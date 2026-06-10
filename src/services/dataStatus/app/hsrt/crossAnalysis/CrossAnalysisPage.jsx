@@ -1459,7 +1459,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
 const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getOverviewContext, getOverview, getOverviewStyled, savePageSettings, exportOverviewHtml, exportOverviewXlsx, createSnapshot, getAiSummary, evaluateChartData } = DpRequestPageApi();
+    const { getOverviewContext, getOverview, getOverviewStyled, savePageSettings, exportOverviewXlsx, createSnapshot, getAiSummary, evaluateChartData } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -2505,23 +2505,28 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     requestData.banner = [selectedXInfo];
                                 }
 
-                                const result = await exportOverviewHtml.mutateAsync(requestData);
+                                const result = await getOverviewStyled.mutateAsync(requestData);
                                 const payload = result?.resultjson || result || {};
 
-                                if (result?.success === "777" && payload.html) {
+                                const css = payload.style_css || '';
+                                const tables = payload.tables || [];
+                                const tablesHtml = tables.map(t => t.html || '').join('<div style="height:24px;"></div>');
+                                const fullHtml = `<!doctype html><html><head><meta charset="utf-8"/><style>${css}</style></head><body style="margin:0; padding:16px;">${tablesHtml || payload.html || ''}</body></html>`;
+
+                                if (fullHtml && (tables.length > 0 || payload.html)) {
                                     try {
-                                        const htmlBlob = new Blob([payload.html], { type: 'text/html' });
-                                        const textBlob = new Blob([payload.html], { type: 'text/plain' });
+                                        const htmlBlob = new Blob([fullHtml], { type: 'text/html' });
+                                        const textBlob = new Blob([fullHtml], { type: 'text/plain' });
                                         const clipboardItem = new window.ClipboardItem({
                                             'text/html': htmlBlob,
                                             'text/plain': textBlob
                                         });
                                         await navigator.clipboard.write([clipboardItem]);
-                                        modal.showAlert('알림', `교차분석 결과(${payload.table_count || 0}개 표)가 클립보드에 복사되었습니다.`);
+                                        modal.showAlert('알림', `교차분석 결과(${tables.length || 0}개 표)가 스타일을 포함하여 클립보드에 복사되었습니다.`);
                                     } catch (clipErr) {
                                         // Fallback
                                         const textArea = document.createElement("textarea");
-                                        textArea.value = payload.html;
+                                        textArea.value = fullHtml;
                                         document.body.appendChild(textArea);
                                         textArea.select();
                                         document.execCommand("copy");
@@ -2532,7 +2537,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     modal.showAlert('오류', 'HTML 데이터 생성에 실패했습니다.');
                                 }
                             } catch (error) {
-                                console.error('HTML Export Error:', error);
+                                console.error('HTML Copy Error:', error);
                                 modal.showAlert('오류', 'HTML 복사 중 문제가 발생했습니다.');
                             } finally {
                                 loadingSpinner.hide();

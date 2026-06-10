@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { Layout, Type, Palette, Eye } from 'lucide-react';
+import { DpRequestPageApi } from '../DpRequestPageApi';
+import { TABLE_THEME_PRESETS } from './TableThemePresets';
 
 const ColorInput = React.memo(({ value, onChange, width = '105px', textWidth = '65px', padding = '3px 6px', gap = '6px' }) => {
     const [localValue, setLocalValue] = useState(value || '');
@@ -31,7 +34,7 @@ const ColorInput = React.memo(({ value, onChange, width = '105px', textWidth = '
     }, [localValue, value, onChange]);
 
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: gap, padding: padding, border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', width: width, boxSizing: 'border-box', height: '28px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: gap, padding: padding, border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', width: width, boxSizing: 'border-box', height: '28px', flexShrink: 0, userSelect: 'none' }}>
             <input
                 type="color"
                 value={(/^#([A-FA-f0-9]{3}){1,2}$/.test(localValue) ? localValue : '#FFFFFF').slice(0, 7)}
@@ -47,14 +50,18 @@ const ColorInput = React.memo(({ value, onChange, width = '105px', textWidth = '
                 value={localValue}
                 onChange={handleTextChange}
                 placeholder="#FFFFFF"
+                autoComplete="off"
                 style={{
                     width: textWidth,
                     height: '20px',
                     fontSize: '11px',
                     border: 'none',
                     outline: 'none',
+                    boxShadow: 'none',
+                    background: 'transparent',
                     fontFamily: 'monospace',
-                    padding: 0
+                    padding: 0,
+                    userSelect: 'text'
                 }}
             />
         </div>
@@ -72,32 +79,32 @@ const LineStylePicker = ({ value, onChange, color, direction = 'down', width = '
 
     const options = ['solid', 'dashed', 'dotted', 'double', 'none'];
     return (
-        <div ref={ref} style={{ position: 'relative' }}>
+        <div ref={ref} style={{ position: 'relative', userSelect: 'none', outline: 'none' }}>
             <div
                 onClick={() => setIsOpen(!isOpen)}
-                style={{ width: width, height: '24px', padding: padding, border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}
+                style={{ width: width, height: '24px', padding: padding, border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', userSelect: 'none', outline: 'none' }}
                 title="선 종류"
             >
                 {value === 'none' ? (
-                    <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600 }}>없음</span>
+                    <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600, userSelect: 'none' }}>없음</span>
                 ) : (
-                    <div style={{ width: '100%', borderTopStyle: value, borderTopWidth: value === 'double' ? '3px' : '2px', borderTopColor: color || '#475569' }} />
+                    <div style={{ width: '100%', borderTopStyle: value, borderTopWidth: value === 'double' ? '3px' : '2px', borderTopColor: color || '#475569', userSelect: 'none' }} />
                 )}
             </div>
             {isOpen && (
-                <div style={{ position: 'absolute', [direction === 'up' ? 'bottom' : 'top']: '100%', left: '-10px', zIndex: 50, background: '#fff', border: '1px solid #CBD5E1', borderRadius: '4px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', width: '80px', [direction === 'up' ? 'marginBottom' : 'marginTop']: '4px', padding: '4px 0' }}>
+                <div style={{ position: 'absolute', [direction === 'up' ? 'bottom' : 'top']: '100%', left: '-10px', zIndex: 50, background: '#fff', border: '1px solid #CBD5E1', borderRadius: '4px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', width: '80px', [direction === 'up' ? 'marginBottom' : 'marginTop']: '4px', padding: '4px 0', userSelect: 'none' }}>
                     {options.map(opt => (
                         <div
                             key={opt}
                             onClick={() => { onChange(opt); setIsOpen(false); }}
-                            style={{ padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: value === opt ? '#F1F5F9' : '#fff' }}
+                            style={{ padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: value === opt ? '#F1F5F9' : '#fff', userSelect: 'none' }}
                             onMouseEnter={(e) => e.currentTarget.style.background = '#F8FAFC'}
                             onMouseLeave={(e) => e.currentTarget.style.background = value === opt ? '#F1F5F9' : '#fff'}
                         >
                             {opt === 'none' ? (
-                                <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600 }}>없음</span>
+                                <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600, userSelect: 'none' }}>없음</span>
                             ) : (
-                                <div style={{ width: '100%', borderTopStyle: opt, borderTopWidth: opt === 'double' ? '3px' : '2px', borderTopColor: color || '#475569' }} />
+                                <div style={{ width: '100%', borderTopStyle: opt, borderTopWidth: opt === 'double' ? '3px' : '2px', borderTopColor: color || '#475569', userSelect: 'none' }} />
                             )}
                         </div>
                     ))}
@@ -108,22 +115,290 @@ const LineStylePicker = ({ value, onChange, color, direction = 'down', width = '
 };
 
 const borderNames = {
-    theme_table_outer_top: '표 상단 외곽선',
-    theme_table_outer_bottom: '표 하단 외곽선',
-    theme_table_outer_left: '표 좌측 외곽선',
-    theme_table_outer_right: '표 우측 외곽선',
-    theme_header_divider: '헤더 하단선',
-    theme_stub_divider: '스터브 구분선',
-    theme_section_separator: '섹션 구분선',
+    theme_table_outer_top: '표 최상단 선',
+    theme_table_outer_bottom: '표 외곽선 (하단)',
+    theme_table_outer_left: '표 외곽선 (좌측)',
+    theme_table_outer_right: '표 외곽선 (우측)',
+    theme_header_divider: '헤더 최하단 구분선',
+    theme_stub_divider: '스터브 끝 구분선',
+    theme_section_separator: '섹션 위쪽 구분선',
     theme_grid: '데이터 기본선',
     theme_stub_tier_divider: '스터브 계층선',
-    theme_header_tier_divider: '헤더 단 구분선',
-    theme_banner_divider: '배너 그룹 구분선'
+    theme_header_tier_divider: '헤더 단 구분선(상위·중위 사이)',
+    theme_banner_divider: '배너 그룹 경계선',
+    theme_data_col_divider: '열 구분선(배너 그룹 내)'
 };
 
 const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
     const [selectedBorder, setSelectedBorder] = useState('theme_table_outer_top');
     const [hoveredBorder, setHoveredBorder] = useState(null);
+
+    const auth = useSelector((store) => store.auth);
+    const { getOverviewStyled, getStyleExamples } = DpRequestPageApi();
+    const pageId = sessionStorage.getItem('pageId');
+
+    const [previewTab, setPreviewTab] = useState(0); // 0: 실제 표 미리보기, 1: 스타일 예시
+    const [realPreviewData, setRealPreviewData] = useState({ css: '', html: '' });
+    const [examplesData, setExamplesData] = useState(null);
+    const [activeExampleIdx, setActiveExampleIdx] = useState(0);
+    const [loadingReal, setLoadingReal] = useState(false);
+    const [loadingExamples, setLoadingExamples] = useState(false);
+
+    const realIframeRef = useRef(null);
+    const exampleIframeRef = useRef(null);
+
+    const examplesPreviewData = React.useMemo(() => {
+        if (!examplesData) return { css: '', html: '' };
+        const payload = examplesData?.resultjson || examplesData || {};
+        const css = payload.style_css || '';
+        const examplesList = payload.examples || [];
+        const currentExample = examplesList[activeExampleIdx];
+        if (!currentExample) return { css: '', html: '' };
+        const html = currentExample.html || '';
+        return { css, html };
+    }, [examplesData, activeExampleIdx]);
+
+    const getDraftPayload = () => {
+        return {
+            user: auth?.user?.userId,
+            pageid: pageId,
+            limit: 1,
+            ui_settings: {
+                font_family: settings.render.font_family,
+                font_size: settings.render.font_size,
+                theme_primary: settings.render.theme_primary?.toUpperCase(),
+                theme_primary_fg: settings.render.theme_primary_fg?.toUpperCase(),
+                theme_stub_header_bg: settings.render.theme_stub_header_bg?.toUpperCase(),
+                theme_stub_header_fg: settings.render.theme_stub_header_fg?.toUpperCase(),
+                theme_bg: settings.render.theme_bg?.toUpperCase(),
+                theme_stripe: settings.render.theme_stripe?.toUpperCase(),
+                theme_text: settings.render.theme_text?.toUpperCase(),
+                theme_text_muted: settings.render.theme_text_muted?.toUpperCase(),
+                theme_grid_color: settings.render.theme_grid_color?.toUpperCase(),
+                theme_grid_style: settings.render.theme_grid_style,
+                theme_grid_width: settings.render.theme_grid_width,
+                theme_stub_divider_color: settings.render.theme_stub_divider_color?.toUpperCase(),
+                theme_stub_divider_style: settings.render.theme_stub_divider_style,
+                theme_stub_divider_width: settings.render.theme_stub_divider_width,
+                theme_section_separator_color: settings.render.theme_section_separator_color?.toUpperCase(),
+                theme_section_separator_style: settings.render.theme_section_separator_style,
+                theme_section_separator_width: settings.render.theme_section_separator_width,
+                theme_header_divider_color: settings.render.theme_header_divider_color?.toUpperCase(),
+                theme_header_divider_style: settings.render.theme_header_divider_style,
+                theme_header_divider_width: settings.render.theme_header_divider_width,
+                theme_table_outer_top_color: settings.render.theme_table_outer_top_color?.toUpperCase(),
+                theme_table_outer_top_style: settings.render.theme_table_outer_top_style,
+                theme_table_outer_top_width: settings.render.theme_table_outer_top_width,
+                theme_table_outer_bottom_color: settings.render.theme_table_outer_bottom_color?.toUpperCase(),
+                theme_table_outer_bottom_style: settings.render.theme_table_outer_bottom_style,
+                theme_table_outer_bottom_width: settings.render.theme_table_outer_bottom_width,
+                theme_table_outer_left_color: settings.render.theme_table_outer_left_color?.toUpperCase(),
+                theme_table_outer_left_style: settings.render.theme_table_outer_left_style,
+                theme_table_outer_left_width: settings.render.theme_table_outer_left_width,
+                theme_table_outer_right_color: settings.render.theme_table_outer_right_color?.toUpperCase(),
+                theme_table_outer_right_style: settings.render.theme_table_outer_right_style,
+                theme_table_outer_right_width: settings.render.theme_table_outer_right_width,
+                theme_header_font: settings.render.theme_header_font,
+                theme_stub_font: settings.render.theme_stub_font,
+                theme_data_font: settings.render.theme_data_font,
+                theme_header_group_bg: settings.render.theme_header_group_bg?.toUpperCase(),
+                theme_header_group_fg: settings.render.theme_header_group_fg?.toUpperCase(),
+                theme_stub_group_bg: settings.render.theme_stub_group_bg?.toUpperCase(),
+                theme_stub_group_fg: settings.render.theme_stub_group_fg?.toUpperCase(),
+                theme_stub_leaf_bg: settings.render.theme_stub_leaf_bg?.toUpperCase(),
+                theme_stub_leaf_fg: settings.render.theme_stub_leaf_fg?.toUpperCase(),
+                theme_stub_tier_divider_color: settings.render.theme_stub_tier_divider_color?.toUpperCase(),
+                theme_stub_tier_divider_style: settings.render.theme_stub_tier_divider_style,
+                theme_stub_tier_divider_width: settings.render.theme_stub_tier_divider_width,
+                theme_header_tier_divider_color: settings.render.theme_header_tier_divider_color?.toUpperCase(),
+                theme_header_tier_divider_style: settings.render.theme_header_tier_divider_style,
+                theme_header_tier_divider_width: settings.render.theme_header_tier_divider_width,
+                theme_banner_divider_color: settings.render.theme_banner_divider_color?.toUpperCase(),
+                theme_banner_divider_style: settings.render.theme_banner_divider_style,
+                theme_banner_divider_width: settings.render.theme_banner_divider_width,
+                theme_base_bg: settings.render.theme_base_bg?.toUpperCase(),
+                theme_base_fg: settings.render.theme_base_fg?.toUpperCase(),
+                theme_etc_bg: settings.render.theme_etc_bg?.toUpperCase(),
+                theme_etc_fg: settings.render.theme_etc_fg?.toUpperCase(),
+                theme_data_col_divider_color: settings.render.theme_data_col_divider_color?.toUpperCase(),
+                theme_data_col_divider_style: settings.render.theme_data_col_divider_style,
+                theme_data_col_divider_width: settings.render.theme_data_col_divider_width,
+                stub_group_layout: settings.render.stub_group_layout,
+                format_percent_as_column: settings.render.format_percent_as_column,
+                format_show_n: settings.display.show_n,
+                format_show_percent: settings.display.show_percent,
+                format_n_round: settings.display.n_digits !== "" && settings.display.n_digits !== null ? Number(settings.display.n_digits) : undefined,
+                format_percent_round: settings.display.percent_digits !== "" && settings.display.percent_digits !== null ? Number(settings.display.percent_digits) : undefined,
+                format_mean_round: settings.display.mean_digits !== "" && settings.display.mean_digits !== null ? Number(settings.display.mean_digits) : undefined,
+                format_std_round: settings.display.std_digits !== "" && settings.display.std_digits !== null ? Number(settings.display.std_digits) : undefined,
+                format_var_round: settings.display.var_digits !== "" && settings.display.var_digits !== null ? Number(settings.display.var_digits) : undefined,
+                format_median_round: settings.display.median_digits !== "" && settings.display.median_digits !== null ? Number(settings.display.median_digits) : undefined,
+                format_min_round: settings.display.min_digits !== "" && settings.display.min_digits !== null ? Number(settings.display.min_digits) : undefined,
+                format_max_round: settings.display.max_digits !== "" && settings.display.max_digits !== null ? Number(settings.display.max_digits) : undefined,
+                hide_zero_base_columns: settings.display.hide_zero_base_columns,
+                hide_zero_banners: settings.display.hide_zero_banners,
+                hide_zero_stubs: settings.display.hide_zero_stubs,
+                show_base_parenthesis: settings.display.show_base_parenthesis,
+                base_prefix: settings.display.show_base_parenthesis ? "(" : "",
+                base_postfix: settings.display.show_base_parenthesis ? ")" : "",
+                percent_symbol: settings.display.percent_symbol,
+            },
+            display_policy: {
+                show_n: settings.display.show_n,
+                show_percent: settings.display.show_percent,
+                n_digits: settings.display.n_digits !== "" && settings.display.n_digits !== null ? Number(settings.display.n_digits) : undefined,
+                percent_digits: settings.display.percent_digits !== "" && settings.display.percent_digits !== null ? Number(settings.display.percent_digits) : undefined,
+                mean_digits: settings.display.mean_digits !== "" && settings.display.mean_digits !== null ? Number(settings.display.mean_digits) : undefined,
+                std_digits: settings.display.std_digits !== "" && settings.display.std_digits !== null ? Number(settings.display.std_digits) : undefined,
+                median_digits: settings.display.median_digits !== "" && settings.display.median_digits !== null ? Number(settings.display.median_digits) : undefined,
+                min_digits: settings.display.min_digits !== "" && settings.display.min_digits !== null ? Number(settings.display.min_digits) : undefined,
+                max_digits: settings.display.max_digits !== "" && settings.display.max_digits !== null ? Number(settings.display.max_digits) : undefined,
+                var_digits: settings.display.var_digits !== "" && settings.display.var_digits !== null ? Number(settings.display.var_digits) : undefined,
+                hide_zero_base_columns: settings.display.hide_zero_base_columns,
+                hide_zero_banners: settings.display.hide_zero_banners,
+                hide_zero_stubs: settings.display.hide_zero_stubs,
+                show_base_parenthesis: settings.display.show_base_parenthesis,
+                base_prefix: settings.display.show_base_parenthesis ? "(" : "",
+                base_postfix: settings.display.show_base_parenthesis ? ")" : "",
+                percent_symbol: settings.display.percent_symbol,
+            }
+        };
+    };
+
+    const parsePreviewData = (res) => {
+        if (!res) return { css: '', html: '' };
+        const payload = res?.resultjson || res || {};
+        const css = payload.style_css || '';
+        const tablesList = payload.tables || payload.examples || [];
+        const htmls = tablesList.map(t => {
+            return t.html || '';
+        }).join('<div style="height:8px;"></div>');
+        return { css, html: htmls || (payload.html || '') };
+    };
+
+    const INITIAL_IFRAME_DOC = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <style id="preview-style">
+                html, body {
+                    height: 100%;
+                    margin: 0;
+                    overflow-y: hidden;
+                }
+                body table, table {
+                    margin: 0 auto !important;
+                }
+            </style>
+        </head>
+        <body id="preview-body" style="margin: 0; padding: 0 8px; background-color: transparent; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100%; box-sizing: border-box;">
+        </body>
+        </html>
+    `;
+
+    const updateIframeContent = (iframeRef, data) => {
+        const iframe = iframeRef.current;
+        if (!iframe) return;
+
+        const runUpdate = () => {
+            try {
+                const doc = iframe.contentDocument || iframe.contentWindow?.document;
+                if (!doc) return;
+
+                const styleEl = doc.getElementById('preview-style');
+                const bodyEl = doc.getElementById('preview-body');
+
+                if (styleEl && bodyEl) {
+                    styleEl.textContent = `
+                        html, body {
+                            height: 100%;
+                            margin: 0;
+                            overflow-y: hidden;
+                        }
+                        ${data.css || ''}
+                        body table, table {
+                            margin: 0 auto !important;
+                        }
+                    `;
+                    bodyEl.innerHTML = data.html || '';
+                } else {
+                    doc.open();
+                    doc.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <meta charset="utf-8">
+                            <style id="preview-style">
+                                html, body {
+                                    height: 100%;
+                                    margin: 0;
+                                    overflow-y: hidden;
+                                }
+                                ${data.css || ''}
+                                body table, table { margin: 0 auto !important; }
+                            </style>
+                        </head>
+                        <body id="preview-body" style="margin: 0; padding: 0 8px; background-color: transparent; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100%; box-sizing: border-box;">
+                            ${data.html || ''}
+                        </body>
+                        </html>
+                    `);
+                    doc.close();
+                }
+            } catch (e) {
+                console.warn("Iframe update error: ", e);
+            }
+        };
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (doc && doc.readyState === 'complete') {
+            runUpdate();
+        } else {
+            iframe.onload = () => {
+                runUpdate();
+                iframe.onload = null;
+            };
+        }
+    };
+
+    useEffect(() => {
+        updateIframeContent(realIframeRef, realPreviewData);
+    }, [realPreviewData]);
+
+    useEffect(() => {
+        updateIframeContent(exampleIframeRef, examplesPreviewData);
+    }, [examplesPreviewData]);
+
+    useEffect(() => {
+        if (!pageId || !auth?.user?.userId) return;
+
+        const timer = setTimeout(async () => {
+            const payload = getDraftPayload();
+
+            setLoadingReal(true);
+            try {
+                const res = await getOverviewStyled.mutateAsync(payload);
+                setRealPreviewData(parsePreviewData(res));
+            } catch (err) {
+                console.error("Failed to fetch real preview styled HTML:", err);
+            } finally {
+                setLoadingReal(false);
+            }
+
+            setLoadingExamples(true);
+            try {
+                const res = await getStyleExamples.mutateAsync(payload);
+                setExamplesData(res);
+            } catch (err) {
+                console.error("Failed to fetch style examples HTML:", err);
+            } finally {
+                setLoadingExamples(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [settings.render, settings.display, pageId, auth?.user?.userId]);
 
     const renderBorderHandle = (borderType, position) => {
         const isSelected = selectedBorder === borderType;
@@ -206,30 +481,18 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
         return Number(val).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
     };
 
-    const previewCols = [
-        { label: '남성 X 20~29세', subLabel: 'banner_02', base: 100, v1: 58, p1: 58.0, v2: 42, p2: 42.0, v3: 0, p3: 0.0, tV: 44, tP: 44.0, mean: 3.42 },
-        { label: '남성 X 30~39세', subLabel: 'banner_02', base: 680, v1: 356, p1: 52.4, v2: 324, p2: 47.6, v3: 0, p3: 0.0, tV: 301, tP: 44.3, mean: 3.37 },
-        { label: '여성 X 20~29세', subLabel: 'banner_02', base: 36, v1: 0, p1: 0.0, v2: 36, p2: 100.0, v3: 0, p3: 0.0, tV: 14, tP: 38.9, mean: 3.11 },
-        { label: '서울', subLabel: 'banner_02', base: 977, v1: 503, p1: 51.5, v2: 474, p2: 48.5, v3: 0, p3: 0.0, tV: 460, tP: 47.1, mean: 3.44 },
-        { label: '부산', subLabel: 'banner_02', base: 181, v1: 94, p1: 51.9, v2: 87, p2: 48.1, v3: 0, p3: 0.0, tV: 87, tP: 48.1, mean: 3.39 },
-        { label: '빈 열 예시', subLabel: '숨김 대상', base: 0, v1: 0, p1: 0.0, v2: 0, p2: 0.0, v3: 0, p3: 0.0, tV: 0, tP: 0.0, mean: '-' }
-    ].filter(col => !settings.display?.hide_zero_base_columns || col.base > 0);
-
-    const showN = settings.display?.show_n ?? true;
-    const showPct = settings.display?.show_percent ?? true;
-
     return (
         <div className="dp-setting-section" style={{
             padding: '20px 24px',
             background: '#F1F5F9',
             minHeight: '100%',
             display: 'flex',
-            flexDirection: 'column',
-            gap: '20px',
+            flexDirection: 'row',
+            gap: '24px',
             boxSizing: 'border-box',
             width: '100%',
             maxWidth: '100%',
-            overflowX: 'hidden'
+            alignItems: 'flex-start'
         }}>
             <style>{`
                 @keyframes borderSelectedPulse {
@@ -237,351 +500,157 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                     50% { opacity: 1; }
                     100% { opacity: 0.6; }
                 }
+                @keyframes loadingPulse {
+                    0%, 100% { opacity: 0.3; }
+                    50% { opacity: 1; }
+                }
+                .loading-pulse-dot {
+                    animation: loadingPulse 1.5s infinite ease-in-out;
+                }
             `}</style>
 
-            {/* 1.5 빠른 프리셋 */}
-            <div style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', padding: '16px' }}>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: '#1E293B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Palette size={16} color="#475569" /> 빠른 테마 프리셋
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748B' }}>Light</span>
-                        {[
-                            { label: '블루 (기본)', bg: '#2F5597', fg: '#FFFFFF', colors: { theme_primary: "#2F5597", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#D9E1F2", theme_stub_header_fg: "#000000", theme_bg: "#FFFFFF", theme_stripe: "#F5F7FB", theme_text: "#000000", theme_text_muted: "#64748B", theme_grid_color: "#E2E8F0", theme_stub_divider_color: "#CBD5E1", theme_header_divider_color: "#172554", theme_section_separator_color: "#94A3B8", theme_table_outer_top_color: "#CBD5E1", theme_table_outer_bottom_color: "#CBD5E1", theme_table_outer_left_color: "#CBD5E1", theme_table_outer_right_color: "#CBD5E1", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } },
-                            { label: '플래티넘 실버', bg: '#FAFAFA', fg: '#18181B', border: '#E4E4E7', colors: { theme_primary: "#3F3F46", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#E4E4E7", theme_stub_header_fg: "#18181B", theme_bg: "#FFFFFF", theme_stripe: "#F7F7F8", theme_text: "#18181B", theme_text_muted: "#A1A1AA", theme_grid_color: "#E4E4E7", theme_stub_divider_color: "#D4D4D8", theme_header_divider_color: "#18181B", theme_section_separator_color: "#A1A1AA", theme_table_outer_top_color: "#D4D4D8", theme_table_outer_bottom_color: "#D4D4D8", theme_table_outer_left_color: "#D4D4D8", theme_table_outer_right_color: "#D4D4D8", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } },
-                            { label: 'Teams (Light)', bg: '#6264A7', fg: '#FFFFFF', colors: { theme_primary: "#6264A7", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#EBEBEB", theme_stub_header_fg: "#242424", theme_bg: "#FFFFFF", theme_stripe: "#FAFAFA", theme_text: "#242424", theme_text_muted: "#616161", theme_grid_color: "#EBEBEB", theme_stub_divider_color: "#E0E0E0", theme_header_divider_color: "#312E81", theme_section_separator_color: "#BDBDBD", theme_table_outer_top_color: "#E0E0E0", theme_table_outer_bottom_color: "#E0E0E0", theme_table_outer_left_color: "#E0E0E0", theme_table_outer_right_color: "#E0E0E0", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } },
-                            { label: '에메랄드 포레스트', bg: '#064E3B', fg: '#FFFFFF', colors: { theme_primary: "#064E3B", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#D1FAE5", theme_stub_header_fg: "#1C1917", theme_bg: "#FFFFFF", theme_stripe: "#F5F5F4", theme_text: "#1C1917", theme_text_muted: "#78716C", theme_grid_color: "#D1FAE5", theme_stub_divider_color: "#A7F3D0", theme_header_divider_color: "#022C22", theme_section_separator_color: "#6EE7B7", theme_table_outer_top_color: "#A7F3D0", theme_table_outer_bottom_color: "#A7F3D0", theme_table_outer_left_color: "#A7F3D0", theme_table_outer_right_color: "#A7F3D0", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } },
-                            { label: '보르도 와인', bg: '#701A75', fg: '#FFFFFF', colors: { theme_primary: "#701A75", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#FCE7F3", theme_stub_header_fg: "#18181B", theme_bg: "#FFFFFF", theme_stripe: "#F5F5F5", theme_text: "#18181B", theme_text_muted: "#71717A", theme_grid_color: "#FCE7F3", theme_stub_divider_color: "#FBCFE8", theme_header_divider_color: "#4A044E", theme_section_separator_color: "#F472B6", theme_table_outer_top_color: "#FBCFE8", theme_table_outer_bottom_color: "#FBCFE8", theme_table_outer_left_color: "#FBCFE8", theme_table_outer_right_color: "#FBCFE8", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } },
-                            { label: '미드나잇 네이비', bg: '#1E293B', fg: '#FFFFFF', colors: { theme_primary: "#1E293B", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#E2E8F0", theme_stub_header_fg: "#0F172A", theme_bg: "#FFFFFF", theme_stripe: "#F4F4F5", theme_text: "#0F172A", theme_text_muted: "#64748B", theme_grid_color: "#E2E8F0", theme_stub_divider_color: "#CBD5E1", theme_header_divider_color: "#020617", theme_section_separator_color: "#94A3B8", theme_table_outer_top_color: "#CBD5E1", theme_table_outer_bottom_color: "#CBD5E1", theme_table_outer_left_color: "#CBD5E1", theme_table_outer_right_color: "#CBD5E1", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } }
-                        ].map(preset => (
-                            <button
-                                key={preset.label}
-                                style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '4px', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', cursor: 'pointer', background: preset.bg, color: preset.fg, border: preset.border ? `1px solid ${preset.border}` : 'none', whiteSpace: 'nowrap' }}
-                                onMouseEnter={(e) => e.target.style.opacity = '0.8'}
-                                onMouseLeave={(e) => e.target.style.opacity = '1'}
-                                onClick={() => {
-                                    setSettings({ ...settings, render: { ...settings.render, ...preset.colors } });
-                                    if (onUnsavedChange) onUnsavedChange(true);
-                                }}
-                            >
-                                {preset.label}
-                            </button>
-                        ))}
+            {/* 왼쪽 구획: 미리보기 영역 (Sticky 고정 - 반응형 넓이 확장 및 상하 균등 정렬) */}
+            <div style={{ flex: '0 0 45%', minWidth: '460px', maxWidth: '750px', position: 'sticky', top: '20px', display: 'flex', flexDirection: 'column', gap: '20px', height: 'calc(100vh - 200px)', minHeight: '620px' }}>
+
+                {/* 카드 1: 실제 표 미리보기 */}
+                <div className="dp-setting-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #CBD5E1', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
+                    <div className="dp-setting-card-header" style={{ padding: '10px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', fontSize: '13px', background: '#F8FAFC', borderRadius: '8px 8px 0 0', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span>미리보기 · 실제 표(교차표와 동일 렌더)</span>
+                        {loadingReal && (
+                            <span style={{ fontSize: '11px', color: '#3B82F6', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span className="loading-pulse-dot" style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#3B82F6' }}></span> 업데이트 중...
+                            </span>
+                        )}
                     </div>
-                    <div style={{ width: '1px', height: '24px', background: '#E2E8F0', flexShrink: 0 }} />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748B' }}>Dark</span>
-                        {[
-                            { label: '슬레이트 다크', bg: '#0F172A', fg: '#F8FAFC', border: '#1E293B', colors: { theme_primary: "#3B82F6", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#1E293B", theme_stub_header_fg: "#F8FAFC", theme_bg: "#0F172A", theme_stripe: "#172033", theme_text: "#F8FAFC", theme_text_muted: "#94A3B8", theme_grid_color: "#1E293B", theme_stub_divider_color: "#334155", theme_header_divider_color: "#60A5FA", theme_section_separator_color: "#475569", theme_table_outer_top_color: "#334155", theme_table_outer_bottom_color: "#334155", theme_table_outer_left_color: "#334155", theme_table_outer_right_color: "#334155", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } },
-                            { label: 'Discord (Dark)', bg: '#4752C4', fg: '#FFFFFF', colors: { theme_primary: "#4752C4", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#4F545C", theme_stub_header_fg: "#DCDDDE", theme_bg: "#36393F", theme_stripe: "#32353B", theme_text: "#DCDDDE", theme_text_muted: "#B9BBBE", theme_grid_color: "#2F3136", theme_stub_divider_color: "#40444B", theme_header_divider_color: "#7289DA", theme_section_separator_color: "#4F545C", theme_table_outer_top_color: "#40444B", theme_table_outer_bottom_color: "#40444B", theme_table_outer_left_color: "#40444B", theme_table_outer_right_color: "#40444B", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } },
-                            { label: 'Webull (Dark)', bg: '#0082FB', fg: '#FFFFFF', colors: { theme_primary: "#0082FB", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#21232B", theme_stub_header_fg: "#F0F2F5", theme_bg: "#0E0F14", theme_stripe: "#12141A", theme_text: "#F0F2F5", theme_text_muted: "#808593", theme_grid_color: "#161821", theme_stub_divider_color: "#2C2F3A", theme_header_divider_color: "#3399FF", theme_section_separator_color: "#21232B", theme_table_outer_top_color: "#2C2F3A", theme_table_outer_bottom_color: "#2C2F3A", theme_table_outer_left_color: "#2C2F3A", theme_table_outer_right_color: "#2C2F3A", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } }
-                        ].map(preset => (
-                            <button
-                                key={preset.label}
-                                style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '4px', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', cursor: 'pointer', background: preset.bg, color: preset.fg, border: preset.border ? `1px solid ${preset.border}` : 'none', whiteSpace: 'nowrap' }}
-                                onMouseEnter={(e) => e.target.style.opacity = '0.8'}
-                                onMouseLeave={(e) => e.target.style.opacity = '1'}
-                                onClick={() => {
-                                    setSettings({ ...settings, render: { ...settings.render, ...preset.colors } });
-                                    if (onUnsavedChange) onUnsavedChange(true);
-                                }}
-                            >
-                                {preset.label}
-                            </button>
-                        ))}
+                    <div style={{ padding: '8px 16px', borderBottom: '1px solid #F1F5F9', background: '#FFFFFF', flexShrink: 0 }}>
+                        <span style={{ fontSize: '11px', color: '#94A3B8' }}>실제 표 미리보기 · 저장 전 현재 설정 그대로</span>
+                    </div>
+
+                    {/* 선 선택 시 조작 도구 바 */}
+                    {selectedBorder && (
+                        <div onMouseEnter={() => setHoveredBorder(selectedBorder)} onMouseLeave={() => setHoveredBorder(null)} style={{ background: '#EFF6FF', borderBottom: '1px solid #BFDBFE', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexShrink: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 700, color: '#1D4ED8', whiteSpace: 'nowrap' }}>선택: {borderNames[selectedBorder]}</span>
+                                <ColorInput value={settings.render[`${selectedBorder}_color`] || ''} onChange={(val) => handleChange(`render.${selectedBorder}_color`, val)} width="90px" textWidth="50px" padding="2px 4px" gap="4px" />
+                                <LineStylePicker value={settings.render[`${selectedBorder}_style`] || 'solid'} onChange={(val) => { handleChange(`render.${selectedBorder}_style`, val); if (val === 'double') { const curWidth = parseInt((settings.render[`${selectedBorder}_width`] || '0').replace('px', ''), 10); if (!curWidth || curWidth < 3) handleChange(`render.${selectedBorder}_width`, '3px'); } }} color={settings.render[`${selectedBorder}_color`] || '#000000'} direction="down" width="50px" padding="0 4px" />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                    <input type="number" min={settings.render[`${selectedBorder}_style`] === 'double' ? 3 : 0} max="10" value={(settings.render[`${selectedBorder}_width`] || '').replace('px', '')} placeholder={settings.render[`${selectedBorder}_style`] === 'double' ? '3' : '1'} onChange={(e) => { const isDouble = settings.render[`${selectedBorder}_style`] === 'double'; let val = e.target.value ? Number(e.target.value) : ''; if (isDouble && val !== '' && val < 3) val = 3; handleChange(`render.${selectedBorder}_width`, val !== '' ? `${val}px` : ''); }} style={{ width: '40px', padding: '2px 4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }} />
+                                    <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
+                                </div>
+                            </div>
+                            <button onClick={() => setSelectedBorder(null)} style={{ border: 'none', background: 'transparent', color: '#1D4ED8', fontSize: '11px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>선택 해제</button>
+                        </div>
+                    )}
+
+                    <div className="dp-setting-card-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: '8px', overflowX: 'auto', background: settings.render.theme_bg || '#FFFFFF', borderRadius: '0 0 8px 8px', position: 'relative' }}>
+                        <iframe
+                            ref={realIframeRef}
+                            srcDoc={INITIAL_IFRAME_DOC}
+                            style={{ width: '100%', flex: 1, minHeight: 0, border: 'none', opacity: loadingReal ? 0.6 : 1, transition: 'opacity 0.2s' }}
+                            title="real-preview"
+                        />
                     </div>
                 </div>
+
+                {/* 카드 2: 스타일 예시 */}
+                <div className="dp-setting-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #CBD5E1', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
+                    <div className="dp-setting-card-header" style={{ padding: '10px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', fontSize: '13px', background: '#F8FAFC', borderRadius: '8px 8px 0 0', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span>스타일 예시 · 샘플 데이터 · 실제 렌더러(교차표와 동일)</span>
+                        {loadingExamples && (
+                            <span style={{ fontSize: '11px', color: '#3B82F6', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span className="loading-pulse-dot" style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#3B82F6' }}></span> 업데이트 중...
+                            </span>
+                        )}
+                    </div>
+
+                    {/* 예시 탭 버튼 바 (텍스트 링크 방식) */}
+                    <div style={{ display: 'flex', gap: '12px', padding: '8px 16px', borderBottom: '1px solid #F1F5F9', background: '#FFFFFF', flexWrap: 'wrap', flexShrink: 0 }}>
+                        {[
+                            { id: 0, label: '① 교차표 (그룹·통계)' },
+                            { id: 1, label: '② 단순 교차표' },
+                            { id: 2, label: '③ 빈도표' }
+                        ].map((item, idx) => {
+                            const isActive = activeExampleIdx === idx;
+                            return (
+                                <button
+                                    key={idx}
+                                    onClick={() => setActiveExampleIdx(idx)}
+                                    style={{
+                                        background: 'transparent',
+                                        border: 'none',
+                                        fontSize: '11px',
+                                        fontWeight: isActive ? 700 : 500,
+                                        color: isActive ? '#2563EB' : '#64748B',
+                                        cursor: 'pointer',
+                                        padding: '2px 4px',
+                                        borderBottom: isActive ? '2px solid #2563EB' : '2px solid transparent',
+                                        transition: 'all 0.15s ease',
+                                        outline: 'none',
+                                        userSelect: 'none'
+                                    }}
+                                >
+                                    {item.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <div className="dp-setting-card-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: '8px', overflowX: 'auto', background: settings.render.theme_bg || '#FFFFFF', borderRadius: '0 0 8px 8px', position: 'relative' }}>
+                        <iframe
+                            ref={exampleIframeRef}
+                            srcDoc={INITIAL_IFRAME_DOC}
+                            style={{ width: '100%', flex: 1, minHeight: 0, border: 'none', opacity: loadingExamples ? 0.6 : 1, transition: 'opacity 0.2s' }}
+                            title="example-preview"
+                        />
+                    </div>
+                </div>
+
             </div>
 
-            {/* 1. 상단: 실시간 미리보기 (고정) */}
-            <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F5F9', margin: '-20px -24px 0 -24px', padding: '20px 24px 10px 24px' }}>
-                <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #CBD5E1', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
-                    <div className="dp-setting-card-header" style={{ padding: '10px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFC', borderRadius: '8px 8px 0 0' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Eye size={16} /> 실시간 미리보기
+            {/* 오른쪽 구획: 테마 프리셋 & 3단 설정 카드 */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', minWidth: '0' }}>
+
+                {/* 1.5 빠른 프리셋 */}
+                <div style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', padding: '16px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#1E293B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Palette size={16} color="#475569" /> 빠른 테마 프리셋
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                            {TABLE_THEME_PRESETS.map(preset => (
+                                <button
+                                    key={preset.label}
+                                    style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '4px', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', cursor: 'pointer', background: preset.bg, color: preset.fg, border: preset.border ? `1px solid ${preset.border}` : 'none', whiteSpace: 'nowrap' }}
+                                    onMouseEnter={(e) => e.target.style.opacity = '0.8'}
+                                    onMouseLeave={(e) => e.target.style.opacity = '1'}
+                                    onClick={() => {
+                                        setSettings({ ...settings, render: { ...settings.render, ...preset.colors } });
+                                        if (onUnsavedChange) onUnsavedChange(true);
+                                    }}
+                                >
+                                    {preset.label}
+                                </button>
+                            ))}
                         </div>
                     </div>
-                    <div className="dp-setting-card-body" style={{ padding: '16px', overflowX: 'auto', background: settings.render.theme_bg || '#FFFFFF', borderRadius: '0 0 8px 8px' }}>
-                        {selectedBorder && (
-                            <div
-                                onMouseEnter={() => setHoveredBorder(selectedBorder)}
-                                onMouseLeave={() => setHoveredBorder(null)}
-                                style={{
-                                    background: '#EFF6FF',
-                                    border: '1px solid #3B82F6',
-                                    borderRadius: '6px',
-                                    padding: '10px 16px',
-                                    marginBottom: '16px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    gap: '16px',
-                                    flexWrap: 'wrap'
-                                }}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#1D4ED8', whiteSpace: 'nowrap' }}>
-                                        선택된 선: {borderNames[selectedBorder]}
-                                    </span>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <ColorInput
-                                            value={settings.render[`${selectedBorder}_color`] || ''}
-                                            onChange={(val) => handleChange(`render.${selectedBorder}_color`, val)}
-                                        />
-                                        <LineStylePicker
-                                            value={settings.render[`${selectedBorder}_style`] || 'solid'}
-                                            onChange={(val) => {
-                                                handleChange(`render.${selectedBorder}_style`, val);
-                                                if (val === 'double') {
-                                                    const curWidth = parseInt((settings.render[`${selectedBorder}_width`] || '0').replace('px', ''), 10);
-                                                    if (!curWidth || curWidth < 3) {
-                                                        handleChange(`render.${selectedBorder}_width`, '3px');
-                                                    }
-                                                }
-                                            }}
-                                            color={settings.render[`${selectedBorder}_color`] || '#000000'}
-                                            direction="down"
-                                        />
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                            <input
-                                                type="number"
-                                                min={settings.render[`${selectedBorder}_style`] === 'double' ? 3 : 0}
-                                                max="10"
-                                                value={(settings.render[`${selectedBorder}_width`] || '').replace('px', '')}
-                                                placeholder={settings.render[`${selectedBorder}_style`] === 'double' ? '3' : '1'}
-                                                onChange={(e) => {
-                                                    const isDouble = settings.render[`${selectedBorder}_style`] === 'double';
-                                                    let val = e.target.value ? Number(e.target.value) : '';
-                                                    if (isDouble && val !== '' && val < 3) val = 3;
-                                                    handleChange(`render.${selectedBorder}_width`, val !== '' ? `${val}px` : '');
-                                                }}
-                                                style={{ width: '50px', padding: '4px 6px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
-                                                title="두께(숫자)"
-                                            />
-                                            <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => setSelectedBorder(null)}
-                                    style={{ border: 'none', background: 'transparent', color: '#1D4ED8', fontSize: '11px', cursor: 'pointer', fontWeight: 600 }}
-                                >
-                                    선택 해제
-                                </button>
-                            </div>
-                        )}
-                        <table style={{
-                            width: '100%', borderCollapse: 'separate', borderSpacing: 0, margin: '0 0 8px 0',
-                            fontFamily: settings.render.font_family || 'Arial',
-                            fontSize: `${settings.render.font_size || 12}px`,
-                            color: settings.render.theme_text || '#000000',
-                            borderTop: `${settings.render.theme_table_outer_top_width || '0px'} ${settings.render.theme_table_outer_top_style || 'none'} ${settings.render.theme_table_outer_top_color || 'transparent'}`,
-                            borderBottom: `${settings.render.theme_table_outer_bottom_width || '0px'} ${settings.render.theme_table_outer_bottom_style || 'none'} ${settings.render.theme_table_outer_bottom_color || 'transparent'}`,
-                            borderLeft: `${settings.render.theme_table_outer_left_width || '0px'} ${settings.render.theme_table_outer_left_style || 'none'} ${settings.render.theme_table_outer_left_color || 'transparent'}`,
-                            borderRight: `${settings.render.theme_table_outer_right_width || '0px'} ${settings.render.theme_table_outer_right_style || 'none'} ${settings.render.theme_table_outer_right_color || 'transparent'}`
-                        }}>
-                            <thead>
-                                <tr style={{ background: settings.render.theme_header_group_bg || settings.render.theme_primary || '#2F5597', color: settings.render.theme_header_group_fg || settings.render.theme_primary_fg || '#FFFFFF' }}>
-                                    <th style={{
-                                        position: 'relative',
-                                        padding: '4px 8px',
-                                        borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
-                                        borderBottom: `${settings.render.theme_header_divider_width || '2px'} ${settings.render.theme_header_divider_style || 'double'} ${settings.render.theme_header_divider_color || '#000'}`,
-                                        textAlign: 'left',
-                                        fontWeight: 500,
-                                        fontFamily: settings.render.theme_header_font || settings.render.font_family || 'inherit',
-                                        fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
-                                    }}>
-                                        구분
-                                        {renderBorderHandle('theme_table_outer_top', 'top')}
-                                        {renderBorderHandle('theme_table_outer_left', 'left')}
-                                        {renderBorderHandle('theme_header_divider', 'bottom')}
-                                        {renderBorderHandle('theme_stub_divider', 'right')}
-                                    </th>
-                                    {previewCols.map((col, i) => (
-                                        <th key={col.label} style={{
-                                            position: 'relative',
-                                            padding: '4px 8px', textAlign: 'right', fontWeight: 500,
-                                            borderLeft: i > 0 ? `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}` : 'none',
-                                            borderBottom: `${settings.render.theme_header_divider_width || '2px'} ${settings.render.theme_header_divider_style || 'double'} ${settings.render.theme_header_divider_color || '#000'}`,
-                                            fontFamily: settings.render.theme_header_font || settings.render.font_family || 'inherit',
-                                            fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
-                                        }}>
-                                            <div>{col.label}</div>
-                                            {renderBorderHandle('theme_table_outer_top', 'top')}
-                                            {renderBorderHandle('theme_header_divider', 'bottom')}
-                                            {i === previewCols.length - 1 && renderBorderHandle('theme_table_outer_right', 'right')}
-                                            {i > 0 && renderBorderHandle('theme_grid', 'left', i !== 1)}
-                                        </th>
-                                    ))}
-                                </tr>
-
-                            </thead>
-                            <tbody>
-                                <tr style={{ background: settings.render.theme_bg || '#FFFFFF' }}>
-                                    <td style={{
-                                        position: 'relative',
-                                        padding: '3px 8px',
-                                        background: settings.render.theme_stub_group_bg || settings.render.theme_stub_header_bg || '#D9E1F2',
-                                        color: settings.render.theme_stub_group_fg || settings.render.theme_stub_header_fg || '#000',
-                                        fontWeight: 600,
-                                        borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
-                                        fontFamily: settings.render.theme_stub_font || settings.render.font_family || 'inherit',
-                                        fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
-                                    }}>
-                                        Base
-                                        {renderBorderHandle('theme_table_outer_left', 'left')}
-                                        {renderBorderHandle('theme_stub_divider', 'right')}
-                                    </td>
-                                    {previewCols.map((col, i) => (
-                                        <td key={i} style={{
-                                            position: 'relative',
-                                            padding: '3px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
-                                            borderLeft: i > 0 ? `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}` : 'none',
-                                            fontFamily: settings.render.theme_data_font || settings.render.font_family || 'inherit',
-                                            fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
-                                        }}>
-                                            {settings.display?.show_base_parenthesis
-                                                ? `(${formatN(col.base)})`
-                                                : formatN(col.base)
-                                            }
-                                            {i === previewCols.length - 1 && renderBorderHandle('theme_table_outer_right', 'right')}
-                                            {i > 0 && renderBorderHandle('theme_grid', 'left', i !== 1)}
-                                        </td>
-                                    ))}
-                                </tr>
-                                {[
-                                    { label: '남성', vKey: 'v1', pKey: 'p1' },
-                                    { label: '여성', vKey: 'v2', pKey: 'p2' },
-                                    { label: '빈 행 예시', vKey: 'v3', pKey: 'p3', isEmptyRow: true }
-                                ]
-                                    .filter(row => !settings.display?.hide_zero_stubs || !row.isEmptyRow)
-                                    .map((row, idx) => (
-                                        <tr key={row.label} style={{ background: idx % 2 === 1 ? (settings.render.theme_stripe || '#F1F5F9') : (settings.render.theme_bg || '#FFFFFF') }}>
-                                            <td style={{
-                                                position: 'relative',
-                                                padding: '3px 8px',
-                                                background: settings.render.theme_stub_leaf_bg || settings.render.theme_stub_header_bg || '#D9E1F2',
-                                                color: settings.render.theme_stub_leaf_fg || settings.render.theme_stub_header_fg || '#000',
-                                                borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
-                                                borderTop: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
-                                                fontFamily: settings.render.theme_stub_font || settings.render.font_family || 'inherit',
-                                                fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
-                                            }}>
-                                                {row.label}
-                                                {renderBorderHandle('theme_table_outer_left', 'left')}
-                                                {renderBorderHandle('theme_stub_divider', 'right')}
-                                                {renderBorderHandle('theme_grid', 'top', idx !== 0)}
-                                            </td>
-                                            {previewCols.map((col, i) => (
-                                                <td key={i} style={{
-                                                    position: 'relative',
-                                                    padding: '3px 8px', textAlign: 'right',
-                                                    borderLeft: i > 0 ? `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}` : 'none',
-                                                    borderTop: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
-                                                    fontFamily: settings.render.theme_data_font || settings.render.font_family || 'inherit',
-                                                    fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
-                                                }}>
-                                                    {showN && <div>{formatN(col[row.vKey])}</div>}
-                                                    {showPct && <div style={{ color: settings.render.theme_text_muted || '#64748B', fontSize: '0.9em', marginTop: '2px' }}>{formatPct(col[row.pKey])}</div>}
-                                                    {i === previewCols.length - 1 && renderBorderHandle('theme_table_outer_right', 'right')}
-                                                    {i > 0 && renderBorderHandle('theme_grid', 'left', i !== 1)}
-                                                    {renderBorderHandle('theme_grid', 'top', idx !== 0)}
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))}
-                                <tr style={{ background: settings.render.theme_bg || '#FFFFFF' }}>
-                                    <td style={{
-                                        position: 'relative',
-                                        padding: '3px 8px',
-                                        background: settings.render.theme_stub_group_bg || settings.render.theme_stub_header_bg || '#D9E1F2',
-                                        color: settings.render.theme_stub_group_fg || settings.render.theme_stub_header_fg || '#000',
-                                        fontWeight: 600,
-                                        borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
-                                        borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
-                                        fontFamily: settings.render.theme_stub_font || settings.render.font_family || 'inherit',
-                                        fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
-                                    }}>
-                                        top2
-                                        {renderBorderHandle('theme_table_outer_left', 'left')}
-                                        {renderBorderHandle('theme_stub_divider', 'right')}
-                                        {renderBorderHandle('theme_section_separator', 'top')}
-                                    </td>
-                                    {previewCols.map((col, i) => (
-                                        <td key={i} style={{
-                                            position: 'relative',
-                                            padding: '3px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
-                                            borderLeft: i > 0 ? `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}` : 'none',
-                                            borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
-                                            fontFamily: settings.render.theme_data_font || settings.render.font_family || 'inherit',
-                                            fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
-                                        }}>
-                                            {showN && <div>{formatN(col.tV)}</div>}
-                                            {showPct && <div style={{ color: settings.render.theme_text_muted || '#64748B', fontSize: '0.9em', marginTop: '2px' }}>{formatPct(col.tP)}</div>}
-                                            {i === previewCols.length - 1 && renderBorderHandle('theme_table_outer_right', 'right')}
-                                            {i > 0 && renderBorderHandle('theme_grid', 'left', i !== 1)}
-                                            {renderBorderHandle('theme_section_separator', 'top')}
-                                        </td>
-                                    ))}
-                                </tr>
-                                <tr style={{ background: settings.render.theme_bg || '#FFFFFF' }}>
-                                    <td style={{
-                                        position: 'relative',
-                                        padding: '3px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000', fontWeight: 600,
-                                        borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
-                                        borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
-                                        fontFamily: settings.render.font_family || 'inherit',
-                                        fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
-                                    }}>
-                                        평균
-                                        {renderBorderHandle('theme_table_outer_left', 'left')}
-                                        {renderBorderHandle('theme_table_outer_bottom', 'bottom')}
-                                        {renderBorderHandle('theme_stub_divider', 'right')}
-                                        {renderBorderHandle('theme_section_separator', 'top')}
-                                    </td>
-                                    {previewCols.map((col, i) => (
-                                        <td key={i} style={{
-                                            position: 'relative',
-                                            padding: '3px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
-                                            borderLeft: i > 0 ? `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}` : 'none',
-                                            borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
-                                            fontFamily: settings.render.font_family || 'inherit',
-                                            fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
-                                        }}>
-                                            {formatMean(col.mean)}
-                                            {i === previewCols.length - 1 && renderBorderHandle('theme_table_outer_right', 'right')}
-                                            {i > 0 && renderBorderHandle('theme_grid', 'left', i !== 1)}
-                                            {renderBorderHandle('theme_section_separator', 'top')}
-                                            {renderBorderHandle('theme_table_outer_bottom', 'bottom')}
-                                        </td>
-                                    ))}
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
-            </div>
-
-            {/* 2. 하단: 설정 패널 (3단 그리드) */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
 
                 {/* 2-1. 테이블 표시 정책 */}
                 <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
                     <div className="dp-setting-card-header" style={{ padding: '12px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', background: '#F8FAFC', borderRadius: '8px 8px 0 0' }}>
                         <Layout size={16} color="#475569" /> 테이블 표시 정책
                     </div>
-                    <div className="dp-setting-card-body" style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        {/* 기본 표시 여부 */}
+                    <div className="dp-setting-card-body" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div>
                             <div style={{ fontWeight: 600, fontSize: '12px', color: '#64748B', marginBottom: '8px' }}>기본 표시 여부</div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                                 {[
                                     { label: '빈도 기본 표시', field: 'show_n' },
                                     { label: '비율 기본 표시', field: 'show_percent' },
-                                    { label: '빈 행 숨기기', field: 'hide_zero_stubs' },
-                                    { label: '빈 열 숨기기', field: 'hide_zero_base_columns' },
+                                    { label: '값 0 행(스터브) 숨기기', field: 'hide_zero_stubs' },
+                                    { label: '값 0 열(배너) 숨기기', field: 'hide_zero_banners' },
+                                    { label: 'Base=0 컬럼 숨기기', field: 'hide_zero_base_columns' },
+                                    { label: '엑셀 출력 % 기호 부착', field: 'percent_symbol' },
                                     { label: 'Base 기본 (괄호)', field: 'show_base_parenthesis', fullWidth: true }
                                 ].map(item => (
                                     <div
@@ -598,15 +667,21 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                             </div>
                         </div>
 
-                        {/* 소수점 자릿수 재정의 */}
                         <div>
                             <div style={{ fontWeight: 600, fontSize: '12px', color: '#64748B', marginBottom: '8px' }}>소수점 자릿수</div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                                 {[
                                     { label: '빈도 (N)', field: 'n_digits' },
-                                    { label: '평균 (Mean)', field: 'mean_digits' },
                                     { label: '비율 (%)', field: 'percent_digits' },
-                                    { label: '표준편차 (Std)', field: 'std_digits' }
+                                    { label: '평균 (Mean)', field: 'mean_digits' },
+                                    { label: '표준편차 (Std)', field: 'std_digits' },
+                                    { label: '중앙값 (Median)', field: 'median_digits' },
+                                    { label: '분산 (Var)', field: 'var_digits' },
+                                    { label: '최소값 (Min)', field: 'min_digits' },
+                                    { label: '최대값 (Max)', field: 'max_digits' }
+
+
+
                                 ].map((item) => {
                                     const val = settings.display[item.field] || 0;
                                     return (
@@ -622,6 +697,33 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 })}
                             </div>
                         </div>
+
+                        <div>
+                            <div style={{ fontWeight: 600, fontSize: '12px', color: '#64748B', marginBottom: '8px' }}>레이아웃 설정</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: '#F1F5F9', borderRadius: '6px' }}>
+                                    <span style={{ fontSize: '11px', color: '#475569', fontWeight: 600 }}>스터브 그룹 레이아웃</span>
+                                    <select
+                                        value={settings.render.stub_group_layout || 'merge'}
+                                        onChange={(e) => handleChange('render.stub_group_layout', e.target.value)}
+                                        style={{ padding: '4px 8px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none', background: '#fff' }}
+                                    >
+                                        <option value="merge">병합 방식 (Merge)</option>
+                                        <option value="flat">계층 반복 방식 (Flat)</option>
+                                        <option value="row">구분 행 방식 (Row)</option>
+                                    </select>
+                                </div>
+                                <div
+                                    onClick={() => handleChange('render.format_percent_as_column', !settings.render.format_percent_as_column)}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F1F5F9', padding: '8px 12px', borderRadius: '6px' }}
+                                >
+                                    <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.render.format_percent_as_column ? '#3B82F6' : '#fff', border: settings.render.format_percent_as_column ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        {settings.render.format_percent_as_column && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                                    </div>
+                                    <span style={{ fontWeight: 500 }}>N/% 가로 분리 표시 (열 분할)</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -630,11 +732,9 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                     <div className="dp-setting-card-header" style={{ padding: '12px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', background: '#F8FAFC', borderRadius: '8px 8px 0 0' }}>
                         <Palette size={16} color="#475569" /> 글꼴/색상 설정
                     </div>
-                    <div className="dp-setting-card-body" style={{ padding: '16px', flex: 1 }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '20px', rowGap: '12px', height: '100%', alignContent: 'start' }}>
-                            {/* 글꼴 / 글자 크기 특별 처리 (같은 줄) */}
+                    <div className="dp-setting-card-body" style={{ padding: '16px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '20px', rowGap: '12px', alignContent: 'start' }}>
                             <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '20px', borderBottom: '1px solid #F1F5F9', paddingBottom: '8px', paddingTop: '4px' }}>
-                                {/* 글꼴 */}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 2 }}>
                                     <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>글꼴</label>
                                     <select
@@ -648,7 +748,6 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         <option value="Arial, sans-serif">Arial</option>
                                     </select>
                                 </div>
-                                {/* 글자 크기 */}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, justifyContent: 'flex-end' }}>
                                     <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>크기</label>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #CBD5E1', borderRadius: '4px', padding: '0 8px', background: '#fff', width: '80px', boxSizing: 'border-box' }}>
@@ -658,7 +757,6 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 </div>
                             </div>
 
-                            {/* 영역별 글꼴 */}
                             <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '8px', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px', paddingTop: '4px' }}>
                                 <div style={{ fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>영역별 글꼴 (빈 값 설정 시 상위/전역 글꼴 적용)</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
@@ -722,6 +820,10 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 { label: '교차 행 배경', field: 'theme_stripe', type: 'color' },
                                 { label: '본문 글자', field: 'theme_text', type: 'color' },
                                 { label: '보조 글자', field: 'theme_text_muted', type: 'color' },
+                                { label: 'Base 행 강조 배경', field: 'theme_base_bg', type: 'color' },
+                                { label: 'Base 행 강조 글자', field: 'theme_base_fg', type: 'color' },
+                                { label: '통계 행 강조 배경', field: 'theme_etc_bg', type: 'color' },
+                                { label: '통계 행 강조 글자', field: 'theme_etc_fg', type: 'color' },
                             ].map((item) => (
                                 <div key={item.field} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', borderBottom: '1px solid #F1F5F9', paddingBottom: '8px', paddingTop: '4px' }}>
                                     <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>{item.label}</label>
@@ -740,21 +842,20 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 </div>
 
                 {/* 2-3. 선 스타일 설정 */}
-                <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
+                <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', userSelect: 'none' }}>
                     <div className="dp-setting-card-header" style={{ padding: '12px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', background: '#F8FAFC', borderRadius: '8px 8px 0 0' }}>
                         <Type size={16} color="#475569" /> 선 스타일 설정
                     </div>
-                    <div className="dp-setting-card-body" style={{ padding: '12px 16px', flex: 1 }}>
-
+                    <div className="dp-setting-card-body" style={{ padding: '12px 16px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             <div style={{ marginBottom: '8px' }}>
                                 <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', borderBottom: '1px solid #E2E8F0', paddingBottom: '4px', marginBottom: '8px' }}>표 외곽선 설정</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '8px', rowGap: '6px', alignContent: 'start' }}>
                                     {[
-                                        { group: '표 상단', prefix: 'theme_table_outer_top', color: 'theme_table_outer_top_color', style: 'theme_table_outer_top_style', width: 'theme_table_outer_top_width' },
-                                        { group: '표 하단', prefix: 'theme_table_outer_bottom', color: 'theme_table_outer_bottom_color', style: 'theme_table_outer_bottom_style', width: 'theme_table_outer_bottom_width' },
-                                        { group: '표 좌측', prefix: 'theme_table_outer_left', color: 'theme_table_outer_left_color', style: 'theme_table_outer_left_style', width: 'theme_table_outer_left_width' },
-                                        { group: '표 우측', prefix: 'theme_table_outer_right', color: 'theme_table_outer_right_color', style: 'theme_table_outer_right_style', width: 'theme_table_outer_right_width' },
+                                        { group: '표 최상단 선', prefix: 'theme_table_outer_top', color: 'theme_table_outer_top_color', style: 'theme_table_outer_top_style', width: 'theme_table_outer_top_width' },
+                                        { group: '표 외곽선 (하단)', prefix: 'theme_table_outer_bottom', color: 'theme_table_outer_bottom_color', style: 'theme_table_outer_bottom_style', width: 'theme_table_outer_bottom_width' },
+                                        { group: '표 외곽선 (좌측)', prefix: 'theme_table_outer_left', color: 'theme_table_outer_left_color', style: 'theme_table_outer_left_style', width: 'theme_table_outer_left_width' },
+                                        { group: '표 외곽선 (우측)', prefix: 'theme_table_outer_right', color: 'theme_table_outer_right_color', style: 'theme_table_outer_right_style', width: 'theme_table_outer_right_width' },
                                     ].map((g, i) => {
                                         const isSelected = selectedBorder === g.prefix;
                                         return (
@@ -831,13 +932,14 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', borderBottom: '1px solid #E2E8F0', paddingBottom: '4px', marginBottom: '8px' }}>표 내부 구분선 설정</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '8px', rowGap: '6px', alignContent: 'start' }}>
                                     {[
-                                        { group: '헤더 하단선', prefix: 'theme_header_divider', color: 'theme_header_divider_color', style: 'theme_header_divider_style', width: 'theme_header_divider_width' },
-                                        { group: '스터브 구분선', prefix: 'theme_stub_divider', color: 'theme_stub_divider_color', style: 'theme_stub_divider_style', width: 'theme_stub_divider_width' },
-                                        { group: '섹션 구분선', prefix: 'theme_section_separator', color: 'theme_section_separator_color', style: 'theme_section_separator_style', width: 'theme_section_separator_width' },
+                                        { group: '헤더 최하단 구분선', prefix: 'theme_header_divider', color: 'theme_header_divider_color', style: 'theme_header_divider_style', width: 'theme_header_divider_width' },
+                                        { group: '스터브 끝 구분선', prefix: 'theme_stub_divider', color: 'theme_stub_divider_color', style: 'theme_stub_divider_style', width: 'theme_stub_divider_width' },
+                                        { group: '섹션 위쪽 구분선', prefix: 'theme_section_separator', color: 'theme_section_separator_color', style: 'theme_section_separator_style', width: 'theme_section_separator_width' },
                                         { group: '데이터 기본선', prefix: 'theme_grid', color: 'theme_grid_color', style: 'theme_grid_style', width: 'theme_grid_width' },
                                         { group: '스터브 계층선', prefix: 'theme_stub_tier_divider', color: 'theme_stub_tier_divider_color', style: 'theme_stub_tier_divider_style', width: 'theme_stub_tier_divider_width' },
-                                        { group: '헤더 단 구분선', prefix: 'theme_header_tier_divider', color: 'theme_header_tier_divider_color', style: 'theme_header_tier_divider_style', width: 'theme_header_tier_divider_width' },
-                                        { group: '배너 그룹 구분선', prefix: 'theme_banner_divider', color: 'theme_banner_divider_color', style: 'theme_banner_divider_style', width: 'theme_banner_divider_width' },
+                                        { group: '헤더 단 구분선(상위·중위 사이)', prefix: 'theme_header_tier_divider', color: 'theme_header_tier_divider_color', style: 'theme_header_tier_divider_style', width: 'theme_header_tier_divider_width' },
+                                        { group: '배너 그룹 경계선', prefix: 'theme_banner_divider', color: 'theme_banner_divider_color', style: 'theme_banner_divider_style', width: 'theme_banner_divider_width' },
+                                        { group: '열 구분선(배너 그룹 내)', prefix: 'theme_data_col_divider', color: 'theme_data_col_divider_color', style: 'theme_data_col_divider_style', width: 'theme_data_col_divider_width' },
                                     ].map((g, i) => {
                                         const isSelected = selectedBorder === g.prefix;
                                         return (

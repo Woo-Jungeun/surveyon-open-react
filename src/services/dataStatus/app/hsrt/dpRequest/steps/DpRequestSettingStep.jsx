@@ -84,7 +84,16 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             theme_header_tier_divider_width: '1px',
             theme_banner_divider_color: '#cbd5e1',
             theme_banner_divider_style: 'solid',
-            theme_banner_divider_width: '1px'
+            theme_banner_divider_width: '1px',
+            theme_base_bg: '#FFF2CC',
+            theme_base_fg: '#7F6000',
+            theme_etc_bg: '#E2EFDA',
+            theme_etc_fg: '#375623',
+            theme_data_col_divider_color: '#cbd5e1',
+            theme_data_col_divider_style: 'none',
+            theme_data_col_divider_width: '1px',
+            stub_group_layout: 'merge',
+            format_percent_as_column: false
         },
         display: {
             show_n: true,
@@ -96,7 +105,11 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             median_digits: 2,
             min_digits: 0,
             max_digits: 0,
-            show_base_parenthesis: true
+            show_base_parenthesis: true,
+            percent_symbol: true,
+            hide_zero_base_columns: true,
+            hide_zero_banners: true,
+            hide_zero_stubs: true
         }
     });
 
@@ -157,6 +170,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 if (ui.hide_zero_base_columns !== undefined && ui.hide_zero_base_columns !== null) initDisplay.hide_zero_base_columns = ui.hide_zero_base_columns;
                 if (ui.hide_zero_banners !== undefined && ui.hide_zero_banners !== null) initDisplay.hide_zero_banners = ui.hide_zero_banners;
                 if (ui.hide_zero_stubs !== undefined && ui.hide_zero_stubs !== null) initDisplay.hide_zero_stubs = ui.hide_zero_stubs;
+                if (ui.percent_symbol !== undefined && ui.percent_symbol !== null) initDisplay.percent_symbol = ui.percent_symbol;
+                else if (renderContext?.effective_display_policy?.percent_symbol !== undefined) initDisplay.percent_symbol = renderContext.effective_display_policy.percent_symbol;
 
                 // base_prefix / base_postfix 값에 따라 show_base_parenthesis 값 판별
                 const policy = actualTableDetail?.display_policy || renderContext?.effective_display_policy;
@@ -226,6 +241,15 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     theme_banner_divider_color: ui.theme_banner_divider_color || settings.render.theme_banner_divider_color,
                     theme_banner_divider_style: ui.theme_banner_divider_style || settings.render.theme_banner_divider_style,
                     theme_banner_divider_width: ui.theme_banner_divider_width || settings.render.theme_banner_divider_width,
+                    theme_base_bg: ui.theme_base_bg !== undefined ? ui.theme_base_bg : settings.render.theme_base_bg,
+                    theme_base_fg: ui.theme_base_fg !== undefined ? ui.theme_base_fg : settings.render.theme_base_fg,
+                    theme_etc_bg: ui.theme_etc_bg !== undefined ? ui.theme_etc_bg : settings.render.theme_etc_bg,
+                    theme_etc_fg: ui.theme_etc_fg !== undefined ? ui.theme_etc_fg : settings.render.theme_etc_fg,
+                    theme_data_col_divider_color: ui.theme_data_col_divider_color || settings.render.theme_data_col_divider_color,
+                    theme_data_col_divider_style: ui.theme_data_col_divider_style || settings.render.theme_data_col_divider_style,
+                    theme_data_col_divider_width: ui.theme_data_col_divider_width || settings.render.theme_data_col_divider_width,
+                    stub_group_layout: ui.stub_group_layout || settings.render.stub_group_layout,
+                    format_percent_as_column: ui.format_percent_as_column !== undefined ? ui.format_percent_as_column : settings.render.format_percent_as_column,
                 };
 
                 nextSettings = {
@@ -566,6 +590,15 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     theme_banner_divider_color: settings.render.theme_banner_divider_color?.toUpperCase(),
                     theme_banner_divider_style: settings.render.theme_banner_divider_style,
                     theme_banner_divider_width: settings.render.theme_banner_divider_width,
+                    theme_base_bg: settings.render.theme_base_bg?.toUpperCase(),
+                    theme_base_fg: settings.render.theme_base_fg?.toUpperCase(),
+                    theme_etc_bg: settings.render.theme_etc_bg?.toUpperCase(),
+                    theme_etc_fg: settings.render.theme_etc_fg?.toUpperCase(),
+                    theme_data_col_divider_color: settings.render.theme_data_col_divider_color?.toUpperCase(),
+                    theme_data_col_divider_style: settings.render.theme_data_col_divider_style,
+                    theme_data_col_divider_width: settings.render.theme_data_col_divider_width,
+                    stub_group_layout: settings.render.stub_group_layout,
+                    format_percent_as_column: settings.render.format_percent_as_column,
                     format_show_n: settings.display.show_n,
                     format_show_percent: settings.display.show_percent,
                     format_n_round: settings.display.n_digits !== "" && settings.display.n_digits !== null ? Number(settings.display.n_digits) : undefined,
@@ -577,11 +610,12 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     format_min_round: settings.display.min_digits !== "" && settings.display.min_digits !== null ? Number(settings.display.min_digits) : undefined,
                     format_max_round: settings.display.max_digits !== "" && settings.display.max_digits !== null ? Number(settings.display.max_digits) : undefined,
                     hide_zero_base_columns: settings.display.hide_zero_base_columns,
-                    hide_zero_banners: settings.display.hide_zero_base_columns,
+                    hide_zero_banners: settings.display.hide_zero_banners,
                     hide_zero_stubs: settings.display.hide_zero_stubs,
                     show_base_parenthesis: settings.display.show_base_parenthesis,
                     base_prefix: settings.display.show_base_parenthesis ? "(" : "",
                     base_postfix: settings.display.show_base_parenthesis ? ")" : "",
+                    percent_symbol: settings.display.percent_symbol,
                 },
                 display_policy: {
                     show_n: settings.display.show_n,
@@ -595,11 +629,12 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     max_digits: settings.display.max_digits !== "" && settings.display.max_digits !== null ? Number(settings.display.max_digits) : undefined,
                     var_digits: settings.display.var_digits !== "" && settings.display.var_digits !== null ? Number(settings.display.var_digits) : undefined,
                     hide_zero_base_columns: settings.display.hide_zero_base_columns,
-                    hide_zero_banners: settings.display.hide_zero_base_columns,
+                    hide_zero_banners: settings.display.hide_zero_banners,
                     hide_zero_stubs: settings.display.hide_zero_stubs,
                     show_base_parenthesis: settings.display.show_base_parenthesis,
                     base_prefix: settings.display.show_base_parenthesis ? "(" : "",
                     base_postfix: settings.display.show_base_parenthesis ? ")" : "",
+                    percent_symbol: settings.display.percent_symbol,
                 },
                 scale_presets: scaleDataPayload,
                 rank_presets: rankDataPayload,

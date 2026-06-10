@@ -202,9 +202,9 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/datasets/overview/styled", "API_BASE_URL_DATASTATUS")
     );
 
-    /** 교차분석 - HTML 복사 (export) */
-    const exportOverviewHtml = useMutation(
-        async (data) => await api.post(data, "/datasets/overview/html-export", "API_BASE_URL_DATASTATUS")
+    /** 표 설정 - 스타일 예시 조회 */
+    const getStyleExamples = useMutation(
+        async (data) => await api.post(data, "/datasets/overview/style-examples", "API_BASE_URL_DATASTATUS")
     );
 
     /** 교차분석 - 엑셀 다운로드 (export) */
@@ -265,7 +265,7 @@ export function DpRequestPageApi() {
         getOverviewContext,
         getOverview,
         getOverviewStyled,
-        exportOverviewHtml,
+        getStyleExamples,
         exportOverviewXlsx,
         createSnapshot,
         savePageSettings,
