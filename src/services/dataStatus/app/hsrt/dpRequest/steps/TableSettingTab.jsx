@@ -34,7 +34,7 @@ const ColorInput = React.memo(({ value, onChange, width = '105px', textWidth = '
     }, [localValue, value, onChange]);
 
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: gap, padding: padding, border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', width: width, boxSizing: 'border-box', height: '28px', flexShrink: 0, userSelect: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: gap, padding: padding, border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', width: width, boxSizing: 'border-box', height: '32px', flexShrink: 0, userSelect: 'none' }}>
             <input
                 type="color"
                 value={(/^#([A-FA-f0-9]{3}){1,2}$/.test(localValue) ? localValue : '#FFFFFF').slice(0, 7)}
@@ -43,7 +43,7 @@ const ColorInput = React.memo(({ value, onChange, width = '105px', textWidth = '
                     setLocalValue(val);
                     onChange(val);
                 }}
-                style={{ width: '16px', height: '16px', padding: 0, border: 'none', cursor: 'pointer', borderRadius: '4px', flexShrink: 0 }}
+                style={{ width: '18px', height: '18px', padding: 0, border: 'none', cursor: 'pointer', borderRadius: '4px', flexShrink: 0 }}
             />
             <input
                 type="text"
@@ -54,7 +54,7 @@ const ColorInput = React.memo(({ value, onChange, width = '105px', textWidth = '
                 style={{
                     width: textWidth,
                     height: '20px',
-                    fontSize: '11px',
+                    fontSize: '12px',
                     border: 'none',
                     outline: 'none',
                     boxShadow: 'none',
@@ -82,11 +82,11 @@ const LineStylePicker = ({ value, onChange, color, direction = 'down', width = '
         <div ref={ref} style={{ position: 'relative', userSelect: 'none', outline: 'none' }}>
             <div
                 onClick={() => setIsOpen(!isOpen)}
-                style={{ width: width, height: '24px', padding: padding, border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', userSelect: 'none', outline: 'none' }}
+                style={{ width: width, height: '32px', padding: padding, border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', userSelect: 'none', outline: 'none' }}
                 title="선 종류"
             >
                 {value === 'none' ? (
-                    <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600, userSelect: 'none' }}>없음</span>
+                    <span style={{ fontSize: '12px', color: '#94A3B8', fontWeight: 600, userSelect: 'none' }}>없음</span>
                 ) : (
                     <div style={{ width: '100%', borderTopStyle: value, borderTopWidth: value === 'double' ? '3px' : '2px', borderTopColor: color || '#475569', userSelect: 'none' }} />
                 )}
@@ -102,7 +102,7 @@ const LineStylePicker = ({ value, onChange, color, direction = 'down', width = '
                             onMouseLeave={(e) => e.currentTarget.style.background = value === opt ? '#F1F5F9' : '#fff'}
                         >
                             {opt === 'none' ? (
-                                <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600, userSelect: 'none' }}>없음</span>
+                                <span style={{ fontSize: '12px', color: '#94A3B8', fontWeight: 600, userSelect: 'none' }}>없음</span>
                             ) : (
                                 <div style={{ width: '100%', borderTopStyle: opt, borderTopWidth: opt === 'double' ? '3px' : '2px', borderTopColor: color || '#475569', userSelect: 'none' }} />
                             )}
@@ -132,6 +132,8 @@ const borderNames = {
 const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
     const [selectedBorder, setSelectedBorder] = useState('theme_table_outer_top');
     const [hoveredBorder, setHoveredBorder] = useState(null);
+    const [activeTab, setActiveTab] = useState('policy'); // 'policy', 'fontColor', 'border'
+    const [isExampleCollapsed, setIsExampleCollapsed] = useState(true);
 
     const auth = useSelector((store) => store.auth);
     const { getOverviewStyled, getStyleExamples } = DpRequestPageApi();
@@ -309,6 +311,36 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 const styleEl = doc.getElementById('preview-style');
                 const bodyEl = doc.getElementById('preview-body');
 
+                // 하이라이트 스타일 빌드
+                const activeHighlight = selectedBorder || hoveredBorder;
+                let highlightCss = '';
+                if (activeHighlight) {
+                    highlightCss = `
+                        @keyframes border-pulse {
+                            0% { border-color: #3b82f6 !important; }
+                            50% { border-color: #ef4444 !important; }
+                            100% { border-color: #3b82f6 !important; }
+                        }
+                    `;
+                    const borderRules = {
+                        theme_table_outer_top: 'table, .styled-table { border-top: 3px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
+                        theme_table_outer_bottom: 'table, .styled-table { border-bottom: 3px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
+                        theme_table_outer_left: 'table, .styled-table { border-left: 3px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
+                        theme_table_outer_right: 'table, .styled-table { border-right: 3px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
+                        theme_header_divider: 'thead th, thead td, th[class*="header"], td[class*="header"] { border-bottom: 3px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
+                        theme_stub_divider: 'th:first-child, td:first-child, .stub-cell { border-right: 3px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
+                        theme_section_separator: '.section-separator, tr[class*="separator"] td, tr[class*="separator"] th { border-top: 3px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
+                        theme_grid: 'tbody td, tbody th:not(:first-child) { border: 2px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
+                        theme_stub_tier_divider: '.stub-cell:not(:first-child) { border-left: 2px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
+                        theme_header_tier_divider: 'thead tr:not(:last-child) th { border-bottom: 2px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
+                        theme_banner_divider: '.banner-divider-cell, th[class*="banner-group"] { border-right: 3px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
+                        theme_data_col_divider: 'tbody td:not(:first-child) { border-right: 2px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }'
+                    };
+                    if (borderRules[activeHighlight]) {
+                        highlightCss += borderRules[activeHighlight];
+                    }
+                }
+
                 if (styleEl && bodyEl) {
                     styleEl.textContent = `
                         html, body {
@@ -320,6 +352,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                         body table, table {
                             margin: 0 auto !important;
                         }
+                        ${highlightCss}
                     `;
                     bodyEl.innerHTML = data.html || '';
                 } else {
@@ -337,6 +370,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 }
                                 ${data.css || ''}
                                 body table, table { margin: 0 auto !important; }
+                                ${highlightCss}
                             </style>
                         </head>
                         <body id="preview-body" style="margin: 0; padding: 0 8px; background-color: transparent; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100%; box-sizing: border-box;">
@@ -364,11 +398,13 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
 
     useEffect(() => {
         updateIframeContent(realIframeRef, realPreviewData);
-    }, [realPreviewData]);
+    }, [realPreviewData, selectedBorder, hoveredBorder]);
 
     useEffect(() => {
-        updateIframeContent(exampleIframeRef, examplesPreviewData);
-    }, [examplesPreviewData]);
+        if (!isExampleCollapsed) {
+            updateIframeContent(exampleIframeRef, examplesPreviewData);
+        }
+    }, [examplesPreviewData, selectedBorder, hoveredBorder, isExampleCollapsed]);
 
     useEffect(() => {
         if (!pageId || !auth?.user?.userId) return;
@@ -492,7 +528,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
             boxSizing: 'border-box',
             width: '100%',
             maxWidth: '100%',
-            alignItems: 'flex-start'
+            alignItems: 'stretch'
         }}>
             <style>{`
                 @keyframes borderSelectedPulse {
@@ -553,304 +589,383 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 </div>
 
                 {/* 카드 2: 스타일 예시 */}
-                <div className="dp-setting-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #CBD5E1', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
-                    <div className="dp-setting-card-header" style={{ padding: '10px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', fontSize: '13px', background: '#F8FAFC', borderRadius: '8px 8px 0 0', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span>스타일 예시 · 샘플 데이터 · 실제 렌더러(교차표와 동일)</span>
-                        {loadingExamples && (
-                            <span style={{ fontSize: '11px', color: '#3B82F6', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span className="loading-pulse-dot" style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#3B82F6' }}></span> 업데이트 중...
-                            </span>
-                        )}
+                {/* 카드 2: 스타일 예시 (접기/펼치기 아코디언 추가) */}
+                <div className="dp-setting-card" style={{ flex: isExampleCollapsed ? '0 0 auto' : 1, display: 'flex', flexDirection: 'column', minHeight: isExampleCollapsed ? 'auto' : 0, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #CBD5E1', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
+                    <div 
+                        className="dp-setting-card-header" 
+                        onClick={() => setIsExampleCollapsed(!isExampleCollapsed)}
+                        style={{ padding: '10px 16px', borderBottom: isExampleCollapsed ? 'none' : '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', fontSize: '13px', background: '#F8FAFC', borderRadius: isExampleCollapsed ? '8px' : '8px 8px 0 0', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span>스타일 예시 · 샘플 데이터 · 실제 렌더러(교차표와 동일)</span>
+                            <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 500 }}>{isExampleCollapsed ? '(클릭하여 펼치기)' : '(클릭하여 접기)'}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {loadingExamples && (
+                                <span style={{ fontSize: '11px', color: '#3B82F6', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span className="loading-pulse-dot" style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#3B82F6' }}></span> 업데이트 중...
+                                </span>
+                            )}
+                            <span style={{ color: '#64748B', fontSize: '12px' }}>{isExampleCollapsed ? '▼' : '▲'}</span>
+                        </div>
                     </div>
 
-                    {/* 예시 탭 버튼 바 (텍스트 링크 방식) */}
-                    <div style={{ display: 'flex', gap: '12px', padding: '8px 16px', borderBottom: '1px solid #F1F5F9', background: '#FFFFFF', flexWrap: 'wrap', flexShrink: 0 }}>
-                        {[
-                            { id: 0, label: '① 교차표 (그룹·통계)' },
-                            { id: 1, label: '② 단순 교차표' },
-                            { id: 2, label: '③ 빈도표' }
-                        ].map((item, idx) => {
-                            const isActive = activeExampleIdx === idx;
-                            return (
-                                <button
-                                    key={idx}
-                                    onClick={() => setActiveExampleIdx(idx)}
-                                    style={{
-                                        background: 'transparent',
-                                        border: 'none',
-                                        fontSize: '11px',
-                                        fontWeight: isActive ? 700 : 500,
-                                        color: isActive ? '#2563EB' : '#64748B',
-                                        cursor: 'pointer',
-                                        padding: '2px 4px',
-                                        borderBottom: isActive ? '2px solid #2563EB' : '2px solid transparent',
-                                        transition: 'all 0.15s ease',
-                                        outline: 'none',
-                                        userSelect: 'none'
-                                    }}
-                                >
-                                    {item.label}
-                                </button>
-                            );
-                        })}
-                    </div>
+                    {!isExampleCollapsed && (
+                        <>
+                            {/* 예시 탭 버튼 바 (텍스트 링크 방식) */}
+                            <div style={{ display: 'flex', gap: '12px', padding: '8px 16px', borderBottom: '1px solid #F1F5F9', background: '#FFFFFF', flexWrap: 'wrap', flexShrink: 0 }}>
+                                {[
+                                    { id: 0, label: '① 교차표 (그룹·통계)' },
+                                    { id: 1, label: '② 단순 교차표' },
+                                    { id: 2, label: '③ 빈도표' }
+                                ].map((item, idx) => {
+                                    const isActive = activeExampleIdx === idx;
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={() => setActiveExampleIdx(idx)}
+                                            style={{
+                                                background: 'transparent',
+                                                border: 'none',
+                                                fontSize: '11px',
+                                                fontWeight: isActive ? 700 : 500,
+                                                color: isActive ? '#2563EB' : '#64748B',
+                                                cursor: 'pointer',
+                                                padding: '2px 4px',
+                                                borderBottom: isActive ? '2px solid #2563EB' : '2px solid transparent',
+                                                transition: 'all 0.15s ease',
+                                                outline: 'none',
+                                                userSelect: 'none'
+                                            }}
+                                        >
+                                            {item.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
 
-                    <div className="dp-setting-card-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: '8px', overflowX: 'auto', background: settings.render.theme_bg || '#FFFFFF', borderRadius: '0 0 8px 8px', position: 'relative' }}>
-                        <iframe
-                            ref={exampleIframeRef}
-                            srcDoc={INITIAL_IFRAME_DOC}
-                            style={{ width: '100%', flex: 1, minHeight: 0, border: 'none', opacity: loadingExamples ? 0.6 : 1, transition: 'opacity 0.2s' }}
-                            title="example-preview"
-                        />
-                    </div>
+                            <div className="dp-setting-card-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: '8px', overflowX: 'auto', background: settings.render.theme_bg || '#FFFFFF', borderRadius: '0 0 8px 8px', position: 'relative' }}>
+                                <iframe
+                                    ref={exampleIframeRef}
+                                    srcDoc={INITIAL_IFRAME_DOC}
+                                    style={{ width: '100%', flex: 1, minHeight: 0, border: 'none', opacity: loadingExamples ? 0.6 : 1, transition: 'opacity 0.2s' }}
+                                    title="example-preview"
+                                />
+                            </div>
+                        </>
+                    )}
                 </div>
 
             </div>
 
             {/* 오른쪽 구획: 테마 프리셋 & 3단 설정 카드 */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', minWidth: '0' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', minWidth: '0' }}>
 
                 {/* 1.5 빠른 프리셋 */}
-                <div style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', padding: '16px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#1E293B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Palette size={16} color="#475569" /> 빠른 테마 프리셋
+                <div style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', userSelect: 'none' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                        <Palette size={15} color="#64748B" /> 빠른 테마 프리셋
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                            {TABLE_THEME_PRESETS.map(preset => (
-                                <button
-                                    key={preset.label}
-                                    style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '4px', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', cursor: 'pointer', background: preset.bg, color: preset.fg, border: preset.border ? `1px solid ${preset.border}` : 'none', whiteSpace: 'nowrap' }}
-                                    onMouseEnter={(e) => e.target.style.opacity = '0.8'}
-                                    onMouseLeave={(e) => e.target.style.opacity = '1'}
-                                    onClick={() => {
-                                        setSettings({ ...settings, render: { ...settings.render, ...preset.colors } });
-                                        if (onUnsavedChange) onUnsavedChange(true);
-                                    }}
-                                >
-                                    {preset.label}
-                                </button>
-                            ))}
-                        </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', flex: 1, justifyContent: 'flex-end', marginLeft: '16px' }}>
+                        {TABLE_THEME_PRESETS.map(preset => (
+                            <button
+                                key={preset.label}
+                                style={{ fontSize: '11px', fontWeight: 600, padding: '5px 10px', borderRadius: '4px', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', cursor: 'pointer', background: preset.bg, color: preset.fg, border: preset.border ? `1px solid ${preset.border}` : 'none', whiteSpace: 'nowrap', transition: 'all 0.15s' }}
+                                onMouseEnter={(e) => e.target.style.opacity = '0.8'}
+                                onMouseLeave={(e) => e.target.style.opacity = '1'}
+                                onClick={() => {
+                                    setSettings({ ...settings, render: { ...settings.render, ...preset.colors } });
+                                    if (onUnsavedChange) onUnsavedChange(true);
+                                }}
+                            >
+                                {preset.label}
+                            </button>
+                        ))}
                     </div>
+                </div>
+
+                {/* 서브 설정 탭 분리 - Pill 스타일 세그먼트 컨트롤 */}
+                <div style={{ 
+                    display: 'flex', 
+                    background: '#F1F5F9', 
+                    borderRadius: '8px', 
+                    padding: '3px', 
+                    marginBottom: '0px', 
+                    gap: '4px',
+                    border: '1px solid #E2E8F0'
+                }}>
+                    {[
+                        { id: 'policy', label: '표시 정책 & 자릿수', icon: <Layout size={16} /> },
+                        { id: 'fontColor', label: '글꼴 & 색상', icon: <Palette size={16} /> },
+                        { id: 'border', label: '구분선 스타일', icon: <Type size={16} /> }
+                    ].map(tab => {
+                        const isActive = activeTab === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                style={{
+                                    flex: 1,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '6px',
+                                    padding: '8px 12px',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    background: isActive ? '#FFFFFF' : 'transparent',
+                                    fontSize: '13px',
+                                    fontWeight: isActive ? 700 : 500,
+                                    color: isActive ? '#2563EB' : '#475569',
+                                    boxShadow: isActive ? '0 2px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' : 'none',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease-in-out',
+                                    whiteSpace: 'nowrap',
+                                    outline: 'none',
+                                    userSelect: 'none'
+                                }}
+                            >
+                                <span style={{ color: isActive ? '#2563EB' : '#64748B', display: 'flex', alignItems: 'center' }}>
+                                    {tab.icon}
+                                </span>
+                                {tab.label}
+                            </button>
+                        );
+                     })}
                 </div>
 
                 {/* 2-1. 테이블 표시 정책 */}
-                <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
-                    <div className="dp-setting-card-header" style={{ padding: '12px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', background: '#F8FAFC', borderRadius: '8px 8px 0 0' }}>
-                        <Layout size={16} color="#475569" /> 테이블 표시 정책
-                    </div>
-                    <div className="dp-setting-card-body" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <div>
-                            <div style={{ fontWeight: 600, fontSize: '12px', color: '#64748B', marginBottom: '8px' }}>기본 표시 여부</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                                {[
-                                    { label: '빈도 기본 표시', field: 'show_n' },
-                                    { label: '비율 기본 표시', field: 'show_percent' },
-                                    { label: '값 0 행(스터브) 숨기기', field: 'hide_zero_stubs' },
-                                    { label: '값 0 열(배너) 숨기기', field: 'hide_zero_banners' },
-                                    { label: 'Base=0 컬럼 숨기기', field: 'hide_zero_base_columns' },
-                                    { label: '엑셀 출력 % 기호 부착', field: 'percent_symbol' },
-                                    { label: 'Base 기본 (괄호)', field: 'show_base_parenthesis', fullWidth: true }
-                                ].map(item => (
-                                    <div
-                                        key={item.field}
-                                        onClick={() => toggleDisplay(item.field)}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F1F5F9', padding: '8px 12px', borderRadius: '6px', ...(item.fullWidth ? { gridColumn: '1 / -1' } : {}) }}
-                                    >
-                                        <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display[item.field] ? '#3B82F6' : '#fff', border: settings.display[item.field] ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            {settings.display[item.field] && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-                                        </div>
-                                        <span style={{ fontWeight: 500 }}>{item.label}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div>
-                            <div style={{ fontWeight: 600, fontSize: '12px', color: '#64748B', marginBottom: '8px' }}>소수점 자릿수</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                                {[
-                                    { label: '빈도 (N)', field: 'n_digits' },
-                                    { label: '비율 (%)', field: 'percent_digits' },
-                                    { label: '평균 (Mean)', field: 'mean_digits' },
-                                    { label: '표준편차 (Std)', field: 'std_digits' },
-                                    { label: '중앙값 (Median)', field: 'median_digits' },
-                                    { label: '분산 (Var)', field: 'var_digits' },
-                                    { label: '최소값 (Min)', field: 'min_digits' },
-                                    { label: '최대값 (Max)', field: 'max_digits' }
-
-
-
-                                ].map((item) => {
-                                    const val = settings.display[item.field] || 0;
-                                    return (
-                                        <div key={item.field} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: '#F1F5F9', borderRadius: '6px' }}>
-                                            <span style={{ fontSize: '11px', color: '#475569', fontWeight: 600 }}>{item.label}</span>
-                                            <div style={{ display: 'flex', alignItems: 'center', background: '#fff', borderRadius: '4px', border: '1px solid #CBD5E1', overflow: 'hidden' }}>
-                                                <button onClick={() => handleChange(`display.${item.field}`, Math.max(0, val - 1))} style={{ width: '22px', height: '22px', background: '#F8FAFC', border: 'none', borderRight: '1px solid #CBD5E1', cursor: 'pointer', fontWeight: 'bold' }}>−</button>
-                                                <div style={{ width: '24px', textAlign: 'center', fontSize: '11px', fontWeight: 600 }}>{val}</div>
-                                                <button onClick={() => handleChange(`display.${item.field}`, Math.min(13, val + 1))} style={{ width: '22px', height: '22px', background: '#F8FAFC', border: 'none', borderLeft: '1px solid #CBD5E1', cursor: 'pointer', fontWeight: 'bold' }}>+</button>
+                {activeTab === 'policy' && (
+                    <div className="dp-setting-card" style={{ flex: 1, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', userSelect: 'none' }}>
+                        <div className="dp-setting-card-body" style={{ flex: 1, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div>
+                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>기본 표시 여부</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {/* 1행: 빈도/비율 표시 (2분할) */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                        {[
+                                            { label: '빈도 기본 표시', field: 'show_n' },
+                                            { label: '비율 기본 표시', field: 'show_percent' }
+                                        ].map(item => (
+                                            <div
+                                                key={item.field}
+                                                onClick={() => toggleDisplay(item.field)}
+                                                style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 14px', borderRadius: '6px' }}
+                                            >
+                                                <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display[item.field] ? '#3B82F6' : '#fff', border: settings.display[item.field] ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    {settings.display[item.field] && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                                                </div>
+                                                <span style={{ fontWeight: 500, fontSize: '12px' }}>{item.label}</span>
                                             </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        <div>
-                            <div style={{ fontWeight: 600, fontSize: '12px', color: '#64748B', marginBottom: '8px' }}>레이아웃 설정</div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: '#F1F5F9', borderRadius: '6px' }}>
-                                    <span style={{ fontSize: '11px', color: '#475569', fontWeight: 600 }}>스터브 그룹 레이아웃</span>
-                                    <select
-                                        value={settings.render.stub_group_layout || 'merge'}
-                                        onChange={(e) => handleChange('render.stub_group_layout', e.target.value)}
-                                        style={{ padding: '4px 8px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none', background: '#fff' }}
-                                    >
-                                        <option value="merge">병합 방식 (Merge)</option>
-                                        <option value="flat">계층 반복 방식 (Flat)</option>
-                                        <option value="row">구분 행 방식 (Row)</option>
-                                    </select>
-                                </div>
-                                <div
-                                    onClick={() => handleChange('render.format_percent_as_column', !settings.render.format_percent_as_column)}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F1F5F9', padding: '8px 12px', borderRadius: '6px' }}
-                                >
-                                    <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.render.format_percent_as_column ? '#3B82F6' : '#fff', border: settings.render.format_percent_as_column ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        {settings.render.format_percent_as_column && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                                        ))}
                                     </div>
-                                    <span style={{ fontWeight: 500 }}>N/% 가로 분리 표시 (열 분할)</span>
+
+                                    {/* 2행: 나머지 2개 (2분할) */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                        {[
+                                            { label: '엑셀 출력 % 기호 부착', field: 'percent_symbol' },
+                                            { label: 'Base 기본 (괄호)', field: 'show_base_parenthesis' }
+                                        ].map(item => (
+                                            <div
+                                                key={item.field}
+                                                onClick={() => toggleDisplay(item.field)}
+                                                style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 14px', borderRadius: '6px' }}
+                                            >
+                                                <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display[item.field] ? '#3B82F6' : '#fff', border: settings.display[item.field] ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    {settings.display[item.field] && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                                                </div>
+                                                <span style={{ fontWeight: 500, fontSize: '12px' }}>{item.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* 3행: 값 0 숨김 관련 3개 (3분할) - 가장 밑줄 */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                                        {[
+                                            { label: '값 0 행(스터브) 숨기기', field: 'hide_zero_stubs' },
+                                            { label: '값 0 열(배너) 숨기기', field: 'hide_zero_banners' },
+                                            { label: 'Base=0 컬럼 숨기기', field: 'hide_zero_base_columns' }
+                                        ].map(item => (
+                                            <div
+                                                key={item.field}
+                                                onClick={() => toggleDisplay(item.field)}
+                                                style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 14px', borderRadius: '6px' }}
+                                            >
+                                                <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display[item.field] ? '#3B82F6' : '#fff', border: settings.display[item.field] ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    {settings.display[item.field] && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                                                </div>
+                                                <span style={{ fontWeight: 500, fontSize: '12px' }}>{item.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>소수점 자릿수</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                    {[
+                                        { label: '빈도 (N)', field: 'n_digits' },
+                                        { label: '비율 (%)', field: 'percent_digits' },
+                                        { label: '평균 (Mean)', field: 'mean_digits' },
+                                        { label: '표준편차 (Std)', field: 'std_digits' },
+                                        { label: '중앙값 (Median)', field: 'median_digits' },
+                                        { label: '분산 (Var)', field: 'var_digits' },
+                                        { label: '최소값 (Min)', field: 'min_digits' },
+                                        { label: '최대값 (Max)', field: 'max_digits' }
+                                    ].map((item) => {
+                                        const val = settings.display[item.field] || 0;
+                                        return (
+                                            <div key={item.field} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: '#F1F5F9', borderRadius: '6px' }}>
+                                                <span style={{ fontSize: '12px', color: '#475569', fontWeight: 600 }}>{item.label}</span>
+                                                <div style={{ display: 'flex', alignItems: 'center', background: '#fff', borderRadius: '4px', border: '1px solid #CBD5E1', overflow: 'hidden' }}>
+                                                    <button onClick={() => handleChange(`display.${item.field}`, Math.max(0, val - 1))} style={{ width: '22px', height: '22px', background: '#F8FAFC', border: 'none', borderRight: '1px solid #CBD5E1', cursor: 'pointer', fontWeight: 'bold' }}>−</button>
+                                                    <div style={{ width: '24px', textAlign: 'center', fontSize: '12px', fontWeight: 600 }}>{val}</div>
+                                                    <button onClick={() => handleChange(`display.${item.field}`, Math.min(13, val + 1))} style={{ width: '22px', height: '22px', background: '#F8FAFC', border: 'none', borderLeft: '1px solid #CBD5E1', cursor: 'pointer', fontWeight: 'bold' }}>+</button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>레이아웃 설정</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px' }}>
+                                        <span style={{ fontSize: '12px', color: '#475569', fontWeight: 600 }}>스터브 그룹 레이아웃</span>
+                                        <select
+                                            value={settings.render.stub_group_layout || 'merge'}
+                                            onChange={(e) => handleChange('render.stub_group_layout', e.target.value)}
+                                            style={{ padding: '4px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none', background: '#fff' }}
+                                        >
+                                            <option value="merge">병합 방식 (Merge)</option>
+                                            <option value="flat">계층 반복 방식 (Flat)</option>
+                                            <option value="row">구분 행 방식 (Row)</option>
+                                        </select>
+                                    </div>
+                                    <div
+                                        onClick={() => handleChange('render.format_percent_as_column', !settings.render.format_percent_as_column)}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 14px', borderRadius: '6px' }}
+                                    >
+                                        <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.render.format_percent_as_column ? '#3B82F6' : '#fff', border: settings.render.format_percent_as_column ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            {settings.render.format_percent_as_column && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                                        </div>
+                                        <span style={{ fontWeight: 500, fontSize: '12px' }}>N/% 가로 분리 표시 (열 분할)</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* 2-2. 글꼴/색상 설정 */}
-                <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
-                    <div className="dp-setting-card-header" style={{ padding: '12px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', background: '#F8FAFC', borderRadius: '8px 8px 0 0' }}>
-                        <Palette size={16} color="#475569" /> 글꼴/색상 설정
-                    </div>
-                    <div className="dp-setting-card-body" style={{ padding: '16px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '20px', rowGap: '12px', alignContent: 'start' }}>
-                            <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '20px', borderBottom: '1px solid #F1F5F9', paddingBottom: '8px', paddingTop: '4px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 2 }}>
-                                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>글꼴</label>
-                                    <select
-                                        value={settings.render.font_family || "Arial, sans-serif"}
-                                        onChange={(e) => handleChange('render.font_family', e.target.value)}
-                                        style={{ flex: 1, padding: '5px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
-                                    >
-                                        <option value="'Spoqa Han Sans Neo', 'SpoqaHanSansNeo', sans-serif">Spoqa Han Sans Neo</option>
-                                        <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
-                                        <option value="'Apple SD Gothic Neo', sans-serif">Apple SD Gothic Neo</option>
-                                        <option value="Arial, sans-serif">Arial</option>
-                                    </select>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, justifyContent: 'flex-end' }}>
-                                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>크기</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #CBD5E1', borderRadius: '4px', padding: '0 8px', background: '#fff', width: '80px', boxSizing: 'border-box' }}>
-                                        <input type="number" value={settings.render.font_size || 12} onChange={(e) => handleChange('render.font_size', Number(e.target.value))} style={{ width: '100%', padding: '5px 0', fontSize: '12px', border: 'none', outline: 'none', textAlign: 'center' }} />
-                                        <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
+                {activeTab === 'fontColor' && (
+                    <div className="dp-setting-card" style={{ flex: 1, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', userSelect: 'none' }}>
+                    <div className="dp-setting-card-body" style={{ flex: 1, padding: '18px 20px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div>
+                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>전역 글꼴 설정</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '12px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', whiteSpace: 'nowrap' }}>글꼴 종류</label>
+                                        <select
+                                            value={settings.render.font_family || "Arial, sans-serif"}
+                                            onChange={(e) => handleChange('render.font_family', e.target.value)}
+                                            style={{ flex: 1, padding: '5px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none', height: '32px' }}
+                                        >
+                                            <option value="'Spoqa Han Sans Neo', 'SpoqaHanSansNeo', sans-serif">Spoqa Han Sans Neo</option>
+                                            <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
+                                            <option value="'Apple SD Gothic Neo', sans-serif">Apple SD Gothic Neo</option>
+                                            <option value="Arial, sans-serif">Arial</option>
+                                        </select>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
+                                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', whiteSpace: 'nowrap' }}>글꼴 크기</label>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #CBD5E1', borderRadius: '4px', padding: '0 8px', background: '#fff', width: '90px', boxSizing: 'border-box', height: '32px' }}>
+                                            <input type="number" value={settings.render.font_size || 12} onChange={(e) => handleChange('render.font_size', Number(e.target.value))} style={{ width: '100%', padding: '5px 0', fontSize: '12px', border: 'none', outline: 'none', textAlign: 'center' }} />
+                                            <span style={{ fontSize: '12px', color: '#94A3B8', fontWeight: 500 }}>px</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '8px', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px', paddingTop: '4px' }}>
-                                <div style={{ fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>영역별 글꼴 (빈 값 설정 시 상위/전역 글꼴 적용)</div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', whiteSpace: 'nowrap' }}>헤더 글꼴</label>
-                                        <select
-                                            value={settings.render.theme_header_font || ""}
-                                            onChange={(e) => handleChange('render.theme_header_font', e.target.value)}
-                                            style={{ flex: 1, padding: '5px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
-                                        >
-                                            <option value="">기본 글꼴 상속</option>
-                                            <option value="'Spoqa Han Sans Neo', 'SpoqaHanSansNeo', sans-serif">Spoqa Han Sans Neo</option>
-                                            <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
-                                            <option value="'Apple SD Gothic Neo', sans-serif">Apple SD Gothic Neo</option>
-                                            <option value="Arial, sans-serif">Arial</option>
-                                        </select>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', whiteSpace: 'nowrap' }}>스터브 글꼴</label>
-                                        <select
-                                            value={settings.render.theme_stub_font || ""}
-                                            onChange={(e) => handleChange('render.theme_stub_font', e.target.value)}
-                                            style={{ flex: 1, padding: '5px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
-                                        >
-                                            <option value="">기본 글꼴 상속</option>
-                                            <option value="'Spoqa Han Sans Neo', 'SpoqaHanSansNeo', sans-serif">Spoqa Han Sans Neo</option>
-                                            <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
-                                            <option value="'Apple SD Gothic Neo', sans-serif">Apple SD Gothic Neo</option>
-                                            <option value="Arial, sans-serif">Arial</option>
-                                        </select>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', whiteSpace: 'nowrap' }}>데이터 글꼴</label>
-                                        <select
-                                            value={settings.render.theme_data_font || ""}
-                                            onChange={(e) => handleChange('render.theme_data_font', e.target.value)}
-                                            style={{ flex: 1, padding: '5px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
-                                        >
-                                            <option value="">기본 글꼴 상속</option>
-                                            <option value="'Spoqa Han Sans Neo', 'SpoqaHanSansNeo', sans-serif">Spoqa Han Sans Neo</option>
-                                            <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
-                                            <option value="'Apple SD Gothic Neo', sans-serif">Apple SD Gothic Neo</option>
-                                            <option value="Arial, sans-serif">Arial</option>
-                                        </select>
-                                    </div>
+                            <div>
+                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>영역별 글꼴 설정</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                                    {[
+                                        { label: '헤더 글꼴', field: 'theme_header_font' },
+                                        { label: '스터브 글꼴', field: 'theme_stub_font' },
+                                        { label: '데이터 글꼴', field: 'theme_data_font' }
+                                    ].map(item => (
+                                        <div key={item.field} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', whiteSpace: 'nowrap' }}>{item.label}</label>
+                                            <select
+                                                value={settings.render[item.field] || ""}
+                                                onChange={(e) => handleChange(`render.${item.field}`, e.target.value)}
+                                                style={{ flex: 1, padding: '5px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none', height: '32px' }}
+                                            >
+                                                <option value="">기본 글꼴 상속</option>
+                                                <option value="'Spoqa Han Sans Neo', 'SpoqaHanSansNeo', sans-serif">Spoqa Han Sans Neo</option>
+                                                <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
+                                                <option value="'Apple SD Gothic Neo', sans-serif">Apple SD Gothic Neo</option>
+                                                <option value="Arial, sans-serif">Arial</option>
+                                            </select>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
 
-                            {[
-                                { label: '헤더 상단 배경', field: 'theme_primary', type: 'color' },
-                                { label: '헤더 상단 글자', field: 'theme_primary_fg', type: 'color' },
-                                { label: '헤더 그룹 배경', field: 'theme_header_group_bg', type: 'color' },
-                                { label: '헤더 그룹 글자', field: 'theme_header_group_fg', type: 'color' },
-                                { label: '구분 헤더 배경', field: 'theme_stub_header_bg', type: 'color' },
-                                { label: '구분 헤더 글자', field: 'theme_stub_header_fg', type: 'color' },
-                                { label: '스터브 구분 배경', field: 'theme_stub_group_bg', type: 'color' },
-                                { label: '스터브 구분 글자', field: 'theme_stub_group_fg', type: 'color' },
-                                { label: '스터브 항목 배경', field: 'theme_stub_leaf_bg', type: 'color' },
-                                { label: '스터브 항목 글자', field: 'theme_stub_leaf_fg', type: 'color' },
-                                { label: '본문 배경', field: 'theme_bg', type: 'color' },
-                                { label: '교차 행 배경', field: 'theme_stripe', type: 'color' },
-                                { label: '본문 글자', field: 'theme_text', type: 'color' },
-                                { label: '보조 글자', field: 'theme_text_muted', type: 'color' },
-                                { label: 'Base 행 강조 배경', field: 'theme_base_bg', type: 'color' },
-                                { label: 'Base 행 강조 글자', field: 'theme_base_fg', type: 'color' },
-                                { label: '통계 행 강조 배경', field: 'theme_etc_bg', type: 'color' },
-                                { label: '통계 행 강조 글자', field: 'theme_etc_fg', type: 'color' },
-                            ].map((item) => (
-                                <div key={item.field} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', borderBottom: '1px solid #F1F5F9', paddingBottom: '8px', paddingTop: '4px' }}>
-                                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>{item.label}</label>
-                                    {item.type === 'color' ? (
-                                        <ColorInput
-                                            value={settings.render[item.field] || ''}
-                                            onChange={(val) => handleChange(`render.${item.field}`, val)}
-                                        />
-                                    ) : (
-                                        <input type={item.type} value={settings.render[item.field] || ''} onChange={(e) => handleChange(`render.${item.field}`, item.type === 'number' ? Number(e.target.value) : e.target.value)} style={{ width: '100px', boxSizing: 'border-box', padding: '5px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }} />
-                                    )}
+                            <div>
+                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>영역별 테마 색상 설정</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', columnGap: '16px', rowGap: '8px' }}>
+                                    {[
+                                        { label: '헤더 상단 배경', field: 'theme_primary' },
+                                        { label: '헤더 상단 글자', field: 'theme_primary_fg' },
+                                        { label: '헤더 그룹 배경', field: 'theme_header_group_bg' },
+                                        { label: '헤더 그룹 글자', field: 'theme_header_group_fg' },
+                                        { label: '구분 헤더 배경', field: 'theme_stub_header_bg' },
+                                        { label: '구분 헤더 글자', field: 'theme_stub_header_fg' },
+                                        { label: '스터브 구분 배경', field: 'theme_stub_group_bg' },
+                                        { label: '스터브 구분 글자', field: 'theme_stub_group_fg' },
+                                        { label: '스터브 항목 배경', field: 'theme_stub_leaf_bg' },
+                                        { label: '스터브 항목 글자', field: 'theme_stub_leaf_fg' },
+                                        { label: '본문 배경', field: 'theme_bg' },
+                                        { label: '교차 행 배경', field: 'theme_stripe' },
+                                        { label: '본문 글자', field: 'theme_text' },
+                                        { label: '보조 글자', field: 'theme_text_muted' },
+                                        { label: 'Base 행 배경', field: 'theme_base_bg' },
+                                        { label: 'Base 행 글자', field: 'theme_base_fg' },
+                                        { label: '통계 행 배경', field: 'theme_etc_bg' },
+                                        { label: '통계 행 글자', field: 'theme_etc_fg' },
+                                    ].map((item) => (
+                                        <div key={item.field} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', borderBottom: '1px solid #F1F5F9', paddingBottom: '4px', paddingTop: '4px' }}>
+                                            <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>{item.label}</label>
+                                            <ColorInput
+                                                value={settings.render[item.field] || ''}
+                                                onChange={(val) => handleChange(`render.${item.field}`, val)}
+                                                width="95px"
+                                                textWidth="55px"
+                                                padding="2px 4px"
+                                                gap="4px"
+                                            />
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
+                            </div>
                         </div>
                     </div>
                 </div>
+            )}
 
                 {/* 2-3. 선 스타일 설정 */}
-                <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', userSelect: 'none' }}>
-                    <div className="dp-setting-card-header" style={{ padding: '12px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', background: '#F8FAFC', borderRadius: '8px 8px 0 0' }}>
-                        <Type size={16} color="#475569" /> 선 스타일 설정
-                    </div>
-                    <div className="dp-setting-card-body" style={{ padding: '12px 16px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <div style={{ marginBottom: '8px' }}>
-                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', borderBottom: '1px solid #E2E8F0', paddingBottom: '4px', marginBottom: '8px' }}>표 외곽선 설정</div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '8px', rowGap: '6px', alignContent: 'start' }}>
+                {activeTab === 'border' && (
+                    <div className="dp-setting-card" style={{ flex: 1, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', userSelect: 'none' }}>
+                    <div className="dp-setting-card-body" style={{ flex: 1, padding: '18px 20px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div style={{ marginBottom: '4px' }}>
+                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>표 외곽선 설정</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '12px', rowGap: '8px', alignContent: 'start' }}>
                                     {[
                                         { group: '표 최상단 선', prefix: 'theme_table_outer_top', color: 'theme_table_outer_top_color', style: 'theme_table_outer_top_style', width: 'theme_table_outer_top_width' },
                                         { group: '표 외곽선 (하단)', prefix: 'theme_table_outer_bottom', color: 'theme_table_outer_bottom_color', style: 'theme_table_outer_bottom_style', width: 'theme_table_outer_bottom_width' },
@@ -866,26 +981,28 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                 onMouseLeave={() => setHoveredBorder(null)}
                                                 style={{
                                                     display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'stretch',
-                                                    gap: '4px',
-                                                    padding: '6px 8px',
-                                                    border: isSelected ? '1px solid #BFDBFE' : '1px solid transparent',
-                                                    borderRadius: '6px',
-                                                    background: isSelected ? '#EFF6FF' : 'transparent',
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    gap: '12px',
+                                                    padding: '8px 12px',
+                                                    border: isSelected ? '1px solid #3B82F6' : '1px solid #E2E8F0',
+                                                    borderRadius: '8px',
+                                                    background: isSelected ? '#EFF6FF' : '#F8FAFC',
                                                     cursor: 'pointer',
-                                                    transition: 'all 0.2s'
+                                                    transition: 'all 0.2s',
+                                                    boxShadow: isSelected ? '0 2px 4px rgba(59, 130, 246, 0.08)' : 'none'
                                                 }}
                                             >
-                                                <div style={{ fontSize: '11px', fontWeight: 600, color: isSelected ? '#1D4ED8' : '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} onClick={(e) => e.stopPropagation()}>
+                                                <div style={{ fontSize: '12px', fontWeight: 600, color: isSelected ? '#2563EB' : '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
                                                     <ColorInput
                                                         value={settings.render[g.color] || ''}
                                                         onChange={(val) => handleChange(`render.${g.color}`, val)}
-                                                        width="95px"
-                                                        textWidth="55px"
-                                                        padding="2px 4px"
-                                                        gap="4px"
+                                                        width="105px"
+                                                        textWidth="65px"
+                                                        padding="3px 6px"
+                                                        gap="6px"
                                                     />
                                                     <LineStylePicker
                                                         value={settings.render[g.style] || 'solid'}
@@ -900,8 +1017,8 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                         }}
                                                         color={settings.render[g.color] || '#000000'}
                                                         direction={i >= 2 ? 'up' : 'down'}
-                                                        width="50px"
-                                                        padding="0 4px"
+                                                        width="60px"
+                                                        padding="0 8px"
                                                     />
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                                                         <input
@@ -916,10 +1033,10 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                                 if (isDouble && val !== '' && val < 3) val = 3;
                                                                 handleChange(`render.${g.width}`, val !== '' ? `${val}px` : '');
                                                             }}
-                                                            style={{ width: '32px', padding: '2px 4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
+                                                            style={{ width: '36px', padding: '4px 6px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
                                                             title="두께(숫자)"
                                                         />
-                                                        <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
+                                                        <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 500 }}>px</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -929,8 +1046,8 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                             </div>
 
                             <div>
-                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', borderBottom: '1px solid #E2E8F0', paddingBottom: '4px', marginBottom: '8px' }}>표 내부 구분선 설정</div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '8px', rowGap: '6px', alignContent: 'start' }}>
+                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>표 내부 구분선 설정</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '12px', rowGap: '8px', alignContent: 'start' }}>
                                     {[
                                         { group: '헤더 최하단 구분선', prefix: 'theme_header_divider', color: 'theme_header_divider_color', style: 'theme_header_divider_style', width: 'theme_header_divider_width' },
                                         { group: '스터브 끝 구분선', prefix: 'theme_stub_divider', color: 'theme_stub_divider_color', style: 'theme_stub_divider_style', width: 'theme_stub_divider_width' },
@@ -950,26 +1067,28 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                 onMouseLeave={() => setHoveredBorder(null)}
                                                 style={{
                                                     display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'stretch',
-                                                    gap: '4px',
-                                                    padding: '6px 8px',
-                                                    border: isSelected ? '1px solid #BFDBFE' : '1px solid transparent',
-                                                    borderRadius: '6px',
-                                                    background: isSelected ? '#EFF6FF' : 'transparent',
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    gap: '12px',
+                                                    padding: '8px 12px',
+                                                    border: isSelected ? '1px solid #3B82F6' : '1px solid #E2E8F0',
+                                                    borderRadius: '8px',
+                                                    background: isSelected ? '#EFF6FF' : '#F8FAFC',
                                                     cursor: 'pointer',
-                                                    transition: 'all 0.2s'
+                                                    transition: 'all 0.2s',
+                                                    boxShadow: isSelected ? '0 2px 4px rgba(59, 130, 246, 0.08)' : 'none'
                                                 }}
                                             >
-                                                <div style={{ fontSize: '11px', fontWeight: 600, color: isSelected ? '#1D4ED8' : '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} onClick={(e) => e.stopPropagation()}>
+                                                <div style={{ fontSize: '12px', fontWeight: 600, color: isSelected ? '#2563EB' : '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
                                                     <ColorInput
                                                         value={settings.render[g.color] || ''}
                                                         onChange={(val) => handleChange(`render.${g.color}`, val)}
-                                                        width="95px"
-                                                        textWidth="55px"
-                                                        padding="2px 4px"
-                                                        gap="4px"
+                                                        width="105px"
+                                                        textWidth="65px"
+                                                        padding="3px 6px"
+                                                        gap="6px"
                                                     />
                                                     <LineStylePicker
                                                         value={settings.render[g.style] || 'solid'}
@@ -984,8 +1103,8 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                         }}
                                                         color={settings.render[g.color] || '#000000'}
                                                         direction={i >= 2 ? 'up' : 'down'}
-                                                        width="50px"
-                                                        padding="0 4px"
+                                                        width="60px"
+                                                        padding="0 8px"
                                                     />
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                                                         <input
@@ -1000,10 +1119,10 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                                 if (isDouble && val !== '' && val < 3) val = 3;
                                                                 handleChange(`render.${g.width}`, val !== '' ? `${val}px` : '');
                                                             }}
-                                                            style={{ width: '32px', padding: '2px 4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
+                                                            style={{ width: '36px', padding: '4px 6px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
                                                             title="두께(숫자)"
                                                         />
-                                                        <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
+                                                        <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 500 }}>px</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1014,6 +1133,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                         </div>
                     </div>
                 </div>
+                )}
             </div>
 
         </div>
