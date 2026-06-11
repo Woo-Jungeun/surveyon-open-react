@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Layout, Type, Palette, Eye } from 'lucide-react';
+import { Layout, Type, Palette, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import { TABLE_THEME_PRESETS } from './TableThemePresets';
 
@@ -120,12 +120,12 @@ const borderNames = {
     theme_table_outer_left: '표 외곽선 (좌측)',
     theme_table_outer_right: '표 외곽선 (우측)',
     theme_header_divider: '헤더 최하단 구분선',
-    theme_stub_divider: '스터브 끝 구분선',
+    theme_stub_divider: '스터브 구분선(세로)',
     theme_section_separator: '섹션 위쪽 구분선',
     theme_grid: '데이터 기본선',
     theme_stub_tier_divider: '스터브 계층선',
     theme_header_tier_divider: '헤더 단 구분선(상위·중위 사이)',
-    theme_banner_divider: '배너 그룹 경계선',
+    theme_banner_divider: '배너 그룹 구분선(세로)',
     theme_data_col_divider: '열 구분선(배너 그룹 내)'
 };
 
@@ -311,50 +311,436 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 const styleEl = doc.getElementById('preview-style');
                 const bodyEl = doc.getElementById('preview-body');
 
-                // 하이라이트 스타일 빌드
+                // 하이라이트 스타일 빌드 (가운데 6px의 넓은 투명 틈새를 두고, 양옆에 5px 두께의 은은하게 뒤가 비치는 반투명(불투명도 30%) 주황색 평행선 두 줄이 감싸도록 섀도우 정의)
                 const activeHighlight = selectedBorder || hoveredBorder;
                 let highlightCss = '';
                 if (activeHighlight) {
-                    highlightCss = `
-                        @keyframes border-pulse {
-                            0% { border-color: #3b82f6 !important; }
-                            50% { border-color: #ef4444 !important; }
-                            100% { border-color: #3b82f6 !important; }
-                        }
-                    `;
                     const borderRules = {
-                        theme_table_outer_top: 'table, .styled-table { border-top: 3px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
-                        theme_table_outer_bottom: 'table, .styled-table { border-bottom: 3px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
-                        theme_table_outer_left: 'table, .styled-table { border-left: 3px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
-                        theme_table_outer_right: 'table, .styled-table { border-right: 3px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
-                        theme_header_divider: 'thead th, thead td, th[class*="header"], td[class*="header"] { border-bottom: 3px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
-                        theme_stub_divider: 'th:first-child, td:first-child, .stub-cell { border-right: 3px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
-                        theme_section_separator: '.section-separator, tr[class*="separator"] td, tr[class*="separator"] th { border-top: 3px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
-                        theme_grid: 'tbody td, tbody th:not(:first-child) { border: 2px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
-                        theme_stub_tier_divider: '.stub-cell:not(:first-child) { border-left: 2px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
-                        theme_header_tier_divider: 'thead tr:not(:last-child) th { border-bottom: 2px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
-                        theme_banner_divider: '.banner-divider-cell, th[class*="banner-group"] { border-right: 3px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }',
-                        theme_data_col_divider: 'tbody td:not(:first-child) { border-right: 2px dashed #3B82F6 !important; animation: border-pulse 1.2s infinite !important; }'
+                        theme_table_outer_top: 'table .injected-outer-top, .styled-table .injected-outer-top { position: relative; z-index: 10; box-shadow: 0 -8px 0 -3px rgba(245, 158, 11, 0.35), inset 0 8px 0 -3px rgba(245, 158, 11, 0.35) !important; }',
+                        theme_table_outer_bottom: 'table .injected-outer-bottom, .styled-table .injected-outer-bottom { position: relative; z-index: 10; box-shadow: 0 8px 0 -3px rgba(245, 158, 11, 0.35), inset 0 -8px 0 -3px rgba(245, 158, 11, 0.35) !important; }',
+                        theme_table_outer_left: 'table .injected-outer-left, .styled-table .injected-outer-left { position: relative; z-index: 10; box-shadow: -8px 0 0 -3px rgba(245, 158, 11, 0.35), inset 8px 0 0 -3px rgba(245, 158, 11, 0.35) !important; }',
+                        theme_table_outer_right: 'table .injected-outer-right, .styled-table .injected-outer-right { position: relative; z-index: 10; box-shadow: 8px 0 0 -3px rgba(245, 158, 11, 0.35), inset -8px 0 0 -3px rgba(245, 158, 11, 0.35) !important; }',
+                        theme_header_divider: 'table thead .injected-header-bottom, .styled-table thead .injected-header-bottom { position: relative; } table thead .injected-header-bottom::after, .styled-table thead .injected-header-bottom::after { content: ""; position: absolute; bottom: -4px; left: 0; right: 0; height: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 20; pointer-events: none; }',
+                        theme_stub_divider: 'table .injected-stub-right, .styled-table .injected-stub-right { position: relative; } table .injected-stub-right::after, .styled-table .injected-stub-right::after { content: ""; position: absolute; top: 0; bottom: -1px; right: -4px; width: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 20; pointer-events: none; }',
+                        theme_section_separator: '.section-separator, table tr[class*="separator"] td, table tr[class*="separator"] th, .styled-table tr[class*="separator"] td, .styled-table tr[class*="separator"] th { position: relative; z-index: 10; box-shadow: inset 0 4px 0 0 rgba(245, 158, 11, 0.35), 0 -4px 0 0 rgba(245, 158, 11, 0.35) !important; }',
+                        theme_grid: 'table tbody td, table tbody th:not(.injected-outer-left), .styled-table tbody td, .styled-table tbody th:not(.injected-outer-left) { position: relative; z-index: 10; box-shadow: inset -8px 0 0 -3px rgba(245, 158, 11, 0.35), 8px 0 0 -3px rgba(245, 158, 11, 0.35), inset 0 -8px 0 -3px rgba(245, 158, 11, 0.35), 0 8px 0 -3px rgba(245, 158, 11, 0.35) !important; }',
+                        theme_stub_tier_divider: 'table .injected-stub-tier-right, .styled-table .injected-stub-tier-right { position: relative; z-index: 110 !important; } table .injected-stub-tier-right::after, .styled-table .injected-stub-tier-right::after { content: ""; position: absolute; top: 0; bottom: -1px; right: -4px; width: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 120 !important; pointer-events: none; }',
+                        theme_header_tier_divider: 'table thead .injected-header-tier, .styled-table thead .injected-header-tier { position: relative; } table thead .injected-header-tier::after, .styled-table thead .injected-header-tier::after { content: ""; position: absolute; bottom: -4px; left: 0; right: 0; height: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 20; pointer-events: none; }',
+                        theme_banner_divider: 'table thead .banner-divider-cell, .styled-table thead .banner-divider-cell, table thead .injected-banner-boundary, .styled-table thead .injected-banner-boundary { position: relative; } table thead .banner-divider-cell::after, .styled-table thead .banner-divider-cell::after, table thead .injected-banner-boundary::after, .styled-table thead .injected-banner-boundary::after { content: ""; position: absolute; top: 0; bottom: -1px; right: -4px; width: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 20; pointer-events: none; }',
+                        theme_data_col_divider: 'table tbody td:not(:first-child), .styled-table tbody td:not(:first-child) { position: relative; } table tbody td:not(:first-child)::before, .styled-table tbody td:not(:first-child)::before { content: ""; position: absolute; top: 0; bottom: -1px; left: -4px; width: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 20; pointer-events: none; }'
                     };
                     if (borderRules[activeHighlight]) {
                         highlightCss += borderRules[activeHighlight];
                     }
                 }
 
+                // 실제 사용자 설정 선 스타일 누락 방지 강제 보정 CSS 빌드 (collapse 모드에서 'none'이 적용되지 않는 현상을 해결하기 위해 'hidden'으로 번역)
+                let userBorderCorrectionCss = '';
+                const r = settings.render;
+                const getStyle = (style) => style || 'solid';
+                if (r) {
+                    // 0단계: 베이스 그리드 적용 (가장 먼저 적용되어야 특정 선들이 이를 덮어쓸 수 있음)
+                    if (r.theme_grid_color) {
+                        const borderGridVal = `${r.theme_grid_width || '1px'} ${getStyle(r.theme_grid_style)} ${r.theme_grid_color}`;
+                        userBorderCorrectionCss += `
+                            table tbody td, table tbody th:not(.injected-outer-left), .styled-table tbody td, .styled-table tbody th:not(.injected-outer-left) {
+                                border-bottom: ${borderGridVal} !important;
+                                border-right: ${borderGridVal} !important;
+                            }
+                        `;
+                    }
+
+                    // 1단계: 스터브 영역 내부의 모든 구분선에 기본적으로 계층선 입힘 (좌우 모두)
+                    if (r.theme_stub_tier_divider_color) {
+                        const borderStubTierVal = `${r.theme_stub_tier_divider_width || '1px'} ${getStyle(r.theme_stub_tier_divider_style)} ${r.theme_stub_tier_divider_color}`;
+                        userBorderCorrectionCss += `
+                            table .injected-stub-tier-right, .styled-table .injected-stub-tier-right {
+                                border-right: ${borderStubTierVal} !important;
+                            }
+                        `;
+                    }
+
+                    // 2단계: 최상단/최하단/최좌측/최우측 외곽선 입혀서 덮어씀
+                    if (r.theme_table_outer_top_width && r.theme_table_outer_top_style) {
+                        const borderTopVal = `${r.theme_table_outer_top_width} ${getStyle(r.theme_table_outer_top_style)} ${r.theme_table_outer_top_color || '#CBD5E1'}`;
+                        userBorderCorrectionCss += `
+                            table, .styled-table {
+                                border-top: ${borderTopVal} !important;
+                            }
+                        `;
+                    }
+                    if (r.theme_table_outer_bottom_width && r.theme_table_outer_bottom_style) {
+                        const borderBottomVal = `${r.theme_table_outer_bottom_width} ${getStyle(r.theme_table_outer_bottom_style)} ${r.theme_table_outer_bottom_color || '#CBD5E1'}`;
+                        userBorderCorrectionCss += `
+                            table, .styled-table {
+                                border-bottom: ${borderBottomVal} !important;
+                            }
+                        `;
+                    }
+                    if (r.theme_table_outer_left_width && r.theme_table_outer_left_style) {
+                        const borderLeftVal = `${r.theme_table_outer_left_width} ${getStyle(r.theme_table_outer_left_style)} ${r.theme_table_outer_left_color || '#CBD5E1'}`;
+                        userBorderCorrectionCss += `
+                            table, .styled-table {
+                                border-left: ${borderLeftVal} !important;
+                            }
+                        `;
+                    }
+                    if (r.theme_table_outer_right_width && r.theme_table_outer_right_style) {
+                        const borderRightVal = `${r.theme_table_outer_right_width} ${getStyle(r.theme_table_outer_right_style)} ${r.theme_table_outer_right_color || '#CBD5E1'}`;
+                        userBorderCorrectionCss += `
+                            table, .styled-table {
+                                border-right: ${borderRightVal} !important;
+                            }
+                        `;
+                    }
+
+                    // 4단계: 헤더 내부의 구분선 (최하단 / 단 구분선)
+                    if (r.theme_header_divider_width && r.theme_header_divider_style) {
+                        const borderHeaderDivVal = `${r.theme_header_divider_width} ${getStyle(r.theme_header_divider_style)} ${r.theme_header_divider_color || '#1F2937'}`;
+                        userBorderCorrectionCss += `
+                            table thead .injected-header-bottom, .styled-table thead .injected-header-bottom {
+                                border-bottom: ${borderHeaderDivVal} !important;
+                            }
+                        `;
+                    }
+                    if (r.theme_header_tier_divider_width && r.theme_header_tier_divider_style) {
+                        const borderHeaderTierVal = `${r.theme_header_tier_divider_width} ${getStyle(r.theme_header_tier_divider_style)} ${r.theme_header_tier_divider_color}`;
+                        userBorderCorrectionCss += `
+                            table thead .injected-header-tier, .styled-table thead .injected-header-tier {
+                                border-bottom: ${borderHeaderTierVal} !important;
+                            }
+                        `;
+                    }
+
+                    // 3단계: 스터브 끝 구분선 입혀서 맨 오른쪽 스터브의 우측선만 덮어씀
+                    if (r.theme_stub_divider_width && r.theme_stub_divider_style) {
+                        const borderStubDivVal = `${r.theme_stub_divider_width} ${getStyle(r.theme_stub_divider_style)} ${r.theme_stub_divider_color || '#94A3B8'}`;
+                        userBorderCorrectionCss += `
+                            table .injected-stub-right, .styled-table .injected-stub-right {
+                                border-right: ${borderStubDivVal} !important;
+                            }
+                        `;
+                    }
+
+                    if (r.theme_section_separator_width && r.theme_section_separator_style) {
+                        const borderSecVal = `${r.theme_section_separator_width} ${getStyle(r.theme_section_separator_style)} ${r.theme_section_separator_color || '#94A3B8'}`;
+                        userBorderCorrectionCss += `
+                            .section-separator, table tr[class*="separator"] td, table tr[class*="separator"] th, .styled-table tr[class*="separator"] td, .styled-table tr[class*="separator"] th {
+                                border-top: ${borderSecVal} !important;
+                            }
+                        `;
+                    }
+                    if (r.theme_header_tier_divider_color) {
+                        const borderHeaderTierVal = `${r.theme_header_tier_divider_width || '1px'} ${getStyle(r.theme_header_tier_divider_style)} ${r.theme_header_tier_divider_color}`;
+                        userBorderCorrectionCss += `
+                            table thead tr:not(:last-child) th, table thead tr:not(:last-child) td, .styled-table thead tr:not(:last-child) th, .styled-table thead tr:not(:last-child) td {
+                                border-bottom: ${borderHeaderTierVal} !important;
+                            }
+                        `;
+                    }
+                    if (r.theme_banner_divider_color) {
+                        const borderBannerVal = `${r.theme_banner_divider_width || '1px'} ${getStyle(r.theme_banner_divider_style)} ${r.theme_banner_divider_color}`;
+                        userBorderCorrectionCss += `
+                            table thead .banner-divider-cell, .styled-table thead .banner-divider-cell, table thead .injected-banner-boundary, .styled-table thead .injected-banner-boundary {
+                                border-right: ${borderBannerVal} !important;
+                            }
+                        `;
+                    }
+                    if (r.theme_data_col_divider_color) {
+                        const borderColVal = `${r.theme_data_col_divider_width || '1px'} ${getStyle(r.theme_data_col_divider_style)} ${r.theme_data_col_divider_color}`;
+                        userBorderCorrectionCss += `
+                            table tbody td:not(:first-child), .styled-table tbody td:not(:first-child) {
+                                border-left: ${borderColVal} !important;
+                            }
+                        `;
+                    }
+                }
+
+                const bindCellEvents = () => {
+                    const table = doc.querySelector('table');
+                    if (!table) return;
+
+                    const thead = table.querySelector('thead');
+                    const firstRow = thead ? thead.querySelector('tr') : table.querySelector('tr');
+                    const bannerBoundaryCols = new Set();
+                    let stubWidth = 0;
+                    const grid = [];
+                    const allRows = Array.from(table.querySelectorAll('tr'));
+                    let maxColIdx = 0;
+
+                    allRows.forEach((tr, r) => {
+                        const rowCells = Array.from(tr.querySelectorAll('th, td'));
+                        rowCells.forEach(cell => {
+                            const rowspan = parseInt(cell.getAttribute('rowspan') || '1', 10);
+                            const colspan = parseInt(cell.getAttribute('colspan') || '1', 10);
+
+                            if (!grid[r]) grid[r] = [];
+                            let startCol = 0;
+                            while (grid[r][startCol]) startCol++;
+
+                            for (let i = 0; i < rowspan; i++) {
+                                if (!grid[r + i]) grid[r + i] = [];
+                                for (let j = 0; j < colspan; j++) {
+                                    grid[r + i][startCol + j] = true;
+                                }
+                            }
+
+                            const rightEdgeColIdx = startCol + colspan - 1;
+                            cell.dataset.colIndex = startCol;
+                            cell.dataset.rightEdge = rightEdgeColIdx;
+                            maxColIdx = Math.max(maxColIdx, rightEdgeColIdx);
+
+                            const isStub = cell.classList.contains('stub-cell') ||
+                                cell.classList.contains('stub-header-cell') ||
+                                cell.classList.contains('stub-header') ||
+                                (cell.className && typeof cell.className === 'string' && cell.className.includes('stub')) ||
+                                (r === 0 && startCol === 0) ||
+                                (cell.textContent && cell.textContent.trim() === '구분');
+                            if (isStub) {
+                                stubWidth = Math.max(stubWidth, rightEdgeColIdx + 1);
+                            }
+
+                            if (r === 0 && !isStub) {
+                                bannerBoundaryCols.add(rightEdgeColIdx);
+                            }
+                        });
+                    });
+
+                    const maxRowIdx = allRows.length - 1;
+                    allRows.forEach((tr, r) => {
+                        const rowCells = tr.querySelectorAll('th, td');
+
+                        let isSeparatorRow = false;
+                        if (tr.style.borderTopWidth && parseInt(tr.style.borderTopWidth, 10) > 1) isSeparatorRow = true;
+                        if (tr.style.borderTopStyle && tr.style.borderTopStyle !== 'solid' && tr.style.borderTopStyle !== 'none') isSeparatorRow = true;
+
+                        rowCells.forEach((cell, idx) => {
+                            if (cell.style.borderTopWidth && parseInt(cell.style.borderTopWidth, 10) > 1) isSeparatorRow = true;
+                            if (cell.style.borderTopStyle && cell.style.borderTopStyle !== 'solid' && cell.style.borderTopStyle !== 'none') isSeparatorRow = true;
+
+                            // 텍스트 기반 폴백: 선 스타일이 1px solid(기본)일 때도 확실하게 통계행(구분선 행)을 감지하기 위함
+                            if (idx < 2) {
+                                const text = cell.textContent.trim();
+                                if (['통계', '계', '소계', '평균', '표준편차', '최대값', '최소값', 'Base'].includes(text)) {
+                                    isSeparatorRow = true;
+                                }
+                            }
+
+                            const cIndex = parseInt(cell.dataset.colIndex, 10);
+                            const rEdge = parseInt(cell.dataset.rightEdge, 10);
+                            const rSpan = parseInt(cell.getAttribute('rowspan') || '1', 10);
+
+                            if (r === 0) cell.classList.add('injected-outer-top');
+                            if (r + rSpan - 1 === maxRowIdx) cell.classList.add('injected-outer-bottom');
+                            if (cIndex === 0) cell.classList.add('injected-outer-left');
+                            if (rEdge === maxColIdx) cell.classList.add('injected-outer-right');
+
+                            const isStub = cell.classList.contains('stub-cell') ||
+                                cell.classList.contains('stub-header-cell') ||
+                                cell.classList.contains('stub-header') ||
+                                cell.className?.includes('stub');
+                            if (isStub) {
+                                if (rEdge < stubWidth - 1) cell.classList.add('injected-stub-tier-right');
+                                if (cIndex > 0) cell.classList.add('injected-stub-tier-left');
+                                if (rEdge === stubWidth - 1) cell.classList.add('injected-stub-right');
+                            }
+                        });
+
+                        if (isSeparatorRow) {
+                            tr.classList.add('separator');
+                        }
+                    });
+
+                    const theadRowsList = thead ? Array.from(thead.querySelectorAll('tr')) : [];
+
+                    // Calculate the actual maximum bottom edge of the header
+                    let maxBottomEdge = 0;
+                    theadRowsList.forEach((tr, r) => {
+                        const cells = tr.querySelectorAll('th, td');
+                        cells.forEach(cell => {
+                            const rSpan = parseInt(cell.getAttribute('rowspan') || '1', 10);
+                            if (r + rSpan > maxBottomEdge) {
+                                maxBottomEdge = r + rSpan;
+                            }
+                        });
+                    });
+
+                    theadRowsList.forEach((tr, r) => {
+                        const cells = tr.querySelectorAll('th, td');
+                        cells.forEach((cell, cIdx) => {
+                            const rightEdge = parseInt(cell.dataset.rightEdge, 10);
+                            const rSpan = parseInt(cell.getAttribute('rowspan') || '1', 10);
+
+                            // Patch API bug: Empty filler cells in the stub area should have stub-header class for background color
+                            if ((!cell.textContent || cell.textContent.trim() === '') && rightEdge < stubWidth) {
+                                cell.classList.add('stub-header');
+                            }
+
+                            const isStub = cell.classList.contains('stub-cell') ||
+                                cell.classList.contains('stub-header-cell') ||
+                                cell.classList.contains('stub-header') ||
+                                (cell.className && typeof cell.className === 'string' && cell.className.includes('stub')) ||
+                                (cell.textContent && cell.textContent.trim() === '구분') ||
+                                (rightEdge < stubWidth);
+
+                            // Calculate if the cell physically touches the bottom boundary of the header
+                            if (r + rSpan === maxBottomEdge) {
+                                cell.classList.add('injected-header-bottom');
+                            } else if (!isStub) {
+                                cell.classList.add('injected-header-tier');
+                            }
+
+                            if (bannerBoundaryCols.has(rightEdge)) {
+                                cell.classList.add('injected-banner-boundary');
+                            }
+                        });
+                    });
+
+                    const cells = doc.querySelectorAll('table th, table td');
+                    cells.forEach(cell => {
+                        let currentLocalBorderType = null;
+
+                        cell.onmousemove = (e) => {
+                            const rect = cell.getBoundingClientRect();
+                            const x = e.clientX - rect.left;
+                            const y = e.clientY - rect.top;
+                            const w = rect.width;
+                            const h = rect.height;
+                            const margin = 5;
+
+                            let borderType = null;
+
+                            const tr = cell.parentElement;
+                            if (!tr) return;
+                            const parentContainer = tr.parentElement;
+                            if (!parentContainer) return;
+                            const activeTable = parentContainer.closest('table');
+                            if (!activeTable) return;
+
+                            const r = allRows.indexOf(tr);
+                            const rowspan = parseInt(cell.getAttribute('rowspan') || '1', 10);
+                            const isFirstRow = (r === 0);
+                            const isLastRow = (r + rowspan - 1 === maxRowIdx);
+
+                            const currentColIndex = parseInt(cell.dataset.colIndex, 10);
+                            const rightColIdx = parseInt(cell.dataset.rightEdge, 10);
+                            const isFirstCol = (currentColIndex === 0);
+                            const isLastCol = (rightColIdx === maxColIdx);
+
+                            const activeThead = activeTable.querySelector('thead');
+                            const inThead = activeThead ? activeThead.contains(cell) : false;
+                            const theadRows = activeThead ? Array.from(activeThead.querySelectorAll('tr')) : [];
+                            const maxTheadRowIdx = theadRows.length - 1;
+
+                            // A cell's bottom touches the header bottom if its row index + rowspan reaches the last header row.
+                            // In case maxTheadRowIdx is calculated incorrectly due to API bugs, we also check if it has the injected class
+                            const isCellAtTheadBottom = inThead && ((r + rowspan - 1 >= maxTheadRowIdx) || cell.classList.contains('injected-header-bottom'));
+                            const isCellInsideThead = inThead && !isCellAtTheadBottom;
+
+                            const isStubCell = cell.classList.contains('stub-cell') ||
+                                cell.classList.contains('stub-header-cell') ||
+                                cell.classList.contains('stub-header') ||
+                                cell.className?.includes('stub') ||
+                                (cell.getAttribute('colspan') === null && cell.tagName === 'TH' && isFirstCol) ||
+                                (cell.textContent && cell.textContent.trim() === '구분') ||
+                                (rightColIdx < stubWidth);
+
+                            const nearTop = (y <= margin);
+                            const nearBottom = (y >= h - margin);
+                            const nearLeft = (x <= margin);
+                            const nearRight = (x >= w - margin);
+
+                            if (nearTop) {
+                                if (isFirstRow) borderType = 'theme_table_outer_top';
+                                else if (tr.classList.contains('separator') || tr.className.includes('separator')) borderType = 'theme_section_separator';
+                                else borderType = 'theme_grid';
+                            } else if (nearBottom) {
+                                if (isLastRow) borderType = 'theme_table_outer_bottom';
+                                else if (isCellAtTheadBottom) borderType = 'theme_header_divider';
+                                else if (isCellInsideThead && !isStubCell) borderType = 'theme_header_tier_divider';
+                                else borderType = 'theme_grid';
+                            } else if (nearLeft) {
+                                if (isFirstCol) {
+                                    borderType = 'theme_table_outer_left';
+                                } else {
+                                    const prevColIdx = currentColIndex - 1;
+                                    if (isStubCell && prevColIdx < stubWidth - 1) {
+                                        borderType = 'theme_stub_tier_divider';
+                                    } else if (currentColIndex === stubWidth) {
+                                        borderType = 'theme_stub_divider';
+                                    } else {
+                                        if (bannerBoundaryCols.has(prevColIdx)) {
+                                            borderType = inThead ? 'theme_banner_divider' : 'theme_data_col_divider';
+                                        } else {
+                                            borderType = 'theme_data_col_divider';
+                                        }
+                                    }
+                                }
+                            } else if (nearRight) {
+                                if (isLastCol) {
+                                    borderType = 'theme_table_outer_right';
+                                } else if (isStubCell) {
+                                    if (rightColIdx === stubWidth - 1) {
+                                        borderType = 'theme_stub_divider';
+                                    } else {
+                                        borderType = 'theme_stub_tier_divider';
+                                    }
+                                } else {
+                                    const rightBoundaryIdx = rightColIdx;
+                                    if (bannerBoundaryCols.has(rightBoundaryIdx)) {
+                                        borderType = inThead ? 'theme_banner_divider' : 'theme_data_col_divider';
+                                    } else {
+                                        borderType = 'theme_data_col_divider';
+                                    }
+                                }
+                            }
+
+                            if (borderType) {
+                                currentLocalBorderType = borderType;
+                                cell.style.cursor = 'pointer';
+                                setHoveredBorder(borderType);
+                            } else {
+                                currentLocalBorderType = null;
+                                cell.style.cursor = 'default';
+                                setHoveredBorder(null);
+                            }
+                        };
+
+                        cell.onmouseleave = () => {
+                            currentLocalBorderType = null;
+                            cell.style.cursor = 'default';
+                            setHoveredBorder(null);
+                        };
+
+                        cell.onclick = (e) => {
+                            if (currentLocalBorderType) {
+                                setSelectedBorder(currentLocalBorderType);
+                                setActiveTab('border');
+                                e.preventDefault();
+                                e.stopPropagation();
+                            }
+                        };
+                    });
+                };
+
                 if (styleEl && bodyEl) {
                     styleEl.textContent = `
                         html, body {
-                            height: 100%;
+                            min-height: 100%;
+                            height: auto;
                             margin: 0;
-                            overflow-y: hidden;
+                            overflow: auto !important;
                         }
                         ${data.css || ''}
                         body table, table {
-                            margin: 0 auto !important;
+                            margin: 18px auto !important;
+                            border-collapse: collapse !important;
                         }
+                        ${userBorderCorrectionCss}
                         ${highlightCss}
                     `;
                     bodyEl.innerHTML = data.html || '';
+                    bindCellEvents();
                 } else {
                     doc.open();
                     doc.write(`
@@ -364,21 +750,27 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                             <meta charset="utf-8">
                             <style id="preview-style">
                                 html, body {
-                                    height: 100%;
+                                    min-height: 100%;
+                                    height: auto;
                                     margin: 0;
-                                    overflow-y: hidden;
+                                    overflow: auto !important;
                                 }
                                 ${data.css || ''}
-                                body table, table { margin: 0 auto !important; }
+                                body table, table { 
+                                    margin: auto !important; 
+                                    border-collapse: collapse !important;
+                                }
+                                ${userBorderCorrectionCss}
                                 ${highlightCss}
                             </style>
                         </head>
-                        <body id="preview-body" style="margin: 0; padding: 0 8px; background-color: transparent; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100%; box-sizing: border-box;">
+                        <body id="preview-body" style="margin: 0; padding: 16px; background-color: transparent; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100%; box-sizing: border-box;">
                             ${data.html || ''}
                         </body>
                         </html>
                     `);
                     doc.close();
+                    bindCellEvents();
                 }
             } catch (e) {
                 console.warn("Iframe update error: ", e);
@@ -551,15 +943,12 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 {/* 카드 1: 실제 표 미리보기 */}
                 <div className="dp-setting-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #CBD5E1', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
                     <div className="dp-setting-card-header" style={{ padding: '10px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', fontSize: '13px', background: '#F8FAFC', borderRadius: '8px 8px 0 0', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span>미리보기 · 실제 표(교차표와 동일 렌더)</span>
+                        <span>실제 표 미리보기</span>
                         {loadingReal && (
                             <span style={{ fontSize: '11px', color: '#3B82F6', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <span className="loading-pulse-dot" style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#3B82F6' }}></span> 업데이트 중...
                             </span>
                         )}
-                    </div>
-                    <div style={{ padding: '8px 16px', borderBottom: '1px solid #F1F5F9', background: '#FFFFFF', flexShrink: 0 }}>
-                        <span style={{ fontSize: '11px', color: '#94A3B8' }}>실제 표 미리보기 · 저장 전 현재 설정 그대로</span>
                     </div>
 
                     {/* 선 선택 시 조작 도구 바 */}
@@ -591,13 +980,13 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 {/* 카드 2: 스타일 예시 */}
                 {/* 카드 2: 스타일 예시 (접기/펼치기 아코디언 추가) */}
                 <div className="dp-setting-card" style={{ flex: isExampleCollapsed ? '0 0 auto' : 1, display: 'flex', flexDirection: 'column', minHeight: isExampleCollapsed ? 'auto' : 0, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #CBD5E1', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
-                    <div 
-                        className="dp-setting-card-header" 
+                    <div
+                        className="dp-setting-card-header"
                         onClick={() => setIsExampleCollapsed(!isExampleCollapsed)}
                         style={{ padding: '10px 16px', borderBottom: isExampleCollapsed ? 'none' : '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', fontSize: '13px', background: '#F8FAFC', borderRadius: isExampleCollapsed ? '8px' : '8px 8px 0 0', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
                     >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span>스타일 예시 · 샘플 데이터 · 실제 렌더러(교차표와 동일)</span>
+                            <span>샘플 데이터 예시</span>
                             <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 500 }}>{isExampleCollapsed ? '(클릭하여 펼치기)' : '(클릭하여 접기)'}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -606,7 +995,11 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     <span className="loading-pulse-dot" style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#3B82F6' }}></span> 업데이트 중...
                                 </span>
                             )}
-                            <span style={{ color: '#64748B', fontSize: '12px' }}>{isExampleCollapsed ? '▼' : '▲'}</span>
+                            {isExampleCollapsed ? (
+                                <ChevronDown size={16} style={{ color: '#64748B' }} />
+                            ) : (
+                                <ChevronUp size={16} style={{ color: '#64748B' }} />
+                            )}
                         </div>
                     </div>
 
@@ -685,12 +1078,12 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 </div>
 
                 {/* 서브 설정 탭 분리 - Pill 스타일 세그먼트 컨트롤 */}
-                <div style={{ 
-                    display: 'flex', 
-                    background: '#F1F5F9', 
-                    borderRadius: '8px', 
-                    padding: '3px', 
-                    marginBottom: '0px', 
+                <div style={{
+                    display: 'flex',
+                    background: '#F1F5F9',
+                    borderRadius: '8px',
+                    padding: '3px',
+                    marginBottom: '0px',
                     gap: '4px',
                     border: '1px solid #E2E8F0'
                 }}>
@@ -731,7 +1124,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 {tab.label}
                             </button>
                         );
-                     })}
+                    })}
                 </div>
 
                 {/* 2-1. 테이블 표시 정책 */}
@@ -839,9 +1232,8 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             onChange={(e) => handleChange('render.stub_group_layout', e.target.value)}
                                             style={{ padding: '4px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none', background: '#fff' }}
                                         >
-                                            <option value="merge">병합 방식 (Merge)</option>
-                                            <option value="flat">계층 반복 방식 (Flat)</option>
-                                            <option value="row">구분 행 방식 (Row)</option>
+                                            <option value="merge">라벨 셀 병합</option>
+                                            <option value="row">라벨 셀 분할</option>
                                         </select>
                                     </div>
                                     <div
@@ -862,277 +1254,281 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 {/* 2-2. 글꼴/색상 설정 */}
                 {activeTab === 'fontColor' && (
                     <div className="dp-setting-card" style={{ flex: 1, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', userSelect: 'none' }}>
-                    <div className="dp-setting-card-body" style={{ flex: 1, padding: '18px 20px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <div>
-                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>전역 글꼴 설정</div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '12px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', whiteSpace: 'nowrap' }}>글꼴 종류</label>
-                                        <select
-                                            value={settings.render.font_family || "Arial, sans-serif"}
-                                            onChange={(e) => handleChange('render.font_family', e.target.value)}
-                                            style={{ flex: 1, padding: '5px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none', height: '32px' }}
-                                        >
-                                            <option value="'Spoqa Han Sans Neo', 'SpoqaHanSansNeo', sans-serif">Spoqa Han Sans Neo</option>
-                                            <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
-                                            <option value="'Apple SD Gothic Neo', sans-serif">Apple SD Gothic Neo</option>
-                                            <option value="Arial, sans-serif">Arial</option>
-                                        </select>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
-                                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', whiteSpace: 'nowrap' }}>글꼴 크기</label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #CBD5E1', borderRadius: '4px', padding: '0 8px', background: '#fff', width: '90px', boxSizing: 'border-box', height: '32px' }}>
-                                            <input type="number" value={settings.render.font_size || 12} onChange={(e) => handleChange('render.font_size', Number(e.target.value))} style={{ width: '100%', padding: '5px 0', fontSize: '12px', border: 'none', outline: 'none', textAlign: 'center' }} />
-                                            <span style={{ fontSize: '12px', color: '#94A3B8', fontWeight: 500 }}>px</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>영역별 글꼴 설정</div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-                                    {[
-                                        { label: '헤더 글꼴', field: 'theme_header_font' },
-                                        { label: '스터브 글꼴', field: 'theme_stub_font' },
-                                        { label: '데이터 글꼴', field: 'theme_data_font' }
-                                    ].map(item => (
-                                        <div key={item.field} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', whiteSpace: 'nowrap' }}>{item.label}</label>
+                        <div className="dp-setting-card-body" style={{ flex: 1, padding: '18px 20px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <div>
+                                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>전역 글꼴 설정</div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '12px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', whiteSpace: 'nowrap' }}>글꼴 종류</label>
                                             <select
-                                                value={settings.render[item.field] || ""}
-                                                onChange={(e) => handleChange(`render.${item.field}`, e.target.value)}
+                                                value={settings.render.font_family || "Arial, sans-serif"}
+                                                onChange={(e) => handleChange('render.font_family', e.target.value)}
                                                 style={{ flex: 1, padding: '5px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none', height: '32px' }}
                                             >
-                                                <option value="">기본 글꼴 상속</option>
                                                 <option value="'Spoqa Han Sans Neo', 'SpoqaHanSansNeo', sans-serif">Spoqa Han Sans Neo</option>
                                                 <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
                                                 <option value="'Apple SD Gothic Neo', sans-serif">Apple SD Gothic Neo</option>
                                                 <option value="Arial, sans-serif">Arial</option>
                                             </select>
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div>
-                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>영역별 테마 색상 설정</div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', columnGap: '16px', rowGap: '8px' }}>
-                                    {[
-                                        { label: '헤더 상단 배경', field: 'theme_primary' },
-                                        { label: '헤더 상단 글자', field: 'theme_primary_fg' },
-                                        { label: '헤더 그룹 배경', field: 'theme_header_group_bg' },
-                                        { label: '헤더 그룹 글자', field: 'theme_header_group_fg' },
-                                        { label: '구분 헤더 배경', field: 'theme_stub_header_bg' },
-                                        { label: '구분 헤더 글자', field: 'theme_stub_header_fg' },
-                                        { label: '스터브 구분 배경', field: 'theme_stub_group_bg' },
-                                        { label: '스터브 구분 글자', field: 'theme_stub_group_fg' },
-                                        { label: '스터브 항목 배경', field: 'theme_stub_leaf_bg' },
-                                        { label: '스터브 항목 글자', field: 'theme_stub_leaf_fg' },
-                                        { label: '본문 배경', field: 'theme_bg' },
-                                        { label: '교차 행 배경', field: 'theme_stripe' },
-                                        { label: '본문 글자', field: 'theme_text' },
-                                        { label: '보조 글자', field: 'theme_text_muted' },
-                                        { label: 'Base 행 배경', field: 'theme_base_bg' },
-                                        { label: 'Base 행 글자', field: 'theme_base_fg' },
-                                        { label: '통계 행 배경', field: 'theme_etc_bg' },
-                                        { label: '통계 행 글자', field: 'theme_etc_fg' },
-                                    ].map((item) => (
-                                        <div key={item.field} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', borderBottom: '1px solid #F1F5F9', paddingBottom: '4px', paddingTop: '4px' }}>
-                                            <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>{item.label}</label>
-                                            <ColorInput
-                                                value={settings.render[item.field] || ''}
-                                                onChange={(val) => handleChange(`render.${item.field}`, val)}
-                                                width="95px"
-                                                textWidth="55px"
-                                                padding="2px 4px"
-                                                gap="4px"
-                                            />
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
+                                            <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', whiteSpace: 'nowrap' }}>글꼴 크기</label>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #CBD5E1', borderRadius: '4px', padding: '0 8px', background: '#fff', width: '90px', boxSizing: 'border-box', height: '32px' }}>
+                                                <input type="number" value={settings.render.font_size || 12} onChange={(e) => handleChange('render.font_size', Number(e.target.value))} style={{ width: '100%', padding: '5px 0', fontSize: '12px', border: 'none', outline: 'none', textAlign: 'center' }} />
+                                                <span style={{ fontSize: '12px', color: '#94A3B8', fontWeight: 500 }}>px</span>
+                                            </div>
                                         </div>
-                                    ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>영역별 글꼴 설정</div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                                        {[
+                                            { label: '헤더 글꼴', field: 'theme_header_font' },
+                                            { label: '스터브 글꼴', field: 'theme_stub_font' },
+                                            { label: '데이터 글꼴', field: 'theme_data_font' }
+                                        ].map(item => (
+                                            <div key={item.field} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', whiteSpace: 'nowrap' }}>{item.label}</label>
+                                                <select
+                                                    value={settings.render[item.field] || ""}
+                                                    onChange={(e) => handleChange(`render.${item.field}`, e.target.value)}
+                                                    style={{ flex: 1, padding: '5px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none', height: '32px' }}
+                                                >
+                                                    <option value="">기본 글꼴 상속</option>
+                                                    <option value="'Spoqa Han Sans Neo', 'SpoqaHanSansNeo', sans-serif">Spoqa Han Sans Neo</option>
+                                                    <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
+                                                    <option value="'Apple SD Gothic Neo', sans-serif">Apple SD Gothic Neo</option>
+                                                    <option value="Arial, sans-serif">Arial</option>
+                                                </select>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>영역별 테마 색상 설정</div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', columnGap: '16px', rowGap: '8px' }}>
+                                        {[
+                                            { label: '헤더 상단 배경', field: 'theme_primary' },
+                                            { label: '헤더 상단 글자', field: 'theme_primary_fg' },
+                                            { label: '헤더 그룹 배경', field: 'theme_header_group_bg' },
+                                            { label: '헤더 그룹 글자', field: 'theme_header_group_fg' },
+                                            { label: '구분 헤더 배경', field: 'theme_stub_header_bg' },
+                                            { label: '구분 헤더 글자', field: 'theme_stub_header_fg' },
+                                            { label: '스터브 구분 배경', field: 'theme_stub_group_bg' },
+                                            { label: '스터브 구분 글자', field: 'theme_stub_group_fg' },
+                                            { label: '스터브 항목 배경', field: 'theme_stub_leaf_bg' },
+                                            { label: '스터브 항목 글자', field: 'theme_stub_leaf_fg' },
+                                            { label: '본문 배경', field: 'theme_bg' },
+                                            { label: '교차 행 배경', field: 'theme_stripe' },
+                                            { label: '본문 글자', field: 'theme_text' },
+                                            { label: '보조 글자', field: 'theme_text_muted' },
+                                            { label: 'Base 행 배경', field: 'theme_base_bg' },
+                                            { label: 'Base 행 글자', field: 'theme_base_fg' },
+                                            { label: '통계 행 배경', field: 'theme_etc_bg' },
+                                            { label: '통계 행 글자', field: 'theme_etc_fg' },
+                                        ].map((item) => (
+                                            <div key={item.field} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', borderBottom: '1px solid #F1F5F9', paddingBottom: '4px', paddingTop: '4px' }}>
+                                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>{item.label}</label>
+                                                <ColorInput
+                                                    value={settings.render[item.field] || ''}
+                                                    onChange={(val) => handleChange(`render.${item.field}`, val)}
+                                                    width="95px"
+                                                    textWidth="55px"
+                                                    padding="2px 4px"
+                                                    gap="4px"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
                 {/* 2-3. 선 스타일 설정 */}
                 {activeTab === 'border' && (
                     <div className="dp-setting-card" style={{ flex: 1, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', userSelect: 'none' }}>
-                    <div className="dp-setting-card-body" style={{ flex: 1, padding: '18px 20px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <div style={{ marginBottom: '4px' }}>
-                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>표 외곽선 설정</div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '12px', rowGap: '8px', alignContent: 'start' }}>
-                                    {[
-                                        { group: '표 최상단 선', prefix: 'theme_table_outer_top', color: 'theme_table_outer_top_color', style: 'theme_table_outer_top_style', width: 'theme_table_outer_top_width' },
-                                        { group: '표 외곽선 (하단)', prefix: 'theme_table_outer_bottom', color: 'theme_table_outer_bottom_color', style: 'theme_table_outer_bottom_style', width: 'theme_table_outer_bottom_width' },
-                                        { group: '표 외곽선 (좌측)', prefix: 'theme_table_outer_left', color: 'theme_table_outer_left_color', style: 'theme_table_outer_left_style', width: 'theme_table_outer_left_width' },
-                                        { group: '표 외곽선 (우측)', prefix: 'theme_table_outer_right', color: 'theme_table_outer_right_color', style: 'theme_table_outer_right_style', width: 'theme_table_outer_right_width' },
-                                    ].map((g, i) => {
-                                        const isSelected = selectedBorder === g.prefix;
-                                        return (
-                                            <div
-                                                key={g.group}
-                                                onClick={() => setSelectedBorder(g.prefix)}
-                                                onMouseEnter={() => setHoveredBorder(g.prefix)}
-                                                onMouseLeave={() => setHoveredBorder(null)}
-                                                style={{
-                                                    display: 'flex',
-                                                    flexDirection: 'row',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    gap: '12px',
-                                                    padding: '8px 12px',
-                                                    border: isSelected ? '1px solid #3B82F6' : '1px solid #E2E8F0',
-                                                    borderRadius: '8px',
-                                                    background: isSelected ? '#EFF6FF' : '#F8FAFC',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.2s',
-                                                    boxShadow: isSelected ? '0 2px 4px rgba(59, 130, 246, 0.08)' : 'none'
-                                                }}
-                                            >
-                                                <div style={{ fontSize: '12px', fontWeight: 600, color: isSelected ? '#2563EB' : '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
-                                                    <ColorInput
-                                                        value={settings.render[g.color] || ''}
-                                                        onChange={(val) => handleChange(`render.${g.color}`, val)}
-                                                        width="105px"
-                                                        textWidth="65px"
-                                                        padding="3px 6px"
-                                                        gap="6px"
-                                                    />
-                                                    <LineStylePicker
-                                                        value={settings.render[g.style] || 'solid'}
-                                                        onChange={(val) => {
-                                                            handleChange(`render.${g.style}`, val);
-                                                            if (val === 'double') {
-                                                                const curWidth = parseInt((settings.render[g.width] || '0').replace('px', ''), 10);
-                                                                if (!curWidth || curWidth < 3) {
-                                                                    handleChange(`render.${g.width}`, '3px');
-                                                                }
-                                                            }
-                                                        }}
-                                                        color={settings.render[g.color] || '#000000'}
-                                                        direction={i >= 2 ? 'up' : 'down'}
-                                                        width="60px"
-                                                        padding="0 8px"
-                                                    />
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                                                        <input
-                                                            type="number"
-                                                            min={settings.render[g.style] === 'double' ? 3 : 0}
-                                                            max="10"
-                                                            value={(settings.render[g.width] || '').replace('px', '')}
-                                                            placeholder={settings.render[g.style] === 'double' ? '3' : '1'}
-                                                            onChange={(e) => {
-                                                                const isDouble = settings.render[g.style] === 'double';
-                                                                let val = e.target.value ? Number(e.target.value) : '';
-                                                                if (isDouble && val !== '' && val < 3) val = 3;
-                                                                handleChange(`render.${g.width}`, val !== '' ? `${val}px` : '');
-                                                            }}
-                                                            style={{ width: '36px', padding: '4px 6px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
-                                                            title="두께(숫자)"
+                        <div className="dp-setting-card-body" style={{ flex: 1, padding: '18px 20px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <div style={{ marginBottom: '4px' }}>
+                                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>표 외곽선 설정</div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '12px', rowGap: '8px', alignContent: 'start' }}>
+                                        {[
+                                            { group: '표 최상단 선', prefix: 'theme_table_outer_top', color: 'theme_table_outer_top_color', style: 'theme_table_outer_top_style', width: 'theme_table_outer_top_width' },
+                                            { group: '표 외곽선 (하단)', prefix: 'theme_table_outer_bottom', color: 'theme_table_outer_bottom_color', style: 'theme_table_outer_bottom_style', width: 'theme_table_outer_bottom_width' },
+                                            { group: '표 외곽선 (좌측)', prefix: 'theme_table_outer_left', color: 'theme_table_outer_left_color', style: 'theme_table_outer_left_style', width: 'theme_table_outer_left_width' },
+                                            { group: '표 외곽선 (우측)', prefix: 'theme_table_outer_right', color: 'theme_table_outer_right_color', style: 'theme_table_outer_right_style', width: 'theme_table_outer_right_width' },
+                                        ].map((g, i) => {
+                                            const isSelected = selectedBorder === g.prefix;
+                                            return (
+                                                <div
+                                                    key={g.group}
+                                                    onClick={() => setSelectedBorder(g.prefix)}
+                                                    onMouseEnter={() => setHoveredBorder(g.prefix)}
+                                                    onMouseLeave={() => setHoveredBorder(null)}
+                                                    style={{
+                                                        display: 'flex',
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        gap: '12px',
+                                                        padding: '8px 12px',
+                                                        border: isSelected ? '2px solid #2563EB' : '1px solid #E2E8F0',
+                                                        borderRadius: '8px',
+                                                        background: 'transparent',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.2s',
+                                                        boxShadow: isSelected ? '0 0 0 3px rgba(37, 99, 235, 0.15)' : 'none'
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <div style={{ fontSize: '12px', fontWeight: isSelected ? 700 : 600, color: isSelected ? '#2563EB' : '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
+                                                    </div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
+                                                        <ColorInput
+                                                            value={settings.render[g.color] || ''}
+                                                            onChange={(val) => handleChange(`render.${g.color}`, val)}
+                                                            width="105px"
+                                                            textWidth="65px"
+                                                            padding="3px 6px"
+                                                            gap="6px"
                                                         />
-                                                        <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 500 }}>px</span>
+                                                        <LineStylePicker
+                                                            value={settings.render[g.style] || 'solid'}
+                                                            onChange={(val) => {
+                                                                handleChange(`render.${g.style}`, val);
+                                                                if (val === 'double') {
+                                                                    const curWidth = parseInt((settings.render[g.width] || '0').replace('px', ''), 10);
+                                                                    if (!curWidth || curWidth < 3) {
+                                                                        handleChange(`render.${g.width}`, '3px');
+                                                                    }
+                                                                }
+                                                            }}
+                                                            color={settings.render[g.color] || '#000000'}
+                                                            direction={i >= 2 ? 'up' : 'down'}
+                                                            width="60px"
+                                                            padding="0 8px"
+                                                        />
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                                            <input
+                                                                type="number"
+                                                                min={settings.render[g.style] === 'double' ? 3 : 0}
+                                                                max="10"
+                                                                value={(settings.render[g.width] || '').replace('px', '')}
+                                                                placeholder={settings.render[g.style] === 'double' ? '3' : '1'}
+                                                                onChange={(e) => {
+                                                                    const isDouble = settings.render[g.style] === 'double';
+                                                                    let val = e.target.value ? Number(e.target.value) : '';
+                                                                    if (isDouble && val !== '' && val < 3) val = 3;
+                                                                    handleChange(`render.${g.width}`, val !== '' ? `${val}px` : '');
+                                                                }}
+                                                                style={{ width: '36px', padding: '4px 6px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
+                                                                title="두께(숫자)"
+                                                            />
+                                                            <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 500 }}>px</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div>
-                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>표 내부 구분선 설정</div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '12px', rowGap: '8px', alignContent: 'start' }}>
-                                    {[
-                                        { group: '헤더 최하단 구분선', prefix: 'theme_header_divider', color: 'theme_header_divider_color', style: 'theme_header_divider_style', width: 'theme_header_divider_width' },
-                                        { group: '스터브 끝 구분선', prefix: 'theme_stub_divider', color: 'theme_stub_divider_color', style: 'theme_stub_divider_style', width: 'theme_stub_divider_width' },
-                                        { group: '섹션 위쪽 구분선', prefix: 'theme_section_separator', color: 'theme_section_separator_color', style: 'theme_section_separator_style', width: 'theme_section_separator_width' },
-                                        { group: '데이터 기본선', prefix: 'theme_grid', color: 'theme_grid_color', style: 'theme_grid_style', width: 'theme_grid_width' },
-                                        { group: '스터브 계층선', prefix: 'theme_stub_tier_divider', color: 'theme_stub_tier_divider_color', style: 'theme_stub_tier_divider_style', width: 'theme_stub_tier_divider_width' },
-                                        { group: '헤더 단 구분선(상위·중위 사이)', prefix: 'theme_header_tier_divider', color: 'theme_header_tier_divider_color', style: 'theme_header_tier_divider_style', width: 'theme_header_tier_divider_width' },
-                                        { group: '배너 그룹 경계선', prefix: 'theme_banner_divider', color: 'theme_banner_divider_color', style: 'theme_banner_divider_style', width: 'theme_banner_divider_width' },
-                                        { group: '열 구분선(배너 그룹 내)', prefix: 'theme_data_col_divider', color: 'theme_data_col_divider_color', style: 'theme_data_col_divider_style', width: 'theme_data_col_divider_width' },
-                                    ].map((g, i) => {
-                                        const isSelected = selectedBorder === g.prefix;
-                                        return (
-                                            <div
-                                                key={g.group}
-                                                onClick={() => setSelectedBorder(g.prefix)}
-                                                onMouseEnter={() => setHoveredBorder(g.prefix)}
-                                                onMouseLeave={() => setHoveredBorder(null)}
-                                                style={{
-                                                    display: 'flex',
-                                                    flexDirection: 'row',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    gap: '12px',
-                                                    padding: '8px 12px',
-                                                    border: isSelected ? '1px solid #3B82F6' : '1px solid #E2E8F0',
-                                                    borderRadius: '8px',
-                                                    background: isSelected ? '#EFF6FF' : '#F8FAFC',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.2s',
-                                                    boxShadow: isSelected ? '0 2px 4px rgba(59, 130, 246, 0.08)' : 'none'
-                                                }}
-                                            >
-                                                <div style={{ fontSize: '12px', fontWeight: 600, color: isSelected ? '#2563EB' : '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
-                                                    <ColorInput
-                                                        value={settings.render[g.color] || ''}
-                                                        onChange={(val) => handleChange(`render.${g.color}`, val)}
-                                                        width="105px"
-                                                        textWidth="65px"
-                                                        padding="3px 6px"
-                                                        gap="6px"
-                                                    />
-                                                    <LineStylePicker
-                                                        value={settings.render[g.style] || 'solid'}
-                                                        onChange={(val) => {
-                                                            handleChange(`render.${g.style}`, val);
-                                                            if (val === 'double') {
-                                                                const curWidth = parseInt((settings.render[g.width] || '0').replace('px', ''), 10);
-                                                                if (!curWidth || curWidth < 3) {
-                                                                    handleChange(`render.${g.width}`, '3px');
-                                                                }
-                                                            }
-                                                        }}
-                                                        color={settings.render[g.color] || '#000000'}
-                                                        direction={i >= 2 ? 'up' : 'down'}
-                                                        width="60px"
-                                                        padding="0 8px"
-                                                    />
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                                                        <input
-                                                            type="number"
-                                                            min={settings.render[g.style] === 'double' ? 3 : 0}
-                                                            max="10"
-                                                            value={(settings.render[g.width] || '').replace('px', '')}
-                                                            placeholder={settings.render[g.style] === 'double' ? '3' : '1'}
-                                                            onChange={(e) => {
-                                                                const isDouble = settings.render[g.style] === 'double';
-                                                                let val = e.target.value ? Number(e.target.value) : '';
-                                                                if (isDouble && val !== '' && val < 3) val = 3;
-                                                                handleChange(`render.${g.width}`, val !== '' ? `${val}px` : '');
-                                                            }}
-                                                            style={{ width: '36px', padding: '4px 6px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
-                                                            title="두께(숫자)"
+                                <div>
+                                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>표 내부 구분선 설정</div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '12px', rowGap: '8px', alignContent: 'start' }}>
+                                        {[
+                                            { group: '헤더 최하단 구분선', prefix: 'theme_header_divider', color: 'theme_header_divider_color', style: 'theme_header_divider_style', width: 'theme_header_divider_width' },
+                                            { group: '스터브 끝 구분선', prefix: 'theme_stub_divider', color: 'theme_stub_divider_color', style: 'theme_stub_divider_style', width: 'theme_stub_divider_width' },
+                                            { group: '섹션 위쪽 구분선', prefix: 'theme_section_separator', color: 'theme_section_separator_color', style: 'theme_section_separator_style', width: 'theme_section_separator_width' },
+                                            { group: '데이터 기본선', prefix: 'theme_grid', color: 'theme_grid_color', style: 'theme_grid_style', width: 'theme_grid_width' },
+                                            { group: '스터브 계층선', prefix: 'theme_stub_tier_divider', color: 'theme_stub_tier_divider_color', style: 'theme_stub_tier_divider_style', width: 'theme_stub_tier_divider_width' },
+                                            { group: '헤더 단 구분선(상위·중위 사이)', prefix: 'theme_header_tier_divider', color: 'theme_header_tier_divider_color', style: 'theme_header_tier_divider_style', width: 'theme_header_tier_divider_width' },
+                                            { group: '배너 그룹 경계선', prefix: 'theme_banner_divider', color: 'theme_banner_divider_color', style: 'theme_banner_divider_style', width: 'theme_banner_divider_width' },
+                                            { group: '열 구분선(배너 그룹 내)', prefix: 'theme_data_col_divider', color: 'theme_data_col_divider_color', style: 'theme_data_col_divider_style', width: 'theme_data_col_divider_width' },
+                                        ].map((g, i) => {
+                                            const isSelected = selectedBorder === g.prefix;
+                                            return (
+                                                <div
+                                                    key={g.group}
+                                                    onClick={() => setSelectedBorder(g.prefix)}
+                                                    onMouseEnter={() => setHoveredBorder(g.prefix)}
+                                                    onMouseLeave={() => setHoveredBorder(null)}
+                                                    style={{
+                                                        display: 'flex',
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        gap: '12px',
+                                                        padding: '8px 12px',
+                                                        border: isSelected ? '2px solid #2563EB' : '1px solid #E2E8F0',
+                                                        borderRadius: '8px',
+                                                        background: 'transparent',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.2s',
+                                                        boxShadow: isSelected ? '0 0 0 3px rgba(37, 99, 235, 0.15)' : 'none'
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <div style={{ fontSize: '12px', fontWeight: isSelected ? 700 : 600, color: isSelected ? '#2563EB' : '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
+                                                    </div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
+                                                        <ColorInput
+                                                            value={settings.render[g.color] || ''}
+                                                            onChange={(val) => handleChange(`render.${g.color}`, val)}
+                                                            width="105px"
+                                                            textWidth="65px"
+                                                            padding="3px 6px"
+                                                            gap="6px"
                                                         />
-                                                        <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 500 }}>px</span>
+                                                        <LineStylePicker
+                                                            value={settings.render[g.style] || 'solid'}
+                                                            onChange={(val) => {
+                                                                handleChange(`render.${g.style}`, val);
+                                                                if (val === 'double') {
+                                                                    const curWidth = parseInt((settings.render[g.width] || '0').replace('px', ''), 10);
+                                                                    if (!curWidth || curWidth < 3) {
+                                                                        handleChange(`render.${g.width}`, '3px');
+                                                                    }
+                                                                }
+                                                            }}
+                                                            color={settings.render[g.color] || '#000000'}
+                                                            direction={i >= 2 ? 'up' : 'down'}
+                                                            width="60px"
+                                                            padding="0 8px"
+                                                        />
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                                            <input
+                                                                type="number"
+                                                                min={settings.render[g.style] === 'double' ? 3 : 0}
+                                                                max="10"
+                                                                value={(settings.render[g.width] || '').replace('px', '')}
+                                                                placeholder={settings.render[g.style] === 'double' ? '3' : '1'}
+                                                                onChange={(e) => {
+                                                                    const isDouble = settings.render[g.style] === 'double';
+                                                                    let val = e.target.value ? Number(e.target.value) : '';
+                                                                    if (isDouble && val !== '' && val < 3) val = 3;
+                                                                    handleChange(`render.${g.width}`, val !== '' ? `${val}px` : '');
+                                                                }}
+                                                                style={{ width: '36px', padding: '4px 6px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
+                                                                title="두께(숫자)"
+                                                            />
+                                                            <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 500 }}>px</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 )}
             </div>
 
