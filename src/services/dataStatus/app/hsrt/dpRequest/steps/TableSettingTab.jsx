@@ -130,10 +130,18 @@ const borderNames = {
 };
 
 const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
-    const [selectedBorder, setSelectedBorder] = useState('theme_table_outer_top');
+    const [selectedBorder, setSelectedBorder] = useState(null);
     const [hoveredBorder, setHoveredBorder] = useState(null);
     const [activeTab, setActiveTab] = useState('policy'); // 'policy', 'fontColor', 'border'
     const [isExampleCollapsed, setIsExampleCollapsed] = useState(true);
+
+    useEffect(() => {
+        if (activeTab === 'border') {
+            setSelectedBorder('theme_table_outer_top');
+        } else {
+            setSelectedBorder(null);
+        }
+    }, [activeTab]);
 
     const auth = useSelector((store) => store.auth);
     const { getOverviewStyled, getStyleExamples } = DpRequestPageApi();
@@ -312,7 +320,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 const bodyEl = doc.getElementById('preview-body');
 
                 // 하이라이트 스타일 빌드 (가운데 6px의 넓은 투명 틈새를 두고, 양옆에 5px 두께의 은은하게 뒤가 비치는 반투명(불투명도 30%) 주황색 평행선 두 줄이 감싸도록 섀도우 정의)
-                const activeHighlight = selectedBorder || hoveredBorder;
+                const activeHighlight = activeTab === 'border' ? (selectedBorder || hoveredBorder) : null;
                 let highlightCss = '';
                 if (activeHighlight) {
                     const borderRules = {
@@ -607,6 +615,13 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
 
                     const cells = doc.querySelectorAll('table th, table td');
                     cells.forEach(cell => {
+                        if (activeTab !== 'border') {
+                            cell.onmousemove = null;
+                            cell.onmouseleave = null;
+                            cell.onclick = null;
+                            cell.style.cursor = 'default';
+                            return;
+                        }
                         let currentLocalBorderType = null;
 
                         cell.onmousemove = (e) => {
@@ -799,13 +814,13 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
 
     useEffect(() => {
         updateIframeContent(realIframeRef, realPreviewData);
-    }, [realPreviewData, selectedBorder, hoveredBorder]);
+    }, [realPreviewData, selectedBorder, hoveredBorder, activeTab]);
 
     useEffect(() => {
         if (!isExampleCollapsed) {
             updateIframeContent(exampleIframeRef, examplesPreviewData);
         }
-    }, [examplesPreviewData, selectedBorder, hoveredBorder, isExampleCollapsed]);
+    }, [examplesPreviewData, selectedBorder, hoveredBorder, isExampleCollapsed, activeTab]);
 
     useEffect(() => {
         if (!pageId || !auth?.user?.userId) return;

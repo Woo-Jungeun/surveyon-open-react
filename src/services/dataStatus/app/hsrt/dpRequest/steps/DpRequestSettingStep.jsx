@@ -718,7 +718,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     transition: 'all 0.2s ease',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '6px'
+                                    gap: '6px',
+                                    userSelect: 'none'
                                 }}
                             >
                                 {tab.label}
