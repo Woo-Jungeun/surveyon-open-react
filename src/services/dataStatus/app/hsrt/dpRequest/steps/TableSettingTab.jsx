@@ -329,7 +329,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                         theme_table_outer_left: 'table .injected-outer-left, .styled-table .injected-outer-left { position: relative; z-index: 10; box-shadow: -8px 0 0 -3px rgba(245, 158, 11, 0.35), inset 8px 0 0 -3px rgba(245, 158, 11, 0.35) !important; }',
                         theme_table_outer_right: 'table .injected-outer-right, .styled-table .injected-outer-right { position: relative; z-index: 10; box-shadow: 8px 0 0 -3px rgba(245, 158, 11, 0.35), inset -8px 0 0 -3px rgba(245, 158, 11, 0.35) !important; }',
                         theme_header_divider: 'table thead .injected-header-bottom, .styled-table thead .injected-header-bottom { position: relative; } table thead .injected-header-bottom::after, .styled-table thead .injected-header-bottom::after { content: ""; position: absolute; bottom: -4px; left: 0; right: 0; height: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 20; pointer-events: none; }',
-                        theme_stub_divider: 'table .injected-stub-right, .styled-table .injected-stub-right { position: relative; } table .injected-stub-right::after, .styled-table .injected-stub-right::after { content: ""; position: absolute; top: 0; bottom: -1px; right: -4px; width: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 20; pointer-events: none; }',
+                        theme_stub_divider: 'table .injected-stub-right, .styled-table .injected-stub-right { position: relative; z-index: 110 !important; } table .injected-stub-right::after, .styled-table .injected-stub-right::after { content: ""; position: absolute; top: 0; bottom: -1px; right: -4px; width: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 120 !important; pointer-events: none; }',
                         theme_section_separator: '.section-separator, table tr[class*="separator"] td, table tr[class*="separator"] th, .styled-table tr[class*="separator"] td, .styled-table tr[class*="separator"] th { position: relative; z-index: 10; box-shadow: inset 0 4px 0 0 rgba(245, 158, 11, 0.35), 0 -4px 0 0 rgba(245, 158, 11, 0.35) !important; }',
                         theme_grid: 'table tbody td, table tbody th:not(.injected-outer-left), .styled-table tbody td, .styled-table tbody th:not(.injected-outer-left) { position: relative; z-index: 10; box-shadow: inset -8px 0 0 -3px rgba(245, 158, 11, 0.35), 8px 0 0 -3px rgba(245, 158, 11, 0.35), inset 0 -8px 0 -3px rgba(245, 158, 11, 0.35), 0 8px 0 -3px rgba(245, 158, 11, 0.35) !important; }',
                         theme_stub_tier_divider: 'table td.injected-stub-tier-left.injected-stub-tier-left, table th.injected-stub-tier-left.injected-stub-tier-left { position: relative; z-index: 110 !important; } table td.injected-stub-tier-left.injected-stub-tier-left::before, table th.injected-stub-tier-left.injected-stub-tier-left::before { content: ""; position: absolute; top: 0; bottom: -1px; left: -4px; width: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 120 !important; pointer-events: none; }',
@@ -339,131 +339,6 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                     };
                     if (borderRules[activeHighlight]) {
                         highlightCss += borderRules[activeHighlight];
-                    }
-                }
-
-                // 실제 사용자 설정 선 스타일 누락 방지 강제 보정 CSS 빌드 (collapse 모드에서 'none'이 적용되지 않는 현상을 해결하기 위해 'hidden'으로 번역)
-                let userBorderCorrectionCss = '';
-                const r = settings.render;
-                const getStyle = (style) => style || 'solid';
-                if (r) {
-                    // 0단계: 베이스 그리드 적용 (가장 먼저 적용되어야 특정 선들이 이를 덮어쓸 수 있음)
-                    if (r.theme_grid_color) {
-                        const borderGridVal = `${r.theme_grid_width || '1px'} ${getStyle(r.theme_grid_style)} ${r.theme_grid_color}`;
-                        userBorderCorrectionCss += `
-                            table tbody td, table tbody th:not(.injected-outer-left), .styled-table tbody td, .styled-table tbody th:not(.injected-outer-left) {
-                                border-bottom: ${borderGridVal} !important;
-                                border-right: ${borderGridVal} !important;
-                            }
-                        `;
-                    }
-
-                    // 1단계: 스터브 영역 내부의 모든 구분선에 기본적으로 계층선 입힘 (좌우 모두)
-                    if (r.theme_stub_tier_divider_color) {
-                        const borderStubTierVal = `${r.theme_stub_tier_divider_width || '1px'} ${getStyle(r.theme_stub_tier_divider_style)} ${r.theme_stub_tier_divider_color}`;
-                        userBorderCorrectionCss += `
-                            table .injected-stub-tier-right, .styled-table .injected-stub-tier-right {
-                                border-right: ${borderStubTierVal} !important;
-                            }
-                            table .injected-stub-tier-left, .styled-table .injected-stub-tier-left {
-                                border-left: ${borderStubTierVal} !important;
-                            }
-                        `;
-                    }
-
-                    // 2단계: 최상단/최하단/최좌측/최우측 외곽선 입혀서 덮어씀
-                    if (r.theme_table_outer_top_width && r.theme_table_outer_top_style) {
-                        const borderTopVal = `${r.theme_table_outer_top_width} ${getStyle(r.theme_table_outer_top_style)} ${r.theme_table_outer_top_color || '#CBD5E1'}`;
-                        userBorderCorrectionCss += `
-                            table, .styled-table {
-                                border-top: ${borderTopVal} !important;
-                            }
-                        `;
-                    }
-                    if (r.theme_table_outer_bottom_width && r.theme_table_outer_bottom_style) {
-                        const borderBottomVal = `${r.theme_table_outer_bottom_width} ${getStyle(r.theme_table_outer_bottom_style)} ${r.theme_table_outer_bottom_color || '#CBD5E1'}`;
-                        userBorderCorrectionCss += `
-                            table, .styled-table {
-                                border-bottom: ${borderBottomVal} !important;
-                            }
-                        `;
-                    }
-                    if (r.theme_table_outer_left_width && r.theme_table_outer_left_style) {
-                        const borderLeftVal = `${r.theme_table_outer_left_width} ${getStyle(r.theme_table_outer_left_style)} ${r.theme_table_outer_left_color || '#CBD5E1'}`;
-                        userBorderCorrectionCss += `
-                            table, .styled-table {
-                                border-left: ${borderLeftVal} !important;
-                            }
-                        `;
-                    }
-                    if (r.theme_table_outer_right_width && r.theme_table_outer_right_style) {
-                        const borderRightVal = `${r.theme_table_outer_right_width} ${getStyle(r.theme_table_outer_right_style)} ${r.theme_table_outer_right_color || '#CBD5E1'}`;
-                        userBorderCorrectionCss += `
-                            table, .styled-table {
-                                border-right: ${borderRightVal} !important;
-                            }
-                        `;
-                    }
-
-                    // 4단계: 헤더 내부의 구분선 (최하단 / 단 구분선)
-                    if (r.theme_header_divider_width && r.theme_header_divider_style) {
-                        const borderHeaderDivVal = `${r.theme_header_divider_width} ${getStyle(r.theme_header_divider_style)} ${r.theme_header_divider_color || '#1F2937'}`;
-                        userBorderCorrectionCss += `
-                            table thead .injected-header-bottom, .styled-table thead .injected-header-bottom {
-                                border-bottom: ${borderHeaderDivVal} !important;
-                            }
-                        `;
-                    }
-                    if (r.theme_header_tier_divider_width && r.theme_header_tier_divider_style) {
-                        const borderHeaderTierVal = `${r.theme_header_tier_divider_width} ${getStyle(r.theme_header_tier_divider_style)} ${r.theme_header_tier_divider_color}`;
-                        userBorderCorrectionCss += `
-                            table thead .injected-header-tier, .styled-table thead .injected-header-tier {
-                                border-bottom: ${borderHeaderTierVal} !important;
-                            }
-                        `;
-                    }
-
-                    // 3단계: 스터브 끝 구분선 입혀서 맨 오른쪽 스터브의 우측선만 덮어씀
-                    if (r.theme_stub_divider_width && r.theme_stub_divider_style) {
-                        const borderStubDivVal = `${r.theme_stub_divider_width} ${getStyle(r.theme_stub_divider_style)} ${r.theme_stub_divider_color || '#94A3B8'}`;
-                        userBorderCorrectionCss += `
-                            table .injected-stub-right, .styled-table .injected-stub-right {
-                                border-right: ${borderStubDivVal} !important;
-                            }
-                        `;
-                    }
-
-                    if (r.theme_section_separator_width && r.theme_section_separator_style) {
-                        const borderSecVal = `${r.theme_section_separator_width} ${getStyle(r.theme_section_separator_style)} ${r.theme_section_separator_color || '#94A3B8'}`;
-                        userBorderCorrectionCss += `
-                            .section-separator, table tr[class*="separator"] td, table tr[class*="separator"] th, .styled-table tr[class*="separator"] td, .styled-table tr[class*="separator"] th {
-                                border-top: ${borderSecVal} !important;
-                            }
-                        `;
-                    }
-                    if (r.theme_header_tier_divider_color) {
-                        const borderHeaderTierVal = `${r.theme_header_tier_divider_width || '1px'} ${getStyle(r.theme_header_tier_divider_style)} ${r.theme_header_tier_divider_color}`;
-                        userBorderCorrectionCss += `
-                            table thead tr:not(:last-child) th, table thead tr:not(:last-child) td, .styled-table thead tr:not(:last-child) th, .styled-table thead tr:not(:last-child) td {
-                                border-bottom: ${borderHeaderTierVal} !important;
-                            }
-                        `;
-                    }
-                    if (r.theme_banner_divider_color) {
-                        const borderBannerVal = `${r.theme_banner_divider_width || '1px'} ${getStyle(r.theme_banner_divider_style)} ${r.theme_banner_divider_color}`;
-                        userBorderCorrectionCss += `
-                            table thead .banner-divider-cell, .styled-table thead .banner-divider-cell, table thead .injected-banner-boundary, .styled-table thead .injected-banner-boundary {
-                                border-right: ${borderBannerVal} !important;
-                            }
-                        `;
-                    }
-                    if (r.theme_data_col_divider_color) {
-                        const borderColVal = `${r.theme_data_col_divider_width || '1px'} ${getStyle(r.theme_data_col_divider_style)} ${r.theme_data_col_divider_color}`;
-                        userBorderCorrectionCss += `
-                            table .injected-data-col-divider, .styled-table .injected-data-col-divider {
-                                border-left: ${borderColVal} !important;
-                            }
-                        `;
                     }
                 }
 
@@ -501,12 +376,14 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                             cell.dataset.rightEdge = rightEdgeColIdx;
                             maxColIdx = Math.max(maxColIdx, rightEdgeColIdx);
 
+                            const textVal = cell.textContent ? cell.textContent.trim() : '';
                             const isStub = cell.classList.contains('stub-cell') ||
                                 cell.classList.contains('stub-header-cell') ||
                                 cell.classList.contains('stub-header') ||
                                 (cell.className && typeof cell.className === 'string' && cell.className.includes('stub')) ||
                                 (r === 0 && startCol === 0) ||
-                                (cell.textContent && cell.textContent.trim() === '구분');
+                                (textVal === '구분') ||
+                                (startCol < 4 && ['base', '평균', '소계', '합계', '계', '통계', '표준편차', '최대값', '최소값', 'std', 'mean'].includes(textVal.toLowerCase()));
                             if (isStub) {
                                 stubWidth = Math.max(stubWidth, rightEdgeColIdx + 1);
                             }
@@ -546,17 +423,17 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                             if (cIndex === 0) cell.classList.add('injected-outer-left');
                             if (rEdge === maxColIdx) cell.classList.add('injected-outer-right');
 
+                            const inThead = thead && thead.contains(cell);
                             const isStub = cell.classList.contains('stub-cell') ||
                                 cell.classList.contains('stub-header-cell') ||
                                 cell.classList.contains('stub-header') ||
                                 (cell.className && typeof cell.className === 'string' && cell.className.includes('stub')) ||
                                 (cIndex < stubWidth);
                             if (isStub) {
-                                if (rEdge < stubWidth - 1) cell.classList.add('injected-stub-tier-right');
-                                if (cIndex > 0) cell.classList.add('injected-stub-tier-left');
-                                if (rEdge === stubWidth - 1) cell.classList.add('injected-stub-right');
+                                if (rEdge < stubWidth - 1 && !inThead) cell.classList.add('injected-stub-tier-right');
+                                if (cIndex > 0 && !inThead) cell.classList.add('injected-stub-tier-left');
+                                if (rEdge === stubWidth - 1 && !inThead) cell.classList.add('injected-stub-right');
                             } else if (cIndex > stubWidth) {
-                                const inThead = thead && thead.contains(cell);
                                 if (!(inThead && bannerBoundaryCols.has(cIndex - 1))) {
                                     cell.classList.add('injected-data-col-divider');
                                 }
@@ -688,9 +565,9 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     borderType = 'theme_table_outer_left';
                                 } else {
                                     const prevColIdx = currentColIndex - 1;
-                                    if (isStubCell && prevColIdx < stubWidth - 1) {
+                                    if (isStubCell && prevColIdx < stubWidth - 1 && !inThead) {
                                         borderType = 'theme_stub_tier_divider';
-                                    } else if (currentColIndex === stubWidth) {
+                                    } else if (currentColIndex === stubWidth && !inThead) {
                                         borderType = 'theme_stub_divider';
                                     } else {
                                         if (bannerBoundaryCols.has(prevColIdx)) {
@@ -705,9 +582,13 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     borderType = 'theme_table_outer_right';
                                 } else if (isStubCell) {
                                     if (rightColIdx === stubWidth - 1) {
-                                        borderType = 'theme_stub_divider';
+                                        if (!inThead) {
+                                            borderType = 'theme_stub_divider';
+                                        }
                                     } else {
-                                        borderType = 'theme_stub_tier_divider';
+                                        if (!inThead) {
+                                            borderType = 'theme_stub_tier_divider';
+                                        }
                                     }
                                 } else {
                                     const rightBoundaryIdx = rightColIdx;
@@ -760,7 +641,6 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                             margin: 18px auto !important;
                             border-collapse: collapse !important;
                         }
-                        ${userBorderCorrectionCss}
                         ${highlightCss}
                     `;
                     bodyEl.innerHTML = data.html || '';
@@ -784,7 +664,6 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     margin: auto !important; 
                                     border-collapse: collapse !important;
                                 }
-                                ${userBorderCorrectionCss}
                                 ${highlightCss}
                             </style>
                         </head>
