@@ -324,10 +324,10 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                         theme_stub_divider: 'table .injected-stub-right, .styled-table .injected-stub-right { position: relative; } table .injected-stub-right::after, .styled-table .injected-stub-right::after { content: ""; position: absolute; top: 0; bottom: -1px; right: -4px; width: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 20; pointer-events: none; }',
                         theme_section_separator: '.section-separator, table tr[class*="separator"] td, table tr[class*="separator"] th, .styled-table tr[class*="separator"] td, .styled-table tr[class*="separator"] th { position: relative; z-index: 10; box-shadow: inset 0 4px 0 0 rgba(245, 158, 11, 0.35), 0 -4px 0 0 rgba(245, 158, 11, 0.35) !important; }',
                         theme_grid: 'table tbody td, table tbody th:not(.injected-outer-left), .styled-table tbody td, .styled-table tbody th:not(.injected-outer-left) { position: relative; z-index: 10; box-shadow: inset -8px 0 0 -3px rgba(245, 158, 11, 0.35), 8px 0 0 -3px rgba(245, 158, 11, 0.35), inset 0 -8px 0 -3px rgba(245, 158, 11, 0.35), 0 8px 0 -3px rgba(245, 158, 11, 0.35) !important; }',
-                        theme_stub_tier_divider: 'table .injected-stub-tier-right, .styled-table .injected-stub-tier-right { position: relative; z-index: 110 !important; } table .injected-stub-tier-right::after, .styled-table .injected-stub-tier-right::after { content: ""; position: absolute; top: 0; bottom: -1px; right: -4px; width: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 120 !important; pointer-events: none; }',
+                        theme_stub_tier_divider: 'table td.injected-stub-tier-left.injected-stub-tier-left, table th.injected-stub-tier-left.injected-stub-tier-left { position: relative; z-index: 110 !important; } table td.injected-stub-tier-left.injected-stub-tier-left::before, table th.injected-stub-tier-left.injected-stub-tier-left::before { content: ""; position: absolute; top: 0; bottom: -1px; left: -4px; width: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 120 !important; pointer-events: none; }',
                         theme_header_tier_divider: 'table thead .injected-header-tier, .styled-table thead .injected-header-tier { position: relative; } table thead .injected-header-tier::after, .styled-table thead .injected-header-tier::after { content: ""; position: absolute; bottom: -4px; left: 0; right: 0; height: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 20; pointer-events: none; }',
                         theme_banner_divider: 'table thead .banner-divider-cell, .styled-table thead .banner-divider-cell, table thead .injected-banner-boundary, .styled-table thead .injected-banner-boundary { position: relative; } table thead .banner-divider-cell::after, .styled-table thead .banner-divider-cell::after, table thead .injected-banner-boundary::after, .styled-table thead .injected-banner-boundary::after { content: ""; position: absolute; top: 0; bottom: -1px; right: -4px; width: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 20; pointer-events: none; }',
-                        theme_data_col_divider: 'table tbody td:not(:first-child), .styled-table tbody td:not(:first-child) { position: relative; } table tbody td:not(:first-child)::before, .styled-table tbody td:not(:first-child)::before { content: ""; position: absolute; top: 0; bottom: -1px; left: -4px; width: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 20; pointer-events: none; }'
+                        theme_data_col_divider: 'table .injected-data-col-divider, .styled-table .injected-data-col-divider { position: relative; } table .injected-data-col-divider::before, .styled-table .injected-data-col-divider::before { content: ""; position: absolute; top: 0; bottom: -1px; left: -4px; width: 8px; background-color: rgba(245, 158, 11, 0.35); z-index: 20; pointer-events: none; }'
                     };
                     if (borderRules[activeHighlight]) {
                         highlightCss += borderRules[activeHighlight];
@@ -356,6 +356,9 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                         userBorderCorrectionCss += `
                             table .injected-stub-tier-right, .styled-table .injected-stub-tier-right {
                                 border-right: ${borderStubTierVal} !important;
+                            }
+                            table .injected-stub-tier-left, .styled-table .injected-stub-tier-left {
+                                border-left: ${borderStubTierVal} !important;
                             }
                         `;
                     }
@@ -449,7 +452,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                     if (r.theme_data_col_divider_color) {
                         const borderColVal = `${r.theme_data_col_divider_width || '1px'} ${getStyle(r.theme_data_col_divider_style)} ${r.theme_data_col_divider_color}`;
                         userBorderCorrectionCss += `
-                            table tbody td:not(:first-child), .styled-table tbody td:not(:first-child) {
+                            table .injected-data-col-divider, .styled-table .injected-data-col-divider {
                                 border-left: ${borderColVal} !important;
                             }
                         `;
@@ -538,11 +541,17 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                             const isStub = cell.classList.contains('stub-cell') ||
                                 cell.classList.contains('stub-header-cell') ||
                                 cell.classList.contains('stub-header') ||
-                                cell.className?.includes('stub');
+                                (cell.className && typeof cell.className === 'string' && cell.className.includes('stub')) ||
+                                (cIndex < stubWidth);
                             if (isStub) {
                                 if (rEdge < stubWidth - 1) cell.classList.add('injected-stub-tier-right');
                                 if (cIndex > 0) cell.classList.add('injected-stub-tier-left');
                                 if (rEdge === stubWidth - 1) cell.classList.add('injected-stub-right');
+                            } else if (cIndex > stubWidth) {
+                                const inThead = thead && thead.contains(cell);
+                                if (!(inThead && bannerBoundaryCols.has(cIndex - 1))) {
+                                    cell.classList.add('injected-data-col-divider');
+                                }
                             }
                         });
 
