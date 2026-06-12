@@ -93,12 +93,12 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
     const effectivePolicy = {
         n_digits: decimalN === '' ? 0 : decimalN,
         percent_digits: decimalPct === '' ? 1 : decimalPct,
-        mean_digits: uiSettings?.mean_digits ?? 1,
-        std_digits: uiSettings?.std_digits ?? 1,
-        median_digits: uiSettings?.median_digits ?? 1,
-        min_digits: uiSettings?.min_digits ?? 1,
-        max_digits: uiSettings?.max_digits ?? 1,
-        var_digits: uiSettings?.var_digits ?? 1,
+        mean_digits: uiSettings?.mean_digits ?? 2,
+        std_digits: uiSettings?.std_digits ?? 2,
+        median_digits: uiSettings?.median_digits ?? 2,
+        min_digits: uiSettings?.min_digits ?? 0,
+        max_digits: uiSettings?.max_digits ?? 0,
+        var_digits: uiSettings?.var_digits ?? 2,
     };
 
     const showLabel3Header = columns.some(c => String(c.label3 ?? "").trim());
@@ -1789,7 +1789,27 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
                 if (ctxPayload) {
                     setProjectNum(ctxPayload.pn || "");
-                    fetchedUi = ctxPayload.ui_settings || {};
+                    const resolvedMeanDigits = ctxPayload.display_policy?.mean_digits ?? ctxPayload.ui_settings?.format_mean_round ?? 2;
+                    const resolvedStdDigits = ctxPayload.display_policy?.std_digits ?? ctxPayload.ui_settings?.format_std_round ?? 2;
+                    const resolvedMedianDigits = ctxPayload.display_policy?.median_digits ?? ctxPayload.ui_settings?.format_median_round ?? 2;
+                    const resolvedMinDigits = ctxPayload.display_policy?.min_digits ?? ctxPayload.ui_settings?.format_min_round ?? 0;
+                    const resolvedMaxDigits = ctxPayload.display_policy?.max_digits ?? ctxPayload.ui_settings?.format_max_round ?? 0;
+                    const resolvedVarDigits = ctxPayload.display_policy?.var_digits ?? ctxPayload.ui_settings?.format_var_round ?? 2;
+                    const resolvedNDigits = ctxPayload.display_policy?.n_digits ?? ctxPayload.ui_settings?.format_n_round ?? 0;
+                    const resolvedPercentDigits = ctxPayload.display_policy?.percent_digits ?? ctxPayload.ui_settings?.format_percent_round ?? 1;
+
+                    fetchedUi = {
+                        ...(ctxPayload.display_policy || {}),
+                        ...(ctxPayload.ui_settings || {}),
+                        mean_digits: resolvedMeanDigits,
+                        std_digits: resolvedStdDigits,
+                        median_digits: resolvedMedianDigits,
+                        min_digits: resolvedMinDigits,
+                        max_digits: resolvedMaxDigits,
+                        var_digits: resolvedVarDigits,
+                        n_digits: resolvedNDigits,
+                        percent_digits: resolvedPercentDigits,
+                    };
                     setUiSettings(fetchedUi);
                     setShowN(fetchedUi.format_show_n ?? true);
                     setDecimalN(fetchedUi.format_n_round ?? ctxPayload.n_digits ?? 0);
@@ -1887,12 +1907,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     hide_zero_banners: isInitialSetupRef.current ? (fetchedUi?.hide_zero_banners ?? false) : (uiSettings?.hide_zero_banners ?? false),
                     n_digits: Number(isInitialSetupRef.current ? (fetchedUi?.format_n_round ?? (decimalN === '' ? 0 : decimalN)) : (decimalN === '' ? 0 : decimalN)),
                     percent_digits: Number(isInitialSetupRef.current ? (fetchedUi?.format_percent_round ?? (decimalPct === '' ? 1 : decimalPct)) : (decimalPct === '' ? 1 : decimalPct)),
-                    mean_digits: fetchedUi?.mean_digits ?? uiSettings?.mean_digits ?? 1,
-                    std_digits: fetchedUi?.std_digits ?? uiSettings?.std_digits ?? 1,
-                    median_digits: fetchedUi?.median_digits ?? uiSettings?.median_digits ?? 1,
-                    min_digits: fetchedUi?.min_digits ?? uiSettings?.min_digits ?? 1,
-                    max_digits: fetchedUi?.max_digits ?? uiSettings?.max_digits ?? 1,
-                    var_digits: fetchedUi?.var_digits ?? uiSettings?.var_digits ?? 1,
+                    mean_digits: fetchedUi?.mean_digits ?? uiSettings?.mean_digits ?? 2,
+                    std_digits: fetchedUi?.std_digits ?? uiSettings?.std_digits ?? 2,
+                    median_digits: fetchedUi?.median_digits ?? uiSettings?.median_digits ?? 2,
+                    min_digits: fetchedUi?.min_digits ?? uiSettings?.min_digits ?? 0,
+                    max_digits: fetchedUi?.max_digits ?? uiSettings?.max_digits ?? 0,
+                    var_digits: fetchedUi?.var_digits ?? uiSettings?.var_digits ?? 2,
                     zero_display: fetchedUi?.zero_display || uiSettings?.zero_display || "0",
                     empty_display: fetchedUi?.empty_display || uiSettings?.empty_display || "blank"
                 }
@@ -2125,12 +2145,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     hide_zero_banners: uiSettings?.hide_zero_banners ?? false,
                     n_digits: Number(decimalN === '' ? 0 : decimalN),
                     percent_digits: Number(excelDecimalPct === '' ? 1 : excelDecimalPct),
-                    mean_digits: uiSettings?.mean_digits ?? 1,
-                    std_digits: uiSettings?.std_digits ?? 1,
-                    median_digits: uiSettings?.median_digits ?? 1,
-                    min_digits: uiSettings?.min_digits ?? 1,
-                    max_digits: uiSettings?.max_digits ?? 1,
-                    var_digits: uiSettings?.var_digits ?? 1,
+                    mean_digits: uiSettings?.mean_digits ?? 2,
+                    std_digits: uiSettings?.std_digits ?? 2,
+                    median_digits: uiSettings?.median_digits ?? 2,
+                    min_digits: uiSettings?.min_digits ?? 0,
+                    max_digits: uiSettings?.max_digits ?? 0,
+                    var_digits: uiSettings?.var_digits ?? 2,
                     zero_display: uiSettings?.zero_display || "0",
                     empty_display: uiSettings?.empty_display || "blank",
                     show_base_parenthesis: excelShowBaseParenthesis,
@@ -2491,12 +2511,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         hide_zero_banners: uiSettings?.hide_zero_banners ?? false,
                                         n_digits: Number(decimalN === '' ? 0 : decimalN),
                                         percent_digits: Number(decimalPct === '' ? 1 : decimalPct),
-                                        mean_digits: uiSettings?.mean_digits ?? 1,
-                                        std_digits: uiSettings?.std_digits ?? 1,
-                                        median_digits: uiSettings?.median_digits ?? 1,
-                                        min_digits: uiSettings?.min_digits ?? 1,
-                                        max_digits: uiSettings?.max_digits ?? 1,
-                                        var_digits: uiSettings?.var_digits ?? 1,
+                                        mean_digits: uiSettings?.mean_digits ?? 2,
+                                        std_digits: uiSettings?.std_digits ?? 2,
+                                        median_digits: uiSettings?.median_digits ?? 2,
+                                        min_digits: uiSettings?.min_digits ?? 0,
+                                        max_digits: uiSettings?.max_digits ?? 0,
+                                        var_digits: uiSettings?.var_digits ?? 2,
                                         zero_display: uiSettings?.zero_display || "0",
                                         empty_display: uiSettings?.empty_display || "blank"
                                     }
@@ -2921,12 +2941,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                 hide_zero_banners: uiSettings?.hide_zero_banners ?? false,
                                                 n_digits: Number(decimalN === '' ? 0 : decimalN),
                                                 percent_digits: Number(decimalPct === '' ? 1 : decimalPct),
-                                                mean_digits: uiSettings?.mean_digits ?? 1,
-                                                std_digits: uiSettings?.std_digits ?? 1,
-                                                median_digits: uiSettings?.median_digits ?? 1,
-                                                min_digits: uiSettings?.min_digits ?? 1,
-                                                max_digits: uiSettings?.max_digits ?? 1,
-                                                var_digits: uiSettings?.var_digits ?? 1,
+                                                mean_digits: uiSettings?.mean_digits ?? 2,
+                                                std_digits: uiSettings?.std_digits ?? 2,
+                                                median_digits: uiSettings?.median_digits ?? 2,
+                                                min_digits: uiSettings?.min_digits ?? 0,
+                                                max_digits: uiSettings?.max_digits ?? 0,
+                                                var_digits: uiSettings?.var_digits ?? 2,
                                                 zero_display: uiSettings?.zero_display || "0",
                                                 empty_display: uiSettings?.empty_display || "blank"
                                             },

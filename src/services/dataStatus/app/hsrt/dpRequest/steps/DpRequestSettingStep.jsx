@@ -153,9 +153,20 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                 const initDisplay = {
                     ...settings.display,
-                    ...renderContext?.effective_display_policy,
-                    ...actualTableDetail?.display_policy
                 };
+                const policySources = [
+                    renderContext?.effective_display_policy,
+                    actualTableDetail?.display_policy
+                ];
+                policySources.forEach(source => {
+                    if (source) {
+                        Object.keys(source).forEach(key => {
+                            if (source[key] !== null && source[key] !== undefined) {
+                                initDisplay[key] = source[key];
+                            }
+                        });
+                    }
+                });
 
                 if (ui.format_show_n !== undefined && ui.format_show_n !== null) initDisplay.show_n = ui.format_show_n;
                 if (ui.format_show_percent !== undefined && ui.format_show_percent !== null) initDisplay.show_percent = ui.format_show_percent;
@@ -601,14 +612,14 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     format_percent_as_column: settings.render.format_percent_as_column,
                     format_show_n: settings.display.show_n,
                     format_show_percent: settings.display.show_percent,
-                    format_n_round: settings.display.n_digits !== "" && settings.display.n_digits !== null ? Number(settings.display.n_digits) : undefined,
-                    format_percent_round: settings.display.percent_digits !== "" && settings.display.percent_digits !== null ? Number(settings.display.percent_digits) : undefined,
-                    format_mean_round: settings.display.mean_digits !== "" && settings.display.mean_digits !== null ? Number(settings.display.mean_digits) : undefined,
-                    format_std_round: settings.display.std_digits !== "" && settings.display.std_digits !== null ? Number(settings.display.std_digits) : undefined,
-                    format_var_round: settings.display.var_digits !== "" && settings.display.var_digits !== null ? Number(settings.display.var_digits) : undefined,
-                    format_median_round: settings.display.median_digits !== "" && settings.display.median_digits !== null ? Number(settings.display.median_digits) : undefined,
-                    format_min_round: settings.display.min_digits !== "" && settings.display.min_digits !== null ? Number(settings.display.min_digits) : undefined,
-                    format_max_round: settings.display.max_digits !== "" && settings.display.max_digits !== null ? Number(settings.display.max_digits) : undefined,
+                    format_n_round: settings.display.n_digits !== "" && settings.display.n_digits !== null && settings.display.n_digits !== undefined ? Number(settings.display.n_digits) : undefined,
+                    format_percent_round: settings.display.percent_digits !== "" && settings.display.percent_digits !== null && settings.display.percent_digits !== undefined ? Number(settings.display.percent_digits) : undefined,
+                    format_mean_round: settings.display.mean_digits !== "" && settings.display.mean_digits !== null && settings.display.mean_digits !== undefined ? Number(settings.display.mean_digits) : undefined,
+                    format_std_round: settings.display.std_digits !== "" && settings.display.std_digits !== null && settings.display.std_digits !== undefined ? Number(settings.display.std_digits) : undefined,
+                    format_var_round: settings.display.var_digits !== "" && settings.display.var_digits !== null && settings.display.var_digits !== undefined ? Number(settings.display.var_digits) : undefined,
+                    format_median_round: settings.display.median_digits !== "" && settings.display.median_digits !== null && settings.display.median_digits !== undefined ? Number(settings.display.median_digits) : undefined,
+                    format_min_round: settings.display.min_digits !== "" && settings.display.min_digits !== null && settings.display.min_digits !== undefined ? Number(settings.display.min_digits) : undefined,
+                    format_max_round: settings.display.max_digits !== "" && settings.display.max_digits !== null && settings.display.max_digits !== undefined ? Number(settings.display.max_digits) : undefined,
                     hide_zero_base_columns: settings.display.hide_zero_base_columns,
                     hide_zero_banners: settings.display.hide_zero_banners,
                     hide_zero_stubs: settings.display.hide_zero_stubs,
@@ -620,14 +631,14 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 display_policy: {
                     show_n: settings.display.show_n,
                     show_percent: settings.display.show_percent,
-                    n_digits: settings.display.n_digits !== "" && settings.display.n_digits !== null ? Number(settings.display.n_digits) : undefined,
-                    percent_digits: settings.display.percent_digits !== "" && settings.display.percent_digits !== null ? Number(settings.display.percent_digits) : undefined,
-                    mean_digits: settings.display.mean_digits !== "" && settings.display.mean_digits !== null ? Number(settings.display.mean_digits) : undefined,
-                    std_digits: settings.display.std_digits !== "" && settings.display.std_digits !== null ? Number(settings.display.std_digits) : undefined,
-                    median_digits: settings.display.median_digits !== "" && settings.display.median_digits !== null ? Number(settings.display.median_digits) : undefined,
-                    min_digits: settings.display.min_digits !== "" && settings.display.min_digits !== null ? Number(settings.display.min_digits) : undefined,
-                    max_digits: settings.display.max_digits !== "" && settings.display.max_digits !== null ? Number(settings.display.max_digits) : undefined,
-                    var_digits: settings.display.var_digits !== "" && settings.display.var_digits !== null ? Number(settings.display.var_digits) : undefined,
+                    n_digits: settings.display.n_digits !== "" && settings.display.n_digits !== null && settings.display.n_digits !== undefined ? Number(settings.display.n_digits) : undefined,
+                    percent_digits: settings.display.percent_digits !== "" && settings.display.percent_digits !== null && settings.display.percent_digits !== undefined ? Number(settings.display.percent_digits) : undefined,
+                    mean_digits: settings.display.mean_digits !== "" && settings.display.mean_digits !== null && settings.display.mean_digits !== undefined ? Number(settings.display.mean_digits) : undefined,
+                    std_digits: settings.display.std_digits !== "" && settings.display.std_digits !== null && settings.display.std_digits !== undefined ? Number(settings.display.std_digits) : undefined,
+                    median_digits: settings.display.median_digits !== "" && settings.display.median_digits !== null && settings.display.median_digits !== undefined ? Number(settings.display.median_digits) : undefined,
+                    min_digits: settings.display.min_digits !== "" && settings.display.min_digits !== null && settings.display.min_digits !== undefined ? Number(settings.display.min_digits) : undefined,
+                    max_digits: settings.display.max_digits !== "" && settings.display.max_digits !== null && settings.display.max_digits !== undefined ? Number(settings.display.max_digits) : undefined,
+                    var_digits: settings.display.var_digits !== "" && settings.display.var_digits !== null && settings.display.var_digits !== undefined ? Number(settings.display.var_digits) : undefined,
                     hide_zero_base_columns: settings.display.hide_zero_base_columns,
                     hide_zero_banners: settings.display.hide_zero_banners,
                     hide_zero_stubs: settings.display.hide_zero_stubs,

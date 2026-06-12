@@ -237,14 +237,14 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 format_percent_as_column: settings.render.format_percent_as_column,
                 format_show_n: settings.display.show_n,
                 format_show_percent: settings.display.show_percent,
-                format_n_round: settings.display.n_digits !== "" && settings.display.n_digits !== null ? Number(settings.display.n_digits) : undefined,
-                format_percent_round: settings.display.percent_digits !== "" && settings.display.percent_digits !== null ? Number(settings.display.percent_digits) : undefined,
-                format_mean_round: settings.display.mean_digits !== "" && settings.display.mean_digits !== null ? Number(settings.display.mean_digits) : undefined,
-                format_std_round: settings.display.std_digits !== "" && settings.display.std_digits !== null ? Number(settings.display.std_digits) : undefined,
-                format_var_round: settings.display.var_digits !== "" && settings.display.var_digits !== null ? Number(settings.display.var_digits) : undefined,
-                format_median_round: settings.display.median_digits !== "" && settings.display.median_digits !== null ? Number(settings.display.median_digits) : undefined,
-                format_min_round: settings.display.min_digits !== "" && settings.display.min_digits !== null ? Number(settings.display.min_digits) : undefined,
-                format_max_round: settings.display.max_digits !== "" && settings.display.max_digits !== null ? Number(settings.display.max_digits) : undefined,
+                format_n_round: settings.display.n_digits !== "" && settings.display.n_digits !== null && settings.display.n_digits !== undefined ? Number(settings.display.n_digits) : undefined,
+                format_percent_round: settings.display.percent_digits !== "" && settings.display.percent_digits !== null && settings.display.percent_digits !== undefined ? Number(settings.display.percent_digits) : undefined,
+                format_mean_round: settings.display.mean_digits !== "" && settings.display.mean_digits !== null && settings.display.mean_digits !== undefined ? Number(settings.display.mean_digits) : undefined,
+                format_std_round: settings.display.std_digits !== "" && settings.display.std_digits !== null && settings.display.std_digits !== undefined ? Number(settings.display.std_digits) : undefined,
+                format_var_round: settings.display.var_digits !== "" && settings.display.var_digits !== null && settings.display.var_digits !== undefined ? Number(settings.display.var_digits) : undefined,
+                format_median_round: settings.display.median_digits !== "" && settings.display.median_digits !== null && settings.display.median_digits !== undefined ? Number(settings.display.median_digits) : undefined,
+                format_min_round: settings.display.min_digits !== "" && settings.display.min_digits !== null && settings.display.min_digits !== undefined ? Number(settings.display.min_digits) : undefined,
+                format_max_round: settings.display.max_digits !== "" && settings.display.max_digits !== null && settings.display.max_digits !== undefined ? Number(settings.display.max_digits) : undefined,
                 hide_zero_base_columns: settings.display.hide_zero_base_columns,
                 hide_zero_banners: settings.display.hide_zero_banners,
                 hide_zero_stubs: settings.display.hide_zero_stubs,
@@ -256,14 +256,14 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
             display_policy: {
                 show_n: settings.display.show_n,
                 show_percent: settings.display.show_percent,
-                n_digits: settings.display.n_digits !== "" && settings.display.n_digits !== null ? Number(settings.display.n_digits) : undefined,
-                percent_digits: settings.display.percent_digits !== "" && settings.display.percent_digits !== null ? Number(settings.display.percent_digits) : undefined,
-                mean_digits: settings.display.mean_digits !== "" && settings.display.mean_digits !== null ? Number(settings.display.mean_digits) : undefined,
-                std_digits: settings.display.std_digits !== "" && settings.display.std_digits !== null ? Number(settings.display.std_digits) : undefined,
-                median_digits: settings.display.median_digits !== "" && settings.display.median_digits !== null ? Number(settings.display.median_digits) : undefined,
-                min_digits: settings.display.min_digits !== "" && settings.display.min_digits !== null ? Number(settings.display.min_digits) : undefined,
-                max_digits: settings.display.max_digits !== "" && settings.display.max_digits !== null ? Number(settings.display.max_digits) : undefined,
-                var_digits: settings.display.var_digits !== "" && settings.display.var_digits !== null ? Number(settings.display.var_digits) : undefined,
+                n_digits: settings.display.n_digits !== "" && settings.display.n_digits !== null && settings.display.n_digits !== undefined ? Number(settings.display.n_digits) : undefined,
+                percent_digits: settings.display.percent_digits !== "" && settings.display.percent_digits !== null && settings.display.percent_digits !== undefined ? Number(settings.display.percent_digits) : undefined,
+                mean_digits: settings.display.mean_digits !== "" && settings.display.mean_digits !== null && settings.display.mean_digits !== undefined ? Number(settings.display.mean_digits) : undefined,
+                std_digits: settings.display.std_digits !== "" && settings.display.std_digits !== null && settings.display.std_digits !== undefined ? Number(settings.display.std_digits) : undefined,
+                median_digits: settings.display.median_digits !== "" && settings.display.median_digits !== null && settings.display.median_digits !== undefined ? Number(settings.display.median_digits) : undefined,
+                min_digits: settings.display.min_digits !== "" && settings.display.min_digits !== null && settings.display.min_digits !== undefined ? Number(settings.display.min_digits) : undefined,
+                max_digits: settings.display.max_digits !== "" && settings.display.max_digits !== null && settings.display.max_digits !== undefined ? Number(settings.display.max_digits) : undefined,
+                var_digits: settings.display.var_digits !== "" && settings.display.var_digits !== null && settings.display.var_digits !== undefined ? Number(settings.display.var_digits) : undefined,
                 hide_zero_base_columns: settings.display.hide_zero_base_columns,
                 hide_zero_banners: settings.display.hide_zero_banners,
                 hide_zero_stubs: settings.display.hide_zero_stubs,
@@ -1119,7 +1119,17 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         { label: '최소값 (Min)', field: 'min_digits' },
                                         { label: '최대값 (Max)', field: 'max_digits' }
                                     ].map((item) => {
-                                        const val = settings.display[item.field] || 0;
+                                        const defValues = {
+                                            n_digits: 0,
+                                            percent_digits: 1,
+                                            mean_digits: 2,
+                                            std_digits: 2,
+                                            median_digits: 2,
+                                            var_digits: 2,
+                                            min_digits: 0,
+                                            max_digits: 0
+                                        };
+                                        const val = settings.display[item.field] !== undefined && settings.display[item.field] !== null ? Number(settings.display[item.field]) : defValues[item.field];
                                         return (
                                             <div key={item.field} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: '#F1F5F9', borderRadius: '6px' }}>
                                                 <span style={{ fontSize: '12px', color: '#475569', fontWeight: 600 }}>{item.label}</span>
