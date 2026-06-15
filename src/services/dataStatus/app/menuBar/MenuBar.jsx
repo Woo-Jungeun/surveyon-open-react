@@ -386,11 +386,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       computedMenuGroups = computedMenuGroups.map(group => {
         const filteredItems = group.items.filter(item => {
           const cleanLabel = item.label.replace(/\s+/g, '').toLowerCase();
-          return allowedMenus.some(allowed =>
-            allowed === cleanLabel ||
-            (cleanLabel === "dp의뢰서") ||
-            (cleanLabel === "문항추가")
-          );
+          return allowedMenus.some(allowed => allowed === cleanLabel);
         });
         return { ...group, items: filteredItems };
       }).filter(group => group.items.length > 0);
