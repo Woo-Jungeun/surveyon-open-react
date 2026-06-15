@@ -66,7 +66,34 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             theme_table_outer_left_width: '1px',
             theme_table_outer_right_color: '#CBD5E1',
             theme_table_outer_right_style: 'solid',
-            theme_table_outer_right_width: '1px'
+            theme_table_outer_right_width: '1px',
+            theme_header_font: '',
+            theme_stub_font: '',
+            theme_data_font: '',
+            theme_header_group_bg: '#FFFFFF',
+            theme_header_group_fg: '#0F172A',
+            theme_stub_group_bg: '#F1F5F9',
+            theme_stub_group_fg: '#0F172A',
+            theme_stub_leaf_bg: '#FFFFFF',
+            theme_stub_leaf_fg: '#0F172A',
+            theme_stub_tier_divider_color: '#cbd5e1',
+            theme_stub_tier_divider_style: 'solid',
+            theme_stub_tier_divider_width: '1px',
+            theme_header_tier_divider_color: '#cbd5e1',
+            theme_header_tier_divider_style: 'solid',
+            theme_header_tier_divider_width: '1px',
+            theme_banner_divider_color: '#cbd5e1',
+            theme_banner_divider_style: 'solid',
+            theme_banner_divider_width: '1px',
+            theme_base_bg: '#FFF2CC',
+            theme_base_fg: '#7F6000',
+            theme_etc_bg: '#E2EFDA',
+            theme_etc_fg: '#375623',
+            theme_data_col_divider_color: '#cbd5e1',
+            theme_data_col_divider_style: 'none',
+            theme_data_col_divider_width: '1px',
+            stub_group_layout: 'merge',
+            format_percent_as_column: false
         },
         display: {
             show_n: true,
@@ -78,7 +105,11 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             median_digits: 2,
             min_digits: 0,
             max_digits: 0,
-            show_base_parenthesis: true
+            show_base_parenthesis: true,
+            percent_symbol: true,
+            hide_zero_base_columns: true,
+            hide_zero_banners: true,
+            hide_zero_stubs: true
         }
     });
 
@@ -122,9 +153,20 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                 const initDisplay = {
                     ...settings.display,
-                    ...renderContext?.effective_display_policy,
-                    ...actualTableDetail?.display_policy
                 };
+                const policySources = [
+                    renderContext?.effective_display_policy,
+                    actualTableDetail?.display_policy
+                ];
+                policySources.forEach(source => {
+                    if (source) {
+                        Object.keys(source).forEach(key => {
+                            if (source[key] !== null && source[key] !== undefined) {
+                                initDisplay[key] = source[key];
+                            }
+                        });
+                    }
+                });
 
                 if (ui.format_show_n !== undefined && ui.format_show_n !== null) initDisplay.show_n = ui.format_show_n;
                 if (ui.format_show_percent !== undefined && ui.format_show_percent !== null) initDisplay.show_percent = ui.format_show_percent;
@@ -139,6 +181,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 if (ui.hide_zero_base_columns !== undefined && ui.hide_zero_base_columns !== null) initDisplay.hide_zero_base_columns = ui.hide_zero_base_columns;
                 if (ui.hide_zero_banners !== undefined && ui.hide_zero_banners !== null) initDisplay.hide_zero_banners = ui.hide_zero_banners;
                 if (ui.hide_zero_stubs !== undefined && ui.hide_zero_stubs !== null) initDisplay.hide_zero_stubs = ui.hide_zero_stubs;
+                if (ui.percent_symbol !== undefined && ui.percent_symbol !== null) initDisplay.percent_symbol = ui.percent_symbol;
+                else if (renderContext?.effective_display_policy?.percent_symbol !== undefined) initDisplay.percent_symbol = renderContext.effective_display_policy.percent_symbol;
 
                 // base_prefix / base_postfix 값에 따라 show_base_parenthesis 값 판별
                 const policy = actualTableDetail?.display_policy || renderContext?.effective_display_policy;
@@ -190,6 +234,33 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     theme_table_outer_right_color: ui.theme_table_outer_right_color || settings.render.theme_table_outer_right_color,
                     theme_table_outer_right_style: ui.theme_table_outer_right_style || settings.render.theme_table_outer_right_style,
                     theme_table_outer_right_width: ui.theme_table_outer_right_width || settings.render.theme_table_outer_right_width,
+                    theme_header_font: ui.theme_header_font || settings.render.theme_header_font,
+                    theme_stub_font: ui.theme_stub_font || settings.render.theme_stub_font,
+                    theme_data_font: ui.theme_data_font || settings.render.theme_data_font,
+                    theme_header_group_bg: ui.theme_header_group_bg || settings.render.theme_header_group_bg,
+                    theme_header_group_fg: ui.theme_header_group_fg || settings.render.theme_header_group_fg,
+                    theme_stub_group_bg: ui.theme_stub_group_bg || settings.render.theme_stub_group_bg,
+                    theme_stub_group_fg: ui.theme_stub_group_fg || settings.render.theme_stub_group_fg,
+                    theme_stub_leaf_bg: ui.theme_stub_leaf_bg || settings.render.theme_stub_leaf_bg,
+                    theme_stub_leaf_fg: ui.theme_stub_leaf_fg || settings.render.theme_stub_leaf_fg,
+                    theme_stub_tier_divider_color: ui.theme_stub_tier_divider_color || settings.render.theme_stub_tier_divider_color,
+                    theme_stub_tier_divider_style: ui.theme_stub_tier_divider_style || settings.render.theme_stub_tier_divider_style,
+                    theme_stub_tier_divider_width: ui.theme_stub_tier_divider_width || settings.render.theme_stub_tier_divider_width,
+                    theme_header_tier_divider_color: ui.theme_header_tier_divider_color || settings.render.theme_header_tier_divider_color,
+                    theme_header_tier_divider_style: ui.theme_header_tier_divider_style || settings.render.theme_header_tier_divider_style,
+                    theme_header_tier_divider_width: ui.theme_header_tier_divider_width || settings.render.theme_header_tier_divider_width,
+                    theme_banner_divider_color: ui.theme_banner_divider_color || settings.render.theme_banner_divider_color,
+                    theme_banner_divider_style: ui.theme_banner_divider_style || settings.render.theme_banner_divider_style,
+                    theme_banner_divider_width: ui.theme_banner_divider_width || settings.render.theme_banner_divider_width,
+                    theme_base_bg: ui.theme_base_bg !== undefined ? ui.theme_base_bg : settings.render.theme_base_bg,
+                    theme_base_fg: ui.theme_base_fg !== undefined ? ui.theme_base_fg : settings.render.theme_base_fg,
+                    theme_etc_bg: ui.theme_etc_bg !== undefined ? ui.theme_etc_bg : settings.render.theme_etc_bg,
+                    theme_etc_fg: ui.theme_etc_fg !== undefined ? ui.theme_etc_fg : settings.render.theme_etc_fg,
+                    theme_data_col_divider_color: ui.theme_data_col_divider_color || settings.render.theme_data_col_divider_color,
+                    theme_data_col_divider_style: ui.theme_data_col_divider_style || settings.render.theme_data_col_divider_style,
+                    theme_data_col_divider_width: ui.theme_data_col_divider_width || settings.render.theme_data_col_divider_width,
+                    stub_group_layout: ui.stub_group_layout || settings.render.stub_group_layout,
+                    format_percent_as_column: ui.format_percent_as_column !== undefined ? ui.format_percent_as_column : settings.render.format_percent_as_column,
                 };
 
                 nextSettings = {
@@ -512,40 +583,69 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     theme_table_outer_right_color: settings.render.theme_table_outer_right_color?.toUpperCase(),
                     theme_table_outer_right_style: settings.render.theme_table_outer_right_style,
                     theme_table_outer_right_width: settings.render.theme_table_outer_right_width,
+                    theme_header_font: settings.render.theme_header_font,
+                    theme_stub_font: settings.render.theme_stub_font,
+                    theme_data_font: settings.render.theme_data_font,
+                    theme_header_group_bg: settings.render.theme_header_group_bg?.toUpperCase(),
+                    theme_header_group_fg: settings.render.theme_header_group_fg?.toUpperCase(),
+                    theme_stub_group_bg: settings.render.theme_stub_group_bg?.toUpperCase(),
+                    theme_stub_group_fg: settings.render.theme_stub_group_fg?.toUpperCase(),
+                    theme_stub_leaf_bg: settings.render.theme_stub_leaf_bg?.toUpperCase(),
+                    theme_stub_leaf_fg: settings.render.theme_stub_leaf_fg?.toUpperCase(),
+                    theme_stub_tier_divider_color: settings.render.theme_stub_tier_divider_color?.toUpperCase(),
+                    theme_stub_tier_divider_style: settings.render.theme_stub_tier_divider_style,
+                    theme_stub_tier_divider_width: settings.render.theme_stub_tier_divider_width,
+                    theme_header_tier_divider_color: settings.render.theme_header_tier_divider_color?.toUpperCase(),
+                    theme_header_tier_divider_style: settings.render.theme_header_tier_divider_style,
+                    theme_header_tier_divider_width: settings.render.theme_header_tier_divider_width,
+                    theme_banner_divider_color: settings.render.theme_banner_divider_color?.toUpperCase(),
+                    theme_banner_divider_style: settings.render.theme_banner_divider_style,
+                    theme_banner_divider_width: settings.render.theme_banner_divider_width,
+                    theme_base_bg: settings.render.theme_base_bg?.toUpperCase(),
+                    theme_base_fg: settings.render.theme_base_fg?.toUpperCase(),
+                    theme_etc_bg: settings.render.theme_etc_bg?.toUpperCase(),
+                    theme_etc_fg: settings.render.theme_etc_fg?.toUpperCase(),
+                    theme_data_col_divider_color: settings.render.theme_data_col_divider_color?.toUpperCase(),
+                    theme_data_col_divider_style: settings.render.theme_data_col_divider_style,
+                    theme_data_col_divider_width: settings.render.theme_data_col_divider_width,
+                    stub_group_layout: settings.render.stub_group_layout,
+                    format_percent_as_column: settings.render.format_percent_as_column,
                     format_show_n: settings.display.show_n,
                     format_show_percent: settings.display.show_percent,
-                    format_n_round: settings.display.n_digits !== "" && settings.display.n_digits !== null ? Number(settings.display.n_digits) : undefined,
-                    format_percent_round: settings.display.percent_digits !== "" && settings.display.percent_digits !== null ? Number(settings.display.percent_digits) : undefined,
-                    format_mean_round: settings.display.mean_digits !== "" && settings.display.mean_digits !== null ? Number(settings.display.mean_digits) : undefined,
-                    format_std_round: settings.display.std_digits !== "" && settings.display.std_digits !== null ? Number(settings.display.std_digits) : undefined,
-                    format_var_round: settings.display.var_digits !== "" && settings.display.var_digits !== null ? Number(settings.display.var_digits) : undefined,
-                    format_median_round: settings.display.median_digits !== "" && settings.display.median_digits !== null ? Number(settings.display.median_digits) : undefined,
-                    format_min_round: settings.display.min_digits !== "" && settings.display.min_digits !== null ? Number(settings.display.min_digits) : undefined,
-                    format_max_round: settings.display.max_digits !== "" && settings.display.max_digits !== null ? Number(settings.display.max_digits) : undefined,
+                    format_n_round: settings.display.n_digits !== "" && settings.display.n_digits !== null && settings.display.n_digits !== undefined ? Number(settings.display.n_digits) : undefined,
+                    format_percent_round: settings.display.percent_digits !== "" && settings.display.percent_digits !== null && settings.display.percent_digits !== undefined ? Number(settings.display.percent_digits) : undefined,
+                    format_mean_round: settings.display.mean_digits !== "" && settings.display.mean_digits !== null && settings.display.mean_digits !== undefined ? Number(settings.display.mean_digits) : undefined,
+                    format_std_round: settings.display.std_digits !== "" && settings.display.std_digits !== null && settings.display.std_digits !== undefined ? Number(settings.display.std_digits) : undefined,
+                    format_var_round: settings.display.var_digits !== "" && settings.display.var_digits !== null && settings.display.var_digits !== undefined ? Number(settings.display.var_digits) : undefined,
+                    format_median_round: settings.display.median_digits !== "" && settings.display.median_digits !== null && settings.display.median_digits !== undefined ? Number(settings.display.median_digits) : undefined,
+                    format_min_round: settings.display.min_digits !== "" && settings.display.min_digits !== null && settings.display.min_digits !== undefined ? Number(settings.display.min_digits) : undefined,
+                    format_max_round: settings.display.max_digits !== "" && settings.display.max_digits !== null && settings.display.max_digits !== undefined ? Number(settings.display.max_digits) : undefined,
                     hide_zero_base_columns: settings.display.hide_zero_base_columns,
-                    hide_zero_banners: settings.display.hide_zero_base_columns,
+                    hide_zero_banners: settings.display.hide_zero_banners,
                     hide_zero_stubs: settings.display.hide_zero_stubs,
                     show_base_parenthesis: settings.display.show_base_parenthesis,
                     base_prefix: settings.display.show_base_parenthesis ? "(" : "",
                     base_postfix: settings.display.show_base_parenthesis ? ")" : "",
+                    percent_symbol: settings.display.percent_symbol,
                 },
                 display_policy: {
                     show_n: settings.display.show_n,
                     show_percent: settings.display.show_percent,
-                    n_digits: settings.display.n_digits !== "" && settings.display.n_digits !== null ? Number(settings.display.n_digits) : undefined,
-                    percent_digits: settings.display.percent_digits !== "" && settings.display.percent_digits !== null ? Number(settings.display.percent_digits) : undefined,
-                    mean_digits: settings.display.mean_digits !== "" && settings.display.mean_digits !== null ? Number(settings.display.mean_digits) : undefined,
-                    std_digits: settings.display.std_digits !== "" && settings.display.std_digits !== null ? Number(settings.display.std_digits) : undefined,
-                    median_digits: settings.display.median_digits !== "" && settings.display.median_digits !== null ? Number(settings.display.median_digits) : undefined,
-                    min_digits: settings.display.min_digits !== "" && settings.display.min_digits !== null ? Number(settings.display.min_digits) : undefined,
-                    max_digits: settings.display.max_digits !== "" && settings.display.max_digits !== null ? Number(settings.display.max_digits) : undefined,
-                    var_digits: settings.display.var_digits !== "" && settings.display.var_digits !== null ? Number(settings.display.var_digits) : undefined,
+                    n_digits: settings.display.n_digits !== "" && settings.display.n_digits !== null && settings.display.n_digits !== undefined ? Number(settings.display.n_digits) : undefined,
+                    percent_digits: settings.display.percent_digits !== "" && settings.display.percent_digits !== null && settings.display.percent_digits !== undefined ? Number(settings.display.percent_digits) : undefined,
+                    mean_digits: settings.display.mean_digits !== "" && settings.display.mean_digits !== null && settings.display.mean_digits !== undefined ? Number(settings.display.mean_digits) : undefined,
+                    std_digits: settings.display.std_digits !== "" && settings.display.std_digits !== null && settings.display.std_digits !== undefined ? Number(settings.display.std_digits) : undefined,
+                    median_digits: settings.display.median_digits !== "" && settings.display.median_digits !== null && settings.display.median_digits !== undefined ? Number(settings.display.median_digits) : undefined,
+                    min_digits: settings.display.min_digits !== "" && settings.display.min_digits !== null && settings.display.min_digits !== undefined ? Number(settings.display.min_digits) : undefined,
+                    max_digits: settings.display.max_digits !== "" && settings.display.max_digits !== null && settings.display.max_digits !== undefined ? Number(settings.display.max_digits) : undefined,
+                    var_digits: settings.display.var_digits !== "" && settings.display.var_digits !== null && settings.display.var_digits !== undefined ? Number(settings.display.var_digits) : undefined,
                     hide_zero_base_columns: settings.display.hide_zero_base_columns,
-                    hide_zero_banners: settings.display.hide_zero_base_columns,
+                    hide_zero_banners: settings.display.hide_zero_banners,
                     hide_zero_stubs: settings.display.hide_zero_stubs,
                     show_base_parenthesis: settings.display.show_base_parenthesis,
                     base_prefix: settings.display.show_base_parenthesis ? "(" : "",
                     base_postfix: settings.display.show_base_parenthesis ? ")" : "",
+                    percent_symbol: settings.display.percent_symbol,
                 },
                 scale_presets: scaleDataPayload,
                 rank_presets: rankDataPayload,
@@ -629,7 +729,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     transition: 'all 0.2s ease',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '6px'
+                                    gap: '6px',
+                                    userSelect: 'none'
                                 }}
                             >
                                 {tab.label}
