@@ -44,43 +44,6 @@ const buildColumnHeaderGroups = (columns, key) => {
     return groups;
 };
 
-const toRechartsData = (resultjson, activeDataType) => {
-    if (!resultjson) return { data: [], series: [] };
-    const labels = resultjson.labels || [];
-    const seriesList = resultjson.series || [];
-
-    // Series represent the stubs (rows)
-    const series = labels.map(lbl => {
-        return {
-            field: String(lbl.key),
-            name: lbl.label || lbl.key
-        };
-    });
-
-    // Data points represent the banner columns
-    const data = seriesList.map(s => {
-        const nameParts = [s.label3, s.label2, s.label]
-            .map(p => String(p || '').trim())
-            .filter(Boolean);
-        const fullLabel = nameParts.reverse().join('\n');
-
-        const item = {
-            label: fullLabel,
-            name: fullLabel,
-            rawSeries: s
-        };
-
-        labels.forEach(lbl => {
-            const valArr = activeDataType === 'percent' ? s.percent : s.count;
-            item[String(lbl.key)] = valArr ? valArr[lbl.key] ?? valArr[labels.indexOf(lbl)] : null;
-        });
-
-        return item;
-    });
-
-    return { data, series };
-};
-
 const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimalPct, uiSettings, hideZeroBaseColumns }) => {
     if (!dataItem) return <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>선택된 표가 없습니다. 좌측에서 항목을 선택해주세요.</div>;
 
@@ -93,12 +56,12 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
     const effectivePolicy = {
         n_digits: decimalN === '' ? 0 : decimalN,
         percent_digits: decimalPct === '' ? 1 : decimalPct,
-        mean_digits: uiSettings?.mean_digits ?? 2,
-        std_digits: uiSettings?.std_digits ?? 2,
-        median_digits: uiSettings?.median_digits ?? 2,
-        min_digits: uiSettings?.min_digits ?? 0,
-        max_digits: uiSettings?.max_digits ?? 0,
-        var_digits: uiSettings?.var_digits ?? 2,
+        mean_digits: uiSettings?.mean_digits ?? 1,
+        std_digits: uiSettings?.std_digits ?? 1,
+        median_digits: uiSettings?.median_digits ?? 1,
+        min_digits: uiSettings?.min_digits ?? 1,
+        max_digits: uiSettings?.max_digits ?? 1,
+        var_digits: uiSettings?.var_digits ?? 1,
     };
 
     const showLabel3Header = columns.some(c => String(c.label3 ?? "").trim());
@@ -479,7 +442,7 @@ const ConditionHeaderCell = (props) => {
     );
 };
 
-const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimalN, decimalPct, uiSettings, projectNum, overviewPayload, userId, styleCss, evaluateChartData, selectedXInfo, filterExpression, defaultBannerId }) => {
+const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimalN, decimalPct, uiSettings, projectNum, overviewPayload, userId }) => {
     const [isAiSummaryOpen, setIsAiSummaryOpen] = useState(false);
     const [isGridOpen, setIsGridOpen] = useState(true);
     const [isChartOpen, setIsChartOpen] = useState(false);
@@ -490,11 +453,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
     const [aiSummaryData, setAiSummaryData] = useState("");
     const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
-    const { getAiSummary, evaluateVariable } = DpRequestPageApi();
-
-    useEffect(() => {
-        setAiSummaryData("");
-    }, [banner?.id, selectedXInfo, filterExpression, uiSettings?.weight_col]);
+    const { getAiSummary } = DpRequestPageApi();
 
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
     const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
@@ -532,7 +491,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     const aiSummaryFetchingRef = useRef(false);
 
     useEffect(() => {
-        if (!isAiSummaryOpen || !projectNum || !banner?.id) return;
+        if (!isAiSummaryOpen || !projectNum || !banner?.id || !overviewPayload) return;
         if (aiSummaryData || aiSummaryFetchingRef.current) return; // 이미 데이터가 있거나 로딩중이면 중지 (무한루프 방지)
 
         const fetchAiSummaryData = async () => {
@@ -542,62 +501,6 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
             try {
                 aiSummaryFetchingRef.current = true;
                 setIsAiSummaryLoading(true);
-
-                const stub = [banner.id];
-                let bannerVarList = [];
-                if (selectedXInfo && selectedXInfo !== '__none__') {
-                    bannerVarList = [selectedXInfo];
-                } else if (banner.raw?.banner && (Array.isArray(banner.raw.banner) ? banner.raw.banner.length > 0 : String(banner.raw.banner).trim() !== '')) {
-                    bannerVarList = Array.isArray(banner.raw.banner) ? banner.raw.banner : [banner.raw.banner];
-                } else if (banner.raw?.banners && (Array.isArray(banner.raw.banners) ? banner.raw.banners.length > 0 : String(banner.raw.banners).trim() !== '')) {
-                    bannerVarList = Array.isArray(banner.raw.banners) ? banner.raw.banners : [banner.raw.banners];
-                } else if (columns && columns.length > 0) {
-                    const colWithDunder = columns.find(c => c.key && c.key.includes('__'));
-                    if (colWithDunder) {
-                        bannerVarList = [colWithDunder.key.split('__')[0]];
-                    }
-                }
-
-                if (!bannerVarList.length && defaultBannerId) {
-                    bannerVarList = [defaultBannerId];
-                }
-
-                if (!stub.length || !bannerVarList.length) {
-                    setAiSummaryData("요약할 데이터의 기준변수(Banner)를 지정해주세요.");
-                    return;
-                }
-
-                const evalPayload = {
-                    pageid: pageId,
-                    user: userId,
-                    table: {
-                        id: banner.id,
-                        stub,
-                        banner: bannerVarList
-                    },
-                    weight_col: uiSettings?.weight_col || null,
-                    filter_expression: filterExpression || ""
-                };
-
-                const evalRes = await evaluateVariable.mutateAsync(evalPayload);
-                if (!evalRes || evalRes.success !== "777" || !evalRes.resultjson) {
-                    setAiSummaryData("요약할 데이터의 로우 데이터를 가져오지 못했습니다.");
-                    return;
-                }
-
-                const tablesItem = {
-                    id: banner.id,
-                    table_id: banner.id,
-                    label: banner.label,
-                    title: banner.label,
-                    type: banner.raw?.type || 'single'
-                };
-
-                const resultsItem = {
-                    table_id: banner.id,
-                    result: evalRes.resultjson
-                };
-
                 const reqData = {
                     project_num: projectNum,
                     user: userId,
@@ -608,10 +511,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                     result_json: {
                         success: "777",
                         message: "OK",
-                        resultjson: {
-                            tables: [tablesItem],
-                            results: [resultsItem]
-                        }
+                        resultjson: overviewPayload
                     }
                 };
 
@@ -633,7 +533,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
         fetchAiSummaryData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isAiSummaryOpen, banner?.id, projectNum, userId, selectedXInfo, filterExpression, defaultBannerId]);
+    }, [isAiSummaryOpen, banner?.id, projectNum, overviewPayload, userId]);
 
     const getChartTypeName = (mode) => {
         const typeMap = {
@@ -802,102 +702,10 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
     // Data extraction for chart
     const resultData = banner.dataResult || {};
-    const columns = useMemo(() => resultData.columns || [], [resultData.columns]);
-    const rows = useMemo(() => resultData.rows || [], [resultData.rows]);
-
-    const [rawChartData, setRawChartData] = useState(null);
-    const [isChartLoading, setIsChartLoading] = useState(false);
-
-    useEffect(() => {
-        const fetchChartData = async () => {
-            if (!isChartOpen) return;
-            if (!banner?.id) return;
-
-            const stub = [banner.id];
-            let bannerVarList = [];
-            if (selectedXInfo && selectedXInfo !== '__none__') {
-                bannerVarList = [selectedXInfo];
-            } else if (banner.raw?.banner && (Array.isArray(banner.raw.banner) ? banner.raw.banner.length > 0 : String(banner.raw.banner).trim() !== '')) {
-                bannerVarList = Array.isArray(banner.raw.banner) ? banner.raw.banner : [banner.raw.banner];
-            } else if (banner.raw?.banners && (Array.isArray(banner.raw.banners) ? banner.raw.banners.length > 0 : String(banner.raw.banners).trim() !== '')) {
-                bannerVarList = Array.isArray(banner.raw.banners) ? banner.raw.banners : [banner.raw.banners];
-            } else if (columns && columns.length > 0) {
-                const colWithDunder = columns.find(c => c.key && c.key.includes('__'));
-                if (colWithDunder) {
-                    bannerVarList = [colWithDunder.key.split('__')[0]];
-                }
-            }
-
-            if (!bannerVarList.length && defaultBannerId) {
-                bannerVarList = [defaultBannerId];
-            }
-
-            if (!stub.length || !bannerVarList.length) {
-                console.warn("fetchChartData diagnostic - early return due to empty stub or bannerVarList", { stub, bannerVarList });
-                setRawChartData(null);
-                return;
-            }
-
-            try {
-                setIsChartLoading(true);
-                const pageId = sessionStorage.getItem('pageId');
-                const payload = {
-                    pageid: pageId,
-                    user: userId,
-                    table: {
-                        id: banner.id,
-                        stub,
-                        banner: bannerVarList
-                    },
-                    weight_col: uiSettings?.weight_col || null,
-                    filter_expression: filterExpression || ""
-                };
-
-                const res = await evaluateChartData.mutateAsync(payload);
-                if (res?.success === "777" && res.resultjson) {
-                    setRawChartData(res.resultjson);
-                } else {
-                    setRawChartData(null);
-                }
-            } catch (err) {
-                console.error("Failed to fetch chart data:", err);
-                setRawChartData(null);
-            } finally {
-                setIsChartLoading(false);
-            }
-        };
-
-        fetchChartData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-        isChartOpen,
-        banner?.id,
-        selectedXInfo,
-        columns,
-        userId,
-        uiSettings?.weight_col,
-        filterExpression,
-        defaultBannerId
-    ]);
+    const columns = resultData.columns || [];
+    const rows = resultData.rows || [];
 
     const availableChartGroups = useMemo(() => {
-        if (rawChartData) {
-            const groups = new Set();
-            rawChartData.series.forEach(s => {
-                const groupName = String(s.label2 || s.label3 || s.var_label || '').trim();
-                const lbl = String(s.label || s.key || '').trim();
-                if (lbl === '전체' || groupName === '전체') {
-                    groups.add('전체');
-                } else if (groupName && groupName.toLowerCase() !== 'base') {
-                    groups.add(groupName);
-                }
-            });
-            if (groups.size === 0) {
-                groups.add('전체');
-            }
-            return Array.from(groups);
-        }
-
         const groups = new Set();
         columns.forEach(col => {
             const groupName = String(col.label3 || col.label2 || col.parent_label || '').trim();
@@ -909,35 +717,13 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
             }
         });
         return Array.from(groups);
-    }, [columns, rawChartData]);
+    }, [columns]);
 
     useEffect(() => {
         if (availableChartGroups.length > 0) {
             setSelectedChartGroups(availableChartGroups);
         }
     }, [availableChartGroups.join(',')]);
-
-    const { apiChartData, apiChartSeries } = useMemo(() => {
-        if (!rawChartData) return { apiChartData: [], apiChartSeries: [] };
-        const activeDataType = chartDataType === 'frequency' ? 'count' : 'percent';
-        const { data, series } = toRechartsData(rawChartData, activeDataType);
-
-        // Filter data points (categories/columns) based on selectedChartGroups
-        const filteredData = data.filter(item => {
-            const sItem = item.rawSeries;
-            if (!sItem) return true;
-            const groupName = String(sItem.label2 || sItem.label3 || sItem.var_label || sItem.parent_label || '').trim();
-            const lbl = String(sItem.label || sItem.key || '').trim();
-            if (lbl === '전체' || groupName === '전체') {
-                return selectedChartGroups.includes('전체');
-            } else if (groupName && availableChartGroups.includes(groupName)) {
-                return selectedChartGroups.includes(groupName);
-            }
-            return true;
-        });
-
-        return { apiChartData: filteredData, apiChartSeries: series };
-    }, [rawChartData, chartDataType, selectedChartGroups, availableChartGroups]);
 
     const chartData = useMemo(() => {
         const targetColumns = columns.filter(col => {
@@ -1015,7 +801,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
             {index > 0 && (
                 <div style={{ width: '100%', borderBottom: '2px dashed #cbd5e1', margin: '10px 0 10px 0' }} />
             )}
-            <div id={`banner_block_${banner.id}`} data-table-id={banner.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: isLast ? '10px' : '0' }}>
+            <div id={`banner_block_${banner.id}`} style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: isLast ? '10px' : '0' }}>
                 {/* Title Indicator */}
                 <div style={{
                     alignSelf: 'flex-start',
@@ -1035,58 +821,14 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                         {isGridOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
                     </div>
                     {isGridOpen && (
-                        <div style={{ flex: 1, minHeight: 0 }}>
-                            <iframe
-                                srcDoc={`<!doctype html><html><head><meta charset="utf-8"/><style>${styleCss || ''}</style></head><body style="margin: 0; padding: 12px; background: transparent; overflow-x: auto; overflow-y: hidden; font-family: sans-serif;">${banner.html || ''}</body></html>`}
-                                style={{ width: '100%', height: '300px', border: 'none', overflow: 'hidden' }}
-                                title={`table-${banner.id}`}
-                                onLoad={(e) => {
-                                    try {
-                                        const iframe = e.target;
-                                        if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
-                                            const doc = iframe.contentWindow.document;
-                                            if (doc.body) {
-                                                doc.body.style.overflowX = 'auto';
-                                                doc.body.style.overflowY = 'hidden';
-                                            }
-                                            const updateHeight = () => {
-                                                const table = doc.querySelector('table');
-                                                let height = 0;
-                                                if (table) {
-                                                    // body padding is 12px (top/bottom total 24px)
-                                                    height = table.getBoundingClientRect().height + 24;
-                                                    // check if horizontal scrollbar is present
-                                                    const isScrollable = doc.body.scrollWidth > doc.body.clientWidth || doc.documentElement.scrollWidth > doc.documentElement.clientWidth;
-                                                    if (isScrollable) {
-                                                        height += 16; // add scrollbar height buffer
-                                                    }
-                                                } else {
-                                                    height = Math.max(
-                                                        doc.body.scrollHeight,
-                                                        doc.documentElement.scrollHeight,
-                                                        doc.body.offsetHeight,
-                                                        doc.documentElement.offsetHeight
-                                                    );
-                                                }
-                                                if (height > 0) {
-                                                    iframe.style.height = `${height}px`;
-                                                    if (iframe.parentElement) {
-                                                        iframe.parentElement.style.height = `${height}px`;
-                                                    }
-                                                }
-                                            };
-                                            setTimeout(updateHeight, 50);
-                                            if (iframe.contentWindow.ResizeObserver && doc.body) {
-                                                const resizeObserver = new iframe.contentWindow.ResizeObserver(() => {
-                                                    updateHeight();
-                                                });
-                                                resizeObserver.observe(doc.body);
-                                            }
-                                        }
-                                    } catch (err) {
-                                        console.error("Iframe autoheight error:", err);
-                                    }
-                                }}
+                        <div style={{ flex: 1, minHeight: 0, height: '450px' }}>
+                            <CrossTableGrid
+                                dataItem={banner}
+                                showN={showN}
+                                showPct={showPct}
+                                decimalN={decimalN}
+                                decimalPct={decimalPct}
+                                uiSettings={uiSettings}
                             />
                         </div>
                     )}
@@ -1416,20 +1158,11 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                     </div>
                     {isChartOpen && (
                         <div className="agg-chart-container" style={{ height: '350px', position: 'relative', marginTop: '10px' }} ref={chartContainerRef}>
-                            {isChartLoading && (
-                                <div style={{
-                                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    background: 'rgba(255, 255, 255, 0.7)', zIndex: 10
-                                }}>
-                                    <Loader2 className="animate-spin" size={24} color="#3b82f6" />
-                                </div>
-                            )}
-                            {(rawChartData ? apiChartData.length > 0 : (columns.length > 0 || rows.length > 0)) ? (
+                            {columns.length > 0 || rows.length > 0 ? (
                                 <KendoChart
-                                    key={`${banner.id}-${chartMode}-${paletteId}-${rawChartData ? 'api' : 'local'}`}
-                                    data={rawChartData ? apiChartData : chartData}
-                                    seriesNames={rawChartData ? apiChartSeries : chartSeries}
+                                    key={`${banner.id}-${chartMode}-${paletteId}`}
+                                    data={chartData}
+                                    seriesNames={chartSeries}
                                     initialType={chartMode}
                                     labelLimit={12}
                                     suffix={usePercentFields && showPercentSymbol ? "%" : ""}
@@ -1443,11 +1176,9 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                     allowAggregate={true}
                                 />
                             ) : (
-                                !isChartLoading && (
-                                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b', fontSize: '13px' }}>
-                                        표시할 차트 데이터가 없습니다.
-                                    </div>
-                                )
+                                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b', fontSize: '13px' }}>
+                                    표시할 차트 데이터가 없습니다.
+                                </div>
                             )}
                         </div>
                     )}
@@ -1459,7 +1190,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
 const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getOverviewContext, getOverview, getOverviewStyled, savePageSettings, exportOverviewXlsx, createSnapshot, getAiSummary, evaluateChartData } = DpRequestPageApi();
+    const { getOverviewContext, getOverview, savePageSettings, exportOverviewHtml, exportOverviewXlsx, createSnapshot, getAiSummary } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -1475,8 +1206,6 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const isSidebarClickScrolling = useRef(false);
 
     const [banners, setBanners] = useState([]);
-    const [styleCss, setStyleCss] = useState("");
-    const [showTTest, setShowTTest] = useState(false);
     const [showN, setShowN] = useState(false);
     const [decimalN, setDecimalN] = useState(0);
     const [showPct, setShowPct] = useState(true);
@@ -1519,20 +1248,6 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         return () => clearTimeout(timeoutId);
     }, [localDecimalPct]);
 
-    const contextFetchedRef = useRef(false);
-    const recodedVariablesRef = useRef({});
-    const baseVariablesRef = useRef({});
-    const isFirstLoadRef = useRef(true);
-
-    const pageId = sessionStorage.getItem('pageId');
-    const userId = auth?.user?.userId;
-
-    useEffect(() => {
-        contextFetchedRef.current = false;
-        isInitialSetupRef.current = true;
-        isFirstLoadRef.current = true;
-    }, [pageId, userId]);
-
     const isInitialSetupRef = useRef(true);
 
     useEffect(() => {
@@ -1542,35 +1257,23 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             const pageId = sessionStorage.getItem('pageId');
             const user = auth?.user?.userId;
 
-            const newUi = {
-                ...uiSettings,
-                format_show_n: showN,
-                format_n_round: decimalN === '' ? 0 : decimalN,
-                format_show_percent: showPct,
-                format_percent_round: decimalPct === '' ? 0 : decimalPct,
-                show_t_test: showTTest
-            };
-            setUiSettings(newUi);
-
             savePageSettings.mutateAsync({
                 pageid: pageId,
                 user: user,
-                ui_settings: newUi
+                ui_settings: {
+                    ...uiSettings,
+                    format_show_n: showN,
+                    format_n_round: decimalN === '' ? 0 : decimalN,
+                    format_show_percent: showPct,
+                    format_percent_round: decimalPct === '' ? 0 : decimalPct
+                }
             }).catch(e => console.error("Setting save error", e));
         }, 500);
 
         return () => clearTimeout(saveTimeout);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [showN, decimalN, showPct, decimalPct, showTTest]);
+    }, [showN, decimalN, showPct, decimalPct]);
     const [xInfoOptions, setXInfoOptions] = useState([]);
-
-    const defaultBannerId = useMemo(() => {
-        const opt = xInfoOptions.find(o => {
-            const val = String(o.value).toLowerCase();
-            return val !== '__none__' && (val === 'banner' || val.startsWith('banner_') || val.startsWith('overview_'));
-        });
-        return opt ? opt.value : null;
-    }, [xInfoOptions]);
 
     const [selectedComputedFilterIds, setSelectedComputedFilterIds] = useState([CROSS_FILTER_ALL_ID]);
     const [draftComputedFilterIds, setDraftComputedFilterIds] = useState([CROSS_FILTER_ALL_ID]);
@@ -1773,119 +1476,92 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         const user = auth?.user?.userId;
         if (!pageId || !user) return;
 
+        // const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+        // const user = "sbbok";
         try {
             loadingSpinner.show();
 
+            // 1. Context 데이터 가져오기
+            const contextRes = await getOverviewContext.mutateAsync({ pageid: pageId, user: user });
+
+            // X 정보 (기준변수) 리스트 세팅 및 데이터 필터 (파생문항) 세팅
+            const ctxPayload = contextRes?.resultjson || contextRes || {};
+
             let fetchedUi = uiSettings;
-            let recodedVars = recodedVariablesRef.current;
-            let baseVars = baseVariablesRef.current;
 
-            if (!contextFetchedRef.current) {
-                // 1. Context 데이터 가져오기
-                const contextRes = await getOverviewContext.mutateAsync({ pageid: pageId, user: user });
+            if (ctxPayload) {
+                setProjectNum(ctxPayload.pn || "");
+                fetchedUi = ctxPayload.ui_settings || {};
+                setUiSettings(fetchedUi);
+                setShowN(fetchedUi.format_show_n ?? true);
+                setDecimalN(fetchedUi.format_n_round ?? ctxPayload.n_digits ?? 0);
+                setShowPct(fetchedUi.format_show_percent ?? true);
+                setDecimalPct(fetchedUi.format_percent_round ?? ctxPayload.percent_digits ?? 1);
+                setHideZeroBaseColumns(fetchedUi.hide_zero_base_columns ?? false);
 
-                // X 정보 (기준변수) 리스트 세팅 및 데이터 필터 (파생문항) 세팅
-                const ctxPayload = contextRes?.resultjson || contextRes || {};
-
-                if (ctxPayload) {
-                    setProjectNum(ctxPayload.pn || "");
-                    const resolvedMeanDigits = ctxPayload.display_policy?.mean_digits ?? ctxPayload.ui_settings?.format_mean_round ?? 2;
-                    const resolvedStdDigits = ctxPayload.display_policy?.std_digits ?? ctxPayload.ui_settings?.format_std_round ?? 2;
-                    const resolvedMedianDigits = ctxPayload.display_policy?.median_digits ?? ctxPayload.ui_settings?.format_median_round ?? 2;
-                    const resolvedMinDigits = ctxPayload.display_policy?.min_digits ?? ctxPayload.ui_settings?.format_min_round ?? 0;
-                    const resolvedMaxDigits = ctxPayload.display_policy?.max_digits ?? ctxPayload.ui_settings?.format_max_round ?? 0;
-                    const resolvedVarDigits = ctxPayload.display_policy?.var_digits ?? ctxPayload.ui_settings?.format_var_round ?? 2;
-                    const resolvedNDigits = ctxPayload.display_policy?.n_digits ?? ctxPayload.ui_settings?.format_n_round ?? 0;
-                    const resolvedPercentDigits = ctxPayload.display_policy?.percent_digits ?? ctxPayload.ui_settings?.format_percent_round ?? 1;
-
-                    fetchedUi = {
-                        ...(ctxPayload.display_policy || {}),
-                        ...(ctxPayload.ui_settings || {}),
-                        mean_digits: resolvedMeanDigits,
-                        std_digits: resolvedStdDigits,
-                        median_digits: resolvedMedianDigits,
-                        min_digits: resolvedMinDigits,
-                        max_digits: resolvedMaxDigits,
-                        var_digits: resolvedVarDigits,
-                        n_digits: resolvedNDigits,
-                        percent_digits: resolvedPercentDigits,
-                    };
-                    setUiSettings(fetchedUi);
-                    setShowN(fetchedUi.format_show_n ?? true);
-                    setDecimalN(fetchedUi.format_n_round ?? ctxPayload.n_digits ?? 0);
-                    setShowPct(fetchedUi.format_show_percent ?? true);
-                    setDecimalPct(fetchedUi.format_percent_round ?? ctxPayload.percent_digits ?? 1);
-                    setHideZeroBaseColumns(fetchedUi.hide_zero_base_columns ?? false);
-                    if (fetchedUi.show_t_test !== undefined && fetchedUi.show_t_test !== showTTest) {
-                        setShowTTest(fetchedUi.show_t_test);
-                    }
-
-                    let hasBaseParenthesis = true;
-                    if (fetchedUi.base_prefix !== undefined && fetchedUi.base_prefix !== null) {
-                        hasBaseParenthesis = (fetchedUi.base_prefix === "(" && fetchedUi.base_postfix === ")");
-                    } else if (ctxPayload.display_policy?.base_prefix !== undefined && ctxPayload.display_policy?.base_prefix !== null) {
-                        hasBaseParenthesis = (ctxPayload.display_policy.base_prefix === "(" && ctxPayload.display_policy.base_postfix === ")");
-                    } else if (fetchedUi.show_base_parenthesis !== undefined && fetchedUi.show_base_parenthesis !== null) {
-                        hasBaseParenthesis = fetchedUi.show_base_parenthesis;
-                    } else if (ctxPayload.display_policy?.show_base_parenthesis !== undefined && ctxPayload.display_policy?.show_base_parenthesis !== null) {
-                        hasBaseParenthesis = ctxPayload.display_policy.show_base_parenthesis;
-                    }
-                    setExcelShowBaseParenthesis(hasBaseParenthesis);
-
-                    recodedVars = ctxPayload.recoded_variables || {};
-                    baseVars = ctxPayload.base_variables || {};
-                    recodedVariablesRef.current = recodedVars;
-                    baseVariablesRef.current = baseVars;
-
-                    const dynamicXInfoOptions = Object.entries(recodedVars)
-                        .filter(([key, value]) => {
-                            const id = String(value?.id ?? key).trim().toLowerCase();
-                            if (!id) return false;
-                            if (id === "banner" || id.startsWith("banner_")) return true;
-                            return id.startsWith("overview_");
-                        })
-                        .map(([key]) => key)
-                        .sort((a, b) => a.localeCompare(b, "ko"))
-                        .map(key => ({
-                            text: recodedVars[key]?.label || key,
-                            value: key
-                        }));
-
-                    setXInfoOptions([
-                        { text: '기본 (스터브 설정값) ', value: '__none__' },
-                        ...dynamicXInfoOptions
-                    ]);
-
-                    const filterOpts = Object.entries(baseVars)
-                        .filter(([, value]) => String(value?.recoded_type ?? "").toLowerCase() === "computed")
-                        .flatMap(([key, value]) => {
-                            const variableId = String(value?.id ?? key);
-                            const variableLabel = String(value?.label ?? key).trim() || variableId;
-                            const infoList = Array.isArray(value?.info) ? value.info : [];
-                            return infoList
-                                .map((info, index) => {
-                                    const label = String(info?.label ?? "").trim();
-                                    const logic = String(info?.logic ?? "").trim();
-                                    if (!label || !logic) return null;
-                                    const rawValue = info?.value ?? index + 1;
-                                    return {
-                                        id: `${variableId}::${String(rawValue).trim() || String(index + 1)}`,
-                                        label,
-                                        logic,
-                                        variableId,
-                                        variableLabel,
-                                    };
-                                })
-                                .filter(Boolean);
-                        })
-                        .sort((a, b) => a.label.localeCompare(b.label, "ko") || a.id.localeCompare(b.id, "en"));
-
-                    setComputedFilterOptions(filterOpts);
+                let hasBaseParenthesis = true;
+                if (fetchedUi.base_prefix !== undefined && fetchedUi.base_prefix !== null) {
+                    hasBaseParenthesis = (fetchedUi.base_prefix === "(" && fetchedUi.base_postfix === ")");
+                } else if (ctxPayload.display_policy?.base_prefix !== undefined && ctxPayload.display_policy?.base_prefix !== null) {
+                    hasBaseParenthesis = (ctxPayload.display_policy.base_prefix === "(" && ctxPayload.display_policy.base_postfix === ")");
+                } else if (fetchedUi.show_base_parenthesis !== undefined && fetchedUi.show_base_parenthesis !== null) {
+                    hasBaseParenthesis = fetchedUi.show_base_parenthesis;
+                } else if (ctxPayload.display_policy?.show_base_parenthesis !== undefined && ctxPayload.display_policy?.show_base_parenthesis !== null) {
+                    hasBaseParenthesis = ctxPayload.display_policy.show_base_parenthesis;
                 }
-
-                contextFetchedRef.current = true;
-                setTimeout(() => { isInitialSetupRef.current = false; }, 100);
+                setExcelShowBaseParenthesis(hasBaseParenthesis);
             }
+
+            // 데이터 세팅 후 초기화 플래그 해제 (setTimeout을 통해 setState 이후 반영 보장)
+            setTimeout(() => { isInitialSetupRef.current = false; }, 100);
+
+            const recodedVars = ctxPayload.recoded_variables || {};
+            const baseVars = ctxPayload.base_variables || {};
+
+            const dynamicXInfoOptions = Object.entries(recodedVars)
+                .filter(([key, value]) => {
+                    const id = String(value?.id ?? key).trim().toLowerCase();
+                    if (!id) return false;
+                    if (id === "banner" || id.startsWith("banner_")) return true;
+                    return id.startsWith("overview_");
+                })
+                .map(([key]) => key)
+                .sort((a, b) => a.localeCompare(b, "ko"))
+                .map(key => ({
+                    text: recodedVars[key]?.label || key,
+                    value: key
+                }));
+
+            setXInfoOptions([
+                { text: '기본 (스터브 설정값) ', value: '__none__' },
+                ...dynamicXInfoOptions
+            ]);
+
+            const filterOpts = Object.entries(baseVars)
+                .filter(([, value]) => String(value?.recoded_type ?? "").toLowerCase() === "computed")
+                .flatMap(([key, value]) => {
+                    const variableId = String(value?.id ?? key);
+                    const variableLabel = String(value?.label ?? key).trim() || variableId;
+                    const infoList = Array.isArray(value?.info) ? value.info : [];
+                    return infoList
+                        .map((info, index) => {
+                            const label = String(info?.label ?? "").trim();
+                            const logic = String(info?.logic ?? "").trim();
+                            if (!label || !logic) return null;
+                            const rawValue = info?.value ?? index + 1;
+                            return {
+                                id: `${variableId}::${String(rawValue).trim() || String(index + 1)}`,
+                                label,
+                                logic,
+                                variableId,
+                                variableLabel,
+                            };
+                        })
+                        .filter(Boolean);
+                })
+                .sort((a, b) => a.label.localeCompare(b.label, "ko") || a.id.localeCompare(b.id, "en"));
+
+            setComputedFilterOptions(filterOpts);
 
             // 2. 전체표 목록 (Overview) 가져오기
             const reqData = {
@@ -1897,22 +1573,21 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 search: bannerSearch,
                 filter_expression: currentFilterExp,
                 use_recoded: true,
-                include_stats: showTTest ? ["t-test"] : [],
                 display_policy: {
-                    show_n: isInitialSetupRef.current ? (fetchedUi?.format_show_n ?? showN) : showN,
-                    show_percent: isInitialSetupRef.current ? (fetchedUi?.format_show_percent ?? showPct) : showPct,
-                    percent_symbol: isInitialSetupRef.current ? (fetchedUi?.format_show_percent ?? showPct) : showPct,
-                    hide_zero_base_columns: isInitialSetupRef.current ? (fetchedUi?.hide_zero_base_columns ?? hideZeroBaseColumns) : hideZeroBaseColumns,
-                    hide_zero_stubs: isInitialSetupRef.current ? (fetchedUi?.hide_zero_stubs ?? false) : (uiSettings?.hide_zero_stubs ?? false),
-                    hide_zero_banners: isInitialSetupRef.current ? (fetchedUi?.hide_zero_banners ?? false) : (uiSettings?.hide_zero_banners ?? false),
-                    n_digits: Number(isInitialSetupRef.current ? (fetchedUi?.format_n_round ?? (decimalN === '' ? 0 : decimalN)) : (decimalN === '' ? 0 : decimalN)),
-                    percent_digits: Number(isInitialSetupRef.current ? (fetchedUi?.format_percent_round ?? (decimalPct === '' ? 1 : decimalPct)) : (decimalPct === '' ? 1 : decimalPct)),
-                    mean_digits: fetchedUi?.mean_digits ?? uiSettings?.mean_digits ?? 2,
-                    std_digits: fetchedUi?.std_digits ?? uiSettings?.std_digits ?? 2,
-                    median_digits: fetchedUi?.median_digits ?? uiSettings?.median_digits ?? 2,
-                    min_digits: fetchedUi?.min_digits ?? uiSettings?.min_digits ?? 0,
-                    max_digits: fetchedUi?.max_digits ?? uiSettings?.max_digits ?? 0,
-                    var_digits: fetchedUi?.var_digits ?? uiSettings?.var_digits ?? 2,
+                    show_n: fetchedUi?.format_show_n ?? showN,
+                    show_percent: fetchedUi?.format_show_percent ?? showPct,
+                    percent_symbol: fetchedUi?.format_show_percent ?? showPct,
+                    hide_zero_base_columns: fetchedUi?.hide_zero_base_columns ?? hideZeroBaseColumns,
+                    hide_zero_stubs: fetchedUi?.hide_zero_stubs ?? false,
+                    hide_zero_banners: fetchedUi?.hide_zero_banners ?? false,
+                    n_digits: Number(fetchedUi?.format_n_round ?? decimalN === '' ? 0 : decimalN),
+                    percent_digits: Number(fetchedUi?.format_percent_round ?? decimalPct === '' ? 1 : decimalPct),
+                    mean_digits: fetchedUi?.mean_digits ?? uiSettings?.mean_digits ?? 1,
+                    std_digits: fetchedUi?.std_digits ?? uiSettings?.std_digits ?? 1,
+                    median_digits: fetchedUi?.median_digits ?? uiSettings?.median_digits ?? 1,
+                    min_digits: fetchedUi?.min_digits ?? uiSettings?.min_digits ?? 1,
+                    max_digits: fetchedUi?.max_digits ?? uiSettings?.max_digits ?? 1,
+                    var_digits: fetchedUi?.var_digits ?? uiSettings?.var_digits ?? 1,
                     zero_display: fetchedUi?.zero_display || uiSettings?.zero_display || "0",
                     empty_display: fetchedUi?.empty_display || uiSettings?.empty_display || "blank"
                 }
@@ -1921,19 +1596,20 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 reqData.banner = [selectedXInfo];
             }
 
-            const overviewRes = await getOverviewStyled.mutateAsync(reqData);
+            const overviewRes = await getOverview.mutateAsync(reqData);
 
             // 응답 포맷 대응 (resultjson 래핑 여부)
             const payload = overviewRes?.resultjson || overviewRes || {};
             const tablesList = payload.tables || [];
+            const resultsList = payload.results || [];
 
             setOverviewPayload(payload);
-            if (payload.style_css) {
-                setStyleCss(payload.style_css);
-            }
 
             if (tablesList.length > 0 || (overviewRes?.success === '777')) {
                 const formatted = tablesList.map((t, i) => {
+                    const matchedResult = resultsList.find(r => r.table_id === (t.table_id || t.id));
+                    const dataResult = matchedResult ? matchedResult.result : null;
+
                     // 스터브 설정값(색상, 선 등 info 정보)을 컨텍스트의 recodedVars에서 매핑
                     const stubVarId = t.table_id || t.id;
                     const stubVar = recodedVars[stubVarId] || {};
@@ -1941,13 +1617,13 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
                     return {
                         id: t.table_id || t.id || `table_${i}`,
-                        label: t.title || t.label || t.name || t.id || t.table_name,
+                        label: t.title || t.label || t.name || t.id,
                         type: t.type === 'single' ? '단일 응답형 (Single)' :
                             t.type === 'double' ? '다중 응답형 (Double)' :
                                 t.type === 'numeric' ? '숫자형 (Numeric)' : (t.type || '단일 응답형 (Single)'),
                         subId: t.table_id || t.id,
                         raw: { ...t, info: stubInfo },
-                        html: t.html,
+                        dataResult: dataResult,
                         info: stubInfo
                     };
                 });
@@ -2026,14 +1702,6 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const filteredBanners = banners;
 
     useEffect(() => {
-        if (isInitialSetupRef.current && !isFirstLoadRef.current) {
-            // Skip updates while initial settings from context are being applied
-            return;
-        }
-        if (isFirstLoadRef.current) {
-            isFirstLoadRef.current = false;
-        }
-
         const timer = setTimeout(() => {
             if (currentPage !== 1) {
                 setCurrentPage(1); // currentPage useEffect가 fetch를 수행함
@@ -2042,7 +1710,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             }
         }, 300);
         return () => clearTimeout(timer);
-    }, [bannerSearch, selectedXInfo, filterExpression, auth?.user?.userId, showTTest, showN, decimalN, showPct, decimalPct]);
+    }, [bannerSearch, selectedXInfo, filterExpression, auth?.user?.userId]);
 
     useEffect(() => {
         const handlePageUpdate = () => {
@@ -2145,12 +1813,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     hide_zero_banners: uiSettings?.hide_zero_banners ?? false,
                     n_digits: Number(decimalN === '' ? 0 : decimalN),
                     percent_digits: Number(excelDecimalPct === '' ? 1 : excelDecimalPct),
-                    mean_digits: uiSettings?.mean_digits ?? 2,
-                    std_digits: uiSettings?.std_digits ?? 2,
-                    median_digits: uiSettings?.median_digits ?? 2,
-                    min_digits: uiSettings?.min_digits ?? 0,
-                    max_digits: uiSettings?.max_digits ?? 0,
-                    var_digits: uiSettings?.var_digits ?? 2,
+                    mean_digits: uiSettings?.mean_digits ?? 1,
+                    std_digits: uiSettings?.std_digits ?? 1,
+                    median_digits: uiSettings?.median_digits ?? 1,
+                    min_digits: uiSettings?.min_digits ?? 1,
+                    max_digits: uiSettings?.max_digits ?? 1,
+                    var_digits: uiSettings?.var_digits ?? 1,
                     zero_display: uiSettings?.zero_display || "0",
                     empty_display: uiSettings?.empty_display || "blank",
                     show_base_parenthesis: excelShowBaseParenthesis,
@@ -2456,31 +2124,6 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         </div>
                     </div>
 
-                    {/* 차이검증 Control Group */}
-                    <div style={{
-                        display: 'flex', alignItems: 'center', borderRadius: '20px', border: '1px solid #cbd5e1', background: '#f8fafc', height: '32px', overflow: 'hidden'
-                    }}>
-                        <div
-                            onClick={() => setShowTTest(!showTTest)}
-                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', height: '100%', cursor: 'pointer', background: '#eef2ff' }}
-                        >
-                            <div style={{
-                                width: '16px', height: '16px', borderRadius: '4px',
-                                background: showTTest ? '#3b82f6' : '#fff',
-                                border: `1.5px solid ${showTTest ? '#3b82f6' : '#cbd5e1'}`,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                flexShrink: 0
-                            }}>
-                                {showTTest && (
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                )}
-                            </div>
-                            <span style={{ fontSize: '13px', fontWeight: 800, color: '#3730a3', userSelect: 'none' }}>차이검증</span>
-                        </div>
-                    </div>
-
                     {/* <button
                         className="dp-btn"
                         onClick={async () => {
@@ -2511,12 +2154,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         hide_zero_banners: uiSettings?.hide_zero_banners ?? false,
                                         n_digits: Number(decimalN === '' ? 0 : decimalN),
                                         percent_digits: Number(decimalPct === '' ? 1 : decimalPct),
-                                        mean_digits: uiSettings?.mean_digits ?? 2,
-                                        std_digits: uiSettings?.std_digits ?? 2,
-                                        median_digits: uiSettings?.median_digits ?? 2,
-                                        min_digits: uiSettings?.min_digits ?? 0,
-                                        max_digits: uiSettings?.max_digits ?? 0,
-                                        var_digits: uiSettings?.var_digits ?? 2,
+                                        mean_digits: uiSettings?.mean_digits ?? 1,
+                                        std_digits: uiSettings?.std_digits ?? 1,
+                                        median_digits: uiSettings?.median_digits ?? 1,
+                                        min_digits: uiSettings?.min_digits ?? 1,
+                                        max_digits: uiSettings?.max_digits ?? 1,
+                                        var_digits: uiSettings?.var_digits ?? 1,
                                         zero_display: uiSettings?.zero_display || "0",
                                         empty_display: uiSettings?.empty_display || "blank"
                                     }
@@ -2525,28 +2168,23 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     requestData.banner = [selectedXInfo];
                                 }
 
-                                const result = await getOverviewStyled.mutateAsync(requestData);
+                                const result = await exportOverviewHtml.mutateAsync(requestData);
                                 const payload = result?.resultjson || result || {};
 
-                                const css = payload.style_css || '';
-                                const tables = payload.tables || [];
-                                const tablesHtml = tables.map(t => t.html || '').join('<div style="height:24px;"></div>');
-                                const fullHtml = `<!doctype html><html><head><meta charset="utf-8"/><style>${css}</style></head><body style="margin:0; padding:16px;">${tablesHtml || payload.html || ''}</body></html>`;
-
-                                if (fullHtml && (tables.length > 0 || payload.html)) {
+                                if (result?.success === "777" && payload.html) {
                                     try {
-                                        const htmlBlob = new Blob([fullHtml], { type: 'text/html' });
-                                        const textBlob = new Blob([fullHtml], { type: 'text/plain' });
+                                        const htmlBlob = new Blob([payload.html], { type: 'text/html' });
+                                        const textBlob = new Blob([payload.html], { type: 'text/plain' });
                                         const clipboardItem = new window.ClipboardItem({
                                             'text/html': htmlBlob,
                                             'text/plain': textBlob
                                         });
                                         await navigator.clipboard.write([clipboardItem]);
-                                        modal.showAlert('알림', `교차분석 결과(${tables.length || 0}개 표)가 스타일을 포함하여 클립보드에 복사되었습니다.`);
+                                        modal.showAlert('알림', `교차분석 결과(${payload.table_count || 0}개 표)가 클립보드에 복사되었습니다.`);
                                     } catch (clipErr) {
                                         // Fallback
                                         const textArea = document.createElement("textarea");
-                                        textArea.value = fullHtml;
+                                        textArea.value = payload.html;
                                         document.body.appendChild(textArea);
                                         textArea.select();
                                         document.execCommand("copy");
@@ -2557,7 +2195,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     modal.showAlert('오류', 'HTML 데이터 생성에 실패했습니다.');
                                 }
                             } catch (error) {
-                                console.error('HTML Copy Error:', error);
+                                console.error('HTML Export Error:', error);
                                 modal.showAlert('오류', 'HTML 복사 중 문제가 발생했습니다.');
                             } finally {
                                 loadingSpinner.hide();
@@ -2787,11 +2425,6 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 projectNum={projectNum}
                                 overviewPayload={overviewPayload}
                                 userId={auth?.user?.userId}
-                                styleCss={styleCss}
-                                evaluateChartData={evaluateChartData}
-                                selectedXInfo={selectedXInfo}
-                                filterExpression={filterExpression}
-                                defaultBannerId={defaultBannerId}
                             />
                         ))}
                     </div>
@@ -2941,12 +2574,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                 hide_zero_banners: uiSettings?.hide_zero_banners ?? false,
                                                 n_digits: Number(decimalN === '' ? 0 : decimalN),
                                                 percent_digits: Number(decimalPct === '' ? 1 : decimalPct),
-                                                mean_digits: uiSettings?.mean_digits ?? 2,
-                                                std_digits: uiSettings?.std_digits ?? 2,
-                                                median_digits: uiSettings?.median_digits ?? 2,
-                                                min_digits: uiSettings?.min_digits ?? 0,
-                                                max_digits: uiSettings?.max_digits ?? 0,
-                                                var_digits: uiSettings?.var_digits ?? 2,
+                                                mean_digits: uiSettings?.mean_digits ?? 1,
+                                                std_digits: uiSettings?.std_digits ?? 1,
+                                                median_digits: uiSettings?.median_digits ?? 1,
+                                                min_digits: uiSettings?.min_digits ?? 1,
+                                                max_digits: uiSettings?.max_digits ?? 1,
+                                                var_digits: uiSettings?.var_digits ?? 1,
                                                 zero_display: uiSettings?.zero_display || "0",
                                                 empty_display: uiSettings?.empty_display || "blank"
                                             },
