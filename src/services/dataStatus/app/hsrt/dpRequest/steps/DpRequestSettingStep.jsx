@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, useContext, forwardRef, useImperativeHandle } from 'react';
 import { useSelector } from 'react-redux';
 import { Settings, Layout } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
@@ -115,9 +115,45 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     const [weightOptions, setWeightOptions] = useState(['없음']);
     const [scaleData, setScaleData] = useState([
-        { name: '5점척도 Top2 / Mid / Bot2', type: 'scale', min: 1, max: 5, recode: true, top: '4,5', mid: '3', bot: '1,2' },
-        { name: '7점척도 Top3 / Mid / Bot3', type: 'scale', min: 1, max: 7, recode: true, top: '5,6,7', mid: '4', bot: '1,2,3' },
-        { name: '10점척도 Top3 / Mid4 / Bot3', type: 'scale', min: 1, max: 10, recode: true, top: '8,9,10', mid: '4,5,6,7', bot: '1,2,3' },
+        {
+            id: 'preset_5scale',
+            name: '5점척도 Top2 / Mid / Bot2',
+            type: 'scale',
+            min: 1,
+            max: 5,
+            recode: true,
+            bands: [
+                { label: 'top', values: '4,5' },
+                { label: 'mid', values: '3' },
+                { label: 'bot', values: '1,2' }
+            ]
+        },
+        {
+            id: 'preset_7scale',
+            name: '7점척도 Top3 / Mid / Bot3',
+            type: 'scale',
+            min: 1,
+            max: 7,
+            recode: true,
+            bands: [
+                { label: 'top', values: '5,6,7' },
+                { label: 'mid', values: '4' },
+                { label: 'bot', values: '1,2,3' }
+            ]
+        },
+        {
+            id: 'preset_10scale',
+            name: '10점척도 Top3 / Mid4 / Bot3',
+            type: 'scale',
+            min: 1,
+            max: 10,
+            recode: true,
+            bands: [
+                { label: 'top', values: '8,9,10' },
+                { label: 'mid', values: '4,5,6,7' },
+                { label: 'bot', values: '1,2,3' }
+            ]
+        }
     ]);
     const [rankData, setRankData] = useState([]);
     const [groupData, setGroupData] = useState([]);
@@ -274,60 +310,69 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                 if (actualTableDetail?.scale_presets) {
                     nextScaleData = actualTableDetail.scale_presets.map(item => {
-                        let top = '', mid = '', bot = '';
                         const options = item.options || {};
+                        let bands = [];
                         if (Array.isArray(options.bands)) {
-                            options.bands.forEach(band => {
-                                const lbl = (band.label || '').toLowerCase();
-                                const vals = (band.values || []).join(',');
-                                if (lbl.includes('top')) top = vals;
-                                else if (lbl.includes('mid')) mid = vals;
-                                else if (lbl.includes('bot')) bot = vals;
-                            });
+                            bands = options.bands.map(b => ({
+                                label: b.label || 'top',
+                                values: Array.isArray(b.values) ? b.values.join(',') : ''
+                            }));
+                            const labelOrder = { 'top': 0, 'mid': 1, 'bot': 2 };
+                            bands.sort((a, b) => (labelOrder[a.label] ?? 99) - (labelOrder[b.label] ?? 99));
                         }
                         return {
                             id: item.id,
                             name: item.name || '',
                             type: item.type || 'scale',
-                            min: options.min ?? '',
-                            max: options.max ?? '',
+                            min: options.min ?? 1,
+                            max: options.max ?? 5,
                             recode: !!options.reverse,
-                            top: top,
-                            mid: mid,
-                            bot: bot
+                            bands: bands
                         };
                     });
                     setScaleData(nextScaleData);
                 }
                 if (actualTableDetail?.rank_presets) {
                     nextRankData = actualTableDetail.rank_presets.map(item => {
-                        let selection = '';
-                        if (Array.isArray(item.combinations) && item.combinations.length > 0) {
-                            selection = item.combinations.join(', ');
-                        } else if (Array.isArray(item.ranks)) {
-                            selection = item.ranks.map(n => {
-                                if (n === 1) return '1';
-                                return Array.from({ length: n }, (_, i) => i + 1).join('+');
-                            }).join(', ');
+                        let combinations = [];
+                        let maxVal = 5;
+                        if (Array.isArray(item.combinations)) {
+                            combinations = item.combinations.map(c => {
+                                const vals = String(c).split('+').map(Number).filter(n => !isNaN(n));
+                                let label = '';
+                                if (vals.length === 1 && vals[0] === 1) label = '1순위';
+                                else if (vals.length > 1 && vals.every((v, idx) => v === idx + 1)) label = `Top${vals.length}`;
+                                else label = vals.join('+');
+                                
+                                return { label: label, values: vals };
+                            });
+                            const allVals = item.combinations.flatMap(c => String(c).split('+').map(Number));
+                            if (allVals.length > 0) {
+                                maxVal = Math.max(...allVals, 5);
+                            }
                         }
                         return {
                             id: item.id,
                             name: item.name || '',
-                            selection: selection
+                            max: maxVal,
+                            combinations: combinations
                         };
                     });
                     setRankData(nextRankData);
                 }
                 if (actualTableDetail?.group_presets) {
                     nextGroupData = actualTableDetail.group_presets.map(item => {
-                        let selection = '';
+                        let groups = [];
                         if (Array.isArray(item.groups)) {
-                            selection = item.groups.map(g => `${g.label || ''}=${(g.values || []).join(',')}`).join(' | ');
+                            groups = item.groups.map(g => ({
+                                label: g.label || '',
+                                values: Array.isArray(g.values) ? g.values.join(',') : ''
+                            }));
                         }
                         return {
                             id: item.id,
                             name: item.name || '',
-                            selection: selection
+                            groups: groups
                         };
                     });
                     setGroupData(nextGroupData);
@@ -358,6 +403,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
         const handlePageUpdate = () => fetchInitialData();
         window.addEventListener("pageSelected", handlePageUpdate);
         return () => window.removeEventListener("pageSelected", handlePageUpdate);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [auth?.user?.userId]);
 
     // 키보드 이벤트 (Undo/Redo)
@@ -420,16 +466,17 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
         loadingSpinner.show();
         try {
-            const scaleDataPayload = scaleData.map(item => {
-                const parseValues = (str) => {
-                    if (!str) return [];
-                    return String(str).split(',').map(s => Number(s.trim())).filter(n => !isNaN(n));
-                };
-                const bands = [];
-                if (item.bot) bands.push({ label: 'bot', values: parseValues(item.bot), min: null, max: null, score: null });
-                if (item.mid) bands.push({ label: 'mid', values: parseValues(item.mid), min: null, max: null, score: null });
-                if (item.top) bands.push({ label: 'top', values: parseValues(item.top), min: null, max: null, score: null });
+            const parseValues = (str) => {
+                if (!str) return [];
+                return String(str)
+                    .split(',')
+                    .map(s => s.trim())
+                    .filter(s => s !== '')
+                    .map(s => Number(s))
+                    .filter(n => !isNaN(n));
+            };
 
+            const scaleDataPayload = scaleData.map(item => {
                 return {
                     id: item.id || `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
                     name: item.name,
@@ -441,105 +488,55 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                         reverse: !!item.recode,
                         score_transform: null,
                         custom_value_map: [],
-                        bands: bands
+                        bands: (item.bands || []).map(b => ({
+                            label: b.label,
+                            values: parseValues(b.values),
+                            min: null,
+                            max: null,
+                            score: null
+                        }))
                     }
                 };
             });
 
             for (let i = 0; i < rankData.length; i++) {
                 const item = rankData[i];
-                if (!item.selection || String(item.selection).trim() === '') {
-                    modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'의 조합 선언이 비어있습니다.`);
-                    loadingSpinner.hide();
-                    return false;
-                }
-
-                const combinations = [];
-                const rawParts = String(item.selection).split(',');
-
-                for (let j = 0; j < rawParts.length; j++) {
-                    const rawPart = rawParts[j];
-                    const part = rawPart.replace(/\s+/g, '');
-                    if (!part) continue;
-
-                    const nums = part.split('+');
-                    const numSet = new Set();
-                    let formatValid = true;
-
-                    for (let k = 0; k < nums.length; k++) {
-                        const strVal = nums[k];
-                        if (!/^-?\d+$/.test(strVal)) {
-                            formatValid = false;
-                            break;
-                        }
-
-                        const numVal = parseInt(strVal, 10);
-                        if (numVal < 1) {
-                            modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'의 '${rawPart.trim()}'에 1 이상의 정수만 허용됩니다.`);
-                            loadingSpinner.hide();
-                            return false;
-                        }
-                        if (numSet.has(strVal)) {
-                            modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'의 '${rawPart.trim()}'에 중복된 숫자가 있습니다.`);
-                            loadingSpinner.hide();
-                            return false;
-                        }
-                        numSet.add(strVal);
-                    }
-
-                    if (!formatValid) {
-                        modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'의 '${rawPart.trim()}' 형식이 올바르지 않습니다. 숫자와 '+' 조합만 허용됩니다.`);
-                        loadingSpinner.hide();
-                        return false;
-                    }
-
-                    const normalizedPart = nums.join('+');
-                    if (combinations.includes(normalizedPart)) {
-                        modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'에 '${normalizedPart}' 조합이 중복 선언되었습니다.`);
-                        loadingSpinner.hide();
-                        return false;
-                    }
-                    combinations.push(normalizedPart);
-                }
-
-                if (combinations.length === 0) {
+                if (!item.combinations || item.combinations.length === 0) {
                     modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'에 유효한 조합이 하나 이상 있어야 합니다.`);
                     loadingSpinner.hide();
                     return false;
                 }
-
-                item._processedCombinations = combinations;
+                for (let j = 0; j < item.combinations.length; j++) {
+                    const combo = item.combinations[j];
+                    if (!combo.values || combo.values.length === 0) {
+                        modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'의 조합 중 선택된 순위가 없는 항목이 있습니다.`);
+                        loadingSpinner.hide();
+                        return false;
+                    }
+                }
             }
 
             const rankDataPayload = rankData.map(item => {
+                const combos = (item.combinations || []).map(c => {
+                    return [...c.values].sort((a, b) => a - b).join('+');
+                }).filter(str => str !== '');
                 return {
                     id: item.id || `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
                     name: item.name,
                     type: 'multi',
-                    combinations: item._processedCombinations,
+                    combinations: combos,
                     ranks: []
                 };
             });
 
             const groupDataPayload = groupData.map(item => {
-                const groups = [];
-                if (item.selection) {
-                    String(item.selection).split('|').forEach(part => {
-                        const splitted = part.split('=');
-                        if (splitted.length >= 2) {
-                            const label = splitted[0].trim();
-                            const valStr = splitted.slice(1).join('=');
-                            groups.push({
-                                label: label,
-                                values: valStr.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n))
-                            });
-                        }
-                    });
-                }
                 return {
                     id: item.id || `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
                     name: item.name,
-                    groups: groups
+                    groups: (item.groups || []).map(g => ({
+                        label: g.label || '',
+                        values: parseValues(g.values)
+                    }))
                 };
             });
 
@@ -740,11 +737,14 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 </div>
             </div>
 
-            <div style={{ flex: 1, overflowY: 'auto' }}>
+            <div style={activeTab === 0 ? { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' } : { flex: 1, overflowY: 'auto' }}>
                 {renderTabContent()}
             </div>
         </div>
     );
 });
 
+DpRequestSettingStep.displayName = 'DpRequestSettingStep';
+
 export default DpRequestSettingStep;
+
