@@ -439,24 +439,21 @@ const AnalysisSettingTab = ({
             <div className="dp-setting-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
 
                 {/* 탭 헤더 */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC', paddingRight: '16px', height: '45px', boxSizing: 'border-box', flexShrink: 0 }}>
-                    <div style={{ display: 'flex', height: '100%', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #E2E8F0', background: '#FFFFFF', padding: '10px 16px', height: '52px', boxSizing: 'border-box', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', background: '#F1F5F9', borderRadius: '8px', padding: '3px', gap: '2px', alignItems: 'center' }}>
                         <button
                             onClick={() => setActiveTab('scale')}
                             style={{
-                                padding: '12px 20px',
-                                fontSize: '13px',
+                                padding: '6px 14px',
+                                fontSize: '12px',
                                 fontWeight: 600,
                                 border: 'none',
-                                borderBottom: activeTab === 'scale' ? '3px solid #2563EB' : '3px solid transparent',
-                                background: 'none',
-                                color: activeTab === 'scale' ? '#2563EB' : '#475569',
+                                borderRadius: '6px',
+                                background: activeTab === 'scale' ? '#FFFFFF' : 'transparent',
+                                color: activeTab === 'scale' ? '#1E293B' : '#64748B',
+                                boxShadow: activeTab === 'scale' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s',
-                                marginBottom: '-1px',
-                                height: '100%',
-                                display: 'flex',
-                                alignItems: 'center'
+                                transition: 'all 0.15s'
                             }}
                         >
                             단일형 척도
@@ -464,19 +461,16 @@ const AnalysisSettingTab = ({
                         <button
                             onClick={() => setActiveTab('group')}
                             style={{
-                                padding: '12px 20px',
-                                fontSize: '13px',
+                                padding: '6px 14px',
+                                fontSize: '12px',
                                 fontWeight: 600,
                                 border: 'none',
-                                borderBottom: activeTab === 'group' ? '3px solid #2563EB' : '3px solid transparent',
-                                background: 'none',
-                                color: activeTab === 'group' ? '#2563EB' : '#475569',
+                                borderRadius: '6px',
+                                background: activeTab === 'group' ? '#FFFFFF' : 'transparent',
+                                color: activeTab === 'group' ? '#1E293B' : '#64748B',
+                                boxShadow: activeTab === 'group' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s',
-                                marginBottom: '-1px',
-                                height: '100%',
-                                display: 'flex',
-                                alignItems: 'center'
+                                transition: 'all 0.15s'
                             }}
                         >
                             그룹 묶기
@@ -484,19 +478,16 @@ const AnalysisSettingTab = ({
                         <button
                             onClick={() => setActiveTab('rank')}
                             style={{
-                                padding: '12px 20px',
-                                fontSize: '13px',
+                                padding: '6px 14px',
+                                fontSize: '12px',
                                 fontWeight: 600,
                                 border: 'none',
-                                borderBottom: activeTab === 'rank' ? '3px solid #2563EB' : '3px solid transparent',
-                                background: 'none',
-                                color: activeTab === 'rank' ? '#2563EB' : '#475569',
+                                borderRadius: '6px',
+                                background: activeTab === 'rank' ? '#FFFFFF' : 'transparent',
+                                color: activeTab === 'rank' ? '#1E293B' : '#64748B',
+                                boxShadow: activeTab === 'rank' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s',
-                                marginBottom: '-1px',
-                                height: '100%',
-                                display: 'flex',
-                                alignItems: 'center'
+                                transition: 'all 0.15s'
                             }}
                         >
                             다중형 순위
