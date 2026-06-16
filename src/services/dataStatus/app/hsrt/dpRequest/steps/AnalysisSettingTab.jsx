@@ -448,12 +448,16 @@ const AnalysisSettingTab = ({
                                 fontSize: '12px',
                                 fontWeight: 600,
                                 border: 'none',
+                                borderBottom: '0px solid transparent',
+                                outline: 'none',
+                                textDecoration: 'none',
                                 borderRadius: '6px',
                                 background: activeTab === 'scale' ? '#FFFFFF' : 'transparent',
                                 color: activeTab === 'scale' ? '#1E293B' : '#64748B',
                                 boxShadow: activeTab === 'scale' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
                                 cursor: 'pointer',
-                                transition: 'all 0.15s'
+                                transition: 'all 0.15s',
+                                margin: 0
                             }}
                         >
                             단일형 척도
@@ -465,12 +469,16 @@ const AnalysisSettingTab = ({
                                 fontSize: '12px',
                                 fontWeight: 600,
                                 border: 'none',
+                                borderBottom: '0px solid transparent',
+                                outline: 'none',
+                                textDecoration: 'none',
                                 borderRadius: '6px',
                                 background: activeTab === 'group' ? '#FFFFFF' : 'transparent',
                                 color: activeTab === 'group' ? '#1E293B' : '#64748B',
                                 boxShadow: activeTab === 'group' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
                                 cursor: 'pointer',
-                                transition: 'all 0.15s'
+                                transition: 'all 0.15s',
+                                margin: 0
                             }}
                         >
                             그룹 묶기
@@ -482,12 +490,16 @@ const AnalysisSettingTab = ({
                                 fontSize: '12px',
                                 fontWeight: 600,
                                 border: 'none',
+                                borderBottom: '0px solid transparent',
+                                outline: 'none',
+                                textDecoration: 'none',
                                 borderRadius: '6px',
                                 background: activeTab === 'rank' ? '#FFFFFF' : 'transparent',
                                 color: activeTab === 'rank' ? '#1E293B' : '#64748B',
                                 boxShadow: activeTab === 'rank' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
                                 cursor: 'pointer',
-                                transition: 'all 0.15s'
+                                transition: 'all 0.15s',
+                                margin: 0
                             }}
                         >
                             다중형 순위
