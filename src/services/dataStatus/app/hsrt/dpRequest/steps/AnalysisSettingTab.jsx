@@ -295,8 +295,12 @@ const AnalysisSettingTab = ({
             if (item.id === id) {
                 let val = value;
                 if (field === 'max') {
-                    const numVal = parseInt(value, 10);
-                    val = isNaN(numVal) ? 5 : numVal;
+                    if (value === '') {
+                        val = '';
+                    } else {
+                        const numVal = parseInt(value, 10);
+                        val = isNaN(numVal) ? 1 : Math.max(1, numVal);
+                    }
                 }
                 return { ...item, [field]: val };
             }
@@ -1084,8 +1088,15 @@ const AnalysisSettingTab = ({
                                                     <span>max</span>
                                                     <input
                                                         type="number"
+                                                        min="1"
                                                         value={item.max}
                                                         onChange={(e) => handleUpdateRankPreset(item.id, 'max', e.target.value)}
+                                                        onBlur={(e) => {
+                                                            const val = parseInt(e.target.value, 10);
+                                                            if (isNaN(val) || val < 1) {
+                                                                handleUpdateRankPreset(item.id, 'max', 1);
+                                                            }
+                                                        }}
                                                         style={{ width: '45px', padding: '3px 4px', textAlign: 'center', border: '1px solid #CBD5E1', borderRadius: '4px' }}
                                                     />
                                                 </div>
