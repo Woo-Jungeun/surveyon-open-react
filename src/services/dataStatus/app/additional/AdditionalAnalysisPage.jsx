@@ -1825,6 +1825,12 @@ const AdditionalAnalysisPage = () => {
         });
     };
 
+    const xInfo = useMemo(() => {
+        return colVars.filter(g => g.length > 0).length > 0
+            ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')]
+            : [];
+    }, [colVars]);
+
     return (
         <div className="cross-tab-page" data-theme="data-dashboard">
             {styleCss && <style dangerouslySetInnerHTML={{ __html: styleCss }} />}
@@ -2260,6 +2266,10 @@ const AdditionalAnalysisPage = () => {
                                             tableMode={tableMode}
                                             paletteId={globalPaletteId}
                                             setPaletteId={setGlobalPaletteId}
+                                            rowVars={rowVars}
+                                            xInfo={xInfo}
+                                            weightCol={selectedWeight === "없음" ? null : selectedWeight}
+                                            filterExpression={filterExpression}
                                         />
                                     ))}
                                 </div>
@@ -2278,6 +2288,7 @@ const AdditionalAnalysisPage = () => {
                 statsOptions={fullscreenModal.statsOptions}
                 chartData={fullscreenModal.chartData}
                 seriesNames={fullscreenModal.seriesNames}
+                rawChartData={fullscreenModal.rawChartData}
                 chartMode={fullscreenModal.chartMode}
                 displayMode={fullscreenModal.displayMode}
                 setDisplayMode={fullscreenModal.setDisplayMode}

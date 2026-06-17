@@ -4,6 +4,43 @@ import { Copy, Maximize, Settings, Download, BarChart2, Layers, LineChart, PieCh
 import KendoChart from '../../components/KendoChart';
 import { saveAs } from '@progress/kendo-file-saver';
 import { CHART_THEME_OPTIONS } from '../../constants/chartThemes';
+import { useSelector } from 'react-redux';
+import { DpRequestPageApi } from '../hsrt/dpRequest/DpRequestPageApi';
+
+const toRechartsData = (resultjson, activeDataType) => {
+    if (!resultjson) return { data: [], series: [] };
+    const labels = resultjson.labels || [];
+    const seriesList = resultjson.series || [];
+
+    const series = labels.map(lbl => {
+        return {
+            field: String(lbl.key),
+            name: lbl.label || lbl.key
+        };
+    });
+
+    const data = seriesList.map(s => {
+        const nameParts = [s.label3, s.label2, s.label]
+            .map(p => String(p || '').trim())
+            .filter(Boolean);
+        const fullLabel = nameParts.reverse().join('\n');
+
+        const item = {
+            label: fullLabel,
+            name: fullLabel,
+            rawSeries: s
+        };
+
+        labels.forEach(lbl => {
+            const valArr = activeDataType === 'percent' ? s.percent : s.count;
+            item[String(lbl.key)] = valArr ? valArr[lbl.key] ?? valArr[labels.indexOf(lbl)] : null;
+        });
+
+        return item;
+    });
+
+    return { data, series };
+};
 
 const computeLocalVars = (dataItem, chartMode, chartDataType) => {
     if (!dataItem || !dataItem.columns || !dataItem.rows) return {};
@@ -85,7 +122,11 @@ export const ResultSectionBlock = ({
     isAnyExpanded,
     tableMode,
     paletteId,
-    setPaletteId
+    setPaletteId,
+    rowVars,
+    xInfo,
+    weightCol,
+    filterExpression
 }) => {
     const [chartMode, setChartMode] = useState(null);
     const activeChartMode = chartMode || 'column';
@@ -111,6 +152,83 @@ export const ResultSectionBlock = ({
     const [showChartValues, setShowChartValues] = useState(true);
     const [showPercentSymbol, setShowPercentSymbol] = useState(false);
 
+    const [layoutOptions, setLayoutOptions] = useState([
+        { id: 'table', label: '표', checked: true },
+        { id: 'stats', label: '통계', checked: true },
+        { id: 'chart', label: '차트', checked: false },
+        { id: 'ai', label: 'AI 분석', checked: false }
+    ]);
+
+    const [statsOptions, setStatsOptions] = useState([
+        { id: 'mean', label: '평균', checked: true },
+        { id: 'median', label: '중앙값', checked: false },
+        { id: 'mode', label: '최빈값', checked: false },
+        { id: 'std', label: '표준편차', checked: false },
+        { id: 'min', label: '최소값', checked: false },
+        { id: 'max', label: '최대값', checked: false },
+        { id: 'n', label: '표본수', checked: false },
+        { id: 'rse', label: '상대표준오차', checked: false },
+    ]);
+
+    const [rawChartData, setRawChartData] = useState(null);
+    const [isChartLoading, setIsChartLoading] = useState(false);
+    const { evaluateChartData } = DpRequestPageApi();
+    const auth = useSelector((store) => store.auth);
+    const userId = auth?.user?.userId;
+
+    const stub = useMemo(() => {
+        if (tableMode === 'separated') {
+            const currentStubVar = rowVars?.[dataIndex];
+            return currentStubVar ? [currentStubVar.id || currentStubVar.name] : [];
+        } else {
+            return rowVars?.map(v => v.id || v.name) || [];
+        }
+    }, [tableMode, rowVars, dataIndex]);
+
+    const isChartVisible = useMemo(() => {
+        return layoutOptions.find(opt => opt.id === 'chart')?.checked;
+    }, [layoutOptions]);
+
+    useEffect(() => {
+        const fetchChartData = async () => {
+            if (!isChartVisible) return;
+            if (!stub.length || !xInfo?.length) {
+                setRawChartData(null);
+                return;
+            }
+
+            try {
+                setIsChartLoading(true);
+                const pageId = sessionStorage.getItem('pageId');
+                const payload = {
+                    pageid: pageId,
+                    user: userId,
+                    table: {
+                        id: resultData?.table_id || 'T1',
+                        stub,
+                        banner: xInfo
+                    },
+                    weight_col: weightCol || null,
+                    filter_expression: filterExpression || ""
+                };
+
+                const res = await evaluateChartData.mutateAsync(payload);
+                if (res?.success === "777" && res.resultjson) {
+                    setRawChartData(res.resultjson);
+                } else {
+                    setRawChartData(null);
+                }
+            } catch (err) {
+                console.error("Failed to fetch chart data in additional analysis:", err);
+                setRawChartData(null);
+            } finally {
+                setIsChartLoading(false);
+            }
+        };
+
+        fetchChartData();
+    }, [isChartVisible, stub, xInfo, weightCol, filterExpression, userId, resultData?.table_id]);
+
     const {
         chartData: fullChartData = [],
         seriesNames = [],
@@ -124,16 +242,31 @@ export const ResultSectionBlock = ({
         [resultData, activeChartMode, chartDataType]
     );
 
+    const { apiChartData, apiChartSeries } = useMemo(() => {
+        if (!rawChartData) return { apiChartData: [], apiChartSeries: [] };
+        const activeDataType = chartDataType === 'frequency' ? 'count' : 'percent';
+        const { data, series } = toRechartsData(rawChartData, activeDataType);
+        return { apiChartData: data, apiChartSeries: series };
+    }, [rawChartData, chartDataType]);
+
+    const finalChartData = useMemo(() => {
+        return rawChartData ? apiChartData : fullChartData;
+    }, [rawChartData, apiChartData, fullChartData]);
+
+    const finalSeriesNames = useMemo(() => {
+        return rawChartData ? apiChartSeries : seriesNames;
+    }, [rawChartData, apiChartSeries, seriesNames]);
+
     const availableChartGroups = useMemo(() => {
-        if (!fullChartData) return [];
+        if (!finalChartData) return [];
         const groups = new Set();
-        fullChartData.forEach(d => {
+        finalChartData.forEach(d => {
             const parts = d.name.split('\n');
             const groupName = parts.length > 1 ? parts[parts.length - 1] : parts[0];
             groups.add(groupName);
         });
         return Array.from(groups);
-    }, [fullChartData]);
+    }, [finalChartData]);
 
     const prevAvailableGroupsStr = useRef("");
 
@@ -145,14 +278,14 @@ export const ResultSectionBlock = ({
         }
     }, [availableChartGroups]);
 
-    const chartData = useMemo(() => {
-        if (!fullChartData) return [];
-        return fullChartData.filter(d => {
+    const filteredChartData = useMemo(() => {
+        if (!finalChartData) return [];
+        return finalChartData.filter(d => {
             const parts = d.name.split('\n');
             const groupName = parts.length > 1 ? parts[parts.length - 1] : parts[0];
             return selectedChartGroups.includes(groupName);
         });
-    }, [fullChartData, selectedChartGroups]);
+    }, [finalChartData, selectedChartGroups]);
 
 
     const uiSettings = renderSettings || {};
@@ -192,13 +325,6 @@ export const ResultSectionBlock = ({
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
-
-    const [layoutOptions, setLayoutOptions] = useState([
-        { id: 'table', label: '표', checked: true },
-        { id: 'stats', label: '통계', checked: true },
-        { id: 'chart', label: '차트', checked: false },
-        { id: 'ai', label: 'AI 분석', checked: false }
-    ]);
 
     const headerGroups = useMemo(() => {
         if (!resultData?.columns) return { row1: [], row2: [], row3: [], showRow2: false, showRow3: false };
@@ -307,17 +433,6 @@ export const ResultSectionBlock = ({
 
         return { row1, row2, row3, showRow2, showRow3 };
     }, [resultData?.columns, hasVarLabel, hasColLabel2, hasColLabel3]);
-
-    const [statsOptions, setStatsOptions] = useState([
-        { id: 'mean', label: '평균', checked: true },
-        { id: 'median', label: '중앙값', checked: false },
-        { id: 'mode', label: '최빈값', checked: false },
-        { id: 'std', label: '표준편차', checked: false },
-        { id: 'min', label: '최소값', checked: false },
-        { id: 'max', label: '최대값', checked: false },
-        { id: 'n', label: '표본수', checked: false },
-        { id: 'rse', label: '상대표준오차', checked: false },
-    ]);
 
     const toggleLayoutOption = (id) => {
         setLayoutOptions(layoutOptions.map(opt =>
@@ -693,8 +808,8 @@ export const ResultSectionBlock = ({
                                                         open: true,
                                                         type: 'table',
                                                         dataItem: resultData,
-                                                        chartData,
-                                                        seriesNames,
+                                                        chartData: filteredChartData,
+                                                        seriesNames: finalSeriesNames,
                                                         statsOptions,
                                                         chartMode,
                                                         displayMode,
@@ -1001,8 +1116,8 @@ export const ResultSectionBlock = ({
                                                         open: true,
                                                         type: 'stats',
                                                         dataItem: resultData,
-                                                        chartData,
-                                                        seriesNames,
+                                                        chartData: filteredChartData,
+                                                        seriesNames: finalSeriesNames,
                                                         statsOptions,
                                                         chartMode,
                                                         displayMode,
@@ -1548,8 +1663,9 @@ export const ResultSectionBlock = ({
                                                         open: true,
                                                         type: 'chart',
                                                         dataItem: resultData,
-                                                        chartData,
-                                                        seriesNames,
+                                                        chartData: filteredChartData,
+                                                        seriesNames: finalSeriesNames,
+                                                        rawChartData,
                                                         statsOptions,
                                                         chartMode: activeChartMode,
                                                         suffix: chartDataType === 'percentage' && showPercentSymbol ? "%" : "",
@@ -1568,11 +1684,20 @@ export const ResultSectionBlock = ({
                                                 </button>
                                             </div>
                                         </div>
-                                        <div ref={chartContainerRef} className="cross-tab-chart-container">
+                                        <div ref={chartContainerRef} className="cross-tab-chart-container" style={{ position: 'relative' }}>
+                                            {isChartLoading && (
+                                                <div style={{
+                                                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    background: 'rgba(255, 255, 255, 0.7)', zIndex: 10
+                                                 }}>
+                                                    <Loader2 className="animate-spin" size={24} color="#3b82f6" />
+                                                </div>
+                                            )}
                                             <KendoChart
-                                                key={`${activeChartMode}-${paletteId}-${chartDataType}`}
-                                                data={chartData}
-                                                seriesNames={seriesNames}
+                                                key={`${activeChartMode}-${paletteId}-${chartDataType}-${rawChartData ? 'api' : 'local'}`}
+                                                data={filteredChartData}
+                                                seriesNames={finalSeriesNames}
                                                 initialType={activeChartMode}
                                                 suffix={chartDataType === 'percentage' && showPercentSymbol ? "%" : ""}
                                                 isPercent={chartDataType === 'percentage'}

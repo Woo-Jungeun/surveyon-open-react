@@ -5,6 +5,41 @@ import KendoChart from '../../components/KendoChart';
 import './FullscreenModal.css';
 import { CHART_THEME_OPTIONS } from '../../constants/chartThemes';
 
+const toRechartsData = (resultjson, activeDataType) => {
+    if (!resultjson) return { data: [], series: [] };
+    const labels = resultjson.labels || [];
+    const seriesList = resultjson.series || [];
+
+    const series = labels.map(lbl => {
+        return {
+            field: String(lbl.key),
+            name: lbl.label || lbl.key
+        };
+    });
+
+    const data = seriesList.map(s => {
+        const nameParts = [s.label3, s.label2, s.label]
+            .map(p => String(p || '').trim())
+            .filter(Boolean);
+        const fullLabel = nameParts.reverse().join('\n');
+
+        const item = {
+            label: fullLabel,
+            name: fullLabel,
+            rawSeries: s
+        };
+
+        labels.forEach(lbl => {
+            const valArr = activeDataType === 'percent' ? s.percent : s.count;
+            item[String(lbl.key)] = valArr ? valArr[lbl.key] ?? valArr[labels.indexOf(lbl)] : null;
+        });
+
+        return item;
+    });
+
+    return { data, series };
+};
+
 const FullscreenModal = ({
     isOpen,
     type,
@@ -13,6 +48,7 @@ const FullscreenModal = ({
     statsOptions,
     chartData,
     seriesNames,
+    rawChartData,
     chartMode,
     suffix,
     displayMode,
@@ -48,9 +84,25 @@ const FullscreenModal = ({
     const [isChartOptionsOpen, setIsChartOptionsOpen] = useState(false);
     const chartOptionsMenuRef = useRef(null);
 
-    // [Standard Logic] Recompute chart variables based on resultData and localChartMode
+    // [Standard Logic] Recompute chart variables based on rawChartData or resultData and localChartMode
     const { localComputedChartData, localComputedSeriesNames, localComputedSuffix } = useMemo(() => {
-        if (!resultData) return {};
+        if (rawChartData) {
+            const activeDataType = localChartDataType === 'frequency' ? 'count' : 'percent';
+            const { data, series } = toRechartsData(rawChartData, activeDataType);
+            return {
+                localComputedChartData: data,
+                localComputedSeriesNames: series,
+                localComputedSuffix: localChartDataType === 'percentage' ? "%" : ""
+            };
+        }
+
+        if (!resultData || !resultData.columns || !resultData.rows) {
+            return {
+                localComputedChartData: [],
+                localComputedSeriesNames: [],
+                localComputedSuffix: ""
+            };
+        }
 
         // Use localChartDataType if provided, otherwise default to legacy behavior
         const usePercent = localChartDataType 
@@ -92,7 +144,7 @@ const FullscreenModal = ({
             localComputedSeriesNames: computedSeriesNames,
             localComputedSuffix: usePercent ? "%" : ""
         };
-    }, [resultData, localChartMode, localChartDataType]);
+    }, [rawChartData, resultData, localChartMode, localChartDataType]);
 
     const availableChartGroups = useMemo(() => {
         if (!localComputedChartData) return [];
@@ -837,7 +889,10 @@ const FullscreenModal = ({
                   }
               `}</style>
 
-                            <table className="cross-table fullscreen-table" style={{ width: "max-content", tableLayout: "fixed", margin: 0 }}>
+                            {resultData.html ? (
+                                <div dangerouslySetInnerHTML={{ __html: resultData.html }} />
+                            ) : (
+                                <table className="cross-table fullscreen-table" style={{ width: "max-content", tableLayout: "fixed", margin: 0 }}>
                                 <thead>
                                     {(() => {
                                         const headerRows = [];
@@ -1060,6 +1115,7 @@ const FullscreenModal = ({
                                     })}
                                 </tbody>
                             </table>
+                            )}
                         </div>
                     )}
 
@@ -1138,11 +1194,11 @@ const FullscreenModal = ({
                                                 </th>
                                             ));
                                         })()}
-                                        {!hasVarLabel && !hasColLabel3 && !hasColLabel2 && resultData.columns.map((col, idx) => (
+                                        {!hasVarLabel && !hasColLabel3 && !hasColLabel2 && resultData.columns && resultData.columns.map((col, idx) => (
                                             <th key={`fs-stat-col-${idx}`} className="fullscreen-table-header" style={{ width: '180px', minWidth: '180px', top: 0, zIndex: 20, verticalAlign: 'middle', textAlign: 'center' }}>
                                                 <div>{col?.label ?? col}</div>
                                                 <div className="fullscreen-stats-n" style={{ fontSize: '10px', opacity: 0.8, marginTop: '2px' }}>
-                                                    N={resultData.stats.n?.[idx] || 0}
+                                                    N={resultData.stats?.n?.[idx] || 0}
                                                 </div>
                                             </th>
                                         ))}
@@ -1212,11 +1268,11 @@ const FullscreenModal = ({
                                     )}
                                     {((hasVarLabel && !hasColLabel2) || (hasVarLabel && hasColLabel2) || (!hasVarLabel && hasColLabel2) || hasColLabel3) && (
                                         <tr>
-                                            {resultData.columns.map((col, idx) => (
+                                            {resultData.columns && resultData.columns.map((col, idx) => (
                                                 <th key={`fs-stat-label-${idx}`} className="fullscreen-table-header" style={{ top: (hasVarLabel && hasColLabel3 && hasColLabel2) ? '75px' : ((hasVarLabel && hasColLabel3) || (hasVarLabel && hasColLabel2) || (hasColLabel3 && hasColLabel2)) ? '50px' : (hasVarLabel || hasColLabel3 || hasColLabel2) ? '25px' : '0', height: '50px', zIndex: 20, verticalAlign: 'middle', textAlign: 'center' }}>
                                                     <div style={{ wordBreak: 'break-all' }}>{col?.label ?? col}</div>
                                                     <div className="fullscreen-stats-n" style={{ fontSize: '10px', opacity: 0.8, marginTop: '2px' }}>
-                                                        N={resultData.stats.n?.[idx] || 0}
+                                                        N={resultData.stats?.n?.[idx] || 0}
                                                     </div>
                                                 </th>
                                             ))}
@@ -1226,7 +1282,7 @@ const FullscreenModal = ({
                                 <tbody>
                                     {statsOptions.filter(opt => opt.checked).map((stat, statIdx) => {
                                         const statKey = stat.id.toLowerCase();
-                                        const statValues = resultData.stats[statKey] || [];
+                                        const statValues = resultData.stats?.[statKey] || [];
                                         return (
                                             <tr key={statIdx}>
                                                 <td colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-cell-sticky" style={{ left: 0, zIndex: 10, background: '#eff6ff', color: '#334155', fontWeight: 'bold', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
