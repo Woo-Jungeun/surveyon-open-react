@@ -12,7 +12,6 @@ import CreateTablePopup from './CreateTablePopup';
 import './AdditionalAnalysisPage.css';
 import { AdditionalAnalysisPageApi } from './AdditionalAnalysisPageApi';
 import { DpRequestPageApi } from '../hsrt/dpRequest/DpRequestPageApi';
-import { RecodingPageApi } from '../recoding/RecodingPageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
 import FullscreenModal from './FullscreenModal';
 import { VariablePageApi } from '../variable/VariablePageApi';
@@ -113,9 +112,8 @@ const processResults = (evalResultData) => {
 const AdditionalAnalysisPage = () => {
     // Auth & API
     const auth = useSelector((store) => store.auth);
-    const { getTableRenderContext } = DpRequestPageApi();
+    const { getTableRenderContext, getOverviewContext } = DpRequestPageApi();
     const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable } = AdditionalAnalysisPageApi();
-    const { getRecodedVariables } = RecodingPageApi();
     const modal = React.useContext(modalContext);
     const loadingSpinner = React.useContext(loadingSpinnerContext);
     const alertTimerRef = useRef(null);
@@ -152,6 +150,32 @@ const AdditionalAnalysisPage = () => {
 
     // Variables for Drag & Drop
     const [variables, setVariables] = useState([]);
+    const baseVariableIdsRef = useRef(new Set());
+    const allBaseVariablesRef = useRef([]);
+
+    const isAddVariable = (v) => {
+        if (!v) return false;
+        return !!v.isBase && (String(v.id).includes('ADD') || String(v.name).includes('ADD'));
+    };
+
+    const isStubVariable = (v) => {
+        if (!v) return false;
+        return !!v.isRecoded && !(String(v.id).includes('ADD') || String(v.name).includes('ADD'));
+    };
+
+    const isValidRowVar = (v) => {
+        return isAddVariable(v) || isStubVariable(v);
+    };
+
+    const isValidColVar = (v) => {
+        if (!v) return false;
+        if (String(v.id).includes('_stub')) {
+            const cleanId = String(v.id).replace(/_stub\+?$/, '');
+            return allBaseVariablesRef.current.some(orig => orig.id === cleanId || orig.name === cleanId) ||
+                   variables.some(orig => orig.id === cleanId || orig.name === cleanId);
+        }
+        return true;
+    };
 
     const [rowVars, setRowVars] = useState([]);
     const [colVars, setColVars] = useState([]);
@@ -202,7 +226,7 @@ const AdditionalAnalysisPage = () => {
 
     // Total Filter State
 
-    const { pageList: getPageList, getOriginalVariables } = VariablePageApi();
+    const { pageList: getPageList } = VariablePageApi();
     const [isPageListOpen, setIsPageListOpen] = useState(false);
     const [pageListData, setPageListData] = useState([]);
     const [displayPolicy, setDisplayPolicy] = useState(null);
@@ -286,18 +310,21 @@ const AdditionalAnalysisPage = () => {
                 }
             } catch (e) { console.error("Render context error", e); }
 
-            // Fetch Variables (Original Variables)
+            // Fetch Variables (via overview/context API)
             try {
-                const varResult = await getOriginalVariables.mutateAsync({
-                    user: auth.user.userId,
-                    pageid: currentPid
+                const contextRes = await getOverviewContext.mutateAsync({
+                    pageid: currentPid,
+                    user: auth.user.userId
                 });
 
-                // Create a Map for deduplication by ID
-                const variablesMap = new Map();
+                const ctxPayload = contextRes?.resultjson || contextRes || {};
 
-                if (varResult?.success === "777" && varResult.resultjson) {
-                    Object.values(varResult.resultjson).forEach(item => {
+                baseVariableIdsRef.current.clear();
+                const baseParsed = [];
+                const recodedParsed = [];
+
+                if (ctxPayload.base_variables) {
+                    Object.values(ctxPayload.base_variables).forEach(item => {
                         const rawType = (item.type || '').toLowerCase();
                         let color = 'gray';
                         let displayType = rawType;
@@ -314,25 +341,23 @@ const AdditionalAnalysisPage = () => {
                         else if (rawType.includes('숫자')) { color = 'open-num'; displayType = 'open(숫자)'; }
                         else if (rawType.includes('open')) { color = 'open-text'; displayType = 'open'; }
 
-                        variablesMap.set(item.id, {
+                        baseVariableIdsRef.current.add(item.id);
+
+                        baseParsed.push({
                             id: item.id,
                             name: item.id,
                             label: item.label,
                             type: displayType,
                             color: color,
-                            info: item.info || []
+                            info: item.info || [],
+                            isBase: true
                         });
                     });
+                    allBaseVariablesRef.current = baseParsed;
                 }
 
-                // Fetch Recoded Variables (including Banner)
-                const recodedResult = await getRecodedVariables.mutateAsync({
-                    user: auth.user.userId,
-                    pageid: currentPid
-                });
-
-                if (recodedResult?.success === "777" && recodedResult.resultjson) {
-                    Object.values(recodedResult.resultjson).forEach(item => {
+                if (ctxPayload.recoded_variables) {
+                    Object.values(ctxPayload.recoded_variables).forEach(item => {
                         const rawType = (item.type || '').toLowerCase();
                         let color = 'gray';
                         let displayType = rawType || 'categorical';
@@ -349,23 +374,52 @@ const AdditionalAnalysisPage = () => {
                         else if (rawType.includes('숫자')) { color = 'open-num'; displayType = 'open(숫자)'; }
                         else if (rawType.includes('open')) { color = 'open-text'; displayType = 'open'; }
 
-                        variablesMap.set(item.id, {
+                        recodedParsed.push({
                             id: item.id,
                             name: item.id,
                             label: item.label,
                             type: displayType,
                             color: color,
-                            info: item.info || []
+                            info: item.info || [],
+                            isRecoded: true
                         });
                     });
                 }
 
-                loadedVariables = Array.from(variablesMap.values());
+                // Categorize variables by user rules
+                // 1. 문항추가 변수 : base_variables > ADD (변수명에 ADD가 들어간변수들)
+                // 2. stub 변수 : recoded_variables > ADD 제외한 모든 값
+                // 3. 순서 : stub변수에서 원본 맵순서 기준으로 + 나머지 새로운 배너변수, 문항추가변수
+                const addBaseVars = baseParsed.filter(v => (v.id || '').includes('ADD') || (v.name || '').includes('ADD'));
 
+                const stubVars = recodedParsed.filter(v => !((v.id || '').includes('ADD') || (v.name || '').includes('ADD')));
+                const addRecodedVars = recodedParsed.filter(v => (v.id || '').includes('ADD') || (v.name || '').includes('ADD'));
 
+                const orderedVariablesMap = new Map();
+
+                // 1) stub 변수 (recoded_variables 중 ADD 제외)
+                stubVars.forEach(v => {
+                    orderedVariablesMap.set(v.id, v);
+                });
+
+                // 2) 나머지 새로운 배너변수 (recoded_variables 중 ADD 포함)
+                addRecodedVars.forEach(v => {
+                    if (!orderedVariablesMap.has(v.id)) {
+                        orderedVariablesMap.set(v.id, v);
+                    }
+                });
+
+                // 3) 문항추가 변수 (base_variables 중 ADD 포함)
+                addBaseVars.forEach(v => {
+                    if (!orderedVariablesMap.has(v.id)) {
+                        orderedVariablesMap.set(v.id, v);
+                    }
+                });
+
+                loadedVariables = Array.from(orderedVariablesMap.values());
                 setVariables(loadedVariables);
             } catch (error) {
-                console.error("Failed to fetch variables:", error);
+                console.error("Failed to fetch variables via getOverviewContext:", error);
             }
 
             // Fetch Tables
@@ -403,17 +457,17 @@ const AdditionalAnalysisPage = () => {
 
                         // Set configuration using loaded variables
                         const newRowVars = (firstTable.row || []).map(id => {
-                            const found = loadedVariables.find(v => v.id === id);
+                            const found = loadedVariables.find(v => v.id === id) || allBaseVariablesRef.current.find(v => v.id === id);
                             return found || { id, name: id, label: id, info: [] };
                         });
                         const newColVars = (firstTable.col || []).map(id => {
                             if (Array.isArray(id)) {
                                 return id.map(subId => {
-                                    const found = loadedVariables.find(v => v.id === subId);
+                                    const found = loadedVariables.find(v => v.id === subId) || allBaseVariablesRef.current.find(v => v.id === subId);
                                     return found || { id: subId, name: subId, label: subId, info: [] };
                                 });
                             }
-                            const found = loadedVariables.find(v => v.id === id);
+                            const found = loadedVariables.find(v => v.id === id) || allBaseVariablesRef.current.find(v => v.id === id);
                             return [found || { id, name: id, label: id, info: [] }];
                         });
                         setRowVars(newRowVars);
@@ -440,15 +494,15 @@ const AdditionalAnalysisPage = () => {
                                             mappedCols = groups.map(g => {
                                                 return g.split('*').filter(id => id.trim()).map(id => {
                                                     const trimmed = id.trim();
-                                                    return loadedVariables.find(v => v.name === trimmed || v.id === trimmed) || { id: trimmed, name: trimmed };
+                                                    return loadedVariables.find(v => v.name === trimmed || v.id === trimmed) || allBaseVariablesRef.current.find(v => v.name === trimmed || v.id === trimmed) || { id: trimmed, name: trimmed };
                                                 });
                                             });
                                         } else {
                                             mappedCols = xIds.map(item => {
                                                 if (Array.isArray(item)) {
-                                                    return item.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
+                                                    return item.map(id => loadedVariables.find(v => v.name === id || v.id === id) || allBaseVariablesRef.current.find(v => v.id === id) || { id, name: id });
                                                 }
-                                                return [loadedVariables.find(v => v.name === item || v.id === item) || { id: item, name: item }];
+                                                return [loadedVariables.find(v => v.name === item || v.id === item) || allBaseVariablesRef.current.find(v => v.name === item || v.id === item) || { id: item, name: item }];
                                             });
                                         }
                                         setColVars(mappedCols.filter(g => g.length > 0));
@@ -460,17 +514,15 @@ const AdditionalAnalysisPage = () => {
                                         if (yIds.length === 1 && typeof yIds[0] === 'string' && (yIds[0].includes('*') || yIds[0].includes('+'))) {
                                             mappedRows = yIds[0].split(/[+*]/).filter(id => id.trim()).map(id => {
                                                 const trimmed = id.trim();
-                                                return loadedVariables.find(v => v.name === trimmed || v.id === trimmed) || { id: trimmed, name: trimmed };
+                                                return loadedVariables.find(v => v.name === trimmed || v.id === trimmed) || allBaseVariablesRef.current.find(v => v.name === trimmed || v.id === trimmed) || { id: trimmed, name: trimmed };
                                             });
                                         } else {
-                                            mappedRows = yIds.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
+                                            mappedRows = yIds.map(id => loadedVariables.find(v => v.name === id || v.id === id) || allBaseVariablesRef.current.find(v => v.id === id) || { id, name: id });
                                         }
                                         if (tData.config.row_eval_mode) {
                                             setTableMode('separated');
-                                            // setTableMode(tData.config.row_eval_mode === 'split' ? 'separated' : 'merged');
                                         } else if (yIds.length === 1 && typeof yIds[0] === 'string' && (yIds[0].includes('*') || yIds[0].includes('+'))) {
                                             setTableMode('separated');
-                                            // setTableMode(yIds[0].includes('+') ? 'merged' : 'separated');
                                         } else if (yIds.length > 1) {
                                             setTableMode('separated');
                                         }
@@ -508,7 +560,7 @@ const AdditionalAnalysisPage = () => {
                                             if (typeof str !== 'string') return;
                                             const parts = str.split(/[+*]/).map(s => s.trim()).filter(Boolean);
                                             parts.forEach(part => {
-                                                const found = loadedVariables.find(v => v.id === part || v.name === part);
+                                                const found = loadedVariables.find(v => v.id === part || v.name === part) || allBaseVariablesRef.current.find(v => v.id === part || v.name === part);
                                                 if (found) {
                                                     variablesMap[part] = found;
                                                 } else {
@@ -522,7 +574,7 @@ const AdditionalAnalysisPage = () => {
                                     extractRawVars(yInfo);
 
                                     if (weightCol && weightCol !== "없음" && weightCol !== "") {
-                                        const weightVar = loadedVariables.find(v => v.id === weightCol || v.name === weightCol);
+                                        const weightVar = loadedVariables.find(v => v.id === weightCol || v.name === weightCol) || allBaseVariablesRef.current.find(v => v.id === weightCol || v.name === weightCol);
                                         if (weightVar) {
                                             variablesMap[weightVar.id || weightVar.name] = weightVar;
                                         }
@@ -605,7 +657,8 @@ const AdditionalAnalysisPage = () => {
             if (group.length === 0) return [];
 
             return group.map(v => {
-                const variable = variables.find(existing => existing.id === v.id || existing.name === v.id || existing.name === v.name);
+                const variable = variables.find(existing => existing.id === v.id || existing.name === v.id || existing.name === v.name) ||
+                    allBaseVariablesRef.current.find(existing => existing.id === v.id || existing.name === v.id || existing.name === v.name);
                 let labels = [];
                 if (!variable || !variable.info) {
                     labels = [v.id || v.name];
@@ -674,7 +727,8 @@ const AdditionalAnalysisPage = () => {
         if (tableMode === 'separated' && rowVars.length > 1) {
             // 각 개별 변수를 배너 안에 넣어서 분리된 것처럼 보이게
             rowGroups = rowVars.map(v => {
-                const variable = variables.find(existing => existing.id === v.id || existing.name === v.id || existing.name === v.name);
+                const variable = variables.find(existing => existing.id === v.id || existing.name === v.id || existing.name === v.name) ||
+                    allBaseVariablesRef.current.find(existing => existing.id === v.id || existing.name === v.id || existing.name === v.name);
                 let labels = [];
                 if (!variable || !variable.info) {
                     labels = [v.id || v.name];
@@ -1066,10 +1120,16 @@ const AdditionalAnalysisPage = () => {
             if (targetType === 'row' || targetType === 'row_item') {
                 const newRowVars = [...rowVars];
                 let skipped = false;
+                let invalidSkipped = false;
                 items.forEach(item => {
+                    const fullVar = variables.find(v => v.id === item.id) || item;
+                    if (!isValidRowVar(fullVar)) {
+                        invalidSkipped = true;
+                        return;
+                    }
                     if (newRowVars.length < 10) {
                         if (!newRowVars.find(v => v.id === item.id)) {
-                            const newItem = { id: item.id, name: item.name, label: item.label, info: item.info || [] };
+                            const newItem = { id: item.id, name: item.name, label: item.label, info: item.info || [], isBase: fullVar.isBase, isRecoded: fullVar.isRecoded };
                             if (targetType === 'row_item') {
                                 newRowVars.splice(targetItemIndex, 0, newItem);
                             } else {
@@ -1081,22 +1141,52 @@ const AdditionalAnalysisPage = () => {
                     }
                 });
                 setRowVars(newRowVars);
-                if (skipped) {
+                if (invalidSkipped) {
+                    modal.showAlert('알림', '세로축에는 문항추가변수와 stub 변수만 추가할 수 있습니다.');
+                } else if (skipped) {
                     modal.showAlert('알림', `최대 10개까지만 추가할 수 있습니다.\n(초과된 문항은 제외되었습니다)`);
                 }
             } else if (targetType === 'col' || targetType === 'new_col_group' || targetType === 'col_item') {
                 const newColVars = [...colVars];
                 let skipped = false;
+                let invalidSkipped = false;
                 items.forEach(item => {
+                    const fullVar = variables.find(v => v.id === item.id) || item;
+                    if (!isValidColVar(fullVar)) {
+                        invalidSkipped = true;
+                        return;
+                    }
                     if (newColVars.length < 10) {
-                        const newItem = { id: item.id, name: item.name, label: item.label, info: item.info || [] };
+                        let targetId = item.id;
+                        let targetName = item.name;
+                        let targetLabel = item.label;
+                        let targetInfo = item.info || [];
+                        
+                        if (String(item.id).includes('_stub')) {
+                            const cleanId = String(item.id).replace(/_stub\+?$/, '');
+                            const origVar = allBaseVariablesRef.current.find(v => v.id === cleanId || v.name === cleanId) || variables.find(v => v.id === cleanId || v.name === cleanId);
+                            if (origVar) {
+                                targetId = origVar.id;
+                                targetName = origVar.name;
+                                targetLabel = origVar.label || origVar.name;
+                                targetInfo = origVar.info || [];
+                            } else {
+                                targetId = cleanId;
+                                targetName = cleanId;
+                                targetLabel = cleanId;
+                            }
+                        }
+
+                        const newItem = { id: targetId, name: targetName, label: targetLabel, info: targetInfo, isBase: true, isRecoded: false };
                         newColVars.push([newItem]);
                     } else {
                         skipped = true;
                     }
                 });
                 setColVars(newColVars);
-                if (skipped) {
+                if (invalidSkipped) {
+                    modal.showAlert('알림', '가로축에는 문항추가변수와 원본 변수명이 존재하는 stub 변수만 추가할 수 있습니다.');
+                } else if (skipped) {
                     modal.showAlert('알림', `최대 10개까지만 추가할 수 있습니다.\n(초과된 문항은 제외되었습니다)`);
                 }
             }
@@ -1112,14 +1202,55 @@ const AdditionalAnalysisPage = () => {
         const srcItemIndex = currentDraggedItem.itemIndex;
 
         const fullVariable = item ? (variables.find(v => v.id === item.id) || item) : null;
-        const newItem = fullVariable ? {
+        if (!fullVariable) {
+            setDraggedItem(null);
+            draggedItemRef.current = null;
+            return;
+        }
+
+        let newItem = {
             id: fullVariable.id,
             name: fullVariable.name,
             label: fullVariable.label || fullVariable.name,
-            info: fullVariable.info || []
-        } : null;
+            info: fullVariable.info || [],
+            isBase: fullVariable.isBase,
+            isRecoded: fullVariable.isRecoded
+        };
+
+        if (targetType === 'col' || targetType === 'col_item' || targetType === 'new_col_group') {
+            if (String(fullVariable.id).includes('_stub')) {
+                const cleanId = String(fullVariable.id).replace(/_stub\+?$/, '');
+                const origVar = allBaseVariablesRef.current.find(v => v.id === cleanId || v.name === cleanId) || variables.find(v => v.id === cleanId || v.name === cleanId);
+                if (origVar) {
+                    newItem = {
+                        id: origVar.id,
+                        name: origVar.name,
+                        label: origVar.label || origVar.name,
+                        info: origVar.info || [],
+                        isBase: true,
+                        isRecoded: false
+                    };
+                } else {
+                    newItem = {
+                        id: cleanId,
+                        name: cleanId,
+                        label: cleanId,
+                        info: [],
+                        isBase: true,
+                        isRecoded: false
+                    };
+                }
+            }
+        }
 
         if (targetType === 'row' || targetType === 'row_item') {
+            if (!isValidRowVar(fullVariable)) {
+                modal.showAlert('알림', '세로축에는 문항추가변수와 stub 변수만 추가할 수 있습니다.');
+                setDraggedItem(null);
+                draggedItemRef.current = null;
+                return;
+            }
+
             const newRowVars = [...rowVars];
 
             if (dragType === 'ROW_ITEM') {
@@ -1146,6 +1277,14 @@ const AdditionalAnalysisPage = () => {
                 }
             }
         } else if (targetType === 'col' || targetType === 'col_item' || targetType === 'new_col_group') {
+            if (dragType !== 'COL_GROUP') {
+                if (!isValidColVar(fullVariable)) {
+                    modal.showAlert('알림', '가로축에는 문항추가변수와 원본 변수명이 존재하는 stub 변수만 추가할 수 있습니다.');
+                    setDraggedItem(null);
+                    draggedItemRef.current = null;
+                    return;
+                }
+            }
             const newColVars = [...colVars];
 
             if (dragType === 'COL_GROUP') {
@@ -1161,11 +1300,13 @@ const AdditionalAnalysisPage = () => {
                     setColVars(newColVars);
                 }
                 setDraggedItem(null);
+                draggedItemRef.current = null;
                 return;
             }
 
             if (!newItem) {
                 setDraggedItem(null);
+                draggedItemRef.current = null;
                 return;
             }
 
@@ -1756,7 +1897,11 @@ const AdditionalAnalysisPage = () => {
                                     minHeight: isConfigOpen ? '750px' : 'auto',
                                     transition: 'all 0.3s ease'
                                 }}>
-                                    <div className="config-header" style={{ padding: '20px 24px', transition: 'all 0.2s' }}>
+                                    <div 
+                                        className="config-header" 
+                                        onClick={() => setIsConfigOpen(!isConfigOpen)}
+                                        style={{ padding: '20px 24px', transition: 'all 0.2s', cursor: 'pointer' }}
+                                    >
                                         <div className="config-header__left-group">
                                             <div className="config-header__title-group" style={{ display: 'flex', alignItems: 'center' }}>
                                                 <span className="config-header__title-label">테이블 명</span>
@@ -1765,6 +1910,7 @@ const AdditionalAnalysisPage = () => {
                                                     className="config-title-input"
                                                     value={tableName}
                                                     onChange={(e) => setTableName(e.target.value)}
+                                                    onClick={(e) => e.stopPropagation()}
                                                     placeholder="테이블 명을 입력하세요"
                                                 />
                                                 {/* <div
@@ -1793,13 +1939,19 @@ const AdditionalAnalysisPage = () => {
                                         {/* Table Mode Switch */}
                                         <div className="action-buttons" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             {isConfigOpen && (
-                                                <button className="btn-run" onClick={handleSaveAndRun}>
+                                                <button 
+                                                    className="btn-run" 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleSaveAndRun();
+                                                    }}
+                                                >
                                                     <Play size={16} fill="white" /> 저장 후 실행
                                                 </button>
                                             )}
                                             <button
                                                 className={`wide-view-toggle-btn ${isConfigOpen ? 'active' : ''}`}
-                                                onClick={() => setIsConfigOpen(!isConfigOpen)}
+                                                type="button"
                                                 title={isConfigOpen ? "설정 닫기" : "설정 열기"}
                                                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', padding: 0, border: '1px solid #e2e8f0', borderRadius: '4px', background: 'white', color: '#64748b', cursor: 'pointer' }}
                                             >
