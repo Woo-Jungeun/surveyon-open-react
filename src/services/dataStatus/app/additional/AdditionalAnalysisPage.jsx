@@ -1627,7 +1627,7 @@ const AdditionalAnalysisPage = () => {
         }
     };
 
-    const handleRun = async (overrideFilter) => {
+    const handleRun = async (overrideFilter, overrideDisplayPolicy) => {
         if (!auth?.user?.userId) {
             modal.showAlert("알림", "로그인이 필요합니다.");
             return;
@@ -1699,6 +1699,7 @@ const AdditionalAnalysisPage = () => {
         }
 
         const currentFilter = overrideFilter !== undefined ? overrideFilter : filterExpression;
+        const currentDisplayPolicy = overrideDisplayPolicy !== undefined ? overrideDisplayPolicy : displayPolicy;
 
         // Include variables used in filter expression
         if (currentFilter) {
@@ -1721,29 +1722,20 @@ const AdditionalAnalysisPage = () => {
             weight_col: weightId,
             filter_expression: currentFilter,
             include_stats: ALL_STATS,
-            row_eval_mode: 'split', // tableMode === 'separated' ? 'split' : 'combined'
-            display_policy: displayPolicy || {},
-            zero_base_columns: displayPolicy?.hide_zero_base_columns ?? false,
-            zero_banners: displayPolicy?.hide_zero_base_columns ?? false,
-            zero_stubs: displayPolicy?.hide_zero_stubs ?? false,
+            row_eval_mode: tableMode === 'separated' ? 'split' : 'combined',
+            display_policy: currentDisplayPolicy || {},
+            zero_base_columns: currentDisplayPolicy?.hide_zero_base_columns ?? false,
+            zero_banners: currentDisplayPolicy?.hide_zero_base_columns ?? false,
+            zero_stubs: currentDisplayPolicy?.hide_zero_stubs ?? false,
             // sort: { group_by: "label2_label3" }
         };
 
-        if (tableMode === 'separated') {
-            payload.tables = rowVars.map((v, idx) => ({
-                id: `${selectedTableId || 'T1'}_${idx + 1}`,
-                name: `${baseTableName} - ${v.label || v.name || v.id}`,
-                banner: xInfo,
-                stub: [v.id || v.name]
-            }));
-        } else {
-            payload.table = {
-                id: selectedTableId || 'T1',
-                name: baseTableName,
-                banner: xInfo,
-                stub: rowVars.map(v => v.id || v.name)
-            };
-        }
+        payload.table = {
+            id: selectedTableId || 'T1',
+            name: baseTableName,
+            banner: xInfo,
+            stub: rowVars.map(v => v.id || v.name)
+        };
 
         try {
             loadingSpinner.show();
@@ -1762,6 +1754,16 @@ const AdditionalAnalysisPage = () => {
         } finally {
             loadingSpinner.hide();
         }
+    };
+
+    const onChangeDisplayMode = async (newMode) => {
+        const nextPolicy = {
+            ...displayPolicy,
+            show_n: newMode === 'all' || newMode === 'value',
+            show_percent: newMode === 'all' || newMode === 'percent'
+        };
+        setDisplayPolicy(nextPolicy);
+        await handleRun(undefined, nextPolicy);
     };
 
     const handleDeleteTable = async (tableId) => {
@@ -2270,6 +2272,7 @@ const AdditionalAnalysisPage = () => {
                                             xInfo={xInfo}
                                             weightCol={selectedWeight === "없음" ? null : selectedWeight}
                                             filterExpression={filterExpression}
+                                            onChangeDisplayMode={onChangeDisplayMode}
                                         />
                                     ))}
                                 </div>
@@ -2291,7 +2294,7 @@ const AdditionalAnalysisPage = () => {
                 rawChartData={fullscreenModal.rawChartData}
                 chartMode={fullscreenModal.chartMode}
                 displayMode={fullscreenModal.displayMode}
-                setDisplayMode={fullscreenModal.setDisplayMode}
+                setDisplayMode={onChangeDisplayMode}
                 paletteId={globalPaletteId}
                 setPaletteId={setGlobalPaletteId}
                 tableName={fullscreenModal.tableName}

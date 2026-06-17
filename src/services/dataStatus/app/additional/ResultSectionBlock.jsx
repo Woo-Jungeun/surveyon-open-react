@@ -126,7 +126,8 @@ export const ResultSectionBlock = ({
     rowVars,
     xInfo,
     weightCol,
-    filterExpression
+    filterExpression,
+    onChangeDisplayMode
 }) => {
     const [chartMode, setChartMode] = useState(null);
     const activeChartMode = chartMode || 'column';
@@ -137,7 +138,15 @@ export const ResultSectionBlock = ({
     const [isStatsOptionsOpen, setIsStatsOptionsOpen] = useState(false);
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
     const [isDisplayMenuOpen, setIsDisplayMenuOpen] = useState(false);
-    const [displayMode, setDisplayMode] = useState('all');
+    
+    const displayMode = useMemo(() => {
+        const showN = displayPolicy?.show_n !== false;
+        const showPercent = displayPolicy?.show_percent !== false;
+        if (showN && showPercent) return 'all';
+        if (showN) return 'value';
+        if (showPercent) return 'percent';
+        return 'all';
+    }, [displayPolicy]);
     const [columnLayout, setColumnLayout] = useState('single');
     const [isMoreStatsOpen, setIsMoreStatsOpen] = useState(false);
     const [aiResult, setAiResult] = useState(null);
@@ -214,7 +223,11 @@ export const ResultSectionBlock = ({
                         banner: xInfo
                     },
                     weight_col: weightCol || null,
-                    filter_expression: filterExpression || ""
+                    filter_expression: filterExpression || "",
+                    display_policy: {
+                        show_n: displayMode === 'all' || displayMode === 'value',
+                        show_percent: displayMode === 'all' || displayMode === 'percent'
+                    }
                 };
 
                 const res = await evaluateChartData.mutateAsync(payload);
@@ -235,7 +248,7 @@ export const ResultSectionBlock = ({
         };
 
         fetchChartData();
-    }, [isChartVisible, isAiVisible, stub, xInfo, weightCol, filterExpression, userId, resultData?.table_id]);
+    }, [isChartVisible, isAiVisible, stub, xInfo, weightCol, filterExpression, userId, resultData?.table_id, displayMode]);
 
     const {
         chartData: fullChartData = [],
@@ -481,6 +494,24 @@ export const ResultSectionBlock = ({
 
     const handleCopyTable = async (dataItem, hasColLabel2, hasColLabel3, hasRowLabel2) => {
         try {
+            if (dataItem?.html) {
+                const fullHtml = `<!doctype html><html><head><meta charset="utf-8"/></head><body style="margin:0; padding:16px;">${dataItem.html}</body></html>`;
+                
+                const htmlBlob = new Blob([fullHtml], { type: 'text/html' });
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(dataItem.html, 'text/html');
+                const plainText = doc.body.innerText || "";
+                const textBlob = new Blob([plainText], { type: 'text/plain' });
+
+                const clipboardItem = new window.ClipboardItem({
+                    'text/html': htmlBlob,
+                    'text/plain': textBlob
+                });
+                await navigator.clipboard.write([clipboardItem]);
+                setToast({ show: true, message: "복사 완료 (Ctrl+V)" });
+                return;
+            }
+
             let clipboardText = "";
             if (hasColLabel2 || hasColLabel3 || hasRowLabel2) {
                 const headerRows = [];
@@ -832,18 +863,18 @@ export const ResultSectionBlock = ({
                                                             <ChevronDown size={14} className="trigger-icon" />
                                                         </div>
                                                         {isDisplayMenuOpen && (
-                                                            <div className="custom-filter-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, width: '100%', zIndex: 1000 }}>
-                                                                {['all', 'value', 'percent'].map(m => (
-                                                                    <div
-                                                                        key={m}
-                                                                        className={`custom-filter-item ${displayMode === m ? 'selected' : ''}`}
-                                                                        onClick={() => { setDisplayMode(m); setIsDisplayMenuOpen(false); }}
-                                                                    >
-                                                                        <span className="filter-text">{m === 'all' ? '전체' : m === 'value' ? '사례수' : '퍼센트'}</span>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
+                                                             <div className="custom-filter-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, width: '100%', zIndex: 1000 }}>
+                                                                 {['all', 'value', 'percent'].map(m => (
+                                                                     <div
+                                                                         key={m}
+                                                                         className={`custom-filter-item ${displayMode === m ? 'selected' : ''}`}
+                                                                         onClick={() => { onChangeDisplayMode?.(m); setIsDisplayMenuOpen(false); }}
+                                                                     >
+                                                                         <span className="filter-text">{m === 'all' ? '전체' : m === 'value' ? '사례수' : '퍼센트'}</span>
+                                                                     </div>
+                                                                 ))}
+                                                             </div>
+                                                         )}
                                                     </div>
                                                 </div>
                                                 <button onClick={() => handleCopyTable(resultData, hasColLabel2, hasColLabel3, hasRowLabel2)} className="action-btn">
@@ -860,7 +891,6 @@ export const ResultSectionBlock = ({
                                                         statsOptions,
                                                         chartMode,
                                                         displayMode,
-                                                        setDisplayMode, // Pass the setter
                                                         paletteId,
                                                         tableName
                                                     })}
