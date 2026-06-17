@@ -2,14 +2,11 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Copy, Maximize, Settings, Download, BarChart2, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Bot, Loader2, CheckCircle2, GripVertical, ChevronLeft, ChevronRight, Maximize2, ChevronDown, ChevronsUpDown, ChevronUp, X, Cloud, Check, LayoutList, BarChartHorizontal, Percent } from 'lucide-react';
 import KendoChart from '../../components/KendoChart';
-import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { saveAs } from '@progress/kendo-file-saver';
 import { CHART_THEME_OPTIONS } from '../../constants/chartThemes';
-import { useSelector } from 'react-redux';
-import { DpRequestPageApi } from '../hsrt/dpRequest/DpRequestPageApi';
 
 const computeLocalVars = (dataItem, chartMode, chartDataType) => {
-    if (!dataItem) return {};
+    if (!dataItem || !dataItem.columns || !dataItem.rows) return {};
 
     // 최종 기준: 차트 표출 데이터 옵션에 따라 퍼센트(_percent) 혹은 사례수(count) 사용
     const usePercent = chartDataType === 'percentage';
@@ -114,7 +111,15 @@ export const ResultSectionBlock = ({
     const [showChartValues, setShowChartValues] = useState(true);
     const [showPercentSymbol, setShowPercentSymbol] = useState(false);
 
-    const { chartData: fullChartData, seriesNames, hasColLabel2, hasColLabel3, hasVarLabel, hasRowLabel2, suffix } = useMemo(() =>
+    const {
+        chartData: fullChartData = [],
+        seriesNames = [],
+        hasColLabel2 = false,
+        hasColLabel3 = false,
+        hasVarLabel = false,
+        hasRowLabel2 = false,
+        suffix = ""
+    } = useMemo(() =>
         computeLocalVars(resultData, activeChartMode, chartDataType),
         [resultData, activeChartMode, chartDataType]
     );
@@ -149,10 +154,10 @@ export const ResultSectionBlock = ({
         });
     }, [fullChartData, selectedChartGroups]);
 
-    
+
     const uiSettings = renderSettings || {};
     const effectivePolicy = displayPolicy || {};
-    
+
     const headerBorder = `${uiSettings?.theme_header_divider_width || '1px'} ${uiSettings?.theme_header_divider_style || 'solid'} ${uiSettings?.theme_header_divider_color || '#cbd5e1'}`;
     const stubBorder = `${uiSettings?.theme_stub_divider_width || '1px'} ${uiSettings?.theme_stub_divider_style || 'solid'} ${uiSettings?.theme_stub_divider_color || '#cbd5e1'}`;
     const gridBorder = `${uiSettings?.theme_grid_width || '1px'} ${uiSettings?.theme_grid_style || 'solid'} ${uiSettings?.theme_grid_color || '#e2e8f0'}`;
@@ -596,7 +601,7 @@ export const ResultSectionBlock = ({
                                 <span>옵션 설정</span>
                             </button>
                             {isStatsOptionsOpen && (
-                                <div className="inline-options-container" onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '16px', background: '#f8fafc', padding: '4px 12px', borderRadius: '6px',  }}>
+                                <div className="inline-options-container" onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '16px', background: '#f8fafc', padding: '4px 12px', borderRadius: '6px', }}>
                                     <div className="stats-controls__section" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 0 }}>
                                         <span className="stats-controls__section-label" style={{ marginBottom: 0, fontSize: '12px', color: '#64748b', fontWeight: '500' }}>배치 옵션</span>
                                         <div className="sortable-list" style={{ flexWrap: 'nowrap', gap: '4px' }}>
@@ -705,8 +710,8 @@ export const ResultSectionBlock = ({
                                             </div>
                                         </div>
                                         <div className="table-wrapper">
-                                            
-              <style>{`
+
+                                            <style>{`
                   .table-wrapper .cross-table {
                       font-size: ${uiSettings.font_size ? uiSettings.font_size + 'px' : '12px'} !important;
                       border-top: ${topOuter} !important;
@@ -732,243 +737,247 @@ export const ResultSectionBlock = ({
                         color: ${uiSettings?.theme_stub_header_fg || '#000'} !important;
                     }
                 `}</style>
-                                            <table className="cross-table" style={{ width: "max-content", tableLayout: "fixed", margin: 0 }}>
-                                                <thead>
-                                                    {(() => {
-                                                        const headerRows = [];
-                                                        const totalRows = (hasVarLabel ? 1 : 0) + (headerGroups.showRow2 ? 1 : 0) + (headerGroups.showRow3 ? 1 : 0) + 1;
+                                            {resultData.html ? (
+                                                <div dangerouslySetInnerHTML={{ __html: resultData.html }} />
+                                            ) : (
+                                                <table className="cross-table" style={{ width: "max-content", tableLayout: "fixed", margin: 0 }}>
+                                                    <thead>
+                                                        {(() => {
+                                                            const headerRows = [];
+                                                            const totalRows = (hasVarLabel ? 1 : 0) + (headerGroups.showRow2 ? 1 : 0) + (headerGroups.showRow3 ? 1 : 0) + 1;
 
-                                                        if (hasVarLabel) {
-                                                            headerRows.push(
-                                                                <tr key="var-label-row">
-                                                                    <th
-                                                                        rowSpan={totalRows}
-                                                                        colSpan={hasRowLabel2 ? 2 : 1}
-                                                                        className="sticky-col sticky-l0"
-                                                                        style={{
-                                                                            background: uiSettings?.theme_primary || '#f8fafc',
-                                                                            
-                                                                            
-                                                                            fontWeight: '700',
-                                                                            color: uiSettings?.theme_primary_fg || '#1e3a8a',
-                                                                            fontSize: '11px',
-                                                                            textAlign: 'center',
-                                                                            verticalAlign: 'middle'
-                                                                        }}
-                                                                    >
-                                                                        문항
-                                                                    </th>
-                                                                    {headerGroups.row1.map((group, i) => (
-                                                                        <th key={i}
-                                                                            colSpan={group.count}
-                                                                            rowSpan={group.rowSpan}
+                                                            if (hasVarLabel) {
+                                                                headerRows.push(
+                                                                    <tr key="var-label-row">
+                                                                        <th
+                                                                            rowSpan={totalRows}
+                                                                            colSpan={hasRowLabel2 ? 2 : 1}
+                                                                            className="sticky-col sticky-l0"
                                                                             style={{
                                                                                 background: uiSettings?.theme_primary || '#f8fafc',
+
+
+                                                                                fontWeight: '700',
                                                                                 color: uiSettings?.theme_primary_fg || '#1e3a8a',
                                                                                 fontSize: '11px',
                                                                                 textAlign: 'center',
-                                                                                padding: '4px 12px',
-                                                                                borderLeft: i > 0 ? gridBorder : 'none',
-                                                                                whiteSpace: 'normal',
-                                                                                wordBreak: 'break-all',
                                                                                 verticalAlign: 'middle'
                                                                             }}
                                                                         >
-                                                                            {group.label}
+                                                                            문항
+                                                                        </th>
+                                                                        {headerGroups.row1.map((group, i) => (
+                                                                            <th key={i}
+                                                                                colSpan={group.count}
+                                                                                rowSpan={group.rowSpan}
+                                                                                style={{
+                                                                                    background: uiSettings?.theme_primary || '#f8fafc',
+                                                                                    color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                                    fontSize: '11px',
+                                                                                    textAlign: 'center',
+                                                                                    padding: '4px 12px',
+                                                                                    borderLeft: i > 0 ? gridBorder : 'none',
+                                                                                    whiteSpace: 'normal',
+                                                                                    wordBreak: 'break-all',
+                                                                                    verticalAlign: 'middle'
+                                                                                }}
+                                                                            >
+                                                                                {group.label}
+                                                                            </th>
+                                                                        ))}
+                                                                    </tr>
+                                                                );
+                                                            }
+
+                                                            if (headerGroups.showRow3) {
+                                                                headerRows.push(
+                                                                    <tr key="col-label3-row">
+                                                                        {!hasVarLabel && (
+                                                                            <th
+                                                                                rowSpan={totalRows}
+                                                                                colSpan={hasRowLabel2 ? 2 : 1}
+                                                                                className="sticky-col sticky-l0"
+                                                                                style={{
+                                                                                    background: uiSettings?.theme_primary || '#f8fafc',
+
+
+                                                                                    fontWeight: '700',
+                                                                                    color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                                    fontSize: '11px',
+                                                                                    textAlign: 'center',
+                                                                                    verticalAlign: 'middle'
+                                                                                }}
+                                                                            >
+                                                                                문항
+                                                                            </th>
+                                                                        )}
+                                                                        {headerGroups.row3.map((group, i) => {
+                                                                            const isSpanned = headerGroups.row1.some(g1 => g1.rowSpan >= 2 && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
+                                                                            if (isSpanned) return null;
+
+                                                                            return (
+                                                                                <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: uiSettings?.theme_primary || '#f0f9ff', color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
+                                                                                    {group.label}
+                                                                                </th>
+                                                                            );
+                                                                        })}
+                                                                    </tr>
+                                                                );
+                                                            }
+
+                                                            if (headerGroups.showRow2) {
+                                                                headerRows.push(
+                                                                    <tr key="col-label2-row">
+                                                                        {(!hasVarLabel && !headerGroups.showRow3) && (
+                                                                            <th
+                                                                                rowSpan={totalRows}
+                                                                                colSpan={hasRowLabel2 ? 2 : 1}
+                                                                                className="sticky-col sticky-l0"
+                                                                                style={{
+                                                                                    background: uiSettings?.theme_primary || '#f8fafc',
+
+
+                                                                                    fontWeight: '700',
+                                                                                    color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                                    fontSize: '11px',
+                                                                                    textAlign: 'center',
+                                                                                    verticalAlign: 'middle'
+                                                                                }}
+                                                                            >
+                                                                                문항
+                                                                            </th>
+                                                                        )}
+                                                                        {headerGroups.row2.map((group, i) => {
+                                                                            // Check if spanning from row1 (rowSpan >= 3) OR row3 (rowSpan >= 2)
+                                                                            const coveredByRow1 = headerGroups.row1.some(g1 => g1.rowSpan >= 3 && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
+                                                                            const coveredByRow3 = headerGroups.row3.some(g3 => g3.rowSpan >= 2 && g3.startIndex <= group.startIndex && (g3.startIndex + g3.count) >= (group.startIndex + group.count));
+                                                                            if (coveredByRow1 || coveredByRow3) return null;
+
+                                                                            return (
+                                                                                <th key={i} colSpan={group.count} style={{ background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
+                                                                                    {group.label}
+                                                                                </th>
+                                                                            );
+                                                                        })}
+                                                                    </tr>
+                                                                );
+                                                            }
+
+                                                            // 마지막 라벨 행
+                                                            headerRows.push(
+                                                                <tr key="label-row">
+                                                                    {(!hasVarLabel && !headerGroups.showRow2 && !headerGroups.showRow3) && (
+                                                                        <th
+                                                                            rowSpan={totalRows}
+                                                                            colSpan={hasRowLabel2 ? 2 : 1}
+                                                                            className="sticky-col sticky-l0"
+                                                                            style={{
+                                                                                background: uiSettings?.theme_primary || '#f8fafc',
+
+
+                                                                                fontWeight: '700',
+                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                                fontSize: '11px',
+                                                                                textAlign: 'center',
+                                                                                verticalAlign: 'middle'
+                                                                            }}
+                                                                        >
+                                                                            문항
+                                                                        </th>
+                                                                    )}
+                                                                    {resultData.columns.map((col, i) => (
+                                                                        <th key={i} style={{ minWidth: '80px', background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || '#64748b', fontSize: '11px', fontWeight: '500', borderLeft: i > 0 ? gridBorder : 'none' }}>
+                                                                            {col?.label ?? col}
                                                                         </th>
                                                                     ))}
                                                                 </tr>
                                                             );
-                                                        }
 
-                                                        if (headerGroups.showRow3) {
-                                                            headerRows.push(
-                                                                <tr key="col-label3-row">
-                                                                    {!hasVarLabel && (
-                                                                        <th
-                                                                            rowSpan={totalRows}
-                                                                            colSpan={hasRowLabel2 ? 2 : 1}
-                                                                            className="sticky-col sticky-l0"
+                                                            return headerRows;
+                                                        })()}
+                                                    </thead>
+                                                    <tbody>
+                                                        {resultData.rows.map((row, i) => {
+                                                            const isSingleVal = row.type === 'stat' || row.stat_type;
+                                                            const isHideAll = row.hide === 'all' || row.hide === 'all ';
+                                                            const isHideN = row.hide === 'n' || isHideAll || effectivePolicy?.show_n === false;
+                                                            const isHideP = row.hide === 'p' || isHideAll || effectivePolicy?.show_percent === false;
+                                                            const labelColor = row.color || 'inherit';
+
+                                                            let rN = effectivePolicy?.n_digits ?? 0;
+                                                            let rP = effectivePolicy?.percent_digits ?? 1;
+                                                            if (row.round !== undefined && row.round !== null && row.round !== '') {
+                                                                rN = Number(row.round);
+                                                                rP = Number(row.round);
+                                                            }
+
+                                                            const formatN = (val) => val === null || val === undefined || val === '' ? '-' : Number(val).toLocaleString(undefined, { minimumFractionDigits: rN, maximumFractionDigits: rN });
+                                                            const formatP = (val) => val === null || val === undefined || val === '' ? '-' : Number(val).toLocaleString(undefined, { minimumFractionDigits: rP, maximumFractionDigits: rP });
+
+                                                            const isBaseRow = String(row.row_role ?? "").toLowerCase() === "base" || String(row.label ?? "").toLowerCase() === "base" || row.is_base;
+                                                            const isSectionAgg = ['top', 'bottom', 'bot', 'mean', 'std'].some(role => String(row.row_role ?? row.stat_type ?? "").toLowerCase().includes(role));
+                                                            let customTopBorderAttr = undefined;
+                                                            if (row.line && row.line !== 'none') {
+                                                                const lineStyle = row.line === 'thick' ? 'solid' : row.line;
+                                                                const lineWidth = row.line === 'double' ? '3px' : '2px';
+                                                                customTopBorderAttr = `${lineWidth} ${lineStyle} #475569`;
+                                                            }
+                                                            const topBorderAttr = customTopBorderAttr || (isBaseRow ? 'none' : (isSectionAgg ? sectionBorder : gridBorder));
+
+                                                            return (
+                                                                <tr key={i}>
+                                                                    {hasRowLabel2 && (
+                                                                        <td
+                                                                            className="label-cell row-group-label sticky-col sticky-l0"
                                                                             style={{
+                                                                                display: (i === 0 || (resultData.rows[i - 1].label2 || resultData.rows[i - 1].var_label) !== (row.label2 || row.var_label)) ? 'table-cell' : 'none',
+                                                                                verticalAlign: 'middle',
                                                                                 background: uiSettings?.theme_primary || '#f8fafc',
-                                                                                
-                                                                                
-                                                                                fontWeight: '700',
                                                                                 color: uiSettings?.theme_primary_fg || '#1e3a8a',
                                                                                 fontSize: '11px',
-                                                                                textAlign: 'center',
-                                                                                verticalAlign: 'middle'
-                                                                            }}
-                                                                        >
-                                                                            문항
-                                                                        </th>
-                                                                    )}
-                                                                    {headerGroups.row3.map((group, i) => {
-                                                                        const isSpanned = headerGroups.row1.some(g1 => g1.rowSpan >= 2 && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
-                                                                        if (isSpanned) return null;
-
-                                                                        return (
-                                                                            <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: uiSettings?.theme_primary || '#f0f9ff',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
-                                                                                {group.label}
-                                                                            </th>
-                                                                        );
-                                                                    })}
-                                                                </tr>
-                                                            );
-                                                        }
-
-                                                        if (headerGroups.showRow2) {
-                                                            headerRows.push(
-                                                                <tr key="col-label2-row">
-                                                                    {(!hasVarLabel && !headerGroups.showRow3) && (
-                                                                        <th
-                                                                            rowSpan={totalRows}
-                                                                            colSpan={hasRowLabel2 ? 2 : 1}
-                                                                            className="sticky-col sticky-l0"
-                                                                            style={{
-                                                                                background: uiSettings?.theme_primary || '#f8fafc',
-                                                                                
-                                                                                
                                                                                 fontWeight: '700',
-                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
-                                                                                fontSize: '11px',
                                                                                 textAlign: 'center',
-                                                                                verticalAlign: 'middle'
+                                                                                borderTop: topBorderAttr,
+                                                                                whiteSpace: 'normal',
+                                                                                wordBreak: 'break-all'
                                                                             }}
+                                                                            rowSpan={resultData.rows.filter(r => (r.label2 || r.var_label) === (row.label2 || row.var_label)).length}
                                                                         >
-                                                                            문항
-                                                                        </th>
+                                                                            {row.label2 || row.var_label}
+                                                                        </td>
                                                                     )}
-                                                                    {headerGroups.row2.map((group, i) => {
-                                                                        // Check if spanning from row1 (rowSpan >= 3) OR row3 (rowSpan >= 2)
-                                                                        const coveredByRow1 = headerGroups.row1.some(g1 => g1.rowSpan >= 3 && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
-                                                                        const coveredByRow3 = headerGroups.row3.some(g3 => g3.rowSpan >= 2 && g3.startIndex <= group.startIndex && (g3.startIndex + g3.count) >= (group.startIndex + group.count));
-                                                                        if (coveredByRow1 || coveredByRow3) return null;
-
-                                                                        return (
-                                                                            <th key={i} colSpan={group.count} style={{ background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
-                                                                                {group.label}
-                                                                            </th>
-                                                                        );
-                                                                    })}
-                                                                </tr>
-                                                            );
-                                                        }
-
-                                                        // 마지막 라벨 행
-                                                        headerRows.push(
-                                                            <tr key="label-row">
-                                                                {(!hasVarLabel && !headerGroups.showRow2 && !headerGroups.showRow3) && (
-                                                                    <th
-                                                                        rowSpan={totalRows}
-                                                                        colSpan={hasRowLabel2 ? 2 : 1}
-                                                                        className="sticky-col sticky-l0"
-                                                                        style={{
-                                                                            background: uiSettings?.theme_primary || '#f8fafc',
-                                                                            
-                                                                            
-                                                                            fontWeight: '700',
-                                                                            color: uiSettings?.theme_primary_fg || '#1e3a8a',
-                                                                            fontSize: '11px',
-                                                                            textAlign: 'center',
-                                                                            verticalAlign: 'middle'
-                                                                        }}
-                                                                    >
-                                                                        문항
-                                                                    </th>
-                                                                )}
-                                                                {resultData.columns.map((col, i) => (
-                                                                    <th key={i} style={{ minWidth: '80px', background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#64748b', fontSize: '11px', fontWeight: '500', borderLeft: i > 0 ? gridBorder : 'none' }}>
-                                                                        {col?.label ?? col}
-                                                                    </th>
-                                                                ))}
-                                                            </tr>
-                                                        );
-
-                                                        return headerRows;
-                                                    })()}
-                                                </thead>
-                                                <tbody>
-                                                    {resultData.rows.map((row, i) => {
-                                                        const isSingleVal = row.type === 'stat' || row.stat_type;
-                                                        const isHideAll = row.hide === 'all' || row.hide === 'all ';
-                                                        const isHideN = row.hide === 'n' || isHideAll || effectivePolicy?.show_n === false;
-                                                        const isHideP = row.hide === 'p' || isHideAll || effectivePolicy?.show_percent === false;
-                                                        const labelColor = row.color || 'inherit';
-
-                                                        let rN = effectivePolicy?.n_digits ?? 0;
-                                                        let rP = effectivePolicy?.percent_digits ?? 1;
-                                                        if (row.round !== undefined && row.round !== null && row.round !== '') {
-                                                            rN = Number(row.round);
-                                                            rP = Number(row.round);
-                                                        }
-
-                                                        const formatN = (val) => val === null || val === undefined || val === '' ? '-' : Number(val).toLocaleString(undefined, { minimumFractionDigits: rN, maximumFractionDigits: rN });
-                                                        const formatP = (val) => val === null || val === undefined || val === '' ? '-' : Number(val).toLocaleString(undefined, { minimumFractionDigits: rP, maximumFractionDigits: rP });
-
-                                                        const isBaseRow = String(row.row_role ?? "").toLowerCase() === "base" || String(row.label ?? "").toLowerCase() === "base" || row.is_base;
-                                                        const isSectionAgg = ['top', 'bottom', 'bot', 'mean', 'std'].some(role => String(row.row_role ?? row.stat_type ?? "").toLowerCase().includes(role));
-                                                        let customTopBorderAttr = undefined;
-                                                        if (row.line && row.line !== 'none') {
-                                                            const lineStyle = row.line === 'thick' ? 'solid' : row.line;
-                                                            const lineWidth = row.line === 'double' ? '3px' : '2px';
-                                                            customTopBorderAttr = `${lineWidth} ${lineStyle} #475569`;
-                                                        }
-                                                        const topBorderAttr = customTopBorderAttr || (isBaseRow ? 'none' : (isSectionAgg ? sectionBorder : gridBorder));
-
-                                                        return (
-                                                        <tr key={i}>
-                                                            {hasRowLabel2 && (
-                                                                <td
-                                                                    className="label-cell row-group-label sticky-col sticky-l0"
-                                                                    style={{
-                                                                        display: (i === 0 || (resultData.rows[i - 1].label2 || resultData.rows[i - 1].var_label) !== (row.label2 || row.var_label)) ? 'table-cell' : 'none',
-                                                                        verticalAlign: 'middle',
-                                                                        background: uiSettings?.theme_primary || '#f8fafc',
-                                                                        color: uiSettings?.theme_primary_fg || '#1e3a8a',
-                                                                        fontSize: '11px',
-                                                                        fontWeight: '700',
-                                                                        textAlign: 'center',
-                                                                        borderTop: topBorderAttr,
-                                                                        whiteSpace: 'normal',
-                                                                        wordBreak: 'break-all'
-                                                                    }}
-                                                                    rowSpan={resultData.rows.filter(r => (r.label2 || r.var_label) === (row.label2 || row.var_label)).length}
-                                                                >
-                                                                    {row.label2 || row.var_label}
-                                                                </td>
-                                                            )}
-                                                            <td className={`label-cell sticky-col ${hasRowLabel2 ? 'sticky-l1' : 'sticky-l0'}`} style={{ textAlign: 'left', fontSize: '11px', color: labelColor, borderTop: topBorderAttr }}>{row.label}</td>
-                                                            {row.values.map((v, j) => (
-                                                                <td
-                                                                    key={j}
-                                                                    className={`${v.sig_vs_total === 'up' ? 'sig-highlight-up' : v.sig_vs_total === 'down' ? 'sig-highlight-down' : ''}`}
-                                                                    style={{ textAlign: 'right', position: 'relative', borderLeft: j > 0 ? gridBorder : 'none', borderTop: topBorderAttr }}
-                                                                >
-                                                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', width: '100%', color: labelColor }}>
-                                                                        {isHideAll ? null : isSingleVal ? (
-                                                                            <span className="cell-value-single" style={{ fontWeight: '600' }}>
-                                                                                {row.prefix || ''}{formatN(v.count)}{row.postfix || ''}
-                                                                            </span>
-                                                                        ) : displayMode === 'all' ? (
-                                                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                                                                                {!isHideN && <span className="cell-value">{formatN(v.count)}</span>}
-                                                                                {!isHideP && <span className="cell-pct">{row.prefix || ''}{formatP(v.percent)}%{row.postfix || ''}</span>}
+                                                                    <td className={`label-cell sticky-col ${hasRowLabel2 ? 'sticky-l1' : 'sticky-l0'}`} style={{ textAlign: 'left', fontSize: '11px', color: labelColor, borderTop: topBorderAttr }}>{row.label}</td>
+                                                                    {row.values.map((v, j) => (
+                                                                        <td
+                                                                            key={j}
+                                                                            className={`${v.sig_vs_total === 'up' ? 'sig-highlight-up' : v.sig_vs_total === 'down' ? 'sig-highlight-down' : ''}`}
+                                                                            style={{ textAlign: 'right', position: 'relative', borderLeft: j > 0 ? gridBorder : 'none', borderTop: topBorderAttr }}
+                                                                        >
+                                                                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', width: '100%', color: labelColor }}>
+                                                                                {isHideAll ? null : isSingleVal ? (
+                                                                                    <span className="cell-value-single" style={{ fontWeight: '600' }}>
+                                                                                        {row.prefix || ''}{formatN(v.count)}{row.postfix || ''}
+                                                                                    </span>
+                                                                                ) : displayMode === 'all' ? (
+                                                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                                                                                        {!isHideN && <span className="cell-value">{formatN(v.count)}</span>}
+                                                                                        {!isHideP && <span className="cell-pct">{row.prefix || ''}{formatP(v.percent)}%{row.postfix || ''}</span>}
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <span className="cell-value-single">
+                                                                                        {displayMode === 'value' && !isHideN ? formatN(v.count) : null}
+                                                                                        {displayMode === 'percent' && !isHideP ? `${row.prefix || ''}${formatP(v.percent)}%${row.postfix || ''}` : null}
+                                                                                    </span>
+                                                                                )}
                                                                             </div>
-                                                                        ) : (
-                                                                            <span className="cell-value-single">
-                                                                                {displayMode === 'value' && !isHideN ? formatN(v.count) : null}
-                                                                                {displayMode === 'percent' && !isHideP ? `${row.prefix || ''}${formatP(v.percent)}%${row.postfix || ''}` : null}
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                </td>
-                                                            ))}
-                                                        </tr>
-                                                        );
-                                                    })}
-                                                </tbody>
-                                            </table>
+                                                                        </td>
+                                                                    ))}
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            )}
                                         </div>
                                     </div>
                                 );
@@ -1464,7 +1473,7 @@ export const ResultSectionBlock = ({
                                                     </div>
 
                                                     <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px', alignSelf: 'center' }} />
-                                                    
+
                                                     {columnLayout === 'double' ? (
                                                         <div className="download-menu-container" ref={chartTypeMenuRef}>
                                                             <button

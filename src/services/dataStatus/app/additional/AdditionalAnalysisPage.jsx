@@ -120,6 +120,7 @@ const AdditionalAnalysisPage = () => {
     const [currentPageId, setCurrentPageId] = useState(sessionStorage.getItem("pageId"));
 
     // Data State
+    const [styleCss, setStyleCss] = useState('');
     const [tables, setTables] = useState([]);
     const [selectedTableId, setSelectedTableId] = useState(null);
     const [mainBannerId, setMainBannerId] = useState(null);
@@ -614,7 +615,8 @@ const AdditionalAnalysisPage = () => {
                                     const evalResult = await evaluateTable.mutateAsync(payload);
 
                                     if (evalResult?.success === "777" && evalResult.resultjson) {
-                                        setResultDataList(processResults(evalResult.resultjson));
+                                        setStyleCss(evalResult.resultjson.style_css || '');
+                                        setResultDataList(evalResult.resultjson.tables || []);
                                     }
                                 } catch (autoEvalError) {
                                     console.error("Initial auto evaluation failed:", autoEvalError);
@@ -963,7 +965,8 @@ const AdditionalAnalysisPage = () => {
                         const evalResult = await evaluateTable.mutateAsync(runPayload);
 
                         if (evalResult?.success === "777" && evalResult.resultjson) {
-                            setResultDataList(processResults(evalResult.resultjson));
+                            setStyleCss(evalResult.resultjson.style_css || '');
+                            setResultDataList(evalResult.resultjson.tables || []);
                         }
 
                     } catch (evalError) {
@@ -1600,10 +1603,8 @@ const AdditionalAnalysisPage = () => {
                 const evalResult = await evaluateTable.mutateAsync(runPayload);
 
                 if (evalResult?.success === "777" && evalResult.resultjson) {
-                    let newData = evalResult.resultjson;
-
-                    const newColumnsList = newData.columns || [];
-                    setResultDataList(processResults(newData));
+                    setStyleCss(evalResult.resultjson.style_css || '');
+                    setResultDataList(evalResult.resultjson.tables || []);
 
                     // Success - Close config when alert is confirmed
                     modal.showAlert("알림", "저장 및 실행이 완료되었습니다.", null, () => {
@@ -1749,9 +1750,8 @@ const AdditionalAnalysisPage = () => {
             const result = await evaluateTable.mutateAsync(payload);
 
             if (result?.success === "777" && result.resultjson) {
-                setResultDataList(processResults(result.resultjson));
-
-                // setIsConfigOpen(false); // 토글 비활성화
+                setStyleCss(result.resultjson.style_css || '');
+                setResultDataList(result.resultjson.tables || []);
             }
             else {
                 modal.showAlert('실패', '분석 실행 실패');
@@ -1827,6 +1827,7 @@ const AdditionalAnalysisPage = () => {
 
     return (
         <div className="cross-tab-page" data-theme="data-dashboard">
+            {styleCss && <style dangerouslySetInnerHTML={{ __html: styleCss }} />}
             <DataHeader
                 title="추가분석"
             >
