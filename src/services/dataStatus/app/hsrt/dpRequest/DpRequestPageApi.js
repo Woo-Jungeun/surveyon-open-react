@@ -184,7 +184,7 @@ export function DpRequestPageApi() {
 
     /** 교차분석 - 차트 데이터 조회 */
     const evaluateChartData = useMutation(
-        async (data) => await api.post(data, "/analysis/evaluate/styled", "API_BASE_URL_DATASTATUS")
+        async (data) => await api.post(data, "/analysis/evaluate/chart-data", "API_BASE_URL_DATASTATUS")
     );
 
     /** 교차분석 - 초기 문맥 조회 */
