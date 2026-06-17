@@ -1851,14 +1851,14 @@ const AdditionalAnalysisPage = () => {
                                                                 title={`${v.label || ''}${v.id ? ` (${v.id})` : ''}`}
                                                             >
                                                                 <div className="variable-item-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                                                                    <div className="variable-item__name">{v.id}</div>
+                                                                    <div className="variable-item__name">{v.label}</div>
                                                                     {v.type && (
                                                                         <span className={`question-type-badge ${v.color}`}>
                                                                             {String(v.type).toLowerCase()}
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                <div className="variable-item__label">{v.label}</div>
+                                                                <div className="variable-item__label">{v.id}</div>
                                                             </div>
                                                         ))}
                                                     </div>
