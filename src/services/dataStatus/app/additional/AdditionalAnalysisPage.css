@@ -2423,3 +2423,59 @@
     border: 1px solid #e2e8f0;
     background: #f8fafc;
 }
+
+/* 2단 레이아웃일 때 헤더 한 줄 정렬 강제 및 높이 일치 */
+.layout-double .section-header {
+    height: 48px;
+    box-sizing: border-box;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap !important;
+}
+
+.layout-double .section-actions {
+    flex-wrap: nowrap !important;
+    gap: 4px;
+}
+
+.layout-double .chart-type-toolbar {
+    margin-right: 4px;
+    gap: 2px;
+    padding: 2px;
+}
+
+.layout-double .view-option-btn,
+.layout-double .action-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.layout-double .display-mode-select {
+    margin-right: 8px;
+}
+
+/* 2단 레이아웃일 때 표와 차트 높이 및 테두리 스타일 일치화 */
+.layout-double .table-wrapper {
+    margin-top: 0 !important;
+    height: 500px;
+    min-height: 500px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.layout-double .cross-tab-chart-container {
+    height: 500px;
+    min-height: 500px;
+    box-sizing: border-box;
+}
+
+/* 표 내부의 테이블 테두리 중복 방지 */
+.layout-double .table-wrapper .cross-table {
+    border: none !important;
+}

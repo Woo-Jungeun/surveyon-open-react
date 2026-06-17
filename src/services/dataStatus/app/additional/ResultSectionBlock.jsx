@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Copy, Maximize, Settings, Download, BarChart2, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Bot, Loader2, CheckCircle2, GripVertical, ChevronLeft, ChevronRight, Maximize2, ChevronDown, ChevronsUpDown, ChevronUp, X, Cloud, Check, LayoutList, BarChartHorizontal, Percent } from 'lucide-react';
+import { Copy, Maximize, Settings, Download, BarChart2, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Bot, Loader2, CheckCircle2, GripVertical, ChevronLeft, ChevronRight, Maximize2, ChevronDown, ChevronsUpDown, ChevronUp, X, Cloud, Check, LayoutList, BarChartHorizontal, Percent, Sparkles } from 'lucide-react';
 import KendoChart from '../../components/KendoChart';
 import { saveAs } from '@progress/kendo-file-saver';
 import { CHART_THEME_OPTIONS } from '../../constants/chartThemes';
@@ -172,7 +172,7 @@ export const ResultSectionBlock = ({
 
     const [rawChartData, setRawChartData] = useState(null);
     const [isChartLoading, setIsChartLoading] = useState(false);
-    const { evaluateChartData } = DpRequestPageApi();
+    const { evaluateChartData, getAiSummary } = DpRequestPageApi();
     const auth = useSelector((store) => store.auth);
     const userId = auth?.user?.userId;
 
@@ -189,11 +189,16 @@ export const ResultSectionBlock = ({
         return layoutOptions.find(opt => opt.id === 'chart')?.checked;
     }, [layoutOptions]);
 
+    const isAiVisible = useMemo(() => {
+        return layoutOptions.find(opt => opt.id === 'ai')?.checked;
+    }, [layoutOptions]);
+
     useEffect(() => {
         const fetchChartData = async () => {
-            if (!isChartVisible) return;
+            if (!isChartVisible && !isAiVisible) return;
             if (!stub.length || !xInfo?.length) {
                 setRawChartData(null);
+                setAiResult(null);
                 return;
             }
 
@@ -215,19 +220,22 @@ export const ResultSectionBlock = ({
                 const res = await evaluateChartData.mutateAsync(payload);
                 if (res?.success === "777" && res.resultjson) {
                     setRawChartData(res.resultjson);
+                    setAiResult(null);
                 } else {
                     setRawChartData(null);
+                    setAiResult(null);
                 }
             } catch (err) {
                 console.error("Failed to fetch chart data in additional analysis:", err);
                 setRawChartData(null);
+                setAiResult(null);
             } finally {
                 setIsChartLoading(false);
             }
         };
 
         fetchChartData();
-    }, [isChartVisible, stub, xInfo, weightCol, filterExpression, userId, resultData?.table_id]);
+    }, [isChartVisible, isAiVisible, stub, xInfo, weightCol, filterExpression, userId, resultData?.table_id]);
 
     const {
         chartData: fullChartData = [],
@@ -540,17 +548,56 @@ export const ResultSectionBlock = ({
         }
     };
 
-    const handleRunAiAnalysis = () => {
-        setIsAiLoading(true);
-        setTimeout(() => {
-            setAiResult([
-                "전체 응답은 High 이상 구간이 높아 전반적으로 긍정적인 반응을 보였습니다.",
-                "배너 중 Banner C가 모든 구간에서 가장 높은 반응도를 기록했습니다.",
-                "데이터 분산이 낮아 결과의 안정성과 신뢰도가 확보되었습니다."
-            ]);
+    const handleRunAiAnalysis = async () => {
+        if (!rawChartData) {
+            setToast({ show: true, message: "AI 분석을 위한 차트 데이터가 아직 로드되지 않았습니다." });
+            return;
+        }
+
+        try {
+            setIsAiLoading(true);
+            const pageId = sessionStorage.getItem('pageId');
+            const projectNum = sessionStorage.getItem('merge_pn');
+            const tableId = resultData?.table_id || 'T1';
+
+            const payload = {
+                project_num: projectNum || "",
+                user: userId || "",
+                page_id: pageId || "",
+                model: "llm-gpt-oss-120b",
+                temperature: 0.2,
+                resultjson: {
+                    table_id: tableId,
+                    table_title: tableName || "", // inputtext= 테이블명 값을 request로 여기에 넣어줘.
+                    labels: rawChartData.labels || [],
+                    series: rawChartData.series || []
+                }
+            };
+
+            const res = await getAiSummary.mutateAsync(payload);
+
+            if (String(res?.success) === "777" && res?.resultjson?.[tableId]?.[0]?.result_data) {
+                const summary = res.resultjson[tableId][0].result_data;
+                const lines = typeof summary === 'string'
+                    ? summary.split('\n').map(l => l.trim()).filter(Boolean)
+                    : (Array.isArray(summary) ? summary : [summary]);
+                setAiResult(lines);
+            } else {
+                setAiResult(["요약 데이터를 불러오지 못했습니다."]);
+            }
+        } catch (err) {
+            console.error("AI Analysis execution error:", err);
+            setAiResult(["요약 데이터를 불러오는 중 오류가 발생했습니다."]);
+        } finally {
             setIsAiLoading(false);
-        }, 1500);
+        }
     };
+
+    useEffect(() => {
+        if (isAiVisible && rawChartData && !aiResult && !isAiLoading) {
+            handleRunAiAnalysis();
+        }
+    }, [isAiVisible, rawChartData, aiResult, isAiLoading]);
 
     const getChartTypeName = (mode) => {
         const typeMap = {
@@ -689,7 +736,7 @@ export const ResultSectionBlock = ({
     return (
         <div
             key={dataIndex}
-            className={`result-section ${tableMode === 'merged' ? 'is-expanded is-merged' : (isExpanded ? 'is-expanded' : 'is-narrow')} ${isConfigOpen ? 'is-config-open' : ''}`}
+            className={`result-section ${tableMode === 'merged' ? 'is-expanded is-merged' : (isExpanded ? 'is-expanded' : 'is-narrow')} ${isConfigOpen ? 'is-config-open' : ''} ${columnLayout === 'double' ? 'layout-double' : ''}`}
             style={{
                 marginTop: dataIndex > 0 ? (tableMode === 'merged' || isExpanded ? '20px' : '8px') : '0'
             }}
@@ -723,14 +770,14 @@ export const ResultSectionBlock = ({
                                             {layoutOptions.map((item, index) => {
                                                 if (item.id === 'stats') return null; // [USER-REQUEST] 통계 임시 주석
                                                 return (
-                                                    <div key={item.id} className={`sortable-item ${item.checked ? 'checked' : ''} ${item.id === 'ai' ? 'disabled' : ''}`}
+                                                    <div key={item.id} className={`sortable-item ${item.checked ? 'checked' : ''}`}
                                                         style={{ padding: '2px 8px', fontSize: '12px', gap: '4px', minWidth: 'auto', marginBottom: 0 }}
-                                                        draggable={item.id !== 'ai'}
-                                                        onDragStart={(e) => item.id !== 'ai' && handleSortDragStart(e, index, 'layout')}
-                                                        onDragOver={(e) => { if (item.id !== 'ai') { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }}
-                                                        onDrop={(e) => item.id !== 'ai' && handleSortDrop(e, index, 'layout')}
-                                                        onClick={(e) => { e.stopPropagation(); item.id !== 'ai' && toggleLayoutOption(item.id); }}>
-                                                        <GripVertical size={12} className="drag-handle" style={item.id === 'ai' ? { display: 'none' } : {}} />
+                                                        draggable={true}
+                                                        onDragStart={(e) => handleSortDragStart(e, index, 'layout')}
+                                                        onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                                                        onDrop={(e) => handleSortDrop(e, index, 'layout')}
+                                                        onClick={(e) => { e.stopPropagation(); toggleLayoutOption(item.id); }}>
+                                                        <GripVertical size={12} className="drag-handle" />
                                                         <span>{item.label}</span>
                                                     </div>
                                                 );
@@ -1690,7 +1737,7 @@ export const ResultSectionBlock = ({
                                                     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                     background: 'rgba(255, 255, 255, 0.7)', zIndex: 10
-                                                 }}>
+                                                }}>
                                                     <Loader2 className="animate-spin" size={24} color="#3b82f6" />
                                                 </div>
                                             )}
@@ -1720,16 +1767,42 @@ export const ResultSectionBlock = ({
                                 return (
                                     <div key="ai" className="result-block">
                                         <div className="section-header">
-                                            <div className="blue-bar"></div>
-                                            <span className="section-title">AI 분석</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <div className="blue-bar"></div>
+                                                <span className="section-title">AI 요약</span>
+                                            </div>
                                         </div>
-                                        <div className="ai-analysis-container">
-                                            {!aiResult && !isAiLoading && <button className="btn-ai-analysis" onClick={handleRunAiAnalysis}><Bot size={18} /><span>AI 분석 실행</span></button>}
-                                            {isAiLoading && <div className="ai-loading"><Loader2 size={32} className="spin-icon" /><span>AI가 데이터를 분석하고 있습니다...</span></div>}
-                                            {aiResult && <div className="ai-result-box">
-                                                {aiResult.map((text, idx) => <div key={idx} className="ai-result-item"><CheckCircle2 size={16} /><p>{text}</p></div>)}
-                                                <button onClick={() => setAiResult(null)}>다시 분석하기</button>
-                                            </div>}
+                                        <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'flex-start', minHeight: '60px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#334155', padding: '16px', flexDirection: 'column', gap: '12px', width: '100%' }}>
+                                                {isAiLoading && (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', width: '100%', justifyContent: 'center', padding: '12px 0' }}>
+                                                        <Loader2 className="animate-spin" size={16} />
+                                                        AI가 데이터를 분석하고 있습니다...
+                                                    </div>
+                                                )}
+                                                {!rawChartData && !isAiLoading && (
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', color: '#64748b', fontSize: '13px', padding: '12px 0' }}>
+                                                        AI 분석을 위한 차트 데이터가 준비되지 않았습니다.
+                                                    </div>
+                                                )}
+                                                {!aiResult && rawChartData && !isAiLoading && (
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', color: '#64748b', fontSize: '13px', padding: '12px 0' }}>
+                                                        AI 요약 대기 중...
+                                                    </div>
+                                                )}
+                                                {aiResult && (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', lineHeight: '1.6', color: '#334155', width: '100%' }}>
+                                                            {aiResult.map((text, idx) => (
+                                                                <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', width: '100%' }}>
+                                                                    <CheckCircle2 size={16} color="#10b981" style={{ marginTop: '2px', flexShrink: 0 }} />
+                                                                    <p style={{ margin: 0, wordBreak: 'keep-all', flex: 1 }}>{text}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 );
