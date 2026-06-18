@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { ChevronDown, ChevronUp, Play, Search, BarChart2, BarChartHorizontal, Download, X, Settings, ChevronRight, GripVertical, GripHorizontal, LineChart, Map as MapIcon, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2, Maximize, Minimize, Save, Grid, Plus, Table, List, Star } from 'lucide-react';
+import { ChevronDown, ChevronUp, Play, Search, BarChart2, BarChartHorizontal, Download, X, Settings, ChevronRight, GripVertical, GripHorizontal, LineChart, Map as MapIcon, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2, Maximize, Minimize, Save, Grid, Plus, Table, List, Star, Table2 } from 'lucide-react';
 import Toast from '../../../../components/common/Toast';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { saveAs } from '@progress/kendo-file-saver';
@@ -173,7 +173,7 @@ const AdditionalAnalysisPage = () => {
         if (String(v.id).includes('_stub')) {
             const cleanId = String(v.id).replace(/_stub\+?$/, '');
             return allBaseVariablesRef.current.some(orig => orig.id === cleanId || orig.name === cleanId) ||
-                   variables.some(orig => orig.id === cleanId || orig.name === cleanId);
+                variables.some(orig => orig.id === cleanId || orig.name === cleanId);
         }
         return true;
     };
@@ -1143,7 +1143,7 @@ const AdditionalAnalysisPage = () => {
                         let targetName = item.name;
                         let targetLabel = item.label;
                         let targetInfo = item.info || [];
-                        
+
                         if (String(item.id).includes('_stub')) {
                             const cleanId = String(item.id).replace(/_stub\+?$/, '');
                             const origVar = allBaseVariablesRef.current.find(v => v.id === cleanId || v.name === cleanId) || variables.find(v => v.id === cleanId || v.name === cleanId);
@@ -1638,9 +1638,9 @@ const AdditionalAnalysisPage = () => {
                 parts.forEach(part => {
                     const found = variables.find(v => v.id === part || v.name === part || v.label === part);
                     if (found) {
-                         variablesMap[part] = found;
+                        variablesMap[part] = found;
                     } else if (part) {
-                         variablesMap[part] = { id: part, name: part, label: part, type: "categorical", info: [] };
+                        variablesMap[part] = { id: part, name: part, label: part, type: "categorical", info: [] };
                     }
                 });
             });
@@ -1871,8 +1871,9 @@ const AdditionalAnalysisPage = () => {
                     {/* Main Content */}
                     <div className="cross-tab-main" style={{ gap: isConfigOpen ? '8px' : '16px' }}>
                         {tables.length === 0 ? (
-                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '15px', background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                                데이터가 없습니다.
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', minHeight: '350px' }}>
+                                <Table2 size={32} color="#94a3b8" style={{ marginBottom: '16px', strokeWidth: 1.5 }} />
+                                <div style={{ fontSize: '15px', fontWeight: 500, color: '#1e293b', letterSpacing: '-0.03em' }}>표시할 데이터가 없습니다.</div>
                             </div>
                         ) : (
                             <>
@@ -1885,8 +1886,8 @@ const AdditionalAnalysisPage = () => {
                                     minHeight: isConfigOpen ? '750px' : 'auto',
                                     transition: 'all 0.3s ease'
                                 }}>
-                                    <div 
-                                        className="config-header" 
+                                    <div
+                                        className="config-header"
                                         onClick={() => setIsConfigOpen(!isConfigOpen)}
                                         style={{ padding: '20px 24px', transition: 'all 0.2s', cursor: 'pointer' }}
                                     >
@@ -1927,8 +1928,8 @@ const AdditionalAnalysisPage = () => {
                                         {/* Table Mode Switch */}
                                         <div className="action-buttons" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             {isConfigOpen && (
-                                                <button 
-                                                    className="btn-run" 
+                                                <button
+                                                    className="btn-run"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleSaveAndRun();

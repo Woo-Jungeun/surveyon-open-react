@@ -2770,8 +2770,10 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
                     <div id="dp-content-scroll-area" className="dp-content custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '10px', backgroundColor: '#f1f5f9' }}>
                         {filteredBanners.length === 0 && (
-                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
-                                표시할 데이터가 없습니다.
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '350px' }}>
+                                <Table2 size={32} color="#94a3b8" style={{ marginBottom: '16px', strokeWidth: 1.5 }} />
+                                <div style={{ fontSize: '15px', fontWeight: 500, color: '#1e293b', letterSpacing: '-0.03em' }}>표시할 데이터가 없습니다.</div>
+                                <div style={{ fontSize: '13px', color: '#64748b', marginTop: '6px', fontWeight: 400, letterSpacing: '-0.01em' }}>DP의뢰서를 작성해주세요.</div>
                             </div>
                         )}
                         {filteredBanners.map((banner, index) => (
