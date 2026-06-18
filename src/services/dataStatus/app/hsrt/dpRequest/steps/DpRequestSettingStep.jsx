@@ -133,47 +133,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     });
 
     const [weightOptions, setWeightOptions] = useState(['없음']);
-    const [scaleData, setScaleData] = useState([
-        {
-            id: 'preset_5scale',
-            name: '5점척도 Top2 / Mid / Bot2',
-            type: 'scale',
-            min: 1,
-            max: 5,
-            recode: true,
-            bands: [
-                { id: 'preset_5scale_top', label: 'top', values: '4,5' },
-                { id: 'preset_5scale_mid', label: 'mid', values: '3' },
-                { id: 'preset_5scale_bot', label: 'bot', values: '1,2' }
-            ]
-        },
-        {
-            id: 'preset_7scale',
-            name: '7점척도 Top3 / Mid / Bot3',
-            type: 'scale',
-            min: 1,
-            max: 7,
-            recode: true,
-            bands: [
-                { id: 'preset_7scale_top', label: 'top', values: '5,6,7' },
-                { id: 'preset_7scale_mid', label: 'mid', values: '4' },
-                { id: 'preset_7scale_bot', label: 'bot', values: '1,2,3' }
-            ]
-        },
-        {
-            id: 'preset_10scale',
-            name: '10점척도 Top3 / Mid4 / Bot3',
-            type: 'scale',
-            min: 1,
-            max: 10,
-            recode: true,
-            bands: [
-                { id: 'preset_10scale_top', label: 'top', values: '8,9,10' },
-                { id: 'preset_10scale_mid', label: 'mid', values: '4,5,6,7' },
-                { id: 'preset_10scale_bot', label: 'bot', values: '1,2,3' }
-            ]
-        }
-    ]);
+    const [scaleData, setScaleData] = useState([]);
     const [rankData, setRankData] = useState([]);
     const [groupData, setGroupData] = useState([]);
     const [contextData, setContextData] = useState(null);
@@ -334,7 +294,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                         if (Array.isArray(options.bands)) {
                             bands = options.bands.map((b, bIdx) => ({
                                 id: b.id || `band_${bIdx}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-                                label: b.label || 'top',
+                                label: b.label || 'Top',
                                 values: Array.isArray(b.values) ? b.values.join(',') : ''
                             }));
                              // No sorting to preserve original layout order

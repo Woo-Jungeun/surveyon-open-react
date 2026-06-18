@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertCircle, ChevronDown, ChevronRight, Plus, Trash2, X, Info } from 'lucide-react';
+import { AlertCircle, ChevronDown, ChevronRight, Plus, Trash2, X, Info, GripVertical } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 
 // 그룹 색상 팔레트 정의
@@ -52,9 +52,56 @@ const AnalysisSettingTab = ({
     const [expandedGroupId, setExpandedGroupId] = useState(null);
     const [expandedRankId, setExpandedRankId] = useState(null);
 
+    // --- 드래그 앤 드롭 상태 ---
+    const [dragOverIdx, setDragOverIdx] = useState(null);
+    const [dragOverPresetId, setDragOverPresetId] = useState(null);
+
     // --- 유틸리티 함수 ---
     const markUnsaved = () => {
         if (onUnsavedChange) onUnsavedChange(true);
+    };
+
+    const handleDragStart = (e, presetId, bandIdx) => {
+        e.dataTransfer.setData('presetId', presetId);
+        e.dataTransfer.setData('bandIdx', String(bandIdx));
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+    };
+
+    const handleDragEnter = (e, presetId, bandIdx) => {
+        e.preventDefault();
+        setDragOverIdx(bandIdx);
+        setDragOverPresetId(presetId);
+    };
+
+    const handleDragEnd = () => {
+        setDragOverIdx(null);
+        setDragOverPresetId(null);
+    };
+
+    const handleDrop = (e, presetId, targetBandIdx) => {
+        e.preventDefault();
+        setDragOverIdx(null);
+        setDragOverPresetId(null);
+        
+        const sourcePresetId = e.dataTransfer.getData('presetId');
+        const sourceBandIdx = parseInt(e.dataTransfer.getData('bandIdx'), 10);
+        
+        if (sourcePresetId !== presetId || sourceBandIdx === targetBandIdx) return;
+        
+        setScaleData(scaleData.map(item => {
+            if (item.id === presetId) {
+                const bands = [...(item.bands || [])];
+                const [draggedItem] = bands.splice(sourceBandIdx, 1);
+                bands.splice(targetBandIdx, 0, draggedItem);
+                return { ...item, bands };
+            }
+            return item;
+        }));
+        markUnsaved();
     };
 
     // 콤마 구분자 문자열 파싱
@@ -78,9 +125,9 @@ const AnalysisSettingTab = ({
             max: 5,
             recode: false,
             bands: [
-                { id: `band_top_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, label: 'top', values: '' },
-                { id: `band_mid_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, label: 'mid', values: '' },
-                { id: `band_bot_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, label: 'bot', values: '' }
+                { id: `band_top_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, label: 'Top', values: '' },
+                { id: `band_mid_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, label: 'Mid', values: '' },
+                { id: `band_bot_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, label: 'Bot', values: '' }
             ]
         };
         setScaleData([...scaleData, newPreset]);
@@ -114,7 +161,7 @@ const AnalysisSettingTab = ({
         setScaleData(scaleData.map(item => {
             if (item.id === presetId) {
                 const bands = item.bands || [];
-                const nextBands = [...bands, { id: `band_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, label: 'top', values: '' }];
+                const nextBands = [...bands, { id: `band_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, label: 'Top', values: '' }];
                 return {
                     ...item,
                     bands: nextBands
@@ -141,7 +188,13 @@ const AnalysisSettingTab = ({
             if (item.id === presetId) {
                 let bands = (item.bands || []).map((band) => {
                     if (band.id === bandId) {
-                        return { ...band, [field]: value };
+                        let updated = { ...band, [field]: value };
+                        if (field === 'values') {
+                            const baseLabel = String(band.label || '').replace(/[0-9]/g, '') || 'Top';
+                            const nVal = parseValues(value).length;
+                            updated.label = nVal > 1 ? `${baseLabel}${nVal}` : baseLabel;
+                        }
+                        return updated;
                     }
                     return band;
                 });
@@ -164,7 +217,10 @@ const AnalysisSettingTab = ({
                         } else {
                             nextVals = [...vals, num].sort((a, b) => a - b);
                         }
-                        return { ...band, values: nextVals.join(',') };
+                        const baseLabel = String(band.label || '').replace(/[0-9]/g, '') || 'Top';
+                        const nVal = nextVals.length;
+                        const nextLabel = nVal > 1 ? `${baseLabel}${nVal}` : baseLabel;
+                        return { ...band, values: nextVals.join(','), label: nextLabel };
                     }
                     return band;
                 });
@@ -705,15 +761,16 @@ const AnalysisSettingTab = ({
 
                                                 {/* 테이블 형태의 헤더 헤딩 */}
                                                 <div style={{ display: 'flex', fontSize: '11px', fontWeight: 700, color: '#64748B', paddingBottom: '4px', borderBottom: '1px solid #F1F5F9' }}>
+                                                    <div style={{ width: '24px' }}></div>
                                                     <div style={{ width: '120px' }}>종류</div>
                                                     <div style={{ width: '50px', textAlign: 'center' }}>N</div>
                                                     <div style={{ width: '180px', paddingLeft: '10px' }}>값 (쉼표 구분)</div>
                                                     <div style={{ flex: 1, paddingLeft: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                         <span>미리보기 ({minVal}~{maxVal})</span>
                                                         <div style={{ display: 'inline-flex', gap: '8px', fontSize: '10px', color: '#64748B', fontWeight: 600, marginRight: '16px' }}>
-                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#BFDBFE', border: '1px solid #60A5FA', boxSizing: 'border-box' }} /> top</span>
-                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#CBD5E1', border: '1px solid #94A3B8', boxSizing: 'border-box' }} /> mid</span>
-                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FECACA', border: '1px solid #F87171', boxSizing: 'border-box' }} /> bot</span>
+                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#BFDBFE', border: '1px solid #60A5FA', boxSizing: 'border-box' }} /> Top</span>
+                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#CBD5E1', border: '1px solid #94A3B8', boxSizing: 'border-box' }} /> Mid</span>
+                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FECACA', border: '1px solid #F87171', boxSizing: 'border-box' }} /> Bot</span>
                                                         </div>
                                                     </div>
                                                     <div style={{ width: '30px' }}></div>
@@ -736,17 +793,63 @@ const AnalysisSettingTab = ({
                                                     }
 
                                                     const displayValuesStr = band.values || '';
+                                                    const isDragOver = dragOverPresetId === item.id && dragOverIdx === bandIdx;
 
                                                     return (
-                                                        <div key={band.id || bandIdx} style={{ display: 'flex', alignItems: 'center', padding: '6px 0' }}>
+                                                        <div 
+                                                            key={band.id || bandIdx} 
+                                                            onDragOver={handleDragOver}
+                                                            onDragEnter={(e) => handleDragEnter(e, item.id, bandIdx)}
+                                                            onDrop={(e) => handleDrop(e, item.id, bandIdx)}
+                                                            style={{ 
+                                                                display: 'flex', 
+                                                                alignItems: 'center', 
+                                                                padding: '6px 0',
+                                                                borderTop: isDragOver ? '2px solid #3B82F6' : '2px solid transparent',
+                                                                transition: 'border-color 0.15s ease',
+                                                                boxSizing: 'border-box'
+                                                            }}
+                                                        >
+                                                            {/* 이동 아이콘 */}
+                                                            <div 
+                                                                draggable
+                                                                onDragStart={(e) => handleDragStart(e, item.id, bandIdx)}
+                                                                onDragEnd={handleDragEnd}
+                                                                style={{ 
+                                                                    display: 'flex', 
+                                                                    alignItems: 'center', 
+                                                                    justifyContent: 'center', 
+                                                                    width: '24px', 
+                                                                    color: '#94A3B8', 
+                                                                    cursor: 'grab' 
+                                                                }}
+                                                            >
+                                                                 <GripVertical size={16} />
+                                                            </div>
+
                                                             {/* 종류 */}
                                                             <div style={{ width: '120px' }}>
-                                                                <DropDownList
-                                                                    data={['top', 'mid', 'bot', 'top2', 'mid2', 'bot2', 'top3', 'mid3', 'bot3']}
-                                                                    value={band.label}
-                                                                    onChange={(e) => handleUpdateScaleBandById(item.id, band.id, 'label', e.value)}
-                                                                    style={{ fontSize: '12px', width: '120px' }}
-                                                                />
+                                                                {(() => {
+                                                                    const nValForDropdown = parseValues(band.values).length;
+                                                                    const suffix = nValForDropdown > 1 ? String(nValForDropdown) : '';
+                                                                    const dropdownData = [`Top${suffix}`, `Mid${suffix}`, `Bot${suffix}`];
+                                                                    
+                                                                    // 서버에서 소문자로 내려온 경우 대응 (casing normalization)
+                                                                    const rawText = String(band.label || '').replace(/[0-9]/g, '').toLowerCase().trim();
+                                                                    let baseLabel = 'Top';
+                                                                    if (rawText === 'mid') baseLabel = 'Mid';
+                                                                    if (rawText === 'bot') baseLabel = 'Bot';
+                                                                    
+                                                                    const currentVal = baseLabel + suffix;
+                                                                    return (
+                                                                        <DropDownList
+                                                                            data={dropdownData}
+                                                                            value={currentVal}
+                                                                            onChange={(e) => handleUpdateScaleBandById(item.id, band.id, 'label', e.value)}
+                                                                            style={{ fontSize: '12px', width: '120px' }}
+                                                                        />
+                                                                    );
+                                                                })()}
                                                             </div>
 
                                                             {/* N 개수 */}
