@@ -13,6 +13,25 @@ const GROUP_COLORS = [
     { bg: '#FECACA', border: '#F87171', text: '#7F1D1D' }  // Red
 ];
 
+// Helper to determine order score for band labels
+const getBandScore = (label) => {
+    if (!label) return 99;
+    const l = String(label).toLowerCase().trim();
+    if (l.startsWith('top')) {
+        const num = parseInt(l.replace('top', ''), 10) || 1;
+        return num - 1;
+    }
+    if (l.startsWith('mid')) {
+        const num = parseInt(l.replace('mid', ''), 10) || 1;
+        return 10 + num - 1;
+    }
+    if (l.startsWith('bot')) {
+        const num = parseInt(l.replace('bot', ''), 10) || 1;
+        return 20 + num - 1;
+    }
+    return 99;
+};
+
 const AnalysisSettingTab = ({
     contextData,
     settings,
@@ -59,9 +78,9 @@ const AnalysisSettingTab = ({
             max: 5,
             recode: false,
             bands: [
-                { label: 'top', values: '' },
-                { label: 'mid', values: '' },
-                { label: 'bot', values: '' }
+                { id: `band_top_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, label: 'top', values: '' },
+                { id: `band_mid_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, label: 'mid', values: '' },
+                { id: `band_bot_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, label: 'bot', values: '' }
             ]
         };
         setScaleData([...scaleData, newPreset]);
@@ -95,9 +114,7 @@ const AnalysisSettingTab = ({
         setScaleData(scaleData.map(item => {
             if (item.id === presetId) {
                 const bands = item.bands || [];
-                const nextBands = [...bands, { label: 'top', values: '' }];
-                const labelOrder = { 'top': 0, 'mid': 1, 'bot': 2 };
-                nextBands.sort((a, b) => (labelOrder[a.label] ?? 99) - (labelOrder[b.label] ?? 99));
+                const nextBands = [...bands, { id: `band_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, label: 'top', values: '' }];
                 return {
                     ...item,
                     bands: nextBands
@@ -108,11 +125,10 @@ const AnalysisSettingTab = ({
         markUnsaved();
     };
 
-    const handleDeleteScaleBand = (presetId, bandIdx) => {
+    const handleDeleteScaleBandById = (presetId, bandId) => {
         setScaleData(scaleData.map(item => {
             if (item.id === presetId) {
-                const bands = [...(item.bands || [])];
-                bands.splice(bandIdx, 1);
+                const bands = (item.bands || []).filter(band => band.id !== bandId);
                 return { ...item, bands };
             }
             return item;
@@ -120,19 +136,15 @@ const AnalysisSettingTab = ({
         markUnsaved();
     };
 
-    const handleUpdateScaleBand = (presetId, bandIdx, field, value) => {
+    const handleUpdateScaleBandById = (presetId, bandId, field, value) => {
         setScaleData(scaleData.map(item => {
             if (item.id === presetId) {
-                let bands = (item.bands || []).map((band, idx) => {
-                    if (idx === bandIdx) {
+                let bands = (item.bands || []).map((band) => {
+                    if (band.id === bandId) {
                         return { ...band, [field]: value };
                     }
                     return band;
                 });
-                if (field === 'label') {
-                    const labelOrder = { 'top': 0, 'mid': 1, 'bot': 2 };
-                    bands = [...bands].sort((a, b) => (labelOrder[a.label] ?? 99) - (labelOrder[b.label] ?? 99));
-                }
                 return { ...item, bands };
             }
             return item;
@@ -140,11 +152,11 @@ const AnalysisSettingTab = ({
         markUnsaved();
     };
 
-    const handleToggleScaleChip = (presetId, bandIdx, num) => {
+    const handleToggleScaleChipById = (presetId, bandId, num) => {
         setScaleData(scaleData.map(item => {
             if (item.id === presetId) {
-                const bands = (item.bands || []).map((band, idx) => {
-                    if (idx === bandIdx) {
+                const bands = (item.bands || []).map((band) => {
+                    if (band.id === bandId) {
                         const vals = parseValues(band.values);
                         let nextVals;
                         if (vals.includes(num)) {
@@ -711,12 +723,13 @@ const AnalysisSettingTab = ({
                                                     let activeBg = '#CBD5E1';
                                                     let activeColor = '#0F172A';
                                                     let activeBorder = '#94A3B8';
-                                                    if (band.label === 'top') {
+                                                    const labelLower = String(band.label || '').toLowerCase().trim();
+                                                    if (labelLower.startsWith('top')) {
                                                         activeBg = '#BFDBFE';
                                                         activeColor = '#1E3A8A';
                                                         activeBorder = '#60A5FA';
                                                     }
-                                                    if (band.label === 'bot') {
+                                                    if (labelLower.startsWith('bot')) {
                                                         activeBg = '#FECACA';
                                                         activeColor = '#7F1D1D';
                                                         activeBorder = '#F87171';
@@ -725,13 +738,13 @@ const AnalysisSettingTab = ({
                                                     const displayValuesStr = band.values || '';
 
                                                     return (
-                                                        <div key={bandIdx} style={{ display: 'flex', alignItems: 'center', padding: '6px 0' }}>
+                                                        <div key={band.id || bandIdx} style={{ display: 'flex', alignItems: 'center', padding: '6px 0' }}>
                                                             {/* 종류 */}
                                                             <div style={{ width: '120px' }}>
                                                                 <DropDownList
-                                                                    data={['top', 'mid', 'bot']}
+                                                                    data={['top', 'mid', 'bot', 'top2', 'mid2', 'bot2', 'top3', 'mid3', 'bot3']}
                                                                     value={band.label}
-                                                                    onChange={(e) => handleUpdateScaleBand(item.id, bandIdx, 'label', e.value)}
+                                                                    onChange={(e) => handleUpdateScaleBandById(item.id, band.id, 'label', e.value)}
                                                                     style={{ fontSize: '12px', width: '120px' }}
                                                                 />
                                                             </div>
@@ -746,11 +759,11 @@ const AnalysisSettingTab = ({
                                                                 <input
                                                                     type="text"
                                                                     value={displayValuesStr}
-                                                                    onChange={(e) => handleUpdateScaleBand(item.id, bandIdx, 'values', e.target.value)}
+                                                                    onChange={(e) => handleUpdateScaleBandById(item.id, band.id, 'values', e.target.value)}
                                                                     onBlur={(e) => {
                                                                         let val = e.target.value.trim();
                                                                         val = val.replace(/,+/g, ',').replace(/^,|,$/g, '');
-                                                                        handleUpdateScaleBand(item.id, bandIdx, 'values', val);
+                                                                        handleUpdateScaleBandById(item.id, band.id, 'values', val);
                                                                     }}
                                                                     style={{ width: '100%', padding: '4px 8px', border: '1px solid #CBD5E1', borderRadius: '4px', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }}
                                                                     placeholder="예: 4,5"
@@ -764,7 +777,7 @@ const AnalysisSettingTab = ({
                                                                     return (
                                                                         <button
                                                                             key={num}
-                                                                            onClick={() => handleToggleScaleChip(item.id, bandIdx, num)}
+                                                                            onClick={() => handleToggleScaleChipById(item.id, band.id, num)}
                                                                             style={{
                                                                                 width: '26px',
                                                                                 height: '26px',
@@ -792,7 +805,7 @@ const AnalysisSettingTab = ({
                                                             {/* 삭제 */}
                                                             <div style={{ width: '30px', textAlign: 'right' }}>
                                                                 <button
-                                                                    onClick={() => handleDeleteScaleBand(item.id, bandIdx)}
+                                                                    onClick={() => handleDeleteScaleBandById(item.id, band.id)}
                                                                     style={{ border: 'none', background: 'transparent', color: '#94A3B8', cursor: 'pointer' }}
                                                                     onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
                                                                     onMouseLeave={e => e.currentTarget.style.color = '#94A3B8'}

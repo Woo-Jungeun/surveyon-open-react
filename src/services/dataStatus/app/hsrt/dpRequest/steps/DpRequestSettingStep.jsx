@@ -9,6 +9,25 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
 import { useRef } from 'react';
 
+// Helper to determine order score for band labels
+const getBandScore = (label) => {
+    if (!label) return 99;
+    const l = String(label).toLowerCase().trim();
+    if (l.startsWith('top')) {
+        const num = parseInt(l.replace('top', ''), 10) || 1;
+        return num - 1;
+    }
+    if (l.startsWith('mid')) {
+        const num = parseInt(l.replace('mid', ''), 10) || 1;
+        return 10 + num - 1;
+    }
+    if (l.startsWith('bot')) {
+        const num = parseInt(l.replace('bot', ''), 10) || 1;
+        return 20 + num - 1;
+    }
+    return 99;
+};
+
 const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
     const { getTableRenderContext, getTableDetail, saveTableSettings, getBaseVariableList } = DpRequestPageApi();
@@ -123,9 +142,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             max: 5,
             recode: true,
             bands: [
-                { label: 'top', values: '4,5' },
-                { label: 'mid', values: '3' },
-                { label: 'bot', values: '1,2' }
+                { id: 'preset_5scale_top', label: 'top', values: '4,5' },
+                { id: 'preset_5scale_mid', label: 'mid', values: '3' },
+                { id: 'preset_5scale_bot', label: 'bot', values: '1,2' }
             ]
         },
         {
@@ -136,9 +155,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             max: 7,
             recode: true,
             bands: [
-                { label: 'top', values: '5,6,7' },
-                { label: 'mid', values: '4' },
-                { label: 'bot', values: '1,2,3' }
+                { id: 'preset_7scale_top', label: 'top', values: '5,6,7' },
+                { id: 'preset_7scale_mid', label: 'mid', values: '4' },
+                { id: 'preset_7scale_bot', label: 'bot', values: '1,2,3' }
             ]
         },
         {
@@ -149,9 +168,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             max: 10,
             recode: true,
             bands: [
-                { label: 'top', values: '8,9,10' },
-                { label: 'mid', values: '4,5,6,7' },
-                { label: 'bot', values: '1,2,3' }
+                { id: 'preset_10scale_top', label: 'top', values: '8,9,10' },
+                { id: 'preset_10scale_mid', label: 'mid', values: '4,5,6,7' },
+                { id: 'preset_10scale_bot', label: 'bot', values: '1,2,3' }
             ]
         }
     ]);
@@ -313,12 +332,14 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                         const options = item.options || {};
                         let bands = [];
                         if (Array.isArray(options.bands)) {
-                            bands = options.bands.map(b => ({
+                            bands = options.bands.map((b, bIdx) => ({
+                                id: b.id || `band_${bIdx}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
                                 label: b.label || 'top',
                                 values: Array.isArray(b.values) ? b.values.join(',') : ''
                             }));
-                            const labelOrder = { 'top': 0, 'mid': 1, 'bot': 2 };
-                            bands.sort((a, b) => (labelOrder[a.label] ?? 99) - (labelOrder[b.label] ?? 99));
+                             // No sorting to preserve original layout order
+                             
+                             // Keep the bands list in its loaded sequence
                         }
                         return {
                             id: item.id,
