@@ -1957,9 +1957,32 @@ const AdditionalAnalysisPage = () => {
                                         }}>
                                             {/* Variable Panel */}
                                             <div className={`variable-panel ${!isVariablePanelOpen ? 'collapsed' : ''}`}>
-                                                <div className="variable-panel-header" style={{ justifyContent: isVariablePanelOpen ? 'space-between' : 'center', gap: '8px', padding: '16px' }}>
-                                                    {isVariablePanelOpen && (
-                                                        <div className="search-input-wrapper" style={{ flex: 1 }}>
+                                                <div className="variable-panel-title-row" style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', height: '48px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: isVariablePanelOpen ? 'space-between' : 'center', flexShrink: 0 }}>
+                                                    {isVariablePanelOpen ? (
+                                                        <>
+                                                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#475569' }}>문항 목록 ({filteredVariables.length})</span>
+                                                            <button
+                                                                className="toggle-button"
+                                                                onClick={() => setIsVariablePanelOpen(!isVariablePanelOpen)}
+                                                                style={{ flexShrink: 0, padding: 0, background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center' }}
+                                                            >
+                                                                <ChevronLeft size={16} />
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <button
+                                                            className="toggle-button"
+                                                            onClick={() => setIsVariablePanelOpen(!isVariablePanelOpen)}
+                                                            style={{ flexShrink: 0, margin: '0 auto', padding: 0, background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center' }}
+                                                        >
+                                                            <ChevronRight size={16} />
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                {isVariablePanelOpen && (
+                                                    <div className="variable-panel-search" style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+                                                        <div style={{ position: 'relative', width: '100%' }}>
                                                             <Search size={14} className="search-icon" />
                                                             <input
                                                                 type="text"
@@ -1970,38 +1993,56 @@ const AdditionalAnalysisPage = () => {
                                                                 style={{ width: '100%' }}
                                                             />
                                                         </div>
-                                                    )}
-                                                    <button
-                                                        className="toggle-button"
-                                                        onClick={() => setIsVariablePanelOpen(!isVariablePanelOpen)}
-                                                        style={{ flexShrink: 0, padding: 0 }}
-                                                    >
-                                                        {isVariablePanelOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
-                                                    </button>
-                                                </div>
+                                                    </div>
+                                                )}
 
                                                 {isVariablePanelOpen && (
-                                                    <div className="variable-list">
-                                                        {filteredVariables.map((v, idx) => (
-                                                            <div
-                                                                key={`${v.id}-${idx}`}
-                                                                className={`variable-item ${selectedVarIds.includes(v.id) ? 'active' : ''}`}
-                                                                draggable
-                                                                onDragStart={(e) => handleDragStart(e, v)}
-                                                                onClick={(e) => handleVariableClick(e, v.id)}
-                                                                title={`${v.label || ''}${v.id ? ` (${v.id})` : ''}`}
-                                                            >
-                                                                <div className="variable-item-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                                                                    <div className="variable-item__name">{v.label}</div>
-                                                                    {v.type && (
-                                                                        <span className={`question-type-badge ${v.color}`}>
-                                                                            {String(v.type).toLowerCase()}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                                <div className="variable-item__label">{v.id}</div>
+                                                    <div className="variable-list" style={{ height: filteredVariables.length === 0 ? '100%' : 'auto' }}>
+                                                        {filteredVariables.length === 0 ? (
+                                                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '220px', padding: '20px', textAlign: 'center' }}>
+                                                                <Table2 size={25} color="#94a3b8" style={{ marginBottom: '12px', strokeWidth: 1.5 }} />
+                                                                <div style={{ fontSize: '14px', fontWeight: 500, color: '#1e293b', letterSpacing: '-0.03em' }}>조회된 문항이 없습니다.</div>
+                                                                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '6px', fontWeight: 400, letterSpacing: '-0.01em' }}>DP의뢰서를 작성해주세요.</div>
                                                             </div>
-                                                        ))}
+                                                        ) : (
+                                                            filteredVariables.map((v, idx) => (
+                                                                <div
+                                                                    key={`${v.id}-${idx}`}
+                                                                    className={`variable-item ${selectedVarIds.includes(v.id) ? 'active' : ''}`}
+                                                                    draggable
+                                                                    onDragStart={(e) => handleDragStart(e, v)}
+                                                                    onClick={(e) => handleVariableClick(e, v.id)}
+                                                                    title={`${v.label || ''}${v.id ? ` (${v.id})` : ''}`}
+                                                                >
+                                                                    <div className="variable-item-content" style={{ overflow: 'hidden', flex: 1 }}>
+                                                                        <div className="variable-item-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0' }}>
+                                                                            <div className="variable-item__name" style={{ wordBreak: 'break-all', lineHeight: 1.3, marginBottom: 0 }}>
+                                                                                {v.label || v.id}
+                                                                            </div>
+                                                                        </div>
+                                                                        {v.label && (
+                                                                            <div className="variable-item-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                                                                                <span style={{ flex: 1, minWidth: 0, wordBreak: 'break-all', color: '#64748b', fontSize: '12px' }}>
+                                                                                    {v.id}
+                                                                                </span>
+                                                                                {v.type && (
+                                                                                    <span className={`question-type-badge ${v.color}`} style={{ flexShrink: 0 }}>
+                                                                                        {String(v.type).toLowerCase()}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+                                                                        {!v.label && v.type && (
+                                                                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+                                                                                <span className={`question-type-badge ${v.color}`} style={{ flexShrink: 0 }}>
+                                                                                    {String(v.type).toLowerCase()}
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            ))
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>

@@ -731,7 +731,6 @@ const CrossAnalysisPage = () => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
 
     // 필터 상태 (이제 팝업으로 대체)
-    const [selectedTotalFilters, setSelectedTotalFilters] = useState(['전체']);
     const [isTotalFilterOpen, setIsTotalFilterOpen] = useState(false);
     const totalFilterRef = useRef(null);
 
