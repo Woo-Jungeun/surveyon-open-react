@@ -147,6 +147,23 @@ export const ResultSectionBlock = ({
         if (showPercent) return 'percent';
         return 'all';
     }, [displayPolicy]);
+
+    const displayYInfo = useMemo(() => {
+        if (resultData?.y_info) {
+            return resultData.y_info;
+        }
+        
+        if (tableMode === 'separated' && rowVars && rowVars[dataIndex]) {
+            const currentVar = rowVars[dataIndex];
+            return currentVar.label || currentVar.name || currentVar.id;
+        }
+        
+        if (rowVars && rowVars.length > 0) {
+            return rowVars.map(v => v.label || v.name || v.id).join(' + ');
+        }
+        
+        return '';
+    }, [resultData?.y_info, tableMode, rowVars, dataIndex]);
     const [columnLayout, setColumnLayout] = useState('single');
     const [isMoreStatsOpen, setIsMoreStatsOpen] = useState(false);
     const [aiResult, setAiResult] = useState(null);
@@ -785,7 +802,7 @@ export const ResultSectionBlock = ({
             >
                 <div className="result-tabs" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                     <div className="result-tab">
-                        결과 {resultData.y_info && <span className="y-info-label" title={resultData.y_info}>{resultData.y_info}</span>}
+                        결과 {displayYInfo && <span className="y-info-label" title={displayYInfo}>{displayYInfo}</span>}
                     </div>
                     {!isConfigOpen && (tableMode === 'merged' || isExpanded) && (
                         <>
