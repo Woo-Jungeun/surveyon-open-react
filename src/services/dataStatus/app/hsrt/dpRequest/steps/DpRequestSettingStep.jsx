@@ -297,9 +297,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 label: b.label || 'Top',
                                 values: Array.isArray(b.values) ? b.values.join(',') : ''
                             }));
-                             // No sorting to preserve original layout order
-                             
-                             // Keep the bands list in its loaded sequence
+                            // No sorting to preserve original layout order
+
+                            // Keep the bands list in its loaded sequence
                         }
                         return {
                             id: item.id,
@@ -324,7 +324,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 if (vals.length === 1 && vals[0] === 1) label = '1순위';
                                 else if (vals.length > 1 && vals.every((v, idx) => v === idx + 1)) label = `Top${vals.length}`;
                                 else label = vals.join('+');
-                                
+
                                 return { label: label, values: vals };
                             });
                             const allVals = item.combinations.flatMap(c => String(c).split('+').map(Number));
@@ -456,6 +456,21 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     .map(s => Number(s))
                     .filter(n => !isNaN(n));
             };
+
+            // N이 0인(입력된 값이 없는) 밴드가 있는지 유효성 검사
+            for (let i = 0; i < scaleData.length; i++) {
+                const item = scaleData[i];
+                const bands = item.bands || [];
+                for (let j = 0; j < bands.length; j++) {
+                    const band = bands[j];
+                    const parsedVals = parseValues(band.values);
+                    if (parsedVals.length === 0) {
+                        modal.showAlert("알림", `[${item.name}]의 '${band.label}' 종류에 입력된 값이 없습니다. 값을 지정하거나 해당 밴드를 삭제해 주세요.`);
+                        loadingSpinner.hide();
+                        return false;
+                    }
+                }
+            }
 
             const scaleDataPayload = scaleData.map(item => {
                 return {
