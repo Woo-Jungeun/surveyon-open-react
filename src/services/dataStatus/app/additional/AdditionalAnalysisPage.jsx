@@ -346,7 +346,7 @@ const AdditionalAnalysisPage = () => {
 
                         baseParsed.push({
                             id: item.id,
-                            name: item.id,
+                            name: item.name || item.id,
                             label: item.label,
                             type: displayType,
                             color: color,
@@ -377,7 +377,7 @@ const AdditionalAnalysisPage = () => {
 
                         recodedParsed.push({
                             id: item.id,
-                            name: item.id,
+                            name: item.name || item.id,
                             label: item.label,
                             type: displayType,
                             color: color,
@@ -387,37 +387,11 @@ const AdditionalAnalysisPage = () => {
                     });
                 }
 
-                // Categorize variables by user rules
-                // 1. 문항추가 변수 : base_variables > ADD (변수명에 ADD가 들어간변수들)
-                // 2. stub 변수 : recoded_variables > ADD 제외한 모든 값
-                // 3. 순서 : stub변수에서 원본 맵순서 기준으로 + 나머지 새로운 배너변수, 문항추가변수
-                const addBaseVars = baseParsed.filter(v => (v.id || '').includes('ADD') || (v.name || '').includes('ADD'));
-
-                const stubVars = recodedParsed.filter(v => !((v.id || '').includes('ADD') || (v.name || '').includes('ADD')));
-                const addRecodedVars = recodedParsed.filter(v => (v.id || '').includes('ADD') || (v.name || '').includes('ADD'));
-
-                const orderedVariablesMap = new Map();
-
-                // 1) stub 변수 (recoded_variables 중 ADD 제외)
-                stubVars.forEach(v => {
-                    orderedVariablesMap.set(v.id, v);
-                });
-
-                // 2) 나머지 새로운 배너변수 (recoded_variables 중 ADD 포함)
-                addRecodedVars.forEach(v => {
-                    if (!orderedVariablesMap.has(v.id)) {
-                        orderedVariablesMap.set(v.id, v);
-                    }
-                });
-
-                // 3) 문항추가 변수 (base_variables 중 ADD 포함)
-                addBaseVars.forEach(v => {
-                    if (!orderedVariablesMap.has(v.id)) {
-                        orderedVariablesMap.set(v.id, v);
-                    }
-                });
-
-                loadedVariables = Array.from(orderedVariablesMap.values());
+                // Keep loadedVariables as all base and recoded variables to avoid missing standard variables like SQ1.
+                const allMergedVariablesMap = new Map();
+                baseParsed.forEach(v => allMergedVariablesMap.set(v.id, v));
+                recodedParsed.forEach(v => allMergedVariablesMap.set(v.id, v));
+                loadedVariables = Array.from(allMergedVariablesMap.values());
                 setVariables(loadedVariables);
             } catch (error) {
                 console.error("Failed to fetch variables via getOverviewContext:", error);
@@ -561,7 +535,7 @@ const AdditionalAnalysisPage = () => {
                                             if (typeof str !== 'string') return;
                                             const parts = str.split(/[+*]/).map(s => s.trim()).filter(Boolean);
                                             parts.forEach(part => {
-                                                const found = loadedVariables.find(v => v.id === part || v.name === part) || allBaseVariablesRef.current.find(v => v.id === part || v.name === part);
+                                                const found = loadedVariables.find(v => v.id === part || v.name === part || v.label === part) || allBaseVariablesRef.current.find(v => v.id === part || v.name === part || v.label === part);
                                                 if (found) {
                                                     variablesMap[part] = found;
                                                 } else {
@@ -778,11 +752,16 @@ const AdditionalAnalysisPage = () => {
         table.name.toLowerCase().includes(tableSearchTerm.toLowerCase())
     );
 
-    // Filter variables based on search term
-    const filteredVariables = variables.filter(variable =>
-        variable?.name?.toLowerCase().includes(variableSearchTerm.toLowerCase()) ||
-        variable?.label?.toLowerCase().includes(variableSearchTerm.toLowerCase())
-    );
+    // Filter variables based on search term & UI rules (recoded or base containing 'ADD')
+    const filteredVariables = variables.filter(variable => {
+        if (!variable) return false;
+        const isTarget = variable.isRecoded || (variable.isBase && ((variable.id || '').includes('ADD') || (variable.name || '').includes('ADD')));
+        if (!isTarget) return false;
+        return (
+            variable?.name?.toLowerCase().includes(variableSearchTerm.toLowerCase()) ||
+            variable?.label?.toLowerCase().includes(variableSearchTerm.toLowerCase())
+        );
+    });
 
     // Result Data List State
     const [resultDataList, setResultDataList] = useState([]);
@@ -911,7 +890,7 @@ const AdditionalAnalysisPage = () => {
                                 if (typeof str !== 'string') return;
                                 const parts = str.split(/[+*]/).map(s => s.trim()).filter(Boolean);
                                 parts.forEach(part => {
-                                    const found = variables.find(v => v.id === part || v.name === part);
+                                    const found = variables.find(v => v.id === part || v.name === part || v.label === part);
                                     if (found) {
                                         variablesMap[part] = found;
                                     } else {
@@ -927,7 +906,7 @@ const AdditionalAnalysisPage = () => {
                         let weightId = "";
                         if (weightCol && weightCol !== "없음") {
                             // Try to find by ID first, then name
-                            const weightVar = variables.find(v => v.id === weightCol || v.name === weightCol);
+                            const weightVar = variables.find(v => v.id === weightCol || v.name === weightCol || v.label === weightCol);
                             if (weightVar) {
                                 const wId = weightVar.id || weightVar.name;
                                 variablesMap[wId] = weightVar;
@@ -1526,7 +1505,7 @@ const AdditionalAnalysisPage = () => {
                         if (typeof str !== 'string') return;
                         const parts = str.split(/[+*]/).map(s => s.trim()).filter(Boolean);
                         parts.forEach(part => {
-                            const found = variables.find(v => v.id === part || v.name === part);
+                            const found = variables.find(v => v.id === part || v.name === part || v.label === part);
                             if (found) {
                                 variablesMap[part] = found;
                             } else if (part) {
@@ -1558,7 +1537,7 @@ const AdditionalAnalysisPage = () => {
                 });
 
                 if (weightId) {
-                    const weightVar = variables.find(v => (v.id || v.name) === weightId);
+                    const weightVar = variables.find(v => (v.id || v.name) === weightId || v.label === weightId);
                     if (weightVar) {
                         variablesMap[weightId] = weightVar;
                     }
@@ -1657,11 +1636,11 @@ const AdditionalAnalysisPage = () => {
                 if (typeof str !== 'string') return;
                 const parts = str.split(/[+*]/).map(s => s.trim()).filter(Boolean);
                 parts.forEach(part => {
-                    const found = variables.find(v => v.id === part || v.name === part);
+                    const found = variables.find(v => v.id === part || v.name === part || v.label === part);
                     if (found) {
-                        variablesMap[part] = found;
+                         variablesMap[part] = found;
                     } else if (part) {
-                        variablesMap[part] = { id: part, name: part, label: part, type: "categorical", info: [] };
+                         variablesMap[part] = { id: part, name: part, label: part, type: "categorical", info: [] };
                     }
                 });
             });
@@ -1690,7 +1669,7 @@ const AdditionalAnalysisPage = () => {
         });
 
         if (weightId) {
-            const weightVar = variables.find(v => v.name === selectedWeight || v.id === selectedWeight);
+            const weightVar = variables.find(v => v.name === selectedWeight || v.id === selectedWeight || v.label === selectedWeight);
             if (weightVar) {
                 const wId = weightVar.id || weightVar.name;
                 variablesMap[wId] = weightVar;
