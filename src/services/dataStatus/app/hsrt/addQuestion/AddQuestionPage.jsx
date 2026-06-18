@@ -420,6 +420,38 @@ const ConditionHeaderCell = (props) => {
     );
 };
 
+const getUniqueNextId = (baseId, existingBanners) => {
+    let candidate = baseId.toUpperCase();
+    const existingIds = new Set(existingBanners.map(b => b.id.toUpperCase()));
+    
+    if (!existingIds.has(candidate)) {
+        return candidate;
+    }
+    
+    const match = candidate.match(/^([A-Z_]+)(\d+)$/);
+    if (!match) {
+        let counter = 1;
+        while (existingIds.has(`${candidate}_${counter}`)) {
+            counter++;
+        }
+        return `${candidate}_${counter}`;
+    }
+    
+    const prefix = match[1];
+    const numStr = match[2];
+    const paddingLength = numStr.length;
+    let currentNum = parseInt(numStr, 10);
+    
+    while (true) {
+        currentNum++;
+        const paddedNum = String(currentNum).padStart(paddingLength, '0');
+        const nextCandidate = prefix + paddedNum;
+        if (!existingIds.has(nextCandidate)) {
+            return nextCandidate;
+        }
+    }
+};
+
 const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
     const { getBaseVariableList, getComputedVariableList, getNextBaseVariableId, saveBaseVariableMerge, recomputeComputedVariables, deleteBaseVariable } = DpRequestPageApi();
@@ -446,23 +478,57 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [currentInfo, setCurrentInfo] = useState([]);
     const currentInfoRef = useRef([]);
 
-    // 선택된 배너 ID ref (callback closure에서 최신값 참조 - 동기 업데이트로 race condition 방지)
+    // 선택된 배너 ID 및 입력 상태 ref (callback closure에서 최신값 참조 - 동기 업데이트로 race condition 방지)
     const selectedBannerRef = useRef('');
+    const currentLabelRef = useRef('');
+    const currentIdRef = useRef('');
+    const currentXInfoRef = useRef('');
 
     // ★ 배너 전환 시 현재 info를 banners에 저장 후 새 배너 로드
     const selectBanner = useCallback((banner) => {
         const prevId = selectedBannerRef.current;
         if (prevId) {
-            setBanners(prev => prev.map(b =>
-                b.id === prevId ? { ...b, info: currentInfoRef.current } : b
-            ));
+            const capturedInfo = currentInfoRef.current;
+            const capturedLabel = currentLabelRef.current;
+            const capturedXInfo = currentXInfoRef.current;
+            const capturedId = currentIdRef.current;
+
+            setBanners(prev => {
+                const b = prev.find(x => x.id === prevId);
+                if (!b) return prev;
+                const isSame = b.label === capturedLabel &&
+                    (b.type || 'single') === capturedXInfo &&
+                    b.info === capturedInfo &&
+                    (b.tempId || b.id) === capturedId;
+                
+                return prev.map(x =>
+                    x.id === prevId
+                        ? {
+                            ...x,
+                            label: capturedLabel,
+                            type: capturedXInfo,
+                            tempId: capturedId,
+                            info: capturedInfo,
+                            isDirty: isSame ? x.isDirty : true
+                          }
+                        : x
+                );
+            });
         }
         // ref를 즉시 업데이트 (useEffect 비동기 대기 없이) → 빠른 연속 클릭 시 race condition 방지
         selectedBannerRef.current = banner.id;
         setSelectedBanner(banner.id);
-        setCurrentId(banner.id.startsWith('NEW_') ? '' : banner.id);
+        
+        const nextId = banner.id.startsWith('NEW_') ? '' : banner.id;
+        setCurrentId(nextId);
+        currentIdRef.current = nextId;
+        
         setCurrentLabel(banner.label);
+        currentLabelRef.current = banner.label;
+        
         setCurrentXInfo(banner.type || 'single');
+        currentXInfoRef.current = banner.type || 'single';
+        
         setCurrentInfo(banner.info || []);
         currentInfoRef.current = banner.info || [];
     }, []);
@@ -482,9 +548,17 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 if (target) {
                     selectedBannerRef.current = target.id;
                     setSelectedBanner(target.id);
-                    setCurrentId(target.tempId || target.id);
+                    
+                    const nextId = target.tempId || target.id;
+                    setCurrentId(nextId);
+                    currentIdRef.current = nextId;
+                    
                     setCurrentLabel(target.label);
+                    currentLabelRef.current = target.label;
+                    
                     setCurrentXInfo(target.type || 'single');
+                    currentXInfoRef.current = target.type || 'single';
+                    
                     setCurrentInfo(target.info || []);
                     currentInfoRef.current = target.info || [];
                 }
@@ -571,20 +645,51 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
             loadingSpinner.show();
             const res = await getNextBaseVariableId.mutateAsync({ pageid: pageId, user });
             if (res?.success === '777' && res.resultjson?.next_id) {
-                const tempId = res.resultjson.next_id;
-                const newBanner = { id: tempId, label: '', type: 'single', recoded_type: 'computed', info: [{ label2: '', label: '', inEdit: true }] };
-                // 현재 info 저장 후 신규 추가
+                const tempId = getUniqueNextId(res.resultjson.next_id, banners);
+                const newBanner = { id: tempId, label: '', type: 'single', recoded_type: 'computed', info: [{ label2: '', label: '', inEdit: true }], isDirty: true };
+                // 현재 active banner의 변경 사항을 임시로 캡처
                 const prevId = selectedBannerRef.current;
-                setBanners(prev => {
-                    const updated = prevId ? prev.map(b => b.id === prevId ? { ...b, info: currentInfoRef.current } : b) : prev;
-                    return [...updated, newBanner];
-                });
+                if (prevId) {
+                    const capturedInfo = currentInfoRef.current;
+                    const capturedLabel = currentLabelRef.current;
+                    const capturedXInfo = currentXInfoRef.current;
+                    const capturedId = currentIdRef.current;
+                    setBanners(prev => {
+                        const b = prev.find(x => x.id === prevId);
+                        const isSame = b && b.label === capturedLabel &&
+                            (b.type || 'single') === capturedXInfo &&
+                            b.info === capturedInfo &&
+                            (b.tempId || b.id) === capturedId;
+                        const updated = prev.map(x =>
+                            x.id === prevId
+                                ? {
+                                    ...x,
+                                    label: capturedLabel,
+                                    type: capturedXInfo,
+                                    tempId: capturedId,
+                                    info: capturedInfo,
+                                    isDirty: isSame ? x.isDirty : true
+                                  }
+                                : x
+                        );
+                        return [...updated, newBanner];
+                    });
+                } else {
+                    setBanners(prev => [...prev, newBanner]);
+                }
                 setTimeout(scrollToBottom, 100);
                 setSelectedBanner(tempId);
                 selectedBannerRef.current = tempId;
+                
                 setCurrentId(tempId);
+                currentIdRef.current = tempId;
+                
                 setCurrentLabel('');
+                currentLabelRef.current = '';
+                
                 setCurrentXInfo('single');
+                currentXInfoRef.current = 'single';
+                
                 setCurrentInfo([{ label2: '', label: '', inEdit: true }]);
                 currentInfoRef.current = [{ label2: '', label: '', inEdit: true }];
             } else {
@@ -657,22 +762,33 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                     if (mode === 'fresh' || mode === 'delete' || targetIdToSelect || !selectedBannerRef.current) {
                         setSelectedBanner(target.id);
                         selectedBannerRef.current = target.id;
+                        
                         setCurrentLabel(target.label);
+                        currentLabelRef.current = target.label;
+                        
                         setCurrentId(target.id);
+                        currentIdRef.current = target.id;
+                        
                         setCurrentXInfo(target.type || 'single');
+                        currentXInfoRef.current = target.type || 'single';
+                        
                         setCurrentInfo(target.info || []);
                         currentInfoRef.current = target.info || [];
                     }
                     if (mode === 'delete') scrollToTop();
                 } else {
                     setSelectedBanner(''); selectedBannerRef.current = '';
-                    setCurrentLabel(''); setCurrentId(''); setCurrentXInfo('single');
+                    setCurrentLabel(''); currentLabelRef.current = '';
+                    setCurrentId(''); currentIdRef.current = '';
+                    setCurrentXInfo('single'); currentXInfoRef.current = 'single';
                     setCurrentInfo([]); currentInfoRef.current = [];
                 }
             } else {
                 setBanners([]); history.reset([]);
                 setSelectedBanner(''); selectedBannerRef.current = '';
-                setCurrentLabel(''); setCurrentId(''); setCurrentXInfo('single');
+                setCurrentLabel(''); currentLabelRef.current = '';
+                setCurrentId(''); currentIdRef.current = '';
+                setCurrentXInfo('single'); currentXInfoRef.current = 'single';
                 setCurrentInfo([]); currentInfoRef.current = [];
             }
         } catch (error) { console.error(error); }
@@ -726,30 +842,76 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         const user = auth?.user?.userId;
         if (!pageId || !user) return;
 
-        if (!currentId.trim()) return modal.showAlert('알림', '문항 ID를 입력해주세요.');
-        if (!currentLabel.trim()) return modal.showAlert('알림', '문항 라벨을 입력해주세요.');
-        if (!currentXInfo?.trim()) return modal.showAlert('알림', '문항 유형을 선택해주세요.');
-
-        const validRules = currentInfoRef.current.filter(r =>
-            String(r.label2 ?? '').trim() !== '' || String(r.label || '').trim() !== ''
-        );
-        if (validRules.length === 0) return modal.showAlert('알림', '최소 1개의 보기를 작성해야 합니다.');
-
-        const hasEmptyLabel2 = validRules.some(r => String(r.label2 ?? '').trim() === '');
-        if (hasEmptyLabel2) return modal.showAlert('알림', '"할당될 값"은 필수입니다.');
-
-        const hasNonNumericLabel2 = validRules.some(r => {
-            const val = String(r.label2 ?? '').trim();
-            return val !== '' && isNaN(Number(val));
-        });
-        if (hasNonNumericLabel2) return modal.showAlert('알림', '"할당될 값"은 숫자만 입력 가능합니다.');
-
-        const nextId = currentId.trim().toUpperCase();
-        const payloadVariables = {
-            [nextId]: {
-                id: nextId,
+        // 1. 현재 에디터 상태를 banners 복사본에 강제 동기화
+        const activeId = selectedBannerRef.current;
+        let latestBanners = [...banners];
+        if (activeId) {
+            const activeBannerIdx = latestBanners.findIndex(b => b.id === activeId);
+            const activeBannerData = {
+                id: currentId.trim(),
                 label: currentLabel.trim(),
                 type: currentXInfo,
+                recoded_type: 'computed',
+                info: currentInfoRef.current,
+                isDirty: true
+            };
+            if (activeBannerIdx > -1) {
+                latestBanners[activeBannerIdx] = activeBannerData;
+            } else {
+                latestBanners.push(activeBannerData);
+            }
+        }
+
+        // 2. 저장 대상 수집 (isDirty === true)
+        const dirtyBanners = latestBanners.filter(b => b.isDirty);
+        if (dirtyBanners.length === 0) {
+            return modal.showAlert('알림', '저장할 변경 사항이 없습니다.');
+        }
+
+        // 3. 일괄 유효성 검사
+        for (const b of dirtyBanners) {
+            if (!b.id?.trim()) {
+                return modal.showAlert('알림', '문항 ID를 입력해주세요.');
+            }
+            if (!b.label?.trim()) {
+                return modal.showAlert('알림', `[${b.id}] 문항 라벨을 입력해주세요.`);
+            }
+            if (!b.type?.trim()) {
+                return modal.showAlert('알림', `[${b.id}] 문항 유형을 선택해주세요.`);
+            }
+
+            const validRules = (b.info || []).filter(r =>
+                String(r.label2 ?? '').trim() !== '' || String(r.label || '').trim() !== ''
+            );
+            if (validRules.length === 0) {
+                return modal.showAlert('알림', `[${b.id}] 최소 1개의 보기를 작성해야 합니다.`);
+            }
+
+            const hasEmptyLabel2 = validRules.some(r => String(r.label2 ?? '').trim() === '');
+            if (hasEmptyLabel2) {
+                return modal.showAlert('알림', `[${b.id}] "할당될 값"은 필수입니다.`);
+            }
+
+            const hasNonNumericLabel2 = validRules.some(r => {
+                const val = String(r.label2 ?? '').trim();
+                return val !== '' && isNaN(Number(val));
+            });
+            if (hasNonNumericLabel2) {
+                return modal.showAlert('알림', `[${b.id}] "할당될 값"은 숫자만 입력 가능합니다.`);
+            }
+        }
+
+        // 4. 전송용 payloadVariables 객체 구성
+        const payloadVariables = {};
+        for (const b of dirtyBanners) {
+            const nextId = b.id.trim().toUpperCase();
+            const validRules = (b.info || []).filter(r =>
+                String(r.label2 ?? '').trim() !== '' || String(r.label || '').trim() !== ''
+            );
+            payloadVariables[nextId] = {
+                id: nextId,
+                label: b.label.trim(),
+                type: b.type,
                 recoded_type: 'computed',
                 info: validRules.map((r, idx) => {
                     const parsedVal = parseFloat(r.label2);
@@ -761,8 +923,8 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                     if (r.logic) itemData.logic = String(r.logic);
                     return itemData;
                 })
-            }
-        };
+            };
+        }
 
         try {
             loadingSpinner.show();
@@ -773,14 +935,21 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
 
                 modal.showAlert('알림', '문항이 저장되었습니다.');
                 if (onUnsavedChange) onUnsavedChange(false);
-                await fetchVariablesData('select', nextId);
+                
+                // 현재 활성화된 ID를 유지하여 리스트 재조회
+                const currentActiveId = currentId.trim().toUpperCase();
+                await fetchVariablesData('select', currentActiveId);
                 setTimeout(scrollToBottom, 100);
                 return true;
             } else {
                 modal.showAlert('오류', result?.Message || '저장 중 문제가 발생했습니다.');
             }
-        } catch { modal.showAlert('오류', '저장 요청에 실패했습니다.'); }
-        finally { loadingSpinner.hide(); }
+        } catch (error) {
+            console.error(error);
+            modal.showAlert('오류', '저장 요청에 실패했습니다.');
+        } finally {
+            loadingSpinner.hide();
+        }
         return false;
     };
 
@@ -873,7 +1042,10 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     <input
                                         type="text"
                                         value={currentLabel}
-                                        onChange={(e) => setCurrentLabel(e.target.value)}
+                                        onChange={(e) => {
+                                            setCurrentLabel(e.target.value);
+                                            currentLabelRef.current = e.target.value;
+                                        }}
                                         className="dp-input"
                                         style={{ flex: 1, minWidth: 0, height: '32px', padding: '0 12px', border: '1px solid #e2e8f0', borderRadius: '6px' }}
                                     />
@@ -884,7 +1056,10 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         data={["single", "scale", "multi", "rank", "open(문자)", "open(숫자)"]}
                                         value={currentXInfo || ''}
                                         className="dp-add-question-dropdown"
-                                        onChange={(e) => setCurrentXInfo(e.value)}
+                                        onChange={(e) => {
+                                            setCurrentXInfo(e.value);
+                                            currentXInfoRef.current = e.value;
+                                        }}
                                         style={{ flex: 1, minWidth: 0, height: '32px', fontSize: '13px', fontWeight: 400, borderRadius: '6px' }}
                                     />
                                 </div>
@@ -911,14 +1086,84 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 show={isCartesianModalOpen}
                 onClose={() => setIsCartesianModalOpen(false)}
                 variables={baseVariables}
-                onApply={(rules) => {
+                onApply={async (rules) => {
                     const mappedRules = rules.map(rule => ({ label2: rule.label2, label: rule.label, logic: rule.logic, inEdit: false }));
-                    setCurrentInfo(prev => {
-                        const newInfo = (prev.length === 1 && !prev[0].label2 && !prev[0].label && !prev[0].logic)
-                            ? mappedRules : [...prev, ...mappedRules];
-                        currentInfoRef.current = newInfo;
-                        return newInfo;
-                    });
+                    const pageId = sessionStorage.getItem('pageId');
+                    const user = auth?.user?.userId;
+
+                    // 현재 선택/작성 중인 문항 ID가 없다면 자동으로 신규 ID를 서버에서 받아와 문항 개설
+                    if (!currentId && pageId && user) {
+                        try {
+                            loadingSpinner.show();
+                            const res = await getNextBaseVariableId.mutateAsync({ pageid: pageId, user });
+                            if (res?.success === '777' && res.resultjson?.next_id) {
+                                const tempId = getUniqueNextId(res.resultjson.next_id, banners);
+                                const newBanner = { id: tempId, label: '', type: 'single', recoded_type: 'computed', info: mappedRules, isDirty: true };
+                                
+                                // 현재 active banner의 변경 사항을 임시로 캡처
+                                const prevId = selectedBannerRef.current;
+                                if (prevId) {
+                                    const capturedInfo = currentInfoRef.current;
+                                    const capturedLabel = currentLabelRef.current;
+                                    const capturedXInfo = currentXInfoRef.current;
+                                    const capturedId = currentIdRef.current;
+                                    setBanners(prev => {
+                                        const b = prev.find(x => x.id === prevId);
+                                        const isSame = b && b.label === capturedLabel &&
+                                            (b.type || 'single') === capturedXInfo &&
+                                            b.info === capturedInfo &&
+                                            (b.tempId || b.id) === capturedId;
+                                        const updated = prev.map(x =>
+                                            x.id === prevId
+                                                ? {
+                                                    ...x,
+                                                    label: capturedLabel,
+                                                    type: capturedXInfo,
+                                                    tempId: capturedId,
+                                                    info: capturedInfo,
+                                                    isDirty: isSame ? x.isDirty : true
+                                                  }
+                                                : x
+                                        );
+                                        return [...updated, newBanner];
+                                    });
+                                } else {
+                                    setBanners(prev => [...prev, newBanner]);
+                                }
+                                
+                                setTimeout(scrollToBottom, 100);
+                                setSelectedBanner(tempId);
+                                selectedBannerRef.current = tempId;
+                                
+                                setCurrentId(tempId);
+                                currentIdRef.current = tempId;
+                                
+                                setCurrentLabel('');
+                                currentLabelRef.current = '';
+                                
+                                setCurrentXInfo('single');
+                                currentXInfoRef.current = 'single';
+                                
+                                setCurrentInfo(mappedRules);
+                                currentInfoRef.current = mappedRules;
+                            } else {
+                                modal.showAlert('오류', '신규 문항 ID를 받아오지 못했습니다.');
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            modal.showAlert('오류', '신규 문항 ID 발급 중 문제가 발생했습니다.');
+                        } finally {
+                            loadingSpinner.hide();
+                        }
+                    } else {
+                        // 기존 문항이 선택되어 있다면 조합된 보기 덮어쓰기/추가
+                        setCurrentInfo(prev => {
+                            const newInfo = (prev.length === 1 && !prev[0].label2 && !prev[0].label && !prev[0].logic)
+                                ? mappedRules : [...prev, ...mappedRules];
+                            currentInfoRef.current = newInfo;
+                            return newInfo;
+                        });
+                    }
                     if (onUnsavedChange) onUnsavedChange(true);
                 }}
             />
