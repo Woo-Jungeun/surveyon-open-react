@@ -2134,6 +2134,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 limit: 0,
                 search: bannerSearch,
                 filter_expression: filterExpression,
+                include_stats: showTTest ? ["t-test"] : [],
                 excel_show_percent: excelShowPct, // 엑셀 % 표출 여부 추가
                 display_policy: {
                     show_n: showN,
