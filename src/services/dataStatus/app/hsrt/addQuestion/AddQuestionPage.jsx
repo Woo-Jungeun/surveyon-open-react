@@ -423,11 +423,11 @@ const ConditionHeaderCell = (props) => {
 const getUniqueNextId = (baseId, existingBanners) => {
     let candidate = baseId.toUpperCase();
     const existingIds = new Set(existingBanners.map(b => b.id.toUpperCase()));
-    
+
     if (!existingIds.has(candidate)) {
         return candidate;
     }
-    
+
     const match = candidate.match(/^([A-Z_]+)(\d+)$/);
     if (!match) {
         let counter = 1;
@@ -436,12 +436,12 @@ const getUniqueNextId = (baseId, existingBanners) => {
         }
         return `${candidate}_${counter}`;
     }
-    
+
     const prefix = match[1];
     const numStr = match[2];
     const paddingLength = numStr.length;
     let currentNum = parseInt(numStr, 10);
-    
+
     while (true) {
         currentNum++;
         const paddedNum = String(currentNum).padStart(paddingLength, '0');
@@ -500,7 +500,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                     (b.type || 'single') === capturedXInfo &&
                     b.info === capturedInfo &&
                     (b.tempId || b.id) === capturedId;
-                
+
                 return prev.map(x =>
                     x.id === prevId
                         ? {
@@ -510,7 +510,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                             tempId: capturedId,
                             info: capturedInfo,
                             isDirty: isSame ? x.isDirty : true
-                          }
+                        }
                         : x
                 );
             });
@@ -518,17 +518,17 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         // ref를 즉시 업데이트 (useEffect 비동기 대기 없이) → 빠른 연속 클릭 시 race condition 방지
         selectedBannerRef.current = banner.id;
         setSelectedBanner(banner.id);
-        
+
         const nextId = banner.id.startsWith('NEW_') ? '' : banner.id;
         setCurrentId(nextId);
         currentIdRef.current = nextId;
-        
+
         setCurrentLabel(banner.label);
         currentLabelRef.current = banner.label;
-        
+
         setCurrentXInfo(banner.type || 'single');
         currentXInfoRef.current = banner.type || 'single';
-        
+
         setCurrentInfo(banner.info || []);
         currentInfoRef.current = banner.info || [];
     }, []);
@@ -548,17 +548,17 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 if (target) {
                     selectedBannerRef.current = target.id;
                     setSelectedBanner(target.id);
-                    
+
                     const nextId = target.tempId || target.id;
                     setCurrentId(nextId);
                     currentIdRef.current = nextId;
-                    
+
                     setCurrentLabel(target.label);
                     currentLabelRef.current = target.label;
-                    
+
                     setCurrentXInfo(target.type || 'single');
                     currentXInfoRef.current = target.type || 'single';
-                    
+
                     setCurrentInfo(target.info || []);
                     currentInfoRef.current = target.info || [];
                 }
@@ -669,7 +669,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     tempId: capturedId,
                                     info: capturedInfo,
                                     isDirty: isSame ? x.isDirty : true
-                                  }
+                                }
                                 : x
                         );
                         return [...updated, newBanner];
@@ -680,16 +680,16 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 setTimeout(scrollToBottom, 100);
                 setSelectedBanner(tempId);
                 selectedBannerRef.current = tempId;
-                
+
                 setCurrentId(tempId);
                 currentIdRef.current = tempId;
-                
+
                 setCurrentLabel('');
                 currentLabelRef.current = '';
-                
+
                 setCurrentXInfo('single');
                 currentXInfoRef.current = 'single';
-                
+
                 setCurrentInfo([{ label2: '', label: '', inEdit: true }]);
                 currentInfoRef.current = [{ label2: '', label: '', inEdit: true }];
             } else {
@@ -762,16 +762,16 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                     if (mode === 'fresh' || mode === 'delete' || targetIdToSelect || !selectedBannerRef.current) {
                         setSelectedBanner(target.id);
                         selectedBannerRef.current = target.id;
-                        
+
                         setCurrentLabel(target.label);
                         currentLabelRef.current = target.label;
-                        
+
                         setCurrentId(target.id);
                         currentIdRef.current = target.id;
-                        
+
                         setCurrentXInfo(target.type || 'single');
                         currentXInfoRef.current = target.type || 'single';
-                        
+
                         setCurrentInfo(target.info || []);
                         currentInfoRef.current = target.info || [];
                     }
@@ -935,7 +935,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
 
                 modal.showAlert('알림', '문항이 저장되었습니다.');
                 if (onUnsavedChange) onUnsavedChange(false);
-                
+
                 // 현재 활성화된 ID를 유지하여 리스트 재조회
                 const currentActiveId = currentId.trim().toUpperCase();
                 await fetchVariablesData('select', currentActiveId);
@@ -1068,7 +1068,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                         <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                             <KendoGridV2
                                 data={currentInfo}
-                                reorderable addable showNo deletable editField="inEdit"
+                                reorderable showNo deletable editField="inEdit"
                                 onDataChange={updateBannerInfo}
                                 onRowClick={handleRowClick}
                                 newRowTemplate={{ label2: '', label: '', logic: '' }}
@@ -1099,7 +1099,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                             if (res?.success === '777' && res.resultjson?.next_id) {
                                 const tempId = getUniqueNextId(res.resultjson.next_id, banners);
                                 const newBanner = { id: tempId, label: '', type: 'single', recoded_type: 'computed', info: mappedRules, isDirty: true };
-                                
+
                                 // 현재 active banner의 변경 사항을 임시로 캡처
                                 const prevId = selectedBannerRef.current;
                                 if (prevId) {
@@ -1122,7 +1122,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                     tempId: capturedId,
                                                     info: capturedInfo,
                                                     isDirty: isSame ? x.isDirty : true
-                                                  }
+                                                }
                                                 : x
                                         );
                                         return [...updated, newBanner];
@@ -1130,20 +1130,20 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 } else {
                                     setBanners(prev => [...prev, newBanner]);
                                 }
-                                
+
                                 setTimeout(scrollToBottom, 100);
                                 setSelectedBanner(tempId);
                                 selectedBannerRef.current = tempId;
-                                
+
                                 setCurrentId(tempId);
                                 currentIdRef.current = tempId;
-                                
+
                                 setCurrentLabel('');
                                 currentLabelRef.current = '';
-                                
+
                                 setCurrentXInfo('single');
                                 currentXInfoRef.current = 'single';
-                                
+
                                 setCurrentInfo(mappedRules);
                                 currentInfoRef.current = mappedRules;
                             } else {
