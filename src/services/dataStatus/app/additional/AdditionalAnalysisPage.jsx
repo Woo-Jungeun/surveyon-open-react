@@ -2014,30 +2014,21 @@ const AdditionalAnalysisPage = () => {
                                                                     onClick={(e) => handleVariableClick(e, v.id)}
                                                                     title={`${v.label || ''}${v.id ? ` (${v.id})` : ''}`}
                                                                 >
-                                                                    <div className="variable-item-content" style={{ overflow: 'hidden', flex: 1 }}>
-                                                                        <div className="variable-item-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0' }}>
+                                                                    <div className="variable-item-content" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flex: 1 }}>
+                                                                        <div style={{ flex: 1, minWidth: 0 }}>
                                                                             <div className="variable-item__name" style={{ wordBreak: 'break-all', lineHeight: 1.3, marginBottom: 0 }}>
                                                                                 {v.label || v.id}
                                                                             </div>
-                                                                        </div>
-                                                                        {v.label && (
-                                                                            <div className="variable-item-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                                                                                <span style={{ flex: 1, minWidth: 0, wordBreak: 'break-all', color: '#64748b', fontSize: '12px' }}>
+                                                                            {v.label && (
+                                                                                <div style={{ wordBreak: 'break-all', color: '#64748b', fontSize: '12px', marginTop: '4px' }}>
                                                                                     {v.id}
-                                                                                </span>
-                                                                                {v.type && (
-                                                                                    <span className={`question-type-badge ${v.color}`} style={{ flexShrink: 0 }}>
-                                                                                        {String(v.type).toLowerCase()}
-                                                                                    </span>
-                                                                                )}
-                                                                            </div>
-                                                                        )}
-                                                                        {!v.label && v.type && (
-                                                                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
-                                                                                <span className={`question-type-badge ${v.color}`} style={{ flexShrink: 0 }}>
-                                                                                    {String(v.type).toLowerCase()}
-                                                                                </span>
-                                                                            </div>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                        {v.type && (
+                                                                            <span className={`question-type-badge ${v.color}`} style={{ flexShrink: 0 }}>
+                                                                                {String(v.type).toLowerCase()}
+                                                                            </span>
                                                                         )}
                                                                     </div>
                                                                 </div>
