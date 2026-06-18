@@ -746,7 +746,7 @@
 
 .result-section.is-expanded {
     flex: 0 0 auto !important;
-    min-height: 650px !important;
+    min-height: 180px !important;
     z-index: 10;
 }
 
