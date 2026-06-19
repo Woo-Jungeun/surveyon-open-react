@@ -833,7 +833,21 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     // --- Add Variable Popup States ---
     const [isAddVarPopupOpen, setIsAddVarPopupOpen] = useState(false);
     const addVarButtonRef = useRef(null);
+    const addVarPopupRef = useRef(null);
     const [addVarSearch, setAddVarSearch] = useState('');
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (isAddVarPopupOpen &&
+                addVarButtonRef.current && !addVarButtonRef.current.contains(e.target) &&
+                addVarPopupRef.current && !addVarPopupRef.current.contains(e.target)) {
+                setIsAddVarPopupOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isAddVarPopupOpen]);
 
     const addVarFilteredVariables = useMemo(() => {
         const search = addVarSearch.toLowerCase();
@@ -2111,7 +2125,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 popupAlign={{ horizontal: 'right', vertical: 'top' }}
                                 margin={{ horizontal: 0, vertical: 4 }}
                             >
-                                <div style={{
+                                <div ref={addVarPopupRef} style={{
                                     width: '280px',
                                     height: '400px',
                                     display: 'flex',
