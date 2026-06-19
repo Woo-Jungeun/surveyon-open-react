@@ -653,12 +653,17 @@ const AnalysisSettingTab = ({
                     )}
                 </div>
 
-                <div className="dp-setting-card-body" style={{ flex: 1, overflowY: 'auto', padding: '20px', background: '#FFFFFF' }}>
+                <div className="dp-setting-card-body" style={{ flex: 1, overflowY: 'auto', padding: '20px', background: '#FFFFFF', display: 'flex', flexDirection: 'column' }}>
 
                     {/* --- 1. 단일형 척도 탭 --- */}
                     {activeTab === 'scale' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {scaleData.map((item) => {
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+                            {scaleData.length === 0 ? (
+                                <div style={{ flex: 1, textAlign: 'center', color: '#94A3B8', fontSize: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                    <Info size={24} />
+                                    데이터가 없습니다. 우측 상단의 추가 버튼을 눌러 척도를 추가해주세요.
+                                </div>
+                            ) : scaleData.map((item) => {
                                 const isExpanded = expandedScaleId === item.id;
                                 const minVal = item.min ?? 1;
                                 const maxVal = item.max ?? 5;
@@ -953,8 +958,13 @@ const AnalysisSettingTab = ({
 
                     {/* --- 2. 그룹 묶기 탭 --- */}
                     {activeTab === 'group' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {groupData.map((item) => {
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+                            {groupData.length === 0 ? (
+                                <div style={{ flex: 1, textAlign: 'center', color: '#94A3B8', fontSize: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                    <Info size={24} />
+                                    데이터가 없습니다. 우측 상단의 추가 버튼을 눌러 그룹을 추가해주세요.
+                                </div>
+                            ) : groupData.map((item) => {
                                 const isExpanded = expandedGroupId === item.id;
                                 const totalChips = Array.from(
                                     new Set(
@@ -1164,8 +1174,13 @@ const AnalysisSettingTab = ({
 
                     {/* --- 3. 다중형 순위 탭 --- */}
                     {activeTab === 'rank' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {rankData.map((item) => {
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+                            {rankData.length === 0 ? (
+                                <div style={{ flex: 1, textAlign: 'center', color: '#94A3B8', fontSize: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                    <Info size={24} />
+                                    데이터가 없습니다. 우측 상단의 추가 버튼을 눌러 순위를 추가해주세요.
+                                </div>
+                            ) : rankData.map((item) => {
                                 const isExpanded = expandedRankId === item.id;
                                 const maxVal = item.max || 5;
                                 const totalChips = Array.from({ length: maxVal }, (_, i) => i + 1);
