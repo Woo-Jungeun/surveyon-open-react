@@ -30,9 +30,11 @@ const getBandScore = (label) => {
 
 const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getTableRenderContext, getTableDetail, saveTableSettings, getBaseVariableList } = DpRequestPageApi();
+    const { getTableRenderContext, getTableDetail, saveTableSettings, getBaseVariableList, getRecodedOverview, reapplyPreset } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
+
+    const originalPresetsRef = useRef({ scale: [], rank: [], group: [] });
 
     // --- 히스토리 관리 (Undo/Redo) ---
     const history = useUpdateHistory('dp-setting');
@@ -360,8 +362,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 }
             }
 
-            if (Array.isArray(varList)) {
-                const weightOpt = ['없음', ...varList.map(v => v.name || v.label)];
+            const actualVarList = varList?.resultjson || varList?.data?.resultjson || varList;
+            if (Array.isArray(actualVarList)) {
+                const weightOpt = ['없음', ...actualVarList.map(v => v.name || v.label)];
                 setWeightOptions(weightOpt);
 
                 // 초기 히스토리 기준점 설정 (서버 데이터)
@@ -371,6 +374,26 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     rankData: nextRankData,
                     groupData: nextGroupData
                 });
+
+                originalPresetsRef.current = {
+                    scale: JSON.parse(JSON.stringify(nextScaleData || [])),
+                    rank: JSON.parse(JSON.stringify(nextRankData || [])),
+                    group: JSON.parse(JSON.stringify(nextGroupData || []))
+                };
+            } else {
+                // varList가 배열이 아니더라도 프리셋 원본은 반드시 저장해야 함
+                history.reset({
+                    settings: nextSettings,
+                    scaleData: nextScaleData,
+                    rankData: nextRankData,
+                    groupData: nextGroupData
+                });
+
+                originalPresetsRef.current = {
+                    scale: JSON.parse(JSON.stringify(nextScaleData || [])),
+                    rank: JSON.parse(JSON.stringify(nextRankData || [])),
+                    group: JSON.parse(JSON.stringify(nextGroupData || []))
+                };
             }
         } catch (err) {
             console.error("Failed to fetch initial setting data:", err);
@@ -447,6 +470,54 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
         loadingSpinner.show();
         try {
+            const changedPresetIds = [];
+            const isPresetEqual = (a, b, type) => {
+                if (a.name !== b.name) return false;
+                if (type === 'scale') {
+                    if (a.min !== b.min || a.max !== b.max || a.recode !== b.recode) return false;
+                    const aBands = a.bands || [];
+                    const bBands = b.bands || [];
+                    if (aBands.length !== bBands.length) return false;
+                    for (let i=0; i<aBands.length; i++) {
+                        if (aBands[i].label !== bBands[i].label) return false;
+                        if (String(aBands[i].values) !== String(bBands[i].values)) return false;
+                    }
+                } else if (type === 'rank') {
+                    const aCombos = a.combinations || [];
+                    const bCombos = b.combinations || [];
+                    if (aCombos.length !== bCombos.length) return false;
+                    for (let i=0; i<aCombos.length; i++) {
+                        if (aCombos[i].label !== bCombos[i].label) return false;
+                        if (JSON.stringify(aCombos[i].values) !== JSON.stringify(bCombos[i].values)) return false;
+                    }
+                } else if (type === 'group') {
+                    const aGroups = a.groups || [];
+                    const bGroups = b.groups || [];
+                    if (aGroups.length !== bGroups.length) return false;
+                    for (let i=0; i<aGroups.length; i++) {
+                        if (aGroups[i].label !== bGroups[i].label) return false;
+                        if (String(aGroups[i].values) !== String(bGroups[i].values)) return false;
+                    }
+                }
+                return true;
+            };
+
+            const checkChanges = (currentData, originalData, typeName) => {
+                const originalMap = new Map((originalData || []).map(item => [item.id, item]));
+                (currentData || []).forEach(currentItem => {
+                    const originalItem = originalMap.get(currentItem.id);
+                    if (!originalItem) {
+                        if (currentItem.id) changedPresetIds.push(currentItem.id);
+                    } else if (!isPresetEqual(currentItem, originalItem, typeName)) {
+                        if (currentItem.id) changedPresetIds.push(currentItem.id);
+                    }
+                });
+            };
+            
+            checkChanges(scaleData, originalPresetsRef.current.scale, 'scale');
+            checkChanges(rankData, originalPresetsRef.current.rank, 'rank');
+            checkChanges(groupData, originalPresetsRef.current.group, 'group');
+
             const parseValues = (str) => {
                 if (!str) return [];
                 return String(str)
@@ -648,8 +719,50 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
             const result = await saveTableSettings.mutateAsync(payload);
             if (result?.message || result?.status === 'success') {
-                modal.showAlert("알림", "설정이 저장되었습니다.");
                 if (onUnsavedChange) onUnsavedChange(false); // 저장 성공 시 더티 해제
+                
+                // --- 수정된 프리셋이 있다면 스터브 조회 및 재적용 ---
+                if (changedPresetIds.length > 0) {
+                    try {
+                        const recodedRes = await getRecodedOverview.mutateAsync({ pageid: pageId, user: auth.user.userId });
+                        const variablesMap = recodedRes?.resultjson?.variables || recodedRes?.data?.resultjson?.variables || {};
+                        const stubItems = recodedRes?.resultjson?.stub_grid_items || recodedRes?.data?.resultjson?.stub_grid_items || [];
+                        
+                        const targetStubIds = new Set();
+                        
+                        // 1. stub_grid_items에서 참조 확인
+                        stubItems.forEach(stub => {
+                            const v = variablesMap[stub.recoded_var_id] || {};
+                            if ((stub.scale_preset_id && changedPresetIds.includes(stub.scale_preset_id)) || 
+                                (v.scale_preset_id && changedPresetIds.includes(v.scale_preset_id)) ||
+                                (stub.rank_preset_id && changedPresetIds.includes(stub.rank_preset_id)) || 
+                                (v.rank_preset_id && changedPresetIds.includes(v.rank_preset_id)) ||
+                                (stub.group_preset_id && changedPresetIds.includes(stub.group_preset_id)) || 
+                                (v.group_preset_id && changedPresetIds.includes(v.group_preset_id))) {
+                                targetStubIds.add(stub.recoded_var_id);
+                            }
+                        });
+                        
+                        // 2. variablesMap 자체에서도 참조 확인
+                        Object.keys(variablesMap).forEach(key => {
+                            const v = variablesMap[key];
+                            if ((v.scale_preset_id && changedPresetIds.includes(v.scale_preset_id)) || 
+                                (v.rank_preset_id && changedPresetIds.includes(v.rank_preset_id)) || 
+                                (v.group_preset_id && changedPresetIds.includes(v.group_preset_id))) {
+                                targetStubIds.add(key);
+                            }
+                        });
+                        
+                        const targetStubIdsArray = Array.from(targetStubIds);
+                        if (targetStubIdsArray.length > 0) {
+                            await reapplyPreset.mutateAsync({ pageid: pageId, user: auth.user.userId, recoded_var_ids: targetStubIdsArray });
+                        }
+                    } catch (e) {
+                        console.error("Failed to reapply presets:", e);
+                    }
+                }
+                
+                modal.showAlert("알림", "설정이 저장되었습니다.");
                 await fetchInitialData();
                 return true;
             }
