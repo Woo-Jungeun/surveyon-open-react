@@ -426,10 +426,13 @@ const AnalysisSettingTab = ({
                     if (idx === comboIdx) {
                         const vals = [...(combo.values || [])];
                         let nextVals;
-                        if (vals.includes(num)) {
-                            nextVals = vals.filter(v => v !== num);
+                        
+                        // 다중형 순위는 띄엄띄엄 선택 불가능하게 무조건 1부터 num까지 누적
+                        // 만약 현재 정확히 1~num까지 선택되어 있다면, 하나 줄이기(토글 오프) 동작
+                        if (vals.length === num && vals.every((v, i) => v === i + 1)) {
+                            nextVals = Array.from({length: num - 1}, (_, i) => i + 1);
                         } else {
-                            nextVals = [...vals, num].sort((a, b) => a - b);
+                            nextVals = Array.from({length: num}, (_, i) => i + 1);
                         }
 
                         let label = combo.label || '';
@@ -439,7 +442,8 @@ const AnalysisSettingTab = ({
                             /^\d+(\+\d+)*$/.test(combo.label);
 
                         if (isAutoLabel) {
-                            if (nextVals.length === 1 && nextVals[0] === 1) label = '1순위';
+                            if (nextVals.length === 0) label = '';
+                            else if (nextVals.length === 1 && nextVals[0] === 1) label = '1순위';
                             else if (nextVals.length > 1 && nextVals.every((v, index) => v === index + 1)) label = `Top${nextVals.length}`;
                             else label = nextVals.join('+');
                         }
