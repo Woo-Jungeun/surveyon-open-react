@@ -218,9 +218,19 @@
 }
 
 .sidebar-page-btn:hover:not(:disabled) {
-    border-color: var(--ds-primary);
-    color: var(--ds-primary);
-    background: var(--ds-primary-light);
+    /* 호버 시 색상 변화 없음 */
+    background: #fff;
+    border-color: var(--ds-border);
+    color: var(--ds-text-sub);
+}
+
+.sidebar-page-btn:active:not(:disabled),
+.sidebar-page-btn:focus:not(:disabled) {
+    /* 클릭 시 색상 변화 없음 */
+    background: #fff;
+    border-color: var(--ds-border);
+    color: var(--ds-text-sub);
+    box-shadow: none;
 }
 
 .sidebar-page-btn:disabled {

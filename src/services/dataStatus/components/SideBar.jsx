@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import './SideBar.css';
 
 const SideBar = ({ items, selectedId, onItemClick, title, totalCount, headerAction, onSearch, onDelete, displayField = 'name', searchPlaceholder = '검색어를 입력하세요.', onScrollEnd, currentPage, totalPages, onPageChange, listRef, className = '' }) => {
@@ -125,6 +125,13 @@ const SideBar = ({ items, selectedId, onItemClick, title, totalCount, headerActi
                 <div className="sidebar-pagination">
                     <button
                         className="sidebar-page-btn"
+                        onClick={() => onPageChange(1)}
+                        disabled={currentPage <= 1}
+                    >
+                        <ChevronsLeft size={16} />
+                    </button>
+                    <button
+                        className="sidebar-page-btn"
                         onClick={() => onPageChange(currentPage - 1)}
                         disabled={currentPage <= 1}
                     >
@@ -139,6 +146,13 @@ const SideBar = ({ items, selectedId, onItemClick, title, totalCount, headerActi
                         disabled={currentPage >= totalPages}
                     >
                         <ChevronRight size={16} />
+                    </button>
+                    <button
+                        className="sidebar-page-btn"
+                        onClick={() => onPageChange(totalPages)}
+                        disabled={currentPage >= totalPages}
+                    >
+                        <ChevronsRight size={16} />
                     </button>
                 </div>
             )}
