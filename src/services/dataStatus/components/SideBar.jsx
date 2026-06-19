@@ -71,7 +71,7 @@ const SideBar = ({ items, selectedId, onItemClick, title, totalCount, headerActi
                                 className={`sidebar-item ${selectedId === item.id ? 'selected' : ''}`}
                                 title={`${item.label || item[displayField] || ''}${item.label && item[displayField] ? ` (${item[displayField]})` : ''}`}
                             >
-                                <div className="sidebar-item-content">
+                                <div className="sidebar-item-content" style={{ flex: 1, minWidth: 0 }}>
                                     <div className="sidebar-item-header" style={{ marginBottom: '0' }}>
                                         <div className="sidebar-item-name" style={{ wordBreak: 'break-all', lineHeight: 1.3, marginBottom: 0 }}>
                                             {item.label || item[displayField]}
@@ -79,33 +79,32 @@ const SideBar = ({ items, selectedId, onItemClick, title, totalCount, headerActi
                                         </div>
                                     </div>
                                     {item.label && (
-                                        <div className="sidebar-item-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                                            <span style={{ flex: 1, minWidth: 0, wordBreak: 'break-all' }}>
-                                                {item[displayField]}
-                                                {item.isDirty && <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px' }}>(수정됨)</span>}
-                                            </span>
-                                            {item.type && (() => {
-                                                const t = String(item.type).toLowerCase();
-                                                let badgeClass = item.color || 'gray';
-                                                if (t === 'single') badgeClass = 'single';
-                                                else if (t === 'multi') badgeClass = 'multi';
-                                                else if (t === 'rank') badgeClass = 'rank';
-                                                else if (t === 'minrank') badgeClass = 'minrank';
-                                                else if (t === 'maxrank') badgeClass = 'maxrank';
-                                                else if (t === 'scale') badgeClass = 'scale';
-                                                else if (t === 'open(문자)') badgeClass = 'open-text';
-                                                else if (t === 'open(숫자)') badgeClass = 'open-num';
-                                                else if (t === 'dummy') badgeClass = 'dummy';
-                                                else if (t === 'custom') badgeClass = 'custom';
-                                                return (
-                                                    <span className={`question-type-badge ${badgeClass}`} style={{ flexShrink: 0 }}>
-                                                        {String(item.type).toLowerCase()}
-                                                    </span>
-                                                );
-                                            })()}
+                                        <div className="sidebar-item-label" style={{ marginTop: '4px', wordBreak: 'break-all' }}>
+                                            {item[displayField]}
+                                            {item.isDirty && <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px' }}>(수정됨)</span>}
                                         </div>
                                     )}
                                 </div>
+                                {item.type && (() => {
+                                    const t = String(item.type).toLowerCase();
+                                    let badgeClass = item.color || 'gray';
+                                    if (t === 'single') badgeClass = 'single';
+                                    else if (t === 'multi') badgeClass = 'multi';
+                                    else if (t === 'rank') badgeClass = 'rank';
+                                    else if (t === 'minrank') badgeClass = 'minrank';
+                                    else if (t === 'maxrank') badgeClass = 'maxrank';
+                                    else if (t === 'scale') badgeClass = 'scale';
+                                    else if (t === 'open(문자)') badgeClass = 'open-text';
+                                    else if (t === 'open(숫자)') badgeClass = 'open-num';
+                                    else if (t === 'dummy') badgeClass = 'dummy';
+                                    else if (t === 'custom') badgeClass = 'custom';
+                                    return (
+                                        <span className={`question-type-badge ${badgeClass}`} style={{ flexShrink: 0, marginLeft: '8px' }}>
+                                            {String(item.type).toLowerCase()}
+                                        </span>
+                                    );
+                                })()}
+
                                 {onDelete && (
                                     <button
                                         onClick={(e) => {
