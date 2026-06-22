@@ -1578,11 +1578,16 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         for (const stub of stubs) {
             // summary 타입은 summary_folders로 분리
             if (stub.var_type === 'summary') {
+                const bannerArr = stub.x_info
+                    ? (Array.isArray(stub.x_info) ? stub.x_info : [stub.x_info])
+                    : [];
+
                 summaryFolders.push({
                     stub_id: stub.recoded_var_id,
                     name: stub.var_label || '',
                     label: stub.var_label || '',
-                    items: Array.isArray(stub.items) ? stub.items : []
+                    items: Array.isArray(stub.items) ? stub.items : [],
+                    banner: bannerArr
                 });
                 continue;
             }
