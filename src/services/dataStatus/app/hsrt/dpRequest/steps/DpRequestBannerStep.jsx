@@ -2028,7 +2028,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     />
                                 </div>
                                 <div className="dp-content-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
-                                    <button
+                                    {/* <button
                                         onClick={() => {
                                             const banner = banners.find(b => b.id === selectedBanner);
                                             if (!banner) {
@@ -2106,7 +2106,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
                                     >
                                         미리보기 계산
-                                    </button>
+                                    </button> */}
                                     <button
                                         ref={addVarButtonRef}
                                         onClick={() => setIsAddVarPopupOpen(!isAddVarPopupOpen)}
@@ -2219,13 +2219,12 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                             <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '13px' }}>
                                                                 {nVal.toLocaleString()}
                                                             </div>
-                                                            {/* 퍼센트값 임시 주석 처리
                                                             {pVal !== null && pVal !== undefined && (
                                                                 <div style={{ color: '#64748b', fontSize: '11px', marginTop: '2px' }}>
                                                                     {Number(pVal).toFixed(1)}%
                                                                 </div>
                                                             )}
-                                                            */}
+
                                                         </React.Fragment>
                                                     ) : (
                                                         <span style={{ color: '#94a3b8', fontSize: '13px' }}>-</span>
