@@ -473,7 +473,6 @@
     align-items: center;
     justify-content: center;
     background: #fff;
-    transition: all 0.2s;
     flex-shrink: 0;
 }
 
@@ -492,7 +491,6 @@
     align-items: center;
     justify-content: center;
     background: #fff;
-    transition: border-color 0.15s ease-in-out;
     flex-shrink: 0;
 }
 
@@ -598,4 +596,11 @@
 .question-type-badge.open {
     background: #FEE2E2;
     color: #B91C1C;
+}
+
+/* Filter Dropdown Node Hovers */
+.filter-parent-node:hover,
+.filter-child-node:hover,
+.filter-parent-node:hover ~ div .filter-child-node {
+    background: #f1f5f9 !important;
 }

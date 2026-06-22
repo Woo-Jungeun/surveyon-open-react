@@ -2299,6 +2299,24 @@ const FrequencyAnalysisPage = () => {
                         <div
                             className={`custom-filter-trigger ${isDropdownFilterOpen ? 'open' : ''}`}
                             onClick={toggleDropdownFilterOpen}
+                            title={(() => {
+                                const activeFilters = isDropdownFilterOpen ? tempDropdownFilters : selectedDropdownFilters;
+                                const selectedSummaryTooltip = [];
+                                Object.entries(activeFilters).forEach(([tableId, logics]) => {
+                                    if (logics && logics.length > 0) {
+                                        const table = dropdownFilterList.find(t => t.id === tableId);
+                                        if (table) {
+                                            const tableName = table.name || table.label || tableId;
+                                            const selectedOptionLabels = logics.map(logicStr => {
+                                                const opt = (table.info || []).find(o => o.logic === logicStr);
+                                                return opt ? opt.label : '';
+                                            }).filter(Boolean);
+                                            selectedSummaryTooltip.push(`${tableName}: ${selectedOptionLabels.join(', ')}`);
+                                        }
+                                    }
+                                });
+                                return selectedSummaryTooltip.length > 0 ? selectedSummaryTooltip.join('\n') : undefined;
+                            })()}
                             style={{
                                 width: '100%',
                                 height: '36px',
@@ -2315,13 +2333,18 @@ const FrequencyAnalysisPage = () => {
                         >
                             <span className="trigger-text" style={{ fontSize: '12px', color: '#334155', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                                 {(() => {
+                                    const activeFilters = isDropdownFilterOpen ? tempDropdownFilters : selectedDropdownFilters;
                                     const selectedSummary = [];
-                                    Object.entries(selectedDropdownFilters).forEach(([tableId, logics]) => {
+                                    Object.entries(activeFilters).forEach(([tableId, logics]) => {
                                         if (logics && logics.length > 0) {
                                             const table = dropdownFilterList.find(t => t.id === tableId);
                                             if (table) {
-                                                const tableName = (table.name || table.label || tableId).split('.').pop().trim();
-                                                selectedSummary.push(`${tableName}(${logics.length})`);
+                                                logics.forEach(logicStr => {
+                                                    const opt = (table.info || []).find(o => o.logic === logicStr);
+                                                    if (opt && opt.label) {
+                                                        selectedSummary.push(opt.label);
+                                                    }
+                                                });
                                             }
                                         }
                                     });
@@ -2364,6 +2387,7 @@ const FrequencyAnalysisPage = () => {
                                                 <div key={tableId} style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px solid #cbd5e1', paddingBottom: '6px' }}>
                                                     {/* Parent Node */}
                                                     <div
+                                                        className="filter-parent-node"
                                                         style={{
                                                             display: 'flex',
                                                             alignItems: 'center',
@@ -2407,6 +2431,7 @@ const FrequencyAnalysisPage = () => {
                                                             return (
                                                                 <div
                                                                     key={opt.logic || opt.index}
+                                                                    className="filter-child-node"
                                                                     style={{
                                                                         display: 'flex',
                                                                         alignItems: 'center',
