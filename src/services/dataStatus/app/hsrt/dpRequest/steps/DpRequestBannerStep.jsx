@@ -734,7 +734,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             logic: it.logic || '',
             stat_type: it.stat_type || null,
             target_var: it.target_var || null,
-            type: it.type || "빈도",
+            type: it.type && it.type !== "빈도" ? it.type : "single",
             prefix: it.prefix || "",
             postfix: it.postfix || "",
             hide: it.hide || "",
@@ -755,6 +755,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             id: bannerId,
             label: currentLabel || activeBannerLabel,
             type: 'single',
+            recoded_type: 'recoded',
             info: validInfo
         };
 
@@ -782,23 +783,47 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                     const firstColKey = apiColumns[0].key;
                     const newFreqs = {};
 
-                    apiRows.forEach((row, idx) => {
-                        const cellBox = row.cells ? row.cells[firstColKey] : row[firstColKey];
-                        if (cellBox !== undefined && cellBox !== null) {
-                            const isSingleVal = typeof cellBox !== 'object';
-                            const nVal = !isSingleVal
-                                ? (cellBox.count !== undefined ? cellBox.count : cellBox.n)
-                                : cellBox;
-                            const pVal = !isSingleVal
-                                ? (cellBox.percent !== undefined ? cellBox.percent : cellBox.p)
-                                : null;
+                    if (apiRows.length === 1 && apiColumns.length > 0) {
+                        // 백엔드가 카테고리들을 컬럼(columns)으로 내려준 경우
+                        const row = apiRows[0];
+                        apiColumns.forEach((col, idx) => {
+                            const cellBox = row.cells ? row.cells[col.key] : row[col.key];
+                            if (cellBox !== undefined && cellBox !== null) {
+                                const isSingleVal = typeof cellBox !== 'object';
+                                const nVal = !isSingleVal
+                                    ? (cellBox.count !== undefined ? cellBox.count : cellBox.n)
+                                    : cellBox;
+                                const pVal = !isSingleVal
+                                    ? (cellBox.percent !== undefined ? cellBox.percent : cellBox.p)
+                                    : null;
 
-                            newFreqs[`${bannerId}-${idx}`] = {
-                                n: nVal !== undefined ? nVal : null,
-                                p: pVal !== undefined ? pVal : null
-                            };
-                        }
-                    });
+                                newFreqs[`${bannerId}-${idx}`] = {
+                                    n: nVal !== undefined ? nVal : null,
+                                    p: pVal !== undefined ? pVal : null
+                                };
+                            }
+                        });
+                    } else {
+                        // 백엔드가 카테고리들을 행(rows)으로 내려준 경우
+                        const firstColKey = apiColumns[0].key;
+                        apiRows.forEach((row, idx) => {
+                            const cellBox = row.cells ? row.cells[firstColKey] : row[firstColKey];
+                            if (cellBox !== undefined && cellBox !== null) {
+                                const isSingleVal = typeof cellBox !== 'object';
+                                const nVal = !isSingleVal
+                                    ? (cellBox.count !== undefined ? cellBox.count : cellBox.n)
+                                    : cellBox;
+                                const pVal = !isSingleVal
+                                    ? (cellBox.percent !== undefined ? cellBox.percent : cellBox.p)
+                                    : null;
+
+                                newFreqs[`${bannerId}-${idx}`] = {
+                                    n: nVal !== undefined ? nVal : null,
+                                    p: pVal !== undefined ? pVal : null
+                                };
+                            }
+                        });
+                    }
 
                     setFrequencies(prev => ({
                         ...prev,
@@ -2194,11 +2219,13 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                             <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '13px' }}>
                                                                 {nVal.toLocaleString()}
                                                             </div>
+                                                            {/* 퍼센트값 임시 주석 처리
                                                             {pVal !== null && pVal !== undefined && (
                                                                 <div style={{ color: '#64748b', fontSize: '11px', marginTop: '2px' }}>
                                                                     {Number(pVal).toFixed(1)}%
                                                                 </div>
                                                             )}
+                                                            */}
                                                         </React.Fragment>
                                                     ) : (
                                                         <span style={{ color: '#94a3b8', fontSize: '13px' }}>-</span>
