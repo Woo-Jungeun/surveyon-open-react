@@ -355,7 +355,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
     const availableChartGroups = useMemo(() => {
         if (!q.data) return [];
         const groups = new Set();
-        
+
         if (q.columns && q.columns.length > 0) {
             q.columns.forEach(col => {
                 const groupName = col.label2 || col.label;
@@ -382,7 +382,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
 
     const chartData = useMemo(() => {
         if (!q.data) return [];
-        
+
         if (q.columns && q.columns.length > 0) {
             return q.columns.filter(col => {
                 const groupName = col.label2 || col.label;
@@ -393,9 +393,9 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                     .map(p => String(p || '').trim())
                     .filter(p => p !== '');
                 const fullLabel = validParts.reverse().join('\n');
-                
+
                 const dataPoint = { name: fullLabel };
-                
+
                 q.data.forEach((row, index) => {
                     dataPoint[`series_${index}`] = row[col.key];
                     dataPoint[`series_${index}_pct`] = row[`${col.key}_pct`];
@@ -426,78 +426,6 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                     </div>
 
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <div className="custom-filter-wrapper" ref={displayMenuRef} style={{ position: 'relative', width: '85px' }}>
-                            <div
-                                className={`custom-filter-trigger ${isDisplayMenuOpen ? 'open' : ''}`}
-                                onClick={() => setIsDisplayMenuOpen(!isDisplayMenuOpen)}
-                                style={{
-                                    height: '36px',
-                                    padding: '0 8px 0 10px',
-                                    gap: '4px',
-                                    background: '#fff',
-                                    border: '1px solid #e9ecef',
-                                    borderRadius: '6px',
-                                    fontSize: '13px',
-                                    fontWeight: '500',
-                                    color: '#495057',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    userSelect: 'none'
-                                }}
-                            >
-                                <span className="trigger-text">
-                                    {displayMode === 'all' ? '전체' : displayMode === 'value' ? '사례수' : '퍼센트'}
-                                </span>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="trigger-icon" style={{ flexShrink: 0 }}>
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </div>
-
-                            {isDisplayMenuOpen && (
-                                <div className="custom-filter-menu" style={{
-                                    position: 'absolute', top: 'calc(100% + 4px)', left: 0,
-                                    width: '100%',
-                                    padding: '4px',
-                                    background: '#fff', border: '1px solid #e2e8f0',
-                                    borderRadius: '6px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                    zIndex: 1000, overflow: 'hidden'
-                                }}>
-                                    {[{ label: '전체', value: 'all' }, { label: '사례수', value: 'value' }, { label: '퍼센트', value: 'percent' }].map((item) => (
-                                        <div
-                                            key={item.value}
-                                            onClick={() => {
-                                                setDisplayMode(item.value);
-                                                setIsDisplayMenuOpen(false);
-                                                if (onDisplayModeChange) {
-                                                    onDisplayModeChange(q.id, item.value);
-                                                }
-                                            }}
-                                            style={{
-                                                padding: '6px 8px',
-                                                cursor: 'pointer',
-                                                fontSize: '13px',
-                                                color: displayMode === item.value ? '#3b82f6' : '#495057',
-                                                background: displayMode === item.value ? '#eff6ff' : 'transparent',
-                                                transition: 'background 0.1s',
-                                                textAlign: 'center',
-                                                borderRadius: '4px',
-                                                userSelect: 'none'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                if (displayMode !== item.value) e.currentTarget.style.background = '#f1f5f9';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                if (displayMode !== item.value) e.currentTarget.style.background = 'transparent';
-                                            }}
-                                        >
-                                            {item.label}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
                         <button
                             onClick={handleCopyTable}
                             style={{
@@ -753,7 +681,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                                         minWidth: '200px', padding: '8px',
                                         display: 'flex', flexDirection: 'column', gap: '4px'
                                     }}>
-                                        <div style={{ padding: '4px 8px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div style={{ padding: '4px 8px', borderBottom: '1px solid #cbd5e1', paddingBottom: '8px', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>X축 그룹 보기</span>
                                             <button
                                                 onClick={() => setSelectedChartGroups(availableChartGroups)}
@@ -771,7 +699,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                                                         setSelectedChartGroups(availableChartGroups);
                                                     }
                                                 }}
-                                                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#0f172a', borderBottom: '1px solid #f1f5f9', marginBottom: '4px' }}
+                                                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#0f172a', borderBottom: '1px solid #cbd5e1', marginBottom: '4px' }}
                                             >
                                                 <div style={{
                                                     width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1132,6 +1060,108 @@ const FrequencyAnalysisPage = () => {
     const [overviewVariables, setOverviewVariables] = useState([]);
     const [bannerVariables, setBannerVariables] = useState([]);
     const [originalVariables, setOriginalVariables] = useState([]);
+
+    // 필터 드롭다운 관련 상태
+    const [dropdownFilterList, setDropdownFilterList] = useState([]);
+    const [selectedDropdownFilters, setSelectedDropdownFilters] = useState({});
+    const [tempDropdownFilters, setTempDropdownFilters] = useState({});
+    const [isDropdownFilterOpen, setIsDropdownFilterOpen] = useState(false);
+    const dropdownFilterMenuRef = useRef(null);
+
+    // 필터 칩 더보기/접기 관련 상태
+    const [isChipsExpanded, setIsChipsExpanded] = useState(false);
+    const [hasMoreChips, setHasMoreChips] = useState(false);
+    const [maxVisibleIndex, setMaxVisibleIndex] = useState(-1);
+    const [containerWidth, setContainerWidth] = useState(0);
+    const chipsContainerRef = useRef(null);
+    const measuringRef = useRef(null);
+
+    const toggleDropdownFilterOpen = () => {
+        if (!isDropdownFilterOpen) {
+            setTempDropdownFilters({ ...selectedDropdownFilters });
+        }
+        setIsDropdownFilterOpen(!isDropdownFilterOpen);
+    };
+
+    const handleApplyDropdownFilters = () => {
+        setSelectedDropdownFilters({ ...tempDropdownFilters });
+        applyDropdownFilters(tempDropdownFilters);
+        setIsDropdownFilterOpen(false);
+    };
+
+    const handleRemoveFilterChip = (tableId) => {
+        const nextSelected = { ...selectedDropdownFilters };
+        delete nextSelected[tableId];
+        setSelectedDropdownFilters(nextSelected);
+        setTempDropdownFilters(prev => {
+            const next = { ...prev };
+            delete next[tableId];
+            return next;
+        });
+        applyDropdownFilters(nextSelected);
+    };
+
+    const handleResetAllFilters = () => {
+        setSelectedDropdownFilters({});
+        setTempDropdownFilters({});
+        applyDropdownFilters({});
+    };
+
+    useEffect(() => {
+        if (!chipsContainerRef.current) return;
+        const observer = new ResizeObserver((entries) => {
+            for (let entry of entries) {
+                setContainerWidth(entry.contentRect.width);
+            }
+        });
+        observer.observe(chipsContainerRef.current);
+        return () => observer.disconnect();
+    }, []);
+
+    React.useLayoutEffect(() => {
+        if (!measuringRef.current) return;
+
+        const container = measuringRef.current;
+        const children = Array.from(container.children);
+        if (children.length <= 1) {
+            setHasMoreChips(false);
+            setMaxVisibleIndex(-1);
+            setIsChipsExpanded(false);
+            return;
+        }
+
+        const chipsElements = children.slice(0, -1);
+        const dummyButton = children[children.length - 1];
+
+        const currentContainerWidth = container.clientWidth;
+        const buttonWidth = dummyButton.offsetWidth;
+        const gap = 6;
+
+        const lastChip = chipsElements[chipsElements.length - 1];
+        const isOverflowing = lastChip.offsetTop > 40;
+
+        setHasMoreChips(isOverflowing);
+
+        if (!isOverflowing) {
+            setMaxVisibleIndex(-1);
+            setIsChipsExpanded(false);
+        } else {
+            let maxIdx = -1;
+            for (let i = 0; i < chipsElements.length; i++) {
+                const chipEl = chipsElements[i];
+                if (chipEl.offsetTop <= 40) {
+                    if (chipEl.offsetLeft + chipEl.offsetWidth + gap + buttonWidth <= currentContainerWidth) {
+                        maxIdx = i;
+                    }
+                }
+            }
+            if (maxIdx === -1 && chipsElements.length > 0) {
+                maxIdx = 0;
+            }
+            setMaxVisibleIndex(maxIdx);
+        }
+    }, [selectedDropdownFilters, containerWidth, dropdownFilterList]);
+
     const { getRecodedList, getRecodedVariables } = RecodingPageApi();
     const { getOriginalVariables } = VariablePageApi();
 
@@ -1205,6 +1235,124 @@ const FrequencyAnalysisPage = () => {
             loadingSpinner.hide();
         }
     };
+
+    const handleChildCheckboxChange = (tableId, logicStr) => {
+        setTempDropdownFilters(prev => {
+            const currentLogics = prev[tableId] || [];
+            let newLogics;
+            if (currentLogics.includes(logicStr)) {
+                newLogics = currentLogics.filter(l => l !== logicStr);
+            } else {
+                newLogics = [...currentLogics, logicStr];
+            }
+            return { ...prev, [tableId]: newLogics };
+        });
+    };
+
+    const handleParentCheckboxChange = (table) => {
+        const tableId = table.id;
+        const allLogics = (table.info || []).map(opt => opt.logic).filter(Boolean);
+        if (allLogics.length === 0) return;
+
+        setTempDropdownFilters(prev => {
+            const currentLogics = prev[tableId] || [];
+            let newLogics;
+            if (currentLogics.length === allLogics.length) {
+                newLogics = [];
+            } else {
+                newLogics = allLogics;
+            }
+            return { ...prev, [tableId]: newLogics };
+        });
+    };
+
+    const applyDropdownFilters = (selections) => {
+        const blocks = [];
+        Object.entries(selections).forEach(([tableId, logics]) => {
+            if (logics && logics.length > 0) {
+                const parsedItems = [];
+                let canCombine = true;
+
+                for (const logicStr of logics) {
+                    // Try matching "var in [val]" (supporting case insensitivity and optional spaces)
+                    let match = logicStr.match(/^(.+?)\s*in\s*\[\s*(.*?)\s*\]$/i);
+                    if (match) {
+                        parsedItems.push({ variable: match[1].trim(), value: match[2].trim() });
+                        continue;
+                    }
+                    // Try matching "var == val"
+                    match = logicStr.match(/^(.+?)\s*==\s*(.+)$/);
+                    if (match) {
+                        parsedItems.push({ variable: match[1].trim(), value: match[2].trim().replace(/^\[|\]$/g, '') });
+                        continue;
+                    }
+                    // If it doesn't match either, we cannot combine
+                    canCombine = false;
+                    break;
+                }
+
+                if (canCombine && parsedItems.length > 0) {
+                    const grouped = {};
+                    parsedItems.forEach(item => {
+                        if (!grouped[item.variable]) {
+                            grouped[item.variable] = [];
+                        }
+                        if (!grouped[item.variable].includes(item.value)) {
+                            grouped[item.variable].push(item.value);
+                        }
+                    });
+
+                    const combinedExprs = Object.entries(grouped).map(([variable, values]) => {
+                        return `${variable} in [${values.join(',')}]`;
+                    });
+
+                    if (combinedExprs.length === 1) {
+                        blocks.push(combinedExprs[0]);
+                    } else {
+                        blocks.push(`(${combinedExprs.join(' and ')})`);
+                    }
+                } else {
+                    if (logics.length === 1) {
+                        blocks.push(logics[0]);
+                    } else {
+                        blocks.push(`(${logics.join(' or ')})`);
+                    }
+                }
+            }
+        });
+        const combined = blocks.join(' and ');
+        setFilterLogic(combined);
+        setSidebarPage(1);
+    };
+
+    const fetchDropdownFilterList = async () => {
+        const pageId = sessionStorage.getItem("pageId");
+        const userId = auth?.user?.userId;
+        if (!pageId || !userId) return;
+
+        try {
+            const payload = {
+                pageid: pageId,
+                use_recoded: false,
+                start: 0,
+                limit: 10000,
+                search: "",
+                user: userId
+            };
+            const result = await getOverviewList.mutateAsync(payload);
+            if (result?.success === "777" && result.resultjson) {
+                setDropdownFilterList(result.resultjson.tables || []);
+            }
+        } catch (error) {
+            console.error("Failed to fetch dropdown filter list:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (auth?.user?.userId) {
+            fetchDropdownFilterList();
+        }
+    }, [auth?.user?.userId]);
 
     const fetchOverviewVars = async () => {
         if (!auth?.user?.userId) return;
@@ -1349,6 +1497,9 @@ const FrequencyAnalysisPage = () => {
             if (bannerDropdownRef.current && !bannerDropdownRef.current.contains(event.target)) {
                 setIsBannerDropdownOpen(false);
             }
+            if (dropdownFilterMenuRef.current && !dropdownFilterMenuRef.current.contains(event.target)) {
+                setIsDropdownFilterOpen(false);
+            }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -1478,12 +1629,12 @@ const FrequencyAnalysisPage = () => {
         }
     };
 
-    // 페이지 변경 시 재조회
+    // 페이지 변경 또는 필터 변경 시 재조회
     useEffect(() => {
         if (auth?.user?.userId) {
             fetchQuestions(sidebarPage);
         }
-    }, [auth?.user?.userId, sidebarPage]);
+    }, [auth?.user?.userId, sidebarPage, filterLogic]);
 
     // 검색어 변경 시 1페이지로 리셋 및 재조회
     useEffect(() => {
@@ -1505,6 +1656,9 @@ const FrequencyAnalysisPage = () => {
             isFetchingListRef.current = false;
             fetchOverviewVars(); // 페이지 변경 시 오버뷰 변수도 다시 조회
             fetchOriginalVars();
+            setSelectedDropdownFilters({}); // 페이지 변경 시 선택된 드롭다운 필터 초기화
+            setTempDropdownFilters({}); // 페이지 변경 시 템프 드롭다운 필터 초기화
+            fetchDropdownFilterList(); // 페이지 변경 시 필터 리스트도 재조회
             fetchQuestions(1);
         };
         window.addEventListener('pageSelected', handlePageSelected);
@@ -1546,19 +1700,10 @@ const FrequencyAnalysisPage = () => {
             try {
                 const pageId = sessionStorage.getItem("pageId");
                 const userId = auth.user.userId;
-                const startTargetId = questions[index].target_id;
 
                 const payload = {
                     pageid: pageId,
                     user: userId,
-                    x_info: (() => {
-                        const baseInfo = selectedVariableIds.length > 0 ? selectedVariableIds : (selectedFilters.includes('전체') ? [] : selectedFilters);
-                        const displayIds = baseInfo.filter(id => id !== 'answerStateCode');
-                        if (baseInfo.includes('answerStateCode')) {
-                            displayIds.push('answerStateCode');
-                        }
-                        return displayIds;
-                    })(), // 배너 문항 적용
                     start: (sidebarPage - 1) * SIDEBAR_PAGE_SIZE + index,  // 전체 순번에 해당하는 인덱스
                     limit: limit, // 가져올 갯수
                     weight_col: "",
@@ -1650,7 +1795,7 @@ const FrequencyAnalysisPage = () => {
             if (result?.success === "777" && result.resultjson && result.resultjson.tables) {
                 const updatedTable = result.resultjson.tables[0];
                 if (updatedTable && updatedTable.html) {
-                    setQuestions(prev => prev.map(q => 
+                    setQuestions(prev => prev.map(q =>
                         q.id === qId ? { ...q, html: updatedTable.html } : q
                     ));
                 }
@@ -2135,6 +2280,468 @@ const FrequencyAnalysisPage = () => {
                     엑셀 다운로드
                 </button>
             </DataHeader>
+
+            {/* 필터 드롭다운 한 줄 영역 */}
+            {currentPageId && (
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 24px',
+                    background: '#ffffff',
+                    borderBottom: '1px solid #e2e8f0',
+                    zIndex: 99
+                }}>
+                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b' }}>필터</span>
+
+                    {/* 필터 선택 드롭다운 */}
+                    <div className="custom-filter-wrapper" ref={dropdownFilterMenuRef} style={{ position: 'relative', width: '320px' }}>
+                        <div
+                            className={`custom-filter-trigger ${isDropdownFilterOpen ? 'open' : ''}`}
+                            onClick={toggleDropdownFilterOpen}
+                            style={{
+                                width: '100%',
+                                height: '36px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                border: '1px solid #cbd5e1',
+                                borderRadius: '6px',
+                                background: '#fff',
+                                padding: '0 12px',
+                                cursor: 'pointer',
+                                userSelect: 'none'
+                            }}
+                        >
+                            <span className="trigger-text" style={{ fontSize: '12px', color: '#334155', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                                {(() => {
+                                    const selectedSummary = [];
+                                    Object.entries(selectedDropdownFilters).forEach(([tableId, logics]) => {
+                                        if (logics && logics.length > 0) {
+                                            const table = dropdownFilterList.find(t => t.id === tableId);
+                                            if (table) {
+                                                const tableName = (table.name || table.label || tableId).split('.').pop().trim();
+                                                selectedSummary.push(`${tableName}(${logics.length})`);
+                                            }
+                                        }
+                                    });
+                                    return selectedSummary.length > 0 ? selectedSummary.join(', ') : '필터 선택';
+                                })()}
+                            </span>
+                            <ChevronDown size={14} className="trigger-icon" style={{ color: '#94a3b8' }} />
+                        </div>
+
+                        {isDropdownFilterOpen && (
+                            <div className="custom-filter-menu" style={{
+                                position: 'absolute',
+                                top: 'calc(100% + 4px)',
+                                left: 0,
+                                width: '325px',
+                                maxHeight: '400px',
+                                overflowY: 'auto',
+                                background: '#fff',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '8px',
+                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                                zIndex: 1000,
+                                padding: '8px',
+                                boxSizing: 'border-box'
+                            }}>
+                                {dropdownFilterList.length === 0 ? (
+                                    <div style={{ padding: '16px', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
+                                        필터 데이터가 없습니다.
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        {dropdownFilterList.map(table => {
+                                            const tableId = table.id;
+                                            const allLogics = (table.info || []).map(opt => opt.logic).filter(Boolean);
+                                            const currentLogics = tempDropdownFilters[tableId] || [];
+                                            const isParentChecked = allLogics.length > 0 && currentLogics.length === allLogics.length;
+                                            const isParentIndeterminate = currentLogics.length > 0 && currentLogics.length < allLogics.length;
+
+                                            return (
+                                                <div key={tableId} style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px solid #cbd5e1', paddingBottom: '6px' }}>
+                                                    {/* Parent Node */}
+                                                    <div
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '8px',
+                                                            padding: '6px 8px',
+                                                            cursor: 'pointer',
+                                                            borderRadius: '4px',
+                                                            userSelect: 'none'
+                                                        }}
+                                                        onClick={() => handleParentCheckboxChange(table)}
+                                                    >
+                                                        <div
+                                                            className={`filter-checkbox-custom ${isParentChecked ? 'checked' : ''}`}
+                                                            style={{
+                                                                width: '16px',
+                                                                height: '16px',
+                                                                border: '1px solid #cbd5e1',
+                                                                borderRadius: '4px',
+                                                                background: '#fff',
+                                                                borderColor: (isParentChecked || isParentIndeterminate) ? '#1e3a8a' : '#cbd5e1',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                flexShrink: 0
+                                                            }}
+                                                        >
+                                                            {isParentChecked && <Check size={12} color="#1e3a8a" strokeWidth={3} />}
+                                                            {isParentIndeterminate && <div style={{ width: '8px', height: '2px', background: '#1e3a8a' }} />}
+                                                        </div>
+                                                        <span style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b' }}>
+                                                            {table.name || table.label || tableId}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Children Option Nodes */}
+                                                    <div style={{ paddingLeft: '24px', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
+                                                        {(table.info || []).map(opt => {
+                                                            const logicStr = opt.logic;
+                                                            const isChildChecked = currentLogics.includes(logicStr);
+
+                                                            return (
+                                                                <div
+                                                                    key={opt.logic || opt.index}
+                                                                    style={{
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: '8px',
+                                                                        padding: '4px 8px',
+                                                                        cursor: 'pointer',
+                                                                        borderRadius: '4px',
+                                                                        userSelect: 'none'
+                                                                    }}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleChildCheckboxChange(tableId, logicStr);
+                                                                    }}
+                                                                >
+                                                                    <div
+                                                                        className={`filter-checkbox-custom ${isChildChecked ? 'checked' : ''}`}
+                                                                        style={{
+                                                                            width: '16px',
+                                                                            height: '16px',
+                                                                            border: '1px solid #cbd5e1',
+                                                                            borderRadius: '4px',
+                                                                            background: '#fff',
+                                                                            borderColor: isChildChecked ? '#1e3a8a' : '#cbd5e1',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'center',
+                                                                            flexShrink: 0
+                                                                        }}
+                                                                    >
+                                                                        {isChildChecked && <Check size={12} color="#1e3a8a" strokeWidth={3} />}
+                                                                    </div>
+                                                                    <span style={{ fontSize: '12px', color: '#475569', fontWeight: 500 }}>
+                                                                        {opt.label}
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 필터 적용/추가 버튼 */}
+                    <button
+                        onClick={handleApplyDropdownFilters}
+                        style={{
+                            height: '36px',
+                            padding: '0 16px',
+                            background: '#1e3a8a',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease-in-out',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                        }}
+                        onMouseOver={(e) => {
+                            e.currentTarget.style.background = '#172e6b';
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                        }}
+                        onMouseOut={(e) => {
+                            e.currentTarget.style.background = '#1e3a8a';
+                            e.currentTarget.style.transform = 'none';
+                        }}
+                    >
+                        필터 추가
+                    </button>
+
+                    {/* 적용된 조건 조합 칩 리스트 */}
+                    {(() => {
+                        const activeFilterChips = Object.entries(selectedDropdownFilters)
+                            .map(([tableId, logics]) => {
+                                if (!logics || logics.length === 0) return null;
+                                const table = dropdownFilterList.find(t => t.id === tableId);
+                                if (!table) return null;
+
+                                const namePart = table.name || table.id || '';
+                                const labelPart = table.label || table.title || '';
+
+                                // Find option labels corresponding to selected logics
+                                const selectedOptionLabels = logics.map(logicStr => {
+                                    const opt = (table.info || []).find(o => o.logic === logicStr);
+                                    return opt ? opt.label : '';
+                                }).filter(Boolean);
+
+                                const displayText = `${namePart}. ${labelPart} (${selectedOptionLabels.join(', ')})`;
+                                return { tableId, displayText };
+                            })
+                            .filter(Boolean);
+
+                        if (activeFilterChips.length === 0) return null;
+
+                        return (
+                            <>
+                                <div style={{ width: '1px', height: '24px', backgroundColor: '#e2e8f0', margin: '0 4px' }} />
+                                <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, marginLeft: '8px', whiteSpace: 'nowrap' }}>
+                                    적용된 필터
+                                </span>
+
+                                <div style={{ flex: 1, position: 'relative', minWidth: 0, display: 'flex', alignItems: 'center' }}>
+                                    {/* Visible container */}
+                                    <div
+                                        toughness="chips-wrapper"
+                                        ref={chipsContainerRef}
+                                        style={{
+                                            display: 'flex',
+                                            gap: '6px',
+                                            flexWrap: 'wrap',
+                                            alignItems: 'center',
+                                            flex: 1,
+                                            maxHeight: isChipsExpanded ? '300px' : '56px',
+                                            overflow: 'hidden',
+                                            transition: 'max-height 0.25s ease-in-out',
+                                        }}
+                                    >
+                                        {activeFilterChips.map((chip, idx) => {
+                                            const isHidden = !isChipsExpanded && hasMoreChips && idx > maxVisibleIndex;
+                                            return (
+                                                <div
+                                                    key={`chip-${chip.tableId}`}
+                                                    style={{
+                                                        display: isHidden ? 'none' : 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '6px',
+                                                        background: '#eff6ff',
+                                                        border: '1px solid #bfdbfe',
+                                                        borderRadius: '16px',
+                                                        padding: '4px 10px',
+                                                        fontSize: '11px',
+                                                        fontWeight: 500,
+                                                        color: '#1e40af',
+                                                        userSelect: 'none',
+                                                        transition: 'all 0.15s ease-in-out'
+                                                    }}
+                                                >
+                                                    <span style={{ fontSize: '11px', lineHeight: '1.2' }}>{chip.displayText}</span>
+                                                    <span
+                                                        onClick={() => handleRemoveFilterChip(chip.tableId)}
+                                                        style={{
+                                                            cursor: 'pointer',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            width: '12px',
+                                                            height: '12px',
+                                                            borderRadius: '50%',
+                                                            fontSize: '9px',
+                                                            color: '#3b82f6',
+                                                            fontWeight: 700,
+                                                            transition: 'all 0.15s'
+                                                        }}
+                                                        onMouseOver={(e) => {
+                                                            e.currentTarget.style.background = '#dbeafe';
+                                                            e.currentTarget.style.color = '#1d4ed8';
+                                                        }}
+                                                        onMouseOut={(e) => {
+                                                            e.currentTarget.style.background = 'transparent';
+                                                            e.currentTarget.style.color = '#3b82f6';
+                                                        }}
+                                                    >
+                                                        ✕
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+
+                                        {isChipsExpanded && hasMoreChips && (
+                                            <button
+                                                onClick={() => setIsChipsExpanded(false)}
+                                                style={{
+                                                    fontSize: '11px',
+                                                    color: '#1e3a8a',
+                                                    background: '#eff6ff',
+                                                    border: '1px solid #bfdbfe',
+                                                    borderRadius: '12px',
+                                                    padding: '2px 10px',
+                                                    cursor: 'pointer',
+                                                    fontWeight: 600,
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    transition: 'all 0.15s ease-in-out',
+                                                    whiteSpace: 'nowrap'
+                                                }}
+                                                onMouseOver={(e) => {
+                                                    e.currentTarget.style.background = '#dbeafe';
+                                                    e.currentTarget.style.borderColor = '#93c5fd';
+                                                }}
+                                                onMouseOut={(e) => {
+                                                    e.currentTarget.style.background = '#eff6ff';
+                                                    e.currentTarget.style.borderColor = '#bfdbfe';
+                                                }}
+                                            >
+                                                접기 ▴
+                                            </button>
+                                        )}
+
+                                        {!isChipsExpanded && hasMoreChips && (
+                                            <button
+                                                onClick={() => setIsChipsExpanded(true)}
+                                                style={{
+                                                    fontSize: '11px',
+                                                    color: '#1e3a8a',
+                                                    background: '#eff6ff',
+                                                    border: '1px solid #bfdbfe',
+                                                    borderRadius: '12px',
+                                                    padding: '2px 10px',
+                                                    cursor: 'pointer',
+                                                    fontWeight: 600,
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    transition: 'all 0.15s ease-in-out',
+                                                    whiteSpace: 'nowrap'
+                                                }}
+                                                onMouseOver={(e) => {
+                                                    e.currentTarget.style.background = '#dbeafe';
+                                                    e.currentTarget.style.borderColor = '#93c5fd';
+                                                }}
+                                                onMouseOut={(e) => {
+                                                    e.currentTarget.style.background = '#eff6ff';
+                                                    e.currentTarget.style.borderColor = '#bfdbfe';
+                                                }}
+                                            >
+                                                더보기 ▾
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Shadow Measuring Container */}
+                                    <div
+                                        ref={measuringRef}
+                                        style={{
+                                            position: 'absolute',
+                                            visibility: 'hidden',
+                                            pointerEvents: 'none',
+                                            left: 0,
+                                            right: 0,
+                                            top: 0,
+                                            display: 'flex',
+                                            gap: '6px',
+                                            flexWrap: 'wrap',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        {activeFilterChips.map((chip) => (
+                                            <div
+                                                key={`shadow-chip-${chip.tableId}`}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '6px',
+                                                    background: '#eff6ff',
+                                                    border: '1px solid #bfdbfe',
+                                                    borderRadius: '16px',
+                                                    padding: '4px 10px',
+                                                    fontSize: '11px',
+                                                    fontWeight: 500,
+                                                    color: '#1e40af',
+                                                    userSelect: 'none',
+                                                    whiteSpace: 'nowrap'
+                                                }}
+                                            >
+                                                <span style={{ fontSize: '11px', lineHeight: '1.2' }}>{chip.displayText}</span>
+                                                <span style={{ fontSize: '9px', fontWeight: 700, marginLeft: '6px' }}>✕</span>
+                                            </div>
+                                        ))}
+                                        <button
+                                            style={{
+                                                fontSize: '11px',
+                                                color: '#1e3a8a',
+                                                background: '#eff6ff',
+                                                border: '1px solid #bfdbfe',
+                                                borderRadius: '12px',
+                                                padding: '2px 10px',
+                                                fontWeight: 600,
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                whiteSpace: 'nowrap',
+                                                visibility: 'hidden'
+                                            }}
+                                        >
+                                            더보기 ▾
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginLeft: '12px', flexShrink: 0 }}>
+                                    <button
+                                        onClick={handleResetAllFilters}
+                                        style={{
+                                            fontSize: '11px',
+                                            color: '#475569',
+                                            background: '#f1f5f9',
+                                            border: '1px solid #cbd5e1',
+                                            borderRadius: '12px',
+                                            padding: '2px 10px',
+                                            cursor: 'pointer',
+                                            fontWeight: 600,
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            transition: 'all 0.15s ease-in-out',
+                                            whiteSpace: 'nowrap'
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.background = '#e2e8f0';
+                                            e.currentTarget.style.color = '#1e293b';
+                                            e.currentTarget.style.borderColor = '#94a3b8';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.background = '#f1f5f9';
+                                            e.currentTarget.style.color = '#475569';
+                                            e.currentTarget.style.borderColor = '#cbd5e1';
+                                        }}
+                                    >
+                                        전체 초기화
+                                    </button>
+                                </div>
+                            </>
+                        );
+                    })()}
+                </div>
+            )}
             {currentPageId && (
                 <div className="aggregation-layout">
                     <SideBar

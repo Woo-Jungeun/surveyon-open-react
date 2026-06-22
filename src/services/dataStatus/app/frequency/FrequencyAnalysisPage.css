@@ -349,7 +349,7 @@
 }
 
 .response-filter-label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: #475569;
     white-space: nowrap;
@@ -396,7 +396,7 @@
 }
 
 .trigger-text {
-    font-size: 13px;
+    font-size: 12px;
     color: #334155;
     white-space: nowrap;
     overflow: hidden;
@@ -480,6 +480,24 @@
 .checkbox-custom.checked {
     background: #3b82f6;
     border-color: #3b82f6;
+}
+
+/* Filter Dropdown Checkbox */
+.filter-checkbox-custom {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    transition: border-color 0.15s ease-in-out;
+    flex-shrink: 0;
+}
+
+.filter-checkbox-custom.checked {
+    border-color: #1e3a8a;
 }
 
 /* Scrollbar for menu */
