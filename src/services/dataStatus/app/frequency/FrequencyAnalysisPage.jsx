@@ -17,11 +17,12 @@ import OverviewVariablePopup from './OverviewVariablePopup';
 import { RecodingPageApi } from '../recoding/RecodingPageApi';
 import { Settings } from 'lucide-react';
 import { VariablePageApi } from '../variable/VariablePageApi';
+import { DpRequestPageApi } from '../hsrt/dpRequest/DpRequestPageApi';
 import PageListPopup from '../variable/PageListPopup';
 import { modalContext } from "@/components/common/Modal.jsx";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
-const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
+const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange, showN, showPct, decimalN, decimalPct }) => {
     const [chartMode, setChartMode] = useState('column');
     const [showChart, setShowChart] = useState(true);
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
@@ -469,6 +470,9 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                                             onClick={() => {
                                                 setDisplayMode(item.value);
                                                 setIsDisplayMenuOpen(false);
+                                                if (onDisplayModeChange) {
+                                                    onDisplayModeChange(q.id, item.value);
+                                                }
                                             }}
                                             style={{
                                                 padding: '6px 8px',
@@ -873,95 +877,104 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                 </div>
             </div>
             <div className="agg-card-body">
-                {/* 데이터 테이블 */}
-                <div className="agg-table-container">
-                    <table className="agg-table">
-                        <thead>
-                            {!q.columns ? (
-                                <tr>
-                                    <th className="sticky-col1">코드</th>
-                                    <th className="sticky-col2">항목</th>
-                                    <th>합계</th>
-                                </tr>
-                            ) : !hasLabel2 ? (
-                                <tr>
-                                    <th className="sticky-col1">코드</th>
-                                    <th className="sticky-col2">항목</th>
-                                    {q.columns.map(col => <th key={col.key}>{col.label}</th>)}
-                                    <th>합계</th>
-                                </tr>
-                            ) : (
-                                <>
+                {q.html ? (
+                    <div className="agg-table-container" style={{ background: '#fff', padding: '16px', boxSizing: 'border-box' }} dangerouslySetInnerHTML={{ __html: q.html }} />
+                ) : (
+                    <div className="agg-table-container">
+                        <table className="agg-table">
+                            <thead>
+                                {!q.columns ? (
                                     <tr>
-                                        <th className="sticky-col1" rowSpan={2} style={{ verticalAlign: 'middle' }}>코드</th>
-                                        <th className="sticky-col2" rowSpan={2} style={{ verticalAlign: 'middle' }}>항목</th>
-                                        {headerGroups.map((g, i) => (
-                                            g.isGroup ? (
-                                                <th key={`group-${i}`} colSpan={g.span} style={{ borderBottom: '1px solid #e2e8f0', background: '#f8fafc', height: '39px' }}>
-                                                    {g.label2}
-                                                </th>
-                                            ) : (
-                                                <th key={`group-${i}`} rowSpan={2} style={{ background: '#f8fafc', verticalAlign: 'middle' }}>
-                                                    {g.cols[0].label}
-                                                </th>
-                                            )
-                                        ))}
-                                        <th rowSpan={2} style={{ verticalAlign: 'middle' }}>합계</th>
+                                        <th className="sticky-col1">코드</th>
+                                        <th className="sticky-col2">항목</th>
+                                        <th>합계</th>
                                     </tr>
+                                ) : !hasLabel2 ? (
                                     <tr>
-                                        {headerGroups.flatMap((g) =>
-                                            g.isGroup ? g.cols.map(col => (
-                                                <th key={col.key} style={{ top: '39px', zIndex: 9 }}>{col.label}</th>
-                                            )) : []
-                                        )}
+                                        <th className="sticky-col1">코드</th>
+                                        <th className="sticky-col2">항목</th>
+                                        {q.columns.map(col => <th key={col.key}>{col.label}</th>)}
+                                        <th>합계</th>
                                     </tr>
-                                </>
-                            )}
-                        </thead>
-                        <tbody>
-                            {!q.isLoaded ? (
-                                <tr>
-                                    <td colSpan={(q.columns?.length || 1) + 3} style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
-                                        데이터를 불러오는 중입니다...
-                                    </td>
-                                </tr>
-                            ) : q.data.length === 0 ? (
-                                <tr>
-                                    <td colSpan={(q.columns?.length || 1) + 3} style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
-                                        조회된 데이터가 없습니다.
-                                    </td>
-                                </tr>
-                            ) : (
-                                q.data.map((row, i) => (
-                                    <tr key={i}>
-                                        <td className="sticky-col1" style={{ textAlign: 'center', color: '#64748b', fontSize: '11px', background: '#f8fafc' }}>{row.value || '-'}</td>
-                                        <td className="sticky-col2" style={{ textAlign: 'left', fontSize: '12px', paddingLeft: '12px', fontWeight: '600', color: '#334155' }}>{row.name}</td>
-                                        {q.columns ? q.columns.map(col => {
-                                            const count = row[col.key] ?? 0;
-                                            const pctRaw = row[`${col.key}_pct`];
-                                            const pct = pctRaw !== undefined && !isNaN(Number(pctRaw)) ? Number(pctRaw).toFixed(1) : pctRaw;
-                                            return (
-                                                <td key={col.key}>
-                                                    {displayMode === 'all' && (
-                                                        <>
-                                                            {count}
-                                                            {pct !== undefined && <span style={{ color: '#888', fontSize: '0.85em', marginLeft: '4px' }}>({pct}%)</span>}
-                                                        </>
-                                                    )}
-                                                    {displayMode === 'value' && count}
-                                                    {displayMode === 'percent' && (pct !== undefined ? `${pct}%` : '-')}
-                                                </td>
-                                            );
-                                        }) : (
+                                ) : (
+                                    <>
+                                        <tr>
+                                            <th className="sticky-col1" rowSpan={2} style={{ verticalAlign: 'middle' }}>코드</th>
+                                            <th className="sticky-col2" rowSpan={2} style={{ verticalAlign: 'middle' }}>항목</th>
+                                            {headerGroups.map((g, i) => (
+                                                g.isGroup ? (
+                                                    <th key={`group-${i}`} colSpan={g.span} style={{ borderBottom: '1px solid #e2e8f0', background: '#f8fafc', height: '39px' }}>
+                                                        {g.label2}
+                                                    </th>
+                                                ) : (
+                                                    <th key={`group-${i}`} rowSpan={2} style={{ background: '#f8fafc', verticalAlign: 'middle' }}>
+                                                        {g.cols[0].label}
+                                                    </th>
+                                                )
+                                            ))}
+                                            <th rowSpan={2} style={{ verticalAlign: 'middle' }}>합계</th>
+                                        </tr>
+                                        <tr>
+                                            {headerGroups.flatMap((g) =>
+                                                g.isGroup ? g.cols.map(col => (
+                                                    <th key={col.key} style={{ top: '39px', zIndex: 9 }}>{col.label}</th>
+                                                )) : []
+                                            )}
+                                        </tr>
+                                    </>
+                                )}
+                            </thead>
+                            <tbody>
+                                {!q.isLoaded ? (
+                                    <tr>
+                                        <td colSpan={(q.columns?.length || 1) + 3} style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
+                                            데이터를 불러오는 중입니다...
+                                        </td>
+                                    </tr>
+                                ) : q.data.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={(q.columns?.length || 1) + 3} style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
+                                            조회된 데이터가 없습니다.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    q.data.map((row, i) => (
+                                        <tr key={i}>
+                                            <td className="sticky-col1" style={{ textAlign: 'center', color: '#64748b', fontSize: '11px', background: '#f8fafc' }}>{row.value || '-'}</td>
+                                            <td className="sticky-col2" style={{ textAlign: 'left', fontSize: '12px', paddingLeft: '12px', fontWeight: '600', color: '#334155' }}>{row.name}</td>
+                                            {q.columns ? q.columns.map(col => {
+                                                const count = row[col.key] ?? 0;
+                                                const pctRaw = row[`${col.key}_pct`];
+                                                const pct = pctRaw !== undefined && !isNaN(Number(pctRaw)) ? Number(pctRaw).toFixed(decimalPct) : pctRaw;
+                                                const formattedCount = count !== undefined && !isNaN(Number(count)) ? Number(count).toFixed(decimalN) : count;
+                                                return (
+                                                    <td key={col.key}>
+                                                        {displayMode === 'all' && (
+                                                            <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: '4px' }}>
+                                                                {showN && <span>{formattedCount}</span>}
+                                                                {showPct && pct !== undefined && (
+                                                                    <span style={{ color: showN ? '#888' : 'inherit', fontSize: showN ? '0.85em' : 'inherit' }}>
+                                                                        {showN ? '(' : ''}{pct}%{showN ? ')' : ''}
+                                                                    </span>
+                                                                )}
+                                                                {!showN && !showPct && '-'}
+                                                            </div>
+                                                        )}
+                                                        {displayMode === 'value' && formattedCount}
+                                                        {displayMode === 'percent' && (pct !== undefined ? `${pct}%` : '-')}
+                                                    </td>
+                                                );
+                                            }) : (
+                                                <td>{row.total}</td>
+                                            )}
                                             <td>{row.total}</td>
-                                        )}
-                                        <td>{row.total}</td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
 
                 {/* 차트 영역 */}
                 {showChart && (
@@ -1021,7 +1034,7 @@ AggregationCard.displayName = 'AggregationCard';
 
 const FrequencyAnalysisPage = () => {
     const auth = useSelector((store) => store.auth);
-    const { getOverviewList, getOverviewData } = FrequencyAnalysisPageApi();
+    const { getOverviewList, getOverviewData, getSurveyProgressStyled, getSurveyProgressChartData, exportSurveyProgressXlsx } = FrequencyAnalysisPageApi();
     const [searchTerm, setSearchTerm] = useState('');
     const [activeId, setActiveId] = useState(null);
     const [sidebarPage, setSidebarPage] = useState(1);
@@ -1094,13 +1107,104 @@ const FrequencyAnalysisPage = () => {
 
     const [globalPaletteId, setGlobalPaletteId] = useState('default');
 
-    // 개요(Overview) 변수 관련 상태
+    const [showN, setShowN] = useState(true);
+    const [localDecimalN, setLocalDecimalN] = useState(0);
+    const [decimalN, setDecimalN] = useState(0);
+
+    const [showPct, setShowPct] = useState(true);
+    const [localDecimalPct, setLocalDecimalPct] = useState(1);
+    const [decimalPct, setDecimalPct] = useState(1);
+
+    useEffect(() => {
+        const t = setTimeout(() => {
+            setDecimalN(localDecimalN === '' ? 0 : localDecimalN);
+        }, 500);
+        return () => clearTimeout(t);
+    }, [localDecimalN]);
+
+    useEffect(() => {
+        const t = setTimeout(() => {
+            setDecimalPct(localDecimalPct === '' ? 1 : localDecimalPct);
+        }, 500);
+        return () => clearTimeout(t);
+    }, [localDecimalPct]);    // 개요(Overview) 변수 관련 상태
     const [isOverviewPopupOpen, setIsOverviewPopupOpen] = useState(false);
     const [overviewVariables, setOverviewVariables] = useState([]);
     const [bannerVariables, setBannerVariables] = useState([]);
     const [originalVariables, setOriginalVariables] = useState([]);
     const { getRecodedList, getRecodedVariables } = RecodingPageApi();
     const { getOriginalVariables } = VariablePageApi();
+
+    const [isExcelModalOpen, setIsExcelModalOpen] = useState(false); // 엑셀 다운로드 확인 모달 열림 여부
+    const [excelShowPct, setExcelShowPct] = useState(true); // 엑셀 다운로드 시 % 표출 여부
+    const [excelShowBaseParenthesis, setExcelShowBaseParenthesis] = useState(true); // 엑셀 다운로드 시 Base 기본 괄호 여부
+    const [excelDecimalPct, setExcelDecimalPct] = useState(1); // 엑셀 다운로드 시 % 소수점 자리수
+
+    const handleExcelExport = async () => {
+        const pageId = sessionStorage.getItem('pageId');
+        const user = auth?.user?.userId;
+        if (!pageId || !user) return;
+
+        try {
+            loadingSpinner.show();
+
+            const selectedBannerIds = (() => {
+                const baseInfo = selectedVariableIds.length > 0 ? selectedVariableIds : (selectedFilters?.includes('전체') ? [] : (selectedFilters || []));
+                const displayIds = baseInfo.filter(id => id !== 'answerStateCode');
+                if (baseInfo.includes('answerStateCode')) {
+                    displayIds.push('answerStateCode');
+                }
+                return displayIds;
+            })();
+
+            const requestData = {
+                pageid: pageId,
+                user: user,
+                search: searchTerm,
+                show_n: showN,
+                show_percent: showPct,
+                excel_show_percent: excelShowPct,
+                percent_digits: Number(excelDecimalPct === '' ? 1 : excelDecimalPct),
+                base_bracket: excelShowBaseParenthesis
+            };
+
+            if (filterLogic) {
+                requestData.filter_expression = filterLogic;
+            }
+
+            if (selectedBannerIds.length > 0) {
+                requestData.x_info = selectedBannerIds;
+            }
+
+            const result = await exportSurveyProgressXlsx.mutateAsync(requestData);
+            const payload = result?.resultjson || result || {};
+
+            if (result?.success === "777" && payload.content_base64) {
+                const binaryString = window.atob(payload.content_base64);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                const blob = new Blob([bytes], { type: payload.content_type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', payload.filename || `survey_progress_${pageId}.xlsx`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } else {
+                modal.showAlert('오류', '엑셀 데이터 생성에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Excel Export Error:', error);
+            modal.showAlert('오류', '엑셀 다운로드 중 문제가 발생했습니다.');
+        } finally {
+            loadingSpinner.hide();
+        }
+    };
 
     const fetchOverviewVars = async () => {
         if (!auth?.user?.userId) return;
@@ -1304,7 +1408,8 @@ const FrequencyAnalysisPage = () => {
                 data: initialData,
                 isLoaded: false,
                 type: item.type,
-                color: color
+                color: color,
+                html: item.html
             };
         });
 
@@ -1322,11 +1427,24 @@ const FrequencyAnalysisPage = () => {
                 user: auth.user.userId,
                 start,
                 limit: SIDEBAR_PAGE_SIZE,
+                filter_expression: filterLogic,
                 // 검색어가 있다면 API에 전달 (API 지원 여부에 따라)
                 search: searchTerm
             };
-            const result = await getOverviewList.mutateAsync(payload);
+            const result = await getSurveyProgressStyled.mutateAsync(payload);
             if (result?.success === "777" && result.resultjson) {
+                // 전역 스타일 주입
+                if (result.resultjson.style_css) {
+                    const styleId = "survey-progress-global-style";
+                    let styleEl = document.getElementById(styleId);
+                    if (!styleEl) {
+                        styleEl = document.createElement("style");
+                        styleEl.id = styleId;
+                        document.head.appendChild(styleEl);
+                    }
+                    styleEl.textContent = result.resultjson.style_css;
+                }
+
                 const overviewList = result.resultjson.tables || [];
                 const newQuestions = parseOverviewList(overviewList);
 
@@ -1449,55 +1567,40 @@ const FrequencyAnalysisPage = () => {
                     search: searchTerm // 검색어 추가
                 };
 
-                const aggResult = await getOverviewData.mutateAsync(payload);
+                const aggResult = await getSurveyProgressChartData.mutateAsync(payload);
                 if (aggResult?.success === "777" && aggResult.resultjson) {
-                    const resultsArray = aggResult.resultjson.results || [];
+                    const resultsArray = aggResult.resultjson.tables || [];
 
                     setQuestions(prevQuestions => prevQuestions.map(q => {
                         if (!tableIdsToSet.includes(q.id)) return q;
                         const tableInfo = resultsArray.find(r => r.table_id === q.id);
                         if (!tableInfo) return { ...q, isLoaded: true };
 
-                        const aggInfoRows = tableInfo.result.rows || [];
-                        const aggInfoCols = tableInfo.result.columns || [];
-                        const tableColumns = aggInfoCols.map(c => ({
-                            key: c.key,
-                            label: c.label || c.var_label || c.name || c.key,
-                            label2: c.label2,
-                            label3: c.label3,
-                            parent_label: c.parent_label
+                        const tableColumns = (tableInfo.series || []).map(s => ({
+                            key: s.key,
+                            label: s.label,
+                            label2: s.label2,
+                            label3: s.label3,
+                            parent_label: s.parent_label
                         }));
 
-                        let optionRows = aggInfoRows;
-                        const updatedData = optionRows.map(row => {
+                        const updatedData = (tableInfo.labels || []).map((lbl, i) => {
                             let rowData = {
-                                name: row.label || row.var_label || row.name || row.key,
-                                value: row.key === 'total' ? '' : (row.value ?? row.key)
+                                name: lbl.label,
+                                value: lbl.key
                             };
                             let totalCount = 0;
                             if (tableColumns.length > 0) {
-                                tableColumns.forEach(banner => {
-                                    let val = 0;
-                                    let pct = 0;
-                                    if (row.cells && row.cells[banner.key]) {
-                                        val = Number(row.cells[banner.key].count || 0);
-                                        pct = Number(row.cells[banner.key].percent || 0);
-                                    }
-                                    rowData[banner.key] = val;
-                                    rowData[`${banner.key}_pct`] = pct;
-                                    totalCount += val;
+                                tableInfo.series.forEach(s => {
+                                    const c = s.count ? (s.count[i] || 0) : 0;
+                                    const p = s.percent ? (s.percent[i] || 0) : 0;
+                                    rowData[s.key] = c;
+                                    rowData[`${s.key}_pct`] = p;
+                                    if (totalCount === 0) totalCount = c;
                                 });
                             } else {
-                                let pct = 0;
-                                if (row.cells && Object.keys(row.cells).length > 0) {
-                                    const firstKey = Object.keys(row.cells)[0];
-                                    totalCount = Number(row.cells[firstKey].count || 0);
-                                    pct = Number(row.cells[firstKey].percent || 0);
-                                } else {
-                                    totalCount = Number(row.value || 0);
-                                }
-                                rowData['전체'] = totalCount;
-                                rowData.total_pct = pct;
+                                rowData['전체'] = 0;
+                                rowData.total_pct = 0;
                             }
                             rowData.total = totalCount;
                             return rowData;
@@ -1521,6 +1624,41 @@ const FrequencyAnalysisPage = () => {
         };
         fetchChunkData();
     }, [activeId, questions, sidebarPage, auth?.user?.userId, selectedVariableIds]);
+
+    const handleDisplayModeChange = async (qId, newMode) => {
+        const index = questions.findIndex(q => q.id === qId);
+        if (index === -1) return;
+
+        const pageId = sessionStorage.getItem("pageId");
+        if (!pageId || !auth?.user?.userId) return;
+
+        const payload = {
+            pageid: pageId,
+            user: auth.user.userId,
+            start: (sidebarPage - 1) * SIDEBAR_PAGE_SIZE + index,
+            limit: 1,
+            filter_expression: filterLogic,
+            search: searchTerm,
+            display_policy: {
+                show_n: newMode === 'all' || newMode === 'value',
+                show_percent: newMode === 'all' || newMode === 'percent'
+            }
+        };
+
+        try {
+            const result = await getSurveyProgressStyled.mutateAsync(payload);
+            if (result?.success === "777" && result.resultjson && result.resultjson.tables) {
+                const updatedTable = result.resultjson.tables[0];
+                if (updatedTable && updatedTable.html) {
+                    setQuestions(prev => prev.map(q => 
+                        q.id === qId ? { ...q, html: updatedTable.html } : q
+                    ));
+                }
+            }
+        } catch (e) {
+            console.error("Failed to refetch table HTML for display mode change", e);
+        }
+    };
 
     const totalSidebarPages = Math.ceil(totalQuestions / SIDEBAR_PAGE_SIZE);
 
@@ -1725,6 +1863,142 @@ const FrequencyAnalysisPage = () => {
                         <Filter size={15} />
                         배너 설정
                     </button>
+
+                    <div style={{ width: '1px', height: '20px', background: '#cbd5e1', margin: '0 4px' }} />
+
+                    {/* N Control Group */}
+                    <div style={{
+                        display: 'flex', alignItems: 'center', borderRadius: '20px', border: '1px solid #cbd5e1', background: '#f8fafc', height: '32px', overflow: 'hidden'
+                    }}>
+                        <div
+                            onClick={() => setShowN(!showN)}
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', height: '100%', cursor: 'pointer', background: '#eef2ff' }}
+                        >
+                            <div style={{
+                                width: '16px', height: '16px', borderRadius: '4px',
+                                background: showN ? '#1e3a8a' : '#fff',
+                                border: `1.5px solid ${showN ? '#1e3a8a' : '#1e3a8a'}`,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0
+                            }}>
+                                {showN && (
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                )}
+                            </div>
+                            <span style={{ fontSize: '14px', fontWeight: 800, color: '#3730a3', userSelect: 'none' }}>N</span>
+                        </div>
+                        <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', height: '100%', background: showN ? '#ffffff' : '#f8fafc' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: showN ? '#1e293b' : '#94a3b8' }}>소수점</span>
+                            <div style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                width: '38px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
+                                background: showN ? '#ffffff' : '#f1f5f9'
+                            }}>
+                                <input
+                                    type="text"
+                                    disabled={!showN}
+                                    value={localDecimalN}
+                                    onChange={(e) => {
+                                        let val = e.target.value.replace(/[^0-9]/g, '');
+                                        if (val !== '') {
+                                            let num = parseInt(val);
+                                            if (num > 13) num = 13;
+                                            setLocalDecimalN(num);
+                                        } else {
+                                            setLocalDecimalN('');
+                                        }
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'ArrowUp') {
+                                            e.preventDefault();
+                                            setLocalDecimalN(prev => Math.min(13, (prev === '' ? 0 : prev) + 1));
+                                        } else if (e.key === 'ArrowDown') {
+                                            e.preventDefault();
+                                            setLocalDecimalN(prev => Math.max(0, (prev === '' ? 0 : prev) - 1));
+                                        }
+                                    }}
+                                    onBlur={() => {
+                                        if (localDecimalN === '') setLocalDecimalN(0);
+                                    }}
+                                    style={{
+                                        width: '100%', height: '100%', border: 'none', background: 'transparent',
+                                        textAlign: 'center', fontSize: '13px', fontWeight: 800, color: showN ? '#1e3a8a' : '#94a3b8',
+                                        outline: 'none', padding: 0
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* % Control Group */}
+                    <div style={{
+                        display: 'flex', alignItems: 'center', borderRadius: '20px', border: '1px solid #cbd5e1', background: '#f8fafc', height: '32px', overflow: 'hidden'
+                    }}>
+                        <div
+                            onClick={() => setShowPct(!showPct)}
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', height: '100%', cursor: 'pointer', background: '#eef2ff' }}
+                        >
+                            <div style={{
+                                width: '16px', height: '16px', borderRadius: '4px',
+                                background: showPct ? '#1e3a8a' : '#fff',
+                                border: `1.5px solid ${showPct ? '#1e3a8a' : '#1e3a8a'}`,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0
+                            }}>
+                                {showPct && (
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                )}
+                            </div>
+                            <span style={{ fontSize: '14px', fontWeight: 800, color: '#3730a3', userSelect: 'none' }}>%</span>
+                        </div>
+                        <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', height: '100%', background: showPct ? '#ffffff' : '#f8fafc' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: showPct ? '#1e293b' : '#94a3b8' }}>소수점</span>
+                            <div style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                width: '38px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
+                                background: showPct ? '#ffffff' : '#f1f5f9'
+                            }}>
+                                <input
+                                    type="text"
+                                    disabled={!showPct}
+                                    value={localDecimalPct}
+                                    onChange={(e) => {
+                                        let val = e.target.value.replace(/[^0-9]/g, '');
+                                        if (val !== '') {
+                                            let num = parseInt(val);
+                                            if (num > 13) num = 13;
+                                            setLocalDecimalPct(num);
+                                        } else {
+                                            setLocalDecimalPct('');
+                                        }
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'ArrowUp') {
+                                            e.preventDefault();
+                                            setLocalDecimalPct(prev => Math.min(13, (prev === '' ? 1 : prev) + 1));
+                                        } else if (e.key === 'ArrowDown') {
+                                            e.preventDefault();
+                                            setLocalDecimalPct(prev => Math.max(0, (prev === '' ? 1 : prev) - 1));
+                                        }
+                                    }}
+                                    onBlur={() => {
+                                        if (localDecimalPct === '') setLocalDecimalPct(1);
+                                    }}
+                                    style={{
+                                        width: '100%', height: '100%', border: 'none', background: 'transparent',
+                                        textAlign: 'center', fontSize: '13px', fontWeight: 800, color: showPct ? '#1e3a8a' : '#94a3b8',
+                                        outline: 'none', padding: 0
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div> {/* 배너 영역 그룹 끝 */}
 
                 {/* 배너 영역 임시 숨김 처리 */}
@@ -1834,29 +2108,32 @@ const FrequencyAnalysisPage = () => {
                     </>
                 )}
 
-                {/*todo 엑셀다운로드 임시 주석 */}
-                {/* <button
-          ㅛ          style={{
+                {/* 엑셀다운로드 */}
+                <button
+                    style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
                         height: '32px',
-                        padding: '0 12px',
-                        border: '1px solid #e2e8f0',
+                        padding: '0 16px',
+                        border: '1.5px solid #1e3a8a',
                         borderRadius: '6px',
                         background: '#fff',
                         fontSize: '13px',
                         fontWeight: '600',
-                        color: '#444',
+                        color: '#1e3a8a',
                         cursor: 'pointer',
-                        marginLeft: '12px',
-                        marginTop: '5px'
+                        marginLeft: '12px'
                     }}
-                    onClick={() => { }}
+                    onClick={() => {
+                        setExcelShowBaseParenthesis(true);
+                        setExcelDecimalPct(decimalPct);
+                        setIsExcelModalOpen(true);
+                    }}
                 >
-                    <Download size={16} />
+                    <Download size={16} strokeWidth={2.5} />
                     엑셀 다운로드
-                </button> */}
+                </button>
             </DataHeader>
             {currentPageId && (
                 <div className="aggregation-layout">
@@ -1878,7 +2155,7 @@ const FrequencyAnalysisPage = () => {
                     <div className="agg-main" ref={mainRef}>
                         {questions.length > 0 ? (
                             questions.map(q => (
-                                <AggregationCard key={q.id} q={q} paletteId={globalPaletteId} setPaletteId={setGlobalPaletteId} />
+                                <AggregationCard key={q.id} q={q} paletteId={globalPaletteId} setPaletteId={setGlobalPaletteId} onDisplayModeChange={handleDisplayModeChange} showN={showN} showPct={showPct} decimalN={decimalN} decimalPct={decimalPct} />
                             ))
                         ) : (
                             <div style={{
@@ -1945,6 +2222,131 @@ const FrequencyAnalysisPage = () => {
                 data={pageListData}
                 onSelect={handlePageSelectedPopup}
             />
+
+            {isExcelModalOpen && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.4)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: '#fff', borderRadius: '16px', padding: '32px', width: '450px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9' }}>
+                        <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Download size={22} color="#1e3a8a" strokeWidth={2.5} />
+                            엑셀 다운로드
+                        </h3>
+                        <p style={{ margin: '0 0 24px 0', fontSize: '15px', color: '#475569', fontWeight: 500, lineHeight: '1.5' }}>
+                            진행현황표를 엑셀 파일로 다운로드 하시겠습니까?
+                        </p>
+                        <div style={{ marginBottom: '28px', padding: '16px 20px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+                                <div
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none'
+                                    }}
+                                    onClick={() => setExcelShowPct(!excelShowPct)}
+                                >
+                                    <div style={{
+                                        width: '20px', height: '20px', borderRadius: '5px',
+                                        background: excelShowPct ? '#1e3a8a' : '#fff',
+                                        border: `1.5px solid ${excelShowPct ? '#1e3a8a' : '#cbd5e1'}`,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        flexShrink: 0,
+                                        transition: 'all 0.15s'
+                                    }}>
+                                        {excelShowPct && (
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        )}
+                                    </div>
+                                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>% 표출 여부</span>
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>% 소수점</span>
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        width: '42px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
+                                        background: '#ffffff'
+                                    }}>
+                                        <input
+                                            type="text"
+                                            value={excelDecimalPct}
+                                            onChange={(e) => {
+                                                let val = e.target.value.replace(/[^0-9]/g, '');
+                                                if (val !== '') {
+                                                    let num = parseInt(val);
+                                                    if (num > 13) num = 13;
+                                                    setExcelDecimalPct(num);
+                                                } else {
+                                                    setExcelDecimalPct('');
+                                                }
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'ArrowUp') {
+                                                    e.preventDefault();
+                                                    setExcelDecimalPct(prev => Math.min(13, (prev === '' ? 1 : prev) + 1));
+                                                } else if (e.key === 'ArrowDown') {
+                                                    e.preventDefault();
+                                                    setExcelDecimalPct(prev => Math.max(0, (prev === '' ? 1 : prev) - 1));
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                if (excelDecimalPct === '') setExcelDecimalPct(1);
+                                            }}
+                                            style={{
+                                                width: '100%', height: '100%', border: 'none', background: 'transparent',
+                                                textAlign: 'center', fontSize: '13px', fontWeight: 800, color: '#1e3a8a',
+                                                outline: 'none', padding: 0
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none'
+                                }}
+                                onClick={() => setExcelShowBaseParenthesis(!excelShowBaseParenthesis)}
+                            >
+                                <div style={{
+                                    width: '20px', height: '20px', borderRadius: '5px',
+                                    background: excelShowBaseParenthesis ? '#1e3a8a' : '#fff',
+                                    border: `1.5px solid ${excelShowBaseParenthesis ? '#1e3a8a' : '#cbd5e1'}`,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexShrink: 0,
+                                    transition: 'all 0.15s'
+                                }}>
+                                    {excelShowBaseParenthesis && (
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                    )}
+                                </div>
+                                <span style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>Base 기본 (괄호)</span>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                            <button
+                                onClick={() => setIsExcelModalOpen(false)}
+                                onMouseOver={(e) => e.target.style.background = '#e2e8f0'}
+                                onMouseOut={(e) => e.target.style.background = '#f1f5f9'}
+                                style={{ padding: '10px 20px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, transition: 'background 0.2s' }}
+                            >
+                                취소
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    setIsExcelModalOpen(false);
+                                    await handleExcelExport();
+                                }}
+                                onMouseOver={(e) => e.target.style.background = '#1e40af'}
+                                onMouseOut={(e) => e.target.style.background = '#1e3a8a'}
+                                style={{ padding: '10px 24px', background: '#1e3a8a', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, transition: 'background 0.2s' }}
+                            >
+                                다운로드
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

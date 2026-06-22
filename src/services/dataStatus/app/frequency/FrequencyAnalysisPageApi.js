@@ -34,8 +34,42 @@ export function FrequencyAnalysisPageApi() {
         }
     );
 
+    /** 진행현황 HTML 테이블 조회 */
+    const getSurveyProgressStyled = useMutation(
+        async (payload) => await api.post(payload, "/survey-progress/styled", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: (vars) => {
+                // loadingSpinner.show();
+            },
+            onSettled: () => {
+                // loadingSpinner.hide();
+            }
+        }
+    );
+
+    /** 진행현황 차트 데이터 조회 */
+    const getSurveyProgressChartData = useMutation(
+        async (payload) => await api.post(payload, "/survey-progress/chart-data", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: (vars) => {
+                // loadingSpinner.show();
+            },
+            onSettled: () => {
+                // loadingSpinner.hide();
+            }
+        }
+    );
+
+    /** 진행현황 엑셀 다운로드 (export) */
+    const exportSurveyProgressXlsx = useMutation(
+        async (payload) => await api.post(payload, "/survey-progress/xlsx-export", "API_BASE_URL_DATASTATUS")
+    );
+
     return {
         getOverviewList,
-        getOverviewData
+        getOverviewData,
+        getSurveyProgressStyled,
+        getSurveyProgressChartData,
+        exportSurveyProgressXlsx
     };
 }
