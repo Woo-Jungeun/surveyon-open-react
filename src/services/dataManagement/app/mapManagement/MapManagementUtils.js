@@ -34,5 +34,5 @@ export const EDITABLE_FIELDS = [
     'label', 'reLabel', 'excludeCode', 'logic', 'decimal', 'spssName', 'type', 'memo',
     'multiValChange', 'minQuestions', 'excludeOpenMerge',
     'verificationVar', 'excludeOutput', 'startPos', 'valLen',
-    'valCnt', 'totalLen', 'etcOpen', 'category', 'ranking', 'isBaked'
+    'valCnt', 'totalLen', 'etcOpen', 'category', 'ranking', 'isBaked', 'isSilsa'
 ];

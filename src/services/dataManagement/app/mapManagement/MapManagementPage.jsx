@@ -123,7 +123,8 @@ const MapManagementPage = () => {
                         category: categoryStr,
                         labels: item.labels || [],
                         ranking: item.ranking || 0,
-                        isBaked: (item.type || '').toLowerCase() === 'custom' ? false : !!item.isBaked
+                        isBaked: (item.type || '').toLowerCase() === 'custom' ? false : !!item.isBaked,
+                        isSilsa: (item.type || '').toLowerCase() === 'custom' ? false : !!item.isSilsa
                     };
                 });
 
@@ -470,6 +471,7 @@ const MapManagementPage = () => {
                 noOutput: !!v.excludeOutput,
                 ranking: v.ranking || 0,
                 isBaked: !!v.isBaked,
+                isSilsa: !!v.isSilsa,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 labels: v.labels || []

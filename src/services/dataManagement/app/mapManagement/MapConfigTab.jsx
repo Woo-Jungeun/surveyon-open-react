@@ -822,11 +822,20 @@ const MapConfigTab = ({
         (ctxVars || []).reduce((obj, v) => ({ ...obj, [v.id]: v.sysName === 'pid' ? true : !!v.isBaked }), {}),
         [ctxVars]);
 
+    const silsaSelectedState = useMemo(() =>
+        (ctxVars || []).reduce((obj, v) => ({ ...obj, [v.id]: !!v.isSilsa }), {}),
+        [ctxVars]);
+
     const handleBakedSelectedChange = useCallback((state) => {
         setVariables(prev => prev.map(v => ({ ...v, isBaked: v.sysName === 'pid' ? true : !!state[v.id] })));
     }, [setVariables]);
 
+    const handleSilsaSelectedChange = useCallback((state) => {
+        setVariables(prev => prev.map(v => ({ ...v, isSilsa: !!state[v.id] })));
+    }, [setVariables]);
+
     const isItemSelectable = useCallback((item) => item?.sysName !== 'pid' && String(item?.type || '').toLowerCase() !== 'custom', []);
+    const isSilsaSelectable = useCallback((item) => String(item?.type || '').toLowerCase() !== 'custom', []);
 
     const BakedSelectionCell = useCallback((props) => {
         const { dataItem } = props;
@@ -865,6 +874,44 @@ const MapConfigTab = ({
             </td>
         );
     }, [bakedSelectedState, handleBakedSelectedChange, isItemSelectable]);
+
+    const SilsaSelectionCell = useCallback((props) => {
+        const { dataItem } = props;
+        if (!dataItem) return <td />;
+
+        const isSelectable = isSilsaSelectable(dataItem);
+        const checked = !!silsaSelectedState[dataItem.id];
+
+        const handleChange = (e) => {
+            if (!isSelectable) return;
+            const next = { ...silsaSelectedState };
+            if (next[dataItem.id]) {
+                delete next[dataItem.id];
+            } else {
+                next[dataItem.id] = true;
+            }
+            handleSilsaSelectedChange(next);
+        };
+
+        return (
+            <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: 0, cursor: isSelectable ? 'pointer' : 'default', userSelect: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px', width: '100%', userSelect: 'none', cursor: isSelectable ? 'pointer' : 'default' }}>
+                    <label className={`dm-checkbox-label ${isSelectable ? '' : 'dm-checkbox-disabled'}`} style={{ userSelect: 'none', cursor: isSelectable ? 'pointer' : 'default' }}>
+                        <input
+                            type="checkbox"
+                            className="dm-checkbox-input"
+                            checked={checked}
+                            disabled={!isSelectable}
+                            onChange={handleChange}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ userSelect: 'none', cursor: isSelectable ? 'pointer' : 'default' }}
+                        />
+                        <span className="dm-checkbox-box" onClick={(e) => e.stopPropagation()} style={{ userSelect: 'none', cursor: isSelectable ? 'pointer' : 'default' }} />
+                    </label>
+                </div>
+            </td>
+        );
+    }, [silsaSelectedState, handleSilsaSelectedChange, isSilsaSelectable]);
 
     const BakedSelectionHeaderCell = useCallback(() => {
         const ref = useRef(null);
@@ -941,13 +988,89 @@ const MapConfigTab = ({
         );
     }, [ctxVars, bakedSelectedState, handleBakedSelectedChange, isItemSelectable]);
 
+    const SilsaSelectionHeaderCell = useCallback(() => {
+        const ref = useRef(null);
+
+        const selectableItems = useMemo(
+            () => (ctxVars ?? []).filter((item) => isSilsaSelectable(item)),
+            [ctxVars]
+        );
+
+        const allChecked = selectableItems.length > 0 && selectableItems.every((item) => silsaSelectedState[item.id]);
+        const someChecked = selectableItems.some((item) => silsaSelectedState[item.id]) && !allChecked;
+
+        useEffect(() => {
+            if (ref.current) ref.current.indeterminate = someChecked;
+        }, [someChecked]);
+
+        const stop = (e) => e.stopPropagation();
+
+        const onHeaderChange = (e) => {
+            const checked = e.target.checked;
+            const next = {};
+            (ctxVars || []).forEach((item) => {
+                if (!isSilsaSelectable(item)) {
+                    next[item.id] = false;
+                } else {
+                    next[item.id] = checked;
+                }
+            });
+            handleSilsaSelectedChange(next);
+        };
+
+        return (
+            <div
+                onClick={stop}
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    width: '100%',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    msUserSelect: 'none',
+                    paddingTop: '4px',
+                    paddingBottom: '4px'
+                }}
+            >
+                <label className="dm-checkbox-label" style={{ margin: 0, display: 'flex', alignItems: 'center', cursor: 'pointer', paddingTop: '2px', paddingBottom: '2px' }}>
+                    <input
+                        ref={ref}
+                        type="checkbox"
+                        className="dm-checkbox-input"
+                        checked={allChecked}
+                        onChange={onHeaderChange}
+                        style={{ cursor: 'pointer' }}
+                    />
+                    <span className="dm-checkbox-box" style={{ cursor: 'pointer' }} />
+                </label>
+                <span style={{
+                    fontSize: '11px',
+                    lineHeight: '1.3',
+                    textAlign: 'left',
+                    display: 'inline-block',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    msUserSelect: 'none',
+                    paddingTop: '1px',
+                    paddingBottom: '1px'
+                }}>실사<br />이관</span>
+            </div>
+        );
+    }, [ctxVars, silsaSelectedState, handleSilsaSelectedChange, isSilsaSelectable]);
+
     const displayData = useMemo(() => {
         const sliced = variables.slice(skip, skip + pageSize);
         return sliced.map(item => ({
             ...item,
-            isBaked: item.sysName === 'pid' ? true : !!bakedSelectedState[item.id]
+            isBaked: item.sysName === 'pid' ? true : !!bakedSelectedState[item.id],
+            isSilsa: !!silsaSelectedState[item.id]
         }));
-    }, [variables, skip, pageSize, bakedSelectedState]);
+    }, [variables, skip, pageSize, bakedSelectedState, silsaSelectedState]);
 
     const rowRender = useCallback((trElement, props) => {
         const { dataItem } = props;
@@ -1038,6 +1161,14 @@ const MapConfigTab = ({
         const insertAfterField = (isDetailed || isResearcher) ? "reLabel" : "label";
         const insertIdx = cols.findIndex(c => c.field === insertAfterField);
 
+        const silsaSelectionCol = {
+            field: 'isSilsa',
+            title: '실사 이관',
+            width: '75px',
+            cell: SilsaSelectionCell,
+            headerCell: SilsaSelectionHeaderCell
+        };
+
         const selectionCol = {
             field: 'isBaked',
             title: 'SRT 이관',
@@ -1047,13 +1178,13 @@ const MapConfigTab = ({
         };
 
         if (insertIdx !== -1) {
-            cols.splice(insertIdx + 1, 0, selectionCol);
+            cols.splice(insertIdx + 1, 0, selectionCol, silsaSelectionCol);
         } else {
-            cols.push(selectionCol);
+            cols.push(selectionCol, silsaSelectionCol);
         }
 
         return cols;
-    }, [isDetailed, isResearcher, BakedSelectionCell, BakedSelectionHeaderCell]);
+    }, [isDetailed, isResearcher, BakedSelectionCell, BakedSelectionHeaderCell, SilsaSelectionCell, SilsaSelectionHeaderCell]);
 
     return (
         <>
