@@ -1178,9 +1178,11 @@ const MapConfigTab = ({
         };
 
         if (insertIdx !== -1) {
-            cols.splice(insertIdx + 1, 0, selectionCol, silsaSelectionCol);
+            // cols.splice(insertIdx + 1, 0, selectionCol, silsaSelectionCol);
+            cols.splice(insertIdx + 1, 0, selectionCol);
         } else {
-            cols.push(selectionCol, silsaSelectionCol);
+            // cols.push(selectionCol, silsaSelectionCol);
+            cols.push(selectionCol);
         }
 
         return cols;
