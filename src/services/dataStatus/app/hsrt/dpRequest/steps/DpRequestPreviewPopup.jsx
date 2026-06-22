@@ -30,9 +30,34 @@ const DpRequestPreviewPopup = () => {
                             const apiColumns = res.resultjson.columns || [];
                             setColumns(apiColumns);
 
-                            // API에서 내려주는 rows 배열 세팅 (예: [{ key: "banner__1", label: "스포츠...", value: 1, total_auto: {n: 335, p: 9.4} }])
-                            const apiRows = res.resultjson.rows || res.resultjson.data || [];
-                            setData(apiRows);
+                            const apiRows = res.resultjson.rows || [];
+                            
+                            // API가 base 행을 주지 않은 경우 수동으로 생성하여 최상단에 주입
+                            const hasBaseRow = apiRows.some(r => r.row_role === 'base');
+                            let finalRows = [...apiRows];
+
+                            if (!hasBaseRow) {
+                                const totalRow = {
+                                    key: "__virtual_base_stub_preview_total",
+                                    label: "전체",
+                                    row_role: "base",
+                                    stat_type: null,
+                                    cells: {}
+                                };
+
+                                apiColumns.forEach(col => {
+                                    totalRow.cells[col.key] = {
+                                        count: col.total || 0,
+                                        percent: 100,
+                                        is_base: true,
+                                        percent_base: col.total || 0,
+                                        cell_type: "frequency"
+                                    };
+                                });
+                                finalRows = [totalRow, ...finalRows];
+                            }
+
+                            setData(finalRows);
                         } else {
                             console.error("Failed to load preview data", res);
                         }
@@ -52,35 +77,41 @@ const DpRequestPreviewPopup = () => {
 
     // 동적 생성된 컬럼들의 셀 데이터를 렌더링 (N과 %를 위아래로 표시, stat_type인 경우 단일숫자 및 prefix/postfix 적용)
     const DataCellTemplate = (props) => {
-        // 데이터가 cells 하위에 있거나 직접 필드명에 매핑되어 있을 수 있음
-        const cellBox = props.dataItem.cells ? props.dataItem.cells[props.field] : props.dataItem[props.field];
-        if (cellBox === undefined || cellBox === null) return <td style={{ textAlign: 'right', padding: '6px 16px', verticalAlign: 'middle', borderBottom: '1px solid #e2e8f0' }}>-</td>;
+        try {
+            // 데이터가 cells 하위에 있거나 직접 필드명에 매핑되어 있을 수 있음
+            const cellBox = props.dataItem.cells ? props.dataItem.cells[props.field] : props.dataItem[props.field];
+            if (cellBox === undefined || cellBox === null) return <td style={{ textAlign: 'right', padding: '6px 16px', verticalAlign: 'middle', borderBottom: '1px solid #e2e8f0' }}>-</td>;
 
-        const isSingleVal = typeof cellBox !== 'object';
-        const singleVal = isSingleVal ? cellBox : null;
-        const nValue = !isSingleVal ? (cellBox.count !== undefined ? cellBox.count : cellBox.n) : null;
-        const pValue = !isSingleVal ? (cellBox.percent !== undefined ? cellBox.percent : cellBox.p) : null;
+            const isSingleVal = typeof cellBox !== 'object';
+            const singleVal = isSingleVal ? cellBox : null;
+            const nValue = !isSingleVal ? (cellBox.count !== undefined ? cellBox.count : cellBox.n) : null;
+            const pValue = !isSingleVal ? (cellBox.percent !== undefined ? cellBox.percent : cellBox.p) : null;
+            const isBase = !isSingleVal && cellBox.is_base === true;
 
-        return (
-            <td style={{ textAlign: 'right', padding: '8px 16px', verticalAlign: 'middle', borderBottom: '1px solid #e2e8f0', background: '#fafafa' }}>
-                {isSingleVal ? (
-                    <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '13px' }}>
-                        {props.dataItem.prefix || ''}
-                        {Number(singleVal).toLocaleString(undefined, { maximumFractionDigits: 1 })}
-                        {props.dataItem.postfix || ''}
-                    </div>
-                ) : (
-                    <React.Fragment>
+            return (
+                <td style={{ textAlign: 'right', padding: '8px 16px', verticalAlign: 'middle', borderBottom: '1px solid #e2e8f0', background: '#fafafa' }}>
+                    {isSingleVal ? (
                         <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '13px' }}>
-                            {nValue !== undefined && nValue !== null ? nValue.toLocaleString() : '-'}
+                            {props.dataItem.prefix || ''}
+                            {Number(singleVal).toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                            {props.dataItem.postfix || ''}
                         </div>
-                        <div style={{ color: '#64748b', fontSize: '11px', marginTop: '2px' }}>
-                            {pValue !== undefined && pValue !== null ? `${Number(pValue).toFixed(1)}%` : '-'}
-                        </div>
-                    </React.Fragment>
-                )}
-            </td>
-        );
+                    ) : (
+                        <React.Fragment>
+                            <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '13px' }}>
+                                {nValue !== undefined && nValue !== null ? nValue.toLocaleString() : '-'}
+                            </div>
+                            <div style={{ color: '#64748b', fontSize: '11px', marginTop: '2px' }}>
+                                {pValue !== undefined && pValue !== null ? `${Number(pValue).toFixed(1)}%` : '-'}
+                            </div>
+                        </React.Fragment>
+                    )}
+                </td>
+            );
+        } catch (e) {
+            console.error("Cell render error:", e);
+            return <td style={{ textAlign: 'right' }}>Error</td>;
+        }
     };
 
     return (
@@ -109,6 +140,20 @@ const DpRequestPreviewPopup = () => {
                             title={col.label}
                             headerClassName="k-text-center"
                             width="140px"
+                            headerCell={(props) => (
+                                <div 
+                                    title={props.title} 
+                                    style={{ 
+                                        whiteSpace: 'nowrap', 
+                                        overflow: 'hidden', 
+                                        textOverflow: 'ellipsis', 
+                                        fontSize: '12px',
+                                        width: '100%'
+                                    }}
+                                >
+                                    {props.title}
+                                </div>
+                            )}
                             cell={DataCellTemplate}
                         />
                     ))}

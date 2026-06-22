@@ -2060,7 +2060,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             };
 
                                             localStorage.setItem('dp_preview_payload', JSON.stringify(payload));
-                                            window.open('/dp_request_preview', '_blank', 'width=600,height=700,left=200,top=100');
+                                            window.open('/dp_request_preview', '_blank', 'width=1200,height=700,left=200,top=100');
                                         }}
                                         style={{
                                             background: '#fff',
