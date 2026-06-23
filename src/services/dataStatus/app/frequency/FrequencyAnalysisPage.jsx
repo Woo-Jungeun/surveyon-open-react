@@ -1149,14 +1149,6 @@ const FrequencyAnalysisPage = () => {
         }).filter(Boolean);
     }, [dropdownFilterList, filterSearchQuery]);
 
-    // 필터 칩 더보기/접기 관련 상태
-    const [isChipsExpanded, setIsChipsExpanded] = useState(false);
-    const [hasMoreChips, setHasMoreChips] = useState(false);
-    const [maxVisibleIndex, setMaxVisibleIndex] = useState(-1);
-    const [containerWidth, setContainerWidth] = useState(0);
-    const chipsContainerRef = useRef(null);
-    const measuringRef = useRef(null);
-
     const toggleDropdownFilterOpen = () => {
         if (!isDropdownFilterOpen) {
             setTempDropdownFilters({ ...selectedDropdownFilters });
@@ -1187,61 +1179,6 @@ const FrequencyAnalysisPage = () => {
         setTempDropdownFilters({});
         applyDropdownFilters({});
     };
-
-    useEffect(() => {
-        if (!chipsContainerRef.current) return;
-        const observer = new ResizeObserver((entries) => {
-            for (let entry of entries) {
-                setContainerWidth(entry.contentRect.width);
-            }
-        });
-        observer.observe(chipsContainerRef.current);
-        return () => observer.disconnect();
-    }, []);
-
-    React.useLayoutEffect(() => {
-        if (!measuringRef.current) return;
-
-        const container = measuringRef.current;
-        const children = Array.from(container.children);
-        if (children.length <= 1) {
-            setHasMoreChips(false);
-            setMaxVisibleIndex(-1);
-            setIsChipsExpanded(false);
-            return;
-        }
-
-        const chipsElements = children.slice(0, -1);
-        const dummyButton = children[children.length - 1];
-
-        const currentContainerWidth = container.clientWidth;
-        const buttonWidth = dummyButton.offsetWidth;
-        const gap = 6;
-
-        const lastChip = chipsElements[chipsElements.length - 1];
-        const isOverflowing = lastChip.offsetTop > 40;
-
-        setHasMoreChips(isOverflowing);
-
-        if (!isOverflowing) {
-            setMaxVisibleIndex(-1);
-            setIsChipsExpanded(false);
-        } else {
-            let maxIdx = -1;
-            for (let i = 0; i < chipsElements.length; i++) {
-                const chipEl = chipsElements[i];
-                if (chipEl.offsetTop <= 40) {
-                    if (chipEl.offsetLeft + chipEl.offsetWidth + gap + buttonWidth <= currentContainerWidth) {
-                        maxIdx = i;
-                    }
-                }
-            }
-            if (maxIdx === -1 && chipsElements.length > 0) {
-                maxIdx = 0;
-            }
-            setMaxVisibleIndex(maxIdx);
-        }
-    }, [selectedDropdownFilters, containerWidth, dropdownFilterList]);
 
     const { getRecodedList, getRecodedVariables } = RecodingPageApi();
     const { getOriginalVariables } = VariablePageApi();
@@ -2414,7 +2351,7 @@ const FrequencyAnalysisPage = () => {
                     borderBottom: '1px solid #e2e8f0',
                     zIndex: 99
                 }}>
-                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b' }}>필터</span>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>필터</span>
 
                     {/* 필터 선택 드롭다운 */}
                     <div className="custom-filter-wrapper" ref={dropdownFilterMenuRef} style={{ position: 'relative', width: '320px' }}>
@@ -2461,12 +2398,8 @@ const FrequencyAnalysisPage = () => {
                                         if (logics && logics.length > 0) {
                                             const table = dropdownFilterList.find(t => t.id === tableId);
                                             if (table) {
-                                                logics.forEach(logicStr => {
-                                                    const opt = (table.info || []).find(o => o.logic === logicStr);
-                                                    if (opt && opt.label) {
-                                                        selectedSummary.push(opt.label);
-                                                    }
-                                                });
+                                                const namePart = table.name || table.label || tableId;
+                                                selectedSummary.push(`${namePart}(${logics.length})`);
                                             }
                                         }
                                     });
@@ -2642,7 +2575,7 @@ const FrequencyAnalysisPage = () => {
                             color: '#ffffff',
                             border: 'none',
                             borderRadius: '6px',
-                            fontSize: '12px',
+                            fontSize: '13px',
                             fontWeight: '600',
                             cursor: 'pointer',
                             transition: 'all 0.2s ease-in-out',
@@ -2680,7 +2613,10 @@ const FrequencyAnalysisPage = () => {
                                     return opt ? opt.label : '';
                                 }).filter(Boolean);
 
-                                const displayText = `${namePart}. ${labelPart} (${selectedOptionLabels.join(', ')})`;
+                                const displayText = labelPart 
+                                    ? `${namePart} ${labelPart} (${selectedOptionLabels.join(', ')})` 
+                                    : `${namePart} (${selectedOptionLabels.join(', ')})`;
+
                                 return { tableId, displayText };
                             })
                             .filter(Boolean);
@@ -2690,33 +2626,27 @@ const FrequencyAnalysisPage = () => {
                         return (
                             <>
                                 <div style={{ width: '1px', height: '24px', backgroundColor: '#e2e8f0', margin: '0 4px' }} />
-                                <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, marginLeft: '8px', whiteSpace: 'nowrap' }}>
+                                <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 600, marginLeft: '8px', whiteSpace: 'nowrap' }}>
                                     적용된 필터
                                 </span>
 
                                 <div style={{ flex: 1, position: 'relative', minWidth: 0, display: 'flex', alignItems: 'center' }}>
                                     {/* Visible container */}
                                     <div
-                                        toughness="chips-wrapper"
-                                        ref={chipsContainerRef}
                                         style={{
                                             display: 'flex',
                                             gap: '6px',
                                             flexWrap: 'wrap',
                                             alignItems: 'center',
                                             flex: 1,
-                                            maxHeight: isChipsExpanded ? '300px' : '56px',
-                                            overflow: 'hidden',
-                                            transition: 'max-height 0.25s ease-in-out',
                                         }}
                                     >
-                                        {activeFilterChips.map((chip, idx) => {
-                                            const isHidden = !isChipsExpanded && hasMoreChips && idx > maxVisibleIndex;
+                                        {activeFilterChips.map((chip) => {
                                             return (
                                                 <div
                                                     key={`chip-${chip.tableId}`}
                                                     style={{
-                                                        display: isHidden ? 'none' : 'flex',
+                                                        display: 'flex',
                                                         alignItems: 'center',
                                                         gap: '6px',
                                                         background: '#eff6ff',
@@ -2730,7 +2660,7 @@ const FrequencyAnalysisPage = () => {
                                                         transition: 'all 0.15s ease-in-out'
                                                     }}
                                                 >
-                                                    <span style={{ fontSize: '11px', lineHeight: '1.2' }}>{chip.displayText}</span>
+                                                    <span style={{ fontSize: '11px', lineHeight: '1.4' }}>{chip.displayText}</span>
                                                     <span
                                                         onClick={() => handleRemoveFilterChip(chip.tableId)}
                                                         style={{
@@ -2760,126 +2690,6 @@ const FrequencyAnalysisPage = () => {
                                                 </div>
                                             );
                                         })}
-
-                                        {isChipsExpanded && hasMoreChips && (
-                                            <button
-                                                onClick={() => setIsChipsExpanded(false)}
-                                                style={{
-                                                    fontSize: '11px',
-                                                    color: '#1e3a8a',
-                                                    background: '#eff6ff',
-                                                    border: '1px solid #bfdbfe',
-                                                    borderRadius: '12px',
-                                                    padding: '2px 10px',
-                                                    cursor: 'pointer',
-                                                    fontWeight: 600,
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    transition: 'all 0.15s ease-in-out',
-                                                    whiteSpace: 'nowrap'
-                                                }}
-                                                onMouseOver={(e) => {
-                                                    e.currentTarget.style.background = '#dbeafe';
-                                                    e.currentTarget.style.borderColor = '#93c5fd';
-                                                }}
-                                                onMouseOut={(e) => {
-                                                    e.currentTarget.style.background = '#eff6ff';
-                                                    e.currentTarget.style.borderColor = '#bfdbfe';
-                                                }}
-                                            >
-                                                접기 ▴
-                                            </button>
-                                        )}
-
-                                        {!isChipsExpanded && hasMoreChips && (
-                                            <button
-                                                onClick={() => setIsChipsExpanded(true)}
-                                                style={{
-                                                    fontSize: '11px',
-                                                    color: '#1e3a8a',
-                                                    background: '#eff6ff',
-                                                    border: '1px solid #bfdbfe',
-                                                    borderRadius: '12px',
-                                                    padding: '2px 10px',
-                                                    cursor: 'pointer',
-                                                    fontWeight: 600,
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    transition: 'all 0.15s ease-in-out',
-                                                    whiteSpace: 'nowrap'
-                                                }}
-                                                onMouseOver={(e) => {
-                                                    e.currentTarget.style.background = '#dbeafe';
-                                                    e.currentTarget.style.borderColor = '#93c5fd';
-                                                }}
-                                                onMouseOut={(e) => {
-                                                    e.currentTarget.style.background = '#eff6ff';
-                                                    e.currentTarget.style.borderColor = '#bfdbfe';
-                                                }}
-                                            >
-                                                더보기 ▾
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {/* Shadow Measuring Container */}
-                                    <div
-                                        ref={measuringRef}
-                                        style={{
-                                            position: 'absolute',
-                                            visibility: 'hidden',
-                                            pointerEvents: 'none',
-                                            left: 0,
-                                            right: 0,
-                                            top: 0,
-                                            display: 'flex',
-                                            gap: '6px',
-                                            flexWrap: 'wrap',
-                                            alignItems: 'center'
-                                        }}
-                                    >
-                                        {activeFilterChips.map((chip) => (
-                                            <div
-                                                key={`shadow-chip-${chip.tableId}`}
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '6px',
-                                                    background: '#eff6ff',
-                                                    border: '1px solid #bfdbfe',
-                                                    borderRadius: '16px',
-                                                    padding: '4px 10px',
-                                                    fontSize: '11px',
-                                                    fontWeight: 500,
-                                                    color: '#1e40af',
-                                                    userSelect: 'none',
-                                                    whiteSpace: 'nowrap'
-                                                }}
-                                            >
-                                                <span style={{ fontSize: '11px', lineHeight: '1.2' }}>{chip.displayText}</span>
-                                                <span style={{ fontSize: '9px', fontWeight: 700, marginLeft: '6px' }}>✕</span>
-                                            </div>
-                                        ))}
-                                        <button
-                                            style={{
-                                                fontSize: '11px',
-                                                color: '#1e3a8a',
-                                                background: '#eff6ff',
-                                                border: '1px solid #bfdbfe',
-                                                borderRadius: '12px',
-                                                padding: '2px 10px',
-                                                fontWeight: 600,
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                whiteSpace: 'nowrap',
-                                                visibility: 'hidden'
-                                            }}
-                                        >
-                                            더보기 ▾
-                                        </button>
                                     </div>
                                 </div>
 
@@ -2887,7 +2697,7 @@ const FrequencyAnalysisPage = () => {
                                     <button
                                         onClick={handleResetAllFilters}
                                         style={{
-                                            fontSize: '11px',
+                                            fontSize: '13px',
                                             color: '#475569',
                                             background: '#f1f5f9',
                                             border: '1px solid #cbd5e1',
