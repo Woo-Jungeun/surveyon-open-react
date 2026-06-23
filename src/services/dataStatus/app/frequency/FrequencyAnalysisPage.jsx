@@ -2956,7 +2956,6 @@ const FrequencyAnalysisPage = () => {
                                 borderRadius: '16px',
                                 border: '1px dashed #e2e8f0'
                             }}>
-                                <div style={{ fontSize: '40px' }}>🔍</div>
                                 조회된 데이터가 없습니다.
                             </div>
                         )}
