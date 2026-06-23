@@ -1,7 +1,7 @@
 import { useState, useCallback, useContext, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
-import { LogIn, Mail, Lock, ArrowLeft, Sparkles } from "lucide-react";
+import { LogIn, Mail, Lock, ArrowLeft, ClipboardCheck } from "lucide-react";
 import "@/services/login/Login.css";
 import { Input } from "@progress/kendo-react-inputs";
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -120,7 +120,7 @@ const Login = () => {
 
                     {/* 로고 */}
                     <div className="login-logo-box">
-                        <Sparkles className="w-5 h-5 text-white" />
+                        <ClipboardCheck className="w-5 h-5 text-white" />
                         <h1 className="hero-title">설문온</h1>
                     </div>
                     <p className="login-subtitle">AI 기반 통합 설문조사 플랫폼</p>

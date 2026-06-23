@@ -1,4 +1,4 @@
-﻿/* ========================================
+/* ========================================
    SCOPE: .homepage-container
 ======================================== */
 .homepage-container {
@@ -211,9 +211,9 @@
 .homepage-container .hp-chip {
   display: inline-flex;
   align-items: center;
-  width: 200px;
-  gap: 6px;
-  padding: 8px 14px;
+  justify-content: center;
+  width: fit-content;
+  padding: 6px 18px;
   background: rgba(255, 255, 255, 0.15);
   border-radius: 9999px;
   font-size: 0.9rem;

@@ -163,7 +163,7 @@ const InfoSection = () => {
         {/* 왼쪽 텍스트 */}
         <div className="hp-hero-text">
           <div className="hp-chip">
-            <Sparkles className="hp-chip-icon" />
+            {/* <Sparkles className="hp-chip-icon" /> */}
             <span>AI 기반 설문 분석 플랫폼</span>
           </div>
 
