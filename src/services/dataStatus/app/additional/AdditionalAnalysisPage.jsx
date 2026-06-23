@@ -1869,7 +1869,12 @@ const AdditionalAnalysisPage = () => {
                     />
 
                     {/* Main Content */}
-                    <div className="cross-tab-main" style={{ gap: isConfigOpen ? '8px' : '16px' }}>
+                    <div className="cross-tab-main" style={{ 
+                        gap: isConfigOpen ? '8px' : '16px',
+                        borderRadius: '8px',
+                        boxShadow: 'none',
+                        border: '1px solid #cbd5e1'
+                    }}>
                         {tables.length === 0 ? (
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', minHeight: '350px' }}>
                                 <Table2 size={32} color="#94a3b8" style={{ marginBottom: '16px', strokeWidth: 1.5 }} />
@@ -1884,7 +1889,8 @@ const AdditionalAnalysisPage = () => {
                                     display: 'flex',
                                     flexDirection: 'column',
                                     minHeight: isConfigOpen ? '750px' : 'auto',
-                                    transition: 'all 0.3s ease'
+                                    transition: 'all 0.3s ease',
+                                    borderRadius: '8px'
                                 }}>
                                     <div
                                         className="config-header"

@@ -786,7 +786,8 @@ export const ResultSectionBlock = ({
             key={dataIndex}
             className={`result-section ${tableMode === 'merged' ? 'is-expanded is-merged' : (isExpanded ? 'is-expanded' : 'is-narrow')} ${isConfigOpen ? 'is-config-open' : ''} ${columnLayout === 'double' ? 'layout-double' : ''}`}
             style={{
-                marginTop: dataIndex > 0 ? (tableMode === 'merged' || isExpanded ? '20px' : '8px') : '0'
+                marginTop: dataIndex > 0 ? (tableMode === 'merged' || isExpanded ? '20px' : '8px') : '0',
+                borderRadius: '8px'
             }}
         >
             <div
