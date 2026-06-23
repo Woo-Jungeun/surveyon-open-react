@@ -27,14 +27,14 @@
     margin: 16px;
     background: #f8fafc;
     border: 1px solid var(--ds-border);
-    border-radius: 16px;
-    box-shadow: var(--ds-shadow);
+    border-radius: 8px;
+    box-shadow: none;
     box-sizing: border-box;
 }
 
 .agg-card {
     background: #fff;
-    border-radius: 12px;
+    border-radius: 8px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     padding: 24px;
     display: flex;
