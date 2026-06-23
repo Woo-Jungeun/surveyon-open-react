@@ -39,6 +39,23 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
     const [showChartValues, setShowChartValues] = useState(true);
     const [isChartOptionsOpen, setIsChartOptionsOpen] = useState(false);
 
+    const cardRef = useRef(null);
+    const [isIntersected, setIsIntersected] = useState(false);
+
+    useEffect(() => {
+        if (!cardRef.current) return;
+        const observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting) {
+                setIsIntersected(true);
+                observer.disconnect();
+            }
+        }, {
+            rootMargin: '400px' // Load 400px before coming into viewport
+        });
+        observer.observe(cardRef.current);
+        return () => observer.disconnect();
+    }, [q.id]);
+
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
     const displayMenuRef = useRef(null);
@@ -412,7 +429,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
     }, [q.data, q.columns, selectedChartGroups]);
 
     return (
-        <div id={q.id} className="agg-card">
+        <div id={q.id} ref={cardRef} className="agg-card">
             <Toast
                 show={toast.show}
                 message={toast.message}
@@ -909,6 +926,8 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                     <div className="agg-chart-container" ref={chartContainerRef}>
                         {!q.isLoaded ? (
                             <div style={{ color: '#888', fontSize: '13px' }}>데이터를 불러오는 중입니다...</div>
+                        ) : !isIntersected ? (
+                            <div style={{ color: '#888', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '360px' }}>차트를 준비 중입니다...</div>
                         ) : q.data.length === 0 ? (
                             <div style={{ color: '#888', fontSize: '13px' }}>조회된 데이터가 없습니다.</div>
                         ) : (() => {
