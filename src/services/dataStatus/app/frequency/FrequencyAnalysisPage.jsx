@@ -449,9 +449,15 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
             />
             <div className="agg-card-header" style={{ gap: '32px' }}>
                 <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', minWidth: 0, gap: '16px' }}>
-                    <div className="agg-card-title-group" style={{ flex: 1, minWidth: 0 }}>
-                        <div className="agg-card-id">{q.label}</div>
-                        <div className="agg-card-label" style={{ whiteSpace: 'pre-wrap', wordBreak: 'keep-all', overflowWrap: 'break-word', lineHeight: '1.4' }}>{q.id}</div>
+                    <div className="agg-card-title-group" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        {/* 문항 ID (작고 연한 텍스트) */}
+                        <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            {q.id}
+                        </div>
+                        {/* 문항명 (크고 진한 텍스트) */}
+                        <div style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b', whiteSpace: 'pre-wrap', wordBreak: 'keep-all', overflowWrap: 'break-word', lineHeight: '1.4' }}>
+                            {q.label}
+                        </div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
