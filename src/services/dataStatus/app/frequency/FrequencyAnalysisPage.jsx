@@ -961,11 +961,11 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                 {showChart && (
                     <div className="agg-chart-container" ref={chartContainerRef}>
                         {!q.isLoaded ? (
-                            <div style={{ color: '#888', fontSize: '13px' }}>데이터를 불러오는 중입니다...</div>
+                            <div style={{ color: '#888', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '360px' }}>데이터를 불러오는 중입니다...</div>
                         ) : !isIntersected ? (
                             <div style={{ color: '#888', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '360px' }}>차트를 준비 중입니다...</div>
                         ) : q.data.length === 0 ? (
-                            <div style={{ color: '#888', fontSize: '13px' }}>조회된 데이터가 없습니다.</div>
+                            <div style={{ color: '#888', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '360px' }}>조회된 데이터가 없습니다.</div>
                         ) : (() => {
                             // ─── 차트 데이터 기준 (최종) ───────────────────────────────────
                             // 도넛(Donut) / 깔때기(Funnel) → 퍼센트(_pct)
