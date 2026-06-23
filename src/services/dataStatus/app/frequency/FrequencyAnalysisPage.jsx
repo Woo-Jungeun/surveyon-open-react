@@ -35,7 +35,10 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
     const [showLegend, setShowLegend] = useState(false);
     const [selectedChartGroups, setSelectedChartGroups] = useState([]);
     const [isGroupFilterMenuOpen, setIsGroupFilterMenuOpen] = useState(false);
-    const [chartDataType, setChartDataType] = useState('percentage'); // 'frequency' or 'percentage'
+    const [chartDataType, setChartDataType] = useState(() => {
+        if (!showPct && showN) return 'frequency';
+        return 'percentage';
+    });
     const [showChartValues, setShowChartValues] = useState(true);
     const [isChartOptionsOpen, setIsChartOptionsOpen] = useState(false);
 
@@ -55,6 +58,14 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
         observer.observe(cardRef.current);
         return () => observer.disconnect();
     }, [q.id]);
+
+    useEffect(() => {
+        if (!showPct && showN) {
+            setChartDataType('frequency');
+        } else if (showPct) {
+            setChartDataType('percentage');
+        }
+    }, [showN, showPct]);
 
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
@@ -967,7 +978,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                                     hideHeader={true}
                                     externalShowLegend={showLegend}
                                     showLabels={showChartValues}
-                                    decimals={usePercentFields ? 1 : 0}
+                                    decimals={usePercentFields ? decimalPct : decimalN}
                                 />
                             );
                         })()}
@@ -1599,8 +1610,14 @@ const FrequencyAnalysisPage = () => {
                 limit: SIDEBAR_PAGE_SIZE,
                 filter_expression: filterLogic,
                 // 검색어가 있다면 API에 전달 (API 지원 여부에 따라)
-                search: searchTerm
+                search: searchTerm,
+                n_digits: Number(decimalN === '' ? 0 : decimalN),
+                percent_digits: Number(decimalPct === '' ? 1 : decimalPct)
             };
+            if (!(showN && showPct)) {
+                payload.show_n = showN;
+                payload.show_percent = showPct;
+            }
             const result = await getSurveyProgressStyled.mutateAsync(payload);
             if (result?.success === "777" && result.resultjson) {
                 // 전역 스타일 주입
@@ -1619,17 +1636,37 @@ const FrequencyAnalysisPage = () => {
                 const newQuestions = parseOverviewList(overviewList);
 
                 // 페이지별 데이터 교체 (서버사이드 페이징)
-                setQuestions(newQuestions);
+                setQuestions(prevQuestions => {
+                    const isSameList = prevQuestions.length === newQuestions.length &&
+                        prevQuestions.every((q, idx) => q.id === newQuestions[idx].id);
 
-                // 목록이 갱신되면 항상 첫 번째 항목을 선택하고 스크롤을 맨 위로 이동
-                if (newQuestions.length > 0) {
-                    setActiveId(newQuestions[0].id);
-                    if (mainRef.current) {
-                        mainRef.current.scrollTo(0, 0);
+                    if (isSameList) {
+                        return prevQuestions.map((q, idx) => ({
+                            ...q,
+                            html: newQuestions[idx].html
+                        }));
                     }
-                } else {
-                    setActiveId(null);
-                }
+
+                    // 리스트가 변경되었을 때만 activeId 및 스크롤을 처리
+                    setTimeout(() => {
+                        if (newQuestions.length > 0) {
+                            setActiveId(prevActive => {
+                                const exists = newQuestions.some(q => q.id === prevActive);
+                                if (!exists) {
+                                    if (mainRef.current) {
+                                        mainRef.current.scrollTo(0, 0);
+                                    }
+                                    return newQuestions[0].id;
+                                }
+                                return prevActive;
+                            });
+                        } else {
+                            setActiveId(null);
+                        }
+                    }, 0);
+
+                    return newQuestions;
+                });
 
                 // 전체 갯수 저장
                 if (result.resultjson.total !== undefined) {
@@ -1648,12 +1685,12 @@ const FrequencyAnalysisPage = () => {
         }
     };
 
-    // 페이지 변경 또는 필터 변경 시 재조회
+    // 페이지 변경 또는 필터 변경 또는 표출 정책 변경 시 재조회
     useEffect(() => {
         if (auth?.user?.userId) {
             fetchQuestions(sidebarPage);
         }
-    }, [auth?.user?.userId, sidebarPage, filterLogic]);
+    }, [auth?.user?.userId, sidebarPage, filterLogic, showN, showPct, decimalN, decimalPct]);
 
     // 검색어 변경 시 1페이지로 리셋 및 재조회
     useEffect(() => {
@@ -1684,12 +1721,12 @@ const FrequencyAnalysisPage = () => {
         return () => window.removeEventListener('pageSelected', handlePageSelected);
     }, [auth?.user?.userId]);
 
-    // 필터 조건이나 배너 변경 시 데이터 로드 상태 초기화 하여 재조회 유도
+    // 배너 설정 변경 시 데이터 로드 상태 초기화 하여 재조회 유도
     useEffect(() => {
         if (questions.length > 0) {
             setQuestions(prev => prev.map(q => ({ ...q, isLoaded: false })));
         }
-    }, [filterLogic, selectedFilters, selectedVariableIds]);
+    }, [selectedVariableIds]);
 
 
     // 활성 아이템 기준 5개씩 데이터 분할 조회
@@ -1728,8 +1765,14 @@ const FrequencyAnalysisPage = () => {
                     weight_col: "",
                     filter_expression: filterLogic, // 배너 설정 조건식 적용
                     include_stats: [],
-                    search: searchTerm // 검색어 추가
+                    search: searchTerm, // 검색어 추가
+                    n_digits: Number(decimalN === '' ? 0 : decimalN),
+                    percent_digits: Number(decimalPct === '' ? 1 : decimalPct)
                 };
+                if (!(showN && showPct)) {
+                    payload.show_n = showN;
+                    payload.show_percent = showPct;
+                }
 
                 const aggResult = await getSurveyProgressChartData.mutateAsync(payload);
                 if (aggResult?.success === "777" && aggResult.resultjson) {
@@ -1787,7 +1830,7 @@ const FrequencyAnalysisPage = () => {
             }
         };
         fetchChunkData();
-    }, [activeId, questions, sidebarPage, auth?.user?.userId, selectedVariableIds]);
+    }, [activeId, questions, sidebarPage, auth?.user?.userId, selectedVariableIds, showN, showPct, decimalN, decimalPct]);
 
     const handleDisplayModeChange = async (qId, newMode) => {
         const index = questions.findIndex(q => q.id === qId);
@@ -1803,11 +1846,15 @@ const FrequencyAnalysisPage = () => {
             limit: 1,
             filter_expression: filterLogic,
             search: searchTerm,
-            display_policy: {
-                show_n: newMode === 'all' || newMode === 'value',
-                show_percent: newMode === 'all' || newMode === 'percent'
-            }
+            n_digits: Number(decimalN === '' ? 0 : decimalN),
+            percent_digits: Number(decimalPct === '' ? 1 : decimalPct)
         };
+        const show_n = newMode === 'all' || newMode === 'value';
+        const show_percent = newMode === 'all' || newMode === 'percent';
+        if (!(show_n && show_percent)) {
+            payload.show_n = show_n;
+            payload.show_percent = show_percent;
+        }
 
         try {
             const result = await getSurveyProgressStyled.mutateAsync(payload);
@@ -1844,13 +1891,6 @@ const FrequencyAnalysisPage = () => {
     const scrollToId = (id) => {
         isClickingRef.current = true;
         if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
-
-        // 현재 목록에 없는 문항이면 해당 문항이 포함될 구간을 재조회
-        const existsInList = questions.some(q => q.id === id);
-        if (!existsInList && hasMoreQuestions) {
-            // 목록에 없으면 현재 listStart부터 추가 로드
-            fetchQuestions(listStart);
-        }
 
         const element = document.getElementById(id);
         if (element) {
@@ -2035,7 +2075,13 @@ const FrequencyAnalysisPage = () => {
                         display: 'flex', alignItems: 'center', borderRadius: '20px', border: '1px solid #cbd5e1', background: '#f8fafc', height: '32px', overflow: 'hidden'
                     }}>
                         <div
-                            onClick={() => setShowN(!showN)}
+                            onClick={() => {
+                                if (showN && !showPct) {
+                                    modal.showAlert("알림", "최소 1개 이상의 지표(N 또는 %)를 선택해야 합니다.");
+                                    return;
+                                }
+                                setShowN(!showN);
+                            }}
                             style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', height: '100%', cursor: 'pointer', background: '#eef2ff' }}
                         >
                             <div style={{
@@ -2102,7 +2148,13 @@ const FrequencyAnalysisPage = () => {
                         display: 'flex', alignItems: 'center', borderRadius: '20px', border: '1px solid #cbd5e1', background: '#f8fafc', height: '32px', overflow: 'hidden'
                     }}>
                         <div
-                            onClick={() => setShowPct(!showPct)}
+                            onClick={() => {
+                                if (showPct && !showN) {
+                                    modal.showAlert("알림", "최소 1개 이상의 지표(N 또는 %)를 선택해야 합니다.");
+                                    return;
+                                }
+                                setShowPct(!showPct);
+                            }}
                             style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', height: '100%', cursor: 'pointer', background: '#eef2ff' }}
                         >
                             <div style={{
