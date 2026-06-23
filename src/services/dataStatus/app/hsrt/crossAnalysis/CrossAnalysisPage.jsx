@@ -17,6 +17,7 @@ import Toast from '@/components/common/Toast';
 
 // --- 상수 ---
 const CROSS_FILTER_ALL_ID = "__all__";
+const EMPTY_ARRAY = [];
 
 const formatCountValue = (val, policy) => {
     if (val === null || val === undefined || val === '') return '-';
@@ -500,7 +501,10 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
     const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
     const [isChartOptionsOpen, setIsChartOptionsOpen] = useState(false);
-    const [chartDataType, setChartDataType] = useState('percentage');
+    const [chartDataType, setChartDataType] = useState(() => {
+        if (!showPct && showN) return 'frequency';
+        return 'percentage';
+    });
     const [showChartValues, setShowChartValues] = useState(true);
     const [showLegend, setShowLegend] = useState(false);
     const chartContainerRef = useRef(null);
@@ -508,6 +512,14 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     const paletteMenuRef = useRef(null);
     const filterMenuRef = useRef(null);
     const chartOptionsMenuRef = useRef(null);
+
+    useEffect(() => {
+        if (!showPct && showN) {
+            setChartDataType('frequency');
+        } else if (showPct) {
+            setChartDataType('percentage');
+        }
+    }, [showN, showPct]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -802,8 +814,8 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
     // Data extraction for chart
     const resultData = banner.dataResult || {};
-    const columns = useMemo(() => resultData.columns || [], [resultData.columns]);
-    const rows = useMemo(() => resultData.rows || [], [resultData.rows]);
+    const columns = useMemo(() => resultData.columns || EMPTY_ARRAY, [resultData.columns]);
+    const rows = useMemo(() => resultData.rows || EMPTY_ARRAY, [resultData.rows]);
 
     const [rawChartData, setRawChartData] = useState(null);
     const [isChartLoading, setIsChartLoading] = useState(false);
@@ -1951,8 +1963,19 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         info: stubInfo
                     };
                 });
-                setBanners(formatted);
-                history.reset(formatted);
+                const isSameList = banners.length === formatted.length &&
+                    banners.every((b, idx) => b.id === formatted[idx].id);
+
+                const finalBanners = isSameList
+                    ? banners.map((b, idx) => ({
+                        ...b,
+                        html: formatted[idx].html,
+                        raw: formatted[idx].raw
+                    }))
+                    : formatted;
+
+                setBanners(finalBanners);
+                history.reset(finalBanners);
 
                 // 렌더링 후 스크롤 상단으로 완벽히 이동 (메인 화면 & 사이드바 모두)
                 setTimeout(() => {
@@ -2025,6 +2048,10 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     // 문항 목록 필터링 (서버사이드 필터링 사용)
     const filteredBanners = banners;
 
+    const prevSearchRef = useRef(bannerSearch);
+    const prevXInfoRef = useRef(selectedXInfo);
+    const prevFilterRef = useRef(filterExpression);
+
     useEffect(() => {
         if (isInitialSetupRef.current && !isFirstLoadRef.current) {
             // Skip updates while initial settings from context are being applied
@@ -2034,14 +2061,30 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             isFirstLoadRef.current = false;
         }
 
-        const timer = setTimeout(() => {
+        const searchChanged = prevSearchRef.current !== bannerSearch;
+        const xInfoChanged = prevXInfoRef.current !== selectedXInfo;
+        const filterChanged = prevFilterRef.current !== filterExpression;
+
+        prevSearchRef.current = bannerSearch;
+        prevXInfoRef.current = selectedXInfo;
+        prevFilterRef.current = filterExpression;
+
+        if (searchChanged || xInfoChanged || filterChanged) {
+            const timer = setTimeout(() => {
+                if (currentPage !== 1) {
+                    setCurrentPage(1); // currentPage useEffect가 fetch를 수행함
+                } else {
+                    fetchCrossAnalysisData('normal', null, 1, filterExpression);
+                }
+            }, 300);
+            return () => clearTimeout(timer);
+        } else {
             if (currentPage !== 1) {
-                setCurrentPage(1); // currentPage useEffect가 fetch를 수행함
+                setCurrentPage(1);
             } else {
                 fetchCrossAnalysisData('normal', null, 1, filterExpression);
             }
-        }, 300);
-        return () => clearTimeout(timer);
+        }
     }, [bannerSearch, selectedXInfo, filterExpression, auth?.user?.userId, showTTest, showN, decimalN, showPct, decimalPct]);
 
     useEffect(() => {
@@ -2328,7 +2371,13 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         display: 'flex', alignItems: 'center', borderRadius: '20px', border: '1px solid #cbd5e1', background: '#f8fafc', height: '32px', overflow: 'hidden'
                     }}>
                         <div
-                            onClick={() => setShowN(!showN)}
+                            onClick={() => {
+                                if (showN && !showPct) {
+                                    modal.showAlert("알림", "최소 1개 이상의 지표(N 또는 %)를 선택해야 합니다.");
+                                    return;
+                                }
+                                setShowN(!showN);
+                            }}
                             style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', height: '100%', cursor: 'pointer', background: '#eef2ff' }}
                         >
                             <div style={{
@@ -2395,7 +2444,13 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         display: 'flex', alignItems: 'center', borderRadius: '20px', border: '1px solid #cbd5e1', background: '#f8fafc', height: '32px', overflow: 'hidden'
                     }}>
                         <div
-                            onClick={() => setShowPct(!showPct)}
+                            onClick={() => {
+                                if (showPct && !showN) {
+                                    modal.showAlert("알림", "최소 1개 이상의 지표(N 또는 %)를 선택해야 합니다.");
+                                    return;
+                                }
+                                setShowPct(!showPct);
+                            }}
                             style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', height: '100%', cursor: 'pointer', background: '#eef2ff' }}
                         >
                             <div style={{
