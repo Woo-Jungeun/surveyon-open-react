@@ -780,7 +780,6 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                 const apiRows = res.resultjson.rows || res.resultjson.data || [];
 
                 if (apiColumns.length > 0 && apiRows.length > 0) {
-                    const firstColKey = apiColumns[0].key;
                     const newFreqs = {};
 
                     if (apiRows.length === 1 && apiColumns.length > 0) {
@@ -790,12 +789,16 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             const cellBox = row.cells ? row.cells[col.key] : row[col.key];
                             if (cellBox !== undefined && cellBox !== null) {
                                 const isSingleVal = typeof cellBox !== 'object';
-                                const nVal = !isSingleVal
-                                    ? (cellBox.count !== undefined ? cellBox.count : cellBox.n)
-                                    : cellBox;
-                                const pVal = !isSingleVal
-                                    ? (cellBox.percent !== undefined ? cellBox.percent : cellBox.p)
-                                    : null;
+                                const nVal = col.column_total !== undefined
+                                    ? col.column_total
+                                    : (!isSingleVal
+                                        ? (cellBox.count !== undefined ? cellBox.count : cellBox.n)
+                                        : cellBox);
+                                const pVal = col.ratio !== undefined
+                                    ? col.ratio
+                                    : (!isSingleVal
+                                        ? (cellBox.percent !== undefined ? cellBox.percent : cellBox.p)
+                                        : null);
 
                                 newFreqs[`${bannerId}-${idx}`] = {
                                     n: nVal !== undefined ? nVal : null,
@@ -810,12 +813,18 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             const cellBox = row.cells ? row.cells[firstColKey] : row[firstColKey];
                             if (cellBox !== undefined && cellBox !== null) {
                                 const isSingleVal = typeof cellBox !== 'object';
-                                const nVal = !isSingleVal
-                                    ? (cellBox.count !== undefined ? cellBox.count : cellBox.n)
-                                    : cellBox;
-                                const pVal = !isSingleVal
-                                    ? (cellBox.percent !== undefined ? cellBox.percent : cellBox.p)
-                                    : null;
+                                const nVal = row.column_total !== undefined
+                                    ? row.column_total
+                                    : (row.row_total !== undefined
+                                        ? row.row_total
+                                        : (!isSingleVal
+                                            ? (cellBox.count !== undefined ? cellBox.count : cellBox.n)
+                                            : cellBox));
+                                const pVal = row.ratio !== undefined
+                                    ? row.ratio
+                                    : (!isSingleVal
+                                        ? (cellBox.percent !== undefined ? cellBox.percent : cellBox.p)
+                                        : null);
 
                                 newFreqs[`${bannerId}-${idx}`] = {
                                     n: nVal !== undefined ? nVal : null,
