@@ -525,7 +525,7 @@ export const ResultSectionBlock = ({
                     'text/plain': textBlob
                 });
                 await navigator.clipboard.write([clipboardItem]);
-                setToast({ show: true, message: "복사 완료 (Ctrl+V)" });
+                setToast({ show: true, message: "표 복사 완료 (Ctrl+V)" });
                 return;
             }
 
@@ -557,7 +557,7 @@ export const ResultSectionBlock = ({
                 clipboardText = `${headers}\n${rows}`;
             }
             await navigator.clipboard.writeText(clipboardText);
-            setToast({ show: true, message: "복사 완료 (Ctrl+V)" });
+            setToast({ show: true, message: "표 복사 완료 (Ctrl+V)" });
         } catch (e) {
             console.error(e);
             setToast({ show: true, message: "복사 실패" });
@@ -897,7 +897,7 @@ export const ResultSectionBlock = ({
                                                 </div>
                                                 <button onClick={() => handleCopyTable(resultData, hasColLabel2, hasColLabel3, hasRowLabel2)} className="action-btn">
                                                     <Copy size={16} />
-                                                    <span>복사</span>
+                                                    <span>표 복사</span>
                                                 </button>
                                                 <button
                                                     onClick={() => setFullscreenModal({

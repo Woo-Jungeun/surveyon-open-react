@@ -112,7 +112,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
 
             setToast(prev => ({ ...prev, show: false }));
             setTimeout(() => {
-                setToast({ show: true, message: "복사 완료 (Ctrl+V)" });
+                setToast({ show: true, message: "표 복사 완료 (Ctrl+V)" });
             }, 50);
         } catch (e) {
             console.error(e);
@@ -427,7 +427,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                                 cursor: 'pointer', flexShrink: 0, height: '36px'
                             }}
                         >
-                            <Copy size={14} /> 복사
+                            <Copy size={14} /> 표 복사
                         </button>
                     </div>
                 </div>
