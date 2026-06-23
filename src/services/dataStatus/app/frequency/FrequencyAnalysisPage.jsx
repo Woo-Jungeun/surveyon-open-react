@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, memo, useMemo, useContext } from 'react';
-import { Cloud, BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download, Copy, ChevronDown, Check, BarChartHorizontal, LayoutList } from 'lucide-react';
+import { Cloud, BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download, Copy, ChevronDown, Check, BarChartHorizontal, LayoutList, Search } from 'lucide-react';
 import { exportImage, exportSVG } from '@progress/kendo-drawing';
 import { saveAs } from '@progress/kendo-file-saver';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
@@ -1096,7 +1096,33 @@ const FrequencyAnalysisPage = () => {
     const [selectedDropdownFilters, setSelectedDropdownFilters] = useState({});
     const [tempDropdownFilters, setTempDropdownFilters] = useState({});
     const [isDropdownFilterOpen, setIsDropdownFilterOpen] = useState(false);
+    const [filterSearchQuery, setFilterSearchQuery] = useState('');
     const dropdownFilterMenuRef = useRef(null);
+
+    useEffect(() => {
+        if (!isDropdownFilterOpen) {
+            setFilterSearchQuery('');
+        }
+    }, [isDropdownFilterOpen]);
+
+    const filteredDropdownFilterList = useMemo(() => {
+        if (!filterSearchQuery.trim()) return dropdownFilterList;
+        const query = filterSearchQuery.toLowerCase().trim();
+        return dropdownFilterList.map(table => {
+            const isParentMatch = (table.name || table.label || table.id || '').toLowerCase().includes(query);
+            const matchedOptions = (table.info || []).filter(opt => 
+                (opt.label || '').toLowerCase().includes(query)
+            );
+            
+            if (isParentMatch || matchedOptions.length > 0) {
+                return {
+                    ...table,
+                    info: isParentMatch ? table.info : matchedOptions
+                };
+            }
+            return null;
+        }).filter(Boolean);
+    }, [dropdownFilterList, filterSearchQuery]);
 
     // 필터 칩 더보기/접기 관련 상태
     const [isChipsExpanded, setIsChipsExpanded] = useState(false);
@@ -2431,8 +2457,9 @@ const FrequencyAnalysisPage = () => {
                                 top: 'calc(100% + 4px)',
                                 left: 0,
                                 width: '325px',
-                                maxHeight: '400px',
-                                overflowY: 'auto',
+                                maxHeight: '420px',
+                                display: 'flex',
+                                flexDirection: 'column',
                                 background: '#fff',
                                 border: '1px solid #e2e8f0',
                                 borderRadius: '8px',
@@ -2441,111 +2468,141 @@ const FrequencyAnalysisPage = () => {
                                 padding: '8px',
                                 boxSizing: 'border-box'
                             }}>
-                                {dropdownFilterList.length === 0 ? (
-                                    <div style={{ padding: '16px', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
-                                        필터 데이터가 없습니다.
-                                    </div>
-                                ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        {dropdownFilterList.map(table => {
-                                            const tableId = table.id;
-                                            const allLogics = (table.info || []).map(opt => opt.logic).filter(Boolean);
-                                            const currentLogics = tempDropdownFilters[tableId] || [];
-                                            const isParentChecked = allLogics.length > 0 && currentLogics.length === allLogics.length;
-                                            const isParentIndeterminate = currentLogics.length > 0 && currentLogics.length < allLogics.length;
+                                {/* 검색창 영역 */}
+                                <div style={{ marginBottom: '8px', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+                                    <input
+                                        type="text"
+                                        placeholder="필터 검색..."
+                                        value={filterSearchQuery}
+                                        onChange={(e) => setFilterSearchQuery(e.target.value)}
+                                        style={{
+                                            width: '100%',
+                                            padding: '6px 10px 6px 30px',
+                                            fontSize: '12px',
+                                            border: '1px solid #cbd5e1',
+                                            borderRadius: '6px',
+                                            outline: 'none',
+                                            boxSizing: 'border-box',
+                                            height: '32px'
+                                        }}
+                                    />
+                                    <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                                    {filterSearchQuery && (
+                                        <X
+                                            size={14}
+                                            style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', cursor: 'pointer' }}
+                                            onClick={() => setFilterSearchQuery('')}
+                                        />
+                                    )}
+                                </div>
 
-                                            return (
-                                                <div key={tableId} style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px solid #cbd5e1', paddingBottom: '6px' }}>
-                                                    {/* Parent Node */}
-                                                    <div
-                                                        className="filter-parent-node"
-                                                        style={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: '8px',
-                                                            padding: '6px 8px',
-                                                            cursor: 'pointer',
-                                                            borderRadius: '4px',
-                                                            userSelect: 'none'
-                                                        }}
-                                                        onClick={() => handleParentCheckboxChange(table)}
-                                                    >
+                                <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto' }}>
+                                    {filteredDropdownFilterList.length === 0 ? (
+                                        <div style={{ padding: '16px', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
+                                            {dropdownFilterList.length === 0 ? '필터 데이터가 없습니다.' : '검색 결과가 없습니다.'}
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {filteredDropdownFilterList.map((table, index) => {
+                                                const tableId = table.id;
+                                                const allLogics = (table.info || []).map(opt => opt.logic).filter(Boolean);
+                                                const currentLogics = tempDropdownFilters[tableId] || [];
+                                                const isParentChecked = allLogics.length > 0 && currentLogics.length === allLogics.length;
+                                                const isParentIndeterminate = currentLogics.length > 0 && currentLogics.length < allLogics.length;
+
+                                                return (
+                                                    <div key={tableId} style={{ display: 'flex', flexDirection: 'column', borderBottom: index === filteredDropdownFilterList.length - 1 ? 'none' : '1px solid #cbd5e1', paddingBottom: '6px' }}>
+                                                        {/* Parent Node */}
                                                         <div
-                                                            className={`filter-checkbox-custom ${isParentChecked ? 'checked' : ''}`}
+                                                            className="filter-parent-node"
                                                             style={{
-                                                                width: '16px',
-                                                                height: '16px',
-                                                                border: '1px solid #cbd5e1',
-                                                                borderRadius: '4px',
-                                                                background: '#fff',
-                                                                borderColor: (isParentChecked || isParentIndeterminate) ? '#1e3a8a' : '#cbd5e1',
                                                                 display: 'flex',
                                                                 alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                flexShrink: 0
+                                                                gap: '8px',
+                                                                padding: '6px 8px',
+                                                                cursor: 'pointer',
+                                                                borderRadius: '4px',
+                                                                userSelect: 'none'
                                                             }}
+                                                            onClick={() => handleParentCheckboxChange(table)}
                                                         >
-                                                            {isParentChecked && <Check size={12} color="#1e3a8a" strokeWidth={3} />}
-                                                            {isParentIndeterminate && <div style={{ width: '8px', height: '2px', background: '#1e3a8a' }} />}
+                                                            <div
+                                                                className={`filter-checkbox-custom ${isParentChecked ? 'checked' : ''}`}
+                                                                style={{
+                                                                    width: '16px',
+                                                                    height: '16px',
+                                                                    border: '1px solid #cbd5e1',
+                                                                    borderRadius: '4px',
+                                                                    background: '#fff',
+                                                                    borderColor: (isParentChecked || isParentIndeterminate) ? '#1e3a8a' : '#cbd5e1',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    flexShrink: 0
+                                                                }}
+                                                            >
+                                                                {isParentChecked && <Check size={12} color="#1e3a8a" strokeWidth={3} />}
+                                                                {isParentIndeterminate && <div style={{ width: '8px', height: '2px', background: '#1e3a8a' }} />}
+                                                            </div>
+                                                            <span style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b' }}>
+                                                                {table.name || table.label || tableId}
+                                                            </span>
                                                         </div>
-                                                        <span style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b' }}>
-                                                            {table.name || table.label || tableId}
-                                                        </span>
-                                                    </div>
 
-                                                    {/* Children Option Nodes */}
-                                                    <div style={{ paddingLeft: '24px', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
-                                                        {(table.info || []).map(opt => {
-                                                            const logicStr = opt.logic;
-                                                            const isChildChecked = currentLogics.includes(logicStr);
+                                                        {/* Children Option Nodes */}
+                                                        <div style={{ paddingLeft: '24px', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
+                                                            {(table.info || []).map(opt => {
+                                                                const logicStr = opt.logic;
+                                                                const isChildChecked = currentLogics.includes(logicStr);
 
-                                                            return (
-                                                                <div
-                                                                    key={opt.logic || opt.index}
-                                                                    className="filter-child-node"
-                                                                    style={{
-                                                                        display: 'flex',
-                                                                        alignItems: 'center',
-                                                                        gap: '8px',
-                                                                        padding: '4px 8px',
-                                                                        cursor: 'pointer',
-                                                                        borderRadius: '4px',
-                                                                        userSelect: 'none'
-                                                                    }}
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleChildCheckboxChange(tableId, logicStr);
-                                                                    }}
-                                                                >
+                                                                return (
                                                                     <div
-                                                                        className={`filter-checkbox-custom ${isChildChecked ? 'checked' : ''}`}
+                                                                        key={opt.logic || opt.index}
+                                                                        className="filter-child-node"
                                                                         style={{
-                                                                            width: '16px',
-                                                                            height: '16px',
-                                                                            border: '1px solid #cbd5e1',
-                                                                            borderRadius: '4px',
-                                                                            background: '#fff',
-                                                                            borderColor: isChildChecked ? '#1e3a8a' : '#cbd5e1',
                                                                             display: 'flex',
                                                                             alignItems: 'center',
-                                                                            justifyContent: 'center',
-                                                                            flexShrink: 0
+                                                                            gap: '8px',
+                                                                            padding: '4px 8px',
+                                                                            cursor: 'pointer',
+                                                                            borderRadius: '4px',
+                                                                            userSelect: 'none'
+                                                                        }}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleChildCheckboxChange(tableId, logicStr);
                                                                         }}
                                                                     >
-                                                                        {isChildChecked && <Check size={12} color="#1e3a8a" strokeWidth={3} />}
+                                                                        <div
+                                                                            className={`filter-checkbox-custom ${isChildChecked ? 'checked' : ''}`}
+                                                                            style={{
+                                                                                width: '16px',
+                                                                                height: '16px',
+                                                                                border: '1px solid #cbd5e1',
+                                                                                borderRadius: '4px',
+                                                                                background: '#fff',
+                                                                                borderColor: isChildChecked ? '#1e3a8a' : '#cbd5e1',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                flexShrink: 0
+                                                                            }}
+                                                                        >
+                                                                            {isChildChecked && <Check size={12} color="#1e3a8a" strokeWidth={3} />}
+                                                                        </div>
+                                                                        <span style={{ fontSize: '12px', color: '#475569', fontWeight: 500 }}>
+                                                                            {opt.label}
+                                                                        </span>
                                                                     </div>
-                                                                    <span style={{ fontSize: '12px', color: '#475569', fontWeight: 500 }}>
-                                                                        {opt.label}
-                                                                    </span>
-                                                                </div>
-                                                            );
-                                                        })}
+                                                                );
+                                                            })}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>
