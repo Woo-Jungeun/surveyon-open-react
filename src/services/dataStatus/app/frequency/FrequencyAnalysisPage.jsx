@@ -1135,10 +1135,10 @@ const FrequencyAnalysisPage = () => {
         const query = filterSearchQuery.toLowerCase().trim();
         return dropdownFilterList.map(table => {
             const isParentMatch = (table.name || table.label || table.id || '').toLowerCase().includes(query);
-            const matchedOptions = (table.info || []).filter(opt => 
+            const matchedOptions = (table.info || []).filter(opt =>
                 (opt.label || '').toLowerCase().includes(query)
             );
-            
+
             if (isParentMatch || matchedOptions.length > 0) {
                 return {
                     ...table,
@@ -1359,7 +1359,8 @@ const FrequencyAnalysisPage = () => {
             };
             const result = await getOverviewList.mutateAsync(payload);
             if (result?.success === "777" && result.resultjson) {
-                setDropdownFilterList(result.resultjson.tables || []);
+                const filteredTables = (result.resultjson.tables || []).filter(table => table.info && table.info.length > 0);
+                setDropdownFilterList(filteredTables);
             }
         } catch (error) {
             console.error("Failed to fetch dropdown filter list:", error);
@@ -2430,7 +2431,7 @@ const FrequencyAnalysisPage = () => {
                                 <div style={{ marginBottom: '8px', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
                                     <input
                                         type="text"
-                                        placeholder="필터 검색..."
+                                        placeholder="필터 검색"
                                         value={filterSearchQuery}
                                         onChange={(e) => setFilterSearchQuery(e.target.value)}
                                         style={{
@@ -2613,8 +2614,8 @@ const FrequencyAnalysisPage = () => {
                                     return opt ? opt.label : '';
                                 }).filter(Boolean);
 
-                                const displayText = labelPart 
-                                    ? `${namePart} ${labelPart} (${selectedOptionLabels.join(', ')})` 
+                                const displayText = labelPart
+                                    ? `${namePart} ${labelPart} (${selectedOptionLabels.join(', ')})`
                                     : `${namePart} (${selectedOptionLabels.join(', ')})`;
 
                                 return { tableId, displayText };
