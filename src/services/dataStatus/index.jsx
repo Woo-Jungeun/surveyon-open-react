@@ -8,12 +8,12 @@ import WeightWrapperView from "./views/setting/WeightWrapperView.jsx";
 import FrequencyWrapperView from "./views/analysis/FrequencyWrapperView.jsx";
 import AdditionalWrapperView from "./views/analysis/AdditionalWrapperView.jsx";
 import QuotaWrapperView from "./views/analysis/QuotaWrapperView.jsx";
-import MenuPermissionWrapperView from "./views/system/MenuPermissionWrapperView.jsx";
+import MenuPermissionWrapperView from "./views/hsrt/MenuPermissionWrapperView.jsx";
 import CrossWrapperView from "./views/analysis/CrossWrapperView.jsx";
 import DataViewerPage from "./app/dataViewer/DataViewerPage.jsx";
 import AddQuestionWrapperView from "./views/hsrt/AddQuestionWrapperView.jsx";
 import DpRequestWrapperView from "./views/hsrt/DpRequestWrapperView.jsx";
-import StubWrapperView from "./views/hsrt/StubWrapperView.jsx";
+
 import CrossAnalysisWrapperView from "./views/hsrt/CrossAnalysisWrapperView.jsx";
 import "./app/DataStatusTheme.css"; // Global Theme Import
 
@@ -36,7 +36,7 @@ export default function DataStatusRoutes() {
         {/* 신규 H-SRT 라우트 */}
         <Route path="hsrt/add_question" element={<AddQuestionWrapperView />} />
         <Route path="hsrt/dp_request" element={<DpRequestWrapperView />} />
-        <Route path="hsrt/stub" element={<StubWrapperView />} />
+
         <Route path="hsrt/cross_analysis" element={<CrossAnalysisWrapperView />} />
       </Route>
 
