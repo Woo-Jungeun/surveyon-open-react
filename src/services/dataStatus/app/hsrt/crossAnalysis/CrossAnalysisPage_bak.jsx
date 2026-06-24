@@ -5,7 +5,7 @@ import { Popup } from '@progress/kendo-react-popup';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import KendoChart from '../../../components/KendoChart';
-import '../../frequency/FrequencyAnalysisPage.css';
+import '@/services/fieldManagement/app/fieldProgress/FieldProgressPage.css';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { saveAs } from '@progress/kendo-file-saver';
 import { CHART_THEME_OPTIONS } from '../../../constants/chartThemes';

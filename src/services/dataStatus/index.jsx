@@ -28,11 +28,11 @@ export default function DataStatusRoutes() {
         <Route path="setting/recoding" element={<RecodingWrapperView />} />
         <Route path="setting/variable" element={<VariableWrapperView />} />
         <Route path="setting/weight" element={<WeightWrapperView />} />
-        <Route path="analysis/additional" element={<AdditionalWrapperView />} />
+        <Route path="hsrt/additional_analysis" element={<AdditionalWrapperView />} />
         <Route path="analysis/frequency" element={<FrequencyWrapperView />} />
         <Route path="analysis/cross" element={<CrossWrapperView />} />
         <Route path="analysis/quota" element={<QuotaWrapperView />} />
-        <Route path="system/menu_permission" element={<MenuPermissionWrapperView />} />
+        <Route path="hsrt/menu_permission" element={<MenuPermissionWrapperView />} />
         {/* 신규 H-SRT 라우트 */}
         <Route path="hsrt/add_question" element={<AddQuestionWrapperView />} />
         <Route path="hsrt/dp_request" element={<DpRequestWrapperView />} />

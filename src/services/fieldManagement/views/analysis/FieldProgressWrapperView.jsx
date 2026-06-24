@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import FieldProgressPage from "@/services/fieldManagement/app/fieldProgress/FieldProgressPage.jsx";
 
-const FrequencyWrapperView = () => {
+const FieldProgressWrapperView = () => {
     return (
         <Fragment>
             <FieldProgressPage />
@@ -9,4 +9,4 @@ const FrequencyWrapperView = () => {
     );
 };
 
-export default FrequencyWrapperView;
+export default FieldProgressWrapperView;

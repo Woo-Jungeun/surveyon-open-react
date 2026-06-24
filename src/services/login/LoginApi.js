@@ -152,7 +152,7 @@ export function LoginApi() {
                         const firstMenuLabel = showmenu.split(",")[0].replace(/\s+/g, "").toLowerCase();
                         const menuPathMap = {
                             "교차분석": "/data_status/hsrt/cross_analysis",
-                            "추가분석": "/data_status/analysis/additional",
+                            "추가분석": "/data_status/hsrt/additional_analysis",
                             "dp의뢰서": "/data_status/hsrt/dp_request",
                             "문항추가": "/data_status/hsrt/add_question",
                         };

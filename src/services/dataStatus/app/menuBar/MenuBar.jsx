@@ -57,7 +57,7 @@ const MENU_ITEMS = [
     label: "집계 현황",
     items: [
       { label: "교차분석", path: "/data_status/hsrt/cross_analysis", icon: Table },
-      { label: "추가분석", path: "/data_status/analysis/additional", icon: BarChart3 },
+      { label: "추가분석", path: "/data_status/hsrt/additional_analysis", icon: BarChart3 },
     ]
   }
 ];
@@ -106,7 +106,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         navigate("/ai_open_analysis");
       }
     },
-    { label: "실사관리", icon: <ClipboardList size={16} />, path: "/field_management/analysis/frequency" },
+    { label: "실사관리", icon: <ClipboardList size={16} />, path: "/field_management/analysis/progress" },
     { label: "응답자관리", icon: <Users size={16} />, path: "/project", isDisabled: true },
   ];
 
@@ -397,7 +397,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     computedMenuGroups.push({
       label: "시스템 관리",
       items: [
-        { label: "메뉴 권한 설정", path: "/data_status/system/menu_permission", icon: ShieldCheck },
+        { label: "메뉴 권한 설정", path: "/data_status/hsrt/menu_permission", icon: ShieldCheck },
       ]
     });
   }

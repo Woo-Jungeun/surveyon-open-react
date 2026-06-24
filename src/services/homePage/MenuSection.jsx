@@ -115,7 +115,7 @@ const MenuSection = () => {
               targetPath = "/data_status/hsrt/add_question";
               targetState = { from: "data_status" };
             } else if (item.id === "field-management") {
-              targetPath = "/field_management/analysis/frequency";
+              targetPath = "/field_management/analysis/progress";
               targetState = { from: "field_management" };
             } else if (item.id === "ai-open-analysis") {
               const projectnum = sessionStorage.getItem("projectnum");

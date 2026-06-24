@@ -157,7 +157,7 @@ const AiSidebar = ({ onOpenProjectModal }) => {
             // isDisabled: true
         },
         { label: "AI오픈분석", icon: <BrainCircuit size={16} />, path: "/ai_open_analysis", highlight: true },
-        { label: "실사관리", icon: <ClipboardList size={16} />, path: "/field_management/analysis/frequency", onClick: () => { navigate("/field_management/analysis/frequency"); } },
+        { label: "실사관리", icon: <ClipboardList size={16} />, path: "/field_management/analysis/progress", onClick: () => { navigate("/field_management/analysis/progress"); } },
         { label: "응답자관리", icon: <Users size={16} />, path: "/project", isDisabled: true },
     ];
 

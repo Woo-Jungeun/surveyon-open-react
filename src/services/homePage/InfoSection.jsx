@@ -264,10 +264,10 @@ const InfoSection = () => {
               className="hp-feature-item"
               onClick={() => {
                 if (!isLoggedIn) {
-                  navigate("/login", { state: { from: "/field_management/analysis/frequency", originalState: { from: "field_management" } } });
+                  navigate("/login", { state: { from: "/field_management/analysis/progress", originalState: { from: "field_management" } } });
                   return;
                 }
-                navigate("/field_management/analysis/frequency", { state: { from: "field_management" } });
+                navigate("/field_management/analysis/progress", { state: { from: "field_management" } });
               }}
               style={{ cursor: "pointer" }}
             >

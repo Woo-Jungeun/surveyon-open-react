@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2, Plus, X, HelpCircle, Filter, Check, ChevronDown } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
-import { RecodingPageApi } from '../recoding/RecodingPageApi';
-import { VariablePageApi } from '../variable/VariablePageApi';
-import { DpRequestPageApi } from '../hsrt/dpRequest/DpRequestPageApi';
+import { RecodingPageApi } from '@/services/dataStatus/app/recoding/RecodingPageApi';
+import { VariablePageApi } from '@/services/dataStatus/app/variable/VariablePageApi';
+import { DpRequestPageApi } from '@/services/dataStatus/app/hsrt/dpRequest/DpRequestPageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
 import './AdvancedFilterPopup.css';
 

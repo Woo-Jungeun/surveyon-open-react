@@ -14,7 +14,7 @@ const MENU_ITEMS = [
     {
         label: "",
         items: [
-            { label: "진행현황표", path: "/field_management/analysis/frequency", icon: Grid },
+            { label: "진행현황표", path: "/field_management/analysis/progress", icon: Grid },
             { label: "쿼터관리", icon: ClipboardList, isPending: true },
             { label: "데이터 삭제(불량)", icon: Trash2, isPending: true },
         ]
@@ -62,7 +62,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
                 navigate("/ai_open_analysis");
             }
         },
-        { label: "실사관리", icon: <ClipboardList size={16} />, path: "/field_management/analysis/frequency", highlight: true },
+        { label: "실사관리", icon: <ClipboardList size={16} />, path: "/field_management/analysis/progress", highlight: true },
         { label: "응답자관리", icon: <Users size={16} />, path: "/project", isDisabled: true },
     ];
 
@@ -207,7 +207,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
             <Sidebar
                 brand={{
                     title: "실사관리",
-                    onClick: () => navigate("/field_management/analysis/frequency")
+                    onClick: () => navigate("/field_management/analysis/progress")
                 }}
                 menuGroups={MENU_ITEMS}
                 projectInfo={projectInfoData}

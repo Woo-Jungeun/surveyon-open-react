@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, Trash2, Search, CheckCircle2, ChevronRight, Play, HelpCircle, Settings } from 'lucide-react';
-import { RecodingPageApi } from '../recoding/RecodingPageApi';
+import { RecodingPageApi } from '@/services/dataStatus/app/recoding/RecodingPageApi';
 import './OverviewVariablePopup.css';
 
 const OverviewVariablePopup = ({ isOpen, onClose, auth, pageId, onSaved }) => {

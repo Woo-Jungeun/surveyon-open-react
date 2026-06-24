@@ -14,7 +14,6 @@ import { modalContext } from '../../../../components/common/Modal';
 import { VariablePageApi } from '../variable/VariablePageApi';
 import PageListPopup from '../variable/PageListPopup';
 import AdditionalAnalysisFilterPopup from '../../../../components/common/popup/AdditionalAnalysisFilterPopup';
-import { FrequencyAnalysisPageApi } from '../frequency/FrequencyAnalysisPageApi';
 // const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
 const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 

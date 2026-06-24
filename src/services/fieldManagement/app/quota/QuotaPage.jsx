@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import DataHeader from '../../components/DataHeader';
+import DataHeader from '@/services/dataStatus/components/DataHeader';
 import { ChevronDown, ChevronUp, Monitor, Smartphone, Tablet, Phone, Users, FileText, Send } from 'lucide-react';
 import './QuotaPage.css';
 

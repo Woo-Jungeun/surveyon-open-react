@@ -4,7 +4,7 @@ import api from "@/common/queries/Api.js";
 import { useContext } from "react";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
-export function FrequencyAnalysisPageApi() {
+export function FieldProgressPageApi() {
 
     const loadingSpinner = useContext(loadingSpinnerContext);
 
@@ -73,3 +73,5 @@ export function FrequencyAnalysisPageApi() {
         exportSurveyProgressXlsx
     };
 }
+
+export { FieldProgressPageApi as FrequencyAnalysisPageApi };
