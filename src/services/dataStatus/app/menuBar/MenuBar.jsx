@@ -15,33 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import "./MenuBar.css";
 
-// 메뉴 아이템 정의
-// 원래 있는건 그대로 두되 메뉴바에서 주석처리
-/*
-const MENU_ITEMS_OLD = [
-  {
-    label: "교차표",
-    items: [
-      // { label: "빈도분석", path: "/data_status/hsrt/add_question", icon: BarChart3 },
-      // { label: "교차분석", path: "/data_status/analysis/cross", icon: Table, isPending: true },
-      { label: "배너설정", path: "/data_status/hsrt/add_question", icon: Columns },
-      { label: "문항", path: "/data_status/analysis/cross", icon: Table },
-      // todo 임시 주석  [쿼터현황/관리] 메뉴
-      // { label: "쿼터현황/관리", path: "/data_status/analysis/quota", icon: ClipboardList },
-      // { label: "쿼터현황/관리", path: "/data_status/analysis/quota", icon: ClipboardList, isPending: true },
-    ]
-  },
-  {
-    label: "데이터설정",
-    items: [
-      { label: "페이지 설정", path: "/data_status/setting/page", icon: LayoutDashboard },
-      { label: "스터브 생성", path: "/data_status/setting/recoding", icon: Wrench },
-      { label: "DP 의뢰서 정의", path: "/data_status/setting/dp_definition", icon: FileText, isPending: true },
-      { label: "가중치 생성", path: "/data_status/setting/weight", icon: Target },
-    ]
-  }
-];
-*/
+
 
 // 신규 H-SRT 메뉴 아이템 반영
 const MENU_ITEMS = [
