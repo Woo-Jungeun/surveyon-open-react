@@ -1499,6 +1499,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [sigDiffMax, setSigDiffMax] = useState(60);
 
     const [localSigExcludeUnderN, setLocalSigExcludeUnderN] = useState(3);
+    const [localSigExcludeEtc, setLocalSigExcludeEtc] = useState(true);
     const [localSigLevel, setLocalSigLevel] = useState(95);
     const [localSigDiffMin, setLocalSigDiffMin] = useState(10);
     const [localSigDiffMax, setLocalSigDiffMax] = useState(60);
@@ -1508,51 +1509,19 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const sigAnchorRef = useRef(null);
     const sigPopupRef = useRef(null);
 
-    // 로컬 상태 동기화
+    // 팝업이 열릴 때 또는 메인 상태가 바뀔 때 로컬 상태 동기화
     useEffect(() => {
-        setLocalSigExcludeUnderN(sigExcludeUnderN);
-    }, [sigExcludeUnderN]);
-
-    useEffect(() => {
-        setLocalSigLevel(sigLevel);
-    }, [sigLevel]);
-
-    useEffect(() => {
-        setLocalSigDiffMin(sigDiffMin);
-    }, [sigDiffMin]);
-
-    useEffect(() => {
-        setLocalSigDiffMax(sigDiffMax);
-    }, [sigDiffMax]);
+        if (isSigPopupOpen) {
+            setLocalSigExcludeUnderN(sigExcludeUnderN);
+            setLocalSigExcludeEtc(sigExcludeEtc);
+            setLocalSigLevel(sigLevel);
+            setLocalSigDiffMin(sigDiffMin);
+            setLocalSigDiffMax(sigDiffMax);
+        }
+    }, [isSigPopupOpen, sigExcludeUnderN, sigExcludeEtc, sigLevel, sigDiffMin, sigDiffMax]);
 
     // 디바운스 타이머
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setSigExcludeUnderN(localSigExcludeUnderN === '' ? 3 : Number(localSigExcludeUnderN));
-        }, 400);
-        return () => clearTimeout(timer);
-    }, [localSigExcludeUnderN]);
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setSigLevel(localSigLevel === '' ? 95 : Number(localSigLevel));
-        }, 400);
-        return () => clearTimeout(timer);
-    }, [localSigLevel]);
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setSigDiffMin(localSigDiffMin === '' ? 10 : Number(localSigDiffMin));
-        }, 400);
-        return () => clearTimeout(timer);
-    }, [localSigDiffMin]);
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setSigDiffMax(localSigDiffMax === '' ? 60 : Number(localSigDiffMax));
-        }, 400);
-        return () => clearTimeout(timer);
-    }, [localSigDiffMax]);
 
 
     const [showN, setShowN] = useState(false);
@@ -1856,7 +1825,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     // --- 데이터 로직 ---
-    const fetchCrossAnalysisData = async (mode = 'normal', targetIdToSelect = null, targetPage = currentPage, currentFilterExp = filterExpression) => {
+    const fetchCrossAnalysisData = async (mode = 'normal', targetIdToSelect = null, targetPage = currentPage, currentFilterExp = filterExpression, overrideSigSettings = null) => {
         // 실제 데이터 연동 시 사용할 주석:
         const pageId = sessionStorage.getItem('pageId');
         const user = auth?.user?.userId;
@@ -1912,6 +1881,13 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     setSigLevel(fetchedUi.sig_level ?? 95);
                     setSigDiffMin(fetchedUi.sig_diff_min ?? 10);
                     setSigDiffMax(fetchedUi.sig_diff_max ?? 60);
+
+                    setLocalSigExcludeUnderN(fetchedUi.sig_exclude_under_n ?? 3);
+                    setLocalSigExcludeEtc(fetchedUi.sig_exclude_etc ?? true);
+                    setLocalSigLevel(fetchedUi.sig_level ?? 95);
+                    setLocalSigDiffMin(fetchedUi.sig_diff_min ?? 10);
+                    setLocalSigDiffMax(fetchedUi.sig_diff_max ?? 60);
+
                     setShowTTest(resolvedSigType === 't-test');
 
                     let hasBaseParenthesis = true;
@@ -1984,11 +1960,11 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             // 2. 전체표 목록 (Overview) 가져오기
             let sigPolicy = {};
             const currentSigType = isInitialSetupRef.current ? (fetchedUi?.sig_type ?? (fetchedUi?.show_t_test ? 't-test' : 'none')) : sigType;
-            const currentExcludeN = isInitialSetupRef.current ? (fetchedUi?.sig_exclude_under_n ?? sigExcludeUnderN) : sigExcludeUnderN;
-            const currentExcludeEtc = isInitialSetupRef.current ? (fetchedUi?.sig_exclude_etc ?? sigExcludeEtc) : sigExcludeEtc;
-            const currentSigLevel = isInitialSetupRef.current ? (fetchedUi?.sig_level ?? sigLevel) : sigLevel;
-            const currentDiffMin = isInitialSetupRef.current ? (fetchedUi?.sig_diff_min ?? sigDiffMin) : sigDiffMin;
-            const currentDiffMax = isInitialSetupRef.current ? (fetchedUi?.sig_diff_max ?? sigDiffMax) : sigDiffMax;
+            const currentExcludeN = overrideSigSettings ? overrideSigSettings.excludeN : (isInitialSetupRef.current ? (fetchedUi?.sig_exclude_under_n ?? sigExcludeUnderN) : sigExcludeUnderN);
+            const currentExcludeEtc = overrideSigSettings ? overrideSigSettings.excludeEtc : (isInitialSetupRef.current ? (fetchedUi?.sig_exclude_etc ?? sigExcludeEtc) : sigExcludeEtc);
+            const currentSigLevel = overrideSigSettings ? overrideSigSettings.level : (isInitialSetupRef.current ? (fetchedUi?.sig_level ?? sigLevel) : sigLevel);
+            const currentDiffMin = overrideSigSettings ? overrideSigSettings.diffMin : (isInitialSetupRef.current ? (fetchedUi?.sig_diff_min ?? sigDiffMin) : sigDiffMin);
+            const currentDiffMax = overrideSigSettings ? overrideSigSettings.diffMax : (isInitialSetupRef.current ? (fetchedUi?.sig_diff_max ?? sigDiffMax) : sigDiffMax);
 
             if (currentSigType === 'none') {
                 sigPolicy = {
@@ -2229,7 +2205,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         fetchCrossAnalysisData('normal', null, currentPage, filterExpression);
     }, [currentPage]);
 
-    // 팝업 외부 클릭 시 닫기 및 데이터 갱신
+    // 팝업 외부 클릭 시 닫기
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (isSigPopupOpen &&
@@ -2238,7 +2214,6 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 sigPopupRef.current &&
                 !sigPopupRef.current.contains(event.target)) {
                 setIsSigPopupOpen(false);
-                fetchCrossAnalysisData('normal', null, currentPage, filterExpression);
             }
         };
 
@@ -2246,7 +2221,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isSigPopupOpen, currentPage, filterExpression]);
+    }, [isSigPopupOpen]);
 
     useEffect(() => {
         const handleObserver = (entries) => {
@@ -2517,9 +2492,11 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     100% { transform: rotate(360deg); }
                 }
                 .animate-sig-highlight {
-                    animation: sig-settings-spin 0.6s cubic-bezier(0.25, 1, 0.5, 1) 1;
                     background-color: #eff6ff !important;
                     color: #2563eb !important;
+                }
+                .animate-sig-highlight svg {
+                    animation: sig-settings-spin 1.2s cubic-bezier(0.25, 1, 0.5, 1) 1;
                 }
                 `}
             </style>
@@ -2767,6 +2744,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 <button
                                     key={animateSettingsTrigger}
                                     onClick={() => {
+                                        setAnimateSettingsTrigger(prev => prev + 1);
                                         if (isSigPopupOpen) {
                                             // 상세설정 팝업이 닫힐 때 설정을 반영하여 즉시 갱신
                                             fetchCrossAnalysisData('normal', null, currentPage, filterExpression);
@@ -2788,7 +2766,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     }}
                                     title="차이검증 세부 설정"
                                 >
-                                    <Settings size={16} className={isSigPopupOpen ? "animate-spin" : ""} style={{ animationDuration: '3s' }} />
+                                    <Settings size={16} />
                                 </button>
                             </>
                         )}
@@ -3172,12 +3150,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>기타/모름/무응답 제외</span>
                             <div
-                                onClick={() => setSigExcludeEtc(!sigExcludeEtc)}
+                                onClick={() => setLocalSigExcludeEtc(!localSigExcludeEtc)}
                                 style={{
                                     position: 'relative',
                                     width: '40px', height: '22px',
                                     borderRadius: '11px',
-                                    background: sigExcludeEtc ? '#3b82f6' : '#cbd5e1',
+                                    background: localSigExcludeEtc ? '#3b82f6' : '#cbd5e1',
                                     cursor: 'pointer',
                                     transition: 'background-color 0.2s ease',
                                     userSelect: 'none'
@@ -3186,7 +3164,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 <div style={{
                                     position: 'absolute',
                                     top: '2px',
-                                    left: sigExcludeEtc ? '20px' : '2px',
+                                    left: localSigExcludeEtc ? '20px' : '2px',
                                     width: '18px', height: '18px',
                                     borderRadius: '50%',
                                     background: '#ffffff',
@@ -3316,11 +3294,56 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     )}
 
                     {/* 적용 버튼 추가 */}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
+                        <button
+                            onClick={() => setIsSigPopupOpen(false)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                background: '#f1f5f9',
+                                color: '#475569',
+                                border: '1px solid #cbd5e1',
+                                borderRadius: '6px',
+                                padding: '6px 16px',
+                                fontSize: '12px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                transition: 'background-color 0.2s, color 0.2s',
+                            }}
+                            onMouseOver={(e) => {
+                                e.currentTarget.style.background = '#e2e8f0';
+                                e.currentTarget.style.color = '#1e293b';
+                            }}
+                            onMouseOut={(e) => {
+                                e.currentTarget.style.background = '#f1f5f9';
+                                e.currentTarget.style.color = '#475569';
+                            }}
+                        >
+                            취소
+                        </button>
                         <button
                             onClick={() => {
                                 setIsSigPopupOpen(false);
-                                fetchCrossAnalysisData('normal', null, currentPage, filterExpression);
+                                const targetExcludeN = localSigExcludeUnderN === '' ? 3 : Number(localSigExcludeUnderN);
+                                const targetExcludeEtc = localSigExcludeEtc;
+                                const targetLevel = localSigLevel === '' ? 95 : Number(localSigLevel);
+                                const targetDiffMin = localSigDiffMin === '' ? 10 : Number(localSigDiffMin);
+                                const targetDiffMax = localSigDiffMax === '' ? 60 : Number(localSigDiffMax);
+
+                                setSigExcludeUnderN(targetExcludeN);
+                                setSigExcludeEtc(targetExcludeEtc);
+                                setSigLevel(targetLevel);
+                                setSigDiffMin(targetDiffMin);
+                                setSigDiffMax(targetDiffMax);
+
+                                fetchCrossAnalysisData('normal', null, currentPage, filterExpression, {
+                                    excludeN: targetExcludeN,
+                                    excludeEtc: targetExcludeEtc,
+                                    level: targetLevel,
+                                    diffMin: targetDiffMin,
+                                    diffMax: targetDiffMax
+                                });
                             }}
                             style={{
                                 display: 'flex',
@@ -3335,6 +3358,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 fontWeight: 700,
                                 cursor: 'pointer',
                                 transition: 'background-color 0.2s',
+                            }}
+                            onMouseOver={(e) => {
+                                e.currentTarget.style.background = '#2563eb';
+                            }}
+                            onMouseOut={(e) => {
+                                e.currentTarget.style.background = '#3b82f6';
                             }}
                         >
                             적용
