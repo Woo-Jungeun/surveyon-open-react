@@ -1594,7 +1594,7 @@ const QaPage = () => {
                                     <span style={{ marginLeft: '4px' }}>{opt.text}</span>
 
                                     {opt.is_exclusive && (
-                                        <span className="qa-control-badge qa-badge-exclusive" style={{ marginLeft: '6px' }}>[배타]</span>
+                                        <span className="qa-control-badge qa-badge-exclusive" style={{ marginLeft: '6px' }}>[중복선택불가]</span>
                                     )}
 
                                     {opt.is_fixed && (
@@ -2032,7 +2032,7 @@ const QaPage = () => {
                                                                         <div key={opt.code} className="qa-qc-option-item">
                                                                             <span className="qa-qc-option-code">[{opt.code}]</span>{' '}
                                                                             <span className="qa-qc-option-text">{opt.text}</span>
-                                                                            {opt.is_exclusive && <span className="qa-control-badge qa-badge-exclusive" style={{ marginLeft: '6px' }}>[배타]</span>}
+                                                                            {opt.is_exclusive && <span className="qa-control-badge qa-badge-exclusive" style={{ marginLeft: '6px' }}>[중복선택불가]</span>}
                                                                             {opt.is_fixed && <span className="qa-control-badge qa-badge-fixed" style={{ marginLeft: '6px' }}>📌 고정</span>}
                                                                             {opt.has_open_ended && <span className="qa-control-badge qa-badge-open" style={{ marginLeft: '6px' }}>✍ 주관식 입력</span>}
                                                                             {opt.display_condition && <span className="qa-control-badge qa-badge-condition" style={{ marginLeft: '6px' }}>👁 {opt.display_condition}</span>}
