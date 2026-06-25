@@ -199,7 +199,10 @@ export function DpRequestPageApi() {
 
     /** 교차분석 - 전체표 결과 조회 (스타일 포함 HTML) */
     const getOverviewStyled = useMutation(
-        async (data) => await api.post(data, "/datasets/overview/styled", "API_BASE_URL_DATASTATUS")
+        async (data) => {
+            const { _config, ...restData } = data || {};
+            return await api.post(restData, "/datasets/overview/styled", "API_BASE_URL_DATASTATUS", _config);
+        }
     );
 
     /** 표 설정 - 스타일 예시 조회 */
@@ -212,12 +215,18 @@ export function DpRequestPageApi() {
     );
     /** 교차분석 - 엑셀 다운로드 (export) */
     const exportOverviewXlsx = useMutation(
-        async (data) => await api.post(data, "/datasets/overview/xlsx-export", "API_BASE_URL_DATASTATUS")
+        async (data) => {
+            const { _config, ...restData } = data || {};
+            return await api.post(restData, "/datasets/overview/xlsx-export", "API_BASE_URL_DATASTATUS", _config);
+        }
     );
 
     /** 교차분석 - 현재 결과 저장 (Snapshot) */
     const createSnapshot = useMutation(
-        async (data) => await api.post(data, "/datasets/overview/snapshots/create", "API_BASE_URL_DATASTATUS")
+        async (data) => {
+            const { _config, ...restData } = data || {};
+            return await api.post(restData, "/datasets/overview/snapshots/create", "API_BASE_URL_DATASTATUS", _config);
+        }
     );
 
     /** 교차분석 - 표시 옵션 저장 */

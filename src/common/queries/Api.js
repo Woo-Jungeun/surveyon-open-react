@@ -45,8 +45,8 @@ const join = (p, type) => {
 
 export default {
 
-    async post(data, url, type) {
-        const response = await apiAxios.post(join(url, type), data);
+    async post(data, url, type, config = {}) {
+        const response = await apiAxios.post(join(url, type), data, config);
         return response.data || {};
     },
 
