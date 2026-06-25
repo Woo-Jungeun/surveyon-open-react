@@ -95,7 +95,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
             if (result?.success === "777") {
                 setPageInfo(prev => ({
                     ...prev,
-                    processedAt: formatDate(result.resultjson.parquetBakedAt)
+                    processedAt: formatDate(result.resultjson.mngParquetBakedAt)
                 }));
             }
         } catch (err) {
@@ -137,7 +137,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         if (!userId || !pn) return;
         try {
             loadingSpinner.show();
-            const result = await syncMap.mutateAsync({ user: userId, pn });
+            const result = await syncMap.mutateAsync({ user: userId, pn, bakeTarget: "mng" });
             if (result?.success === "777") {
                 modal.showAlert("알림", "데이터 새로고침이 성공적으로 완료되었습니다.");
                 await fetchDataInfo(pn);
