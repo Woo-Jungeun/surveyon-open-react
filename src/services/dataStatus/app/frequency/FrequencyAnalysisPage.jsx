@@ -4,21 +4,21 @@ import { exportImage, exportSVG } from '@progress/kendo-drawing';
 import { saveAs } from '@progress/kendo-file-saver';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import Toast from '../../../../components/common/Toast';
-import DataHeader from '@/services/dataStatus/components/DataHeader';
-import SideBar from '@/services/dataStatus/components/SideBar';
-import KendoChart from '@/services/dataStatus/components/KendoChart';
+import DataHeader from '../../components/DataHeader';
+import SideBar from '../../components/SideBar';
+import KendoChart from '../../components/KendoChart';
 import AdvancedFilterPopup from './AdvancedFilterPopup';
-import './FieldProgressPage.css';
+import './FrequencyAnalysisPage.css';
 import '@progress/kendo-theme-default/dist/all.css';
-import { CHART_THEME_OPTIONS } from '@/services/dataStatus/constants/chartThemes';
+import { CHART_THEME_OPTIONS } from '../../constants/chartThemes';
 import { useSelector } from 'react-redux';
-import { FieldProgressPageApi } from './FieldProgressPageApi';
+import { FrequencyAnalysisPageApi } from './FrequencyAnalysisPageApi';
 import OverviewVariablePopup from './OverviewVariablePopup';
-import { RecodingPageApi } from '@/services/dataStatus/app/recoding/RecodingPageApi';
+import { RecodingPageApi } from '../recoding/RecodingPageApi';
 import { Settings } from 'lucide-react';
-import { VariablePageApi } from '@/services/dataStatus/app/variable/VariablePageApi';
-import { DpRequestPageApi } from '@/services/dataStatus/app/hsrt/dpRequest/DpRequestPageApi';
-import PageListPopup from '@/services/dataStatus/app/variable/PageListPopup';
+import { VariablePageApi } from '../variable/VariablePageApi';
+import { DpRequestPageApi } from '../hsrt/dpRequest/DpRequestPageApi';
+import PageListPopup from '../variable/PageListPopup';
 import { modalContext } from "@/components/common/Modal.jsx";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
@@ -1015,9 +1015,9 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
 });
 AggregationCard.displayName = 'AggregationCard';
 
-const FieldProgressPage = () => {
+const FrequencyAnalysisPage = () => {
     const auth = useSelector((store) => store.auth);
-    const { getOverviewList, getOverviewData, getSurveyProgressStyled, getSurveyProgressChartData, exportSurveyProgressXlsx } = FieldProgressPageApi();
+    const { getOverviewList, getOverviewData, getSurveyProgressStyled, getSurveyProgressChartData, exportSurveyProgressXlsx } = FrequencyAnalysisPageApi();
     const [searchTerm, setSearchTerm] = useState('');
     const [activeId, setActiveId] = useState(null);
     const [sidebarPage, setSidebarPage] = useState(1);
@@ -2946,4 +2946,4 @@ const FieldProgressPage = () => {
     );
 };
 
-export default FieldProgressPage;
+export default FrequencyAnalysisPage;
