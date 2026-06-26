@@ -116,16 +116,16 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
                             const pages = pageRes.resultjson || [];
                             if (pages.length > 0) {
                                 const pageId = pages[0].id || pages[0].pageid;
-                                sessionStorage.setItem("pageId", pageId);
+                                sessionStorage.setItem("silsaPageId", pageId);
                             } else {
-                                sessionStorage.setItem("pageId", "dummy_page_id_for_field_management");
+                                sessionStorage.setItem("silsaPageId", "dummy_page_id_for_field_management");
                             }
                             window.dispatchEvent(new Event("pageSelected"));
                         }
                     })
                     .catch(err => {
                         console.warn("Auto-select page error on mount", err);
-                        sessionStorage.setItem("pageId", "dummy_page_id_for_field_management");
+                        sessionStorage.setItem("silsaPageId", "dummy_page_id_for_field_management");
                         window.dispatchEvent(new Event("pageSelected"));
                     });
             }
@@ -186,17 +186,17 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
                 const user = auth?.user?.userId;
                 const pageRes = await pageList.mutateAsync({ user: user, pn: project.merge_pn });
                 if (pageRes?.success === "777") {
-                    const pages = pageRes.resultjson || [];
-                    if (pages.length > 0) {
-                        const pageId = pages[0].id || pages[0].pageid;
-                        sessionStorage.setItem("pageId", pageId);
-                    } else {
-                        sessionStorage.setItem("pageId", "dummy_page_id_for_field_management");
-                    }
+                     const pages = pageRes.resultjson || [];
+                     if (pages.length > 0) {
+                         const pageId = pages[0].id || pages[0].pageid;
+                         sessionStorage.setItem("silsaPageId", pageId);
+                     } else {
+                         sessionStorage.setItem("silsaPageId", "dummy_page_id_for_field_management");
+                     }
                 }
             } catch (e) {
                 console.warn("Auto-select page error", e);
-                sessionStorage.setItem("pageId", "dummy_page_id_for_field_management");
+                sessionStorage.setItem("silsaPageId", "dummy_page_id_for_field_management");
             }
         }
 

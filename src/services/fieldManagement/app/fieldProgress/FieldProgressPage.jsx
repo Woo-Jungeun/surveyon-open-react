@@ -1024,7 +1024,7 @@ const FieldProgressPage = () => {
     const [totalQuestions, setTotalQuestions] = useState(0);
     const SIDEBAR_PAGE_SIZE = 20;
 
-    const [currentPageId, setCurrentPageId] = useState(sessionStorage.getItem("pageId"));
+    const [currentPageId, setCurrentPageId] = useState(sessionStorage.getItem("silsaPageId"));
 
     const modal = useContext(modalContext);
     const loadingSpinner = useContext(loadingSpinnerContext);
@@ -1057,7 +1057,7 @@ const FieldProgressPage = () => {
     const handlePageSelectedPopup = (page) => {
         const pageId = page.pageid || page.id;
         const pageTitle = page.title || page.name;
-        sessionStorage.setItem("pageId", pageId);
+        sessionStorage.setItem("silsaPageId", pageId);
         sessionStorage.setItem("pagetitle", pageTitle);
         setIsPageListOpen(false);
         window.location.reload();
@@ -1188,7 +1188,7 @@ const FieldProgressPage = () => {
     const [excelDecimalPct, setExcelDecimalPct] = useState(1); // 엑셀 다운로드 시 % 소수점 자리수
 
     const handleExcelExport = async () => {
-        const pageId = sessionStorage.getItem('pageId');
+        const pageId = sessionStorage.getItem('silsaPageId');
         const user = auth?.user?.userId;
         if (!pageId || !user) return;
 
@@ -1343,7 +1343,7 @@ const FieldProgressPage = () => {
     };
 
     const fetchDropdownFilterList = async () => {
-        const pageId = sessionStorage.getItem("pageId");
+        const pageId = sessionStorage.getItem("silsaPageId");
         const userId = auth?.user?.userId;
         if (!pageId || !userId) return;
 
@@ -1374,7 +1374,7 @@ const FieldProgressPage = () => {
 
     const fetchOverviewVars = async () => {
         if (!auth?.user?.userId) return;
-        const pageId = sessionStorage.getItem("pageId");
+        const pageId = sessionStorage.getItem("silsaPageId");
         if (!pageId) return;
 
         try {
@@ -1401,7 +1401,7 @@ const FieldProgressPage = () => {
 
     const fetchBannerVars = async () => {
         if (!auth?.user?.userId) return;
-        const pageId = sessionStorage.getItem("pageId");
+        const pageId = sessionStorage.getItem("silsaPageId");
         if (!pageId) return;
 
         try {
@@ -1437,7 +1437,7 @@ const FieldProgressPage = () => {
 
     const fetchOriginalVars = async () => {
         if (!auth?.user?.userId) return;
-        const pageId = sessionStorage.getItem("pageId");
+        const pageId = sessionStorage.getItem("silsaPageId");
         if (!pageId) return;
 
         try {
@@ -1461,7 +1461,7 @@ const FieldProgressPage = () => {
         if (!auth?.user?.userId) return;
 
         const checkPid = () => {
-            const pid = sessionStorage.getItem("pageId");
+            const pid = sessionStorage.getItem("silsaPageId");
             setCurrentPageId(pid);
             if (pid) {
                 fetchOverviewVars();
@@ -1471,7 +1471,7 @@ const FieldProgressPage = () => {
             } else {
                 if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
                 alertTimerRef.current = setTimeout(() => {
-                    const finalPid = sessionStorage.getItem("pageId");
+                    const finalPid = sessionStorage.getItem("silsaPageId");
                     setCurrentPageId(finalPid);
                     if (sessionStorage.getItem("merge_pn") && !finalPid) {
                         setQuestions([]); // 이전 문항 데이터 초기화
@@ -1585,7 +1585,7 @@ const FieldProgressPage = () => {
     const fetchQuestions = async (page) => {
         if (isFetchingListRef.current) return;
         if (!auth?.user?.userId) return;
-        const pageId = sessionStorage.getItem("pageId");
+        const pageId = sessionStorage.getItem("silsaPageId");
         if (!pageId) return;
 
         isFetchingListRef.current = true;
@@ -1692,7 +1692,7 @@ const FieldProgressPage = () => {
     useEffect(() => {
         const handlePageSelected = () => {
             if (!auth?.user?.userId) return;
-            setCurrentPageId(sessionStorage.getItem("pageId"));
+            setCurrentPageId(sessionStorage.getItem("silsaPageId"));
             setQuestions([]);
             setSidebarPage(1);
             setTotalQuestions(0);
@@ -1742,7 +1742,7 @@ const FieldProgressPage = () => {
             tableIdsToSet.forEach(id => fetchingRef.current.add(id));
 
             try {
-                const pageId = sessionStorage.getItem("pageId");
+                const pageId = sessionStorage.getItem("silsaPageId");
                 const userId = auth.user.userId;
 
                 const payload = {
@@ -1824,7 +1824,7 @@ const FieldProgressPage = () => {
         const index = questions.findIndex(q => q.id === qId);
         if (index === -1) return;
 
-        const pageId = sessionStorage.getItem("pageId");
+        const pageId = sessionStorage.getItem("silsaPageId");
         if (!pageId || !auth?.user?.userId) return;
 
         const payload = {
@@ -2786,7 +2786,7 @@ const FieldProgressPage = () => {
                         fetchOverviewVars(); // 팝업 닫힐 때 목록 최신화
                     }}
                     auth={auth}
-                    pageId={sessionStorage.getItem("pageId")}
+                    pageId={sessionStorage.getItem("silsaPageId")}
                     onSaved={fetchOverviewVars}
                     activeVariableId={selectedVariableIds.length === 1 ? selectedVariableIds[0] : null}
                     onDeleteActive={(deletedVarId) => {
@@ -2806,7 +2806,7 @@ const FieldProgressPage = () => {
                 isOpen={isOverviewPopupOpen}
                 onClose={() => setIsOverviewPopupOpen(false)}
                 auth={auth}
-                pageId={sessionStorage.getItem("pageId")}
+                pageId={sessionStorage.getItem("silsaPageId")}
                 onSaved={fetchOverviewVars}
             />
 
