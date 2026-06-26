@@ -133,7 +133,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
     const [selectedBorder, setSelectedBorder] = useState(null);
     const [hoveredBorder, setHoveredBorder] = useState(null);
     const [activeTab, setActiveTab] = useState('policy'); // 'policy', 'fontColor', 'border'
-    const [isExampleCollapsed, setIsExampleCollapsed] = useState(true);
+    const [isExampleCollapsed, setIsExampleCollapsed] = useState(false);
 
     useEffect(() => {
         if (activeTab === 'border') {
@@ -716,15 +716,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
         const timer = setTimeout(async () => {
             const payload = getDraftPayload();
 
-            setLoadingReal(true);
-            try {
-                const res = await getOverviewStyled.mutateAsync(payload);
-                setRealPreviewData(parsePreviewData(res));
-            } catch (err) {
-                console.error("Failed to fetch real preview styled HTML:", err);
-            } finally {
-                setLoadingReal(false);
-            }
+            // 실제 표 미리보기 API 호출은 주석 처리됨
 
             setLoadingExamples(true);
             try {
@@ -852,7 +844,8 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
             {/* 왼쪽 구획: 미리보기 영역 (Sticky 고정 - 반응형 넓이 확장 및 상하 균등 정렬) */}
             <div style={{ flex: '0 0 45%', minWidth: '460px', maxWidth: '750px', position: 'sticky', top: '20px', display: 'flex', flexDirection: 'column', gap: '20px', height: 'calc(100vh - 200px)', minHeight: '620px' }}>
 
-                {/* 카드 1: 실제 표 미리보기 */}
+                {/* 카드 1: 실제 표 미리보기 (주석 처리) */}
+                {/* 
                 <div className="dp-setting-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #CBD5E1', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
                     <div className="dp-setting-card-header" style={{ padding: '10px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', fontSize: '13px', background: '#F8FAFC', borderRadius: '8px 8px 0 0', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span>실제 표 미리보기</span>
@@ -863,7 +856,6 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                         )}
                     </div>
 
-                    {/* 선 선택 시 조작 도구 바 */}
                     {selectedBorder && (
                         <div onMouseEnter={() => setHoveredBorder(selectedBorder)} onMouseLeave={() => setHoveredBorder(null)} style={{ background: '#EFF6FF', borderBottom: '1px solid #BFDBFE', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexShrink: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -888,6 +880,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                         />
                     </div>
                 </div>
+                */}
 
                 {/* 카드 2: 스타일 예시 */}
                 {/* 카드 2: 스타일 예시 (접기/펼치기 아코디언 추가) */}
