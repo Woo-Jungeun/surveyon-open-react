@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { MenuBarApi } from "@/services/dataStatus/app/menuBar/MenuBarApi";
 import ProjectSelectionModal from "@/services/dataStatus/app/menuBar/ProjectSelectionModal";
 import { VariablePageApi } from "@/services/dataStatus/app/variable/VariablePageApi";
+import { FieldProgressPageApi } from "@/services/fieldManagement/app/fieldProgress/FieldProgressPageApi";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import "@/services/dataStatus/app/menuBar/MenuBar.css";
 
@@ -27,7 +28,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     const auth = useSelector((store) => store.auth);
     const navigate = useNavigate();
     const { getDataInfo, syncMap } = MenuBarApi();
-    const { pageList } = VariablePageApi();
+    const { pageList } = FieldProgressPageApi();
 
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
 

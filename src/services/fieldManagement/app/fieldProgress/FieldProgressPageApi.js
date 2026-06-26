@@ -65,12 +65,26 @@ export function FieldProgressPageApi() {
         async (payload) => await api.post(payload, "/survey-progress/xlsx-export", "API_BASE_URL_DATASTATUS")
     );
 
+    /** 실사관리 대시보드(페이지) 목록 조회 */
+    const pageList = useMutation(
+        async (data) => await api.post(data, "/survey-progress/list", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => {
+                loadingSpinner.show();
+            },
+            onSettled: () => {
+                loadingSpinner.hide();
+            }
+        }
+    );
+
     return {
         getOverviewList,
         getOverviewData,
         getSurveyProgressStyled,
         getSurveyProgressChartData,
-        exportSurveyProgressXlsx
+        exportSurveyProgressXlsx,
+        pageList
     };
 }
 

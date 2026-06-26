@@ -1017,7 +1017,7 @@ AggregationCard.displayName = 'AggregationCard';
 
 const FieldProgressPage = () => {
     const auth = useSelector((store) => store.auth);
-    const { getOverviewList, getOverviewData, getSurveyProgressStyled, getSurveyProgressChartData, exportSurveyProgressXlsx } = FieldProgressPageApi();
+    const { getOverviewList, getOverviewData, getSurveyProgressStyled, getSurveyProgressChartData, exportSurveyProgressXlsx, pageList: getPageList } = FieldProgressPageApi();
     const [searchTerm, setSearchTerm] = useState('');
     const [activeId, setActiveId] = useState(null);
     const [sidebarPage, setSidebarPage] = useState(1);
@@ -1030,7 +1030,6 @@ const FieldProgressPage = () => {
     const loadingSpinner = useContext(loadingSpinnerContext);
     const alertTimerRef = useRef(null);
 
-    const { pageList: getPageList } = VariablePageApi();
     const [isPageListOpen, setIsPageListOpen] = useState(false);
     const [pageListData, setPageListData] = useState([]);
 
@@ -2816,6 +2815,7 @@ const FieldProgressPage = () => {
                 onClose={() => setIsPageListOpen(false)}
                 data={pageListData}
                 onSelect={handlePageSelectedPopup}
+                pageListApi={getPageList}
             />
 
             {isExcelModalOpen && (

@@ -70,9 +70,10 @@ const ActionCell = (props) => {
     );
 };
 
-const PageListPopup = ({ isOpen, onClose, data, onSelect }) => {
+const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
     const auth = useSelector((store) => store.auth);
-    const { pageSet, pageList, pageDelete } = VariablePageApi();
+    const { pageSet, pageList: defaultPageList, pageDelete } = VariablePageApi();
+    const pageList = pageListApi || defaultPageList;
     const modal = useContext(modalContext);
 
     const draftTitleRef = React.useRef("");
