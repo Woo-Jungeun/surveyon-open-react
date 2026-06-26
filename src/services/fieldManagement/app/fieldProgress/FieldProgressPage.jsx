@@ -1933,7 +1933,7 @@ const FieldProgressPage = () => {
 
     return (
         <div className="aggregation-page" data-theme="data-dashboard">
-            <DataHeader title="문항별집게">
+            <DataHeader title="문항별집계">
                 {/* 배너 영역 그룹 */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {/* 배너 문항 선택 드롭다운 */}
@@ -2826,7 +2826,7 @@ const FieldProgressPage = () => {
                             엑셀 다운로드
                         </h3>
                         <p style={{ margin: '0 0 24px 0', fontSize: '15px', color: '#475569', fontWeight: 500, lineHeight: '1.5' }}>
-                            문항별집게를 엑셀 파일로 다운로드 하시겠습니까?
+                            문항별집계를 엑셀 파일로 다운로드 하시겠습니까?
                         </p>
                         <div style={{ marginBottom: '28px', padding: '16px 20px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
