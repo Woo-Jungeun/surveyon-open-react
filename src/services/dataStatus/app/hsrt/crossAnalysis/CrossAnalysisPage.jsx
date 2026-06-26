@@ -18,6 +18,11 @@ import Toast from '@/components/common/Toast';
 // --- 상수 ---
 const CROSS_FILTER_ALL_ID = "__all__";
 const EMPTY_ARRAY = [];
+const SIG_TYPE_OPTIONS = [
+    { text: '미적용', value: 'none' },
+    { text: '차이검증 (t-test)', value: 't-test' },
+    { text: '전체값 대비 (편차)', value: 'deviation' }
+];
 
 const formatCountValue = (val, policy) => {
     if (val === null || val === undefined || val === '') return '-';
@@ -1508,6 +1513,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [animateSettingsTrigger, setAnimateSettingsTrigger] = useState(0);
     const sigAnchorRef = useRef(null);
     const sigPopupRef = useRef(null);
+    const isSavingDirectlyRef = useRef(false);
 
     // 팝업이 열릴 때 또는 메인 상태가 바뀔 때 로컬 상태 동기화
     useEffect(() => {
@@ -1584,6 +1590,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     useEffect(() => {
         if (isInitialSetupRef.current) return;
+        if (isSavingDirectlyRef.current) return;
 
         const saveTimeout = setTimeout(() => {
             const pageId = sessionStorage.getItem('pageId');
@@ -1597,6 +1604,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 format_percent_round: decimalPct === '' ? 0 : decimalPct,
                 show_t_test: sigType === 't-test',
                 sig_type: sigType,
+                sig_diff_fin_mode: sigType === 't-test' ? 't_test' : sigType,
                 sig_exclude_under_n: sigExcludeUnderN,
                 sig_exclude_etc: sigExcludeEtc,
                 sig_level: sigLevel,
@@ -1874,19 +1882,43 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     setShowPct(fetchedUi.format_show_percent ?? true);
                     setDecimalPct(fetchedUi.format_percent_round ?? ctxPayload.percent_digits ?? 1);
                     setHideZeroBaseColumns(fetchedUi.hide_zero_base_columns ?? false);
-                    const resolvedSigType = fetchedUi.sig_type ?? (fetchedUi.show_t_test ? 't-test' : 'none');
+                    const resolvedSigType = fetchedUi.sig_diff_fin_mode === 't_test' ? 't-test' : (fetchedUi.sig_diff_fin_mode ?? fetchedUi.sig_type ?? (fetchedUi.show_t_test ? 't-test' : 'none'));
                     setSigType(resolvedSigType);
-                    setSigExcludeUnderN(fetchedUi.sig_exclude_under_n ?? 3);
-                    setSigExcludeEtc(fetchedUi.sig_exclude_etc ?? true);
-                    setSigLevel(fetchedUi.sig_level ?? 95);
-                    setSigDiffMin(fetchedUi.sig_diff_min ?? 10);
-                    setSigDiffMax(fetchedUi.sig_diff_max ?? 60);
 
-                    setLocalSigExcludeUnderN(fetchedUi.sig_exclude_under_n ?? 3);
-                    setLocalSigExcludeEtc(fetchedUi.sig_exclude_etc ?? true);
-                    setLocalSigLevel(fetchedUi.sig_level ?? 95);
-                    setLocalSigDiffMin(fetchedUi.sig_diff_min ?? 10);
-                    setLocalSigDiffMax(fetchedUi.sig_diff_max ?? 60);
+                    let defaultExcludeN = 3;
+                    let defaultExcludeEtc = true;
+                    let defaultLevel = 95;
+                    let defaultDiffMin = 10;
+                    let defaultDiffMax = 60;
+
+                    if (resolvedSigType === 't-test') {
+                        defaultExcludeN = 20;
+                        defaultExcludeEtc = true;
+                        defaultLevel = 95;
+                    } else if (resolvedSigType === 'deviation') {
+                        defaultExcludeN = 30;
+                        defaultExcludeEtc = false;
+                        defaultDiffMin = 5;
+                        defaultDiffMax = 100;
+                    }
+
+                    const initialExcludeN = fetchedUi.sig_exclude_under_n ?? defaultExcludeN;
+                    const initialExcludeEtc = fetchedUi.sig_exclude_etc ?? defaultExcludeEtc;
+                    const initialLevel = fetchedUi.sig_level ?? defaultLevel;
+                    const initialDiffMin = fetchedUi.sig_diff_min ?? defaultDiffMin;
+                    const initialDiffMax = fetchedUi.sig_diff_max ?? defaultDiffMax;
+
+                    setSigExcludeUnderN(initialExcludeN);
+                    setSigExcludeEtc(initialExcludeEtc);
+                    setSigLevel(initialLevel);
+                    setSigDiffMin(initialDiffMin);
+                    setSigDiffMax(initialDiffMax);
+
+                    setLocalSigExcludeUnderN(initialExcludeN);
+                    setLocalSigExcludeEtc(initialExcludeEtc);
+                    setLocalSigLevel(initialLevel);
+                    setLocalSigDiffMin(initialDiffMin);
+                    setLocalSigDiffMax(initialDiffMax);
 
                     setShowTTest(resolvedSigType === 't-test');
 
@@ -1959,7 +1991,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
             // 2. 전체표 목록 (Overview) 가져오기
             let sigPolicy = {};
-            const currentSigType = isInitialSetupRef.current ? (fetchedUi?.sig_type ?? (fetchedUi?.show_t_test ? 't-test' : 'none')) : sigType;
+            const currentSigType = overrideSigSettings && overrideSigSettings.sigType ? overrideSigSettings.sigType : (isInitialSetupRef.current ? (fetchedUi?.sig_type ?? (fetchedUi?.show_t_test ? 't-test' : 'none')) : sigType);
             const currentExcludeN = overrideSigSettings ? overrideSigSettings.excludeN : (isInitialSetupRef.current ? (fetchedUi?.sig_exclude_under_n ?? sigExcludeUnderN) : sigExcludeUnderN);
             const currentExcludeEtc = overrideSigSettings ? overrideSigSettings.excludeEtc : (isInitialSetupRef.current ? (fetchedUi?.sig_exclude_etc ?? sigExcludeEtc) : sigExcludeEtc);
             const currentSigLevel = overrideSigSettings ? overrideSigSettings.level : (isInitialSetupRef.current ? (fetchedUi?.sig_level ?? sigLevel) : sigLevel);
@@ -1968,13 +2000,15 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
             if (currentSigType === 'none') {
                 sigPolicy = {
-                    sig_diff_test_mode: false
+                    sig_diff_test_mode: false,
+                    sig_diff_fin_mode: 'none'
                 };
             } else if (currentSigType === 't-test') {
                 sigPolicy = {
                     sig_exclude_under_n: Number(currentExcludeN),
                     sig_exclude_etc: currentExcludeEtc,
                     sig_diff_test_mode: false,
+                    sig_diff_fin_mode: 't_test',
                     sig_level: Number(currentSigLevel)
                 };
             } else if (currentSigType === 'deviation') {
@@ -1982,6 +2016,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     sig_exclude_under_n: Number(currentExcludeN),
                     sig_exclude_etc: currentExcludeEtc,
                     sig_diff_test_mode: true,
+                    sig_diff_fin_mode: 'deviation',
                     sig_diff_min: Number(currentDiffMin),
                     sig_diff_max: Number(currentDiffMax)
                 };
@@ -2282,13 +2317,15 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             let sigPolicy = {};
             if (sigType === 'none') {
                 sigPolicy = {
-                    sig_diff_test_mode: false
+                    sig_diff_test_mode: false,
+                    sig_diff_fin_mode: 'none'
                 };
             } else if (sigType === 't-test') {
                 sigPolicy = {
                     sig_exclude_under_n: Number(sigExcludeUnderN),
                     sig_exclude_etc: sigExcludeEtc,
                     sig_diff_test_mode: false,
+                    sig_diff_fin_mode: 't_test',
                     sig_level: Number(sigLevel)
                 };
             } else if (sigType === 'deviation') {
@@ -2296,6 +2333,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     sig_exclude_under_n: Number(sigExcludeUnderN),
                     sig_exclude_etc: sigExcludeEtc,
                     sig_diff_test_mode: true,
+                    sig_diff_fin_mode: 'deviation',
                     sig_diff_min: Number(sigDiffMin),
                     sig_diff_max: Number(sigDiffMax)
                 };
@@ -2704,32 +2742,116 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
                         <div style={{ height: '100%', display: 'flex', alignItems: 'center', position: 'relative' }}>
                             <DropDownList
-                                data={[
-                                    { text: '미적용', value: 'none' },
-                                    { text: '차이검증 (t-test)', value: 't-test' },
-                                    { text: '전체값 대비 (편차)', value: 'deviation' }
-                                ]}
+                                data={SIG_TYPE_OPTIONS}
                                 textField="text"
                                 dataItemKey="value"
-                                value={[
-                                    { text: '미적용', value: 'none' },
-                                    { text: '차이검증 (t-test)', value: 't-test' },
-                                    { text: '전체값 대비 (편차)', value: 'deviation' }
-                                ].find(o => o.value === sigType) || { text: '미적용', value: 'none' }}
+                                value={SIG_TYPE_OPTIONS.find(o => o.value === sigType) || SIG_TYPE_OPTIONS[0]}
                                 onOpen={() => setIsSigPopupOpen(false)}
-                                onChange={(e) => {
-                                    const nextVal = e.value.value;
+                                onChange={async (e) => {
+                                    const nextVal = (typeof e.value === 'object' && e.value !== null) ? e.value.value : e.value;
                                     const prevVal = sigType;
                                     setSigType(nextVal);
-                                    setIsSigPopupOpen(false);
+                                    
+                                    if (nextVal !== 'none') {
+                                        setIsSigPopupOpen(true);
+                                    } else {
+                                        setIsSigPopupOpen(false);
+                                    }
 
                                     // 분석 기준이 미적용('none')이 아니고 실제 바뀌었을 때만 강조 애니메이션 발동
                                     if (nextVal !== 'none' && nextVal !== prevVal) {
                                         setAnimateSettingsTrigger(prev => prev + 1);
                                     }
 
-                                    // 어떤 값이 선택되든 즉시 데이터 갱신 (설정 팝업 없이 즉시 적용)
-                                    fetchCrossAnalysisData('normal', null, 1, filterExpression);
+                                    // nextVal에 따른 기획 정의 초기값 설정
+                                    let nextExcludeN = sigExcludeUnderN;
+                                    let nextExcludeEtc = sigExcludeEtc;
+                                    let nextLevel = sigLevel;
+                                    let nextDiffMin = sigDiffMin;
+                                    let nextDiffMax = sigDiffMax;
+
+                                    if (nextVal === 't_test') {
+                                        nextExcludeN = 20;
+                                        nextExcludeEtc = true;
+                                        nextLevel = 95;
+                                    } else if (nextVal === 'deviation') {
+                                        nextExcludeN = 30;
+                                        nextExcludeEtc = false;
+                                        nextDiffMin = 5;
+                                        nextDiffMax = 100;
+                                    } else if (nextVal === 'none') {
+                                        nextExcludeN = 3;
+                                        nextExcludeEtc = true;
+                                        nextLevel = 95;
+                                        nextDiffMin = 10;
+                                        nextDiffMax = 60;
+                                    }
+
+                                    // 상태 즉시 업데이트
+                                    setSigExcludeUnderN(nextExcludeN);
+                                    setSigExcludeEtc(nextExcludeEtc);
+                                    setSigLevel(nextLevel);
+                                    setSigDiffMin(nextDiffMin);
+                                    setSigDiffMax(nextDiffMax);
+
+                                    setLocalSigExcludeUnderN(nextExcludeN);
+                                    setLocalSigExcludeEtc(nextExcludeEtc);
+                                    setLocalSigLevel(nextLevel);
+                                    setLocalSigDiffMin(nextDiffMin);
+                                    setLocalSigDiffMax(nextDiffMax);
+
+                                    const pageId = sessionStorage.getItem('pageId');
+                                    const user = auth?.user?.userId;
+                                    if (pageId && user) {
+                                        const newUi = {
+                                            ...uiSettings,
+                                            format_show_n: showN,
+                                            format_n_round: decimalN === '' ? 0 : decimalN,
+                                            format_show_percent: showPct,
+                                            format_percent_round: decimalPct === '' ? 0 : decimalPct,
+                                            show_t_test: nextVal === 't_test',
+                                            sig_type: nextVal === 't_test' ? 't-test' : nextVal,
+                                            sig_diff_fin_mode: nextVal,
+                                            sig_exclude_under_n: nextExcludeN,
+                                            sig_exclude_etc: nextExcludeEtc,
+                                            sig_level: nextLevel,
+                                            sig_diff_min: nextDiffMin,
+                                            sig_diff_max: nextDiffMax,
+                                            percent_symbol: uiSettings?.percent_symbol ?? false,
+                                            percent_as_column: uiSettings?.percent_as_column ?? uiSettings?.format_percent_as_column ?? false,
+                                            stub_group_layout: uiSettings?.stub_group_layout ?? 'merge',
+                                            base_prefix: uiSettings?.base_prefix ?? "(",
+                                            base_postfix: uiSettings?.base_postfix ?? ")",
+                                        };
+                                        setUiSettings(newUi);
+
+                                        isSavingDirectlyRef.current = true;
+
+                                        try {
+                                            // 1. set API (설정 저장)를 먼저 동기 호출하여 저장 완료를 보장
+                                            await savePageSettings.mutateAsync({
+                                                pageid: pageId,
+                                                user: user,
+                                                ui_settings: newUi
+                                            });
+
+                                            // 2. 저장 완료 후 styled API (데이터 조회) 호출
+                                            await fetchCrossAnalysisData('normal', null, 1, filterExpression, {
+                                                sigType: nextVal === 't_test' ? 't-test' : nextVal,
+                                                excludeN: nextExcludeN,
+                                                excludeEtc: nextExcludeEtc,
+                                                level: nextLevel,
+                                                diffMin: nextDiffMin,
+                                                diffMax: nextDiffMax
+                                            });
+                                        } catch (err) {
+                                            console.error("Failed to save or fetch on sigType change", err);
+                                        } finally {
+                                            setTimeout(() => {
+                                                isSavingDirectlyRef.current = false;
+                                            }, 600);
+                                        }
+                                    }
                                 }}
                                 style={{ width: '160px', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
                                 className="custom-xinfo-dropdown"
@@ -3323,7 +3445,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             취소
                         </button>
                         <button
-                            onClick={() => {
+                            onClick={async () => {
                                 setIsSigPopupOpen(false);
                                 const targetExcludeN = localSigExcludeUnderN === '' ? 3 : Number(localSigExcludeUnderN);
                                 const targetExcludeEtc = localSigExcludeEtc;
@@ -3331,19 +3453,69 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 const targetDiffMin = localSigDiffMin === '' ? 10 : Number(localSigDiffMin);
                                 const targetDiffMax = localSigDiffMax === '' ? 60 : Number(localSigDiffMax);
 
+                                // 1. 메인 상태 업데이트
                                 setSigExcludeUnderN(targetExcludeN);
                                 setSigExcludeEtc(targetExcludeEtc);
                                 setSigLevel(targetLevel);
                                 setSigDiffMin(targetDiffMin);
                                 setSigDiffMax(targetDiffMax);
 
-                                fetchCrossAnalysisData('normal', null, currentPage, filterExpression, {
-                                    excludeN: targetExcludeN,
-                                    excludeEtc: targetExcludeEtc,
-                                    level: targetLevel,
-                                    diffMin: targetDiffMin,
-                                    diffMax: targetDiffMax
-                                });
+                                // 2. set API 즉시 전송을 위해 newUi 생성
+                                const pageId = sessionStorage.getItem('pageId');
+                                const user = auth?.user?.userId;
+                                if (pageId && user) {
+                                    const newUi = {
+                                        ...uiSettings,
+                                        format_show_n: showN,
+                                        format_n_round: decimalN === '' ? 0 : decimalN,
+                                        format_show_percent: showPct,
+                                        format_percent_round: decimalPct === '' ? 0 : decimalPct,
+                                        show_t_test: sigType === 't-test',
+                                        sig_type: sigType,
+                                        sig_diff_fin_mode: sigType === 't-test' ? 't_test' : sigType,
+                                        sig_exclude_under_n: targetExcludeN,
+                                        sig_exclude_etc: targetExcludeEtc,
+                                        sig_level: targetLevel,
+                                        sig_diff_min: targetDiffMin,
+                                        sig_diff_max: targetDiffMax,
+                                        percent_symbol: uiSettings?.percent_symbol ?? false,
+                                        percent_as_column: uiSettings?.percent_as_column ?? uiSettings?.format_percent_as_column ?? false,
+                                        stub_group_layout: uiSettings?.stub_group_layout ?? 'merge',
+                                        base_prefix: uiSettings?.base_prefix ?? "(",
+                                        base_postfix: uiSettings?.base_postfix ?? ")",
+                                    };
+                                    setUiSettings(newUi);
+
+                                    // 중복 디바운스 저장 방지 플래그 설정
+                                    isSavingDirectlyRef.current = true;
+
+                                    try {
+                                        loadingSpinner.show();
+                                        // 3. set API (설정 저장)를 먼저 동기 호출하여 저장 완료를 보장
+                                        await savePageSettings.mutateAsync({
+                                            pageid: pageId,
+                                            user: user,
+                                            ui_settings: newUi
+                                        });
+
+                                        // 4. 저장 완료 후 styled API (데이터 조회) 호출
+                                        await fetchCrossAnalysisData('normal', null, currentPage, filterExpression, {
+                                            excludeN: targetExcludeN,
+                                            excludeEtc: targetExcludeEtc,
+                                            level: targetLevel,
+                                            diffMin: targetDiffMin,
+                                            diffMax: targetDiffMax
+                                        });
+                                    } catch (e) {
+                                        console.error("Setting save or fetch error", e);
+                                    } finally {
+                                        loadingSpinner.hide();
+                                        // 디바운스 타이머가 지나간 뒤 플래그를 해제하도록 600ms 뒤 오프
+                                        setTimeout(() => {
+                                            isSavingDirectlyRef.current = false;
+                                        }, 600);
+                                    }
+                                }
                             }}
                             style={{
                                 display: 'flex',
@@ -3496,13 +3668,15 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         let sigPolicy = {};
                                         if (sigType === 'none') {
                                             sigPolicy = {
-                                                sig_diff_test_mode: false
+                                                sig_diff_test_mode: false,
+                                                sig_diff_fin_mode: 'none'
                                             };
                                         } else if (sigType === 't-test') {
                                             sigPolicy = {
                                                 sig_exclude_under_n: Number(sigExcludeUnderN),
                                                 sig_exclude_etc: sigExcludeEtc,
                                                 sig_diff_test_mode: false,
+                                                sig_diff_fin_mode: 't_test',
                                                 sig_level: Number(sigLevel)
                                             };
                                         } else if (sigType === 'deviation') {
@@ -3510,6 +3684,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                 sig_exclude_under_n: Number(sigExcludeUnderN),
                                                 sig_exclude_etc: sigExcludeEtc,
                                                 sig_diff_test_mode: true,
+                                                sig_diff_fin_mode: 'deviation',
                                                 sig_diff_min: Number(sigDiffMin),
                                                 sig_diff_max: Number(sigDiffMax)
                                             };
