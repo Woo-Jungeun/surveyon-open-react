@@ -613,22 +613,42 @@ const getTypeClass = (type) => {
     return lower;
 };
 
-const VariableItem = memo(({ v, isSelected, onDragStart, onClick }) => (
-    <div
-        className={`variable-item ${isSelected ? 'selected' : ''}`}
-        draggable
-        onDragStart={(e) => onDragStart(e, v)}
-        onClick={(e) => { e.stopPropagation(); onClick(v.id); }}
-        style={{ borderRadius: '6px' }}
-        title={`${v.label || ''}${v.id ? ` (${v.id})` : ''}`}
-    >
-        <div className="variable-item-header">
-            <div className="variable-item__name">{v.label}</div>
-            {v.type && <span className={`question-type-badge ${getTypeClass(v.type)}`} style={{ marginBottom: '-12.5px' }}>{v.type}</span>}
+const VariableItem = memo(({ v, isSelected, onDragStart, onClick }) => {
+    const infoLabels = useMemo(() => {
+        const list = Array.isArray(v.info) ? v.info : (Array.isArray(v.categories) ? v.categories : []);
+        return list.map(item => item.label).filter(Boolean);
+    }, [v.info, v.categories]);
+
+    const tooltipText = useMemo(() => {
+        const base = `${v.label || ''}${v.id ? ` (${v.id})` : ''}`;
+        if (infoLabels.length > 0) {
+            return `${base}\n\n[보기 목록]\n${infoLabels.map(l => `- ${l}`).join('\n')}`;
+        }
+        return base;
+    }, [v.label, v.id, infoLabels]);
+
+    return (
+        <div
+            className={`variable-item ${isSelected ? 'selected' : ''}`}
+            draggable
+            onDragStart={(e) => onDragStart(e, v)}
+            onClick={(e) => { e.stopPropagation(); onClick(v.id); }}
+            onMouseUp={(e) => {
+                if (infoLabels.length > 0) {
+                    console.log(`[${v.label} (${v.id})] 보기 목록:`, infoLabels);
+                }
+            }}
+            style={{ borderRadius: '6px' }}
+            title={tooltipText}
+        >
+            <div className="variable-item-header">
+                <div className="variable-item__name">{v.label}</div>
+                {v.type && <span className={`question-type-badge ${getTypeClass(v.type)}`} style={{ marginBottom: '-12.5px' }}>{v.type}</span>}
+            </div>
+            <div className="variable-item__label">{v.id}</div>
         </div>
-        <div className="variable-item__label">{v.id}</div>
-    </div>
-));
+    );
+});
 
 // --- (컴팩트 디자인 & 여유로운 패딩) 배너 생성 전용 푸터 바 ---
 const BannerActionFooter = memo(({ onCreateBanner, name, onNameChange }) => {
