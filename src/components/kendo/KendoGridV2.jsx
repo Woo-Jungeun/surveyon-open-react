@@ -24,6 +24,7 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
         newRowTemplate = {},
         copyable = false,
         duplicateRowTemplate,
+        showNoRecordsAddBtn = true,
         onDataChange,
         onRowClick,
         onAdd,
@@ -275,8 +276,8 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
             >
                 <GridNoRecords>
                     <div style={{ textAlign: "center", padding: "40px 0", color: "#94a3b8", fontSize: "14px" }}>
-                        <div style={{ marginBottom: addable ? '16px' : '0' }}>조회된 데이터가 없습니다.</div>
-                        {addable && (
+                        <div style={{ marginBottom: (addable && showNoRecordsAddBtn) ? '16px' : '0' }}>조회된 데이터가 없습니다.</div>
+                        {addable && showNoRecordsAddBtn && (
                             <button
                                 type="button"
                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAdd(); }}
@@ -472,6 +473,7 @@ KendoGridV2.propTypes = {
     editField: PropTypes.string,
     newRowTemplate: PropTypes.object,
     duplicateRowTemplate: PropTypes.func,
+    showNoRecordsAddBtn: PropTypes.bool,
     onDataChange: PropTypes.func,
     onRowClick: PropTypes.func,
     onDelete: PropTypes.func

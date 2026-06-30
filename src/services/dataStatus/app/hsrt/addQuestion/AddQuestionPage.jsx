@@ -1068,7 +1068,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                         <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                             <KendoGridV2
                                 data={currentInfo}
-                                reorderable showNo deletable editField="inEdit"
+                                reorderable showNo deletable addable showNoRecordsAddBtn={false} editField="inEdit"
                                 onDataChange={updateBannerInfo}
                                 onRowClick={handleRowClick}
                                 newRowTemplate={{ label2: '', label: '', logic: '' }}
