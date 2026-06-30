@@ -58,12 +58,15 @@ const MapManagementPage = () => {
     const [skip, setSkip] = useState(0);
     const [pageSize, setPageSize] = useState(100);
 
+    const [isForceDirty, setIsForceDirty] = useState(false);  // 자동생성 등으로 인한 강제 변경 활성화 플래그
+
     // ── 변경 감지 최적화 ──
     const originalMap = useMemo(() => {
         return new Map(originalVariables.map(v => [v.id, v]));
     }, [originalVariables]);
 
     const hasChanges = useMemo(() => {
+        if (isForceDirty) return true;
         if (!isDataLoaded) return false;
         if (deletedIds.length > 0) return true;
         if (variables.some(v => v.isNew)) return true;
@@ -77,7 +80,7 @@ const MapManagementPage = () => {
             // 필드 비교 (최적화: 루프 대신 명시적 비교가 빠를 수 있으나, 가독성을 위해 maintain)
             return EDITABLE_FIELDS.some(f => v[f] !== orig[f]);
         });
-    }, [variables, originalMap, deletedIds, isDataLoaded]);
+    }, [variables, originalMap, deletedIds, isDataLoaded, isForceDirty]);
 
     const loadData = async () => {
         if (!auth?.user?.userId) return;
@@ -519,6 +522,7 @@ const MapManagementPage = () => {
 
             if (createSuccess && updateSuccess) {
                 setDeletedIds([]);
+                setIsForceDirty(false); // 저장 성공 시 리셋
                 await loadData();
                 try {
                     await syncMap.mutateAsync({ user: userId, pn });
@@ -609,8 +613,9 @@ const MapManagementPage = () => {
         onAdd: handleAddVariable,
         onDelete: handleDeleteVariable,
         moveVariable,
+        setIsForceDirty,
         refreshData: () => setRefreshKey(prev => prev + 1)
-    }), [variables, editingRowId, editingField, isDetailed, handleAddVariable, handleDeleteVariable, moveVariable]);
+    }), [variables, editingRowId, editingField, isDetailed, handleAddVariable, handleDeleteVariable, moveVariable, setIsForceDirty]);
 
     // ── 렌더 ──
     return (

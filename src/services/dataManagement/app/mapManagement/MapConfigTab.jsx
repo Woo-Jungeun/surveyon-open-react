@@ -13,7 +13,7 @@ const CustomReLabelHeaderCell = (props) => {
     const modal = useContext(modalContext);
     const { generateRelabels } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
-    const { refreshData } = useContext(MapManagementContext);
+    const { refreshData, setIsForceDirty } = useContext(MapManagementContext);
 
     const handleSubmit = async () => {
         const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum');
@@ -46,6 +46,7 @@ const CustomReLabelHeaderCell = (props) => {
                                     } else {
                                         await modal.showAlert("완료", res?.message || "완료되었습니다.");
                                     }
+                                    if (setIsForceDirty) setIsForceDirty(true);
                                     if (refreshData) refreshData();
                                 } else {
                                     console.warn("Re-Label Not 777:", res);
