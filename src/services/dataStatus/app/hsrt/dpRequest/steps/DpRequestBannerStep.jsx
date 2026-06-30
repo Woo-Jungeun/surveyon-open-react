@@ -1116,8 +1116,8 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                     const item = next[data.gIdx][data.iIdx];
                     next[data.gIdx].splice(data.iIdx, 1);
                     if (targetIdx === 'new') {
-                        if (next.length >= 20) {
-                            modal.showAlert('알림', '최대 20개 그룹까지만 구성할 수 있습니다.');
+                        if (next.length >= 300) {
+                            modal.showAlert('알림', '가로축은 최대 300개 그룹까지만 구성할 수 있습니다.');
                             return prev;
                         }
                         next.push([item]);
@@ -1147,8 +1147,8 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                     const group = next[data.gIdx];
                     next.splice(data.gIdx, 1);
                     if (targetIdx === 'new') {
-                        if (next.length >= 20) {
-                            modal.showAlert('알림', '최대 20개 그룹까지만 구성할 수 있습니다.');
+                        if (next.length >= 300) {
+                            modal.showAlert('알림', '가로축은 최대 300개 그룹까지만 구성할 수 있습니다.');
                             return prev;
                         }
                         next.push(group);
@@ -1158,10 +1158,8 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                 if (data.type === 'EXTERNAL') {
                     const itemsToAdd = data.items;
                     if (targetIdx === 'new') {
-                        // 새로 추가되면서 20개를 넘는지 체크
-                        if (next.length + itemsToAdd.length > 20) {
-                            modal.showAlert('알림', '최대 20개 그룹까지만 구성할 수 있습니다.');
-                            // 가능힌 부분까지만 추가하거나 아예 안하거나 결정 (여기서는 안전하게 경고 후 중단)
+                        if (next.length + itemsToAdd.length > 300) {
+                            modal.showAlert('알림', '가로축은 최대 300개 그룹까지만 구성할 수 있습니다.');
                             return prev;
                         }
                         next.push(...itemsToAdd.map(it => [it]));
@@ -1340,6 +1338,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     const handleCreateBanner = async (name) => {
         if (!name?.trim()) return modal.showAlert('알림', '배너명을 입력해 주세요.');
         if (colVars.length === 0) return modal.showAlert('알림', '구성된 문항이 없습니다.');
+        if (colVars.length > 300) return modal.showAlert('알림', '가로축은 최대 300개 그룹까지만 구성할 수 있습니다.');
         const pageId = sessionStorage.getItem('pageId');
         const formula = colVars.map(group => group.map(v => v.id).join('*')).join('+');
         try {
@@ -1896,7 +1895,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     <div className="axis-header" style={{ padding: '8px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>가로축 (열)</span>
-                                            <span className="group-count-badge" style={{ fontSize: '10px' }}>{colVars.length} / 20</span>
+                                            <span className="group-count-badge" style={{ fontSize: '10px' }}>{colVars.length}</span>
                                         </div>
                                         <button onClick={() => setColVars([])} className="axis-clear-btn" title="모두 비우기" style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                                             <X size={14} color="#94a3b8" />
