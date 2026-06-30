@@ -74,6 +74,11 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
             sessionStorage.setItem("merge_pn", merge_pn || "");
             sessionStorage.setItem("merge_pn_text", merge_pn_text || "");
             sessionStorage.setItem("usergroup", usergroup || "");
+            
+            // 프로젝트 변경 시 pageId, silsaPageId, pagetitle 세션 초기화
+            sessionStorage.removeItem("pageId");
+            sessionStorage.removeItem("silsaPageId");
+            sessionStorage.removeItem("pagetitle");
         }
 
         if (onProjectSelect) {
