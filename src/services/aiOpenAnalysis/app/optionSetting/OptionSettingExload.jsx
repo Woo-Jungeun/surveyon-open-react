@@ -440,7 +440,7 @@ const OptionSettingExload = () => {
                     </div>
                 </article>
 
-                <div className="cmn_gird_wrap">
+                <div className="cmn_gird_wrap" style={{ position: "relative" }}>
                     <div id="grid_right" className="cmn_grid singlehead">
                         <KendoGrid
                             parentProps={{
@@ -456,7 +456,8 @@ const OptionSettingExload = () => {
                                 setSelectedState: noopSelect,       // 아무 것도 안 함
                                 selectedField: undefined,           // 선택 필드 미사용(가능하면 undefined)
                                 idGetter: rightIdGetter,            // 안전하게 id 계산
-                                height: rightRows.length !== 0 ? "583px" : "658px"
+                                height: rightRows.length !== 0 ? "583px" : "658px",
+                                loading: excelListData.isLoading
                             }}
                         >
                             {rightColumns.filter((c) => c.show !== false).map((c) => (
@@ -488,10 +489,30 @@ const OptionSettingExload = () => {
                             </Button>
                         </div>
                     }
+                    {excelListData.isLoading && (
+                        <div style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: "rgba(255, 255, 255, 0.75)",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "8px",
+                            zIndex: 100,
+                            borderRadius: "4px"
+                        }}>
+                            <span className="k-icon k-i-loading" style={{ fontSize: "36px", color: "#ff6b00" }}></span>
+                            <span style={{ fontSize: "13px", color: "#666", fontWeight: 600 }}>데이터를 불러오는 중입니다...</span>
+                        </div>
+                    )}
                 </div>
             </div>
         );
-    }, [rightRows, rightColumns, rightSort, rightFilter, handleUploadClick, handleFileChange, handleSampleClick]);
+    }, [rightRows, rightColumns, rightSort, rightFilter, handleUploadClick, handleFileChange, handleSampleClick, excelListData.isLoading, questionText]);
 
     return (
         <Fragment>
