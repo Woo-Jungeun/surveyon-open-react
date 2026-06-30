@@ -29,6 +29,8 @@ const OptionSettingExload = () => {
     const projectnum = (searchParams.get("projectnum") || "").trim(); // 예: n221115
     const qnum = (searchParams.get("qnum") || "").trim();       // 예: 문1
 
+    const [searchText, setSearchText] = useState("");
+
     // 좌측 전용 정렬/필터
     const [leftSort, setLeftSort] = useState([]);
     const [leftFilter, setLeftFilter] = useState(null);
@@ -381,68 +383,7 @@ const OptionSettingExload = () => {
         }
     }, [rightRows]);
 
-    // 좌측 그리드
-    const LeftGrid = useCallback(
-        (props) => {
-            const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField } = props;
-
-            return (
-                <div className="panel left">
-                    <article className="subTitWrap">
-                        <div className="subTit">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '24px', padding: '4px 0' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <span style={{ fontWeight: 600, color: '#666', fontSize: '14px' }}>프로젝트번호</span>
-                                    <span style={{ fontWeight: 700, color: '#ff6b00', fontSize: '14px' }}>{projectnum}</span>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <span style={{ fontWeight: 600, color: '#666', fontSize: '14px' }}>문항정보</span>
-                                    <span style={{ fontWeight: 700, color: '#ff6b00', fontSize: '14px' }}>{qnum}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-
-                    <div className="cmn_gird_wrap">
-                        <div id="grid_left" className="cmn_grid singlehead">
-                            <KendoGrid
-                                parentProps={{
-                                    data: dataState?.data,
-                                    dataItemKey,
-                                    selectedState,
-                                    setSelectedState,
-                                    selectedField,
-                                    idGetter,
-                                    sortable: { mode: "multiple", allowUnsort: true },
-                                    filterable: true,
-                                    sortChange: ({ sort }) => setLeftSort(sort ?? []),
-                                    filterChange: ({ filter }) => setLeftFilter(filter ?? undefined),
-                                    sort: leftSort,
-                                    filter: leftFilter,
-                                    onRowClick: onLeftRowClick,
-                                    pageable: false, // 페이징 제거
-                                    toolbar: null,   // 툴바 제거
-                                }}
-                            >
-                                {leftColumns.filter((c) => c.show !== false).map((c) => (
-                                    <Column
-                                        key={c.field}
-                                        field={c.field}
-                                        title={c.title}
-                                        width={c.width}
-                                        editable={false}
-                                        columnMenu={leftColumnMenu}
-                                        className={c.className}
-                                    />
-                                ))}
-                            </KendoGrid>
-                        </div>
-                    </div>
-                    <div style={{ borderTop: "1px solid #e0e0e0" }}></div>
-                </div>
-            );
-        }, [leftFilter, leftColumns, leftSort]
-    );
+    // LeftGrid 컴포넌트는 포커스 유실 현상 방지를 위해 파일 하단 외부 영역으로 분리되었습니다.
     // 우측 그리드
     const RightGrid = useMemo(() => {
         return (
@@ -515,6 +456,7 @@ const OptionSettingExload = () => {
                                 setSelectedState: noopSelect,       // 아무 것도 안 함
                                 selectedField: undefined,           // 선택 필드 미사용(가능하면 undefined)
                                 idGetter: rightIdGetter,            // 안전하게 id 계산
+                                height: rightRows.length !== 0 ? "583px" : "658px"
                             }}
                         >
                             {rightColumns.filter((c) => c.show !== false).map((c) => (
@@ -564,13 +506,180 @@ const OptionSettingExload = () => {
                         projectnum: projectnum,
                         gb: "projectlist"
                     }}
+                    fetchOnMount={false}
                     searchable={false}
                     pageable={false}
-                    renderItem={(props) => <LeftGrid {...props} />}
+                    renderItem={(props) => (
+                        <LeftGrid
+                            {...props}
+                            projectnum={projectnum}
+                            qnum={qnum}
+                            searchText={searchText}
+                            setSearchText={setSearchText}
+                            leftSort={leftSort}
+                            setLeftSort={setLeftSort}
+                            leftFilter={leftFilter}
+                            setLeftFilter={setLeftFilter}
+                            leftColumns={leftColumns}
+                            leftColumnMenu={leftColumnMenu}
+                            onLeftRowClick={onLeftRowClick}
+                            auth={auth}
+                        />
+                    )}
                 />
                 {RightGrid}
             </div>
         </Fragment>
+    );
+};
+
+// 좌측 그리드 컴포넌트 (포커스 유실 현상 방지를 위해 외부 분리)
+const LeftGrid = ({
+    selectedState,
+    setSelectedState,
+    idGetter,
+    dataState,
+    dataItemKey,
+    selectedField,
+    handleSearch,
+    isLoading,
+    projectnum,
+    qnum,
+    searchText,
+    setSearchText,
+    leftSort,
+    setLeftSort,
+    leftFilter,
+    setLeftFilter,
+    leftColumns,
+    leftColumnMenu,
+    onLeftRowClick,
+    auth
+}) => {
+    const handleSearchClick = () => {
+        handleSearch({
+            params: {
+                user: auth?.user?.userId || "",
+                projectnum: projectnum,
+                gb: "projectlist",
+                search: searchText
+            }
+        });
+    };
+
+    return (
+        <div className="panel left">
+            <article className="subTitWrap">
+                <div className="subTit">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '24px', padding: '4px 0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <span style={{ fontWeight: 600, color: '#666', fontSize: '14px' }}>프로젝트번호</span>
+                            <span style={{ fontWeight: 700, color: '#ff6b00', fontSize: '14px' }}>{projectnum}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <span style={{ fontWeight: 600, color: '#666', fontSize: '14px' }}>문항정보</span>
+                            <span style={{ fontWeight: 700, color: '#ff6b00', fontSize: '14px' }}>{qnum}</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            {/* 검색 영역 */}
+            <div style={{ display: 'flex', gap: '8px', padding: '12px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', alignItems: 'center' }}>
+                <input
+                    type="text"
+                    placeholder="검색어를 입력하세요."
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            handleSearchClick();
+                        }
+                    }}
+                    style={{
+                        flex: 1,
+                        height: '34px',
+                        padding: '0 12px',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        outline: 'none'
+                    }}
+                />
+                <Button
+                    type="button"
+                    className="btnTxt"
+                    onClick={handleSearchClick}
+                    style={{
+                        height: '34px',
+                        padding: '0 16px',
+                        fontSize: '13px',
+                        fontWeight: 600
+                    }}
+                >
+                    검색
+                </Button>
+            </div>
+
+            <div className="cmn_gird_wrap" style={{ position: "relative" }}>
+                <div id="grid_left" className="cmn_grid singlehead">
+                    <KendoGrid
+                        parentProps={{
+                            data: dataState?.data,
+                            dataItemKey,
+                            selectedState,
+                            setSelectedState,
+                            selectedField,
+                            idGetter,
+                            sortable: { mode: "multiple", allowUnsort: true },
+                            filterable: true,
+                            sortChange: ({ sort }) => setLeftSort(sort ?? []),
+                            filterChange: ({ filter }) => setLeftFilter(filter ?? undefined),
+                            sort: leftSort,
+                            filter: leftFilter,
+                            onRowClick: onLeftRowClick,
+                            pageable: false, // 페이징 제거
+                            toolbar: null,   // 툴바 제거
+                            loading: isLoading,
+                            height: "600px"
+                        }}
+                    >
+                        {leftColumns.filter((c) => c.show !== false).map((c) => (
+                            <Column
+                                key={c.field}
+                                field={c.field}
+                                title={c.title}
+                                width={c.width}
+                                editable={false}
+                                columnMenu={leftColumnMenu}
+                                className={c.className}
+                            />
+                        ))}
+                    </KendoGrid>
+                </div>
+                {isLoading && (
+                    <div style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: "rgba(255, 255, 255, 0.75)",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "8px",
+                        zIndex: 100,
+                        borderRadius: "4px"
+                    }}>
+                        <span className="k-icon k-i-loading" style={{ fontSize: "36px", color: "#ff6b00" }}></span>
+                        <span style={{ fontSize: "13px", color: "#666", fontWeight: 600 }}>데이터를 불러오는 중입니다...</span>
+                    </div>
+                )}
+            </div>
+            <div style={{ borderTop: "1px solid #e0e0e0" }}></div>
+        </div>
     );
 };
 

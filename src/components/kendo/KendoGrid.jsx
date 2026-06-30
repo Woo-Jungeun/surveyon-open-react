@@ -557,6 +557,7 @@ const KendoGrid = ({ parentProps, children }) => {
 
     return (
         <Grid
+            loading={parentProps?.loading}
             scrollable={scrollable}
             style={{ height: height || "625px" }}
             data={gridData}

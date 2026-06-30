@@ -27,19 +27,20 @@ const GridData = ({
     multiSelect = false,
     rowNumber,
     rowNumberOrder = "asc",
-
     renderItem,
-    initialParams   // 초기 조회용 파라미터 
+    initialParams,   // 초기 조회용 파라미터 
+    fetchOnMount = true
 }) => {
 
     const [data, setData] = useState({ totalSize: 0, data: [] }); //전체 데이터
+    const [isLoading, setIsLoading] = useState(false);
     const initDataState = {
         totalSize: data.totalSize,
         data: data.data.map((dataItem) => ({ ...dataItem, [selectedField]: false }))
     };
     const [dataState, setDataState] = useState(initDataState); //전체데이터 + selected상태
     const [selectedState, setSelectedState] = useState({}); //selected상태 //{5: true}
-
+ 
     const modal = useContext(modalContext);
 
     const [searchParams, setSearchParams] = useState({}); //  마지막 조회 파라미터 저장
@@ -51,6 +52,7 @@ const GridData = ({
 
     // 초기 1번만 자동 조회
     useEffect(() => {
+        if (!fetchOnMount) return;
         if (didInitialFetchRef.current) return;
         if (!searchMutation) return;
         didInitialFetchRef.current = true;
@@ -90,6 +92,7 @@ const GridData = ({
 
         if (inFlightRef.current || !searchMutation) return;
         inFlightRef.current = true;
+        setIsLoading(true);
 
         try {
             const res = await searchMutation.mutateAsync({ params: { ...params, skipSpinner } });
@@ -124,6 +127,7 @@ const GridData = ({
             modal.showAlert("알림", message.searchFail);
         } finally {
             inFlightRef.current = false;
+            setIsLoading(false);
         }
     };
 
@@ -140,6 +144,7 @@ const GridData = ({
         idGetter,
         onRowClick,
         handleSearch,
+        isLoading,
     });
 };
 
