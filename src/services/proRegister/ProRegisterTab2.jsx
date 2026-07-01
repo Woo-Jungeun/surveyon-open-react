@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useContext, Fragment, useCallback } from "react";
+import React, { useState, useRef, useContext, Fragment, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -149,16 +149,14 @@ const ProRegisterTab2 = (props) => {
         const pid = row[idIndex];
         let answer = row[colIndex];
         if (answer === undefined || answer === null) {
-          return;
-        } else if (typeof answer === "string" && answer.trim() === "") {
-          answer = " ";
+          answer = "";
         }
         if (pid != null) {
           result.push({
             pid,
             qnum,
             qnum_text: qnumText,
-            answer,
+            answer: typeof answer === "string" ? answer : String(answer),
             contents: "",
           });
         }
