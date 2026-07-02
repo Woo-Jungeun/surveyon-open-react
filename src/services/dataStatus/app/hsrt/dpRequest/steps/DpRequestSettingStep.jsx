@@ -310,6 +310,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                             min: options.min ?? 1,
                             max: options.max ?? 5,
                             recode: !!options.reverse,
+                            reverse_order: !!options.reverse_order,
+                            ex_show: !!options.ex_show,
                             bands: bands
                         };
                     });
@@ -474,7 +476,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             const isPresetEqual = (a, b, type) => {
                 if (a.name !== b.name) return false;
                 if (type === 'scale') {
-                    if (a.min !== b.min || a.max !== b.max || a.recode !== b.recode) return false;
+                    if (a.min !== b.min || a.max !== b.max || a.recode !== b.recode || a.reverse_order !== b.reverse_order || a.ex_show !== b.ex_show) return false;
                     const aBands = a.bands || [];
                     const bBands = b.bands || [];
                     if (aBands.length !== bBands.length) return false;
@@ -553,6 +555,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                         min: (item.min === 0 || item.min) ? Number(item.min) : null,
                         max: (item.max === 0 || item.max) ? Number(item.max) : null,
                         reverse: !!item.recode,
+                        reverse_order: !!item.reverse_order,
+                        ex_show: !!item.ex_show,
                         score_transform: null,
                         custom_value_map: [],
                         bands: (item.bands || []).map(b => ({

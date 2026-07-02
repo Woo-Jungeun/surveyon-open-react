@@ -86,12 +86,12 @@ const AnalysisSettingTab = ({
         e.preventDefault();
         setDragOverIdx(null);
         setDragOverPresetId(null);
-        
+
         const sourcePresetId = e.dataTransfer.getData('presetId');
         const sourceBandIdx = parseInt(e.dataTransfer.getData('bandIdx'), 10);
-        
+
         if (sourcePresetId !== presetId || sourceBandIdx === targetBandIdx) return;
-        
+
         setScaleData(scaleData.map(item => {
             if (item.id === presetId) {
                 const bands = [...(item.bands || [])];
@@ -124,6 +124,8 @@ const AnalysisSettingTab = ({
             min: 1,
             max: 5,
             recode: false,
+            reverse_order: false,
+            ex_show: false,
             bands: [
                 { id: `band_top_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, label: 'Top', values: '' },
                 { id: `band_mid_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, label: 'Mid', values: '' },
@@ -426,13 +428,13 @@ const AnalysisSettingTab = ({
                     if (idx === comboIdx) {
                         const vals = [...(combo.values || [])];
                         let nextVals;
-                        
+
                         // 다중형 순위는 띄엄띄엄 선택 불가능하게 무조건 1부터 num까지 누적
                         // 만약 현재 정확히 1~num까지 선택되어 있다면, 하나 줄이기(토글 오프) 동작
                         if (vals.length === num && vals.every((v, i) => v === i + 1)) {
-                            nextVals = Array.from({length: num - 1}, (_, i) => i + 1);
+                            nextVals = Array.from({ length: num - 1 }, (_, i) => i + 1);
                         } else {
-                            nextVals = Array.from({length: num}, (_, i) => i + 1);
+                            nextVals = Array.from({ length: num }, (_, i) => i + 1);
                         }
 
                         let label = combo.label || '';
@@ -746,6 +748,38 @@ const AnalysisSettingTab = ({
                                                     <span className="dp-checkbox-box" />
                                                     <span style={{ fontSize: '12px', color: '#475569', fontWeight: 500 }}>역코딩</span>
                                                 </label>
+
+                                                {/* 역순정렬 여부 */}
+                                                <label
+                                                    className="dp-checkbox-label"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none', margin: 0, marginLeft: '12px' }}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        className="dp-checkbox-input"
+                                                        checked={!!item.reverse_order}
+                                                        onChange={(e) => handleUpdateScalePreset(item.id, 'reverse_order', e.target.checked)}
+                                                    />
+                                                    <span className="dp-checkbox-box" />
+                                                    <span style={{ fontSize: '12px', color: '#475569', fontWeight: 500 }}>역순정렬</span>
+                                                </label>
+
+                                                {/* 보기코드제시 여부 */}
+                                                <label
+                                                    className="dp-checkbox-label"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none', margin: 0, marginLeft: '12px' }}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        className="dp-checkbox-input"
+                                                        checked={!!item.ex_show}
+                                                        onChange={(e) => handleUpdateScalePreset(item.id, 'ex_show', e.target.checked)}
+                                                    />
+                                                    <span className="dp-checkbox-box" />
+                                                    <span style={{ fontSize: '12px', color: '#475569', fontWeight: 500 }}>보기코드제시</span>
+                                                </label>
                                             </div>
 
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} onClick={(e) => e.stopPropagation()}>
@@ -805,14 +839,14 @@ const AnalysisSettingTab = ({
                                                     const isDragOver = dragOverPresetId === item.id && dragOverIdx === bandIdx;
 
                                                     return (
-                                                        <div 
-                                                            key={band.id || bandIdx} 
+                                                        <div
+                                                            key={band.id || bandIdx}
                                                             onDragOver={handleDragOver}
                                                             onDragEnter={(e) => handleDragEnter(e, item.id, bandIdx)}
                                                             onDrop={(e) => handleDrop(e, item.id, bandIdx)}
-                                                            style={{ 
-                                                                display: 'flex', 
-                                                                alignItems: 'center', 
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
                                                                 padding: '6px 0',
                                                                 borderTop: isDragOver ? '2px solid #3B82F6' : '2px solid transparent',
                                                                 transition: 'border-color 0.15s ease',
@@ -820,20 +854,20 @@ const AnalysisSettingTab = ({
                                                             }}
                                                         >
                                                             {/* 이동 아이콘 */}
-                                                            <div 
+                                                            <div
                                                                 draggable
                                                                 onDragStart={(e) => handleDragStart(e, item.id, bandIdx)}
                                                                 onDragEnd={handleDragEnd}
-                                                                style={{ 
-                                                                    display: 'flex', 
-                                                                    alignItems: 'center', 
-                                                                    justifyContent: 'center', 
-                                                                    width: '24px', 
-                                                                    color: '#94A3B8', 
-                                                                    cursor: 'grab' 
+                                                                style={{
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    width: '24px',
+                                                                    color: '#94A3B8',
+                                                                    cursor: 'grab'
                                                                 }}
                                                             >
-                                                                 <GripVertical size={16} />
+                                                                <GripVertical size={16} />
                                                             </div>
 
                                                             {/* 종류 */}
@@ -842,13 +876,13 @@ const AnalysisSettingTab = ({
                                                                     const nValForDropdown = parseValues(band.values).length;
                                                                     const suffix = nValForDropdown > 1 ? String(nValForDropdown) : '';
                                                                     const dropdownData = [`Top${suffix}`, `Mid${suffix}`, `Bot${suffix}`];
-                                                                    
+
                                                                     // 서버에서 소문자로 내려온 경우 대응 (casing normalization)
                                                                     const rawText = String(band.label || '').replace(/[0-9]/g, '').toLowerCase().trim();
                                                                     let baseLabel = 'Top';
                                                                     if (rawText === 'mid') baseLabel = 'Mid';
                                                                     if (rawText === 'bot') baseLabel = 'Bot';
-                                                                    
+
                                                                     const currentVal = baseLabel + suffix;
                                                                     return (
                                                                         <DropDownList
@@ -1137,7 +1171,7 @@ const AnalysisSettingTab = ({
 
                                                 <div style={{ marginTop: '10px', paddingTop: '12px', borderTop: '1px solid #E2E8F0' }}>
                                                     <div style={{ fontSize: '11px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
-                                                         전체 값 색칠 ({totalChips.length}개)
+                                                        전체 값 색칠 ({totalChips.length}개)
                                                     </div>
                                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', rowGap: '6px' }}>
                                                         {totalChips.map(num => {
