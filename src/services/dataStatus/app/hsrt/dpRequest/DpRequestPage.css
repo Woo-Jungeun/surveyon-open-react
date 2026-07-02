@@ -1982,3 +1982,9 @@
     border-color: #3b82f6 !important;
     background: #eff6ff !important;
 }
+
+[data-theme="data-dashboard"] .dp-btn-delete-all .lucide-trash2,
+[data-theme="data-dashboard"] .dp-btn-delete-all .lucide-trash-2 {
+    stroke: #ef4444 !important;
+    color: #ef4444 !important;
+}

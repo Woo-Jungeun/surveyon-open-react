@@ -1129,7 +1129,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
         setManualScaleMax(maxSp);
         setManualScaleMin(1);
-        
+
         // 탭이 오픈 문항 탭인 경우
         if (currentTab === 'open-num') {
             setIsManualModalOpen(true);
@@ -1204,7 +1204,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             setManualScaleMin(opts.min ?? 1);
             setManualScaleMax(opts.max ?? 5);
             setManualIsReverse(!!opts.reverse);
-            
+
             let loadedBands = [];
             if (Array.isArray(opts.bands)) {
                 loadedBands = opts.bands.map((b, idx) => ({
@@ -1794,12 +1794,13 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     <span>제목 일괄 수정</span>
                                 </button>
                                 <button
+                                    className="dp-btn-delete-all"
                                     onClick={() => {
-                                        modal.showConfirm('전체 삭제 확인', '생성된 모든 요약표를 삭제하시겠습니까?', {
+                                        modal.showConfirm('알림', '생성된 모든 요약표를 삭제하시겠습니까?', {
                                             btns: [
                                                 { title: "취소", click: () => { } },
                                                 {
-                                                    title: "모두 삭제",
+                                                    title: "확인",
                                                     click: async () => {
                                                         const newDeletedIds = [...new Set([...deletedSummaryIds, ...originalFolderIds])];
                                                         setDeletedSummaryIds(newDeletedIds);
@@ -1818,8 +1819,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; }}
                                     onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
                                 >
-                                    <Trash2 size={13} />
-                                    <span>모두 삭제</span>
+                                    <Trash2 size={13} style={{ color: '#ef4444', stroke: '#ef4444' }} />
+                                    <span>전체 삭제</span>
                                 </button>
                             </div>
                         </div>
@@ -1852,74 +1853,74 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             <GripVertical size={16} />
                                         </div>
 
-                                        <div 
+                                        <div
                                             style={{ flex: 1, minWidth: 0, marginRight: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}
                                             onClick={() => toggleFolderExpand(folder.id)}
                                         >
 
-                                                 {isExpanded ? (
-                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
-                                                         <input
-                                                             type="text"
-                                                             value={folder.name}
-                                                             onChange={(e) => {
-                                                                 setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, name: e.target.value } : f));
-                                                                 if (onUnsavedChange) onUnsavedChange(true);
-                                                             }}
-                                                             onKeyDown={(e) => {
-                                                                 if (e.key === 'Enter') {
-                                                                     e.target.blur();
-                                                                 }
-                                                             }}
-                                                             onClick={(e) => e.stopPropagation()}
-                                                             onMouseDown={(e) => e.stopPropagation()}
-                                                             onMouseUp={(e) => e.stopPropagation()}
-                                                             style={{
-                                                                 fontSize: '13px',
-                                                                 fontWeight: 700,
-                                                                 color: '#1e293b',
-                                                                 border: '1px solid #cbd5e1',
-                                                                 borderRadius: '4px',
-                                                                 padding: '2px 6px',
-                                                                 outline: 'none',
-                                                                 background: '#ffffff',
-                                                                 width: '280px'
-                                                             }}
-                                                         />
-                                                         <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace', fontWeight: 600 }}>
-                                                             ({folder.id})
-                                                         </span>
-                                                     </div>
-                                                 ) : (
-                                                     <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
-                                                         {folder.name}
-                                                         <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace', fontWeight: 600, marginLeft: '6px' }}>
-                                                             ({folder.id})
-                                                         </span>
-                                                     </span>
-                                                 )}
-                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                     <span style={{ fontSize: '10px', color: '#475569', background: '#f1f5f9', padding: '1px 5px', borderRadius: '3px', fontWeight: 700 }}>
-                                                         {folder.items?.length || 0}개
-                                                     </span>
-                                                     {badgeList.length > 0 && (
-                                                         <div style={{ display: 'flex', gap: '4px' }}>
-                                                             {badgeList.map(b => {
-                                                                 let bg = '#f1f5f9';
-                                                                 let fg = '#64748b';
-                                                                 if (b.includes('Top')) { bg = '#ecfdf5'; fg = '#10b981'; }
-                                                                 else if (b.includes('Bot')) { bg = '#fff1f2'; fg = '#f43f5e'; }
-                                                                 else if (b === '평균') { bg = '#eff6ff'; fg = '#3b82f6'; }
-                                                                 return (
-                                                                     <span key={b} style={{ fontSize: '9px', fontWeight: 700, color: fg, background: bg, padding: '1px 5px', borderRadius: '3px' }}>
-                                                                         {b}
-                                                                     </span>
-                                                                 );
-                                                             })}
-                                                         </div>
-                                                     )}
-                                                 </div>
-                                         </div>
+                                            {isExpanded ? (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
+                                                    <input
+                                                        type="text"
+                                                        value={folder.name}
+                                                        onChange={(e) => {
+                                                            setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, name: e.target.value } : f));
+                                                            if (onUnsavedChange) onUnsavedChange(true);
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                e.target.blur();
+                                                            }
+                                                        }}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        onMouseDown={(e) => e.stopPropagation()}
+                                                        onMouseUp={(e) => e.stopPropagation()}
+                                                        style={{
+                                                            fontSize: '13px',
+                                                            fontWeight: 700,
+                                                            color: '#1e293b',
+                                                            border: '1px solid #cbd5e1',
+                                                            borderRadius: '4px',
+                                                            padding: '2px 6px',
+                                                            outline: 'none',
+                                                            background: '#ffffff',
+                                                            width: '280px'
+                                                        }}
+                                                    />
+                                                    <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace', fontWeight: 600 }}>
+                                                        ({folder.id})
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
+                                                    {folder.name}
+                                                    <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace', fontWeight: 600, marginLeft: '6px' }}>
+                                                        ({folder.id})
+                                                    </span>
+                                                </span>
+                                            )}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <span style={{ fontSize: '10px', color: '#475569', background: '#f1f5f9', padding: '1px 5px', borderRadius: '3px', fontWeight: 700 }}>
+                                                    {folder.items?.length || 0}개
+                                                </span>
+                                                {badgeList.length > 0 && (
+                                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                                        {badgeList.map(b => {
+                                                            let bg = '#f1f5f9';
+                                                            let fg = '#64748b';
+                                                            if (b.includes('Top')) { bg = '#ecfdf5'; fg = '#10b981'; }
+                                                            else if (b.includes('Bot')) { bg = '#fff1f2'; fg = '#f43f5e'; }
+                                                            else if (b === '평균') { bg = '#eff6ff'; fg = '#3b82f6'; }
+                                                            return (
+                                                                <span key={b} style={{ fontSize: '9px', fontWeight: 700, color: fg, background: bg, padding: '1px 5px', borderRadius: '3px' }}>
+                                                                    {b}
+                                                                </span>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                             <button
                                                 onClick={(e) => {
@@ -2267,257 +2268,257 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                             {/* 옵션 설정 영역 */}
                             {wizardTab === 'scale' ? (
-                                    <>
-                                        {/* 척도형 옵션 */}
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                <div style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
-                                                    요약 유형 설정 <span style={{ fontSize: '11px', fontWeight: 500, color: '#64748b', marginLeft: '4px' }}>(문항별 척도 기준 자동 변환)</span>
-                                                </div>
+                                <>
+                                    {/* 척도형 옵션 */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                            <div style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
+                                                요약 유형 설정 <span style={{ fontSize: '11px', fontWeight: 500, color: '#64748b', marginLeft: '4px' }}>(문항별 척도 기준 자동 변환)</span>
+                                            </div>
+                                        </div>
+
+                                        {/* 빠른 선택 및 평균 포함 배치 */}
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                                <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 700 }}>빠른 선택:</span>
+                                                {[
+                                                    { key: 'top3_bot3', label: 'Top3-Bot3' },
+                                                    { key: 'top2_bot2', label: 'Top2-Bot2' },
+                                                    { key: 'top1_bot1', label: 'Top1-Bot1' },
+                                                    { key: 'top_mid_bot', label: 'Top-Mid-Bot' },
+                                                    { key: 'reset', label: '초기화' }
+                                                ].map(preset => {
+                                                    const isActive = isPresetActive(preset.key);
+                                                    let borderStyle = '1px solid #cbd5e1';
+                                                    let bgStyle = '#ffffff';
+                                                    let colorStyle = '#475569';
+                                                    if (preset.key === 'reset') {
+                                                        borderStyle = '1px solid #cbd5e1';
+                                                        bgStyle = '#f8fafc';
+                                                    }
+                                                    if (isActive) {
+                                                        borderStyle = '1px solid #2563eb';
+                                                        bgStyle = '#eff6ff';
+                                                        colorStyle = '#2563eb';
+                                                    }
+                                                    return (
+                                                        <button
+                                                            key={preset.key}
+                                                            onClick={() => applyWizardPreset(preset.key)}
+                                                            style={{
+                                                                padding: '4px 10px', fontSize: '11px', borderRadius: '16px',
+                                                                border: borderStyle,
+                                                                background: bgStyle,
+                                                                color: colorStyle, fontWeight: isActive ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
+                                                            }}
+                                                        >
+                                                            {preset.label}
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
 
-                                            {/* 빠른 선택 및 평균 포함 배치 */}
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                                                    <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 700 }}>빠른 선택:</span>
-                                                    {[
-                                                        { key: 'top3_bot3', label: 'Top3-Bot3' },
-                                                        { key: 'top2_bot2', label: 'Top2-Bot2' },
-                                                        { key: 'top1_bot1', label: 'Top1-Bot1' },
-                                                        { key: 'top_mid_bot', label: 'Top-Mid-Bot' },
-                                                        { key: 'reset', label: '초기화' }
-                                                    ].map(preset => {
-                                                        const isActive = isPresetActive(preset.key);
-                                                        let borderStyle = '1px solid #cbd5e1';
-                                                        let bgStyle = '#ffffff';
-                                                        let colorStyle = '#475569';
-                                                        if (preset.key === 'reset') {
-                                                            borderStyle = '1px solid #cbd5e1';
-                                                            bgStyle = '#f8fafc';
-                                                        }
-                                                        if (isActive) {
-                                                            borderStyle = '1px solid #2563eb';
-                                                            bgStyle = '#eff6ff';
-                                                            colorStyle = '#2563eb';
-                                                        }
+                                            {/* 평균 포함 체크박스 제안 배치 */}
+                                            <label
+                                                className="dp-checkbox-label"
+                                                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none', margin: 0 }}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    className="dp-checkbox-input"
+                                                    checked={isMeanIncluded}
+                                                    onChange={(e) => setIsMeanIncluded(e.target.checked)}
+                                                />
+                                                <span className="dp-checkbox-box" />
+                                                <span style={{ fontSize: '12px', color: '#475569', fontWeight: 700 }}>평균 포함</span>
+                                            </label>
+                                        </div>
+
+                                        {/* 개수 선택 라인 */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px 14px', background: '#ffffff', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                                            {/* Top 선택 */}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#3b82f6' }} />
+                                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', lineHeight: 1.2 }}>Top</span>
+                                                        <span style={{ fontSize: '10px', color: '#64748b' }}>가장 높은 점수부터</span>
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '5px' }}>
+                                                    {[1, 2, 3].map(count => {
+                                                        const isSelected = (matrixSelection.top || []).length === count;
                                                         return (
                                                             <button
-                                                                key={preset.key}
-                                                                onClick={() => applyWizardPreset(preset.key)}
+                                                                key={count}
+                                                                onClick={() => setSelectionCount('top', count)}
                                                                 style={{
-                                                                    padding: '4px 10px', fontSize: '11px', borderRadius: '16px',
-                                                                    border: borderStyle,
-                                                                    background: bgStyle,
-                                                                    color: colorStyle, fontWeight: isActive ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
+                                                                    padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
+                                                                    border: isSelected ? '1px solid #3b82f6' : '1px solid #cbd5e1',
+                                                                    background: isSelected ? '#eff6ff' : '#ffffff',
+                                                                    color: isSelected ? '#2563eb' : '#64748b',
+                                                                    fontWeight: isSelected ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
                                                                 }}
                                                             >
-                                                                {preset.label}
+                                                                {count}개
                                                             </button>
                                                         );
                                                     })}
-                                                </div>
-
-                                                {/* 평균 포함 체크박스 제안 배치 */}
-                                                <label
-                                                    className="dp-checkbox-label"
-                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none', margin: 0 }}
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        className="dp-checkbox-input"
-                                                        checked={isMeanIncluded}
-                                                        onChange={(e) => setIsMeanIncluded(e.target.checked)}
-                                                    />
-                                                    <span className="dp-checkbox-box" />
-                                                    <span style={{ fontSize: '12px', color: '#475569', fontWeight: 700 }}>평균 포함</span>
-                                                </label>
-                                            </div>
-
-                                            {/* 개수 선택 라인 */}
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px 14px', background: '#ffffff', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                                                {/* Top 선택 */}
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#3b82f6' }} />
-                                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', lineHeight: 1.2 }}>Top</span>
-                                                            <span style={{ fontSize: '10px', color: '#64748b' }}>가장 높은 점수부터</span>
-                                                        </div>
-                                                    </div>
-                                                    <div style={{ display: 'flex', gap: '5px' }}>
-                                                        {[1, 2, 3].map(count => {
-                                                            const isSelected = (matrixSelection.top || []).length === count;
-                                                            return (
-                                                                <button
-                                                                    key={count}
-                                                                    onClick={() => setSelectionCount('top', count)}
-                                                                    style={{
-                                                                        padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
-                                                                        border: isSelected ? '1px solid #3b82f6' : '1px solid #cbd5e1',
-                                                                        background: isSelected ? '#eff6ff' : '#ffffff',
-                                                                        color: isSelected ? '#2563eb' : '#64748b',
-                                                                        fontWeight: isSelected ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
-                                                                    }}
-                                                                >
-                                                                    {count}개
-                                                                </button>
-                                                            );
-                                                        })}
-                                                        <button
-                                                            onClick={() => setSelectionCount('top', 0)}
-                                                            style={{
-                                                                padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
-                                                                border: '1px solid #cbd5e1',
-                                                                background: (matrixSelection.top || []).length === 0 ? '#f1f5f9' : '#ffffff',
-                                                                color: (matrixSelection.top || []).length === 0 ? '#475569' : '#64748b',
-                                                                fontWeight: (matrixSelection.top || []).length === 0 ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
-                                                            }}
-                                                        >
-                                                            안 함
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                <hr style={{ border: 'none', borderTop: '1px solid #cbd5e1', margin: 0 }} />
-
-                                                {/* Mid 선택 */}
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#f59e0b' }} />
-                                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', lineHeight: 1.2 }}>Mid</span>
-                                                            <span style={{ fontSize: '10px', color: '#64748b' }}>가운데 점수 기준</span>
-                                                        </div>
-                                                    </div>
-                                                    <div style={{ display: 'flex', gap: '5px' }}>
-                                                        {[1, 2, 3].map(count => {
-                                                            const isSelected = (matrixSelection.mid || []).length === count;
-                                                            return (
-                                                                <button
-                                                                    key={count}
-                                                                    onClick={() => setSelectionCount('mid', count)}
-                                                                    style={{
-                                                                        padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
-                                                                        border: isSelected ? '1px solid #f59e0b' : '1px solid #cbd5e1',
-                                                                        background: isSelected ? '#fef3c7' : '#ffffff',
-                                                                        color: isSelected ? '#d97706' : '#64748b',
-                                                                        fontWeight: isSelected ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
-                                                                    }}
-                                                                >
-                                                                    {count}개
-                                                                </button>
-                                                            );
-                                                        })}
-                                                        <button
-                                                            onClick={() => setSelectionCount('mid', 0)}
-                                                            style={{
-                                                                padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
-                                                                border: '1px solid #cbd5e1',
-                                                                background: (matrixSelection.mid || []).length === 0 ? '#f1f5f9' : '#ffffff',
-                                                                color: (matrixSelection.mid || []).length === 0 ? '#475569' : '#64748b',
-                                                                fontWeight: (matrixSelection.mid || []).length === 0 ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
-                                                            }}
-                                                        >
-                                                            안 함
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                <hr style={{ border: 'none', borderTop: '1px solid #cbd5e1', margin: 0 }} />
-
-                                                {/* Bot 선택 */}
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ef4444' }} />
-                                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', lineHeight: 1.2 }}>Bot</span>
-                                                            <span style={{ fontSize: '10px', color: '#64748b' }}>가장 낮은 점수부터</span>
-                                                        </div>
-                                                    </div>
-                                                    <div style={{ display: 'flex', gap: '5px' }}>
-                                                        {[1, 2, 3].map(count => {
-                                                            const isSelected = (matrixSelection.bot || []).length === count;
-                                                            return (
-                                                                <button
-                                                                    key={count}
-                                                                    onClick={() => setSelectionCount('bot', count)}
-                                                                    style={{
-                                                                        padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
-                                                                        border: isSelected ? '1px solid #f43f5e' : '1px solid #cbd5e1',
-                                                                        background: isSelected ? '#ffe4e6' : '#ffffff',
-                                                                        color: isSelected ? '#e11d48' : '#64748b',
-                                                                        fontWeight: isSelected ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
-                                                                    }}
-                                                                >
-                                                                    {count}개
-                                                                </button>
-                                                            );
-                                                        })}
-                                                        <button
-                                                            onClick={() => setSelectionCount('bot', 0)}
-                                                            style={{
-                                                                padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
-                                                                border: '1px solid #cbd5e1',
-                                                                background: (matrixSelection.bot || []).length === 0 ? '#f1f5f9' : '#ffffff',
-                                                                color: (matrixSelection.bot || []).length === 0 ? '#475569' : '#64748b',
-                                                                fontWeight: (matrixSelection.bot || []).length === 0 ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
-                                                            }}
-                                                        >
-                                                            안 함
-                                                        </button>
-                                                    </div>
+                                                    <button
+                                                        onClick={() => setSelectionCount('top', 0)}
+                                                        style={{
+                                                            padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
+                                                            border: '1px solid #cbd5e1',
+                                                            background: (matrixSelection.top || []).length === 0 ? '#f1f5f9' : '#ffffff',
+                                                            color: (matrixSelection.top || []).length === 0 ? '#475569' : '#64748b',
+                                                            fontWeight: (matrixSelection.top || []).length === 0 ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
+                                                        }}
+                                                    >
+                                                        안 함
+                                                    </button>
                                                 </div>
                                             </div>
 
-                                            {/* 척도별 미리보기 */}
-                                            <div style={{ padding: '10px 14px', background: '#f1f5f9', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#475569' }}>척도별 요약 기준 미리보기</span>
-                                                    <div style={{ display: 'flex', gap: '8px', fontSize: '10.5px', fontWeight: 600 }}>
-                                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#334155' }}>
-                                                            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#3b82f6' }} /> Top
-                                                        </span>
-                                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#334155' }}>
-                                                            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#f59e0b' }} /> Mid
-                                                        </span>
-                                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#334155' }}>
-                                                            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#ef4444' }} /> Bot
-                                                        </span>
+                                            <hr style={{ border: 'none', borderTop: '1px solid #cbd5e1', margin: 0 }} />
+
+                                            {/* Mid 선택 */}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#f59e0b' }} />
+                                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', lineHeight: 1.2 }}>Mid</span>
+                                                        <span style={{ fontSize: '10px', color: '#64748b' }}>가운데 점수 기준</span>
                                                     </div>
                                                 </div>
+                                                <div style={{ display: 'flex', gap: '5px' }}>
+                                                    {[1, 2, 3].map(count => {
+                                                        const isSelected = (matrixSelection.mid || []).length === count;
+                                                        return (
+                                                            <button
+                                                                key={count}
+                                                                onClick={() => setSelectionCount('mid', count)}
+                                                                style={{
+                                                                    padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
+                                                                    border: isSelected ? '1px solid #f59e0b' : '1px solid #cbd5e1',
+                                                                    background: isSelected ? '#fef3c7' : '#ffffff',
+                                                                    color: isSelected ? '#d97706' : '#64748b',
+                                                                    fontWeight: isSelected ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
+                                                                }}
+                                                            >
+                                                                {count}개
+                                                            </button>
+                                                        );
+                                                    })}
+                                                    <button
+                                                        onClick={() => setSelectionCount('mid', 0)}
+                                                        style={{
+                                                            padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
+                                                            border: '1px solid #cbd5e1',
+                                                            background: (matrixSelection.mid || []).length === 0 ? '#f1f5f9' : '#ffffff',
+                                                            color: (matrixSelection.mid || []).length === 0 ? '#475569' : '#64748b',
+                                                            fontWeight: (matrixSelection.mid || []).length === 0 ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
+                                                        }}
+                                                    >
+                                                        안 함
+                                                    </button>
+                                                </div>
+                                            </div>
 
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                    {[5, 7, 10].map(points => (
-                                                        <div key={points} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                            <span style={{ width: '32px', fontSize: '11px', fontWeight: 700, color: '#475569' }}>{points}점</span>
-                                                            <div style={{ display: 'flex', gap: '4px' }}>
-                                                                {Array.from({ length: points }, (_, idx) => {
-                                                                    const val = idx + 1;
-                                                                    const chipStyle = getPreviewChipStyle(val, points);
-                                                                    return (
-                                                                        <span
-                                                                            key={val}
-                                                                            style={{
-                                                                                width: '22px', height: '22px', borderRadius: '50%',
-                                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                                fontSize: '10.5px', fontWeight: 700,
-                                                                                background: chipStyle.bg,
-                                                                                border: `1px solid ${chipStyle.border}`,
-                                                                                color: chipStyle.text,
-                                                                                transition: 'all 0.15s'
-                                                                            }}
-                                                                        >
-                                                                            {val}
-                                                                        </span>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                                            <hr style={{ border: 'none', borderTop: '1px solid #cbd5e1', margin: 0 }} />
+
+                                            {/* Bot 선택 */}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ef4444' }} />
+                                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', lineHeight: 1.2 }}>Bot</span>
+                                                        <span style={{ fontSize: '10px', color: '#64748b' }}>가장 낮은 점수부터</span>
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '5px' }}>
+                                                    {[1, 2, 3].map(count => {
+                                                        const isSelected = (matrixSelection.bot || []).length === count;
+                                                        return (
+                                                            <button
+                                                                key={count}
+                                                                onClick={() => setSelectionCount('bot', count)}
+                                                                style={{
+                                                                    padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
+                                                                    border: isSelected ? '1px solid #f43f5e' : '1px solid #cbd5e1',
+                                                                    background: isSelected ? '#ffe4e6' : '#ffffff',
+                                                                    color: isSelected ? '#e11d48' : '#64748b',
+                                                                    fontWeight: isSelected ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
+                                                                }}
+                                                            >
+                                                                {count}개
+                                                            </button>
+                                                        );
+                                                    })}
+                                                    <button
+                                                        onClick={() => setSelectionCount('bot', 0)}
+                                                        style={{
+                                                            padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
+                                                            border: '1px solid #cbd5e1',
+                                                            background: (matrixSelection.bot || []).length === 0 ? '#f1f5f9' : '#ffffff',
+                                                            color: (matrixSelection.bot || []).length === 0 ? '#475569' : '#64748b',
+                                                            fontWeight: (matrixSelection.bot || []).length === 0 ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
+                                                        }}
+                                                    >
+                                                        안 함
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
-                                    </>
+
+                                        {/* 척도별 미리보기 */}
+                                        <div style={{ padding: '10px 14px', background: '#f1f5f9', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#475569' }}>척도별 요약 기준 미리보기</span>
+                                                <div style={{ display: 'flex', gap: '8px', fontSize: '10.5px', fontWeight: 600 }}>
+                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#334155' }}>
+                                                        <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#3b82f6' }} /> Top
+                                                    </span>
+                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#334155' }}>
+                                                        <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#f59e0b' }} /> Mid
+                                                    </span>
+                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#334155' }}>
+                                                        <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#ef4444' }} /> Bot
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                {[5, 7, 10].map(points => (
+                                                    <div key={points} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                        <span style={{ width: '32px', fontSize: '11px', fontWeight: 700, color: '#475569' }}>{points}점</span>
+                                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                                            {Array.from({ length: points }, (_, idx) => {
+                                                                const val = idx + 1;
+                                                                const chipStyle = getPreviewChipStyle(val, points);
+                                                                return (
+                                                                    <span
+                                                                        key={val}
+                                                                        style={{
+                                                                            width: '22px', height: '22px', borderRadius: '50%',
+                                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                            fontSize: '10.5px', fontWeight: 700,
+                                                                            background: chipStyle.bg,
+                                                                            border: `1px solid ${chipStyle.border}`,
+                                                                            color: chipStyle.text,
+                                                                            transition: 'all 0.15s'
+                                                                        }}
+                                                                    >
+                                                                        {val}
+                                                                    </span>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
                             ) : (
                                 <>
                                     {/* 오픈형 옵션 */}
@@ -3068,8 +3069,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             {/* 좌측 TextArea 영역 */}
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 2px' }}>
-                                        <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>복사/붙여넣기 텍스트창</span>
-                                        <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '600' }}>한 줄에 제목 하나씩 입력</span>
+                                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>복사/붙여넣기 텍스트창</span>
+                                    <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '600' }}>한 줄에 제목 하나씩 입력</span>
                                 </div>
                                 <textarea
                                     value={bulkTitleText}
