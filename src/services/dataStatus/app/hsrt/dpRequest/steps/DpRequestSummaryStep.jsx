@@ -47,10 +47,12 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [selectedSummary, setSelectedSummary] = useState('');
     const [folders, setFolders] = useState([]);
     const [selectedFolderId, setSelectedFolderId] = useState('');
+
+
     const [baseVariables, setBaseVariables] = useState([]);
     const [isWizardOpen, setIsWizardOpen] = useState(false);
     const [wizardTab, setWizardTab] = useState('scale'); // 'scale' | 'open-num'
-    const [matrixSelection, setMatrixSelection] = useState({ top: [2], mid: [], bot: [2] });
+    const [matrixSelection, setMatrixSelection] = useState({ top: [1, 2], mid: [], bot: [1, 2] });
     const [isMeanIncluded, setIsMeanIncluded] = useState(true);
     const [openStats, setOpenStats] = useState({ mean: true, median: false, mode: false });
     const [isMergeByTitle, setIsMergeByTitle] = useState(false);
@@ -83,6 +85,19 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [activeBulkItemFolderId, setActiveBulkItemFolderId] = useState(null); // 활성화된 교차표 문구 일괄 편집 폴더
     const [bulkItemLabelText, setBulkItemLabelText] = useState(''); // 교차표 문구 일괄 편집용 텍스트
     const [modalFolders, setModalFolders] = useState([]); // 제목 일괄 수정 모달용 로컬 폴더 리스트
+
+    // --- 수동 요약 생성 관련 상태 추가 ---
+    const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+    const [manualScaleMin, setManualScaleMin] = useState(1);
+    const [manualScaleMax, setManualScaleMax] = useState(5);
+    const [manualIsReverse, setManualIsReverse] = useState(false);
+    const [manualBands, setManualBands] = useState([
+        { id: 'b1', label: 'Bot2', values: '1,2' },
+        { id: 'b2', label: 'Mid', values: '3' },
+        { id: 'b3', label: 'Top2', values: '4,5' }
+    ]);
+    const [manualPresetId, setManualPresetId] = useState('custom');
+    const [manualIsMeanIncluded, setManualIsMeanIncluded] = useState(true);
 
     const toggleFolderExpand = (folderId) => {
         setExpandedFolders(prev => {
@@ -121,12 +136,11 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         });
     };
 
-    // 요약표 제목 일괄 적용 및 저장
-    const handleApplyBulkTitleText = async () => {
+    // 요약표 제목 일괄 적용
+    const handleApplyBulkTitleText = () => {
         setFolders(modalFolders);
         setIsBulkTitleModalOpen(false);
         if (onUnsavedChange) onUnsavedChange(true);
-        await handleSaveSummary(modalFolders, null, '요약표 제목이 일괄 적용 및 저장되었습니다.');
     };
 
     // 교차표 문구 일괄 편집 모달 열기
@@ -828,6 +842,74 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         });
     };
 
+    const setSelectionCount = (row, count) => {
+        const nextList = count === 0 ? [] : Array.from({ length: count }, (_, i) => i + 1);
+        setMatrixSelection(prev => ({ ...prev, [row]: nextList }));
+    };
+
+    const getPreviewChipStyle = (n, totalPoints) => {
+        const topCount = (matrixSelection.top || []).length;
+        const midCount = (matrixSelection.mid || []).length;
+        const botCount = (matrixSelection.bot || []).length;
+
+        const isTop = topCount > 0 && n >= (totalPoints - topCount + 1) && n <= totalPoints;
+        const isBot = botCount > 0 && n >= 1 && n <= botCount;
+
+        let isMid = false;
+        if (midCount > 0) {
+            const midIndexes = [];
+            if (totalPoints % 2 === 1) {
+                const center = Math.ceil(totalPoints / 2);
+                if (midCount === 1) {
+                    midIndexes.push(center);
+                } else if (midCount === 2) {
+                    midIndexes.push(center - 1, center);
+                } else if (midCount === 3) {
+                    midIndexes.push(center - 1, center, center + 1);
+                }
+            } else {
+                const c1 = totalPoints / 2;
+                const c2 = c1 + 1;
+                if (midCount === 1) {
+                    midIndexes.push(c1);
+                } else if (midCount === 2) {
+                    midIndexes.push(c1, c2);
+                } else if (midCount === 3) {
+                    midIndexes.push(c1 - 1, c1, c2);
+                }
+            }
+            isMid = midIndexes.includes(n);
+        }
+
+        if (isTop) {
+            return {
+                bg: '#eff6ff',
+                border: '#3b82f6',
+                text: '#2563eb'
+            };
+        }
+        if (isBot) {
+            return {
+                bg: '#ffe4e6',
+                border: '#f43f5e',
+                text: '#e11d48'
+            };
+        }
+        if (isMid) {
+            return {
+                bg: '#fef3c7',
+                border: '#f59e0b',
+                text: '#d97706'
+            };
+        }
+
+        return {
+            bg: '#ffffff',
+            border: '#cbd5e1',
+            text: '#94a3b8'
+        };
+    };
+
     const toggleOpenStat = (key) => {
         setOpenStats(prev => ({ ...prev, [key]: !prev[key] }));
     };
@@ -842,6 +924,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                 const subItems = [];
                 const tags = [];
+                const sp = group.scalePoints || group.items[0]?.scale_points || 7;
 
                 // 1단계 설정에서 해당 문항의 프리셋에 역코딩이 켜져 있는지 확인
                 const preset = scalePresets.find(p => p.id === group.scalePresetId);
@@ -865,9 +948,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         type: 'frequency',
                         name: `${group.parentLabel} - Top 요약 (${sp}점 척도)`,
                         include_codes: codes,
-                        tag: `Top${maxTop}`
+                        tag: `Top ${codes}`
                     });
-                    tags.push(`Top${maxTop}`);
+                    tags.push(`Top ${codes}`);
                 }
 
                 // Mid 묶음 제안 (선택된 숫자들의 최댓값 기준 1개만 생성)
@@ -883,9 +966,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         type: 'frequency',
                         name: `${group.parentLabel} - Mid 요약 (${sp}점 척도)`,
                         include_codes: codes,
-                        tag: `Mid${maxMid}`
+                        tag: `Mid ${codes}`
                     });
-                    tags.push(`Mid${maxMid}`);
+                    tags.push(`Mid ${codes}`);
                 }
 
                 // Bot 묶음 제안 (선택된 숫자들의 최댓값 기준 1개만 생성)
@@ -906,9 +989,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         type: 'frequency',
                         name: `${group.parentLabel} - Bot 요약 (${sp}점 척도)`,
                         include_codes: codes,
-                        tag: `Bot${maxBot}`
+                        tag: `Bot ${codes}`
                     });
-                    tags.push(`Bot${maxBot}`);
+                    tags.push(`Bot ${codes}`);
                 }
 
                 // 평균 요약 제안
@@ -935,7 +1018,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     subItems,
                     tags,
                     items: group.items.map(it => it.id),
-                    itemsDesc: `대상 문항: ${group.items.map(it => `${it.id}. ${it.label}`).join(', ')}`
+                    itemsDesc: `대상 문항: ${group.items.map(it => `${it.id}. ${it.label}`).join(', ')}`,
+                    scale_points: sp
                 });
             });
         }
@@ -986,7 +1070,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         groupId: prop.groupId,
                         subItems: [],
                         tags: new Set(),
-                        items: new Set()
+                        items: new Set(),
+                        scale_points: prop.scale_points
                     };
                 }
                 prop.subItems.forEach(si => {
@@ -1007,12 +1092,313 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 subItems: m.subItems,
                 tags: Array.from(m.tags),
                 items: Array.from(m.items),
-                itemsDesc: `대상 문항: ${Array.from(m.items).join(', ')}`
+                itemsDesc: `대상 문항: ${Array.from(m.items).join(', ')}`,
+                scale_points: m.scale_points
             }));
         }
 
         return proposals;
     }, [wizardTab, matrixSelection, isMeanIncluded, openStats, isMergeByTitle, groupedVariables, scalePresets]);
+
+    // --- 수동 요약 생성 팝업 핸들러 및 비즈니스 로직 ---
+
+    const handleOpenManualSummaryModal = () => {
+        if (selectedIds.length === 0) return;
+
+        // 척도 정합성 일치 검사 (동일한 척도로만 생성 가능하도록 제한)
+        const scalePointsSet = new Set();
+        selectedIds.forEach(id => {
+            const v = summaryVariables.find(item => item.id === id);
+            if (v && v.scale_points !== undefined && v.scale_points !== null) {
+                scalePointsSet.add(v.scale_points);
+            }
+        });
+        if (scalePointsSet.size > 1) {
+            modal.showAlert('알림', '동일한 척도의 변수로만 요약표를 생성할 수 있습니다.');
+            return;
+        }
+
+        // 선택된 문항들의 scale_points 중 최댓값을 가져와 척도 점수로 셋팅
+        let maxSp = 5;
+        selectedIds.forEach(id => {
+            const v = summaryVariables.find(item => item.id === id);
+            if (v && v.scale_points) {
+                maxSp = Math.max(maxSp, v.scale_points);
+            }
+        });
+
+        setManualScaleMax(maxSp);
+        setManualScaleMin(1);
+        
+        // 탭이 오픈 문항 탭인 경우
+        if (currentTab === 'open-num') {
+            setIsManualModalOpen(true);
+            return;
+        }
+
+        // 선택한 점수에 맞는 프리셋이 있는지 확인해서 있으면 프리셋 자동 선택, 없으면 custom
+        const matchedPreset = scalePresets.find(p => (p.options?.max || p.max) === maxSp);
+        if (matchedPreset) {
+            setManualPresetId(matchedPreset.id);
+            const opts = matchedPreset.options || {};
+            setManualIsReverse(!!opts.reverse);
+            let loadedBands = [];
+            if (Array.isArray(opts.bands)) {
+                loadedBands = opts.bands.map((b, idx) => ({
+                    id: b.id || `band_${idx}_${Date.now()}`,
+                    label: b.label || 'Top',
+                    values: Array.isArray(b.values) ? b.values.join(',') : ''
+                }));
+            } else if (Array.isArray(matchedPreset.bands)) {
+                loadedBands = matchedPreset.bands.map((b, idx) => ({
+                    id: b.id || `band_${idx}_${Date.now()}`,
+                    label: b.label || 'Top',
+                    values: String(b.values)
+                }));
+            }
+            if (loadedBands.length > 0) {
+                setManualBands(loadedBands);
+            } else {
+                setDefaultBandsForScale(maxSp);
+            }
+        } else {
+            setManualPresetId('custom');
+            setDefaultBandsForScale(maxSp);
+        }
+
+        setIsManualModalOpen(true);
+    };
+
+    const setDefaultBandsForScale = (sp) => {
+        if (sp === 5) {
+            setManualBands([
+                { id: 'b1', label: 'Bot2', values: '1,2' },
+                { id: 'b2', label: 'Mid', values: '3' },
+                { id: 'b3', label: 'Top2', values: '4,5' }
+            ]);
+        } else if (sp === 7) {
+            setManualBands([
+                { id: 'b1', label: 'Bot3', values: '1,2,3' },
+                { id: 'b2', label: 'Mid', values: '4' },
+                { id: 'b3', label: 'Top3', values: '5,6,7' }
+            ]);
+        } else {
+            const center = Math.ceil(sp / 2);
+            const botVals = Array.from({ length: center - 1 }, (_, i) => i + 1).join(',');
+            const topVals = Array.from({ length: sp - center }, (_, i) => center + 1 + i).join(',');
+            setManualBands([
+                { id: 'b1', label: 'Bot', values: botVals },
+                { id: 'b2', label: 'Mid', values: `${center}` },
+                { id: 'b3', label: 'Top', values: topVals }
+            ]);
+        }
+    };
+
+    const handleManualPresetChange = (presetId) => {
+        setManualPresetId(presetId);
+        if (presetId === 'custom') return;
+
+        const preset = scalePresets.find(p => p.id === presetId);
+        if (preset) {
+            const opts = preset.options || {};
+            setManualScaleMin(opts.min ?? 1);
+            setManualScaleMax(opts.max ?? 5);
+            setManualIsReverse(!!opts.reverse);
+            
+            let loadedBands = [];
+            if (Array.isArray(opts.bands)) {
+                loadedBands = opts.bands.map((b, idx) => ({
+                    id: b.id || `band_${idx}_${Date.now()}`,
+                    label: b.label || 'Top',
+                    values: Array.isArray(b.values) ? b.values.join(',') : ''
+                }));
+            } else if (Array.isArray(preset.bands)) {
+                loadedBands = preset.bands.map((b, idx) => ({
+                    id: b.id || `band_${idx}_${Date.now()}`,
+                    label: b.label || 'Top',
+                    values: String(b.values)
+                }));
+            }
+            setManualBands(loadedBands);
+        }
+    };
+
+    const getBandValueCount = (valStr) => {
+        if (!valStr) return 0;
+        return valStr.split(',').map(s => s.trim()).filter(s => s !== '' && !isNaN(Number(s))).length;
+    };
+
+    const handleToggleCircle = (bandId, num) => {
+        setManualBands(prev => prev.map(band => {
+            if (band.id !== bandId) return band;
+
+            let currentVals = band.values.split(',')
+                .map(s => s.trim())
+                .filter(s => s !== '')
+                .map(Number)
+                .filter(n => !isNaN(n));
+
+            if (currentVals.includes(num)) {
+                currentVals = currentVals.filter(v => v !== num);
+            } else {
+                currentVals = [...currentVals, num].sort((a, b) => a - b);
+            }
+
+            return {
+                ...band,
+                values: currentVals.join(',')
+            };
+        }));
+    };
+
+    const handleAddManualBand = () => {
+        setManualBands(prev => [
+            ...prev,
+            { id: `band_${Date.now()}_${Math.random()}`, label: 'Top', values: '' }
+        ]);
+    };
+
+    const handleRemoveManualBand = (bandId) => {
+        setManualBands(prev => prev.filter(b => b.id !== bandId));
+    };
+
+    const handleConfirmManualSummary = () => {
+        if (selectedIds.length === 0) {
+            modal.showAlert('알림', '선택된 변수가 없습니다.');
+            return;
+        }
+
+        // 척도 일치 여부 검사 (다른 척도 혼용 방지)
+        const scalePointsSet = new Set();
+        selectedIds.forEach(varId => {
+            const baseVar = summaryVariables.find(v => v.id === varId);
+            if (baseVar && baseVar.scale_points !== undefined && baseVar.scale_points !== null) {
+                scalePointsSet.add(baseVar.scale_points);
+            }
+        });
+        if (scalePointsSet.size > 1) {
+            modal.showAlert('알림', '동일한 척도의 변수로만 요약표를 동시에 생성할 수 있습니다.');
+            return;
+        }
+
+        const newSummaries = [];
+        const uniqueFolders = [...folders];
+
+        if (currentTab === 'scale') {
+            // 밴드 값 입력 유효성 검사
+            for (let i = 0; i < manualBands.length; i++) {
+                const band = manualBands[i];
+                if (getBandValueCount(band.values) === 0) {
+                    modal.showAlert('알림', `'${band.label}' 밴드에 지정된 값이 없습니다. 값을 기입하거나 삭제해 주세요.`);
+                    return;
+                }
+            }
+
+            // 선택된 변수별로 폴더 및 summaries 상세 구조 생성
+            selectedIds.forEach((varId) => {
+                const baseVar = baseVariables.find(v => v.id === varId);
+                const varLabel = baseVar?.label || baseVar?.name || varId;
+                const sp = baseVar?.scale_points || manualScaleMax;
+
+                const subItems = [];
+                manualBands.forEach(band => {
+                    subItems.push({
+                        type: 'frequency',
+                        name: `${varLabel} - ${band.label} 요약`,
+                        include_codes: band.values,
+                        tag: band.label
+                    });
+                });
+
+                if (manualIsMeanIncluded) {
+                    subItems.push({
+                        type: 'statistics',
+                        name: `${varLabel} - 평균 요약 (${sp}점 척도)`,
+                        mean: true,
+                        median: false,
+                        mode: false,
+                        tag: 'mean'
+                    });
+                }
+
+                const folderId = `manual_scale_${varId}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+                const newFolder = {
+                    id: folderId,
+                    name: `${varLabel} - 요약표`,
+                    label: `${varLabel} - 요약표`,
+                    type: 'frequency',
+                    scale_points: sp,
+                    scale_preset_id: manualPresetId !== 'custom' ? manualPresetId : null,
+                    items: [varId]
+                };
+                uniqueFolders.push(newFolder);
+
+                const formatted = {
+                    id: folderId,
+                    label: `${varLabel} - 요약표`,
+                    subId: folderId,
+                    info: subItems.map(si => ({ ...si, inEdit: false }))
+                };
+                newSummaries.push(formatted);
+            });
+        } else {
+            // 오픈형 생성
+            const hasAnyStats = openStats.mean || openStats.median || openStats.mode;
+            if (!hasAnyStats) {
+                modal.showAlert('알림', '최소 하나 이상의 통계 옵션(평균/중앙값/최빈값)을 선택해 주세요.');
+                return;
+            }
+
+            selectedIds.forEach((varId) => {
+                const baseVar = baseVariables.find(v => v.id === varId);
+                const varLabel = baseVar?.label || baseVar?.name || varId;
+
+                const subItems = [];
+                subItems.push({
+                    type: 'statistics',
+                    name: `${varLabel} - 통계 요약표`,
+                    mean: !!openStats.mean,
+                    median: !!openStats.median,
+                    mode: !!openStats.mode
+                });
+
+                const folderId = `manual_open_${varId}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+                const newFolder = {
+                    id: folderId,
+                    name: `${varLabel} - 통계 요약표`,
+                    label: `${varLabel} - 통계 요약표`,
+                    type: 'statistics',
+                    items: [varId]
+                };
+                uniqueFolders.push(newFolder);
+
+                const formatted = {
+                    id: folderId,
+                    label: `${varLabel} - 통계 요약표`,
+                    subId: folderId,
+                    info: subItems.map(si => ({ ...si, inEdit: false }))
+                };
+                newSummaries.push(formatted);
+            });
+        }
+
+        setFolders(uniqueFolders);
+        setSummaries(prev => [...prev, ...newSummaries]);
+        setSelectedSummary(newSummaries[0]?.id || null);
+
+        // 히스토리 업데이트 연동
+        if (history && typeof history.commit === 'function') {
+            history.commit({
+                folders: uniqueFolders,
+                summaries: [...summaries, ...newSummaries]
+            });
+        }
+
+        setIsManualModalOpen(false);
+        setSelectedIds([]);
+        modal.showAlert('성공', '선택된 변수로 요약표가 성공적으로 생성되었습니다.');
+        if (onUnsavedChange) onUnsavedChange(true);
+    };
 
     // 전체 선택/해제 핸들러
     const handleToggleAllWizardProposals = (select) => {
@@ -1349,6 +1735,40 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 );
                             })}
                         </div>
+
+                        {/* 요약표 수동 생성 버튼 영역 */}
+                        <div style={{ padding: '12px', borderTop: '1px solid #e2e8f0', background: '#ffffff', flexShrink: 0 }}>
+                            <button
+                                disabled={selectedIds.length === 0}
+                                onClick={handleOpenManualSummaryModal}
+                                style={{
+                                    width: '100%',
+                                    height: '36px',
+                                    fontSize: '13px',
+                                    fontWeight: 600,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '6px',
+                                    borderRadius: '4px',
+                                    border: 'none',
+                                    background: selectedIds.length > 0 ? '#2563eb' : '#cbd5e1',
+                                    color: '#ffffff',
+                                    cursor: selectedIds.length > 0 ? 'pointer' : 'not-allowed',
+                                    transition: 'all 0.2s',
+                                    boxShadow: selectedIds.length > 0 ? '0 2px 4px rgba(37, 99, 235, 0.15)' : 'none'
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (selectedIds.length > 0) e.currentTarget.style.background = '#1d4ed8';
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (selectedIds.length > 0) e.currentTarget.style.background = '#2563eb';
+                                }}
+                            >
+                                <Plus size={14} />
+                                <span>요약표 생성 ({selectedIds.length}개 선택됨)</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -1432,83 +1852,97 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             <GripVertical size={16} />
                                         </div>
 
-                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', marginRight: '12px', fontFamily: 'monospace' }}>
-                                            #{folderIdx + 1}
-                                        </span>
+                                        <div 
+                                            style={{ flex: 1, minWidth: 0, marginRight: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}
+                                            onClick={() => toggleFolderExpand(folder.id)}
+                                        >
 
-                                        <div style={{ flex: 1, minWidth: 0, marginRight: '16px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                                <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
-                                                    {folder.name}
-                                                </span>
-                                                <span style={{ fontSize: '10.5px', color: '#94a3b8', background: '#f8fafc', padding: '1px 6px', borderRadius: '4px', border: '1px solid #e2e8f0', fontFamily: 'monospace' }}>
-                                                    {folder.id}
-                                                </span>
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-                                                <span>유형: <strong style={{ color: '#3b82f6' }}>{isStatistics ? '통계 요약' : '빈도 요약'}</strong></span>
-                                                <span style={{ color: '#cbd5e1' }}>|</span>
-                                                <span>변수 개수: <strong>{folder.items?.length || 0}개</strong></span>
-                                                <span style={{ color: '#cbd5e1' }}>|</span>
-                                                {isStatistics ? (
-                                                    <span>옵션: <strong>평균({folder.mean ? 'Y' : 'N'}) 중앙값({folder.median ? 'Y' : 'N'}) 최빈값({folder.mode ? 'Y' : 'N'})</strong></span>
-                                                ) : (
-                                                    <span>포함 코드: <strong>{folder.include_codes || '없음'}</strong></span>
-                                                )}
-
-                                                {badgeList.length > 0 && (
-                                                    <div style={{ display: 'flex', gap: '4px', marginLeft: '6px' }}>
-                                                        {badgeList.map(b => {
-                                                            let bg = '#f1f5f9';
-                                                            let fg = '#64748b';
-                                                            if (b.includes('Top')) { bg = '#ecfdf5'; fg = '#10b981'; }
-                                                            else if (b.includes('Bot')) { bg = '#fff1f2'; fg = '#f43f5e'; }
-                                                            else if (b === '평균') { bg = '#eff6ff'; fg = '#3b82f6'; }
-                                                            return (
-                                                                <span key={b} style={{ fontSize: '9px', fontWeight: 700, color: fg, background: bg, padding: '1px 5px', borderRadius: '3px' }}>
-                                                                    {b}
-                                                                </span>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
+                                                 {isExpanded ? (
+                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
+                                                         <input
+                                                             type="text"
+                                                             value={folder.name}
+                                                             onChange={(e) => {
+                                                                 setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, name: e.target.value } : f));
+                                                                 if (onUnsavedChange) onUnsavedChange(true);
+                                                             }}
+                                                             onKeyDown={(e) => {
+                                                                 if (e.key === 'Enter') {
+                                                                     e.target.blur();
+                                                                 }
+                                                             }}
+                                                             onClick={(e) => e.stopPropagation()}
+                                                             onMouseDown={(e) => e.stopPropagation()}
+                                                             onMouseUp={(e) => e.stopPropagation()}
+                                                             style={{
+                                                                 fontSize: '13px',
+                                                                 fontWeight: 700,
+                                                                 color: '#1e293b',
+                                                                 border: '1px solid #cbd5e1',
+                                                                 borderRadius: '4px',
+                                                                 padding: '2px 6px',
+                                                                 outline: 'none',
+                                                                 background: '#ffffff',
+                                                                 width: '280px'
+                                                             }}
+                                                         />
+                                                         <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace', fontWeight: 600 }}>
+                                                             ({folder.id})
+                                                         </span>
+                                                     </div>
+                                                 ) : (
+                                                     <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
+                                                         {folder.name}
+                                                         <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace', fontWeight: 600, marginLeft: '6px' }}>
+                                                             ({folder.id})
+                                                         </span>
+                                                     </span>
+                                                 )}
+                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                     <span style={{ fontSize: '10px', color: '#475569', background: '#f1f5f9', padding: '1px 5px', borderRadius: '3px', fontWeight: 700 }}>
+                                                         {folder.items?.length || 0}개
+                                                     </span>
+                                                     {badgeList.length > 0 && (
+                                                         <div style={{ display: 'flex', gap: '4px' }}>
+                                                             {badgeList.map(b => {
+                                                                 let bg = '#f1f5f9';
+                                                                 let fg = '#64748b';
+                                                                 if (b.includes('Top')) { bg = '#ecfdf5'; fg = '#10b981'; }
+                                                                 else if (b.includes('Bot')) { bg = '#fff1f2'; fg = '#f43f5e'; }
+                                                                 else if (b === '평균') { bg = '#eff6ff'; fg = '#3b82f6'; }
+                                                                 return (
+                                                                     <span key={b} style={{ fontSize: '9px', fontWeight: 700, color: fg, background: bg, padding: '1px 5px', borderRadius: '3px' }}>
+                                                                         {b}
+                                                                     </span>
+                                                                 );
+                                                             })}
+                                                         </div>
+                                                     )}
+                                                 </div>
+                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                             <button
-                                                onClick={() => toggleFolderExpand(folder.id)}
-                                                style={{
-                                                    display: 'flex', alignItems: 'center', gap: '6px', height: '28px', padding: '0 10px',
-                                                    fontSize: '11.5px', fontWeight: 600,
-                                                    background: isExpanded ? '#f1f5f9' : '#eff6ff',
-                                                    color: isExpanded ? '#475569' : '#2563eb',
-                                                    border: isExpanded ? '1px solid #cbd5e1' : '1px solid #bfdbfe',
-                                                    borderRadius: '4px', cursor: 'pointer', transition: 'all 0.15s'
-                                                }}
-                                            >
-                                                {isExpanded ? <EyeOff size={13} /> : <Eye size={13} />}
-                                                <span>{isExpanded ? '상세접기' : '상세보기'}</span>
-                                            </button>
-
-                                            <button
-                                                onClick={() => {
-                                                    if (!isExpanded) {
-                                                        toggleFolderExpand(folder.id);
-                                                    }
-                                                    setTimeout(() => {
-                                                        const el = document.getElementById(`folder-name-input-${folder.id}`);
-                                                        if (el) el.focus();
-                                                    }, 100);
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setEditingFolderId(folder.id);
+                                                    setEditingTitleText(folder.name);
                                                 }}
                                                 style={{
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px',
-                                                    background: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '4px',
+                                                    background: 'transparent', color: '#64748b', border: 'none', borderRadius: '6px',
                                                     cursor: 'pointer', transition: 'all 0.15s'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.background = '#f1f5f9';
+                                                    e.currentTarget.style.color = '#1e293b';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.background = 'transparent';
+                                                    e.currentTarget.style.color = '#64748b';
                                                 }}
                                                 title="이름 수정"
                                             >
-                                                <Edit size={13} />
+                                                <Edit size={14} />
                                             </button>
 
                                             <button
@@ -1534,12 +1968,20 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 }}
                                                 style={{
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px',
-                                                    background: '#ffffff', color: '#10b981', border: '1px solid #a7f3d0', borderRadius: '4px',
+                                                    background: 'transparent', color: '#10b981', border: 'none', borderRadius: '6px',
                                                     cursor: 'pointer', transition: 'all 0.15s'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.background = '#ecfdf5';
+                                                    e.currentTarget.style.color = '#059669';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.background = 'transparent';
+                                                    e.currentTarget.style.color = '#10b981';
                                                 }}
                                                 title="복사"
                                             >
-                                                <Copy size={13} />
+                                                <Copy size={14} />
                                             </button>
 
                                             <button
@@ -1567,12 +2009,20 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 }}
                                                 style={{
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px',
-                                                    background: '#ffffff', color: '#ef4444', border: '1px solid #fca5a5', borderRadius: '4px',
+                                                    background: 'transparent', color: '#ef4444', border: 'none', borderRadius: '6px',
                                                     cursor: 'pointer', transition: 'all 0.15s'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.background = '#fff1f2';
+                                                    e.currentTarget.style.color = '#dc2626';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.background = 'transparent';
+                                                    e.currentTarget.style.color = '#ef4444';
                                                 }}
                                                 title="삭제"
                                             >
-                                                <X size={13} />
+                                                <Trash2 size={14} />
                                             </button>
                                         </div>
                                     </div>
@@ -1580,7 +2030,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     {isExpanded && (
                                         <div style={{ marginTop: '12px', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
 
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '12px' }}>
+                                            <div style={{ display: 'none', alignItems: 'center', gap: '8px', padding: '10px 14px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '12px' }}>
                                                 <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>요약표 타이틀명:</span>
                                                 <input
                                                     id={`folder-name-input-${folder.id}`}
@@ -1599,9 +2049,10 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                                                     {!isStatistics ? (
                                                         <>
-                                                            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
+                                                            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
                                                                 <input
                                                                     type="checkbox"
+                                                                    className="dp-checkbox-input"
                                                                     checked={(folder.include_codes || '').includes(String(scalePoints)) || (folder.include_codes || '').includes(String(scalePoints - 1))}
                                                                     onChange={(e) => {
                                                                         let newCodes = (folder.include_codes || '').split(',').map(x => x.trim()).filter(Boolean);
@@ -1614,13 +2065,14 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                                         setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, include_codes: newCodes.join(',') } : f));
                                                                         if (onUnsavedChange) onUnsavedChange(true);
                                                                     }}
-                                                                    style={{ cursor: 'pointer', margin: 0, width: '13px', height: '13px', accentColor: '#3b82f6', appearance: 'checkbox', WebkitAppearance: 'checkbox', opacity: 1 }}
                                                                 />
+                                                                <span className="dp-checkbox-box"></span>
                                                                 <span>Top2</span>
                                                             </label>
-                                                            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
+                                                            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
                                                                 <input
                                                                     type="checkbox"
+                                                                    className="dp-checkbox-input"
                                                                     checked={(folder.include_codes || '').includes('1') || (folder.include_codes || '').includes('2')}
                                                                     onChange={(e) => {
                                                                         let newCodes = (folder.include_codes || '').split(',').map(x => x.trim()).filter(Boolean);
@@ -1633,62 +2085,66 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                                         setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, include_codes: newCodes.join(',') } : f));
                                                                         if (onUnsavedChange) onUnsavedChange(true);
                                                                     }}
-                                                                    style={{ cursor: 'pointer', margin: 0, width: '13px', height: '13px', accentColor: '#3b82f6', appearance: 'checkbox', WebkitAppearance: 'checkbox', opacity: 1 }}
                                                                 />
+                                                                <span className="dp-checkbox-box"></span>
                                                                 <span>Bot2</span>
                                                             </label>
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
+                                                            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
                                                                 <input
                                                                     type="checkbox"
+                                                                    className="dp-checkbox-input"
                                                                     checked={folder.mean || false}
                                                                     onChange={(e) => {
                                                                         setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mean: e.target.checked } : f));
                                                                         if (onUnsavedChange) onUnsavedChange(true);
                                                                     }}
-                                                                    style={{ cursor: 'pointer', margin: 0, width: '13px', height: '13px', accentColor: '#3b82f6', appearance: 'checkbox', WebkitAppearance: 'checkbox', opacity: 1 }}
                                                                 />
+                                                                <span className="dp-checkbox-box"></span>
                                                                 <span>평균</span>
                                                             </label>
-                                                            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
+                                                            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
                                                                 <input
                                                                     type="checkbox"
+                                                                    className="dp-checkbox-input"
                                                                     checked={folder.median || false}
                                                                     onChange={(e) => {
                                                                         setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, median: e.target.checked } : f));
                                                                         if (onUnsavedChange) onUnsavedChange(true);
                                                                     }}
-                                                                    style={{ cursor: 'pointer', margin: 0, width: '13px', height: '13px', accentColor: '#3b82f6', appearance: 'checkbox', WebkitAppearance: 'checkbox', opacity: 1 }}
                                                                 />
+                                                                <span className="dp-checkbox-box"></span>
                                                                 <span>중앙값</span>
                                                             </label>
-                                                            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
+                                                            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
                                                                 <input
                                                                     type="checkbox"
+                                                                    className="dp-checkbox-input"
                                                                     checked={folder.mode || false}
                                                                     onChange={(e) => {
                                                                         setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mode: e.target.checked } : f));
                                                                         if (onUnsavedChange) onUnsavedChange(true);
                                                                     }}
-                                                                    style={{ cursor: 'pointer', margin: 0, width: '13px', height: '13px', accentColor: '#3b82f6', appearance: 'checkbox', WebkitAppearance: 'checkbox', opacity: 1 }}
                                                                 />
+                                                                <span className="dp-checkbox-box"></span>
                                                                 <span>최빈값</span>
                                                             </label>
                                                         </>
                                                     )}
                                                     {!isStatistics && (
-                                                        <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
+                                                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
                                                             <input
                                                                 type="checkbox"
+                                                                className="dp-checkbox-input"
                                                                 checked={folder.mean || false}
                                                                 onChange={(e) => {
                                                                     setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mean: e.target.checked } : f));
                                                                     if (onUnsavedChange) onUnsavedChange(true);
                                                                 }}
-                                                                style={{ cursor: 'pointer', margin: 0, width: '13px', height: '13px', accentColor: '#3b82f6', appearance: 'checkbox', WebkitAppearance: 'checkbox', opacity: 1 }}
                                                             />
+                                                            <span className="dp-checkbox-box"></span>
                                                             <span>평균</span>
                                                         </label>
                                                     )}
@@ -1770,14 +2226,14 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
                 }}>
                     <div style={{
-                        backgroundColor: '#ffffff', borderRadius: '12px', width: '640px',
+                        backgroundColor: '#ffffff', borderRadius: '12px', width: '700px',
                         maxHeight: '90vh', display: 'flex', flexDirection: 'column',
                         boxShadow: '0 12px 24px -4px rgba(0, 0, 0, 0.15)', overflow: 'hidden'
                     }}>
                         {/* 팝업 헤더 */}
                         <div style={{
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            padding: '14px 20px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
+                            padding: '10px 18px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>
                                 <span style={{ width: '3px', height: '14px', backgroundColor: '#2563eb', marginRight: '8px', display: 'inline-block' }}></span>
@@ -1794,10 +2250,10 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
 
                         {/* 모달 콘텐츠 */}
-                        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '12px', minHeight: 0 }}>
+                        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 18px', display: 'flex', flexDirection: 'column', gap: '8px', minHeight: 0 }}>
                             {/* 안내 배너 */}
                             <div style={{
-                                display: 'flex', gap: '6px', padding: '6px 12px', borderRadius: '4px',
+                                display: 'flex', gap: '6px', padding: '4px 10px', borderRadius: '4px',
                                 background: '#f0f9ff', border: '1px solid #e0f2fe', color: '#0369a1', fontSize: '11px', lineHeight: 1.4
                             }}>
                                 <span style={{ fontSize: '13px', display: 'inline-block', transform: 'translateY(-1px)' }}>💡</span>
@@ -1811,155 +2267,257 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                             {/* 옵션 설정 영역 */}
                             {wizardTab === 'scale' ? (
-                                <>
-                                    {/* 척도형 옵션 */}
-                                    <div>
-                                        <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>요약 유형 프리셋 일괄 적용</div>
-                                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                            {[
-                                                { key: 'top3_bot3', label: 'Top3 · Bot3' },
-                                                { key: 'top2_bot2', label: 'Top2 · Bot2' },
-                                                { key: 'top1_bot1', label: 'Top1 · Bot1 (박스)' },
-                                                { key: 'top_mid_bot', label: 'Top · Mid · Bot' },
-                                                { key: 'all', label: '전부 (1·2·3)' },
-                                                { key: 'reset', label: '초기화' }
-                                            ].map(preset => {
-                                                const isActive = isPresetActive(preset.key);
-                                                let borderStyle = '1px solid #cbd5e1';
-                                                let bgStyle = '#ffffff';
-                                                let colorStyle = '#475569';
-                                                let weightStyle = 600;
-                                                if (preset.key === 'reset') {
-                                                    borderStyle = '1px dashed #cbd5e1';
-                                                    bgStyle = '#f8fafc';
-                                                }
-                                                if (isActive) {
-                                                    borderStyle = '1px solid #2563eb';
-                                                    bgStyle = '#eff6ff';
-                                                    colorStyle = '#2563eb';
-                                                    weightStyle = 700;
-                                                }
-                                                return (
-                                                    <button
-                                                        key={preset.key}
-                                                        onClick={() => applyWizardPreset(preset.key)}
-                                                        style={{
-                                                            padding: '5px 10px', fontSize: '11.5px', borderRadius: '4px',
-                                                            border: borderStyle,
-                                                            background: bgStyle,
-                                                            color: colorStyle, fontWeight: weightStyle, cursor: 'pointer', transition: 'all 0.15s'
-                                                        }}
-                                                        onMouseEnter={(e) => {
-                                                            if (!isActive) e.currentTarget.style.background = '#f1f5f9';
-                                                        }}
-                                                        onMouseLeave={(e) => {
-                                                            if (!isActive) {
-                                                                e.currentTarget.style.background = preset.key === 'reset' ? '#f8fafc' : '#ffffff';
-                                                            } else {
-                                                                e.currentTarget.style.background = '#eff6ff';
-                                                            }
-                                                        }}
-                                                    >
-                                                        {preset.label}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
+                                    <>
+                                        {/* 척도형 옵션 */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                <div style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
+                                                    요약 유형 설정 <span style={{ fontSize: '11px', fontWeight: 500, color: '#64748b', marginLeft: '4px' }}>(문항별 척도 기준 자동 변환)</span>
+                                                </div>
+                                            </div>
 
-                                    <div style={{ display: 'grid', gridTemplateColumns: '38% 1fr', gap: '16px' }}>
-                                        {/* 매트릭스 셀 선택 */}
-                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>매트릭스 셀 선택 (N개 점수 묶음)</div>
-                                            <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px', background: '#f8fafc', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', boxSizing: 'border-box' }}>
-                                                <div style={{ display: 'grid', gridTemplateColumns: '50px 36px 36px 36px', gap: '8px', alignItems: 'center', justifyItems: 'center', textAlign: 'center' }}>
-                                                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>종류</span>
-                                                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>1</span>
-                                                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>2</span>
-                                                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>3</span>
+                                            {/* 빠른 선택 및 평균 포함 배치 */}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                                    <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 700 }}>빠른 선택:</span>
+                                                    {[
+                                                        { key: 'top3_bot3', label: 'Top3-Bot3' },
+                                                        { key: 'top2_bot2', label: 'Top2-Bot2' },
+                                                        { key: 'top1_bot1', label: 'Top1-Bot1' },
+                                                        { key: 'top_mid_bot', label: 'Top-Mid-Bot' },
+                                                        { key: 'reset', label: '초기화' }
+                                                    ].map(preset => {
+                                                        const isActive = isPresetActive(preset.key);
+                                                        let borderStyle = '1px solid #cbd5e1';
+                                                        let bgStyle = '#ffffff';
+                                                        let colorStyle = '#475569';
+                                                        if (preset.key === 'reset') {
+                                                            borderStyle = '1px solid #cbd5e1';
+                                                            bgStyle = '#f8fafc';
+                                                        }
+                                                        if (isActive) {
+                                                            borderStyle = '1px solid #2563eb';
+                                                            bgStyle = '#eff6ff';
+                                                            colorStyle = '#2563eb';
+                                                        }
+                                                        return (
+                                                            <button
+                                                                key={preset.key}
+                                                                onClick={() => applyWizardPreset(preset.key)}
+                                                                style={{
+                                                                    padding: '4px 10px', fontSize: '11px', borderRadius: '16px',
+                                                                    border: borderStyle,
+                                                                    background: bgStyle,
+                                                                    color: colorStyle, fontWeight: isActive ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
+                                                                }}
+                                                            >
+                                                                {preset.label}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
 
-                                                    {['Top', 'Mid', 'Bot'].map(row => (
-                                                        <React.Fragment key={row}>
-                                                            <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#475569', textAlign: 'left' }}>{row}</span>
-                                                            {[1, 2, 3].map(col => {
-                                                                const isSelected = (matrixSelection[row.toLowerCase()] || []).includes(col);
+                                                {/* 평균 포함 체크박스 제안 배치 */}
+                                                <label
+                                                    className="dp-checkbox-label"
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none', margin: 0 }}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        className="dp-checkbox-input"
+                                                        checked={isMeanIncluded}
+                                                        onChange={(e) => setIsMeanIncluded(e.target.checked)}
+                                                    />
+                                                    <span className="dp-checkbox-box" />
+                                                    <span style={{ fontSize: '12px', color: '#475569', fontWeight: 700 }}>평균 포함</span>
+                                                </label>
+                                            </div>
 
-                                                                let btnBg = '#ffffff';
-                                                                let btnBorder = '1px solid #cbd5e1';
-                                                                let btnColor = '#94a3b8';
+                                            {/* 개수 선택 라인 */}
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px 14px', background: '#ffffff', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                                                {/* Top 선택 */}
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#3b82f6' }} />
+                                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', lineHeight: 1.2 }}>Top</span>
+                                                            <span style={{ fontSize: '10px', color: '#64748b' }}>가장 높은 점수부터</span>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: '5px' }}>
+                                                        {[1, 2, 3].map(count => {
+                                                            const isSelected = (matrixSelection.top || []).length === count;
+                                                            return (
+                                                                <button
+                                                                    key={count}
+                                                                    onClick={() => setSelectionCount('top', count)}
+                                                                    style={{
+                                                                        padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
+                                                                        border: isSelected ? '1px solid #3b82f6' : '1px solid #cbd5e1',
+                                                                        background: isSelected ? '#eff6ff' : '#ffffff',
+                                                                        color: isSelected ? '#2563eb' : '#64748b',
+                                                                        fontWeight: isSelected ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
+                                                                    }}
+                                                                >
+                                                                    {count}개
+                                                                </button>
+                                                            );
+                                                        })}
+                                                        <button
+                                                            onClick={() => setSelectionCount('top', 0)}
+                                                            style={{
+                                                                padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
+                                                                border: '1px solid #cbd5e1',
+                                                                background: (matrixSelection.top || []).length === 0 ? '#f1f5f9' : '#ffffff',
+                                                                color: (matrixSelection.top || []).length === 0 ? '#475569' : '#64748b',
+                                                                fontWeight: (matrixSelection.top || []).length === 0 ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
+                                                            }}
+                                                        >
+                                                            안 함
+                                                        </button>
+                                                    </div>
+                                                </div>
 
-                                                                if (isSelected) {
-                                                                    if (row === 'Top') {
-                                                                        btnBg = '#dbeafe';
-                                                                        btnBorder = '1px solid #3b82f6';
-                                                                        btnColor = '#1e293b';
-                                                                    } else if (row === 'Bot') {
-                                                                        btnBg = '#ffe4e6';
-                                                                        btnBorder = '1px solid #f43f5e';
-                                                                        btnColor = '#1e293b';
-                                                                    } else { // Mid
-                                                                        btnBg = '#e2e8f0';
-                                                                        btnBorder = '1px solid #94a3b8';
-                                                                        btnColor = '#1e293b';
-                                                                    }
-                                                                }
+                                                <hr style={{ border: 'none', borderTop: '1px solid #cbd5e1', margin: 0 }} />
 
-                                                                return (
-                                                                    <button
-                                                                        key={col}
-                                                                        onClick={() => toggleMatrixCell(row, col)}
-                                                                        style={{
-                                                                            width: '32px', height: '32px', borderRadius: '50%',
-                                                                            border: btnBorder,
-                                                                            background: btnBg,
-                                                                            color: btnColor,
-                                                                            fontWeight: 700, fontSize: '12px', cursor: 'pointer', transition: 'all 0.15s'
-                                                                        }}
-                                                                    >
-                                                                        {col}
-                                                                    </button>
-                                                                );
-                                                            })}
-                                                        </React.Fragment>
+                                                {/* Mid 선택 */}
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#f59e0b' }} />
+                                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', lineHeight: 1.2 }}>Mid</span>
+                                                            <span style={{ fontSize: '10px', color: '#64748b' }}>가운데 점수 기준</span>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: '5px' }}>
+                                                        {[1, 2, 3].map(count => {
+                                                            const isSelected = (matrixSelection.mid || []).length === count;
+                                                            return (
+                                                                <button
+                                                                    key={count}
+                                                                    onClick={() => setSelectionCount('mid', count)}
+                                                                    style={{
+                                                                        padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
+                                                                        border: isSelected ? '1px solid #f59e0b' : '1px solid #cbd5e1',
+                                                                        background: isSelected ? '#fef3c7' : '#ffffff',
+                                                                        color: isSelected ? '#d97706' : '#64748b',
+                                                                        fontWeight: isSelected ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
+                                                                    }}
+                                                                >
+                                                                    {count}개
+                                                                </button>
+                                                            );
+                                                        })}
+                                                        <button
+                                                            onClick={() => setSelectionCount('mid', 0)}
+                                                            style={{
+                                                                padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
+                                                                border: '1px solid #cbd5e1',
+                                                                background: (matrixSelection.mid || []).length === 0 ? '#f1f5f9' : '#ffffff',
+                                                                color: (matrixSelection.mid || []).length === 0 ? '#475569' : '#64748b',
+                                                                fontWeight: (matrixSelection.mid || []).length === 0 ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
+                                                            }}
+                                                        >
+                                                            안 함
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <hr style={{ border: 'none', borderTop: '1px solid #cbd5e1', margin: 0 }} />
+
+                                                {/* Bot 선택 */}
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ef4444' }} />
+                                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', lineHeight: 1.2 }}>Bot</span>
+                                                            <span style={{ fontSize: '10px', color: '#64748b' }}>가장 낮은 점수부터</span>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: '5px' }}>
+                                                        {[1, 2, 3].map(count => {
+                                                            const isSelected = (matrixSelection.bot || []).length === count;
+                                                            return (
+                                                                <button
+                                                                    key={count}
+                                                                    onClick={() => setSelectionCount('bot', count)}
+                                                                    style={{
+                                                                        padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
+                                                                        border: isSelected ? '1px solid #f43f5e' : '1px solid #cbd5e1',
+                                                                        background: isSelected ? '#ffe4e6' : '#ffffff',
+                                                                        color: isSelected ? '#e11d48' : '#64748b',
+                                                                        fontWeight: isSelected ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
+                                                                    }}
+                                                                >
+                                                                    {count}개
+                                                                </button>
+                                                            );
+                                                        })}
+                                                        <button
+                                                            onClick={() => setSelectionCount('bot', 0)}
+                                                            style={{
+                                                                padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
+                                                                border: '1px solid #cbd5e1',
+                                                                background: (matrixSelection.bot || []).length === 0 ? '#f1f5f9' : '#ffffff',
+                                                                color: (matrixSelection.bot || []).length === 0 ? '#475569' : '#64748b',
+                                                                fontWeight: (matrixSelection.bot || []).length === 0 ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
+                                                            }}
+                                                        >
+                                                            안 함
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* 척도별 미리보기 */}
+                                            <div style={{ padding: '10px 14px', background: '#f1f5f9', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#475569' }}>척도별 요약 기준 미리보기</span>
+                                                    <div style={{ display: 'flex', gap: '8px', fontSize: '10.5px', fontWeight: 600 }}>
+                                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#334155' }}>
+                                                            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#3b82f6' }} /> Top
+                                                        </span>
+                                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#334155' }}>
+                                                            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#f59e0b' }} /> Mid
+                                                        </span>
+                                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#334155' }}>
+                                                            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#ef4444' }} /> Bot
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                    {[5, 7, 10].map(points => (
+                                                        <div key={points} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                            <span style={{ width: '32px', fontSize: '11px', fontWeight: 700, color: '#475569' }}>{points}점</span>
+                                                            <div style={{ display: 'flex', gap: '4px' }}>
+                                                                {Array.from({ length: points }, (_, idx) => {
+                                                                    const val = idx + 1;
+                                                                    const chipStyle = getPreviewChipStyle(val, points);
+                                                                    return (
+                                                                        <span
+                                                                            key={val}
+                                                                            style={{
+                                                                                width: '22px', height: '22px', borderRadius: '50%',
+                                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                fontSize: '10.5px', fontWeight: 700,
+                                                                                background: chipStyle.bg,
+                                                                                border: `1px solid ${chipStyle.border}`,
+                                                                                color: chipStyle.text,
+                                                                                transition: 'all 0.15s'
+                                                                            }}
+                                                                        >
+                                                                            {val}
+                                                                        </span>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
                                                     ))}
                                                 </div>
                                             </div>
                                         </div>
-
-                                        {/* 추가 통계 옵션 */}
-                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>추가 통계 옵션</div>
-                                            <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px', background: '#f8fafc', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '16px', boxSizing: 'border-box' }}>
-                                                <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '12.5px', color: '#334155', userSelect: 'none' }}>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isMeanIncluded}
-                                                        onChange={(e) => setIsMeanIncluded(e.target.checked)}
-                                                        style={{
-                                                            cursor: 'pointer',
-                                                            appearance: 'checkbox',
-                                                            WebkitAppearance: 'checkbox',
-                                                            width: '14px',
-                                                            height: '14px',
-                                                            margin: '0 6px 0 0',
-                                                            verticalAlign: 'middle',
-                                                            display: 'inline-block',
-                                                            position: 'static',
-                                                            opacity: 1
-                                                        }}
-                                                    />
-                                                    <span style={{ fontWeight: 700, color: '#1e293b' }}>평균 요약표 자동 포함</span>
-                                                </label>
-                                                <div style={{
-                                                    padding: '10px', borderRadius: '4px', border: '1px solid #e2e8f0',
-                                                    background: '#ffffff', fontSize: '10.5px', color: '#64748b', lineHeight: 1.5
-                                                }}>
-                                                    * 최고점수(Top), 중간점수(Mid), 최저점수(Bot) 기준으로 각 척도에 맞추어 실시간으로 코드 값이 계산 및 매핑됩니다.
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </>
+                                    </>
                             ) : (
                                 <>
                                     {/* 오픈형 옵션 */}
@@ -1971,25 +2529,19 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 { key: 'median', label: '중앙값 (Median)' },
                                                 { key: 'mode', label: '최빈값 (Mode)' }
                                             ].map(stat => (
-                                                <label key={stat.key} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '12.5px', color: '#334155', userSelect: 'none' }}>
+                                                <label
+                                                    key={stat.key}
+                                                    className="dp-checkbox-label"
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none', margin: 0 }}
+                                                >
                                                     <input
                                                         type="checkbox"
+                                                        className="dp-checkbox-input"
                                                         checked={openStats[stat.key]}
                                                         onChange={() => toggleOpenStat(stat.key)}
-                                                        style={{
-                                                            cursor: 'pointer',
-                                                            appearance: 'checkbox',
-                                                            WebkitAppearance: 'checkbox',
-                                                            width: '14px',
-                                                            height: '14px',
-                                                            margin: '0 6px 0 0',
-                                                            verticalAlign: 'middle',
-                                                            display: 'inline-block',
-                                                            position: 'static',
-                                                            opacity: 1
-                                                        }}
                                                     />
-                                                    <span style={{ fontWeight: 600 }}>{stat.label}</span>
+                                                    <span className="dp-checkbox-box" />
+                                                    <span style={{ fontSize: '12.5px', color: '#475569', fontWeight: 700 }}>{stat.label}</span>
                                                 </label>
                                             ))}
                                         </div>
@@ -2004,31 +2556,18 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
                                             생성 제안 목록 ({wizardProposals.length}개 요약표 제안됨)
                                         </span>
-                                        <label style={{
-                                            display: 'flex', alignItems: 'center', cursor: 'pointer',
-                                            userSelect: 'none', gap: '6px', marginLeft: '12px'
-                                        }}>
+                                        <label
+                                            className="dp-checkbox-label"
+                                            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none', margin: 0, marginLeft: '12px' }}
+                                        >
                                             <input
                                                 type="checkbox"
+                                                className="dp-checkbox-input"
                                                 checked={isMergeByTitle}
                                                 onChange={(e) => setIsMergeByTitle(e.target.checked)}
-                                                style={{
-                                                    cursor: 'pointer',
-                                                    appearance: 'checkbox',
-                                                    WebkitAppearance: 'checkbox',
-                                                    width: '14px',
-                                                    height: '14px',
-                                                    accentColor: '#2563eb',
-                                                    margin: 0,
-                                                    verticalAlign: 'middle',
-                                                    display: 'inline-block',
-                                                    position: 'static',
-                                                    opacity: 1
-                                                }}
                                             />
-                                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155', letterSpacing: '-0.3px', fontFamily: 'inherit' }}>
-                                                동일 타이틀 합치기
-                                            </span>
+                                            <span className="dp-checkbox-box" />
+                                            <span style={{ fontSize: '12px', color: '#475569', fontWeight: 700 }}>동일 타이틀 합치기</span>
                                         </label>
                                     </div>
                                     <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', gap: '8px' }}>
@@ -2092,7 +2631,14 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                         }}
                                                     />
                                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                                        <div style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>{prop.title}</div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>{prop.title}</span>
+                                                            {prop.scale_points && (
+                                                                <span style={{ fontSize: '8.5px', fontWeight: 700, color: '#0284c7', background: '#e0f2fe', padding: '1px 4px', borderRadius: '10px', whiteSpace: 'nowrap' }}>
+                                                                    {prop.scale_points}점
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                         <div
                                                             className="proposal-target-desc"
                                                             title={prop.itemsDesc}
@@ -2109,6 +2655,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                             let badgeBg = '#f1f5f9';
                                                             let badgeColor = '#64748b';
                                                             if (tag.includes('Top')) { badgeBg = '#e0f2fe'; badgeColor = '#2563eb'; }
+                                                            else if (tag.includes('Mid')) { badgeBg = '#fef3c7'; badgeColor = '#d97706'; }
                                                             else if (tag.includes('Bot')) { badgeBg = '#ffe4e6'; badgeColor = '#ef4444'; }
                                                             else if (tag.includes('평균')) { badgeBg = '#ecfdf5'; badgeColor = '#10b981'; }
                                                             else if (tag.includes('중앙값')) { badgeBg = '#f3e8ff'; badgeColor = '#7e22ce'; }
@@ -2172,6 +2719,318 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 </div>
             )}
 
+            {/* 요약표 수동 생성 설정 모달 */}
+            {isManualModalOpen && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+                }}>
+                    <div style={{
+                        backgroundColor: '#ffffff', borderRadius: '12px', width: '720px',
+                        maxHeight: '90vh', display: 'flex', flexDirection: 'column',
+                        boxShadow: '0 12px 24px -4px rgba(0, 0, 0, 0.15)', overflow: 'hidden'
+                    }}>
+                        {/* 팝업 헤더 */}
+                        <div style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            padding: '14px 20px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>
+                                <span style={{ width: '3px', height: '14px', backgroundColor: '#2563eb', marginRight: '8px', display: 'inline-block' }}></span>
+                                <span>요약 설정 생성 ({selectedIds.length}개 문항 선택됨)</span>
+                            </div>
+                            <button
+                                onClick={() => setIsManualModalOpen(false)}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {/* 모달 콘텐츠 */}
+                        <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', minHeight: 0 }}>
+                            {currentTab === 'scale' ? (
+                                <>
+                                    {/* 1. 프리셋 및 기본 정보 */}
+                                    <div style={{
+                                        display: 'grid', gridTemplateColumns: '1.2fr 0.8fr 0.8fr', gap: '12px',
+                                        alignItems: 'center', background: '#f8fafc', padding: '14px 18px', borderRadius: '6px', border: '1px solid #e2e8f0'
+                                    }}>
+                                        <div>
+                                            <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>요약 프리셋 선택</div>
+                                            <select
+                                                value={manualPresetId}
+                                                onChange={(e) => handleManualPresetChange(e.target.value)}
+                                                style={{ width: '100%', height: '32px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#ffffff', padding: '0 8px' }}
+                                            >
+                                                <option value="custom">직접 설정 (Custom)</option>
+                                                {scalePresets.map(preset => (
+                                                    <option key={preset.id} value={preset.id}>{preset.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>점수 범위 (최댓값)</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <input
+                                                    type="number"
+                                                    value={manualScaleMin}
+                                                    disabled
+                                                    style={{ width: '40px', height: '32px', fontSize: '12px', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#f1f5f9', textAlign: 'center' }}
+                                                />
+                                                <span style={{ fontSize: '12px', color: '#64748b' }}>~</span>
+                                                <input
+                                                    type="number"
+                                                    value={manualScaleMax}
+                                                    onChange={(e) => {
+                                                        const val = Math.max(2, Number(e.target.value) || 2);
+                                                        setManualScaleMax(val);
+                                                        setManualPresetId('custom');
+                                                    }}
+                                                    style={{ width: '50px', height: '32px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid #cbd5e1', textAlign: 'center' }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div style={{ display: 'flex', alignItems: 'center', height: '100%', paddingTop: '16px', boxSizing: 'border-box' }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '12.5px', color: '#334155', userSelect: 'none' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={manualIsReverse}
+                                                    onChange={(e) => {
+                                                        setManualIsReverse(e.target.checked);
+                                                        setManualPresetId('custom');
+                                                    }}
+                                                    style={{ cursor: 'pointer', width: '13px', height: '13px', marginRight: '6px', appearance: 'checkbox', WebkitAppearance: 'checkbox', opacity: 1, display: 'inline-block', position: 'relative' }}
+                                                />
+                                                <span style={{ fontWeight: 600 }}>역코딩 (역채점)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    {/* 2. 밴딩 설정 목록 */}
+                                    <div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>밴드 설정 (표시 종류 및 포함 코드)</span>
+                                            <div style={{ fontSize: '10.5px', color: '#94a3b8' }}>* 번호 동그라미를 직접 클릭하면 켜거나 끌 수 있습니다.</div>
+                                        </div>
+
+                                        <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {manualBands.map((band) => (
+                                                <div key={band.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0' }}>
+                                                    {/* 종류 매핑용 드롭다운 */}
+                                                    <select
+                                                        value={band.label.toLowerCase().includes('top') ? 'top' : band.label.toLowerCase().includes('mid') ? 'mid' : 'bot'}
+                                                        onChange={(e) => {
+                                                            const type = e.target.value;
+                                                            setManualBands(prev => prev.map(b => b.id === band.id ? {
+                                                                ...b,
+                                                                label: type === 'top' ? 'Top2' : type === 'mid' ? 'Mid' : 'Bot2'
+                                                            } : b));
+                                                            setManualPresetId('custom');
+                                                        }}
+                                                        style={{ width: '80px', height: '28px', fontSize: '11.5px', borderRadius: '4px', border: '1px solid #cbd5e1', padding: '0 4px' }}
+                                                    >
+                                                        <option value="top">Top</option>
+                                                        <option value="mid">Mid</option>
+                                                        <option value="bot">Bot</option>
+                                                    </select>
+
+                                                    {/* 밴드 명칭 입력 */}
+                                                    <input
+                                                        type="text"
+                                                        value={band.label}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            setManualBands(prev => prev.map(b => b.id === band.id ? { ...b, label: val } : b));
+                                                            setManualPresetId('custom');
+                                                        }}
+                                                        placeholder="이름"
+                                                        style={{ width: '90px', height: '28px', fontSize: '11.5px', padding: '0 6px', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                                                    />
+
+                                                    {/* N 개수 표시 */}
+                                                    <div style={{ width: '38px', textAlign: 'center', fontSize: '11.5px', color: '#64748b', fontWeight: 700 }}>
+                                                        N={getBandValueCount(band.values)}
+                                                    </div>
+
+                                                    {/* 값 텍스트 */}
+                                                    <input
+                                                        type="text"
+                                                        value={band.values}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            setManualBands(prev => prev.map(b => b.id === band.id ? { ...b, values: val } : b));
+                                                            setManualPresetId('custom');
+                                                        }}
+                                                        placeholder="값 (쉼표 구분)"
+                                                        style={{ flex: 1, minWidth: 0, height: '28px', fontSize: '11.5px', padding: '0 6px', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                                                    />
+
+                                                    {/* 서클 토글 미리보기 */}
+                                                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center', padding: '0 4px' }}>
+                                                        {Array.from({ length: manualScaleMax - manualScaleMin + 1 }, (_, idx) => {
+                                                            const num = manualScaleMin + idx;
+                                                            const currentVals = band.values.split(',').map(s => s.trim()).filter(s => s !== '').map(Number);
+                                                            const isSelected = currentVals.includes(num);
+
+                                                            const labelLower = (band.label || '').toLowerCase();
+                                                            let circleBg = '#ffffff';
+                                                            let circleBorder = '1px solid #cbd5e1';
+                                                            let circleColor = '#94a3b8';
+
+                                                            if (isSelected) {
+                                                                if (labelLower.includes('top')) {
+                                                                    circleBg = '#e0f2fe';
+                                                                    circleBorder = '1px solid #3b82f6';
+                                                                    circleColor = '#2563eb';
+                                                                } else if (labelLower.includes('bot')) {
+                                                                    circleBg = '#ffe4e6';
+                                                                    circleBorder = '1px solid #f43f5e';
+                                                                    circleColor = '#ef4444';
+                                                                } else {
+                                                                    circleBg = '#f1f5f9';
+                                                                    circleBorder = '1px solid #64748b';
+                                                                    circleColor = '#475569';
+                                                                }
+                                                            }
+
+                                                            return (
+                                                                <button
+                                                                    key={num}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        handleToggleCircle(band.id, num);
+                                                                        setManualPresetId('custom');
+                                                                    }}
+                                                                    style={{
+                                                                        width: '24px', height: '24px', borderRadius: '50%',
+                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                        fontSize: '11px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.1s',
+                                                                        background: circleBg, border: circleBorder, color: circleColor
+                                                                    }}
+                                                                >
+                                                                    {num}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+
+                                                    {/* 삭제 버튼 */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            handleRemoveManualBand(band.id);
+                                                            setManualPresetId('custom');
+                                                        }}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '4px', display: 'flex', alignItems: 'center' }}
+                                                        onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; }}
+                                                        onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; }}
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            ))}
+
+                                            {/* 밴드 추가 버튼 */}
+                                            <button
+                                                type="button"
+                                                onClick={handleAddManualBand}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', gap: '4px', background: '#ffffff',
+                                                    color: '#475569', border: '1px solid #cbd5e1', borderRadius: '4px',
+                                                    padding: '5px 12px', fontSize: '11.5px', fontWeight: 600, cursor: 'pointer',
+                                                    marginTop: '4px', width: 'fit-content', transition: 'all 0.15s'
+                                                }}
+                                                onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
+                                                onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
+                                            >
+                                                <Plus size={12} />
+                                                <span>밴드 추가</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* 3. 추가 통계 옵션 */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderTop: '1px solid #f1f5f9', paddingTop: '14px' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '12.5px', color: '#334155', userSelect: 'none' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={manualIsMeanIncluded}
+                                                onChange={(e) => setManualIsMeanIncluded(e.target.checked)}
+                                                style={{ cursor: 'pointer', width: '13.5px', height: '13.5px', marginRight: '6px', appearance: 'checkbox', WebkitAppearance: 'checkbox', opacity: 1, display: 'inline-block', position: 'relative' }}
+                                            />
+                                            <span style={{ fontWeight: 700, color: '#1e293b' }}>평균 요약표 자동 포함</span>
+                                        </label>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    {/* 오픈형(통계) 설정 */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>통계 설정 선택</div>
+                                        <div style={{ display: 'flex', gap: '24px', padding: '16px 20px', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#f8fafc' }}>
+                                            {[
+                                                { key: 'mean', label: '평균 (Mean)' },
+                                                { key: 'median', label: '중앙값 (Median)' },
+                                                { key: 'mode', label: '최빈값 (Mode)' }
+                                            ].map(stat => (
+                                                <label
+                                                    key={stat.key}
+                                                    className="dp-checkbox-label"
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none', margin: 0 }}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        className="dp-checkbox-input"
+                                                        checked={openStats[stat.key]}
+                                                        onChange={() => toggleOpenStat(stat.key)}
+                                                    />
+                                                    <span className="dp-checkbox-box" />
+                                                    <span style={{ fontSize: '12.5px', color: '#475569', fontWeight: 700 }}>{stat.label}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* 팝업 푸터 */}
+                        <div style={{
+                            display: 'flex', justifyContent: 'flex-end', gap: '8px',
+                            padding: '12px 20px', borderTop: '1px solid #e2e8f0', background: '#f8fafc'
+                        }}>
+                            <button
+                                onClick={() => setIsManualModalOpen(false)}
+                                style={{
+                                    padding: '7px 16px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid #cbd5e1',
+                                    background: '#ffffff', color: '#475569', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
+                            >
+                                취소
+                            </button>
+                            <button
+                                onClick={handleConfirmManualSummary}
+                                style={{
+                                    padding: '7px 20px', fontSize: '12.5px', borderRadius: '4px', border: 'none',
+                                    background: '#2563eb', color: '#ffffff',
+                                    fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.15s'
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#1d4ed8'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = '#2563eb'; }}
+                            >
+                                <span>요약표 생성하기</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* 요약표 제목 일괄 수정 모달 */}
             {isBulkTitleModalOpen && (
                 <div style={{
@@ -2194,8 +3053,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 <div style={{ width: '4px', height: '18px', background: '#3b82f6', borderRadius: '2px', marginTop: '3px' }}></div>
                                 <div>
                                     <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>요약표 제목 일괄 수정</h3>
-                                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-                                        좌측 TextArea의 전체 리스트와 우측 개별 문항 이름 폼은 실시간 양방향으로 동기화됩니다.
+                                    <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '4px', fontWeight: 500 }}>
+                                        왼쪽 편집창의 전체 목록과 오른쪽의 개별 입력창은 실시간으로 양방향 연동됩니다.
                                     </div>
                                 </div>
                             </div>
@@ -2209,8 +3068,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             {/* 좌측 TextArea 영역 */}
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 2px' }}>
-                                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>복사/붙여넣기 텍스트창</span>
-                                    <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '500' }}>한 줄에 요약표 제목 하나씩</span>
+                                        <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>복사/붙여넣기 텍스트창</span>
+                                        <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '600' }}>한 줄에 제목 하나씩 입력</span>
                                 </div>
                                 <textarea
                                     value={bulkTitleText}
@@ -2235,8 +3094,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                             {/* 우측 개별 제목 수정 영역 */}
                             <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', padding: '0 2px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 2px' }}>
                                     <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>개별 제목 수정</span>
+                                    <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '600' }}>클릭하여 각 제목을 개별 수정 가능</span>
                                 </div>
                                 <div className="custom-scrollbar" style={{
                                     flex: 1, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px',
@@ -2244,15 +3104,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 }}>
                                     {modalFolders.map((folder, folderIdx) => (
                                         <div key={folder.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{
-                                                fontSize: '12px', fontWeight: '700', color: '#64748b',
-                                                width: '24px', textAlign: 'center', fontFamily: 'monospace'
-                                            }}>
-                                                #{folderIdx + 1}
-                                            </span>
                                             <div style={{
                                                 flex: 1, border: '1px solid #cbd5e1', borderRadius: '6px',
-                                                background: '#ffffff', padding: '5px 12px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                                                background: '#ffffff', padding: '6px 12px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
                                                 boxShadow: '0 1px 2px rgba(0,0,0,0.01)', transition: 'border-color 0.15s, box-shadow 0.15s'
                                             }}
                                                 onFocusCapture={(e) => {
@@ -2271,9 +3125,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                     onChange={(e) => handleIndividualTitleChange(folder.id, e.target.value)}
                                                     style={{ border: 'none', outline: 'none', flex: 1, minWidth: 0, fontSize: '13px', fontWeight: '600', color: '#1e293b', background: 'transparent' }}
                                                 />
-                                                <span style={{ fontSize: '11.5px', color: '#475569', fontWeight: 700, marginLeft: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                                <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, fontFamily: 'monospace', marginLeft: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}>
                                                     ID: {folder.id}
-                                                </span>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -2308,9 +3162,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 onMouseLeave={(e) => { e.currentTarget.style.background = '#3b82f6'; }}
                             >
                                 <svg style={{ width: '13px', height: '13px', fill: 'currentColor' }} viewBox="0 0 24 24">
-                                    <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                                 </svg>
-                                <span>적용 및 저장</span>
+                                <span>일괄 적용</span>
                             </button>
                         </div>
                     </div>

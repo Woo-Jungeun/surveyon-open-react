@@ -1786,7 +1786,7 @@
     border-width: 0 1.5px 1.5px 0;
     transform: rotate(45deg);
     opacity: 0;
-    margin-bottom: 1px;
+    margin-bottom: 2px;
     transition: opacity 0.2s;
 }
 
