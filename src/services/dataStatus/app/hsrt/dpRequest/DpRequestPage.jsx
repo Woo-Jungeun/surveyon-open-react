@@ -161,7 +161,7 @@ const DpRequestPage = () => {
 
     // 단계에 따라 컨텐츠 영역 padding 결정
     // Step 0 (표 설정) 은 자체 padding을 포함하므로 별도 패딩 불필요
-    const contentPadding = currentStep === 0 ? '0' : '12px 16px 16px 16px';
+    const contentPadding = (currentStep === 0 || currentStep === 3) ? '0' : '12px 16px 16px 16px';
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

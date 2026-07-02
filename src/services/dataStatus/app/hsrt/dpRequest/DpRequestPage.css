@@ -1957,3 +1957,28 @@
 .dropped-tag.grouped.drag-over-item-bottom {
     box-shadow: 0 2px 0 0 #2563eb, 0 1px 2px rgba(0, 0, 0, 0.05) !important;
 }
+
+/* 일괄 수정 팝업 내 인풋의 이중 테두리 및 섀도우 완벽 리셋 */
+.srt-bulk-input {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+
+/* 제안 카드 호버 시 피드백 향상 */
+.wizard-proposal-card:hover {
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06) !important;
+    background: #f8fafc !important;
+}
+
+.wizard-proposal-card.selected:hover {
+    border-color: #3b82f6 !important;
+    background: #eff6ff !important;
+}
