@@ -834,6 +834,11 @@ const AnalysisSettingTab = ({
                                                         activeColor = '#7F1D1D';
                                                         activeBorder = '#F87171';
                                                     }
+                                                    if (labelLower.startsWith('mid')) {
+                                                        activeBg = '#FEF3C7';
+                                                        activeColor = '#D97706';
+                                                        activeBorder = '#F59E0B';
+                                                    }
 
                                                     const displayValuesStr = band.values || '';
                                                     const isDragOver = dragOverPresetId === item.id && dragOverIdx === bandIdx;
