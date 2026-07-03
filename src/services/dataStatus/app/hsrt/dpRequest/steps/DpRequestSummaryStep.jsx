@@ -83,12 +83,12 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     // --- 일괄 편집 관련 상태 추가 ---
     const [expandedFolders, setExpandedFolders] = useState(new Set()); // 상세보기 활성화 폴더 ID
-    const [isBulkTitleModalOpen, setIsBulkTitleModalOpen] = useState(false); // 제목 일괄 수정 모달 여부
-    const [bulkTitleText, setBulkTitleText] = useState(''); // 제목 일괄 수정용 텍스트
+    const [isBulkTitleModalOpen, setIsBulkTitleModalOpen] = useState(false); // 제목 일괄 편집 모달 여부
+    const [bulkTitleText, setBulkTitleText] = useState(''); // 제목 일괄 편집용 텍스트
     const [isBulkItemLabelModalOpen, setIsBulkItemLabelModalOpen] = useState(false); // 교차표 문구 일괄 수정 모달 여부
     const [activeBulkItemFolderId, setActiveBulkItemFolderId] = useState(null); // 활성화된 교차표 문구 일괄 편집 폴더
     const [bulkItemLabelText, setBulkItemLabelText] = useState(''); // 교차표 문구 일괄 편집용 텍스트
-    const [modalFolders, setModalFolders] = useState([]); // 제목 일괄 수정 모달용 로컬 폴더 리스트
+    const [modalFolders, setModalFolders] = useState([]); // 제목 일괄 편집 모달용 로컬 폴더 리스트
 
     // --- 수동 요약 생성 관련 상태 추가 ---
     const [isManualModalOpen, setIsManualModalOpen] = useState(false);
@@ -139,7 +139,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         });
     };
 
-    // 요약표 제목 일괄 수정 모달 열기
+    // 요약표 제목 일괄 편집 모달 열기
     const handleOpenBulkTitleModal = () => {
         const targetFolders = folders.filter(folder => currentTab === 'scale' ? folder.type === 'frequency' : folder.type === 'statistics');
         const names = targetFolders.map(f => f.name).join('\n');
@@ -805,7 +805,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
         (overrideFolders || folders).forEach(f => {
             const firstItemId = f.items && f.items[0];
-            
+
             // 척도 및 최소값 추출
             let scalePoints = 7;
             if (firstItemId) {
@@ -842,7 +842,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         const isMean = item.mean === true || item.mean === 'true' || item.mean === 1 || item.mean === '1' || item.tag === 'mean' || item.value_id === 'mean';
                         const isMedian = item.median === true || item.median === 'true' || item.median === 1 || item.median === '1' || item.tag === 'median' || item.value_id === 'median';
                         const isMode = item.mode === true || item.mode === 'true' || item.mode === 1 || item.mode === '1' || item.tag === 'mode' || item.value_id === 'mode';
-                        
+
                         if (isMean) meanVal = true;
                         if (isMedian) medianVal = true;
                         if (isMode) modeVal = true;
@@ -861,15 +861,15 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     const hasMean = meanVal;
                     const hasMedian = medianVal;
                     const hasMode = modeVal;
-                    
+
                     const meanLabel = summaries.find(s => s.id === itemId + '_mean')?.label ?? 'mean';
                     const medianLabel = summaries.find(s => s.id === itemId + '_median')?.label ?? 'median';
                     const modeLabel = summaries.find(s => s.id === itemId + '_mode')?.label ?? 'mode';
-                    
+
                     if (hasMean) vars.push({ name: itemId + '_mean', label: meanLabel });
                     if (hasMedian) vars.push({ name: itemId + '_median', label: medianLabel });
                     if (hasMode) vars.push({ name: itemId + '_mode', label: modeLabel });
-                    
+
                     if (vars.length === 0) {
                         vars.push({ name: itemId + '_mean', label: meanLabel });
                     }
@@ -2325,7 +2325,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     if (tabSelectedCount > 0) e.currentTarget.style.background = '#2563eb';
                                 }}
                             >
-                                <Plus size={14} />
                                 <span>요약표 생성 ({tabSelectedCount}개 선택됨)</span>
                             </button>
                         </div>
@@ -2351,7 +2350,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
                                 >
                                     <Edit size={13} />
-                                    <span>제목 일괄 수정</span>
+                                    <span>제목 일괄 편집</span>
                                 </button>
                                 <button
                                     className="dp-btn-delete-all"
@@ -2399,687 +2398,687 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         }}>
                             {filteredFolders.length > 0 ? (
                                 filteredFolders.map((folder, folderIdx) => {
-                                const isExpanded = expandedFolders.has(folder.id);
+                                    const isExpanded = expandedFolders.has(folder.id);
 
-                                const scalePoints = summaries.find(s => folder.items && folder.items.includes(s.id))?.scale_points || 7;
-                                const isStatistics = folder.type === 'statistics';
+                                    const scalePoints = summaries.find(s => folder.items && folder.items.includes(s.id))?.scale_points || 7;
+                                    const isStatistics = folder.type === 'statistics';
 
-                                const badgeList = [];
-                                const assocSummary = summaries.find(s => s.id === folder.id) ||
-                                    summaries.find(s => folder.items && folder.items.includes(s.id)) ||
-                                    summaries.find(s => s.id === (folder.items && folder.items[0]));
-                                if (assocSummary && Array.isArray(assocSummary.info)) {
-                                    assocSummary.info.forEach(item => {
-                                         if (item.disabled) return;
-                                        const isStatistics = item.type === 'statistics' ||
-                                            item.type === 'mean' ||
-                                            item.mean === true ||
-                                            item.tag === 'mean' ||
-                                            item.value_id === 'mean' ||
-                                            item.tag === 'median' ||
-                                            item.tag === 'mode' ||
-                                            item.value_id === 'median' ||
-                                            item.value_id === 'mode';
-                                        if (isStatistics) {
-                                            const hasMean = item.mean === true || item.mean === 'true' || item.mean === 1 || item.mean === '1' || item.tag === 'mean' || item.value_id === 'mean';
-                                            const hasMedian = item.median === true || item.median === 'true' || item.median === 1 || item.median === '1' || item.tag === 'median' || item.value_id === 'median';
-                                            const hasMode = item.mode === true || item.mode === 'true' || item.mode === 1 || item.mode === '1' || item.tag === 'mode' || item.value_id === 'mode';
-                                            
-                                            if (hasMean) badgeList.push('평균');
-                                            if (hasMedian) badgeList.push('중앙값');
-                                            if (hasMode) badgeList.push('최빈값');
-                                        } else {
-                                            const tagLabel = item.tag || item.label || item.name;
-                                            if (tagLabel) {
-                                                const cleanLabel = tagLabel.replace(/\s*요약\s*$/, '').trim();
-                                                badgeList.push(cleanLabel);
+                                    const badgeList = [];
+                                    const assocSummary = summaries.find(s => s.id === folder.id) ||
+                                        summaries.find(s => folder.items && folder.items.includes(s.id)) ||
+                                        summaries.find(s => s.id === (folder.items && folder.items[0]));
+                                    if (assocSummary && Array.isArray(assocSummary.info)) {
+                                        assocSummary.info.forEach(item => {
+                                            if (item.disabled) return;
+                                            const isStatistics = item.type === 'statistics' ||
+                                                item.type === 'mean' ||
+                                                item.mean === true ||
+                                                item.tag === 'mean' ||
+                                                item.value_id === 'mean' ||
+                                                item.tag === 'median' ||
+                                                item.tag === 'mode' ||
+                                                item.value_id === 'median' ||
+                                                item.value_id === 'mode';
+                                            if (isStatistics) {
+                                                const hasMean = item.mean === true || item.mean === 'true' || item.mean === 1 || item.mean === '1' || item.tag === 'mean' || item.value_id === 'mean';
+                                                const hasMedian = item.median === true || item.median === 'true' || item.median === 1 || item.median === '1' || item.tag === 'median' || item.value_id === 'median';
+                                                const hasMode = item.mode === true || item.mode === 'true' || item.mode === 1 || item.mode === '1' || item.tag === 'mode' || item.value_id === 'mode';
+
+                                                if (hasMean) badgeList.push('평균');
+                                                if (hasMedian) badgeList.push('중앙값');
+                                                if (hasMode) badgeList.push('최빈값');
+                                            } else {
+                                                const tagLabel = item.tag || item.label || item.name;
+                                                if (tagLabel) {
+                                                    const cleanLabel = tagLabel.replace(/\s*요약\s*$/, '').trim();
+                                                    badgeList.push(cleanLabel);
+                                                }
                                             }
-                                        }
-                                    });
-                                }
-
-                                if (badgeList.length === 0) {
-                                    if (isStatistics) {
-                                        if (folder.mean) badgeList.push('평균');
-                                        if (folder.median) badgeList.push('중앙값');
-                                        if (folder.mode) badgeList.push('최빈값');
-                                    } else {
-                                        const codes = folder.include_codes || '';
-                                        const hasTopCodes = codes.includes(String(scalePoints)) || codes.includes(String(scalePoints - 1));
-                                        const hasBotCodes = codes.includes('1') || codes.includes('2');
-                                        if (hasTopCodes) badgeList.push(`Top2`);
-                                        if (hasBotCodes) badgeList.push(`Bot2`);
-                                        if (folder.mean) badgeList.push('평균');
+                                        });
                                     }
-                                }
 
-                                const fromIdx = folders.findIndex(f => f.id === draggedFolderId);
-                                const toIdx = folders.findIndex(f => f.id === folder.id);
+                                    if (badgeList.length === 0) {
+                                        if (isStatistics) {
+                                            if (folder.mean) badgeList.push('평균');
+                                            if (folder.median) badgeList.push('중앙값');
+                                            if (folder.mode) badgeList.push('최빈값');
+                                        } else {
+                                            const codes = folder.include_codes || '';
+                                            const hasTopCodes = codes.includes(String(scalePoints)) || codes.includes(String(scalePoints - 1));
+                                            const hasBotCodes = codes.includes('1') || codes.includes('2');
+                                            if (hasTopCodes) badgeList.push(`Top2`);
+                                            if (hasBotCodes) badgeList.push(`Bot2`);
+                                            if (folder.mean) badgeList.push('평균');
+                                        }
+                                    }
 
-                                const baseBorderColor = (newlyCreatedFolderIds.has(folder.id) || isExpanded) ? '#3b82f6' : '#e2e8f0';
-                                 const baseBorderWidth = (newlyCreatedFolderIds.has(folder.id) || isExpanded) ? '1.5px' : '1px';
-                                 const baseBorderStyle = 'solid';
+                                    const fromIdx = folders.findIndex(f => f.id === draggedFolderId);
+                                    const toIdx = folders.findIndex(f => f.id === folder.id);
 
-                                 let customBorderTop = `${baseBorderWidth} ${baseBorderStyle} ${baseBorderColor}`;
-                                 let customBorderBottom = `${baseBorderWidth} ${baseBorderStyle} ${baseBorderColor}`;
-                                 const customBorderRight = `${baseBorderWidth} ${baseBorderStyle} ${baseBorderColor}`;
-                                 const customBorderLeft = `${baseBorderWidth} ${baseBorderStyle} ${baseBorderColor}`;
+                                    const baseBorderColor = (newlyCreatedFolderIds.has(folder.id) || isExpanded) ? '#3b82f6' : '#e2e8f0';
+                                    const baseBorderWidth = (newlyCreatedFolderIds.has(folder.id) || isExpanded) ? '1.5px' : '1px';
+                                    const baseBorderStyle = 'solid';
 
-                                 if (draggedFolderId && dragOverFolderId === folder.id) {
-                                     if (fromIdx > toIdx) {
-                                         customBorderTop = '3px solid #2563eb';
-                                     } else if (fromIdx < toIdx) {
-                                         customBorderBottom = '3px solid #2563eb';
-                                     }
-                                 }
+                                    let customBorderTop = `${baseBorderWidth} ${baseBorderStyle} ${baseBorderColor}`;
+                                    let customBorderBottom = `${baseBorderWidth} ${baseBorderStyle} ${baseBorderColor}`;
+                                    const customBorderRight = `${baseBorderWidth} ${baseBorderStyle} ${baseBorderColor}`;
+                                    const customBorderLeft = `${baseBorderWidth} ${baseBorderStyle} ${baseBorderColor}`;
 
-                                 return (
-                                     <div
-                                         key={folder.id}
-                                         draggable={dragEnabledFolderId === folder.id}
-                                         onDragStart={(e) => handleFolderItemDragStart(e, folder.id)}
-                                         onDragOver={(e) => handleFolderItemDragOver(e, folder.id)}
-                                         onDragLeave={handleFolderItemDragLeave}
-                                         onDrop={(e) => handleFolderItemDrop(e, folder.id)}
-                                         onDragEnd={handleFolderItemDragEnd}
-                                         style={{
-                                             borderTop: customBorderTop,
-                                             borderBottom: customBorderBottom,
-                                             borderRight: customBorderRight,
-                                             borderLeft: customBorderLeft,
-                                             borderRadius: '6px',
-                                             background: (newlyCreatedFolderIds.has(folder.id) || isExpanded) ? '#f0f9ff' : '#ffffff',
-                                             boxShadow: '0 1px 2px rgba(0, 0, 0, 0.02)',
-                                             padding: '10px 14px',
-                                             display: 'flex',
-                                             flexDirection: 'column',
-                                             opacity: draggedFolderId === folder.id ? 0.4 : 1,
-                                             transition: 'background-color 0.8s ease, border-color 0.8s ease'
-                                         }}
-                                    >
+                                    if (draggedFolderId && dragOverFolderId === folder.id) {
+                                        if (fromIdx > toIdx) {
+                                            customBorderTop = '3px solid #2563eb';
+                                        } else if (fromIdx < toIdx) {
+                                            customBorderBottom = '3px solid #2563eb';
+                                        }
+                                    }
 
-                                        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                                            <div
-                                                style={{ cursor: 'grab', display: 'flex', alignItems: 'center', color: '#94a3b8', marginRight: '6px' }}
-                                                onMouseDown={() => setDragEnabledFolderId(folder.id)}
-                                                onMouseUp={() => setDragEnabledFolderId(null)}
-                                                onMouseLeave={() => setDragEnabledFolderId(null)}
-                                            >
-                                                <GripVertical size={16} />
+                                    return (
+                                        <div
+                                            key={folder.id}
+                                            draggable={dragEnabledFolderId === folder.id}
+                                            onDragStart={(e) => handleFolderItemDragStart(e, folder.id)}
+                                            onDragOver={(e) => handleFolderItemDragOver(e, folder.id)}
+                                            onDragLeave={handleFolderItemDragLeave}
+                                            onDrop={(e) => handleFolderItemDrop(e, folder.id)}
+                                            onDragEnd={handleFolderItemDragEnd}
+                                            style={{
+                                                borderTop: customBorderTop,
+                                                borderBottom: customBorderBottom,
+                                                borderRight: customBorderRight,
+                                                borderLeft: customBorderLeft,
+                                                borderRadius: '6px',
+                                                background: (newlyCreatedFolderIds.has(folder.id) || isExpanded) ? '#f0f9ff' : '#ffffff',
+                                                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.02)',
+                                                padding: '10px 14px',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                opacity: draggedFolderId === folder.id ? 0.4 : 1,
+                                                transition: 'background-color 0.8s ease, border-color 0.8s ease'
+                                            }}
+                                        >
+
+                                            <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                                <div
+                                                    style={{ cursor: 'grab', display: 'flex', alignItems: 'center', color: '#94a3b8', marginRight: '6px' }}
+                                                    onMouseDown={() => setDragEnabledFolderId(folder.id)}
+                                                    onMouseUp={() => setDragEnabledFolderId(null)}
+                                                    onMouseLeave={() => setDragEnabledFolderId(null)}
+                                                >
+                                                    <GripVertical size={16} />
+                                                </div>
+
+                                                <div
+                                                    style={{ flex: 1, minWidth: 0, marginRight: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}
+                                                    onClick={() => toggleFolderExpand(folder.id)}
+                                                >
+
+                                                    {isExpanded ? (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
+                                                            <input
+                                                                type="text"
+                                                                value={folder.name}
+                                                                onChange={(e) => {
+                                                                    setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, name: e.target.value } : f));
+                                                                    if (onUnsavedChange) onUnsavedChange(true);
+                                                                }}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter') {
+                                                                        e.target.blur();
+                                                                    }
+                                                                }}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                onMouseDown={(e) => e.stopPropagation()}
+                                                                onMouseUp={(e) => e.stopPropagation()}
+                                                                style={{
+                                                                    fontSize: '13px',
+                                                                    fontWeight: 700,
+                                                                    color: '#1e293b',
+                                                                    border: '1px solid #cbd5e1',
+                                                                    borderRadius: '4px',
+                                                                    padding: '2px 6px',
+                                                                    outline: 'none',
+                                                                    background: '#ffffff',
+                                                                    width: '280px'
+                                                                }}
+                                                            />
+
+                                                        </div>
+                                                    ) : (
+                                                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
+                                                            {folder.name}
+
+                                                        </span>
+                                                    )}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <span style={{ fontSize: '10px', color: '#475569', background: '#f1f5f9', padding: '1px 5px', borderRadius: '3px', fontWeight: 700 }}>
+                                                            {folder.items?.length || 0}개
+                                                        </span>
+                                                        {badgeList.length > 0 && (
+                                                            <div style={{ display: 'flex', gap: '4px' }}>
+                                                                {badgeList.map(b => {
+                                                                    let bg = '#f1f5f9';
+                                                                    let fg = '#64748b';
+                                                                    const lower = b.toLowerCase();
+
+                                                                    let cleanB = b;
+                                                                    if (lower.startsWith('top')) cleanB = 'Top' + b.slice(3);
+                                                                    else if (lower.startsWith('bot')) cleanB = 'Bot' + b.slice(3);
+                                                                    else if (lower.startsWith('mid')) cleanB = 'Mid' + b.slice(3);
+
+                                                                    if (lower.includes('top')) { bg = '#eff6ff'; fg = '#3b82f6'; }
+                                                                    else if (lower.includes('bot')) { bg = '#fff1f2'; fg = '#f43f5e'; }
+                                                                    else if (lower.includes('mid')) { bg = '#fffbeb'; fg = '#d97706'; }
+                                                                    else if (lower === '평균') { bg = '#ecfdf5'; fg = '#10b981'; }
+                                                                    else if (lower === '중앙값') { bg = '#faf5ff'; fg = '#7c3aed'; }
+                                                                    else if (lower === '최빈값') { bg = '#fffbeb'; fg = '#d97706'; }
+
+                                                                    return (
+                                                                        <span key={b} style={{ fontSize: '9px', fontWeight: 700, color: fg, background: bg, padding: '1px 5px', borderRadius: '3px' }}>
+                                                                            {cleanB}
+                                                                        </span>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleOpenEditModal(folder);
+                                                        }}
+                                                        style={{
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px',
+                                                            background: 'transparent', color: '#64748b', border: 'none', borderRadius: '6px',
+                                                            cursor: 'pointer', transition: 'all 0.15s'
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.color = '#2563eb';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.background = 'transparent';
+                                                            e.currentTarget.style.color = '#64748b';
+                                                        }}
+                                                        title="요약 설정 수정"
+                                                    >
+                                                        <Edit size={14} />
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => {
+                                                            const baseMatch = folder.name.match(/^(.*?)(?:_복사본(?:\s+\d+)?)?$/);
+                                                            const baseName = baseMatch ? baseMatch[1] : folder.name;
+
+                                                            const copyNames = folders.map(f => f.name).filter(n => n.startsWith(baseName + "_복사본"));
+                                                            let maxNum = 0;
+                                                            copyNames.forEach(name => {
+                                                                const numMatch = name.match(/_복사본(?:\s+(\d+))?$/);
+                                                                if (numMatch) {
+                                                                    const num = numMatch[1] ? parseInt(numMatch[1], 10) : 1;
+                                                                    if (num > maxNum) maxNum = num;
+                                                                }
+                                                            });
+                                                            const newName = `${baseName}_복사본 ${maxNum + 1}`;
+
+                                                            const newId = `folder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                                                            const newFolder = { ...folder, id: newId, name: newName, items: [...(folder.items || [])] };
+                                                            setFolders(prev => {
+                                                                const idx = prev.findIndex(f => f.id === folder.id);
+                                                                if (idx === -1) return [...prev, newFolder];
+                                                                const updated = [...prev];
+                                                                updated.splice(idx + 1, 0, newFolder);
+                                                                return updated;
+                                                            });
+                                                            if (onUnsavedChange) onUnsavedChange(true);
+                                                        }}
+                                                        style={{
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px',
+                                                            background: 'transparent', color: '#64748b', border: 'none', borderRadius: '6px',
+                                                            cursor: 'pointer', transition: 'all 0.15s'
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.background = '#ecfdf5';
+                                                            e.currentTarget.style.color = '#059669';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.background = 'transparent';
+                                                            e.currentTarget.style.color = '#64748b';
+                                                        }}
+                                                        title="복사"
+                                                    >
+                                                        <Copy size={14} />
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => {
+                                                            modal.showConfirm('확인', '요약표를 삭제하시겠습니까?', {
+                                                                btns: [
+                                                                    { title: "취소", click: () => { } },
+                                                                    {
+                                                                        title: "삭제",
+                                                                        click: async () => {
+                                                                            const newFolders = folders.filter(f => f.id !== folder.id);
+                                                                            setFolders(newFolders);
+
+                                                                            const deleteKey = folder.stub_id || folder.id;
+                                                                            if (deleteKey && String(deleteKey).trim() !== "") {
+                                                                                if (originalFolderIds.includes(folder.id) && !folder.id.startsWith('folder_')) {
+                                                                                    const newDeletedIds = [...deletedSummaryIds, deleteKey];
+                                                                                    setDeletedSummaryIds(newDeletedIds);
+                                                                                    await handleSaveSummary(newFolders, newDeletedIds, '요약표가 삭제되었습니다.');
+                                                                                } else {
+                                                                                    if (onUnsavedChange) onUnsavedChange(true);
+                                                                                }
+                                                                            } else {
+                                                                                if (onUnsavedChange) onUnsavedChange(true);
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                ]
+                                                            });
+                                                        }}
+                                                        style={{
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px',
+                                                            background: 'transparent', color: '#ef4444', border: 'none', borderRadius: '6px',
+                                                            cursor: 'pointer', transition: 'all 0.15s'
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.background = '#fff1f2';
+                                                            e.currentTarget.style.color = '#dc2626';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.background = 'transparent';
+                                                            e.currentTarget.style.color = '#64748b';
+                                                        }}
+                                                        title="삭제"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
                                             </div>
 
-                                            <div
-                                                style={{ flex: 1, minWidth: 0, marginRight: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}
-                                                onClick={() => toggleFolderExpand(folder.id)}
-                                            >
+                                            {isExpanded && (
+                                                <div style={{ marginTop: currentTab === 'scale' ? '8px' : '4px', borderTop: '1px solid #f1f5f9', paddingTop: currentTab === 'scale' ? '4px' : '0px' }}>
 
-                                                {isExpanded ? (
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
+                                                    <div style={{ display: 'none', alignItems: 'center', gap: '8px', padding: '10px 14px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '12px' }}>
+                                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>요약표 타이틀명:</span>
                                                         <input
+                                                            id={`folder-name-input-${folder.id}`}
                                                             type="text"
                                                             value={folder.name}
                                                             onChange={(e) => {
                                                                 setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, name: e.target.value } : f));
                                                                 if (onUnsavedChange) onUnsavedChange(true);
                                                             }}
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === 'Enter') {
-                                                                    e.target.blur();
-                                                                }
-                                                            }}
-                                                            onClick={(e) => e.stopPropagation()}
-                                                            onMouseDown={(e) => e.stopPropagation()}
-                                                            onMouseUp={(e) => e.stopPropagation()}
-                                                            style={{
-                                                                fontSize: '13px',
-                                                                fontWeight: 700,
-                                                                color: '#1e293b',
-                                                                border: '1px solid #cbd5e1',
-                                                                borderRadius: '4px',
-                                                                padding: '2px 6px',
-                                                                outline: 'none',
-                                                                background: '#ffffff',
-                                                                width: '280px'
-                                                            }}
+                                                            style={{ flex: 1, padding: '5px 10px', fontSize: '12.5px', border: '1px solid #cbd5e1', borderRadius: '4px', outline: 'none', background: '#ffffff', color: '#1e293b' }}
                                                         />
-
                                                     </div>
-                                                ) : (
-                                                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
-                                                        {folder.name}
 
-                                                    </span>
-                                                )}
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                    <span style={{ fontSize: '10px', color: '#475569', background: '#f1f5f9', padding: '1px 5px', borderRadius: '3px', fontWeight: 700 }}>
-                                                        {folder.items?.length || 0}개
-                                                    </span>
-                                                    {badgeList.length > 0 && (
-                                                        <div style={{ display: 'flex', gap: '4px' }}>
-                                                            {badgeList.map(b => {
-                                                                let bg = '#f1f5f9';
-                                                                let fg = '#64748b';
-                                                                const lower = b.toLowerCase();
+                                                    {currentTab === 'scale' && (
 
-                                                                let cleanB = b;
-                                                                if (lower.startsWith('top')) cleanB = 'Top' + b.slice(3);
-                                                                else if (lower.startsWith('bot')) cleanB = 'Bot' + b.slice(3);
-                                                                else if (lower.startsWith('mid')) cleanB = 'Mid' + b.slice(3);
 
-                                                                if (lower.includes('top')) { bg = '#eff6ff'; fg = '#3b82f6'; }
-                                                                else if (lower.includes('bot')) { bg = '#fff1f2'; fg = '#f43f5e'; }
-                                                                else if (lower.includes('mid')) { bg = '#fffbeb'; fg = '#d97706'; }
-                                                                else if (lower === '평균') { bg = '#ecfdf5'; fg = '#10b981'; }
-                                                                else if (lower === '중앙값') { bg = '#faf5ff'; fg = '#7c3aed'; }
-                                                                else if (lower === '최빈값') { bg = '#fffbeb'; fg = '#d97706'; }
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '10px', padding: '0 4px' }}>
+                                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>포함 요약표 구성 (뱃지):</span>
+                                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                                {assocSummary && Array.isArray(assocSummary.info) && assocSummary.info.map((item, idx) => {
+                                                                    const isMean = (item.type === 'statistics' && item.mean) ||
+                                                                        item.type === 'mean' ||
+                                                                        item.mean === true ||
+                                                                        item.tag === 'mean' ||
+                                                                        item.value_id === 'mean';
 
-                                                                return (
-                                                                    <span key={b} style={{ fontSize: '9px', fontWeight: 700, color: fg, background: bg, padding: '1px 5px', borderRadius: '3px' }}>
-                                                                        {cleanB}
-                                                                    </span>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleOpenEditModal(folder);
-                                                    }}
-                                                    style={{
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px',
-                                                        background: 'transparent', color: '#64748b', border: 'none', borderRadius: '6px',
-                                                        cursor: 'pointer', transition: 'all 0.15s'
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.color = '#2563eb';
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        e.currentTarget.style.background = 'transparent';
-                                                        e.currentTarget.style.color = '#64748b';
-                                                    }}
-                                                    title="요약 설정 수정"
-                                                >
-                                                    <Edit size={14} />
-                                                </button>
-
-                                                <button
-                                                    onClick={() => {
-                                                        const baseMatch = folder.name.match(/^(.*?)(?:_복사본(?:\s+\d+)?)?$/);
-                                                        const baseName = baseMatch ? baseMatch[1] : folder.name;
-
-                                                        const copyNames = folders.map(f => f.name).filter(n => n.startsWith(baseName + "_복사본"));
-                                                        let maxNum = 0;
-                                                        copyNames.forEach(name => {
-                                                            const numMatch = name.match(/_복사본(?:\s+(\d+))?$/);
-                                                            if (numMatch) {
-                                                                const num = numMatch[1] ? parseInt(numMatch[1], 10) : 1;
-                                                                if (num > maxNum) maxNum = num;
-                                                            }
-                                                        });
-                                                        const newName = `${baseName}_복사본 ${maxNum + 1}`;
-
-                                                        const newId = `folder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                                                        const newFolder = { ...folder, id: newId, name: newName, items: [...(folder.items || [])] };
-                                                        setFolders(prev => {
-                                                            const idx = prev.findIndex(f => f.id === folder.id);
-                                                            if (idx === -1) return [...prev, newFolder];
-                                                            const updated = [...prev];
-                                                            updated.splice(idx + 1, 0, newFolder);
-                                                            return updated;
-                                                        });
-                                                        if (onUnsavedChange) onUnsavedChange(true);
-                                                    }}
-                                                    style={{
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px',
-                                                        background: 'transparent', color: '#64748b', border: 'none', borderRadius: '6px',
-                                                        cursor: 'pointer', transition: 'all 0.15s'
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        e.currentTarget.style.background = '#ecfdf5';
-                                                        e.currentTarget.style.color = '#059669';
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        e.currentTarget.style.background = 'transparent';
-                                                        e.currentTarget.style.color = '#64748b';
-                                                    }}
-                                                    title="복사"
-                                                >
-                                                    <Copy size={14} />
-                                                </button>
-
-                                                <button
-                                                    onClick={() => {
-                                                        modal.showConfirm('확인', '요약표를 삭제하시겠습니까?', {
-                                                            btns: [
-                                                                { title: "취소", click: () => { } },
-                                                                {
-                                                                    title: "삭제",
-                                                                    click: async () => {
-                                                                        const newFolders = folders.filter(f => f.id !== folder.id);
-                                                                        setFolders(newFolders);
-
-                                                                        const deleteKey = folder.stub_id || folder.id;
-                                                                         if (deleteKey && String(deleteKey).trim() !== "") {
-                                                                             if (originalFolderIds.includes(folder.id) && !folder.id.startsWith('folder_')) {
-                                                                                 const newDeletedIds = [...deletedSummaryIds, deleteKey];
-                                                                                 setDeletedSummaryIds(newDeletedIds);
-                                                                                 await handleSaveSummary(newFolders, newDeletedIds, '요약표가 삭제되었습니다.');
-                                                                             } else {
-                                                                                 if (onUnsavedChange) onUnsavedChange(true);
-                                                                             }
-                                                                         } else {
-                                                                            if (onUnsavedChange) onUnsavedChange(true);
-                                                                        }
+                                                                    let b = '';
+                                                                    if (isMean) {
+                                                                        b = '평균';
+                                                                    } else {
+                                                                        const tagLabel = item.tag || item.label || item.name || '';
+                                                                        b = tagLabel.replace(/\s*요약\s*$/, '').trim();
                                                                     }
+
+                                                                    if (!b) return null;
+
+                                                                    let bg = '#f1f5f9';
+                                                                    let fg = '#64748b';
+                                                                    let border = '1px solid #cbd5e1';
+                                                                    const lower = b.toLowerCase();
+
+                                                                    if (item.disabled) {
+                                                                        bg = '#f8fafc';
+                                                                        fg = '#94a3b8';
+                                                                        border = '1px dashed #cbd5e1';
+                                                                    } else {
+                                                                        if (lower.includes('top')) { bg = '#eff6ff'; fg = '#3b82f6'; border = '1px solid #bfdbfe'; }
+                                                                        else if (lower.includes('bot')) { bg = '#fff1f2'; fg = '#f43f5e'; border = '1px solid #fca5a5'; }
+                                                                        else if (lower.includes('mid')) { bg = '#fffbeb'; fg = '#d97706'; border = '1px solid #fde68a'; }
+                                                                        else if (lower === '평균') { bg = '#ecfdf5'; fg = '#10b981'; border = '1px solid #a7f3d0'; }
+                                                                        else if (lower === '중앙값') { bg = '#faf5ff'; fg = '#7c3aed'; border = '1px solid #e9d5ff'; }
+                                                                        else if (lower === '최빈값') { bg = '#fffbeb'; fg = '#d97706'; border = '1px solid #fde68a'; }
+                                                                    }
+
+                                                                    let cleanB = b;
+                                                                    if (lower.startsWith('top')) cleanB = 'Top' + b.slice(3);
+                                                                    else if (lower.startsWith('bot')) cleanB = 'Bot' + b.slice(3);
+                                                                    else if (lower.startsWith('mid')) cleanB = 'Mid' + b.slice(3);
+
+                                                                    return (
+                                                                        <span
+                                                                            key={`${b}_${idx}`}
+                                                                            onClick={() => {
+                                                                                setSummaries(prev => prev.map(s => {
+                                                                                    const isTarget = s.id === folder.id ||
+                                                                                        (folder.items && folder.items.includes(s.id));
+                                                                                    if (isTarget) {
+                                                                                        return {
+                                                                                            ...s,
+                                                                                            info: s.info.map((inner, innerIdx) => {
+                                                                                                if (innerIdx === idx) {
+                                                                                                    return { ...inner, disabled: !inner.disabled };
+                                                                                                }
+                                                                                                return inner;
+                                                                                            })
+                                                                                        };
+                                                                                    }
+                                                                                    return s;
+                                                                                }));
+                                                                                if (onUnsavedChange) onUnsavedChange(true);
+                                                                            }}
+                                                                            style={{
+                                                                                fontSize: '10.5px',
+                                                                                fontWeight: 600,
+                                                                                padding: '3px 8px',
+                                                                                borderRadius: '12px',
+                                                                                color: fg,
+                                                                                background: bg,
+                                                                                border: border,
+                                                                                userSelect: 'none',
+                                                                                cursor: 'pointer',
+                                                                                opacity: item.disabled ? 0.6 : 1,
+                                                                                transition: 'all 0.15s ease-in-out'
+                                                                            }}
+                                                                        >
+                                                                            {cleanB}
+                                                                        </span>
+                                                                    );
+                                                                })
                                                                 }
-                                                            ]
-                                                        });
-                                                    }}
-                                                    style={{
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px',
-                                                        background: 'transparent', color: '#ef4444', border: 'none', borderRadius: '6px',
-                                                        cursor: 'pointer', transition: 'all 0.15s'
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        e.currentTarget.style.background = '#fff1f2';
-                                                        e.currentTarget.style.color = '#dc2626';
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        e.currentTarget.style.background = 'transparent';
-                                                        e.currentTarget.style.color = '#64748b';
-                                                    }}
-                                                    title="삭제"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {isExpanded && (
-                                            <div style={{ marginTop: currentTab === 'scale' ? '8px' : '4px', borderTop: '1px solid #f1f5f9', paddingTop: currentTab === 'scale' ? '4px' : '0px' }}>
-
-                                                <div style={{ display: 'none', alignItems: 'center', gap: '8px', padding: '10px 14px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '12px' }}>
-                                                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>요약표 타이틀명:</span>
-                                                    <input
-                                                        id={`folder-name-input-${folder.id}`}
-                                                        type="text"
-                                                        value={folder.name}
-                                                        onChange={(e) => {
-                                                            setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, name: e.target.value } : f));
-                                                            if (onUnsavedChange) onUnsavedChange(true);
-                                                        }}
-                                                        style={{ flex: 1, padding: '5px 10px', fontSize: '12.5px', border: '1px solid #cbd5e1', borderRadius: '4px', outline: 'none', background: '#ffffff', color: '#1e293b' }}
-                                                    />
-                                                </div>
-
-                                                {currentTab === 'scale' && (
+                                                            </div>
+                                                        </div>
 
 
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '10px', padding: '0 4px' }}>
-                                                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>포함 요약표 구성 (뱃지):</span>
-                                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                                        {assocSummary && Array.isArray(assocSummary.info) && assocSummary.info.map((item, idx) => {
-                                                            const isMean = (item.type === 'statistics' && item.mean) ||
-                                                                           item.type === 'mean' ||
-                                                                           item.mean === true ||
-                                                                           item.tag === 'mean' ||
-                                                                           item.value_id === 'mean';
-                                                            
-                                                            let b = '';
-                                                            if (isMean) {
-                                                                b = '평균';
-                                                            } else {
-                                                                const tagLabel = item.tag || item.label || item.name || '';
-                                                                b = tagLabel.replace(/\s*요약\s*$/, '').trim();
-                                                            }
+                                                    )}
+                                                    {currentTab === 'scale' && (
+                                                        <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '6px 0 10px 0' }} />
+                                                    )}
 
-                                                            if (!b) return null;
-
-                                                            let bg = '#f1f5f9';
-                                                            let fg = '#64748b';
-                                                            let border = '1px solid #cbd5e1';
-                                                            const lower = b.toLowerCase();
-                                                            
-                                                            if (item.disabled) {
-                                                                bg = '#f8fafc';
-                                                                fg = '#94a3b8';
-                                                                border = '1px dashed #cbd5e1';
-                                                            } else {
-                                                                if (lower.includes('top')) { bg = '#eff6ff'; fg = '#3b82f6'; border = '1px solid #bfdbfe'; }
-                                                                else if (lower.includes('bot')) { bg = '#fff1f2'; fg = '#f43f5e'; border = '1px solid #fca5a5'; }
-                                                                else if (lower.includes('mid')) { bg = '#fffbeb'; fg = '#d97706'; border = '1px solid #fde68a'; }
-                                                                else if (lower === '평균') { bg = '#ecfdf5'; fg = '#10b981'; border = '1px solid #a7f3d0'; }
-                                                                else if (lower === '중앙값') { bg = '#faf5ff'; fg = '#7c3aed'; border = '1px solid #e9d5ff'; }
-                                                                else if (lower === '최빈값') { bg = '#fffbeb'; fg = '#d97706'; border = '1px solid #fde68a'; }
-                                                            }
-                                                            
-                                                            let cleanB = b;
-                                                            if (lower.startsWith('top')) cleanB = 'Top' + b.slice(3);
-                                                            else if (lower.startsWith('bot')) cleanB = 'Bot' + b.slice(3);
-                                                            else if (lower.startsWith('mid')) cleanB = 'Mid' + b.slice(3);
-
-                                                            return (
-                                                                <span 
-                                                                    key={`${b}_${idx}`} 
-                                                                    onClick={() => {
-                                                                        setSummaries(prev => prev.map(s => {
-                                                                            const isTarget = s.id === folder.id || 
-                                                                                             (folder.items && folder.items.includes(s.id));
-                                                                            if (isTarget) {
-                                                                                return {
-                                                                                    ...s,
-                                                                                    info: s.info.map((inner, innerIdx) => {
-                                                                                        if (innerIdx === idx) {
-                                                                                            return { ...inner, disabled: !inner.disabled };
-                                                                                        }
-                                                                                        return inner;
-                                                                                    })
-                                                                                };
-                                                                            }
-                                                                            return s;
-                                                                        }));
-                                                                        if (onUnsavedChange) onUnsavedChange(true);
-                                                                    }}
-                                                                    style={{ 
-                                                                        fontSize: '10.5px', 
-                                                                        fontWeight: 600, 
-                                                                        padding: '3px 8px', 
-                                                                        borderRadius: '12px', 
-                                                                        color: fg, 
-                                                                        background: bg, 
-                                                                        border: border, 
-                                                                        userSelect: 'none',
-                                                                        cursor: 'pointer',
-                                                                        opacity: item.disabled ? 0.6 : 1,
-                                                                        transition: 'all 0.15s ease-in-out'
-                                                                    }}
-                                                                >
-                                                                    {cleanB}
-                                                                </span>
-                                                            );
-                                                        })
-                                                    }
-                                                     </div>
-                                                </div>
-
-
-                                                )}
-                                                {currentTab === 'scale' && (
-                                                    <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '6px 0 10px 0' }} />
-                                                )}
-
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', padding: '0 4px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#334155' }}>상세 변수 및 교차표 문구 매핑</span>
-                                                        <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500, userSelect: 'none' }}>
-                                                            💡 입력창 중 하나를 선택해 엑셀 열을 붙여넣기(Ctrl+V)하면 아래로 자동 채워집니다.
-                                                        </span>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', padding: '0 4px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#334155' }}>상세 변수 및 교차표 문구 매핑</span>
+                                                            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500, userSelect: 'none' }}>
+                                                                💡 입력창 중 하나를 선택해 엑셀 열을 붙여넣기(Ctrl+V)하면 아래로 자동 채워집니다.
+                                                            </span>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => handleOpenBulkItemLabelModal(folder.id)}
+                                                            style={{
+                                                                height: '28px', padding: '0 12px', fontSize: '11.5px', fontWeight: 600,
+                                                                background: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '6px',
+                                                                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                                                                cursor: 'pointer', transition: 'all 0.2s'
+                                                            }}
+                                                            onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+                                                            onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                                                        >
+                                                            교차표 문구 일괄 편집
+                                                        </button>
                                                     </div>
-                                                    <button
-                                                        onClick={() => handleOpenBulkItemLabelModal(folder.id)}
-                                                        style={{
-                                                            height: '28px', padding: '0 12px', fontSize: '11.5px', fontWeight: 600,
-                                                            background: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '6px',
-                                                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                                                            cursor: 'pointer', transition: 'all 0.2s'
-                                                        }}
-                                                        onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = '#94a3b8'; }}
-                                                        onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
-                                                    >
-                                                        전체 일괄 편집
-                                                    </button>
-                                                </div>
 
-                                                <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', background: '#ffffff', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-                                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px' }}>
-                                                        <thead>
-                                                            <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#475569', fontWeight: 700 }}>
-                                                                <th style={{ padding: '10px 14px', textAlign: 'left', width: '200px', fontSize: '11.5px', color: '#475569' }}>변수 ID</th>
-                                                                <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11.5px', color: '#475569' }}>교차표 문구</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {folder.type === 'statistics' ? (
-                                                                (() => {
-                                                                    const assocSummary = summaries.find(s => s.id === folder.id) ||
-                                                                        summaries.find(s => folder.items && folder.items.includes(s.id)) ||
-                                                                        summaries.find(s => s.id === (folder.items && folder.items[0]));
-                                                                    
-                                                                    let hasMean = folder.mean === true;
-                                                                    let hasMedian = folder.median === true;
-                                                                    let hasMode = folder.mode === true;
-                                                                    
-                                                                    if (assocSummary && Array.isArray(assocSummary.info)) {
-                                                                        let meanActive = false;
-                                                                        let medianActive = false;
-                                                                        let modeActive = false;
-                                                                        let hasStatInfo = false;
-                                                                        
-                                                                        assocSummary.info.forEach(item => {
-                                                                            if (item.disabled) return;
-                                                                            const isMean = item.mean === true || item.tag === 'mean' || item.value_id === 'mean';
-                                                                            const isMedian = item.median === true || item.tag === 'median' || item.value_id === 'median';
-                                                                            const isMode = item.mode === true || item.tag === 'mode' || item.value_id === 'mode';
-                                                                            
-                                                                            if (isMean) { meanActive = true; hasStatInfo = true; }
-                                                                            if (isMedian) { medianActive = true; hasStatInfo = true; }
-                                                                            if (isMode) { modeActive = true; hasStatInfo = true; }
-                                                                        });
-                                                                        
-                                                                        if (hasStatInfo) {
-                                                                            hasMean = meanActive;
-                                                                            hasMedian = medianActive;
-                                                                            hasMode = modeActive;
+                                                    <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', background: '#ffffff', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+                                                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px' }}>
+                                                            <thead>
+                                                                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#475569', fontWeight: 700 }}>
+                                                                    <th style={{ padding: '10px 14px', textAlign: 'left', width: '200px', fontSize: '11.5px', color: '#475569' }}>변수 ID</th>
+                                                                    <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11.5px', color: '#475569' }}>교차표 문구</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {folder.type === 'statistics' ? (
+                                                                    (() => {
+                                                                        const assocSummary = summaries.find(s => s.id === folder.id) ||
+                                                                            summaries.find(s => folder.items && folder.items.includes(s.id)) ||
+                                                                            summaries.find(s => s.id === (folder.items && folder.items[0]));
+
+                                                                        let hasMean = folder.mean === true;
+                                                                        let hasMedian = folder.median === true;
+                                                                        let hasMode = folder.mode === true;
+
+                                                                        if (assocSummary && Array.isArray(assocSummary.info)) {
+                                                                            let meanActive = false;
+                                                                            let medianActive = false;
+                                                                            let modeActive = false;
+                                                                            let hasStatInfo = false;
+
+                                                                            assocSummary.info.forEach(item => {
+                                                                                if (item.disabled) return;
+                                                                                const isMean = item.mean === true || item.tag === 'mean' || item.value_id === 'mean';
+                                                                                const isMedian = item.median === true || item.tag === 'median' || item.value_id === 'median';
+                                                                                const isMode = item.mode === true || item.tag === 'mode' || item.value_id === 'mode';
+
+                                                                                if (isMean) { meanActive = true; hasStatInfo = true; }
+                                                                                if (isMedian) { medianActive = true; hasStatInfo = true; }
+                                                                                if (isMode) { modeActive = true; hasStatInfo = true; }
+                                                                            });
+
+                                                                            if (hasStatInfo) {
+                                                                                hasMean = meanActive;
+                                                                                hasMedian = medianActive;
+                                                                                hasMode = modeActive;
+                                                                            }
                                                                         }
-                                                                    }
-                                                                    
-                                                                    const activeStats = [];
-                                                                    const itemId = folder.items && folder.items[0];
-                                                                    
-                                                                    if (itemId) {
-                                                                        if (hasMean) {
+
+                                                                        const activeStats = [];
+                                                                        const itemId = folder.items && folder.items[0];
+
+                                                                        if (itemId) {
+                                                                            if (hasMean) {
+                                                                                const meanLabel = summaries.find(s => s.id === itemId + '_mean')?.label ?? 'mean';
+                                                                                activeStats.push({ key: 'mean', label: meanLabel, virtualId: itemId + '_mean' });
+                                                                            }
+                                                                            if (hasMedian) {
+                                                                                const medianLabel = summaries.find(s => s.id === itemId + '_median')?.label ?? 'median';
+                                                                                activeStats.push({ key: 'median', label: medianLabel, virtualId: itemId + '_median' });
+                                                                            }
+                                                                            if (hasMode) {
+                                                                                const modeLabel = summaries.find(s => s.id === itemId + '_mode')?.label ?? 'mode';
+                                                                                activeStats.push({ key: 'mode', label: modeLabel, virtualId: itemId + '_mode' });
+                                                                            }
+                                                                        }
+
+                                                                        if (activeStats.length === 0 && itemId) {
                                                                             const meanLabel = summaries.find(s => s.id === itemId + '_mean')?.label ?? 'mean';
                                                                             activeStats.push({ key: 'mean', label: meanLabel, virtualId: itemId + '_mean' });
                                                                         }
-                                                                        if (hasMedian) {
-                                                                            const medianLabel = summaries.find(s => s.id === itemId + '_median')?.label ?? 'median';
-                                                                            activeStats.push({ key: 'median', label: medianLabel, virtualId: itemId + '_median' });
-                                                                        }
-                                                                        if (hasMode) {
-                                                                            const modeLabel = summaries.find(s => s.id === itemId + '_mode')?.label ?? 'mode';
-                                                                            activeStats.push({ key: 'mode', label: modeLabel, virtualId: itemId + '_mode' });
-                                                                        }
-                                                                    }
-                                                                    
-                                                                    if (activeStats.length === 0 && itemId) {
-                                                                        const meanLabel = summaries.find(s => s.id === itemId + '_mean')?.label ?? 'mean';
-                                                                        activeStats.push({ key: 'mean', label: meanLabel, virtualId: itemId + '_mean' });
-                                                                    }
-                                                                    
-                                                                    return activeStats.map((stat) => (
-                                                                        <tr key={stat.key} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
-                                                                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                                                                                <span style={{
-                                                                                    display: 'inline-block',
-                                                                                    padding: '3px 8px',
-                                                                                    background: '#f1f5f9',
-                                                                                    color: '#475569',
-                                                                                    borderRadius: '6px',
-                                                                                    fontWeight: 600,
-                                                                                    fontFamily: 'monospace',
-                                                                                    fontSize: '11px',
-                                                                                    border: '1px solid #e2e8f0'
-                                                                                }}>
-                                                                                    {stat.key}
-                                                                                </span>
-                                                                            </td>
-                                                                            <td style={{ padding: '8px 14px' }}>
-                                                                                <input
-                                                                                    type="text"
-                                                                                    value={stat.label}
-                                                                                    onChange={(e) => {
-                                                                                        setSummaries(prev => {
-                                                                                            const exists = prev.some(s => s.id === stat.virtualId);
-                                                                                            if (exists) {
-                                                                                                return prev.map(s => s.id === stat.virtualId ? { ...s, label: e.target.value } : s);
-                                                                                            } else {
-                                                                                                return [
-                                                                                                    ...prev,
-                                                                                                    {
-                                                                                                        id: stat.virtualId,
-                                                                                                        label: e.target.value,
-                                                                                                        subId: stat.virtualId,
-                                                                                                        type: 'statistics',
-                                                                                                        info: []
-                                                                                                    }
-                                                                                                ];
-                                                                                            }
-                                                                                        });
-                                                                                        if (onUnsavedChange) onUnsavedChange(true);
-                                                                                    }}
-                                                                                    onFocus={(e) => {
-                                                                                        e.currentTarget.style.borderColor = '#3b82f6';
-                                                                                        e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.08)';
-                                                                                        e.currentTarget.style.backgroundColor = '#ffffff';
-                                                                                    }}
-                                                                                    onBlur={(e) => {
-                                                                                        e.currentTarget.style.borderColor = '#e2e8f0';
-                                                                                        e.currentTarget.style.boxShadow = 'none';
-                                                                                        e.currentTarget.style.backgroundColor = '#ffffff';
-                                                                                    }}
-                                                                                    style={{
-                                                                                        width: '100%',
-                                                                                        padding: '6px 12px',
-                                                                                        border: '1px solid #e2e8f0',
+
+                                                                        return activeStats.map((stat) => (
+                                                                            <tr key={stat.key} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
+                                                                                <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                                                                                    <span style={{
+                                                                                        display: 'inline-block',
+                                                                                        padding: '3px 8px',
+                                                                                        background: '#f1f5f9',
+                                                                                        color: '#475569',
                                                                                         borderRadius: '6px',
-                                                                                        outline: 'none',
-                                                                                        color: '#1e293b',
-                                                                                        fontSize: '11.5px',
-                                                                                        background: '#ffffff',
-                                                                                        transition: 'all 0.15s ease-in-out'
-                                                                                    }}
-                                                                                />
-                                                                            </td>
-                                                                        </tr>
-                                                                    ));
-                                                                })()
-                                                            ) : (
-                                                                folder.items.map((itemId, idx) => {
-                                                                    const varInfo = summaries.find(s => s.id === itemId);
-                                                                    const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
-                                                                    const showLabel = baseVar ? baseVar.label || baseVar.name : '';
-                                                                    const labelValue = (() => {
-                                                                         let val = varInfo ? varInfo.label : showLabel;
-                                                                         if (varInfo && folder && folder.name) {
-                                                                             const isCorrupted = varInfo.label === folder.name || 
-                                                                                                 varInfo.label.includes('요약표') || 
-                                                                                                 varInfo.label.includes('(평균)') || 
-                                                                                                 varInfo.label.includes('(Top') || 
-                                                                                                 varInfo.label.includes('(Bot') || 
-                                                                                                 varInfo.label.includes('(Mid');
-                                                                             if (isCorrupted) {
-                                                                                 val = showLabel;
-                                                                             }
-                                                                         }
-                                                                         return val;
-                                                                     })();
-                                                                    return (
-                                                                        <tr key={itemId} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
-                                                                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                                                                                <span style={{
-                                                                                    display: 'inline-block',
-                                                                                    padding: '3px 8px',
-                                                                                    background: '#f1f5f9',
-                                                                                    color: '#475569',
-                                                                                    borderRadius: '6px',
-                                                                                    fontWeight: 600,
-                                                                                    fontFamily: 'monospace',
-                                                                                    fontSize: '11px',
-                                                                                    border: '1px solid #e2e8f0'
-                                                                                }}>
-                                                                                    {itemId}
-                                                                                </span>
-                                                                            </td>
-                                                                            <td style={{ padding: '8px 14px' }}>
-                                                                                <input
-                                                                                    type="text"
-                                                                                    value={labelValue}
-                                                                                    onChange={(e) => {
-                                                                                        setSummaries(prev => {
-                                                                                            const exists = prev.some(s => s.id === itemId);
-                                                                                            if (exists) {
-                                                                                                return prev.map(s => s.id === itemId ? { ...s, label: e.target.value } : s);
-                                                                                            } else {
-                                                                                                return [
-                                                                                                    ...prev,
-                                                                                                    {
-                                                                                                        id: itemId,
-                                                                                                        label: e.target.value,
-                                                                                                        subId: itemId,
-                                                                                                        type: baseVar?.type || 'frequency',
-                                                                                                        info: baseVar?.info || baseVar?.categories || []
-                                                                                                    }
-                                                                                                ];
-                                                                                            }
-                                                                                        });
-                                                                                        if (onUnsavedChange) onUnsavedChange(true);
-                                                                                    }}
-                                                                                    onPaste={(e) => handlePasteLabels(e, idx, folder.items)}
-                                                                                    onFocus={(e) => {
-                                                                                        e.currentTarget.style.borderColor = '#3b82f6';
-                                                                                        e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.08)';
-                                                                                        e.currentTarget.style.backgroundColor = '#ffffff';
-                                                                                    }}
-                                                                                    onBlur={(e) => {
-                                                                                        e.currentTarget.style.borderColor = '#e2e8f0';
-                                                                                        e.currentTarget.style.boxShadow = 'none';
-                                                                                        e.currentTarget.style.backgroundColor = '#fdfdfd';
-                                                                                    }}
-                                                                                    style={{
-                                                                                        width: '100%',
-                                                                                        padding: '6px 12px',
-                                                                                        border: '1px solid #e2e8f0',
+                                                                                        fontWeight: 600,
+                                                                                        fontFamily: 'monospace',
+                                                                                        fontSize: '11px',
+                                                                                        border: '1px solid #e2e8f0'
+                                                                                    }}>
+                                                                                        {stat.key}
+                                                                                    </span>
+                                                                                </td>
+                                                                                <td style={{ padding: '8px 14px' }}>
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        value={stat.label}
+                                                                                        onChange={(e) => {
+                                                                                            setSummaries(prev => {
+                                                                                                const exists = prev.some(s => s.id === stat.virtualId);
+                                                                                                if (exists) {
+                                                                                                    return prev.map(s => s.id === stat.virtualId ? { ...s, label: e.target.value } : s);
+                                                                                                } else {
+                                                                                                    return [
+                                                                                                        ...prev,
+                                                                                                        {
+                                                                                                            id: stat.virtualId,
+                                                                                                            label: e.target.value,
+                                                                                                            subId: stat.virtualId,
+                                                                                                            type: 'statistics',
+                                                                                                            info: []
+                                                                                                        }
+                                                                                                    ];
+                                                                                                }
+                                                                                            });
+                                                                                            if (onUnsavedChange) onUnsavedChange(true);
+                                                                                        }}
+                                                                                        onFocus={(e) => {
+                                                                                            e.currentTarget.style.borderColor = '#3b82f6';
+                                                                                            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.08)';
+                                                                                            e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                                        }}
+                                                                                        onBlur={(e) => {
+                                                                                            e.currentTarget.style.borderColor = '#e2e8f0';
+                                                                                            e.currentTarget.style.boxShadow = 'none';
+                                                                                            e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                                        }}
+                                                                                        style={{
+                                                                                            width: '100%',
+                                                                                            padding: '6px 12px',
+                                                                                            border: '1px solid #e2e8f0',
+                                                                                            borderRadius: '6px',
+                                                                                            outline: 'none',
+                                                                                            color: '#1e293b',
+                                                                                            fontSize: '11.5px',
+                                                                                            background: '#ffffff',
+                                                                                            transition: 'all 0.15s ease-in-out'
+                                                                                        }}
+                                                                                    />
+                                                                                </td>
+                                                                            </tr>
+                                                                        ));
+                                                                    })()
+                                                                ) : (
+                                                                    folder.items.map((itemId, idx) => {
+                                                                        const varInfo = summaries.find(s => s.id === itemId);
+                                                                        const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
+                                                                        const showLabel = baseVar ? baseVar.label || baseVar.name : '';
+                                                                        const labelValue = (() => {
+                                                                            let val = varInfo ? varInfo.label : showLabel;
+                                                                            if (varInfo && folder && folder.name) {
+                                                                                const isCorrupted = varInfo.label === folder.name ||
+                                                                                    varInfo.label.includes('요약표') ||
+                                                                                    varInfo.label.includes('(평균)') ||
+                                                                                    varInfo.label.includes('(Top') ||
+                                                                                    varInfo.label.includes('(Bot') ||
+                                                                                    varInfo.label.includes('(Mid');
+                                                                                if (isCorrupted) {
+                                                                                    val = showLabel;
+                                                                                }
+                                                                            }
+                                                                            return val;
+                                                                        })();
+                                                                        return (
+                                                                            <tr key={itemId} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
+                                                                                <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                                                                                    <span style={{
+                                                                                        display: 'inline-block',
+                                                                                        padding: '3px 8px',
+                                                                                        background: '#f1f5f9',
+                                                                                        color: '#475569',
                                                                                         borderRadius: '6px',
-                                                                                        outline: 'none',
-                                                                                        color: '#1e293b',
-                                                                                        fontSize: '11.5px',
-                                                                                        background: '#fdfdfd',
-                                                                                        transition: 'all 0.15s ease-in-out'
-                                                                                    }}
-                                                                                />
-                                                                            </td>
-                                                                        </tr>
-                                                                    );
-                                                                })
-                                                            )}
-                                                        </tbody>
-                                                    </table>
+                                                                                        fontWeight: 600,
+                                                                                        fontFamily: 'monospace',
+                                                                                        fontSize: '11px',
+                                                                                        border: '1px solid #e2e8f0'
+                                                                                    }}>
+                                                                                        {itemId}
+                                                                                    </span>
+                                                                                </td>
+                                                                                <td style={{ padding: '8px 14px' }}>
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        value={labelValue}
+                                                                                        onChange={(e) => {
+                                                                                            setSummaries(prev => {
+                                                                                                const exists = prev.some(s => s.id === itemId);
+                                                                                                if (exists) {
+                                                                                                    return prev.map(s => s.id === itemId ? { ...s, label: e.target.value } : s);
+                                                                                                } else {
+                                                                                                    return [
+                                                                                                        ...prev,
+                                                                                                        {
+                                                                                                            id: itemId,
+                                                                                                            label: e.target.value,
+                                                                                                            subId: itemId,
+                                                                                                            type: baseVar?.type || 'frequency',
+                                                                                                            info: baseVar?.info || baseVar?.categories || []
+                                                                                                        }
+                                                                                                    ];
+                                                                                                }
+                                                                                            });
+                                                                                            if (onUnsavedChange) onUnsavedChange(true);
+                                                                                        }}
+                                                                                        onPaste={(e) => handlePasteLabels(e, idx, folder.items)}
+                                                                                        onFocus={(e) => {
+                                                                                            e.currentTarget.style.borderColor = '#3b82f6';
+                                                                                            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.08)';
+                                                                                            e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                                        }}
+                                                                                        onBlur={(e) => {
+                                                                                            e.currentTarget.style.borderColor = '#e2e8f0';
+                                                                                            e.currentTarget.style.boxShadow = 'none';
+                                                                                            e.currentTarget.style.backgroundColor = '#fdfdfd';
+                                                                                        }}
+                                                                                        style={{
+                                                                                            width: '100%',
+                                                                                            padding: '6px 12px',
+                                                                                            border: '1px solid #e2e8f0',
+                                                                                            borderRadius: '6px',
+                                                                                            outline: 'none',
+                                                                                            color: '#1e293b',
+                                                                                            fontSize: '11.5px',
+                                                                                            background: '#fdfdfd',
+                                                                                            transition: 'all 0.15s ease-in-out'
+                                                                                        }}
+                                                                                    />
+                                                                                </td>
+                                                                            </tr>
+                                                                        );
+                                                                    })
+                                                                )}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+
                                                 </div>
+                                            )}
 
-                                            </div>
-                                        )}
-
-                                    </div>
-                                );
-                            })
-                        ) : (
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                flex: 1,
-                                color: '#94a3b8',
-                                fontSize: '13.5px',
-                                fontWeight: 500,
-                                userSelect: 'none'
-                            }}>
-                                등록된 요약표가 없습니다.
-                            </div>
-                        )}</div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    flex: 1,
+                                    color: '#94a3b8',
+                                    fontSize: '13.5px',
+                                    fontWeight: 500,
+                                    userSelect: 'none'
+                                }}>
+                                    등록된 요약표가 없습니다.
+                                </div>
+                            )}</div>
                     </div>
                 </div>
             </div>
@@ -3092,44 +3091,40 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
                 }}>
                     <div style={{
-                        backgroundColor: '#ffffff', borderRadius: '12px', width: '700px',
+                        backgroundColor: '#ffffff', borderRadius: '16px', width: '750px',
                         maxHeight: '90vh', display: 'flex', flexDirection: 'column',
-                        boxShadow: '0 12px 24px -4px rgba(0, 0, 0, 0.15)', overflow: 'hidden'
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)', overflow: 'hidden',
+                        border: '1px solid rgba(226, 232, 240, 0.8)'
                     }}>
                         {/* 팝업 헤더 */}
                         <div style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            padding: '10px 18px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            padding: '20px 28px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
                         }}>
-                            <div style={{ display: 'flex', alignItems: 'center', fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>
-                                <span style={{ width: '3px', height: '14px', backgroundColor: '#2563eb', marginRight: '8px', display: 'inline-block' }}></span>
-                                <span>요약표 일괄 자동 생성</span>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                                <div style={{ width: '4px', height: '18px', background: '#3b82f6', borderRadius: '2px', marginTop: '3px' }}></div>
+                                <div>
+                                    <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>요약표 일괄 자동 생성</h3>
+                                    <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '4px', fontWeight: 500 }}>
+                                        {wizardTab === 'scale'
+                                            ? '감지된 모든 척도형 문항(Scale) 묶음에 대해 지정한 밴드 조합과 평균 포함 여부에 따라 요약표를 일괄 구성합니다.'
+                                            : '오픈/숫자형(open(숫자)) 문항들에 대해 선택한 통계 요약표를 일괄적으로 구성하여 생성 제안합니다.'
+                                        }
+                                    </div>
+                                </div>
                             </div>
                             <button
                                 onClick={() => setIsWizardOpen(false)}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#94a3b8', transition: 'color 0.15s' }}
+                                onMouseEnter={(e) => e.currentTarget.style.color = '#475569'}
+                                onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
                             >
-                                <X size={18} />
+                                <X size={20} />
                             </button>
                         </div>
 
-
-
                         {/* 모달 콘텐츠 */}
-                        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 18px', display: 'flex', flexDirection: 'column', gap: '8px', minHeight: 0 }}>
-                            {/* 안내 배너 */}
-                            <div style={{
-                                display: 'flex', gap: '6px', padding: '4px 10px', borderRadius: '4px',
-                                background: '#f0f9ff', border: '1px solid #e0f2fe', color: '#0369a1', fontSize: '11px', lineHeight: 1.4
-                            }}>
-                                <span style={{ fontSize: '13px', display: 'inline-block', transform: 'translateY(-1px)' }}>💡</span>
-                                <span style={{ fontSize: '11.5px', color: '#0369a1', fontWeight: 500 }}>
-                                    {wizardTab === 'scale'
-                                        ? '감지된 모든 척도형 문항(Scale) 묶음에 대해 지정한 밴드 조합과 평균 포함 여부에 따라 요약표를 일괄 구성합니다.'
-                                        : '오픈/숫자형(open(숫자)) 문항들에 대해 선택한 통계 요약표를 일괄적으로 구성하여 생성 제안합니다.'
-                                    }
-                                </span>
-                            </div>
+                        <div style={{ flex: 1, overflowY: 'auto', padding: '28px', display: 'flex', flexDirection: 'column', gap: '12px', minHeight: 0 }}>
 
                             {/* 옵션 설정 영역 */}
                             {wizardTab === 'scale' ? (
@@ -3420,7 +3415,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                         <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
-                                            생성 제안 목록 ({totalWizardSubItemsCount}개 요약표 제안됨)
+                                            생성 제안 목록 ({wizardProposals.length}개 요약표 제안됨)
                                         </span>
                                         <label
                                             className="dp-checkbox-label"
@@ -3555,12 +3550,12 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         {/* 팝업 푸터 */}
                         <div style={{
                             display: 'flex', justifyContent: 'flex-end', gap: '8px',
-                            padding: '12px 20px', borderTop: '1px solid #e2e8f0', background: '#f8fafc'
+                            padding: '14px 28px', borderTop: '1px solid #e2e8f0', background: '#f8fafc'
                         }}>
                             <button
                                 onClick={() => setIsWizardOpen(false)}
                                 style={{
-                                    padding: '7px 16px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid #cbd5e1',
+                                    height: '38px', padding: '0 20px', fontSize: '13px', borderRadius: '6px', border: '1px solid #cbd5e1',
                                     background: '#ffffff', color: '#475569', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
                                 }}
                                 onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
@@ -3571,14 +3566,14 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <button
                                 onClick={handleAddProposals}
                                 style={{
-                                    padding: '7px 20px', fontSize: '12.5px', borderRadius: '4px', border: 'none',
-                                    background: '#2563eb', color: '#ffffff',
+                                    height: '38px', padding: '0 24px', fontSize: '13px', borderRadius: '6px', border: 'none',
+                                    background: '#3b82f6', color: '#ffffff',
                                     fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.15s'
                                 }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = '#1d4ed8'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = '#2563eb'; }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#2563eb'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = '#3b82f6'; }}
                             >
-                                <span>{totalWizardSubItemsCount}개 생성 목록 추가</span>
+                                <span>{wizardSelectedIds.size}개 생성 목록 추가</span>
                             </button>
                         </div>
                     </div>
@@ -3920,7 +3915,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 </div>
             )}
 
-            {/* 요약표 제목 일괄 수정 모달 */}
+            {/* 요약표 제목 일괄 편집 모달 */}
             {isBulkTitleModalOpen && (
                 <div style={{
                     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -3941,7 +3936,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                                 <div style={{ width: '4px', height: '18px', background: '#3b82f6', borderRadius: '2px', marginTop: '3px' }}></div>
                                 <div>
-                                    <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>요약표 제목 일괄 수정</h3>
+                                    <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>요약표 제목 일괄 편집</h3>
                                     <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '4px', fontWeight: 500 }}>
                                         왼쪽 편집창의 전체 목록과 오른쪽의 개별 입력창은 실시간으로 양방향 연동됩니다.
                                     </div>
@@ -4050,9 +4045,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 onMouseEnter={(e) => { e.currentTarget.style.background = '#2563eb'; }}
                                 onMouseLeave={(e) => { e.currentTarget.style.background = '#3b82f6'; }}
                             >
-                                <svg style={{ width: '13px', height: '13px', fill: 'currentColor' }} viewBox="0 0 24 24">
-                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                                </svg>
                                 <span>일괄 적용</span>
                             </button>
                         </div>
@@ -4068,39 +4060,52 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
                 }}>
                     <div style={{
-                        backgroundColor: '#ffffff', borderRadius: '12px', width: '500px',
+                        backgroundColor: '#ffffff', borderRadius: '16px', width: '750px',
                         display: 'flex', flexDirection: 'column',
-                        boxShadow: '0 12px 24px -4px rgba(0, 0, 0, 0.15)', overflow: 'hidden'
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)', overflow: 'hidden',
+                        border: '1px solid rgba(226, 232, 240, 0.8)'
                     }}>
                         {/* 팝업 헤더 */}
                         <div style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            padding: '10px 18px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            padding: '20px 28px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
                         }}>
-                            <div style={{ display: 'flex', alignItems: 'center', fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>
-                                <span style={{ width: '3px', height: '14px', backgroundColor: '#2563eb', marginRight: '8px', display: 'inline-block' }}></span>
-                                <span>교차표 문구 일괄 수정</span>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                                <div style={{ width: '4px', height: '18px', background: '#3b82f6', borderRadius: '2px', marginTop: '3px' }}></div>
+                                <div>
+                                    <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>교차표 문구 일괄 수정</h3>
+                                    <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '4px', fontWeight: 500 }}>현재 요약표에 속한 변수들의 교차표 문구 목록입니다. 줄바꿈 단위로 편집하거나, 엑셀 열 데이터를 복사해서 붙여넣으면 일괄 반영됩니다.
+                                    </div>
+                                </div>
                             </div>
                             <button
                                 onClick={() => { setIsBulkItemLabelModalOpen(false); setActiveBulkItemFolderId(null); }}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#94a3b8', transition: 'color 0.15s' }}
+                                onMouseEnter={(e) => e.currentTarget.style.color = '#475569'}
+                                onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
                             >
-                                <X size={18} />
+                                <X size={20} />
                             </button>
                         </div>
 
                         {/* 모달 콘텐츠 */}
-                        <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <div style={{ fontSize: '11.5px', color: '#64748b', lineHeight: 1.5 }}>
-                                현재 요약표에 속한 변수들의 교차표 문구 목록입니다. 줄바꿈 단위로 편집하거나 엑셀 열 데이터를 통째로 복사해서 붙여넣으세요.
-                            </div>
+                        <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '10px', background: '#ffffff' }}>
                             <textarea
                                 value={bulkItemLabelText}
                                 onChange={(e) => setBulkItemLabelText(e.target.value)}
                                 style={{
-                                    width: '100%', height: '240px', padding: '12px', border: '1px solid #cbd5e1',
-                                    borderRadius: '6px', fontSize: '12px', outline: 'none', resize: 'none',
-                                    lineHeight: 1.6, color: '#1e293b', fontFamily: 'inherit'
+                                    width: '100%', height: '380px', padding: '16px', border: '1px solid #cbd5e1',
+                                    borderRadius: '8px', fontSize: '14.5px', outline: 'none', resize: 'none',
+                                    lineHeight: 1.6, color: '#1e293b', fontFamily: 'inherit',
+                                    transition: 'border-color 0.15s, box-shadow 0.15s'
+                                }}
+                                onFocus={(e) => {
+                                    e.target.style.borderColor = '#3b82f6';
+                                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                                }}
+                                onBlur={(e) => {
+                                    e.target.style.borderColor = '#cbd5e1';
+                                    e.target.style.boxShadow = 'none';
                                 }}
                                 placeholder="교차표 문구 1&#10;교차표 문구 2&#10;교차표 문구 3"
                             />
@@ -4109,12 +4114,12 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         {/* 팝업 푸터 */}
                         <div style={{
                             display: 'flex', justifyContent: 'flex-end', gap: '8px',
-                            padding: '10px 18px', borderTop: '1px solid #e2e8f0', background: '#ffffff'
+                            padding: '14px 28px', borderTop: '1px solid #e2e8f0', background: '#f8fafc'
                         }}>
                             <button
                                 onClick={() => { setIsBulkItemLabelModalOpen(false); setActiveBulkItemFolderId(null); }}
                                 style={{
-                                    padding: '6px 16px', fontSize: '12px', borderRadius: '4px', border: '1px solid #cbd5e1',
+                                    height: '38px', padding: '0 20px', fontSize: '13px', borderRadius: '6px', border: '1px solid #cbd5e1',
                                     background: '#ffffff', color: '#475569', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
                                 }}
                                 onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
@@ -4125,11 +4130,11 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <button
                                 onClick={handleApplyBulkItemLabelText}
                                 style={{
-                                    padding: '6px 20px', fontSize: '12px', borderRadius: '4px', border: 'none',
-                                    background: '#2563eb', color: '#ffffff', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
+                                    height: '38px', padding: '0 24px', fontSize: '13px', borderRadius: '6px', border: 'none',
+                                    background: '#3b82f6', color: '#ffffff', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
                                 }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = '#1d4ed8'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = '#2563eb'; }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#2563eb'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = '#3b82f6'; }}
                             >
                                 일괄 적용
                             </button>
