@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, memo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { ChevronDown, ChevronUp, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, Wand2, Folder, Copy, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, Wand2, Folder, Copy, Edit, Trash2, Eye, EyeOff, Check } from 'lucide-react';
+import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -76,6 +77,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [originalFolderIds, setOriginalFolderIds] = useState([]); // 초기 로딩된 폴더 ID 목록 (신규 생성 구분용)
     const [collapsedFolders, setCollapsedFolders] = useState(new Set()); // 아코디언 상태 관리용
     const [dragOverTarget, setDragOverTarget] = useState({ folderId: null, idx: null }); // 드래그 오버 상태 관리
+    const [draggedFolderId, setDraggedFolderId] = useState(null); // 드래그 중인 폴더 ID
+    const [dragOverFolderId, setDragOverFolderId] = useState(null); // 드래그 오버 중인 대상 폴더 ID
+    const [dragEnabledFolderId, setDragEnabledFolderId] = useState(null); // 드래그가 활성화된 폴더 ID
 
     // --- 일괄 편집 관련 상태 추가 ---
     const [expandedFolders, setExpandedFolders] = useState(new Set()); // 상세보기 활성화 폴더 ID
@@ -97,7 +101,34 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         { id: 'b3', label: 'Top2', values: '4,5' }
     ]);
     const [manualPresetId, setManualPresetId] = useState('custom');
-    const [manualIsMeanIncluded, setManualIsMeanIncluded] = useState(true);
+    const [manualIsMeanIncluded, setManualIsMeanIncluded] = useState(false);
+    const [manualModalMode, setManualModalMode] = useState('create');
+    const [editingFolderIdForBands, setEditingFolderIdForBands] = useState(null);
+
+    // 신규 생성된 폴더 하이라이트 효과용 상태
+    const [newlyCreatedFolderIds, setNewlyCreatedFolderIds] = useState(new Set());
+
+    // 2.5초 후 하이라이트 투명하게 복구
+    useEffect(() => {
+        if (newlyCreatedFolderIds.size > 0) {
+            const timer = setTimeout(() => {
+                setNewlyCreatedFolderIds(new Set());
+            }, 2500);
+            return () => clearTimeout(timer);
+        }
+    }, [newlyCreatedFolderIds]);
+
+    // 최하단 스크롤용 함수
+    const scrollSmoothToBottom = () => {
+        setTimeout(() => {
+            if (scrollContainerRef.current) {
+                scrollContainerRef.current.scrollTo({
+                    top: scrollContainerRef.current.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }
+        }, 100);
+    };
 
     const toggleFolderExpand = (folderId) => {
         setExpandedFolders(prev => {
@@ -110,9 +141,10 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     // 요약표 제목 일괄 수정 모달 열기
     const handleOpenBulkTitleModal = () => {
-        const names = folders.map(f => f.name).join('\n');
+        const targetFolders = folders.filter(folder => currentTab === 'scale' ? folder.type === 'frequency' : folder.type === 'statistics');
+        const names = targetFolders.map(f => f.name).join('\n');
         setBulkTitleText(names);
-        setModalFolders(folders.map(f => ({ ...f })));
+        setModalFolders(targetFolders.map(f => ({ ...f })));
         setIsBulkTitleModalOpen(true);
     };
 
@@ -138,7 +170,12 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     // 요약표 제목 일괄 적용
     const handleApplyBulkTitleText = () => {
-        setFolders(modalFolders);
+        setFolders(prev => {
+            return prev.map(f => {
+                const updated = modalFolders.find(m => m.id === f.id);
+                return updated ? { ...f, name: updated.name } : f;
+            });
+        });
         setIsBulkTitleModalOpen(false);
         if (onUnsavedChange) onUnsavedChange(true);
     };
@@ -149,7 +186,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         if (!folder) return;
         const labels = folder.items.map(itemId => {
             const varInfo = summaries.find(s => s.id === itemId);
-            return varInfo ? varInfo.label : itemId;
+            if (varInfo && varInfo.label) return varInfo.label;
+            const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
+            return baseVar ? baseVar.label || baseVar.name : itemId;
         }).join('\n');
 
         setActiveBulkItemFolderId(folderId);
@@ -163,13 +202,28 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         if (!folder) return;
         const lines = bulkItemLabelText.split('\n').map(l => l.trim());
 
-        setSummaries(prev => prev.map(s => {
-            const idx = folder.items.indexOf(s.id);
-            if (idx !== -1 && lines[idx] !== undefined && lines[idx] !== '') {
-                return { ...s, label: lines[idx] };
-            }
-            return s;
-        }));
+        setSummaries(prev => {
+            let next = [...prev];
+            folder.items.forEach((itemId, idx) => {
+                const textVal = lines[idx];
+                if (textVal !== undefined && textVal !== '') {
+                    const existsIdx = next.findIndex(s => s.id === itemId);
+                    if (existsIdx !== -1) {
+                        next[existsIdx] = { ...next[existsIdx], label: textVal };
+                    } else {
+                        const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
+                        next.push({
+                            id: itemId,
+                            label: textVal,
+                            subId: itemId,
+                            type: baseVar?.type || 'frequency',
+                            info: baseVar?.info || baseVar?.categories || []
+                        });
+                    }
+                }
+            });
+            return next;
+        });
 
         setIsBulkItemLabelModalOpen(false);
         setActiveBulkItemFolderId(null);
@@ -182,17 +236,68 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         const clipboardData = e.clipboardData.getData('Text');
         const lines = clipboardData.split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
         if (lines.length > 0) {
-            setSummaries(prev => prev.map(s => {
-                const itemIdx = items.indexOf(s.id);
-                if (itemIdx !== -1 && itemIdx >= startIdx) {
-                    const offset = itemIdx - startIdx;
-                    if (lines[offset] !== undefined) {
-                        return { ...s, label: lines[offset] };
+            setSummaries(prev => {
+                let next = [...prev];
+                items.forEach((itemId, idx) => {
+                    if (idx >= startIdx) {
+                        const offset = idx - startIdx;
+                        const textVal = lines[offset];
+                        if (textVal !== undefined && textVal !== '') {
+                            const existsIdx = next.findIndex(s => s.id === itemId);
+                            if (existsIdx !== -1) {
+                                next[existsIdx] = { ...next[existsIdx], label: textVal };
+                            } else {
+                                const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
+                                next.push({
+                                    id: itemId,
+                                    label: textVal,
+                                    subId: itemId,
+                                    type: baseVar?.type || 'frequency',
+                                    info: baseVar?.info || baseVar?.categories || []
+                                });
+                            }
+                        }
                     }
-                }
-                return s;
-            }));
+                });
+                return next;
+            });
             if (onUnsavedChange) onUnsavedChange(true);
+        }
+    };
+
+    // 설명글 클릭 시 클립보드 데이터를 읽어와서 첫 번째 입력창부터 채워주는 액션
+    const handleClipboardPasteToFolder = async (folderItems) => {
+        try {
+            const text = await navigator.clipboard.readText();
+            if (!text) return;
+            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
+            if (lines.length === 0) return;
+
+            setSummaries(prev => {
+                let next = [...prev];
+                folderItems.forEach((itemId, offset) => {
+                    const textVal = lines[offset];
+                    if (textVal !== undefined && textVal !== '') {
+                        const existsIdx = next.findIndex(s => s.id === itemId);
+                        if (existsIdx !== -1) {
+                            next[existsIdx] = { ...next[existsIdx], label: textVal };
+                        } else {
+                            const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
+                            next.push({
+                                id: itemId,
+                                label: textVal,
+                                subId: itemId,
+                                type: baseVar?.type || 'frequency',
+                                info: baseVar?.info || baseVar?.categories || []
+                            });
+                        }
+                    }
+                });
+                return next;
+            });
+            if (onUnsavedChange) onUnsavedChange(true);
+        } catch (err) {
+            console.error('Failed to read clipboard text:', err);
         }
     };
 
@@ -264,7 +369,92 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         }
     }, [summaries, history]);
 
+
+    useEffect(() => {
+        if (!folders || folders.length === 0) return;
+        setFolders(prev => {
+            let changed = false;
+            const next = prev.map(f => {
+                if (!f.allowedBadges) {
+                    changed = true;
+                    const badges = [];
+                    const firstItemId = f.items && f.items[0];
+                    const associatedVar = summaries.find(s => s.id === firstItemId);
+                    const scalePoints = associatedVar?.scale_points || 7;
+
+                    if (f.type === 'statistics') {
+                        if (f.mean) badges.push('평균');
+                        if (f.median) badges.push('중앙값');
+                        if (f.mode) badges.push('최빈값');
+                    } else {
+                        const codes = f.include_codes || '';
+                        const hasTopCodes = codes.includes(String(scalePoints)) || codes.includes(String(scalePoints - 1));
+                        const hasBotCodes = codes.includes('1') || codes.includes('2');
+                        if (hasTopCodes) badges.push('Top2');
+                        if (hasBotCodes) badges.push('Bot2');
+                        if (f.mean) badges.push('평균');
+                    }
+                    if (badges.length === 0) {
+                        if (f.type === 'statistics') badges.push('평균', '중앙값', '최빈값');
+                        else badges.push('Top2', 'Bot2', '평균');
+                    }
+                    return { ...f, allowedBadges: badges };
+                }
+                return f;
+            });
+            return changed ? next : prev;
+        });
+    }, [folders, summaries]);
+
     // --- Interaction Logic ---
+
+    const handleFolderItemDragStart = (e, folderId) => {
+        setDraggedFolderId(folderId);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleFolderItemDragOver = (e, targetFolderId) => {
+        e.preventDefault();
+        if (draggedFolderId === null || draggedFolderId === targetFolderId) {
+            setDragOverFolderId(null);
+            return;
+        }
+        setDragOverFolderId(targetFolderId);
+    };
+
+    const handleFolderItemDragLeave = () => {
+        setDragOverFolderId(null);
+    };
+
+    const handleFolderItemDrop = (e, targetFolderId) => {
+        e.preventDefault();
+        if (draggedFolderId === null || draggedFolderId === targetFolderId) {
+            setDraggedFolderId(null);
+            setDragOverFolderId(null);
+            return;
+        }
+
+        setFolders(prev => {
+            const fromIdx = prev.findIndex(f => f.id === draggedFolderId);
+            const toIdx = prev.findIndex(f => f.id === targetFolderId);
+            if (fromIdx === -1 || toIdx === -1) return prev;
+
+            const updated = [...prev];
+            const [moved] = updated.splice(fromIdx, 1);
+            updated.splice(toIdx, 0, moved);
+            return updated;
+        });
+
+        setDraggedFolderId(null);
+        setDragOverFolderId(null);
+        if (onUnsavedChange) onUnsavedChange(true);
+    };
+
+    const handleFolderItemDragEnd = () => {
+        setDraggedFolderId(null);
+        setDragOverFolderId(null);
+        setDragEnabledFolderId(null);
+    };
 
     const handleDragStart = useCallback((e, draggedVar) => {
         let targets = [];
@@ -440,49 +630,105 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
             const result = await getSummaryDetail.mutateAsync({ pageid: pageId, user: userId });
             if (result?.success === '777' && result.resultjson) {
-                if (result.resultjson.summary_source_variables) {
-                    const sourceVars = result.resultjson.summary_source_variables;
-                    setBaseVariables(Array.isArray(sourceVars) ? sourceVars : Object.values(sourceVars));
-                }
-                if (result.resultjson.summary_folders) {
-                    const uniqueFolders = [];
-                    const idSet = new Set();
-                    result.resultjson.summary_folders.forEach(f => {
-                        // 백엔드는 stub_id를 반환하므로 프론트엔드 id로 매핑
-                        let fId = f.stub_id || f.id;
-                        let counter = 1;
-                        while (idSet.has(fId)) {
-                            fId = `${f.stub_id || f.id}_dup${counter++}`;
+                const sourceVars = result.resultjson.summary_source_variables || [];
+                const sourceVarsList = Array.isArray(sourceVars) ? sourceVars : Object.values(sourceVars);
+                setBaseVariables(sourceVarsList);
+
+                // --- 신규 백엔드 스펙(summary_tables) 기반 로드 복구 ---
+                const rawTables = result.resultjson.summary_tables || [];
+                const tablesList = Array.isArray(rawTables) ? rawTables : Object.values(rawTables);
+
+                const uniqueFolders = [];
+                const formattedSummaries = [];
+
+                tablesList.forEach(table => {
+                    const firstItemId = table.vars && table.vars[0] && table.vars[0].name.replace(/_(mean|median|mode)$/, '');
+                    let folderType = 'frequency';
+
+                    if (firstItemId) {
+                        const baseVar = sourceVarsList.find(v => v.id === firstItemId || v.base_id === firstItemId);
+                        if (baseVar) {
+                            const varType = (baseVar.type || '').toLowerCase();
+                            if (varType === 'double' || varType === 'numeric' || varType.includes('숫자') || varType === 'open-num') {
+                                folderType = 'statistics';
+                            }
                         }
-                        idSet.add(fId);
-                        uniqueFolders.push({ ...f, id: fId, name: f.label || f.name || fId });
+                    }
+
+                    uniqueFolders.push({
+                        id: table.id,
+                        name: table.name,
+                        type: folderType,
+                        items: [...new Set((table.vars || []).map(v => v.name.replace(/_(mean|median|mode)$/, '')))],
+                        reverse: table.reverse === true || table.reverse === 'true',
+                        scale_points: table.scale ? Number(table.scale) : 5,
+                        scale_preset_id: table.scale_preset_id || null,
+                        mean: table.stats ? (table.stats.mean === true || table.stats.mean === 'true' || table.stats.mean === 1 || table.stats.mean === '1') : false,
+                        median: table.stats ? (table.stats.median === true || table.stats.median === 'true' || table.stats.median === 1 || table.stats.median === '1') : false,
+                        mode: table.stats ? (table.stats.mode === true || table.stats.mode === 'true' || table.stats.mode === 1 || table.stats.mode === '1') : false
                     });
-                    setFolders(uniqueFolders);
-                    setOriginalFolderIds(uniqueFolders.map(f => f.id));
-                }
-                if (result.resultjson.recoded_variables) {
-                    const raw = result.resultjson.recoded_variables;
-                    const recodes = Array.isArray(raw) ? raw : Object.values(raw);
-                    const formatted = recodes.map((v, i) => ({
-                        id: v.id || `var_${i}`,
-                        label: v.name || v.label,
-                        subId: v.id || `summary_0${i + 1}`,
-                        info: (v.info || v.categories || []).map(item => ({ ...item, inEdit: false }))
-                    }));
-                    setSummaries(formatted);
-                    history.reset(formatted); // 초기 히스토리 기준점을 서버 데이터로 설정
 
-                    // 서버에서 온 원본 ID들 보관
-                    const ids = formatted.map(b => b.id);
-                    setOriginalSummaryIds(ids);
-                    setDeletedSummaryIds([]); // 삭제 목록 초기화
-
-                    if (formatted.length > 0) {
-                        const target = isFresh ? formatted[formatted.length - 1] : formatted[0];
-                        if (isFresh || !selectedSummary) {
-                            setSelectedSummary(target.id);
-                            setCurrentLabel(target.label);
+                    (table.vars || []).forEach(v => {
+                        const infoList = [];
+                        const baseName = v.name.replace(/_(mean|median|mode)$/, '');
+                        if (folderType === 'frequency') {
+                            if (table.bands && Array.isArray(table.bands)) {
+                                table.bands.forEach(b => {
+                                    infoList.push({
+                                        type: 'frequency',
+                                        name: b.kind,
+                                        include_codes: Array.isArray(b.values) ? b.values.join(',') : '',
+                                        tag: b.kind,
+                                        label: b.kind
+                                    });
+                                });
+                            }
+                            if (table.stats && (table.stats.mean || table.stats.median || table.stats.mode)) {
+                                infoList.push({
+                                    type: 'statistics',
+                                    name: '평균 요약',
+                                    mean: table.stats.mean === true || table.stats.mean === 'true' || table.stats.mean === 1 || table.stats.mean === '1',
+                                    median: table.stats.median === true || table.stats.median === 'true' || table.stats.median === 1 || table.stats.median === '1',
+                                    mode: table.stats.mode === true || table.stats.mode === 'true' || table.stats.mode === 1 || table.stats.mode === '1',
+                                    tag: 'mean'
+                                });
+                            }
+                        } else {
+                            if (table.stats) {
+                                infoList.push({
+                                    type: 'statistics',
+                                    name: '평균 요약',
+                                    mean: table.stats.mean === true || table.stats.mean === 'true' || table.stats.mean === 1 || table.stats.mean === '1',
+                                    median: table.stats.median === true || table.stats.median === 'true' || table.stats.median === 1 || table.stats.median === '1',
+                                    mode: table.stats.mode === true || table.stats.mode === 'true' || table.stats.mode === 1 || table.stats.mode === '1',
+                                    tag: 'mean'
+                                });
+                            }
                         }
+
+                        formattedSummaries.push({
+                            id: v.name,
+                            label: v.label || baseName,
+                            subId: v.name,
+                            info: infoList.map(item => ({ ...item, inEdit: false }))
+                        });
+                    });
+                });
+
+                setFolders(uniqueFolders);
+                setOriginalFolderIds(uniqueFolders.map(f => f.id));
+                setSummaries(formattedSummaries);
+                history.reset(formattedSummaries);
+
+                const ids = formattedSummaries.map(b => b.id);
+                setOriginalSummaryIds(ids);
+                setDeletedSummaryIds([]);
+
+                if (formattedSummaries.length > 0) {
+                    const target = isFresh ? formattedSummaries[formattedSummaries.length - 1] : formattedSummaries[0];
+                    if (isFresh || !selectedSummary) {
+                        setSelectedSummary(target.id);
+                        setCurrentLabel(target.label);
                     }
                 }
             }
@@ -535,166 +781,137 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         const pageId = sessionStorage.getItem('pageId');
         if (!pageId) return false;
 
-        const variablesPayload = {};
-        summaries.forEach(s => {
-            variablesPayload[s.id] = {
-                id: s.id,
-                label: s.label,
-                type: s.type,
-                info: s.info || []
-            };
-        });
+        const payloadTables = [];
 
-        const mappedFolders = [];
+        const getBandValues = (kind, scale) => {
+            const numMatch = kind.match(/\d+/);
+            const num = numMatch ? parseInt(numMatch[0]) : 1;
+            const k = kind.toLowerCase();
+            const values = [];
+            if (k.includes('top')) {
+                for (let v = scale; v > scale - num; v--) {
+                    if (v >= 1) values.push(v);
+                }
+            } else if (k.includes('bot')) {
+                for (let v = 1; v <= num; v++) {
+                    if (v <= scale) values.push(v);
+                }
+            } else if (k.includes('mid')) {
+                const midVal = Math.ceil(scale / 2);
+                values.push(midVal);
+            }
+            return values.sort((a, b) => a - b);
+        };
+
         (overrideFolders || folders).forEach(f => {
-            const isScaleSummary = f.type === 'scale_summary' || f.type === 'statistics_summary';
-
-            if (!isScaleSummary) {
-                // 빈도형 요약표: Top2, Bot2, 평균 분할
-                const firstItemId = f.items && f.items[0];
-                const associatedVar = summaries.find(s => s.id === firstItemId);
-                const sp = associatedVar?.scale_points || 7;
-
-                const codes = f.include_codes || '';
-                const hasTop2 = codes.includes(String(sp)) || codes.includes(String(sp - 1));
-                const hasBot2 = codes.includes('1') || codes.includes('2');
-                const hasMean = f.mean === true;
-
-                let addedAny = false;
-
-                if (hasTop2) {
-                    mappedFolders.push({
-                        stub_id: `${f.id}_top2`,
-                        name: `${f.name} (Top2)`,
-                        label: `${f.name} (Top2)`,
-                        type: f.type,
-                        items: f.items || [],
-                        include_codes: [String(sp), String(sp - 1)].join(','),
-                        mean: false,
-                        median: false,
-                        mode: false
-                    });
-                    addedAny = true;
-                }
-
-                if (hasBot2) {
-                    mappedFolders.push({
-                        stub_id: `${f.id}_bot2`,
-                        name: `${f.name} (Bot2)`,
-                        label: `${f.name} (Bot2)`,
-                        type: f.type,
-                        items: f.items || [],
-                        include_codes: '1,2',
-                        mean: false,
-                        median: false,
-                        mode: false
-                    });
-                    addedAny = true;
-                }
-
-                if (hasMean) {
-                    mappedFolders.push({
-                        stub_id: `${f.id}_mean`,
-                        name: `${f.name} (평균)`,
-                        label: `${f.name} (평균)`,
-                        type: f.type,
-                        items: f.items || [],
-                        include_codes: '',
-                        mean: true,
-                        median: false,
-                        mode: false
-                    });
-                    addedAny = true;
-                }
-
-                if (!addedAny) {
-                    mappedFolders.push({
-                        stub_id: f.id,
-                        name: f.name,
-                        label: f.name,
-                        type: f.type,
-                        items: f.items || [],
-                        include_codes: typeof f.include_codes === 'string' ? f.include_codes.replace(/\s+/g, '') : f.include_codes,
-                        mean: f.mean,
-                        median: f.median,
-                        mode: f.mode
-                    });
-                }
-            } else {
-                // 척도형(통계) 요약표: 평균, 중앙값, 최빈값 분할
-                const hasMean = f.mean === true;
-                const hasMedian = f.median === true;
-                const hasMode = f.mode === true;
-
-                let addedAny = false;
-
-                if (hasMean) {
-                    mappedFolders.push({
-                        stub_id: `${f.id}_mean`,
-                        name: `${f.name} (평균)`,
-                        label: `${f.name} (평균)`,
-                        type: f.type,
-                        items: f.items || [],
-                        include_codes: '',
-                        mean: true,
-                        median: false,
-                        mode: false
-                    });
-                    addedAny = true;
-                }
-
-                if (hasMedian) {
-                    mappedFolders.push({
-                        stub_id: `${f.id}_median`,
-                        name: `${f.name} (중앙값)`,
-                        label: `${f.name} (중앙값)`,
-                        type: f.type,
-                        items: f.items || [],
-                        include_codes: '',
-                        mean: false,
-                        median: true,
-                        mode: false
-                    });
-                    addedAny = true;
-                }
-
-                if (hasMode) {
-                    mappedFolders.push({
-                        stub_id: `${f.id}_mode`,
-                        name: `${f.name} (최빈값)`,
-                        label: `${f.name} (최빈값)`,
-                        type: f.type,
-                        items: f.items || [],
-                        include_codes: '',
-                        mean: false,
-                        median: false,
-                        mode: true
-                    });
-                    addedAny = true;
-                }
-
-                if (!addedAny) {
-                    mappedFolders.push({
-                        stub_id: f.id,
-                        name: f.name,
-                        label: f.name,
-                        type: f.type,
-                        items: f.items || [],
-                        include_codes: typeof f.include_codes === 'string' ? f.include_codes.replace(/\s+/g, '') : f.include_codes,
-                        mean: f.mean,
-                        median: f.median,
-                        mode: f.mode
-                    });
+            const firstItemId = f.items && f.items[0];
+            
+            // 척도 및 최소값 추출
+            let scalePoints = 7;
+            if (firstItemId) {
+                const baseVar = baseVariables.find(v => v.id === firstItemId || v.base_id === firstItemId);
+                if (baseVar) {
+                    scalePoints = baseVar.scale_points || 7;
                 }
             }
+
+            // bands 및 stats 수집
+            const bands = [];
+            let meanVal = false;
+            let medianVal = false;
+            let modeVal = false;
+
+            const assocSummary = summaries.find(s => s.id === f.id) ||
+                summaries.find(s => f.items && f.items.includes(s.id)) ||
+                summaries.find(s => s.id === firstItemId);
+
+            if (assocSummary && Array.isArray(assocSummary.info)) {
+                assocSummary.info.forEach(item => {
+                    if (item.disabled) return;
+                    const isStatistics = item.type === 'statistics' || item.type === 'mean' || item.type === 'median' || item.type === 'mode';
+                    if (!isStatistics) {
+                        const tagLabel = item.tag || item.label || item.name || '';
+                        const cleanTag = tagLabel.replace(/\s*요약\s*$/, '').trim();
+                        if (cleanTag) {
+                            bands.push({
+                                kind: cleanTag,
+                                values: getBandValues(cleanTag, scalePoints)
+                            });
+                        }
+                    } else {
+                        const isMean = item.mean === true || item.mean === 'true' || item.mean === 1 || item.mean === '1' || item.tag === 'mean' || item.value_id === 'mean';
+                        const isMedian = item.median === true || item.median === 'true' || item.median === 1 || item.median === '1' || item.tag === 'median' || item.value_id === 'median';
+                        const isMode = item.mode === true || item.mode === 'true' || item.mode === 1 || item.mode === '1' || item.tag === 'mode' || item.value_id === 'mode';
+                        
+                        if (isMean) meanVal = true;
+                        if (isMedian) medianVal = true;
+                        if (isMode) modeVal = true;
+                    }
+                });
+            } else {
+                meanVal = f.mean === true;
+                medianVal = f.median === true;
+                modeVal = f.mode === true;
+            }
+
+            // vars 구성
+            let vars = [];
+            if (f.type === 'statistics') {
+                (f.items || []).forEach(itemId => {
+                    const hasMean = meanVal;
+                    const hasMedian = medianVal;
+                    const hasMode = modeVal;
+                    
+                    const meanLabel = summaries.find(s => s.id === itemId + '_mean')?.label ?? 'mean';
+                    const medianLabel = summaries.find(s => s.id === itemId + '_median')?.label ?? 'median';
+                    const modeLabel = summaries.find(s => s.id === itemId + '_mode')?.label ?? 'mode';
+                    
+                    if (hasMean) vars.push({ name: itemId + '_mean', label: meanLabel });
+                    if (hasMedian) vars.push({ name: itemId + '_median', label: medianLabel });
+                    if (hasMode) vars.push({ name: itemId + '_mode', label: modeLabel });
+                    
+                    if (vars.length === 0) {
+                        vars.push({ name: itemId + '_mean', label: meanLabel });
+                    }
+                });
+            } else {
+                vars = (f.items || []).map(itemId => {
+                    const varInfo = summaries.find(s => s.id === itemId);
+                    const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
+                    const showLabel = baseVar ? baseVar.label || baseVar.name : itemId;
+                    const finalLabel = varInfo ? varInfo.label : showLabel;
+                    return {
+                        name: itemId,
+                        label: finalLabel
+                    };
+                });
+            }
+
+            payloadTables.push({
+                id: f.id,
+                name: f.name,
+                scale: scalePoints,
+                min: 1,
+                reverse: f.reverse === true,
+                vars: vars,
+                bands: bands,
+                stats: {
+                    mean: meanVal,
+                    sd: false,
+                    median: medianVal,
+                    mode: modeVal
+                }
+            });
         });
+
+        const rawDeleteIds = overrideDeleteIds || deletedSummaryIds;
+        const cleanDeleteIds = Array.isArray(rawDeleteIds) ? rawDeleteIds.filter(id => id && String(id).trim() !== "") : [];
 
         const payload = {
             pageid: pageId,
             user: auth?.user?.userId,
-            summary_folders: mappedFolders,
-            variables: variablesPayload,
-            delete_ids: overrideDeleteIds || deletedSummaryIds
+            summary_tables: payloadTables,
+            delete_ids: cleanDeleteIds
         };
 
         try {
@@ -742,6 +959,11 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             }
         });
     }, [summaryVariables, currentTab]);
+
+    const tabSelectedCount = useMemo(() => {
+        const tabVarIds = new Set(tabFilteredVariables.map(v => v.id));
+        return selectedIds.filter(id => tabVarIds.has(id)).length;
+    }, [tabFilteredVariables, selectedIds]);
 
     const searchedVariables = useMemo(() => {
         const search = (summarySearchMap[currentTab] || '').toLowerCase().trim();
@@ -1008,8 +1230,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     tags.push('평균');
                 }
 
-                if (subItems.length === 0) return;
-
                 proposals.push({
                     id: `prop_scale_${group.parentId}`,
                     title: `${group.parentLabel} - 요약표`,
@@ -1041,8 +1261,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     if (openStats.median) tags.push('중앙값');
                     if (openStats.mode) tags.push('최빈값');
                 }
-
-                if (subItems.length === 0) return;
 
                 proposals.push({
                     id: `prop_open_${group.parentId}`,
@@ -1100,6 +1318,11 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         return proposals;
     }, [wizardTab, matrixSelection, isMeanIncluded, openStats, isMergeByTitle, groupedVariables, scalePresets]);
 
+    const totalWizardSubItemsCount = useMemo(() => {
+        const selectedProposals = wizardProposals.filter(p => wizardSelectedIds.has(p.id));
+        return selectedProposals.reduce((sum, p) => sum + (p.subItems || []).length, 0);
+    }, [wizardProposals, wizardSelectedIds]);
+
     // --- 수동 요약 생성 팝업 핸들러 및 비즈니스 로직 ---
 
     const handleOpenManualSummaryModal = () => {
@@ -1119,16 +1342,19 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         }
 
         // 선택된 문항들의 scale_points 중 최댓값을 가져와 척도 점수로 셋팅
-        let maxSp = 5;
+        let maxSp = 0;
         selectedIds.forEach(id => {
             const v = summaryVariables.find(item => item.id === id);
             if (v && v.scale_points) {
                 maxSp = Math.max(maxSp, v.scale_points);
             }
         });
+        if (maxSp === 0) maxSp = 5;
 
         setManualScaleMax(maxSp);
         setManualScaleMin(1);
+        setManualModalMode('create');
+        setEditingFolderIdForBands(null);
 
         // 탭이 오픈 문항 탭인 경우
         if (currentTab === 'open-num') {
@@ -1228,27 +1454,129 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         return valStr.split(',').map(s => s.trim()).filter(s => s !== '' && !isNaN(Number(s))).length;
     };
 
-    const handleToggleCircle = (bandId, num) => {
-        setManualBands(prev => prev.map(band => {
-            if (band.id !== bandId) return band;
+    const getBandsMaxN = (bands) => {
+        if (!Array.isArray(bands) || bands.length === 0) return 1;
+        const counts = bands.map(b => getBandValueCount(b.values));
+        return Math.max(...counts, 1);
+    };
 
-            let currentVals = band.values.split(',')
-                .map(s => s.trim())
-                .filter(s => s !== '')
-                .map(Number)
-                .filter(n => !isNaN(n));
+    const computeBandLabel = (labelOrType, maxNVal) => {
+        const lower = (labelOrType || '').toLowerCase();
+        let type = 'Top';
+        if (lower.includes('mid')) type = 'Mid';
+        else if (lower.includes('bot')) type = 'Bot';
+        const suffix = maxNVal > 1 ? String(maxNVal) : '';
+        return `${type}${suffix}`;
+    };
 
-            if (currentVals.includes(num)) {
-                currentVals = currentVals.filter(v => v !== num);
-            } else {
-                currentVals = [...currentVals, num].sort((a, b) => a - b);
+    const handleOpenEditModal = (folder) => {
+        if (folder.type === 'statistics') {
+            setManualModalMode('edit');
+            setEditingFolderIdForBands(folder.id);
+            const summaryData = summaries.find(s => s.id === folder.id);
+            if (summaryData && Array.isArray(summaryData.info) && summaryData.info[0]) {
+                const statItem = summaryData.info[0];
+                setOpenStats({
+                    mean: !!statItem.mean,
+                    median: !!statItem.median,
+                    mode: !!statItem.mode
+                });
+            }
+            setIsManualModalOpen(true);
+            return;
+        }
+
+        setManualModalMode('edit');
+        setEditingFolderIdForBands(folder.id);
+
+        const firstItemId = folder.items && folder.items[0];
+        const summaryData = summaries.find(s => s.id === folder.id) || summaries.find(s => s.id === firstItemId);
+        if (!summaryData || !Array.isArray(summaryData.info)) {
+            modal.showAlert('알림', '수정할 요약표 상세 데이터를 찾을 수 없습니다.');
+            return;
+        }
+
+        // 평균/통계 항목을 제외한 나머지를 모두 빈도형 밴드로 안전 복원
+        const freqItems = summaryData.info.filter(item => {
+            const isMean = (item.type === 'statistics' && item.mean) ||
+                item.type === 'mean' ||
+                item.mean === true ||
+                item.tag === 'mean' ||
+                item.value_id === 'mean';
+            return !isMean;
+        });
+
+        const restoredBands = freqItems.map((item, idx) => {
+            // tag, label, name, value_id 중 존재하는 필드로 라벨 복원
+            let rawLabel = item.tag || item.label || item.name || item.value_id || 'Top';
+
+            // 첫 글자를 대문자로 정규화 (예: 'top3' -> 'Top3', 'bot' -> 'Bot')
+            if (rawLabel) {
+                const lower = rawLabel.toLowerCase();
+                if (lower.startsWith('top')) {
+                    rawLabel = 'Top' + rawLabel.slice(3);
+                } else if (lower.startsWith('bot')) {
+                    rawLabel = 'Bot' + rawLabel.slice(3);
+                } else if (lower.startsWith('mid')) {
+                    rawLabel = 'Mid' + rawLabel.slice(3);
+                }
             }
 
+            // include_codes 또는 values 속성에서 밴드 코드 복원
+            const rawValues = item.include_codes || item.values || '';
+
             return {
-                ...band,
-                values: currentVals.join(',')
+                id: `band_edit_${idx}_${Date.now()}`,
+                label: rawLabel,
+                values: rawValues
             };
-        }));
+        });
+
+        const hasMean = summaryData.info.some(item =>
+            (item.type === 'statistics' && item.mean) ||
+            item.type === 'mean' ||
+            item.mean === true ||
+            item.tag === 'mean' ||
+            item.value_id === 'mean'
+        );
+
+        setManualScaleMax(folder.scale_points || 5);
+        setManualScaleMin(1);
+        setManualPresetId(folder.scale_preset_id || 'custom');
+        setManualBands(restoredBands);
+        setManualIsMeanIncluded(hasMean);
+
+        setIsManualModalOpen(true);
+    };
+
+    const handleToggleCircle = (bandId, num) => {
+        setManualBands(prev => {
+            const updatedBands = prev.map(band => {
+                if (band.id !== bandId) return band;
+
+                let currentVals = band.values.split(',')
+                    .map(s => s.trim())
+                    .filter(s => s !== '')
+                    .map(Number)
+                    .filter(n => !isNaN(n));
+
+                if (currentVals.includes(num)) {
+                    currentVals = currentVals.filter(v => v !== num);
+                } else {
+                    currentVals = [...currentVals, num].sort((a, b) => a - b);
+                }
+
+                return {
+                    ...band,
+                    values: currentVals.join(',')
+                };
+            });
+
+            return updatedBands.map(b => ({
+                ...b,
+                label: computeBandLabel(b.label, getBandValueCount(b.values))
+            }));
+        });
     };
 
     const handleAddManualBand = () => {
@@ -1263,6 +1591,124 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     const handleConfirmManualSummary = () => {
+        if (manualModalMode === 'edit') {
+            if (!editingFolderIdForBands) return;
+
+            const targetFolder = folders.find(f => f.id === editingFolderIdForBands);
+            if (!targetFolder) return;
+
+            const varId = targetFolder.items[0];
+            const baseVar = baseVariables.find(v => v.id === varId);
+            const varLabel = baseVar?.label || baseVar?.name || varId;
+            const sp = manualScaleMax;
+
+            if (targetFolder.type === 'statistics') {
+                const subItems = [];
+                subItems.push({
+                    type: 'statistics',
+                    name: `${varLabel} - 통계 요약표`,
+                    mean: !!openStats.mean,
+                    median: !!openStats.median,
+                    mode: !!openStats.mode
+                });
+
+                const newFolders = folders.map(f => {
+                    if (f.id === editingFolderIdForBands) {
+                        return {
+                            ...f,
+                            name: `${varLabel} - 통계 요약표`,
+                            label: `${varLabel} - 통계 요약표`,
+                            mean: !!openStats.mean,
+                            median: !!openStats.median,
+                            mode: !!openStats.mode
+                        };
+                    }
+                    return f;
+                });
+                setFolders(newFolders);
+
+                setSummaries(prev => prev.map(s => {
+                    const isTarget = s.id === editingFolderIdForBands || s.id === varId;
+                    if (isTarget) {
+                        return {
+                            ...s,
+                            label: `${varLabel} - 통계 요약표`,
+                            info: subItems.map(si => ({ ...si, inEdit: false }))
+                        };
+                    }
+                    return s;
+                }));
+
+                setIsManualModalOpen(false);
+                if (onUnsavedChange) onUnsavedChange(true);
+                return;
+            }
+
+            for (let i = 0; i < manualBands.length; i++) {
+                const band = manualBands[i];
+                if (getBandValueCount(band.values) === 0) {
+                    modal.showAlert('알림', `'${band.label}' 밴드에 지정된 값이 없습니다. 값을 기입하거나 삭제해 주세요.`);
+                    return;
+                }
+            }
+
+            const subItems = [];
+            manualBands.forEach(band => {
+                subItems.push({
+                    type: 'frequency',
+                    name: `${varLabel} - ${band.label} 요약`,
+                    include_codes: band.values,
+                    tag: band.label,
+                    label: band.label
+                });
+            });
+
+            if (manualIsMeanIncluded) {
+                subItems.push({
+                    type: 'statistics',
+                    name: `${varLabel} - 평균 요약 (${sp}점 척도)`,
+                    mean: true,
+                    median: false,
+                    mode: false,
+                    tag: 'mean'
+                });
+            }
+
+            const newFolders = folders.map(f => {
+                if (f.id === editingFolderIdForBands) {
+                    return {
+                        ...f,
+                        scale_points: sp,
+                        scale_preset_id: manualPresetId !== 'custom' ? manualPresetId : null,
+                        reverse: manualIsReverse === true,
+                        mean: manualIsMeanIncluded,
+                        median: false,
+                        mode: false
+                    };
+                }
+                return f;
+            });
+            setFolders(newFolders);
+
+            setSummaries(prev => prev.map(s => {
+                const isTarget = s.id === editingFolderIdForBands ||
+                    (targetFolder && s.id === targetFolder.id) ||
+                    (targetFolder && targetFolder.items && targetFolder.items.includes(s.id)) ||
+                    (targetFolder && targetFolder.items && s.id === targetFolder.items[0]);
+                if (isTarget) {
+                    return {
+                        ...s,
+                        info: subItems.map(si => ({ ...si, inEdit: false }))
+                    };
+                }
+                return s;
+            }));
+
+            setIsManualModalOpen(false);
+            if (onUnsavedChange) onUnsavedChange(true);
+            return;
+        }
+
         if (selectedIds.length === 0) {
             modal.showAlert('알림', '선택된 변수가 없습니다.');
             return;
@@ -1284,6 +1730,11 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         const newSummaries = [];
         const uniqueFolders = [...folders];
 
+        const firstVarId = selectedIds[0];
+        const baseVar = baseVariables.find(v => v.id === firstVarId || v.base_id === firstVarId);
+        const varLabel = baseVar?.label || baseVar?.name || firstVarId;
+        const sp = baseVar?.scale_points || manualScaleMax;
+
         if (currentTab === 'scale') {
             // 밴드 값 입력 유효성 검사
             for (let i = 0; i < manualBands.length; i++) {
@@ -1294,53 +1745,54 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 }
             }
 
-            // 선택된 변수별로 폴더 및 summaries 상세 구조 생성
-            selectedIds.forEach((varId) => {
-                const baseVar = baseVariables.find(v => v.id === varId);
-                const varLabel = baseVar?.label || baseVar?.name || varId;
-                const sp = baseVar?.scale_points || manualScaleMax;
+            const folderName = selectedIds.length > 1
+                ? `${varLabel} 외 ${selectedIds.length - 1}개 - 요약표`
+                : `${varLabel} - 요약표`;
 
-                const subItems = [];
-                manualBands.forEach(band => {
-                    subItems.push({
-                        type: 'frequency',
-                        name: `${varLabel} - ${band.label} 요약`,
-                        include_codes: band.values,
-                        tag: band.label
-                    });
-                });
-
-                if (manualIsMeanIncluded) {
-                    subItems.push({
-                        type: 'statistics',
-                        name: `${varLabel} - 평균 요약 (${sp}점 척도)`,
-                        mean: true,
-                        median: false,
-                        mode: false,
-                        tag: 'mean'
-                    });
-                }
-
-                const folderId = `manual_scale_${varId}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-                const newFolder = {
-                    id: folderId,
-                    name: `${varLabel} - 요약표`,
-                    label: `${varLabel} - 요약표`,
+            const subItems = [];
+            manualBands.forEach(band => {
+                subItems.push({
                     type: 'frequency',
-                    scale_points: sp,
-                    scale_preset_id: manualPresetId !== 'custom' ? manualPresetId : null,
-                    items: [varId]
-                };
-                uniqueFolders.push(newFolder);
-
-                const formatted = {
-                    id: folderId,
-                    label: `${varLabel} - 요약표`,
-                    subId: folderId,
-                    info: subItems.map(si => ({ ...si, inEdit: false }))
-                };
-                newSummaries.push(formatted);
+                    name: `${folderName} - ${band.label} 요약`,
+                    include_codes: band.values,
+                    tag: band.label
+                });
             });
+
+            if (manualIsMeanIncluded) {
+                subItems.push({
+                    type: 'statistics',
+                    name: `${folderName} - 평균 요약 (${sp}점 척도)`,
+                    mean: true,
+                    median: false,
+                    mode: false,
+                    tag: 'mean'
+                });
+            }
+
+            const folderId = firstVarId;
+            const newFolder = {
+                id: folderId,
+                name: folderName,
+                label: folderName,
+                type: 'frequency',
+                scale_points: sp,
+                scale_preset_id: manualPresetId !== 'custom' ? manualPresetId : null,
+                items: [...selectedIds],
+                reverse: manualIsReverse === true,
+                mean: manualIsMeanIncluded,
+                median: false,
+                mode: false
+            };
+            uniqueFolders.push(newFolder);
+
+            const formatted = {
+                id: folderId,
+                label: varLabel, // 교차표 문구 매핑을 위해 요약표 대표 변수 본래 라벨명 주입
+                subId: folderId,
+                info: subItems.map(si => ({ ...si, inEdit: false }))
+            };
+            newSummaries.push(formatted);
         } else {
             // 오픈형 생성
             const hasAnyStats = openStats.mean || openStats.median || openStats.mode;
@@ -1349,42 +1801,56 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 return;
             }
 
-            selectedIds.forEach((varId) => {
-                const baseVar = baseVariables.find(v => v.id === varId);
-                const varLabel = baseVar?.label || baseVar?.name || varId;
+            const folderName = selectedIds.length > 1
+                ? `${varLabel} 외 ${selectedIds.length - 1}개 - 통계 요약표`
+                : `${varLabel} - 통계 요약표`;
 
-                const subItems = [];
-                subItems.push({
-                    type: 'statistics',
-                    name: `${varLabel} - 통계 요약표`,
-                    mean: !!openStats.mean,
-                    median: !!openStats.median,
-                    mode: !!openStats.mode
-                });
-
-                const folderId = `manual_open_${varId}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-                const newFolder = {
-                    id: folderId,
-                    name: `${varLabel} - 통계 요약표`,
-                    label: `${varLabel} - 통계 요약표`,
-                    type: 'statistics',
-                    items: [varId]
-                };
-                uniqueFolders.push(newFolder);
-
-                const formatted = {
-                    id: folderId,
-                    label: `${varLabel} - 통계 요약표`,
-                    subId: folderId,
-                    info: subItems.map(si => ({ ...si, inEdit: false }))
-                };
-                newSummaries.push(formatted);
+            const subItems = [];
+            subItems.push({
+                type: 'statistics',
+                name: `${folderName} - 통계 요약표`,
+                mean: !!openStats.mean,
+                median: !!openStats.median,
+                mode: !!openStats.mode
             });
+
+            const folderId = firstVarId;
+            const newFolder = {
+                id: folderId,
+                name: folderName,
+                label: folderName,
+                type: 'statistics',
+                items: [...selectedIds],
+                mean: !!openStats.mean,
+                median: !!openStats.median,
+                mode: !!openStats.mode
+            };
+            uniqueFolders.push(newFolder);
+
+            const formatted = {
+                id: folderId,
+                label: varLabel, // 교차표 문구 매핑을 위해 요약표 대표 변수 본래 라벨명 주입
+                subId: folderId,
+                info: subItems.map(si => ({ ...si, inEdit: false }))
+            };
+            newSummaries.push(formatted);
         }
 
         setFolders(uniqueFolders);
         setSummaries(prev => [...prev, ...newSummaries]);
         setSelectedSummary(newSummaries[0]?.id || null);
+
+        // 신규 생성 폴더 자동 열기 및 하이라이트 등록
+        const newFolderIds = newSummaries.map(ns => ns.id);
+        setNewlyCreatedFolderIds(new Set(newFolderIds));
+        setExpandedFolders(prev => {
+            const next = new Set(prev);
+            newFolderIds.forEach(id => next.add(id));
+            return next;
+        });
+
+        // 최하단 스크롤
+        scrollSmoothToBottom();
 
         // 히스토리 업데이트 연동
         if (history && typeof history.commit === 'function') {
@@ -1400,7 +1866,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         if (onUnsavedChange) onUnsavedChange(true);
     };
 
-    // 전체 선택/해제 핸들러
     const handleToggleAllWizardProposals = (select) => {
         if (select) {
             setWizardSelectedIds(new Set(wizardProposals.map(p => p.id)));
@@ -1425,36 +1890,131 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             return;
         }
 
+        if (totalWizardSubItemsCount === 0) {
+            modal.showAlert('알림', '생성할 요약표 옵션(Top/Mid/Bot/평균 등)이 선택되지 않았습니다.');
+            return;
+        }
+
         const newFoldersToAdd = [];
+        const newSummariesToAdd = [];
+
         selectedProposals.forEach(prop => {
-            prop.subItems.forEach((sub, subIdx) => {
-                const folderId = `folder_auto_${Date.now()}_${prop.groupId}_${sub.tag || subIdx}_${Math.random().toString(36).substr(2, 5)}`;
+            const folderId = prop.items[0];
+            const subItems = [];
+
+            if (wizardTab === 'scale') {
+                const freqItems = prop.subItems.filter(item => item.type === 'frequency');
+                freqItems.forEach(item => {
+                    const labelLower = item.tag.toLowerCase();
+                    let cleanTag = 'Top';
+                    if (labelLower.includes('mid')) cleanTag = 'Mid';
+                    else if (labelLower.includes('bot')) cleanTag = 'Bot';
+
+                    const nVal = getBandValueCount(item.include_codes);
+                    const finalTag = nVal > 1 ? `${cleanTag}${nVal}` : cleanTag;
+
+                    subItems.push({
+                        type: 'frequency',
+                        name: item.name.replace(/ - (Top|Mid|Bot) 요약/, ` - ${finalTag} 요약`),
+                        include_codes: item.include_codes,
+                        tag: finalTag
+                    });
+                });
+
+                const hasMean = prop.subItems.some(item => item.type === 'statistics' && item.mean);
+                if (hasMean) {
+                    subItems.push({
+                        type: 'statistics',
+                        name: `${prop.groupLabel} - 평균 요약 (${prop.scale_points}점 척도)`,
+                        mean: true,
+                        median: false,
+                        mode: false,
+                        tag: 'mean'
+                    });
+                }
 
                 newFoldersToAdd.push({
                     id: folderId,
-                    name: sub.name,
-                    type: sub.type,
-                    include_codes: sub.include_codes || '',
-                    mean: sub.mean || false,
-                    median: sub.median || false,
-                    mode: sub.mode || false,
+                    name: prop.title,
+                    label: prop.title,
+                    type: 'frequency',
+                    scale_points: prop.scale_points,
+                    scale_preset_id: null,
                     items: [...prop.items]
                 });
+            } else {
+                const statItem = prop.subItems.find(item => item.type === 'statistics');
+                if (statItem) {
+                    subItems.push({
+                        type: 'statistics',
+                        name: statItem.name,
+                        mean: !!statItem.mean,
+                        median: !!statItem.median,
+                        mode: !!statItem.mode
+                    });
+                }
+
+                newFoldersToAdd.push({
+                    id: folderId,
+                    name: prop.title,
+                    label: prop.title,
+                    type: 'statistics',
+                    items: [...prop.items]
+                });
+            }
+
+            newSummariesToAdd.push({
+                id: folderId,
+                label: prop.title,
+                subId: folderId,
+                info: subItems.map(si => ({ ...si, inEdit: false }))
             });
         });
 
-        setFolders(prev => [...prev, ...newFoldersToAdd]);
+        setFolders(prev => {
+            const next = [...prev];
+            newFoldersToAdd.forEach(newF => {
+                const idx = next.findIndex(f => f.id === newF.id);
+                if (idx > -1) {
+                    next[idx] = newF;
+                } else {
+                    next.push(newF);
+                }
+            });
+            return next;
+        });
+        setSummaries(prev => {
+            const next = [...prev];
+            newSummariesToAdd.forEach(newS => {
+                const idx = next.findIndex(s => s.id === newS.id);
+                if (idx > -1) {
+                    next[idx] = newS;
+                } else {
+                    next.push(newS);
+                }
+            });
+            return next;
+        });
+
+        // 신규 자동 생성 폴더 자동 열기 및 하이라이팅 등록
+        const autoFolderIds = newSummariesToAdd.map(ns => ns.id);
+        setNewlyCreatedFolderIds(new Set(autoFolderIds));
+        setExpandedFolders(prev => {
+            const next = new Set(prev);
+            autoFolderIds.forEach(id => next.add(id));
+            return next;
+        });
+
+        // 첫 번째 폴더를 자동 선택하여 펼치기
+        if (newSummariesToAdd.length > 0) {
+            setSelectedSummary(newSummariesToAdd[0].id);
+        }
+
         setIsWizardOpen(false);
         if (onUnsavedChange) onUnsavedChange(true);
 
-        setTimeout(() => {
-            if (scrollContainerRef.current) {
-                scrollContainerRef.current.scrollTo({
-                    top: scrollContainerRef.current.scrollHeight,
-                    behavior: 'smooth'
-                });
-            }
-        }, 100);
+        // 최하단 스크롤
+        scrollSmoothToBottom();
     };
 
     // 탭이나 groupedVariables가 변경될 때 아코디언 폴더들을 기본적으로 모두 열어둠
@@ -1607,10 +2167,10 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     <div className="dp-sidebar custom-scrollbar" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
                         <div className="dp-sidebar-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span>원본 변수 목록 ({tabFilteredVariables.length})</span>
-                                {selectedIds.length > 0 && (
+                                <span>원본 변수 목록 ({searchedVariables.length})</span>
+                                {tabSelectedCount > 0 && (
                                     <span style={{ fontSize: '11px', color: '#2563eb', fontWeight: 600, background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '1px 6px', display: 'inline-flex', alignItems: 'center', height: '18px' }}>
-                                        선택 {selectedIds.length}
+                                        선택 {tabSelectedCount}
                                     </span>
                                 )}
                             </div>
@@ -1739,7 +2299,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         {/* 요약표 수동 생성 버튼 영역 */}
                         <div style={{ padding: '12px', borderTop: '1px solid #e2e8f0', background: '#ffffff', flexShrink: 0 }}>
                             <button
-                                disabled={selectedIds.length === 0}
+                                disabled={tabSelectedCount === 0}
                                 onClick={handleOpenManualSummaryModal}
                                 style={{
                                     width: '100%',
@@ -1752,32 +2312,32 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     gap: '6px',
                                     borderRadius: '4px',
                                     border: 'none',
-                                    background: selectedIds.length > 0 ? '#2563eb' : '#cbd5e1',
+                                    background: tabSelectedCount > 0 ? '#2563eb' : '#cbd5e1',
                                     color: '#ffffff',
-                                    cursor: selectedIds.length > 0 ? 'pointer' : 'not-allowed',
+                                    cursor: tabSelectedCount > 0 ? 'pointer' : 'not-allowed',
                                     transition: 'all 0.2s',
-                                    boxShadow: selectedIds.length > 0 ? '0 2px 4px rgba(37, 99, 235, 0.15)' : 'none'
+                                    boxShadow: tabSelectedCount > 0 ? '0 2px 4px rgba(37, 99, 235, 0.15)' : 'none'
                                 }}
                                 onMouseEnter={(e) => {
-                                    if (selectedIds.length > 0) e.currentTarget.style.background = '#1d4ed8';
+                                    if (tabSelectedCount > 0) e.currentTarget.style.background = '#1d4ed8';
                                 }}
                                 onMouseLeave={(e) => {
-                                    if (selectedIds.length > 0) e.currentTarget.style.background = '#2563eb';
+                                    if (tabSelectedCount > 0) e.currentTarget.style.background = '#2563eb';
                                 }}
                             >
                                 <Plus size={14} />
-                                <span>요약표 생성 ({selectedIds.length}개 선택됨)</span>
+                                <span>요약표 생성 ({tabSelectedCount}개 선택됨)</span>
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                    <div ref={scrollContainerRef} className="dp-table-container custom-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '16px' }}>
+                    <div ref={scrollContainerRef} className="dp-table-container custom-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '16px', display: 'flex', flexDirection: 'column' }}>
                         {/* 생성된 요약표 목록 헤더 */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', padding: '0 4px' }}>
                             <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                                생성된 요약표 목록 ({folders.length}개)
+                                생성된 요약표 목록 ({filteredFolders.length}개)
                             </h3>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button
@@ -1825,396 +2385,701 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             </div>
                         </div>
 
-                        {filteredFolders.map((folder, folderIdx) => {
-                            const isExpanded = expandedFolders.has(folder.id);
+                        <div style={{
+                            background: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '10px',
+                            padding: '10px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px',
+                            marginTop: '4px',
+                            flex: 1,
+                            minHeight: '300px'
+                        }}>
+                            {filteredFolders.length > 0 ? (
+                                filteredFolders.map((folder, folderIdx) => {
+                                const isExpanded = expandedFolders.has(folder.id);
 
-                            const scalePoints = summaries.find(s => folder.items.includes(s.id))?.scale_points || 7;
-                            const isStatistics = folder.type === 'statistics';
+                                const scalePoints = summaries.find(s => folder.items && folder.items.includes(s.id))?.scale_points || 7;
+                                const isStatistics = folder.type === 'statistics';
 
-                            const badgeList = [];
-                            if (isStatistics) {
-                                if (folder.mean) badgeList.push('평균');
-                                if (folder.median) badgeList.push('중앙값');
-                                if (folder.mode) badgeList.push('최빈값');
-                            } else {
-                                const codes = folder.include_codes || '';
-                                const hasTopCodes = codes.includes(String(scalePoints)) || codes.includes(String(scalePoints - 1));
-                                const hasBotCodes = codes.includes('1') || codes.includes('2');
-                                if (hasTopCodes) badgeList.push(`Top2`);
-                                if (hasBotCodes) badgeList.push(`Bot2`);
-                                if (folder.mean) badgeList.push('평균');
-                            }
+                                const badgeList = [];
+                                const assocSummary = summaries.find(s => s.id === folder.id) ||
+                                    summaries.find(s => folder.items && folder.items.includes(s.id)) ||
+                                    summaries.find(s => s.id === (folder.items && folder.items[0]));
+                                if (assocSummary && Array.isArray(assocSummary.info)) {
+                                    assocSummary.info.forEach(item => {
+                                         if (item.disabled) return;
+                                        const isStatistics = item.type === 'statistics' ||
+                                            item.type === 'mean' ||
+                                            item.mean === true ||
+                                            item.tag === 'mean' ||
+                                            item.value_id === 'mean' ||
+                                            item.tag === 'median' ||
+                                            item.tag === 'mode' ||
+                                            item.value_id === 'median' ||
+                                            item.value_id === 'mode';
+                                        if (isStatistics) {
+                                            const hasMean = item.mean === true || item.mean === 'true' || item.mean === 1 || item.mean === '1' || item.tag === 'mean' || item.value_id === 'mean';
+                                            const hasMedian = item.median === true || item.median === 'true' || item.median === 1 || item.median === '1' || item.tag === 'median' || item.value_id === 'median';
+                                            const hasMode = item.mode === true || item.mode === 'true' || item.mode === 1 || item.mode === '1' || item.tag === 'mode' || item.value_id === 'mode';
+                                            
+                                            if (hasMean) badgeList.push('평균');
+                                            if (hasMedian) badgeList.push('중앙값');
+                                            if (hasMode) badgeList.push('최빈값');
+                                        } else {
+                                            const tagLabel = item.tag || item.label || item.name;
+                                            if (tagLabel) {
+                                                const cleanLabel = tagLabel.replace(/\s*요약\s*$/, '').trim();
+                                                badgeList.push(cleanLabel);
+                                            }
+                                        }
+                                    });
+                                }
 
-                            return (
-                                <div key={folder.id} style={{ border: '1px solid #e2e8f0', borderRadius: '8px', marginBottom: '12px', background: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', padding: '12px', display: 'flex', flexDirection: 'column' }}>
+                                if (badgeList.length === 0) {
+                                    if (isStatistics) {
+                                        if (folder.mean) badgeList.push('평균');
+                                        if (folder.median) badgeList.push('중앙값');
+                                        if (folder.mode) badgeList.push('최빈값');
+                                    } else {
+                                        const codes = folder.include_codes || '';
+                                        const hasTopCodes = codes.includes(String(scalePoints)) || codes.includes(String(scalePoints - 1));
+                                        const hasBotCodes = codes.includes('1') || codes.includes('2');
+                                        if (hasTopCodes) badgeList.push(`Top2`);
+                                        if (hasBotCodes) badgeList.push(`Bot2`);
+                                        if (folder.mean) badgeList.push('평균');
+                                    }
+                                }
 
-                                    <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                                        <div style={{ cursor: 'grab', display: 'flex', alignItems: 'center', color: '#94a3b8', marginRight: '6px' }}>
-                                            <GripVertical size={16} />
+                                const fromIdx = folders.findIndex(f => f.id === draggedFolderId);
+                                const toIdx = folders.findIndex(f => f.id === folder.id);
+
+                                const baseBorderColor = (newlyCreatedFolderIds.has(folder.id) || isExpanded) ? '#3b82f6' : '#e2e8f0';
+                                 const baseBorderWidth = (newlyCreatedFolderIds.has(folder.id) || isExpanded) ? '1.5px' : '1px';
+                                 const baseBorderStyle = 'solid';
+
+                                 let customBorderTop = `${baseBorderWidth} ${baseBorderStyle} ${baseBorderColor}`;
+                                 let customBorderBottom = `${baseBorderWidth} ${baseBorderStyle} ${baseBorderColor}`;
+                                 const customBorderRight = `${baseBorderWidth} ${baseBorderStyle} ${baseBorderColor}`;
+                                 const customBorderLeft = `${baseBorderWidth} ${baseBorderStyle} ${baseBorderColor}`;
+
+                                 if (draggedFolderId && dragOverFolderId === folder.id) {
+                                     if (fromIdx > toIdx) {
+                                         customBorderTop = '3px solid #2563eb';
+                                     } else if (fromIdx < toIdx) {
+                                         customBorderBottom = '3px solid #2563eb';
+                                     }
+                                 }
+
+                                 return (
+                                     <div
+                                         key={folder.id}
+                                         draggable={dragEnabledFolderId === folder.id}
+                                         onDragStart={(e) => handleFolderItemDragStart(e, folder.id)}
+                                         onDragOver={(e) => handleFolderItemDragOver(e, folder.id)}
+                                         onDragLeave={handleFolderItemDragLeave}
+                                         onDrop={(e) => handleFolderItemDrop(e, folder.id)}
+                                         onDragEnd={handleFolderItemDragEnd}
+                                         style={{
+                                             borderTop: customBorderTop,
+                                             borderBottom: customBorderBottom,
+                                             borderRight: customBorderRight,
+                                             borderLeft: customBorderLeft,
+                                             borderRadius: '6px',
+                                             background: (newlyCreatedFolderIds.has(folder.id) || isExpanded) ? '#f0f9ff' : '#ffffff',
+                                             boxShadow: '0 1px 2px rgba(0, 0, 0, 0.02)',
+                                             padding: '10px 14px',
+                                             display: 'flex',
+                                             flexDirection: 'column',
+                                             opacity: draggedFolderId === folder.id ? 0.4 : 1,
+                                             transition: 'background-color 0.8s ease, border-color 0.8s ease'
+                                         }}
+                                    >
+
+                                        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                            <div
+                                                style={{ cursor: 'grab', display: 'flex', alignItems: 'center', color: '#94a3b8', marginRight: '6px' }}
+                                                onMouseDown={() => setDragEnabledFolderId(folder.id)}
+                                                onMouseUp={() => setDragEnabledFolderId(null)}
+                                                onMouseLeave={() => setDragEnabledFolderId(null)}
+                                            >
+                                                <GripVertical size={16} />
+                                            </div>
+
+                                            <div
+                                                style={{ flex: 1, minWidth: 0, marginRight: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}
+                                                onClick={() => toggleFolderExpand(folder.id)}
+                                            >
+
+                                                {isExpanded ? (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
+                                                        <input
+                                                            type="text"
+                                                            value={folder.name}
+                                                            onChange={(e) => {
+                                                                setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, name: e.target.value } : f));
+                                                                if (onUnsavedChange) onUnsavedChange(true);
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    e.target.blur();
+                                                                }
+                                                            }}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            onMouseDown={(e) => e.stopPropagation()}
+                                                            onMouseUp={(e) => e.stopPropagation()}
+                                                            style={{
+                                                                fontSize: '13px',
+                                                                fontWeight: 700,
+                                                                color: '#1e293b',
+                                                                border: '1px solid #cbd5e1',
+                                                                borderRadius: '4px',
+                                                                padding: '2px 6px',
+                                                                outline: 'none',
+                                                                background: '#ffffff',
+                                                                width: '280px'
+                                                            }}
+                                                        />
+
+                                                    </div>
+                                                ) : (
+                                                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
+                                                        {folder.name}
+
+                                                    </span>
+                                                )}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <span style={{ fontSize: '10px', color: '#475569', background: '#f1f5f9', padding: '1px 5px', borderRadius: '3px', fontWeight: 700 }}>
+                                                        {folder.items?.length || 0}개
+                                                    </span>
+                                                    {badgeList.length > 0 && (
+                                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                                            {badgeList.map(b => {
+                                                                let bg = '#f1f5f9';
+                                                                let fg = '#64748b';
+                                                                const lower = b.toLowerCase();
+
+                                                                let cleanB = b;
+                                                                if (lower.startsWith('top')) cleanB = 'Top' + b.slice(3);
+                                                                else if (lower.startsWith('bot')) cleanB = 'Bot' + b.slice(3);
+                                                                else if (lower.startsWith('mid')) cleanB = 'Mid' + b.slice(3);
+
+                                                                if (lower.includes('top')) { bg = '#eff6ff'; fg = '#3b82f6'; }
+                                                                else if (lower.includes('bot')) { bg = '#fff1f2'; fg = '#f43f5e'; }
+                                                                else if (lower.includes('mid')) { bg = '#fffbeb'; fg = '#d97706'; }
+                                                                else if (lower === '평균') { bg = '#ecfdf5'; fg = '#10b981'; }
+                                                                else if (lower === '중앙값') { bg = '#faf5ff'; fg = '#7c3aed'; }
+                                                                else if (lower === '최빈값') { bg = '#fffbeb'; fg = '#d97706'; }
+
+                                                                return (
+                                                                    <span key={b} style={{ fontSize: '9px', fontWeight: 700, color: fg, background: bg, padding: '1px 5px', borderRadius: '3px' }}>
+                                                                        {cleanB}
+                                                                    </span>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleOpenEditModal(folder);
+                                                    }}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px',
+                                                        background: 'transparent', color: '#64748b', border: 'none', borderRadius: '6px',
+                                                        cursor: 'pointer', transition: 'all 0.15s'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.color = '#2563eb';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.background = 'transparent';
+                                                        e.currentTarget.style.color = '#64748b';
+                                                    }}
+                                                    title="요약 설정 수정"
+                                                >
+                                                    <Edit size={14} />
+                                                </button>
+
+                                                <button
+                                                    onClick={() => {
+                                                        const baseMatch = folder.name.match(/^(.*?)(?:_복사본(?:\s+\d+)?)?$/);
+                                                        const baseName = baseMatch ? baseMatch[1] : folder.name;
+
+                                                        const copyNames = folders.map(f => f.name).filter(n => n.startsWith(baseName + "_복사본"));
+                                                        let maxNum = 0;
+                                                        copyNames.forEach(name => {
+                                                            const numMatch = name.match(/_복사본(?:\s+(\d+))?$/);
+                                                            if (numMatch) {
+                                                                const num = numMatch[1] ? parseInt(numMatch[1], 10) : 1;
+                                                                if (num > maxNum) maxNum = num;
+                                                            }
+                                                        });
+                                                        const newName = `${baseName}_복사본 ${maxNum + 1}`;
+
+                                                        const newId = `folder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                                                        const newFolder = { ...folder, id: newId, name: newName, items: [...(folder.items || [])] };
+                                                        setFolders(prev => {
+                                                            const idx = prev.findIndex(f => f.id === folder.id);
+                                                            if (idx === -1) return [...prev, newFolder];
+                                                            const updated = [...prev];
+                                                            updated.splice(idx + 1, 0, newFolder);
+                                                            return updated;
+                                                        });
+                                                        if (onUnsavedChange) onUnsavedChange(true);
+                                                    }}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px',
+                                                        background: 'transparent', color: '#64748b', border: 'none', borderRadius: '6px',
+                                                        cursor: 'pointer', transition: 'all 0.15s'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.background = '#ecfdf5';
+                                                        e.currentTarget.style.color = '#059669';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.background = 'transparent';
+                                                        e.currentTarget.style.color = '#64748b';
+                                                    }}
+                                                    title="복사"
+                                                >
+                                                    <Copy size={14} />
+                                                </button>
+
+                                                <button
+                                                    onClick={() => {
+                                                        modal.showConfirm('확인', '요약표를 삭제하시겠습니까?', {
+                                                            btns: [
+                                                                { title: "취소", click: () => { } },
+                                                                {
+                                                                    title: "삭제",
+                                                                    click: async () => {
+                                                                        const newFolders = folders.filter(f => f.id !== folder.id);
+                                                                        setFolders(newFolders);
+
+                                                                        const deleteKey = folder.stub_id || folder.id;
+                                                                         if (deleteKey && String(deleteKey).trim() !== "") {
+                                                                             if (originalFolderIds.includes(folder.id) && !folder.id.startsWith('folder_')) {
+                                                                                 const newDeletedIds = [...deletedSummaryIds, deleteKey];
+                                                                                 setDeletedSummaryIds(newDeletedIds);
+                                                                                 await handleSaveSummary(newFolders, newDeletedIds, '요약표가 삭제되었습니다.');
+                                                                             } else {
+                                                                                 if (onUnsavedChange) onUnsavedChange(true);
+                                                                             }
+                                                                         } else {
+                                                                            if (onUnsavedChange) onUnsavedChange(true);
+                                                                        }
+                                                                    }
+                                                                }
+                                                            ]
+                                                        });
+                                                    }}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px',
+                                                        background: 'transparent', color: '#ef4444', border: 'none', borderRadius: '6px',
+                                                        cursor: 'pointer', transition: 'all 0.15s'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.background = '#fff1f2';
+                                                        e.currentTarget.style.color = '#dc2626';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.background = 'transparent';
+                                                        e.currentTarget.style.color = '#64748b';
+                                                    }}
+                                                    title="삭제"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
                                         </div>
 
-                                        <div
-                                            style={{ flex: 1, minWidth: 0, marginRight: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}
-                                            onClick={() => toggleFolderExpand(folder.id)}
-                                        >
+                                        {isExpanded && (
+                                            <div style={{ marginTop: currentTab === 'scale' ? '8px' : '4px', borderTop: '1px solid #f1f5f9', paddingTop: currentTab === 'scale' ? '4px' : '0px' }}>
 
-                                            {isExpanded ? (
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
+                                                <div style={{ display: 'none', alignItems: 'center', gap: '8px', padding: '10px 14px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '12px' }}>
+                                                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>요약표 타이틀명:</span>
                                                     <input
+                                                        id={`folder-name-input-${folder.id}`}
                                                         type="text"
                                                         value={folder.name}
                                                         onChange={(e) => {
                                                             setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, name: e.target.value } : f));
                                                             if (onUnsavedChange) onUnsavedChange(true);
                                                         }}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === 'Enter') {
-                                                                e.target.blur();
-                                                            }
-                                                        }}
-                                                        onClick={(e) => e.stopPropagation()}
-                                                        onMouseDown={(e) => e.stopPropagation()}
-                                                        onMouseUp={(e) => e.stopPropagation()}
-                                                        style={{
-                                                            fontSize: '13px',
-                                                            fontWeight: 700,
-                                                            color: '#1e293b',
-                                                            border: '1px solid #cbd5e1',
-                                                            borderRadius: '4px',
-                                                            padding: '2px 6px',
-                                                            outline: 'none',
-                                                            background: '#ffffff',
-                                                            width: '280px'
-                                                        }}
+                                                        style={{ flex: 1, padding: '5px 10px', fontSize: '12.5px', border: '1px solid #cbd5e1', borderRadius: '4px', outline: 'none', background: '#ffffff', color: '#1e293b' }}
                                                     />
-                                                    <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace', fontWeight: 600 }}>
-                                                        ({folder.id})
-                                                    </span>
                                                 </div>
-                                            ) : (
-                                                <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
-                                                    {folder.name}
-                                                    <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace', fontWeight: 600, marginLeft: '6px' }}>
-                                                        ({folder.id})
-                                                    </span>
-                                                </span>
-                                            )}
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                <span style={{ fontSize: '10px', color: '#475569', background: '#f1f5f9', padding: '1px 5px', borderRadius: '3px', fontWeight: 700 }}>
-                                                    {folder.items?.length || 0}개
-                                                </span>
-                                                {badgeList.length > 0 && (
-                                                    <div style={{ display: 'flex', gap: '4px' }}>
-                                                        {badgeList.map(b => {
+
+                                                {currentTab === 'scale' && (
+
+
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '10px', padding: '0 4px' }}>
+                                                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>포함 요약표 구성 (뱃지):</span>
+                                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                        {assocSummary && Array.isArray(assocSummary.info) && assocSummary.info.map((item, idx) => {
+                                                            const isMean = (item.type === 'statistics' && item.mean) ||
+                                                                           item.type === 'mean' ||
+                                                                           item.mean === true ||
+                                                                           item.tag === 'mean' ||
+                                                                           item.value_id === 'mean';
+                                                            
+                                                            let b = '';
+                                                            if (isMean) {
+                                                                b = '평균';
+                                                            } else {
+                                                                const tagLabel = item.tag || item.label || item.name || '';
+                                                                b = tagLabel.replace(/\s*요약\s*$/, '').trim();
+                                                            }
+
+                                                            if (!b) return null;
+
                                                             let bg = '#f1f5f9';
                                                             let fg = '#64748b';
-                                                            if (b.includes('Top')) { bg = '#ecfdf5'; fg = '#10b981'; }
-                                                            else if (b.includes('Bot')) { bg = '#fff1f2'; fg = '#f43f5e'; }
-                                                            else if (b === '평균') { bg = '#eff6ff'; fg = '#3b82f6'; }
+                                                            let border = '1px solid #cbd5e1';
+                                                            const lower = b.toLowerCase();
+                                                            
+                                                            if (item.disabled) {
+                                                                bg = '#f8fafc';
+                                                                fg = '#94a3b8';
+                                                                border = '1px dashed #cbd5e1';
+                                                            } else {
+                                                                if (lower.includes('top')) { bg = '#eff6ff'; fg = '#3b82f6'; border = '1px solid #bfdbfe'; }
+                                                                else if (lower.includes('bot')) { bg = '#fff1f2'; fg = '#f43f5e'; border = '1px solid #fca5a5'; }
+                                                                else if (lower.includes('mid')) { bg = '#fffbeb'; fg = '#d97706'; border = '1px solid #fde68a'; }
+                                                                else if (lower === '평균') { bg = '#ecfdf5'; fg = '#10b981'; border = '1px solid #a7f3d0'; }
+                                                                else if (lower === '중앙값') { bg = '#faf5ff'; fg = '#7c3aed'; border = '1px solid #e9d5ff'; }
+                                                                else if (lower === '최빈값') { bg = '#fffbeb'; fg = '#d97706'; border = '1px solid #fde68a'; }
+                                                            }
+                                                            
+                                                            let cleanB = b;
+                                                            if (lower.startsWith('top')) cleanB = 'Top' + b.slice(3);
+                                                            else if (lower.startsWith('bot')) cleanB = 'Bot' + b.slice(3);
+                                                            else if (lower.startsWith('mid')) cleanB = 'Mid' + b.slice(3);
+
                                                             return (
-                                                                <span key={b} style={{ fontSize: '9px', fontWeight: 700, color: fg, background: bg, padding: '1px 5px', borderRadius: '3px' }}>
-                                                                    {b}
+                                                                <span 
+                                                                    key={`${b}_${idx}`} 
+                                                                    onClick={() => {
+                                                                        setSummaries(prev => prev.map(s => {
+                                                                            const isTarget = s.id === folder.id || 
+                                                                                             (folder.items && folder.items.includes(s.id));
+                                                                            if (isTarget) {
+                                                                                return {
+                                                                                    ...s,
+                                                                                    info: s.info.map((inner, innerIdx) => {
+                                                                                        if (innerIdx === idx) {
+                                                                                            return { ...inner, disabled: !inner.disabled };
+                                                                                        }
+                                                                                        return inner;
+                                                                                    })
+                                                                                };
+                                                                            }
+                                                                            return s;
+                                                                        }));
+                                                                        if (onUnsavedChange) onUnsavedChange(true);
+                                                                    }}
+                                                                    style={{ 
+                                                                        fontSize: '10.5px', 
+                                                                        fontWeight: 600, 
+                                                                        padding: '3px 8px', 
+                                                                        borderRadius: '12px', 
+                                                                        color: fg, 
+                                                                        background: bg, 
+                                                                        border: border, 
+                                                                        userSelect: 'none',
+                                                                        cursor: 'pointer',
+                                                                        opacity: item.disabled ? 0.6 : 1,
+                                                                        transition: 'all 0.15s ease-in-out'
+                                                                    }}
+                                                                >
+                                                                    {cleanB}
                                                                 </span>
                                                             );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setEditingFolderId(folder.id);
-                                                    setEditingTitleText(folder.name);
-                                                }}
-                                                style={{
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px',
-                                                    background: 'transparent', color: '#64748b', border: 'none', borderRadius: '6px',
-                                                    cursor: 'pointer', transition: 'all 0.15s'
-                                                }}
-                                                onMouseEnter={(e) => {
-                                                    e.currentTarget.style.background = '#f1f5f9';
-                                                    e.currentTarget.style.color = '#1e293b';
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    e.currentTarget.style.background = 'transparent';
-                                                    e.currentTarget.style.color = '#64748b';
-                                                }}
-                                                title="이름 수정"
-                                            >
-                                                <Edit size={14} />
-                                            </button>
-
-                                            <button
-                                                onClick={() => {
-                                                    const baseMatch = folder.name.match(/^(.*?)(?:_복사본(?:\s+\d+)?)?$/);
-                                                    const baseName = baseMatch ? baseMatch[1] : folder.name;
-
-                                                    const copyNames = folders.map(f => f.name).filter(n => n.startsWith(baseName + "_복사본"));
-                                                    let maxNum = 0;
-                                                    copyNames.forEach(name => {
-                                                        const numMatch = name.match(/_복사본(?:\s+(\d+))?$/);
-                                                        if (numMatch) {
-                                                            const num = numMatch[1] ? parseInt(numMatch[1], 10) : 1;
-                                                            if (num > maxNum) maxNum = num;
-                                                        }
-                                                    });
-                                                    const newName = `${baseName}_복사본 ${maxNum + 1}`;
-
-                                                    const newId = `folder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                                                    const newFolder = { ...folder, id: newId, name: newName, items: [...(folder.items || [])] };
-                                                    setFolders(prev => [...prev, newFolder]);
-                                                    if (onUnsavedChange) onUnsavedChange(true);
-                                                }}
-                                                style={{
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px',
-                                                    background: 'transparent', color: '#10b981', border: 'none', borderRadius: '6px',
-                                                    cursor: 'pointer', transition: 'all 0.15s'
-                                                }}
-                                                onMouseEnter={(e) => {
-                                                    e.currentTarget.style.background = '#ecfdf5';
-                                                    e.currentTarget.style.color = '#059669';
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    e.currentTarget.style.background = 'transparent';
-                                                    e.currentTarget.style.color = '#10b981';
-                                                }}
-                                                title="복사"
-                                            >
-                                                <Copy size={14} />
-                                            </button>
-
-                                            <button
-                                                onClick={() => {
-                                                    modal.showConfirm('확인', '요약표를 삭제하시겠습니까?', {
-                                                        btns: [
-                                                            { title: "취소", click: () => { } },
-                                                            {
-                                                                title: "삭제",
-                                                                click: async () => {
-                                                                    const newFolders = folders.filter(f => f.id !== folder.id);
-                                                                    setFolders(newFolders);
-
-                                                                    if (originalFolderIds.includes(folder.id)) {
-                                                                        const newDeletedIds = [...deletedSummaryIds, folder.id];
-                                                                        setDeletedSummaryIds(newDeletedIds);
-                                                                        await handleSaveSummary(newFolders, newDeletedIds, '요약표가 삭제되었습니다.');
-                                                                    } else {
-                                                                        if (onUnsavedChange) onUnsavedChange(true);
-                                                                    }
-                                                                }
-                                                            }
-                                                        ]
-                                                    });
-                                                }}
-                                                style={{
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px',
-                                                    background: 'transparent', color: '#ef4444', border: 'none', borderRadius: '6px',
-                                                    cursor: 'pointer', transition: 'all 0.15s'
-                                                }}
-                                                onMouseEnter={(e) => {
-                                                    e.currentTarget.style.background = '#fff1f2';
-                                                    e.currentTarget.style.color = '#dc2626';
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    e.currentTarget.style.background = 'transparent';
-                                                    e.currentTarget.style.color = '#ef4444';
-                                                }}
-                                                title="삭제"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {isExpanded && (
-                                        <div style={{ marginTop: '12px', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
-
-                                            <div style={{ display: 'none', alignItems: 'center', gap: '8px', padding: '10px 14px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '12px' }}>
-                                                <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>요약표 타이틀명:</span>
-                                                <input
-                                                    id={`folder-name-input-${folder.id}`}
-                                                    type="text"
-                                                    value={folder.name}
-                                                    onChange={(e) => {
-                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, name: e.target.value } : f));
-                                                        if (onUnsavedChange) onUnsavedChange(true);
-                                                    }}
-                                                    style={{ flex: 1, padding: '5px 10px', fontSize: '12.5px', border: '1px solid #cbd5e1', borderRadius: '4px', outline: 'none', background: '#ffffff', color: '#1e293b' }}
-                                                />
-                                            </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px', padding: '0 4px' }}>
-                                                <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>포함 요약표 구성 (뱃지):</span>
-                                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                                    {!isStatistics ? (
-                                                        <>
-                                                            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
-                                                                <input
-                                                                    type="checkbox"
-                                                                    className="dp-checkbox-input"
-                                                                    checked={(folder.include_codes || '').includes(String(scalePoints)) || (folder.include_codes || '').includes(String(scalePoints - 1))}
-                                                                    onChange={(e) => {
-                                                                        let newCodes = (folder.include_codes || '').split(',').map(x => x.trim()).filter(Boolean);
-                                                                        const topCodes = [String(scalePoints), String(scalePoints - 1)];
-                                                                        if (e.target.checked) {
-                                                                            topCodes.forEach(tc => { if (!newCodes.includes(tc)) newCodes.push(tc); });
-                                                                        } else {
-                                                                            newCodes = newCodes.filter(c => !topCodes.includes(c));
-                                                                        }
-                                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, include_codes: newCodes.join(',') } : f));
-                                                                        if (onUnsavedChange) onUnsavedChange(true);
-                                                                    }}
-                                                                />
-                                                                <span className="dp-checkbox-box"></span>
-                                                                <span>Top2</span>
-                                                            </label>
-                                                            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
-                                                                <input
-                                                                    type="checkbox"
-                                                                    className="dp-checkbox-input"
-                                                                    checked={(folder.include_codes || '').includes('1') || (folder.include_codes || '').includes('2')}
-                                                                    onChange={(e) => {
-                                                                        let newCodes = (folder.include_codes || '').split(',').map(x => x.trim()).filter(Boolean);
-                                                                        const botCodes = ['1', '2'];
-                                                                        if (e.target.checked) {
-                                                                            botCodes.forEach(bc => { if (!newCodes.includes(bc)) newCodes.push(bc); });
-                                                                        } else {
-                                                                            newCodes = newCodes.filter(c => !botCodes.includes(c));
-                                                                        }
-                                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, include_codes: newCodes.join(',') } : f));
-                                                                        if (onUnsavedChange) onUnsavedChange(true);
-                                                                    }}
-                                                                />
-                                                                <span className="dp-checkbox-box"></span>
-                                                                <span>Bot2</span>
-                                                            </label>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
-                                                                <input
-                                                                    type="checkbox"
-                                                                    className="dp-checkbox-input"
-                                                                    checked={folder.mean || false}
-                                                                    onChange={(e) => {
-                                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mean: e.target.checked } : f));
-                                                                        if (onUnsavedChange) onUnsavedChange(true);
-                                                                    }}
-                                                                />
-                                                                <span className="dp-checkbox-box"></span>
-                                                                <span>평균</span>
-                                                            </label>
-                                                            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
-                                                                <input
-                                                                    type="checkbox"
-                                                                    className="dp-checkbox-input"
-                                                                    checked={folder.median || false}
-                                                                    onChange={(e) => {
-                                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, median: e.target.checked } : f));
-                                                                        if (onUnsavedChange) onUnsavedChange(true);
-                                                                    }}
-                                                                />
-                                                                <span className="dp-checkbox-box"></span>
-                                                                <span>중앙값</span>
-                                                            </label>
-                                                            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
-                                                                <input
-                                                                    type="checkbox"
-                                                                    className="dp-checkbox-input"
-                                                                    checked={folder.mode || false}
-                                                                    onChange={(e) => {
-                                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mode: e.target.checked } : f));
-                                                                        if (onUnsavedChange) onUnsavedChange(true);
-                                                                    }}
-                                                                />
-                                                                <span className="dp-checkbox-box"></span>
-                                                                <span>최빈값</span>
-                                                            </label>
-                                                        </>
-                                                    )}
-                                                    {!isStatistics && (
-                                                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', margin: 0, fontSize: '11.5px', fontWeight: 600, color: '#475569', userSelect: 'none' }}>
-                                                            <input
-                                                                type="checkbox"
-                                                                className="dp-checkbox-input"
-                                                                checked={folder.mean || false}
-                                                                onChange={(e) => {
-                                                                    setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mean: e.target.checked } : f));
-                                                                    if (onUnsavedChange) onUnsavedChange(true);
-                                                                }}
-                                                            />
-                                                            <span className="dp-checkbox-box"></span>
-                                                            <span>평균</span>
-                                                        </label>
-                                                    )}
+                                                        })
+                                                    }
+                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '0 4px' }}>
-                                                <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>상세 변수 및 교차표 문구 매핑</span>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ fontSize: '10.5px', color: '#94a3b8' }}>
-                                                        💡 엑셀의 열을 복사하여 아래 입력창에 붙여넣으면 순서대로 자동 채움 처리됩니다.
-                                                    </span>
+
+                                                )}
+                                                {currentTab === 'scale' && (
+                                                    <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '6px 0 10px 0' }} />
+                                                )}
+
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', padding: '0 4px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#334155' }}>상세 변수 및 교차표 문구 매핑</span>
+                                                        <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500, userSelect: 'none' }}>
+                                                            💡 입력창 중 하나를 선택해 엑셀 열을 붙여넣기(Ctrl+V)하면 아래로 자동 채워집니다.
+                                                        </span>
+                                                    </div>
                                                     <button
                                                         onClick={() => handleOpenBulkItemLabelModal(folder.id)}
                                                         style={{
-                                                            height: '26px', padding: '0 10px', fontSize: '11px', fontWeight: 600,
-                                                            background: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '4px',
-                                                            cursor: 'pointer', transition: 'all 0.15s'
+                                                            height: '28px', padding: '0 12px', fontSize: '11.5px', fontWeight: 600,
+                                                            background: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '6px',
+                                                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                                                            cursor: 'pointer', transition: 'all 0.2s'
                                                         }}
-                                                        onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
-                                                        onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
+                                                        onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+                                                        onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
                                                     >
                                                         전체 일괄 편집
                                                     </button>
                                                 </div>
+
+                                                <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', background: '#ffffff', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+                                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px' }}>
+                                                        <thead>
+                                                            <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#475569', fontWeight: 700 }}>
+                                                                <th style={{ padding: '10px 14px', textAlign: 'left', width: '200px', fontSize: '11.5px', color: '#475569' }}>변수 ID</th>
+                                                                <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11.5px', color: '#475569' }}>교차표 문구</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {folder.type === 'statistics' ? (
+                                                                (() => {
+                                                                    const assocSummary = summaries.find(s => s.id === folder.id) ||
+                                                                        summaries.find(s => folder.items && folder.items.includes(s.id)) ||
+                                                                        summaries.find(s => s.id === (folder.items && folder.items[0]));
+                                                                    
+                                                                    let hasMean = folder.mean === true;
+                                                                    let hasMedian = folder.median === true;
+                                                                    let hasMode = folder.mode === true;
+                                                                    
+                                                                    if (assocSummary && Array.isArray(assocSummary.info)) {
+                                                                        let meanActive = false;
+                                                                        let medianActive = false;
+                                                                        let modeActive = false;
+                                                                        let hasStatInfo = false;
+                                                                        
+                                                                        assocSummary.info.forEach(item => {
+                                                                            if (item.disabled) return;
+                                                                            const isMean = item.mean === true || item.tag === 'mean' || item.value_id === 'mean';
+                                                                            const isMedian = item.median === true || item.tag === 'median' || item.value_id === 'median';
+                                                                            const isMode = item.mode === true || item.tag === 'mode' || item.value_id === 'mode';
+                                                                            
+                                                                            if (isMean) { meanActive = true; hasStatInfo = true; }
+                                                                            if (isMedian) { medianActive = true; hasStatInfo = true; }
+                                                                            if (isMode) { modeActive = true; hasStatInfo = true; }
+                                                                        });
+                                                                        
+                                                                        if (hasStatInfo) {
+                                                                            hasMean = meanActive;
+                                                                            hasMedian = medianActive;
+                                                                            hasMode = modeActive;
+                                                                        }
+                                                                    }
+                                                                    
+                                                                    const activeStats = [];
+                                                                    const itemId = folder.items && folder.items[0];
+                                                                    
+                                                                    if (itemId) {
+                                                                        if (hasMean) {
+                                                                            const meanLabel = summaries.find(s => s.id === itemId + '_mean')?.label ?? 'mean';
+                                                                            activeStats.push({ key: 'mean', label: meanLabel, virtualId: itemId + '_mean' });
+                                                                        }
+                                                                        if (hasMedian) {
+                                                                            const medianLabel = summaries.find(s => s.id === itemId + '_median')?.label ?? 'median';
+                                                                            activeStats.push({ key: 'median', label: medianLabel, virtualId: itemId + '_median' });
+                                                                        }
+                                                                        if (hasMode) {
+                                                                            const modeLabel = summaries.find(s => s.id === itemId + '_mode')?.label ?? 'mode';
+                                                                            activeStats.push({ key: 'mode', label: modeLabel, virtualId: itemId + '_mode' });
+                                                                        }
+                                                                    }
+                                                                    
+                                                                    if (activeStats.length === 0 && itemId) {
+                                                                        const meanLabel = summaries.find(s => s.id === itemId + '_mean')?.label ?? 'mean';
+                                                                        activeStats.push({ key: 'mean', label: meanLabel, virtualId: itemId + '_mean' });
+                                                                    }
+                                                                    
+                                                                    return activeStats.map((stat) => (
+                                                                        <tr key={stat.key} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
+                                                                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                                                                                <span style={{
+                                                                                    display: 'inline-block',
+                                                                                    padding: '3px 8px',
+                                                                                    background: '#f1f5f9',
+                                                                                    color: '#475569',
+                                                                                    borderRadius: '6px',
+                                                                                    fontWeight: 600,
+                                                                                    fontFamily: 'monospace',
+                                                                                    fontSize: '11px',
+                                                                                    border: '1px solid #e2e8f0'
+                                                                                }}>
+                                                                                    {stat.key}
+                                                                                </span>
+                                                                            </td>
+                                                                            <td style={{ padding: '8px 14px' }}>
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={stat.label}
+                                                                                    onChange={(e) => {
+                                                                                        setSummaries(prev => {
+                                                                                            const exists = prev.some(s => s.id === stat.virtualId);
+                                                                                            if (exists) {
+                                                                                                return prev.map(s => s.id === stat.virtualId ? { ...s, label: e.target.value } : s);
+                                                                                            } else {
+                                                                                                return [
+                                                                                                    ...prev,
+                                                                                                    {
+                                                                                                        id: stat.virtualId,
+                                                                                                        label: e.target.value,
+                                                                                                        subId: stat.virtualId,
+                                                                                                        type: 'statistics',
+                                                                                                        info: []
+                                                                                                    }
+                                                                                                ];
+                                                                                            }
+                                                                                        });
+                                                                                        if (onUnsavedChange) onUnsavedChange(true);
+                                                                                    }}
+                                                                                    onFocus={(e) => {
+                                                                                        e.currentTarget.style.borderColor = '#3b82f6';
+                                                                                        e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.08)';
+                                                                                        e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                                    }}
+                                                                                    onBlur={(e) => {
+                                                                                        e.currentTarget.style.borderColor = '#e2e8f0';
+                                                                                        e.currentTarget.style.boxShadow = 'none';
+                                                                                        e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                                    }}
+                                                                                    style={{
+                                                                                        width: '100%',
+                                                                                        padding: '6px 12px',
+                                                                                        border: '1px solid #e2e8f0',
+                                                                                        borderRadius: '6px',
+                                                                                        outline: 'none',
+                                                                                        color: '#1e293b',
+                                                                                        fontSize: '11.5px',
+                                                                                        background: '#ffffff',
+                                                                                        transition: 'all 0.15s ease-in-out'
+                                                                                    }}
+                                                                                />
+                                                                            </td>
+                                                                        </tr>
+                                                                    ));
+                                                                })()
+                                                            ) : (
+                                                                folder.items.map((itemId, idx) => {
+                                                                    const varInfo = summaries.find(s => s.id === itemId);
+                                                                    const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
+                                                                    const showLabel = baseVar ? baseVar.label || baseVar.name : '';
+                                                                    const labelValue = (() => {
+                                                                         let val = varInfo ? varInfo.label : showLabel;
+                                                                         if (varInfo && folder && folder.name) {
+                                                                             const isCorrupted = varInfo.label === folder.name || 
+                                                                                                 varInfo.label.includes('요약표') || 
+                                                                                                 varInfo.label.includes('(평균)') || 
+                                                                                                 varInfo.label.includes('(Top') || 
+                                                                                                 varInfo.label.includes('(Bot') || 
+                                                                                                 varInfo.label.includes('(Mid');
+                                                                             if (isCorrupted) {
+                                                                                 val = showLabel;
+                                                                             }
+                                                                         }
+                                                                         return val;
+                                                                     })();
+                                                                    return (
+                                                                        <tr key={itemId} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
+                                                                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                                                                                <span style={{
+                                                                                    display: 'inline-block',
+                                                                                    padding: '3px 8px',
+                                                                                    background: '#f1f5f9',
+                                                                                    color: '#475569',
+                                                                                    borderRadius: '6px',
+                                                                                    fontWeight: 600,
+                                                                                    fontFamily: 'monospace',
+                                                                                    fontSize: '11px',
+                                                                                    border: '1px solid #e2e8f0'
+                                                                                }}>
+                                                                                    {itemId}
+                                                                                </span>
+                                                                            </td>
+                                                                            <td style={{ padding: '8px 14px' }}>
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={labelValue}
+                                                                                    onChange={(e) => {
+                                                                                        setSummaries(prev => {
+                                                                                            const exists = prev.some(s => s.id === itemId);
+                                                                                            if (exists) {
+                                                                                                return prev.map(s => s.id === itemId ? { ...s, label: e.target.value } : s);
+                                                                                            } else {
+                                                                                                return [
+                                                                                                    ...prev,
+                                                                                                    {
+                                                                                                        id: itemId,
+                                                                                                        label: e.target.value,
+                                                                                                        subId: itemId,
+                                                                                                        type: baseVar?.type || 'frequency',
+                                                                                                        info: baseVar?.info || baseVar?.categories || []
+                                                                                                    }
+                                                                                                ];
+                                                                                            }
+                                                                                        });
+                                                                                        if (onUnsavedChange) onUnsavedChange(true);
+                                                                                    }}
+                                                                                    onPaste={(e) => handlePasteLabels(e, idx, folder.items)}
+                                                                                    onFocus={(e) => {
+                                                                                        e.currentTarget.style.borderColor = '#3b82f6';
+                                                                                        e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.08)';
+                                                                                        e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                                    }}
+                                                                                    onBlur={(e) => {
+                                                                                        e.currentTarget.style.borderColor = '#e2e8f0';
+                                                                                        e.currentTarget.style.boxShadow = 'none';
+                                                                                        e.currentTarget.style.backgroundColor = '#fdfdfd';
+                                                                                    }}
+                                                                                    style={{
+                                                                                        width: '100%',
+                                                                                        padding: '6px 12px',
+                                                                                        border: '1px solid #e2e8f0',
+                                                                                        borderRadius: '6px',
+                                                                                        outline: 'none',
+                                                                                        color: '#1e293b',
+                                                                                        fontSize: '11.5px',
+                                                                                        background: '#fdfdfd',
+                                                                                        transition: 'all 0.15s ease-in-out'
+                                                                                    }}
+                                                                                />
+                                                                            </td>
+                                                                        </tr>
+                                                                    );
+                                                                })
+                                                            )}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
                                             </div>
+                                        )}
 
-                                            <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', overflow: 'hidden', background: '#ffffff' }}>
-                                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px' }}>
-                                                    <thead>
-                                                        <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#475569', fontWeight: 700 }}>
-                                                            <th style={{ padding: '8px 12px', textAlign: 'left', width: '180px' }}>변수 ID</th>
-                                                            <th style={{ padding: '8px 12px', textAlign: 'left' }}>교차표 문구 (더블클릭/붙여넣기 지원)</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {folder.items.map((itemId, idx) => {
-                                                            const varInfo = summaries.find(s => s.id === itemId);
-                                                            const labelValue = varInfo ? varInfo.label : '';
-                                                            return (
-                                                                <tr key={itemId} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                                                    <td style={{ padding: '8px 12px', color: '#64748b', fontWeight: 600, fontFamily: 'monospace' }}>
-                                                                        {itemId}
-                                                                    </td>
-                                                                    <td style={{ padding: '6px 12px' }}>
-                                                                        <input
-                                                                            type="text"
-                                                                            value={labelValue}
-                                                                            onChange={(e) => {
-                                                                                setSummaries(prev => prev.map(s => s.id === itemId ? { ...s, label: e.target.value } : s));
-                                                                                if (onUnsavedChange) onUnsavedChange(true);
-                                                                            }}
-                                                                            onPaste={(e) => handlePasteLabels(e, idx, folder.items)}
-                                                                            style={{ width: '100%', padding: '4px 8px', border: '1px solid #e2e8f0', borderRadius: '4px', outline: 'none', color: '#1e293b' }}
-                                                                        />
-                                                                    </td>
-                                                                </tr>
-                                                            );
-                                                        })}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-
-                                        </div>
-                                    )}
-
-                                </div>
-                            );
-                        })}
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flex: 1,
+                                color: '#94a3b8',
+                                fontSize: '13.5px',
+                                fontWeight: 500,
+                                userSelect: 'none'
+                            }}>
+                                등록된 요약표가 없습니다.
+                            </div>
+                        )}</div>
                     </div>
                 </div>
             </div>
@@ -2555,7 +3420,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                         <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
-                                            생성 제안 목록 ({wizardProposals.length}개 요약표 제안됨)
+                                            생성 제안 목록 ({totalWizardSubItemsCount}개 요약표 제안됨)
                                         </span>
                                         <label
                                             className="dp-checkbox-label"
@@ -2616,7 +3481,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                     <input
                                                         type="checkbox"
                                                         checked={isChecked}
-                                                        onChange={() => { }}
+                                                        onChange={() => toggleWizardProposalSelect(prop.id)}
                                                         onClick={(e) => e.stopPropagation()}
                                                         style={{
                                                             cursor: 'pointer',
@@ -2713,7 +3578,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 onMouseEnter={(e) => { e.currentTarget.style.background = '#1d4ed8'; }}
                                 onMouseLeave={(e) => { e.currentTarget.style.background = '#2563eb'; }}
                             >
-                                <span>{wizardSelectedIds.size}개 생성 목록 추가</span>
+                                <span>{totalWizardSubItemsCount}개 생성 목록 추가</span>
                             </button>
                         </div>
                     </div>
@@ -2739,7 +3604,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>
                                 <span style={{ width: '3px', height: '14px', backgroundColor: '#2563eb', marginRight: '8px', display: 'inline-block' }}></span>
-                                <span>요약 설정 생성 ({selectedIds.length}개 문항 선택됨)</span>
+                                <span>{manualModalMode === 'edit' ? '요약 설정 수정' : `요약 설정 생성 (${selectedIds.length}개 문항 선택됨)`}</span>
                             </div>
                             <button
                                 onClick={() => setIsManualModalOpen(false)}
@@ -2755,7 +3620,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 <>
                                     {/* 1. 프리셋 및 기본 정보 */}
                                     <div style={{
-                                        display: 'grid', gridTemplateColumns: '1.2fr 0.8fr 0.8fr', gap: '12px',
+                                        display: 'none', gridTemplateColumns: '1.2fr 0.8fr 0.8fr', gap: '12px',
                                         alignItems: 'center', background: '#f8fafc', padding: '14px 18px', borderRadius: '6px', border: '1px solid #e2e8f0'
                                     }}>
                                         <div>
@@ -2814,43 +3679,46 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     {/* 2. 밴딩 설정 목록 */}
                                     <div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>밴드 설정 (표시 종류 및 포함 코드)</span>
-                                            <div style={{ fontSize: '10.5px', color: '#94a3b8' }}>* 번호 동그라미를 직접 클릭하면 켜거나 끌 수 있습니다.</div>
+                                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>표시 종류 및 포함 코드</span>
+                                            <div style={{ fontSize: '10.5px', color: '#94a3b8' }}>* 번호를 직접 클릭하면 켜거나 끌 수 있습니다.</div>
                                         </div>
 
                                         <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             {manualBands.map((band) => (
                                                 <div key={band.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0' }}>
                                                     {/* 종류 매핑용 드롭다운 */}
-                                                    <select
-                                                        value={band.label.toLowerCase().includes('top') ? 'top' : band.label.toLowerCase().includes('mid') ? 'mid' : 'bot'}
-                                                        onChange={(e) => {
-                                                            const type = e.target.value;
-                                                            setManualBands(prev => prev.map(b => b.id === band.id ? {
-                                                                ...b,
-                                                                label: type === 'top' ? 'Top2' : type === 'mid' ? 'Mid' : 'Bot2'
-                                                            } : b));
-                                                            setManualPresetId('custom');
-                                                        }}
-                                                        style={{ width: '80px', height: '28px', fontSize: '11.5px', borderRadius: '4px', border: '1px solid #cbd5e1', padding: '0 4px' }}
-                                                    >
-                                                        <option value="top">Top</option>
-                                                        <option value="mid">Mid</option>
-                                                        <option value="bot">Bot</option>
-                                                    </select>
+                                                    {(() => {
+                                                        const nVal = getBandValueCount(band.values);
+                                                        const suffix = nVal > 1 ? String(nVal) : '';
+                                                        const dropdownData = [
+                                                            { text: `Top${suffix}`, value: "top" },
+                                                            { text: `Mid${suffix}`, value: "mid" },
+                                                            { text: `Bot${suffix}`, value: "bot" }
+                                                        ];
 
-                                                    {/* 밴드 명칭 입력 */}
-                                                    <input
-                                                        type="text"
-                                                        value={band.label}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            setManualBands(prev => prev.map(b => b.id === band.id ? { ...b, label: val } : b));
-                                                            setManualPresetId('custom');
-                                                        }}
-                                                        placeholder="이름"
-                                                        style={{ width: '90px', height: '28px', fontSize: '11.5px', padding: '0 6px', borderRadius: '4px', border: '1px solid #cbd5e1' }}
-                                                    />
+                                                        return (
+                                                            <DropDownList
+                                                                data={dropdownData}
+                                                                textField="text"
+                                                                dataItemKey="value"
+                                                                value={{
+                                                                    text: computeBandLabel(band.label, nVal),
+                                                                    value: band.label.toLowerCase().includes('top') ? 'top' : band.label.toLowerCase().includes('mid') ? 'mid' : 'bot'
+                                                                }}
+                                                                onChange={(e) => {
+                                                                    const type = e.value.value;
+                                                                    setManualBands(prev => prev.map(b => b.id === band.id ? {
+                                                                        ...b,
+                                                                        label: computeBandLabel(type, getBandValueCount(b.values))
+                                                                    } : b));
+                                                                    setManualPresetId('custom');
+                                                                }}
+                                                                style={{ width: '115px', height: '28px', fontSize: '11.5px' }}
+                                                            />
+                                                        );
+                                                    })()}
+
+
 
                                                     {/* N 개수 표시 */}
                                                     <div style={{ width: '38px', textAlign: 'center', fontSize: '11.5px', color: '#64748b', fontWeight: 700 }}>
@@ -2863,7 +3731,13 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                         value={band.values}
                                                         onChange={(e) => {
                                                             const val = e.target.value;
-                                                            setManualBands(prev => prev.map(b => b.id === band.id ? { ...b, values: val } : b));
+                                                            setManualBands(prev => {
+                                                                const updatedBands = prev.map(b => b.id === band.id ? { ...b, values: val } : b);
+                                                                return updatedBands.map(b => ({
+                                                                    ...b,
+                                                                    label: computeBandLabel(b.label, getBandValueCount(b.values))
+                                                                }));
+                                                            });
                                                             setManualPresetId('custom');
                                                         }}
                                                         placeholder="값 (쉼표 구분)"
@@ -2892,9 +3766,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                                     circleBorder = '1px solid #f43f5e';
                                                                     circleColor = '#ef4444';
                                                                 } else {
-                                                                    circleBg = '#f1f5f9';
-                                                                    circleBorder = '1px solid #64748b';
-                                                                    circleColor = '#475569';
+                                                                    circleBg = '#fef3c7';
+                                                                    circleBorder = '1px solid #f59e0b';
+                                                                    circleColor = '#d97706';
                                                                 }
                                                             }
 
@@ -2935,36 +3809,50 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 </div>
                                             ))}
 
-                                            {/* 밴드 추가 버튼 */}
-                                            <button
-                                                type="button"
-                                                onClick={handleAddManualBand}
-                                                style={{
-                                                    display: 'flex', alignItems: 'center', gap: '4px', background: '#ffffff',
-                                                    color: '#475569', border: '1px solid #cbd5e1', borderRadius: '4px',
-                                                    padding: '5px 12px', fontSize: '11.5px', fontWeight: 600, cursor: 'pointer',
-                                                    marginTop: '4px', width: 'fit-content', transition: 'all 0.15s'
-                                                }}
-                                                onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
-                                                onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
-                                            >
-                                                <Plus size={12} />
-                                                <span>밴드 추가</span>
-                                            </button>
-                                        </div>
-                                    </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                                                {/* 밴드 추가 버튼 */}
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAddManualBand}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', gap: '3px', background: '#ffffff',
+                                                        color: '#475569', border: '1px solid #cbd5e1', borderRadius: '4px',
+                                                        padding: '3px 8px', fontSize: '10.5px', fontWeight: 600, cursor: 'pointer',
+                                                        width: 'fit-content', transition: 'all 0.15s'
+                                                    }}
+                                                    onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
+                                                    onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
+                                                >
+                                                    <Plus size={11} />
+                                                    <span>밴드 추가</span>
+                                                </button>
 
-                                    {/* 3. 추가 통계 옵션 */}
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderTop: '1px solid #f1f5f9', paddingTop: '14px' }}>
-                                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '12.5px', color: '#334155', userSelect: 'none' }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={manualIsMeanIncluded}
-                                                onChange={(e) => setManualIsMeanIncluded(e.target.checked)}
-                                                style={{ cursor: 'pointer', width: '13.5px', height: '13.5px', marginRight: '6px', appearance: 'checkbox', WebkitAppearance: 'checkbox', opacity: 1, display: 'inline-block', position: 'relative' }}
-                                            />
-                                            <span style={{ fontWeight: 700, color: '#1e293b' }}>평균 요약표 자동 포함</span>
-                                        </label>
+                                                {/* 평균 요약표 자동 포함 */}
+                                                <label
+                                                    onClick={() => setManualIsMeanIncluded(!manualIsMeanIncluded)}
+                                                    style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '11px', color: '#475569', userSelect: 'none', margin: 0 }}
+                                                >
+                                                    <div
+                                                        style={{
+                                                            width: '14px',
+                                                            height: '14px',
+                                                            borderRadius: '4px',
+                                                            border: manualIsMeanIncluded ? '1.5px solid #3b82f6' : '1.5px solid #cbd5e1',
+                                                            background: '#ffffff',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            marginRight: '6px',
+                                                            transition: 'all 0.15s',
+                                                            boxSizing: 'border-box'
+                                                        }}
+                                                    >
+                                                        {manualIsMeanIncluded && <Check size={10} strokeWidth={3.5} style={{ color: '#3b82f6' }} />}
+                                                    </div>
+                                                    <span style={{ fontWeight: 600 }}>평균 요약표 자동 포함</span>
+                                                </label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </>
                             ) : (
@@ -3025,7 +3913,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 onMouseEnter={(e) => { e.currentTarget.style.background = '#1d4ed8'; }}
                                 onMouseLeave={(e) => { e.currentTarget.style.background = '#2563eb'; }}
                             >
-                                <span>요약표 생성하기</span>
+                                <span>{manualModalMode === 'edit' ? '저장하기' : '요약표 생성하기'}</span>
                             </button>
                         </div>
                     </div>
@@ -3176,25 +4064,33 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             {isBulkItemLabelModalOpen && (
                 <div style={{
                     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
                 }}>
                     <div style={{
-                        backgroundColor: '#ffffff', borderRadius: '16px', width: '500px',
+                        backgroundColor: '#ffffff', borderRadius: '12px', width: '500px',
                         display: 'flex', flexDirection: 'column',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)', overflow: 'hidden',
-                        border: '1px solid rgba(226, 232, 240, 0.8)'
+                        boxShadow: '0 12px 24px -4px rgba(0, 0, 0, 0.15)', overflow: 'hidden'
                     }}>
+                        {/* 팝업 헤더 */}
                         <div style={{
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            padding: '14px 20px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc'
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            padding: '10px 18px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
                         }}>
-                            <h3 style={{ fontSize: '13.5px', fontWeight: 700, color: '#1e293b', margin: 0 }}>교차표 문구 일괄 수정</h3>
-                            <button onClick={() => { setIsBulkItemLabelModalOpen(false); setActiveBulkItemFolderId(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#94a3b8' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>
+                                <span style={{ width: '3px', height: '14px', backgroundColor: '#2563eb', marginRight: '8px', display: 'inline-block' }}></span>
+                                <span>교차표 문구 일괄 수정</span>
+                            </div>
+                            <button
+                                onClick={() => { setIsBulkItemLabelModalOpen(false); setActiveBulkItemFolderId(null); }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            >
                                 <X size={18} />
                             </button>
                         </div>
-                        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+                        {/* 모달 콘텐츠 */}
+                        <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             <div style={{ fontSize: '11.5px', color: '#64748b', lineHeight: 1.5 }}>
                                 현재 요약표에 속한 변수들의 교차표 문구 목록입니다. 줄바꿈 단위로 편집하거나 엑셀 열 데이터를 통째로 복사해서 붙여넣으세요.
                             </div>
@@ -3203,20 +4099,22 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 onChange={(e) => setBulkItemLabelText(e.target.value)}
                                 style={{
                                     width: '100%', height: '240px', padding: '12px', border: '1px solid #cbd5e1',
-                                    borderRadius: '6px', fontSize: '12.5px', outline: 'none', resize: 'none',
+                                    borderRadius: '6px', fontSize: '12px', outline: 'none', resize: 'none',
                                     lineHeight: 1.6, color: '#1e293b', fontFamily: 'inherit'
                                 }}
                                 placeholder="교차표 문구 1&#10;교차표 문구 2&#10;교차표 문구 3"
                             />
                         </div>
+
+                        {/* 팝업 푸터 */}
                         <div style={{
                             display: 'flex', justifyContent: 'flex-end', gap: '8px',
-                            padding: '12px 20px', borderTop: '1px solid #e2e8f0', background: '#f8fafc'
+                            padding: '10px 18px', borderTop: '1px solid #e2e8f0', background: '#ffffff'
                         }}>
                             <button
                                 onClick={() => { setIsBulkItemLabelModalOpen(false); setActiveBulkItemFolderId(null); }}
                                 style={{
-                                    padding: '7px 16px', fontSize: '12px', borderRadius: '4px', border: '1px solid #cbd5e1',
+                                    padding: '6px 16px', fontSize: '12px', borderRadius: '4px', border: '1px solid #cbd5e1',
                                     background: '#ffffff', color: '#475569', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
                                 }}
                                 onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
@@ -3227,7 +4125,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <button
                                 onClick={handleApplyBulkItemLabelText}
                                 style={{
-                                    padding: '7px 20px', fontSize: '12px', borderRadius: '4px', border: 'none',
+                                    padding: '6px 20px', fontSize: '12px', borderRadius: '4px', border: 'none',
                                     background: '#2563eb', color: '#ffffff', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
                                 }}
                                 onMouseEnter={(e) => { e.currentTarget.style.background = '#1d4ed8'; }}
