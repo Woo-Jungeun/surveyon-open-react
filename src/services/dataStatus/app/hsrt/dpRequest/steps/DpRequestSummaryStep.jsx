@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useContext, useCallback, useMemo, memo, forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { ChevronDown, ChevronUp, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, Wand2, Folder, Copy, Edit, Trash2, Eye, EyeOff, Check } from 'lucide-react';
-import { DropDownList } from '@progress/kendo-react-dropdowns';
+import { ChevronDown, Search, ChevronLeft, ChevronRight, GripVertical, X, Wand2, Copy, Edit, Trash2 } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -12,7 +11,7 @@ import DpRequestManualSummaryModal from './DpRequestManualSummaryModal';
 
 const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getSummaryDetail, getBaseVariableList, generateSummaryAuto, saveSummaryDetail, getTableDetail } = DpRequestPageApi();
+    const { getSummaryDetail, saveSummaryDetail, getTableDetail } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -48,7 +47,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [summaries, setSummaries] = useState([]);
     const [selectedSummary, setSelectedSummary] = useState('');
     const [folders, setFolders] = useState([]);
-    const [selectedFolderId, setSelectedFolderId] = useState('');
 
 
     const [baseVariables, setBaseVariables] = useState([]);
@@ -59,25 +57,16 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [openStats, setOpenStats] = useState({ mean: true, median: false, mode: false });
     const [isMergeByTitle, setIsMergeByTitle] = useState(false);
     const [wizardSelectedIds, setWizardSelectedIds] = useState(new Set());
-    const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
     const [isSummarySidebarOpen, setIsSummarySidebarOpen] = useState(true);
-    const [wizardSearch, setWizardSearch] = useState('');
     const [summarySearchMap, setSummarySearchMap] = useState({ scale: '', 'open-num': '' });
     const [scalePresets, setScalePresets] = useState([]);
-    const [colVars, setColVars] = useState([]);
-    const [currentLabel, setCurrentLabel] = useState('');
     const [selectedIds, setSelectedIds] = useState([]);
-    const [lastSelectedIndex, setLastSelectedIndex] = useState(null);
     const [currentTab, setCurrentTab] = useState('scale'); // 'scale' (척도 문항) | 'open-num' (오픈(숫자) 문항)
     const [expandedParents, setExpandedParents] = useState(new Set());
-    const hasInitializedExpanded = useRef(false);
 
     // --- 삭제 관리용 스테이트 추가 ---
     const [deletedSummaryIds, setDeletedSummaryIds] = useState([]); // 서버에 실제 삭제 요청할 ID들
-    const [originalSummaryIds, setOriginalSummaryIds] = useState([]); // 초기 로딩된 요약표 ID 목록 (신규 구분용)
     const [originalFolderIds, setOriginalFolderIds] = useState([]); // 초기 로딩된 폴더 ID 목록 (신규 생성 구분용)
-    const [collapsedFolders, setCollapsedFolders] = useState(new Set()); // 아코디언 상태 관리용
-    const [dragOverTarget, setDragOverTarget] = useState({ folderId: null, idx: null }); // 드래그 오버 상태 관리
     const [draggedFolderId, setDraggedFolderId] = useState(null); // 드래그 중인 폴더 ID
     const [dragOverFolderId, setDragOverFolderId] = useState(null); // 드래그 오버 중인 대상 폴더 ID
     const [dragEnabledFolderId, setDragEnabledFolderId] = useState(null); // 드래그가 활성화된 폴더 ID
@@ -256,42 +245,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         }
     };
 
-    // 설명글 클릭 시 클립보드 데이터를 읽어와서 첫 번째 입력창부터 채워주는 액션
-    const handleClipboardPasteToFolder = async (folderItems) => {
-        try {
-            const text = await navigator.clipboard.readText();
-            if (!text) return;
-            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
-            if (lines.length === 0) return;
-
-            setSummaries(prev => {
-                let next = [...prev];
-                folderItems.forEach((itemId, offset) => {
-                    const textVal = lines[offset];
-                    if (textVal !== undefined && textVal !== '') {
-                        const existsIdx = next.findIndex(s => s.id === itemId);
-                        if (existsIdx !== -1) {
-                            next[existsIdx] = { ...next[existsIdx], label: textVal };
-                        } else {
-                            const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
-                            next.push({
-                                id: itemId,
-                                label: textVal,
-                                subId: itemId,
-                                type: baseVar?.type || 'frequency',
-                                info: baseVar?.info || baseVar?.categories || []
-                            });
-                        }
-                    }
-                });
-                return next;
-            });
-            if (onUnsavedChange) onUnsavedChange(true);
-        } catch (err) {
-            console.error('Failed to read clipboard text:', err);
-        }
-    };
-
     const scrollContainerRef = useRef(null);
 
     const filteredFolders = useMemo(() => {
@@ -307,15 +260,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     useEffect(() => {
         setWizardSelectedIds(new Set());
     }, [wizardTab]);
-
-    const toggleFolderCollapse = (folderId) => {
-        setCollapsedFolders(prev => {
-            const next = new Set(prev);
-            if (next.has(folderId)) next.delete(folderId);
-            else next.add(folderId);
-            return next;
-        });
-    };
 
     // 키보드 이벤트 (Undo/Redo)
     useEffect(() => {
@@ -447,160 +391,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         setDragEnabledFolderId(null);
     };
 
-    const handleDragStart = useCallback((e, draggedVar) => {
-        let targets = [];
-        if (selectedIds.includes(draggedVar.id)) {
-            targets = baseVariables.filter(v => selectedIds.includes(v.id));
-        } else {
-            targets = [draggedVar];
-            setSelectedIds([draggedVar.id]);
-        }
-        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'EXTERNAL', items: targets }));
-    }, [selectedIds, baseVariables]);
-
-
-
-    const handleFolderDrop = useCallback((e, folderId, targetIdx = -1) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setDragOverTarget({ folderId: null, idx: null });
-        try {
-            const dataStr = e.dataTransfer.getData('text/plain');
-            if (!dataStr) return;
-            const data = JSON.parse(dataStr);
-            const targetFolder = folders.find(f => f.id === folderId);
-            if (!targetFolder) return;
-
-            const isFrequencyFolder = targetFolder.type !== 'statistics';
-
-            if (data.type === 'EXTERNAL') {
-                if (isFrequencyFolder) {
-                    const hasNumeric = data.items.some(it => it.type === 'double' || it.type === 'numeric');
-                    if (hasNumeric) {
-                        modal.showAlert('알림', '숫자형 변수는 빈도 요약 폴더에 추가할 수 없습니다.');
-                        return;
-                    }
-                }
-
-                const itemsToAdd = data.items.map(it => it.base_id || it.id);
-
-                const existingItems = targetFolder.items || [];
-                const hasDuplicates = itemsToAdd.some(id => existingItems.includes(id));
-                const uniqueItemsToAdd = itemsToAdd.filter(id => !existingItems.includes(id));
-
-                if (uniqueItemsToAdd.length > 0) {
-                    setFolders(prev => prev.map(f => {
-                        if (f.id === folderId) {
-                            const newItems = [...(f.items || [])];
-                            if (targetIdx === -1) {
-                                newItems.push(...uniqueItemsToAdd);
-                            } else {
-                                newItems.splice(targetIdx, 0, ...uniqueItemsToAdd);
-                            }
-                            return { ...f, items: newItems };
-                        }
-                        return f;
-                    }));
-                    if (onUnsavedChange) onUnsavedChange(true);
-                }
-
-                if (hasDuplicates) {
-                    if (uniqueItemsToAdd.length === 0) {
-                        modal.showAlert('알림', '이미 추가된 문항입니다.');
-                    } else {
-                        modal.showAlert('알림', '이미 등록된 항목을 제외하고 추가했습니다.');
-                    }
-                }
-
-                setSelectedIds([]);
-            } else if (data.type === 'INTERNAL_FOLDER_ITEM') {
-                const { folderId: sourceFolderId, itemId } = data;
-
-                if (isFrequencyFolder) {
-                    const varData = baseVariables.find(v => v.id === itemId);
-                    if (varData && (varData.type === 'double' || varData.type === 'numeric')) {
-                        modal.showAlert('알림', '숫자형 변수는 빈도 요약 폴더에 추가할 수 없습니다.');
-                        return;
-                    }
-                }
-
-                setFolders(prev => {
-                    let next = prev.map(f => ({ ...f, items: [...(f.items || [])] }));
-                    const srcF = next.find(f => f.id === sourceFolderId);
-                    const tgtF = next.find(f => f.id === folderId);
-
-                    if (!srcF || !tgtF) return prev;
-                    if (sourceFolderId !== folderId && tgtF.items.includes(itemId)) {
-                        return prev; // 중복 이동 방지
-                    }
-
-                    const srcIdx = srcF.items.indexOf(itemId);
-                    if (srcIdx === -1) return prev;
-
-                    srcF.items.splice(srcIdx, 1);
-
-                    let insertIdx = targetIdx;
-                    if (insertIdx === -1) {
-                        tgtF.items.push(itemId);
-                    } else {
-                        if (sourceFolderId === folderId && targetIdx > srcIdx) {
-                            insertIdx = targetIdx - 1;
-                        }
-                        tgtF.items.splice(insertIdx, 0, itemId);
-                    }
-
-                    return next;
-                });
-                if (onUnsavedChange) onUnsavedChange(true);
-            }
-        } catch (err) { console.error(err); }
-    }, [folders, onUnsavedChange, modal]);
-
-    const removeVar = (varId, groupIndex) => {
-        setColVars(prev => {
-            const next = prev.map(g => [...g]);
-            next[groupIndex] = next[groupIndex].filter(v => v.id !== varId);
-            return next.filter(g => g.length > 0);
-        });
-    };
-
-    const handleDeleteSummary = (e, summaryId) => {
-        e.stopPropagation();
-        modal.showConfirm('삭제 확인', `요약표(${summaryId})를 삭제하시겠습니까?`, {
-            btns: [
-                { title: "취소", click: () => { } },
-                {
-                    title: "삭제",
-                    click: async () => {
-                        const pageId = sessionStorage.getItem('pageId');
-                        if (!pageId) return;
-
-                        try {
-                            loadingSpinner.show();
-                            const requestData = {
-                                pageid: pageId,
-                                user: auth?.user?.userId,
-                                variables: {},
-                                delete_ids: [summaryId]
-                            };
-
-                            const result = await saveSummaryDetail.mutateAsync(requestData);
-                            if (result?.success === "777") {
-                                modal.showAlert('알림', '요약표가 삭제되었습니다.');
-                                await fetchSummaryData();
-                            }
-                        } catch (error) {
-                            console.error('Delete error:', error);
-                            modal.showAlert('오류', '요약표 삭제 중 문제가 발생했습니다.');
-                        } finally {
-                            loadingSpinner.hide();
-                        }
-                    }
-                }
-            ]
-        });
-    };
-
     // --- 데이터 로직 ---
     const fetchSummaryData = async (isFresh = false) => {
         const pageId = sessionStorage.getItem('pageId');
@@ -711,61 +501,17 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 setSummaries(formattedSummaries);
                 history.reset(formattedSummaries);
 
-                const ids = formattedSummaries.map(b => b.id);
-                setOriginalSummaryIds(ids);
                 setDeletedSummaryIds([]);
 
                 if (formattedSummaries.length > 0) {
                     const target = isFresh ? formattedSummaries[formattedSummaries.length - 1] : formattedSummaries[0];
                     if (isFresh || !selectedSummary) {
                         setSelectedSummary(target.id);
-                        setCurrentLabel(target.label);
                     }
                 }
             }
         } catch (error) { console.error(error); }
         finally { loadingSpinner.hide(); }
-    };
-
-    const handleCreateSummary = async (name) => {
-        if (!name?.trim()) return modal.showAlert('알림', '요약표명을 입력해 주세요.');
-        if (colVars.length === 0) return modal.showAlert('알림', '구성된 문항이 없습니다.');
-        const pageId = sessionStorage.getItem('pageId');
-        const formula = colVars.map(group => group.map(v => v.id).join('*')).join('+');
-        try {
-            loadingSpinner.show();
-            // TODO: 기존 generateSummary 가 미구현 상태였음 일단 유지
-            modal.showAlert('알림', '기존 수동 생성 API는 정의되지 않았습니다');
-        } catch (error) { console.error(error); }
-        finally { loadingSpinner.hide(); }
-    };
-
-    const handleAutoGenerateSummary = async () => {
-        const pageId = sessionStorage.getItem('pageId');
-        if (!pageId) return;
-        try {
-            loadingSpinner.show();
-            // TODO: 임시 하드코딩
-            const result = await generateSummaryAuto.mutateAsync({ pageid: pageId, user: auth?.user?.userId, append_mode: true });
-            // const result = await generateSummaryAuto.mutateAsync({ pageid: "446bd14c-d053-47c8-bf01-59384cb37746", user: "sbbok", append_mode: true });
-
-            if (result && result.resultjson && result.resultjson.summary_folders) {
-                // 응답에서 새로 생성된 폴더 목록이 summary_folders 또는 다른 형태로 온다면
-                // 임시로 백엔드 스펙에 맞게 다시 조회하거나 매핑. 
-                // 명세엔 generated_folder_count 등만 보여서, 여기선 fetchSummaryData 호출을 추천.
-                await fetchSummaryData();
-                if (onUnsavedChange) onUnsavedChange(true);
-                modal.showAlert('알림', `${result.resultjson.generated_folder_count || result.resultjson.summary_folders?.length || 0}개의 척도형 요약표가 자동 생성되었습니다.`);
-            } else if (result?.success === "777") {
-                await fetchSummaryData();
-                modal.showAlert('알림', `척도형 요약표 자동 생성이 완료되었습니다.`);
-            }
-        } catch (error) {
-            console.error('Auto generate error:', error);
-            modal.showAlert('오류', '척도형 요약표 자동 생성 중 문제가 발생했습니다.');
-        } finally {
-            loadingSpinner.hide();
-        }
     };
 
     const handleSaveSummary = async (overrideFolders = null, overrideDeleteIds = null, successMessage = '요약표가 저장되었습니다.') => {
@@ -1034,23 +780,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             return arrayEqual(t, []) && arrayEqual(m, []) && arrayEqual(b, []) && !isMeanIncluded;
         }
         return false;
-    };
-
-    const toggleMatrixCell = (rowName, num) => {
-        const row = rowName.toLowerCase();
-        setMatrixSelection(prev => {
-            const currentList = prev[row] || [];
-            let nextList;
-            if (currentList.includes(num)) {
-                // 이미 포함되어 있으면, 해당 숫자 이상의 모든 숫자를 비활성화 (누적 해제)
-                nextList = currentList.filter(x => x < num);
-            } else {
-                // 포함되어 있지 않으면, 1부터 해당 숫자까지 모두 활성화 (누적 선택)
-                const needed = Array.from({ length: num }, (_, i) => i + 1);
-                nextList = Array.from(new Set([...currentList, ...needed])).sort((a, b) => a - b);
-            }
-            return { ...prev, [row]: nextList };
-        });
     };
 
     const setSelectionCount = (row, count) => {
@@ -1808,14 +1537,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'EXTERNAL', items: targets }));
     }, [selectedIds, summaryVariables]);
 
-    // 요약표 목록 필터링 (일단 유지)
-    const filteredSummaries = useMemo(() => {
-        const search = (summarySearchMap[currentTab] || '').toLowerCase();
-        return summaries.filter(b =>
-            (b.label || '').toLowerCase().includes(search) || (b.id || '').toLowerCase().includes(search)
-        );
-    }, [summaries, summarySearchMap, currentTab]);
-
     useEffect(() => {
         fetchSummaryData();
         const handlePageUpdate = () => fetchSummaryData();
@@ -2134,7 +1855,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             minHeight: '300px'
                         }}>
                             {filteredFolders.length > 0 ? (
-                                filteredFolders.map((folder, folderIdx) => {
+                                filteredFolders.map((folder) => {
                                     const isExpanded = expandedFolders.has(folder.id);
 
                                     const scalePoints = summaries.find(s => folder.items && folder.items.includes(s.id))?.scale_points || 7;
@@ -3464,7 +3185,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     flex: 1, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px',
                                     background: '#f8fafc', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px'
                                 }}>
-                                    {modalFolders.map((folder, folderIdx) => (
+                                    {modalFolders.map((folder) => (
                                         <div key={folder.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <div style={{
                                                 flex: 1, border: '1px solid #cbd5e1', borderRadius: '6px',
