@@ -313,17 +313,21 @@ const DpRequestManualSummaryModal = ({
                 {/* 팝업 헤더 */}
                 <div style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '16px 20px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
+                    padding: '20px 28px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>
-                        <span style={{ width: '3px', height: '14px', backgroundColor: '#2563eb', marginRight: '8px', display: 'inline-block' }}></span>
-                        <span>{mode === 'edit' ? '요약 설정 수정' : `요약 설정 생성 (${selectedIds.length}개 문항 선택됨)`}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '4px', height: '18px', background: '#3b82f6', borderRadius: '2px' }}></div>
+                        <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>
+                            {mode === 'edit' ? '요약 설정 수정' : `요약 설정 생성 (${selectedIds.length}개 문항 선택됨)`}
+                        </h3>
                     </div>
                     <button
                         onClick={onClose}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#94a3b8', transition: 'color 0.15s' }}
+                        onMouseEnter={(e) => e.currentTarget.style.color = '#475569'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
                     >
-                        <X size={18} />
+                        <X size={20} />
                     </button>
                 </div>
 
