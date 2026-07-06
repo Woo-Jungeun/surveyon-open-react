@@ -1216,6 +1216,13 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         const varLabel = baseVar?.label || baseVar?.name || firstVarId;
         const sp = baseVar?.scale_points || scaleMax;
 
+        let folderId = firstVarId;
+        let counter = 2;
+        while (folders.some(f => f.id === folderId)) {
+            folderId = `${firstVarId}_${counter}`;
+            counter++;
+        }
+
         if (currentTab === 'scale') {
             const folderName = selectedIds.length > 1
                 ? `${varLabel} 외 ${selectedIds.length - 1}개 - 요약표`
@@ -1242,7 +1249,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 });
             }
 
-            const folderId = firstVarId;
             const newFolder = {
                 id: folderId,
                 name: folderName,
@@ -1280,7 +1286,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 mode: !!openStats.mode
             });
 
-            const folderId = firstVarId;
             const newFolder = {
                 id: folderId,
                 name: folderName,
