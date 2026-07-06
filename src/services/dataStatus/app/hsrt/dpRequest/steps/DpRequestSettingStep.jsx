@@ -1,9 +1,9 @@
 import { useState, useEffect, useContext, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Settings, Layout, Scale, AlertCircle, Info, Trash2, ChevronLeft, ChevronRight, Search, Plus } from 'lucide-react';
-import { DropDownList } from '@progress/kendo-react-dropdowns';
+
 import { Input } from '@progress/kendo-react-inputs';
-import { Popup } from '@progress/kendo-react-popup';
+
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import AnalysisSettingTab from './AnalysisSettingTab';
@@ -54,67 +54,16 @@ const NumericEditCell = (props) => {
     );
 };
 
-// --- 커스텀 헤더 셀 (조건 도움말) ---
-const ConditionHeaderCell = (props) => {
-    const anchorRef = useRef(null);
-    const [show, setShow] = useState(false);
-
-    return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-            <span>{props.title}</span>
-            <div
-                ref={anchorRef}
-                onMouseEnter={() => setShow(true)}
-                onMouseLeave={() => setShow(false)}
-                style={{ cursor: 'pointer', display: 'flex' }}
-                onClick={(e) => e.stopPropagation()}
-            >
-                <Info size={14} color="#94a3b8" />
-            </div>
-
-            <Popup
-                anchor={anchorRef.current}
-                show={show}
-                animate={false}
-                popupClass="condition-tooltip-popup"
-                style={{ zIndex: 100000 }}
-            >
-                <div style={{
-                    padding: '12px 16px',
-                    background: '#ffffff',
-                    width: 'max-content',
-                    minWidth: '160px',
-                    lineHeight: '1.6',
-                    color: '#334155',
-                    textAlign: 'left',
-                    border: '1px solid #cbd5e1',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                    borderRadius: '8px'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                        <div style={{
-                            width: '18px', height: '18px', borderRadius: '50%',
-                            background: '#e2e8f0', color: '#64748b',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '11px', fontWeight: 'bold'
-                        }}>i</div>
-                        <span style={{ color: '#2563eb', fontWeight: '800', fontSize: '13px' }}>조건</span>
-                    </div>
-                    <div style={{ fontSize: '13px', letterSpacing: '-0.3px', marginLeft: '4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <div><span style={{ fontWeight: 600 }}>• 동등 대조:</span> <span>GENDER == 1, REGION == &quot;A&quot;</span></div>
-                        <div><span style={{ fontWeight: 600 }}>• 비교 대조:</span> <span>AGE &gt;= 20, AGE &lt; 30</span></div>
-                        <div><span style={{ fontWeight: 600 }}>• IN 연산:</span> <span>AGE_GROUP in [2, 3, 4]</span></div>
-                        <div><span style={{ fontWeight: 600 }}>• 다중 조건:</span> <span>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</span></div>
-                    </div>
-                </div>
-            </Popup>
-        </div>
-    );
+// --- PID 전용 읽기 전용 커스텀 셀 ---
+const PidCell = (props) => {
+    return <td style={{ ...props.style, padding: '0 12px' }}>{props.dataItem[props.field]}</td>;
 };
+
+
 
 const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getTableRenderContext, getTableDetail, saveTableSettings, getBaseVariableList, getRecodedOverview, reapplyPreset } = DpRequestPageApi();
+    const { getTableRenderContext, getTableDetail, saveTableSettings, getBaseVariableList, getRecodedOverview, reapplyPreset, getRecodedPlain, saveRecodedSet, deleteRecodedSet, getWeightPidList } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -136,23 +85,14 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     // --- 가중치 설정 탭 상태 관리 ---
     const [isWeightSidebarOpen, setIsWeightSidebarOpen] = useState(true);
     const [weightSearch, setWeightSearch] = useState('');
-    const [weights, setWeights] = useState([
-        {
-            id: 'WEIGHT_1',
-            label: '가중치 1',
-            type: 'single',
-            info: [
-                { label2: '1', label: '가중치 그룹 A', logic: '', inEdit: false }
-            ]
-        }
-    ]);
-    const [selectedWeightId, setSelectedWeightId] = useState('WEIGHT_1');
-    const [currentWeightId, setCurrentWeightId] = useState('WEIGHT_1');
-    const [currentWeightLabel, setCurrentWeightLabel] = useState('가중치 1');
+    const [weights, setWeights] = useState([]);
+    const [selectedWeightId, setSelectedWeightId] = useState('');
+    const [currentWeightId, setCurrentWeightId] = useState('');
+    const [currentWeightLabel, setCurrentWeightLabel] = useState('');
     const [currentWeightType, setCurrentWeightType] = useState('single');
-    const [currentWeightInfo, setCurrentWeightInfo] = useState([
-        { label2: '1', label: '가중치 그룹 A', logic: '', inEdit: false }
-    ]);
+    const [currentWeightInfo, setCurrentWeightInfo] = useState([]);
+    const [deletedWeightIds, setDeletedWeightIds] = useState([]);
+    const [weightSort, setWeightSort] = useState([]);
 
     const selectWeight = (w) => {
         const prevId = selectedWeightId;
@@ -175,6 +115,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
         setCurrentWeightLabel(w.label);
         setCurrentWeightType(w.type || 'single');
         setCurrentWeightInfo(w.info || []);
+        setWeightSort([]);
     };
 
     const handleUpdateWeightField = (field, val) => {
@@ -207,40 +148,112 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
         setCurrentWeightInfo(prev => prev.map(it => ({ ...it, inEdit: it === e.dataItem })));
     };
 
-    const handleAddNewWeight = () => {
-        const newId = `WEIGHT_${Date.now()}`;
-        const newW = {
-            id: newId,
-            label: '새 가중치 설정',
-            type: 'single',
-            info: [{ label2: '1', label: '가중치 그룹 A', logic: '', inEdit: true }]
-        };
+    const handleWeightSortChange = (e) => {
+        setWeightSort(e.sort);
+        if (e.sort && e.sort.length > 0) {
+            const { field, dir } = e.sort[0];
+            if (!dir) return;
+            const sortedInfo = [...currentWeightInfo].sort((a, b) => {
+                let valA = a[field];
+                let valB = b[field];
 
-        if (selectedWeightId) {
-            setWeights(prev => {
-                const updated = prev.map(item =>
-                    item.id === selectedWeightId
-                        ? {
-                            ...item,
-                            id: currentWeightId,
-                            label: currentWeightLabel,
-                            type: currentWeightType,
-                            info: currentWeightInfo
-                        }
-                        : item
-                );
-                return [...updated, newW];
+                if (field === 'value') {
+                    valA = Number(valA) || 0;
+                    valB = Number(valB) || 0;
+                    return dir === 'asc' ? valA - valB : valB - valA;
+                }
+
+                if (field === 'label') {
+                    const numA = Number(valA);
+                    const numB = Number(valB);
+                    if (!isNaN(numA) && !isNaN(numB)) {
+                        return dir === 'asc' ? numA - numB : numB - numA;
+                    }
+                }
+
+                const strA = String(valA || '');
+                const strB = String(valB || '');
+                return dir === 'asc' ? strA.localeCompare(strB) : strB.localeCompare(strA);
             });
-        } else {
-            setWeights(prev => [...prev, newW]);
+            updateWeightInfo(sortedInfo);
         }
+    };
 
-        setSelectedWeightId(newId);
-        setCurrentWeightId(newId);
-        setCurrentWeightLabel('새 가중치 설정');
-        setCurrentWeightType('single');
-        setCurrentWeightInfo([{ label2: '1', label: '가중치 그룹 A', logic: '', inEdit: true }]);
-        if (onUnsavedChange) onUnsavedChange(true);
+    const handleAddNewWeight = async () => {
+        const pageId = sessionStorage.getItem('pageId');
+        if (!pageId || !auth?.user?.userId) return;
+
+        loadingSpinner.show();
+        try {
+            const pidListRes = await getWeightPidList.mutateAsync({ pageid: pageId, user: auth.user.userId });
+            const pidData = pidListRes?.resultjson || pidListRes?.data?.resultjson || pidListRes;
+            const pidColumn = pidData?.pid_column || 'pid';
+            const pids = pidData?.pids || [];
+
+            // Build the info array by checking existing weights loaded from variables/recoded/plain
+            const newInfo = pids.map((pid) => {
+                let matchedValue = ''; // default fallback value
+
+                // Loop through all loaded weights to search for info row with label matching pid
+                for (const w of weights) {
+                    const infoList = w.id === selectedWeightId ? currentWeightInfo : (w.info || []);
+                    const matchedItem = infoList.find(infoItem => String(infoItem.label) === String(pid));
+                    if (matchedItem) {
+                        const valNum = Number(matchedItem.value);
+                        if (!isNaN(valNum)) {
+                            matchedValue = valNum;
+                            break;
+                        }
+                    }
+                }
+
+                return {
+                    value: matchedValue,
+                    label: String(pid),
+                    logic: `${pidColumn} == ${pid}`,
+                    inEdit: false
+                };
+            });
+
+            const newId = `new_${Date.now()}`;
+            const newW = {
+                id: newId,
+                label: '새 가중치 설정',
+                type: 'single',
+                info: newInfo
+            };
+
+            if (selectedWeightId) {
+                setWeights(prev => {
+                    const updated = prev.map(item =>
+                        item.id === selectedWeightId
+                            ? {
+                                ...item,
+                                id: currentWeightId,
+                                label: currentWeightLabel,
+                                type: currentWeightType,
+                                info: currentWeightInfo
+                            }
+                            : item
+                    );
+                    return [...updated, newW];
+                });
+            } else {
+                setWeights(prev => [...prev, newW]);
+            }
+
+            setSelectedWeightId(newId);
+            setCurrentWeightId(newId);
+            setCurrentWeightLabel('새 가중치 설정');
+            setCurrentWeightType('single');
+            setCurrentWeightInfo(newInfo);
+            if (onUnsavedChange) onUnsavedChange(true);
+        } catch (err) {
+            console.error("Failed to load PID list for new weight:", err);
+            modal.showAlert("오류", "PID 목록을 조회하는 데 실패했습니다.");
+        } finally {
+            loadingSpinner.hide();
+        }
     };
 
     const handleDeleteWeight = (e, id) => {
@@ -253,6 +266,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     click: () => {
                         const nextList = weights.filter(w => w.id !== id);
                         setWeights(nextList);
+                        if (!id.startsWith('new_')) {
+                            setDeletedWeightIds(prev => [...prev, id]);
+                        }
                         if (selectedWeightId === id) {
                             if (nextList.length > 0) {
                                 selectWeight(nextList[0]);
@@ -385,7 +401,15 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             const detailPromise = getTableDetail.mutateAsync({ pageid: pageId, user: auth.user.userId });
             // 2. 가중치 선택을 위한 기본 변수 목록 조회
             const variablesPromise = getBaseVariableList.mutateAsync({ pageid: pageId, user: auth.user.userId });
-            const [renderContext, tableDetail, varList] = await Promise.all([contextPromise, detailPromise, variablesPromise]);
+            // 3. 가중치 설정 탭 목록 조회
+            const recodedPlainPromise = getRecodedPlain.mutateAsync({ pageid: pageId, user: auth.user.userId });
+
+            const [renderContext, tableDetail, varList, recodedPlainRes] = await Promise.all([
+                contextPromise,
+                detailPromise,
+                variablesPromise,
+                recodedPlainPromise
+            ]);
 
             if (renderContext) {
                 setContextData(renderContext);
@@ -597,6 +621,52 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 }
             }
 
+            // --- 가중치 목록 parsing ---
+            const actualRecodedPlain = recodedPlainRes?.resultjson || recodedPlainRes?.data?.resultjson || recodedPlainRes || {};
+            const loadedWeights = [];
+            Object.keys(actualRecodedPlain).forEach(key => {
+                const item = actualRecodedPlain[key];
+                if (item && (item.variable_role === 'weight' || item.recoded_type === 'weight')) {
+                    loadedWeights.push({
+                        id: item.id,
+                        label: item.label || item.name || '',
+                        type: item.type || 'single',
+                        info: (item.info || []).map(infoItem => ({
+                            value: infoItem.value !== undefined && infoItem.value !== null ? Number(infoItem.value) : (infoItem.val !== undefined && infoItem.val !== null ? Number(infoItem.val) : ''),
+                            label: infoItem.label !== undefined ? infoItem.label : '',
+                            logic: infoItem.logic !== undefined ? infoItem.logic : (infoItem.condition !== undefined ? infoItem.condition : ''),
+                            inEdit: false
+                        }))
+                    });
+                }
+            });
+
+            setWeights(loadedWeights);
+            setDeletedWeightIds([]);
+
+            if (loadedWeights.length > 0) {
+                const exists = loadedWeights.find(w => w.id === selectedWeightId);
+                if (exists) {
+                    setSelectedWeightId(exists.id);
+                    setCurrentWeightId(exists.id);
+                    setCurrentWeightLabel(exists.label);
+                    setCurrentWeightType(exists.type || 'single');
+                    setCurrentWeightInfo(exists.info || []);
+                } else {
+                    setSelectedWeightId(loadedWeights[0].id);
+                    setCurrentWeightId(loadedWeights[0].id);
+                    setCurrentWeightLabel(loadedWeights[0].label);
+                    setCurrentWeightType(loadedWeights[0].type || 'single');
+                    setCurrentWeightInfo(loadedWeights[0].info || []);
+                }
+            } else {
+                setSelectedWeightId('');
+                setCurrentWeightId('');
+                setCurrentWeightLabel('');
+                setCurrentWeightType('single');
+                setCurrentWeightInfo([]);
+            }
+
             const actualVarList = varList?.resultjson || varList?.data?.resultjson || varList;
             if (Array.isArray(actualVarList)) {
                 const weightOpt = ['없음', ...actualVarList.map(v => v.name || v.label)];
@@ -705,6 +775,76 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
         loadingSpinner.show();
         try {
+            // 0. 가중치 설정 저장/삭제 처리
+            for (const delId of deletedWeightIds) {
+                await deleteRecodedSet.mutateAsync({
+                    pageid: pageId,
+                    user: auth.user.userId,
+                    variables: [delId]
+                });
+            }
+
+            for (const w of weights) {
+                let id = w.id;
+                let label = w.label;
+                let type = w.type;
+                let info = w.info;
+
+                if (w.id === selectedWeightId) {
+                    id = currentWeightId;
+                    label = currentWeightLabel;
+                    type = currentWeightType;
+                    info = currentWeightInfo;
+                }
+
+                if (!id || id.trim() === '' || id.startsWith('new_')) {
+                    const cleanId = id.startsWith('new_') ? id.replace('new_', 'weight_') : `weight_${Date.now()}`;
+                    id = cleanId;
+                }
+
+                const infoArray = info.map((opt, index) => ({
+                    index: index + 1,
+                    label: opt.label || '',
+                    label2: '',
+                    label3: '',
+                    logic: opt.logic || '',
+                    type: 'option',
+                    row_role: 'option',
+                    is_internal: null,
+                    prefix: null,
+                    postfix: null,
+                    hide: '',
+                    round: null,
+                    value: Number(opt.value) || 0,
+                    stat_type: null,
+                    target_var: null,
+                    line: null,
+                    color: null
+                }));
+
+                const savePayload = {
+                    pageid: pageId,
+                    user: auth.user.userId,
+                    variables: {
+                        [id]: {
+                            id: id,
+                            label: label || `가중치: ${id}`,
+                            type: type || 'single',
+                            recoded_type: 'weight',
+                            variable_role: 'weight',
+                            info: infoArray
+                        }
+                    },
+                    recoded_type: {
+                        [id]: 'weight'
+                    }
+                };
+
+                await saveRecodedSet.mutateAsync(savePayload);
+            }
+
+            setDeletedWeightIds([]);
+
             const changedPresetIds = [];
             const isPresetEqual = (a, b, type) => {
                 if (a.name !== b.name) return false;
@@ -1163,33 +1303,14 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                             <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', flexShrink: 0, borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', marginBottom: '16px', paddingLeft: '16px', paddingRight: '16px', paddingTop: '16px' }}>
                                 <div className="dp-content-label-edit" style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1, minWidth: 0 }}>
-                                    <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>가중치 ID</span>
-                                        <input
-                                            type="text"
-                                            value={currentWeightId}
-                                            onChange={(e) => handleUpdateWeightField('id', e.target.value)}
-                                            className="dp-input"
-                                            style={{ flex: 1, minWidth: 0, height: '32px', padding: '0 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
-                                        />
-                                    </div>
-                                    <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>가중치 라벨</span>
                                         <input
                                             type="text"
                                             value={currentWeightLabel}
                                             onChange={(e) => handleUpdateWeightField('label', e.target.value)}
                                             className="dp-input"
-                                            style={{ flex: 1, minWidth: 0, height: '32px', padding: '0 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
-                                        />
-                                    </div>
-                                    <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>가중치 유형</span>
-                                        <DropDownList
-                                            data={["single", "scale", "multi", "rank", "open(문자)", "open(숫자)"]}
-                                            value={currentWeightType || 'single'}
-                                            onChange={(e) => handleUpdateWeightField('type', e.value)}
-                                            style={{ flex: 1, minWidth: 0, height: '32px', fontSize: '13px', borderRadius: '6px' }}
+                                            style={{ width: '280px', height: '32px', padding: '0 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
                                         />
                                     </div>
                                 </div>
@@ -1197,15 +1318,16 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                                 <KendoGridV2
                                     data={currentWeightInfo}
-                                    reorderable showNo deletable addable showNoRecordsAddBtn={false} editField="inEdit"
+                                    showNo showNoRecordsAddBtn={false} editField="inEdit"
                                     onDataChange={updateWeightInfo}
                                     onRowClick={handleWeightRowClick}
-                                    newRowTemplate={{ label2: '', label: '', logic: '' }}
+                                    sortable={true}
+                                    sort={weightSort}
+                                    onSortChange={handleWeightSortChange}
                                     style={{ flex: 1, height: '100%', width: '100%' }}
                                 >
-                                    <Column field="label2" title="할당될 값" width="120px" cell={NumericEditCell} />
-                                    <Column field="label" title="보기 라벨" width="300px" />
-                                    <Column field="logic" title="조건" headerCell={ConditionHeaderCell} />
+                                    <Column field="label" title="pid" width="200px" cell={PidCell} />
+                                    <Column field="value" title="가중치 비율" cell={NumericEditCell} />
                                 </KendoGridV2>
                             </div>
                         </div>

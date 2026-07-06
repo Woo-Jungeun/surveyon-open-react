@@ -97,6 +97,16 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/dp-request/recoded/overview", "API_BASE_URL_DATASTATUS")
     );
 
+    /** DP 의뢰서 - Recoded Plain 목록 조회 */
+    const getRecodedPlain = useMutation(
+        async (data) => await api.post(data, "/variables/recoded/plain", "API_BASE_URL_DATASTATUS")
+    );
+
+    /** DP 의뢰서 - 가중치 PID 목록 조회 */
+    const getWeightPidList = useMutation(
+        async (data) => await api.post(data, "/weight/pid-list", "API_BASE_URL_DATASTATUS")
+    );
+
     /** DP 의뢰서 - Summary 조회 */
     const getSummaryDetail = useMutation(
         async (data) => await api.post(data, "/dp-request/summary/detail", "API_BASE_URL_DATASTATUS"),
@@ -283,6 +293,8 @@ export function DpRequestPageApi() {
         createSnapshot,
         savePageSettings,
         getAiSummary,
-        reapplyPreset
+        reapplyPreset,
+        getRecodedPlain,
+        getWeightPidList
     };
 }
