@@ -6,6 +6,7 @@ import { DpRequestPageApi } from '../DpRequestPageApi';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
+import DpRequestManualSummaryModal from './DpRequestManualSummaryModal';
 
 
 
@@ -92,18 +93,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     // --- 수동 요약 생성 관련 상태 추가 ---
     const [isManualModalOpen, setIsManualModalOpen] = useState(false);
-    const [manualScaleMin, setManualScaleMin] = useState(1);
-    const [manualScaleMax, setManualScaleMax] = useState(5);
-    const [manualIsReverse, setManualIsReverse] = useState(false);
-    const [manualBands, setManualBands] = useState([
-        { id: 'b1', label: 'Bot2', values: '1,2' },
-        { id: 'b2', label: 'Mid', values: '3' },
-        { id: 'b3', label: 'Top2', values: '4,5' }
-    ]);
-    const [manualPresetId, setManualPresetId] = useState('custom');
-    const [manualIsMeanIncluded, setManualIsMeanIncluded] = useState(false);
     const [manualModalMode, setManualModalMode] = useState('create');
-    const [editingFolderIdForBands, setEditingFolderIdForBands] = useState(null);
+    const [editingFolder, setEditingFolder] = useState(null);
 
     // 신규 생성된 폴더 하이라이트 효과용 상태
     const [newlyCreatedFolderIds, setNewlyCreatedFolderIds] = useState(new Set());
@@ -933,9 +924,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         }
     };
 
-    const updateSummaryInfo = useCallback((newInfo) => {
-        setSummaries(prev => prev.map(b => b.id === selectedSummary ? { ...b, info: newInfo } : b));
-    }, [selectedSummary]);
+
 
     const summaryVariables = useMemo(() => {
         return (Array.isArray(baseVariables) ? baseVariables : []).map(v => {
@@ -1341,112 +1330,15 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             return;
         }
 
-        // 선택된 문항들의 scale_points 중 최댓값을 가져와 척도 점수로 셋팅
-        let maxSp = 0;
-        selectedIds.forEach(id => {
-            const v = summaryVariables.find(item => item.id === id);
-            if (v && v.scale_points) {
-                maxSp = Math.max(maxSp, v.scale_points);
-            }
-        });
-        if (maxSp === 0) maxSp = 5;
-
-        setManualScaleMax(maxSp);
-        setManualScaleMin(1);
         setManualModalMode('create');
-        setEditingFolderIdForBands(null);
-
-        // 탭이 오픈 문항 탭인 경우
-        if (currentTab === 'open-num') {
-            setIsManualModalOpen(true);
-            return;
-        }
-
-        // 선택한 점수에 맞는 프리셋이 있는지 확인해서 있으면 프리셋 자동 선택, 없으면 custom
-        const matchedPreset = scalePresets.find(p => (p.options?.max || p.max) === maxSp);
-        if (matchedPreset) {
-            setManualPresetId(matchedPreset.id);
-            const opts = matchedPreset.options || {};
-            setManualIsReverse(!!opts.reverse);
-            let loadedBands = [];
-            if (Array.isArray(opts.bands)) {
-                loadedBands = opts.bands.map((b, idx) => ({
-                    id: b.id || `band_${idx}_${Date.now()}`,
-                    label: b.label || 'Top',
-                    values: Array.isArray(b.values) ? b.values.join(',') : ''
-                }));
-            } else if (Array.isArray(matchedPreset.bands)) {
-                loadedBands = matchedPreset.bands.map((b, idx) => ({
-                    id: b.id || `band_${idx}_${Date.now()}`,
-                    label: b.label || 'Top',
-                    values: String(b.values)
-                }));
-            }
-            if (loadedBands.length > 0) {
-                setManualBands(loadedBands);
-            } else {
-                setDefaultBandsForScale(maxSp);
-            }
-        } else {
-            setManualPresetId('custom');
-            setDefaultBandsForScale(maxSp);
-        }
-
+        setEditingFolder(null);
         setIsManualModalOpen(true);
     };
 
-    const setDefaultBandsForScale = (sp) => {
-        if (sp === 5) {
-            setManualBands([
-                { id: 'b1', label: 'Bot2', values: '1,2' },
-                { id: 'b2', label: 'Mid', values: '3' },
-                { id: 'b3', label: 'Top2', values: '4,5' }
-            ]);
-        } else if (sp === 7) {
-            setManualBands([
-                { id: 'b1', label: 'Bot3', values: '1,2,3' },
-                { id: 'b2', label: 'Mid', values: '4' },
-                { id: 'b3', label: 'Top3', values: '5,6,7' }
-            ]);
-        } else {
-            const center = Math.ceil(sp / 2);
-            const botVals = Array.from({ length: center - 1 }, (_, i) => i + 1).join(',');
-            const topVals = Array.from({ length: sp - center }, (_, i) => center + 1 + i).join(',');
-            setManualBands([
-                { id: 'b1', label: 'Bot', values: botVals },
-                { id: 'b2', label: 'Mid', values: `${center}` },
-                { id: 'b3', label: 'Top', values: topVals }
-            ]);
-        }
-    };
-
-    const handleManualPresetChange = (presetId) => {
-        setManualPresetId(presetId);
-        if (presetId === 'custom') return;
-
-        const preset = scalePresets.find(p => p.id === presetId);
-        if (preset) {
-            const opts = preset.options || {};
-            setManualScaleMin(opts.min ?? 1);
-            setManualScaleMax(opts.max ?? 5);
-            setManualIsReverse(!!opts.reverse);
-
-            let loadedBands = [];
-            if (Array.isArray(opts.bands)) {
-                loadedBands = opts.bands.map((b, idx) => ({
-                    id: b.id || `band_${idx}_${Date.now()}`,
-                    label: b.label || 'Top',
-                    values: Array.isArray(b.values) ? b.values.join(',') : ''
-                }));
-            } else if (Array.isArray(preset.bands)) {
-                loadedBands = preset.bands.map((b, idx) => ({
-                    id: b.id || `band_${idx}_${Date.now()}`,
-                    label: b.label || 'Top',
-                    values: String(b.values)
-                }));
-            }
-            setManualBands(loadedBands);
-        }
+    const handleOpenEditModal = (folder) => {
+        setManualModalMode('edit');
+        setEditingFolder(folder);
+        setIsManualModalOpen(true);
     };
 
     const getBandValueCount = (valStr) => {
@@ -1454,153 +1346,19 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         return valStr.split(',').map(s => s.trim()).filter(s => s !== '' && !isNaN(Number(s))).length;
     };
 
-    const getBandsMaxN = (bands) => {
-        if (!Array.isArray(bands) || bands.length === 0) return 1;
-        const counts = bands.map(b => getBandValueCount(b.values));
-        return Math.max(...counts, 1);
-    };
+    const handleConfirmManualSummary = (data) => {
+        const { scaleMax, presetId, isReverse, bands, isMeanIncluded, openStats } = data;
 
-    const computeBandLabel = (labelOrType, maxNVal) => {
-        const lower = (labelOrType || '').toLowerCase();
-        let type = 'Top';
-        if (lower.includes('mid')) type = 'Mid';
-        else if (lower.includes('bot')) type = 'Bot';
-        const suffix = maxNVal > 1 ? String(maxNVal) : '';
-        return `${type}${suffix}`;
-    };
-
-    const handleOpenEditModal = (folder) => {
-        if (folder.type === 'statistics') {
-            setManualModalMode('edit');
-            setEditingFolderIdForBands(folder.id);
-            const summaryData = summaries.find(s => s.id === folder.id);
-            if (summaryData && Array.isArray(summaryData.info) && summaryData.info[0]) {
-                const statItem = summaryData.info[0];
-                setOpenStats({
-                    mean: !!statItem.mean,
-                    median: !!statItem.median,
-                    mode: !!statItem.mode
-                });
-            }
-            setIsManualModalOpen(true);
-            return;
-        }
-
-        setManualModalMode('edit');
-        setEditingFolderIdForBands(folder.id);
-
-        const firstItemId = folder.items && folder.items[0];
-        const summaryData = summaries.find(s => s.id === folder.id) || summaries.find(s => s.id === firstItemId);
-        if (!summaryData || !Array.isArray(summaryData.info)) {
-            modal.showAlert('알림', '수정할 요약표 상세 데이터를 찾을 수 없습니다.');
-            return;
-        }
-
-        // 평균/통계 항목을 제외한 나머지를 모두 빈도형 밴드로 안전 복원
-        const freqItems = summaryData.info.filter(item => {
-            const isMean = (item.type === 'statistics' && item.mean) ||
-                item.type === 'mean' ||
-                item.mean === true ||
-                item.tag === 'mean' ||
-                item.value_id === 'mean';
-            return !isMean;
-        });
-
-        const restoredBands = freqItems.map((item, idx) => {
-            // tag, label, name, value_id 중 존재하는 필드로 라벨 복원
-            let rawLabel = item.tag || item.label || item.name || item.value_id || 'Top';
-
-            // 첫 글자를 대문자로 정규화 (예: 'top3' -> 'Top3', 'bot' -> 'Bot')
-            if (rawLabel) {
-                const lower = rawLabel.toLowerCase();
-                if (lower.startsWith('top')) {
-                    rawLabel = 'Top' + rawLabel.slice(3);
-                } else if (lower.startsWith('bot')) {
-                    rawLabel = 'Bot' + rawLabel.slice(3);
-                } else if (lower.startsWith('mid')) {
-                    rawLabel = 'Mid' + rawLabel.slice(3);
-                }
-            }
-
-            // include_codes 또는 values 속성에서 밴드 코드 복원
-            const rawValues = item.include_codes || item.values || '';
-
-            return {
-                id: `band_edit_${idx}_${Date.now()}`,
-                label: rawLabel,
-                values: rawValues
-            };
-        });
-
-        const hasMean = summaryData.info.some(item =>
-            (item.type === 'statistics' && item.mean) ||
-            item.type === 'mean' ||
-            item.mean === true ||
-            item.tag === 'mean' ||
-            item.value_id === 'mean'
-        );
-
-        setManualScaleMax(folder.scale_points || 5);
-        setManualScaleMin(1);
-        setManualPresetId(folder.scale_preset_id || 'custom');
-        setManualBands(restoredBands);
-        setManualIsMeanIncluded(hasMean);
-
-        setIsManualModalOpen(true);
-    };
-
-    const handleToggleCircle = (bandId, num) => {
-        setManualBands(prev => {
-            const updatedBands = prev.map(band => {
-                if (band.id !== bandId) return band;
-
-                let currentVals = band.values.split(',')
-                    .map(s => s.trim())
-                    .filter(s => s !== '')
-                    .map(Number)
-                    .filter(n => !isNaN(n));
-
-                if (currentVals.includes(num)) {
-                    currentVals = currentVals.filter(v => v !== num);
-                } else {
-                    currentVals = [...currentVals, num].sort((a, b) => a - b);
-                }
-
-                return {
-                    ...band,
-                    values: currentVals.join(',')
-                };
-            });
-
-            return updatedBands.map(b => ({
-                ...b,
-                label: computeBandLabel(b.label, getBandValueCount(b.values))
-            }));
-        });
-    };
-
-    const handleAddManualBand = () => {
-        setManualBands(prev => [
-            ...prev,
-            { id: `band_${Date.now()}_${Math.random()}`, label: 'Top', values: '' }
-        ]);
-    };
-
-    const handleRemoveManualBand = (bandId) => {
-        setManualBands(prev => prev.filter(b => b.id !== bandId));
-    };
-
-    const handleConfirmManualSummary = () => {
         if (manualModalMode === 'edit') {
-            if (!editingFolderIdForBands) return;
+            if (!editingFolder) return;
 
-            const targetFolder = folders.find(f => f.id === editingFolderIdForBands);
+            const targetFolder = folders.find(f => f.id === editingFolder.id);
             if (!targetFolder) return;
 
             const varId = targetFolder.items[0];
             const baseVar = baseVariables.find(v => v.id === varId);
             const varLabel = baseVar?.label || baseVar?.name || varId;
-            const sp = manualScaleMax;
+            const sp = scaleMax;
 
             if (targetFolder.type === 'statistics') {
                 const subItems = [];
@@ -1613,7 +1371,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 });
 
                 const newFolders = folders.map(f => {
-                    if (f.id === editingFolderIdForBands) {
+                    if (f.id === editingFolder.id) {
                         return {
                             ...f,
                             name: `${varLabel} - 통계 요약표`,
@@ -1628,7 +1386,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 setFolders(newFolders);
 
                 setSummaries(prev => prev.map(s => {
-                    const isTarget = s.id === editingFolderIdForBands || s.id === varId;
+                    const isTarget = s.id === editingFolder.id || s.id === varId;
                     if (isTarget) {
                         return {
                             ...s,
@@ -1644,16 +1402,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 return;
             }
 
-            for (let i = 0; i < manualBands.length; i++) {
-                const band = manualBands[i];
-                if (getBandValueCount(band.values) === 0) {
-                    modal.showAlert('알림', `'${band.label}' 밴드에 지정된 값이 없습니다. 값을 기입하거나 삭제해 주세요.`);
-                    return;
-                }
-            }
-
             const subItems = [];
-            manualBands.forEach(band => {
+            bands.forEach(band => {
                 subItems.push({
                     type: 'frequency',
                     name: `${varLabel} - ${band.label} 요약`,
@@ -1663,7 +1413,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 });
             });
 
-            if (manualIsMeanIncluded) {
+            if (isMeanIncluded) {
                 subItems.push({
                     type: 'statistics',
                     name: `${varLabel} - 평균 요약 (${sp}점 척도)`,
@@ -1673,15 +1423,14 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     tag: 'mean'
                 });
             }
-
             const newFolders = folders.map(f => {
-                if (f.id === editingFolderIdForBands) {
+                if (f.id === editingFolder.id) {
                     return {
                         ...f,
                         scale_points: sp,
-                        scale_preset_id: manualPresetId !== 'custom' ? manualPresetId : null,
-                        reverse: manualIsReverse === true,
-                        mean: manualIsMeanIncluded,
+                        scale_preset_id: presetId !== 'custom' ? presetId : null,
+                        reverse: isReverse === true,
+                        mean: isMeanIncluded,
                         median: false,
                         mode: false
                     };
@@ -1690,19 +1439,22 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             });
             setFolders(newFolders);
 
-            setSummaries(prev => prev.map(s => {
-                const isTarget = s.id === editingFolderIdForBands ||
-                    (targetFolder && s.id === targetFolder.id) ||
-                    (targetFolder && targetFolder.items && targetFolder.items.includes(s.id)) ||
-                    (targetFolder && targetFolder.items && s.id === targetFolder.items[0]);
-                if (isTarget) {
-                    return {
-                        ...s,
-                        info: subItems.map(si => ({ ...si, inEdit: false }))
-                    };
-                }
-                return s;
-            }));
+            setSummaries(prev => {
+                const next = prev.map(s => {
+                    const isTarget = s.id === editingFolder.id ||
+                        (targetFolder && s.id === targetFolder.id) ||
+                        (targetFolder && targetFolder.items && targetFolder.items.includes(s.id)) ||
+                        (targetFolder && targetFolder.items && s.id === targetFolder.items[0]);
+                    if (isTarget) {
+                        return {
+                            ...s,
+                            info: subItems.map(si => ({ ...si, inEdit: false }))
+                        };
+                    }
+                    return s;
+                });
+                return next;
+            });
 
             setIsManualModalOpen(false);
             if (onUnsavedChange) onUnsavedChange(true);
@@ -1733,24 +1485,15 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         const firstVarId = selectedIds[0];
         const baseVar = baseVariables.find(v => v.id === firstVarId || v.base_id === firstVarId);
         const varLabel = baseVar?.label || baseVar?.name || firstVarId;
-        const sp = baseVar?.scale_points || manualScaleMax;
+        const sp = baseVar?.scale_points || scaleMax;
 
         if (currentTab === 'scale') {
-            // 밴드 값 입력 유효성 검사
-            for (let i = 0; i < manualBands.length; i++) {
-                const band = manualBands[i];
-                if (getBandValueCount(band.values) === 0) {
-                    modal.showAlert('알림', `'${band.label}' 밴드에 지정된 값이 없습니다. 값을 기입하거나 삭제해 주세요.`);
-                    return;
-                }
-            }
-
             const folderName = selectedIds.length > 1
                 ? `${varLabel} 외 ${selectedIds.length - 1}개 - 요약표`
                 : `${varLabel} - 요약표`;
 
             const subItems = [];
-            manualBands.forEach(band => {
+            bands.forEach(band => {
                 subItems.push({
                     type: 'frequency',
                     name: `${folderName} - ${band.label} 요약`,
@@ -1759,7 +1502,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 });
             });
 
-            if (manualIsMeanIncluded) {
+            if (isMeanIncluded) {
                 subItems.push({
                     type: 'statistics',
                     name: `${folderName} - 평균 요약 (${sp}점 척도)`,
@@ -1777,10 +1520,10 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 label: folderName,
                 type: 'frequency',
                 scale_points: sp,
-                scale_preset_id: manualPresetId !== 'custom' ? manualPresetId : null,
+                scale_preset_id: presetId !== 'custom' ? presetId : null,
                 items: [...selectedIds],
-                reverse: manualIsReverse === true,
-                mean: manualIsMeanIncluded,
+                reverse: isReverse === true,
+                mean: isMeanIncluded,
                 median: false,
                 mode: false
             };
@@ -1788,19 +1531,13 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
             const formatted = {
                 id: folderId,
-                label: varLabel, // 교차표 문구 매핑을 위해 요약표 대표 변수 본래 라벨명 주입
+                label: varLabel,
                 subId: folderId,
                 info: subItems.map(si => ({ ...si, inEdit: false }))
             };
             newSummaries.push(formatted);
         } else {
             // 오픈형 생성
-            const hasAnyStats = openStats.mean || openStats.median || openStats.mode;
-            if (!hasAnyStats) {
-                modal.showAlert('알림', '최소 하나 이상의 통계 옵션(평균/중앙값/최빈값)을 선택해 주세요.');
-                return;
-            }
-
             const folderName = selectedIds.length > 1
                 ? `${varLabel} 외 ${selectedIds.length - 1}개 - 통계 요약표`
                 : `${varLabel} - 통계 요약표`;
@@ -1829,7 +1566,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
             const formatted = {
                 id: folderId,
-                label: varLabel, // 교차표 문구 매핑을 위해 요약표 대표 변수 본래 라벨명 주입
+                label: varLabel,
                 subId: folderId,
                 info: subItems.map(si => ({ ...si, inEdit: false }))
             };
@@ -2094,7 +1831,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
 
     return (
-        <div className="dp-request-container" onClick={() => updateSummaryInfo(summaries.find(b => b.id === selectedSummary)?.info.map(it => ({ ...it, inEdit: false })) || [])} style={{ background: '#f8fafc', gap: 0, height: 'calc(100vh - 90px)', display: 'flex', flexDirection: 'column' }}>
+        <div className="dp-request-container" style={{ background: '#f8fafc', gap: 0, height: 'calc(100vh - 90px)', display: 'flex', flexDirection: 'column' }}>
             {/* 큰 대분류 탭 바 */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E2E8F0', padding: '0 24px', background: '#FFFFFF', flexShrink: 0 }}>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -2451,6 +2188,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             if (folder.mean) badgeList.push('평균');
                                         }
                                     }
+
 
                                     const fromIdx = folders.findIndex(f => f.id === draggedFolderId);
                                     const toIdx = folders.findIndex(f => f.id === folder.id);
@@ -3582,337 +3320,17 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
             {/* 요약표 수동 생성 설정 모달 */}
             {isManualModalOpen && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
-                }}>
-                    <div style={{
-                        backgroundColor: '#ffffff', borderRadius: '12px', width: '720px',
-                        maxHeight: '90vh', display: 'flex', flexDirection: 'column',
-                        boxShadow: '0 12px 24px -4px rgba(0, 0, 0, 0.15)', overflow: 'hidden'
-                    }}>
-                        {/* 팝업 헤더 */}
-                        <div style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            padding: '14px 20px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>
-                                <span style={{ width: '3px', height: '14px', backgroundColor: '#2563eb', marginRight: '8px', display: 'inline-block' }}></span>
-                                <span>{manualModalMode === 'edit' ? '요약 설정 수정' : `요약 설정 생성 (${selectedIds.length}개 문항 선택됨)`}</span>
-                            </div>
-                            <button
-                                onClick={() => setIsManualModalOpen(false)}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            >
-                                <X size={18} />
-                            </button>
-                        </div>
-
-                        {/* 모달 콘텐츠 */}
-                        <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', minHeight: 0 }}>
-                            {currentTab === 'scale' ? (
-                                <>
-                                    {/* 1. 프리셋 및 기본 정보 */}
-                                    <div style={{
-                                        display: 'none', gridTemplateColumns: '1.2fr 0.8fr 0.8fr', gap: '12px',
-                                        alignItems: 'center', background: '#f8fafc', padding: '14px 18px', borderRadius: '6px', border: '1px solid #e2e8f0'
-                                    }}>
-                                        <div>
-                                            <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>요약 프리셋 선택</div>
-                                            <select
-                                                value={manualPresetId}
-                                                onChange={(e) => handleManualPresetChange(e.target.value)}
-                                                style={{ width: '100%', height: '32px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#ffffff', padding: '0 8px' }}
-                                            >
-                                                <option value="custom">직접 설정 (Custom)</option>
-                                                {scalePresets.map(preset => (
-                                                    <option key={preset.id} value={preset.id}>{preset.name}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>점수 범위 (최댓값)</div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                <input
-                                                    type="number"
-                                                    value={manualScaleMin}
-                                                    disabled
-                                                    style={{ width: '40px', height: '32px', fontSize: '12px', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#f1f5f9', textAlign: 'center' }}
-                                                />
-                                                <span style={{ fontSize: '12px', color: '#64748b' }}>~</span>
-                                                <input
-                                                    type="number"
-                                                    value={manualScaleMax}
-                                                    onChange={(e) => {
-                                                        const val = Math.max(2, Number(e.target.value) || 2);
-                                                        setManualScaleMax(val);
-                                                        setManualPresetId('custom');
-                                                    }}
-                                                    style={{ width: '50px', height: '32px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid #cbd5e1', textAlign: 'center' }}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div style={{ display: 'flex', alignItems: 'center', height: '100%', paddingTop: '16px', boxSizing: 'border-box' }}>
-                                            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '12.5px', color: '#334155', userSelect: 'none' }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={manualIsReverse}
-                                                    onChange={(e) => {
-                                                        setManualIsReverse(e.target.checked);
-                                                        setManualPresetId('custom');
-                                                    }}
-                                                    style={{ cursor: 'pointer', width: '13px', height: '13px', marginRight: '6px', appearance: 'checkbox', WebkitAppearance: 'checkbox', opacity: 1, display: 'inline-block', position: 'relative' }}
-                                                />
-                                                <span style={{ fontWeight: 600 }}>역코딩 (역채점)</span>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    {/* 2. 밴딩 설정 목록 */}
-                                    <div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>표시 종류 및 포함 코드</span>
-                                            <div style={{ fontSize: '10.5px', color: '#94a3b8' }}>* 번호를 직접 클릭하면 켜거나 끌 수 있습니다.</div>
-                                        </div>
-
-                                        <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            {manualBands.map((band) => (
-                                                <div key={band.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0' }}>
-                                                    {/* 종류 매핑용 드롭다운 */}
-                                                    {(() => {
-                                                        const nVal = getBandValueCount(band.values);
-                                                        const suffix = nVal > 1 ? String(nVal) : '';
-                                                        const dropdownData = [
-                                                            { text: `Top${suffix}`, value: "top" },
-                                                            { text: `Mid${suffix}`, value: "mid" },
-                                                            { text: `Bot${suffix}`, value: "bot" }
-                                                        ];
-
-                                                        return (
-                                                            <DropDownList
-                                                                data={dropdownData}
-                                                                textField="text"
-                                                                dataItemKey="value"
-                                                                value={{
-                                                                    text: computeBandLabel(band.label, nVal),
-                                                                    value: band.label.toLowerCase().includes('top') ? 'top' : band.label.toLowerCase().includes('mid') ? 'mid' : 'bot'
-                                                                }}
-                                                                onChange={(e) => {
-                                                                    const type = e.value.value;
-                                                                    setManualBands(prev => prev.map(b => b.id === band.id ? {
-                                                                        ...b,
-                                                                        label: computeBandLabel(type, getBandValueCount(b.values))
-                                                                    } : b));
-                                                                    setManualPresetId('custom');
-                                                                }}
-                                                                style={{ width: '115px', height: '28px', fontSize: '11.5px' }}
-                                                            />
-                                                        );
-                                                    })()}
-
-
-
-                                                    {/* N 개수 표시 */}
-                                                    <div style={{ width: '38px', textAlign: 'center', fontSize: '11.5px', color: '#64748b', fontWeight: 700 }}>
-                                                        N={getBandValueCount(band.values)}
-                                                    </div>
-
-                                                    {/* 값 텍스트 */}
-                                                    <input
-                                                        type="text"
-                                                        value={band.values}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            setManualBands(prev => {
-                                                                const updatedBands = prev.map(b => b.id === band.id ? { ...b, values: val } : b);
-                                                                return updatedBands.map(b => ({
-                                                                    ...b,
-                                                                    label: computeBandLabel(b.label, getBandValueCount(b.values))
-                                                                }));
-                                                            });
-                                                            setManualPresetId('custom');
-                                                        }}
-                                                        placeholder="값 (쉼표 구분)"
-                                                        style={{ flex: 1, minWidth: 0, height: '28px', fontSize: '11.5px', padding: '0 6px', borderRadius: '4px', border: '1px solid #cbd5e1' }}
-                                                    />
-
-                                                    {/* 서클 토글 미리보기 */}
-                                                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center', padding: '0 4px' }}>
-                                                        {Array.from({ length: manualScaleMax - manualScaleMin + 1 }, (_, idx) => {
-                                                            const num = manualScaleMin + idx;
-                                                            const currentVals = band.values.split(',').map(s => s.trim()).filter(s => s !== '').map(Number);
-                                                            const isSelected = currentVals.includes(num);
-
-                                                            const labelLower = (band.label || '').toLowerCase();
-                                                            let circleBg = '#ffffff';
-                                                            let circleBorder = '1px solid #cbd5e1';
-                                                            let circleColor = '#94a3b8';
-
-                                                            if (isSelected) {
-                                                                if (labelLower.includes('top')) {
-                                                                    circleBg = '#e0f2fe';
-                                                                    circleBorder = '1px solid #3b82f6';
-                                                                    circleColor = '#2563eb';
-                                                                } else if (labelLower.includes('bot')) {
-                                                                    circleBg = '#ffe4e6';
-                                                                    circleBorder = '1px solid #f43f5e';
-                                                                    circleColor = '#ef4444';
-                                                                } else {
-                                                                    circleBg = '#fef3c7';
-                                                                    circleBorder = '1px solid #f59e0b';
-                                                                    circleColor = '#d97706';
-                                                                }
-                                                            }
-
-                                                            return (
-                                                                <button
-                                                                    key={num}
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        handleToggleCircle(band.id, num);
-                                                                        setManualPresetId('custom');
-                                                                    }}
-                                                                    style={{
-                                                                        width: '24px', height: '24px', borderRadius: '50%',
-                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                        fontSize: '11px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.1s',
-                                                                        background: circleBg, border: circleBorder, color: circleColor
-                                                                    }}
-                                                                >
-                                                                    {num}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-
-                                                    {/* 삭제 버튼 */}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            handleRemoveManualBand(band.id);
-                                                            setManualPresetId('custom');
-                                                        }}
-                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '4px', display: 'flex', alignItems: 'center' }}
-                                                        onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; }}
-                                                        onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; }}
-                                                    >
-                                                        <X size={14} />
-                                                    </button>
-                                                </div>
-                                            ))}
-
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                                                {/* 밴드 추가 버튼 */}
-                                                <button
-                                                    type="button"
-                                                    onClick={handleAddManualBand}
-                                                    style={{
-                                                        display: 'flex', alignItems: 'center', gap: '3px', background: '#ffffff',
-                                                        color: '#475569', border: '1px solid #cbd5e1', borderRadius: '4px',
-                                                        padding: '3px 8px', fontSize: '10.5px', fontWeight: 600, cursor: 'pointer',
-                                                        width: 'fit-content', transition: 'all 0.15s'
-                                                    }}
-                                                    onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
-                                                    onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
-                                                >
-                                                    <Plus size={11} />
-                                                    <span>밴드 추가</span>
-                                                </button>
-
-                                                {/* 평균 요약표 자동 포함 */}
-                                                <label
-                                                    onClick={() => setManualIsMeanIncluded(!manualIsMeanIncluded)}
-                                                    style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '11px', color: '#475569', userSelect: 'none', margin: 0 }}
-                                                >
-                                                    <div
-                                                        style={{
-                                                            width: '14px',
-                                                            height: '14px',
-                                                            borderRadius: '4px',
-                                                            border: manualIsMeanIncluded ? '1.5px solid #3b82f6' : '1.5px solid #cbd5e1',
-                                                            background: '#ffffff',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            marginRight: '6px',
-                                                            transition: 'all 0.15s',
-                                                            boxSizing: 'border-box'
-                                                        }}
-                                                    >
-                                                        {manualIsMeanIncluded && <Check size={10} strokeWidth={3.5} style={{ color: '#3b82f6' }} />}
-                                                    </div>
-                                                    <span style={{ fontWeight: 600 }}>평균 요약표 자동 포함</span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    {/* 오픈형(통계) 설정 */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>통계 설정 선택</div>
-                                        <div style={{ display: 'flex', gap: '24px', padding: '16px 20px', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#f8fafc' }}>
-                                            {[
-                                                { key: 'mean', label: '평균 (Mean)' },
-                                                { key: 'median', label: '중앙값 (Median)' },
-                                                { key: 'mode', label: '최빈값 (Mode)' }
-                                            ].map(stat => (
-                                                <label
-                                                    key={stat.key}
-                                                    className="dp-checkbox-label"
-                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none', margin: 0 }}
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        className="dp-checkbox-input"
-                                                        checked={openStats[stat.key]}
-                                                        onChange={() => toggleOpenStat(stat.key)}
-                                                    />
-                                                    <span className="dp-checkbox-box" />
-                                                    <span style={{ fontSize: '12.5px', color: '#475569', fontWeight: 700 }}>{stat.label}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-
-                        {/* 팝업 푸터 */}
-                        <div style={{
-                            display: 'flex', justifyContent: 'flex-end', gap: '8px',
-                            padding: '12px 20px', borderTop: '1px solid #e2e8f0', background: '#f8fafc'
-                        }}>
-                            <button
-                                onClick={() => setIsManualModalOpen(false)}
-                                style={{
-                                    padding: '7px 16px', fontSize: '12.5px', borderRadius: '4px', border: '1px solid #cbd5e1',
-                                    background: '#ffffff', color: '#475569', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
-                                }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
-                            >
-                                취소
-                            </button>
-                            <button
-                                onClick={handleConfirmManualSummary}
-                                style={{
-                                    padding: '7px 20px', fontSize: '12.5px', borderRadius: '4px', border: 'none',
-                                    background: '#2563eb', color: '#ffffff',
-                                    fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.15s'
-                                }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = '#1d4ed8'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = '#2563eb'; }}
-                            >
-                                <span>{manualModalMode === 'edit' ? '저장하기' : '요약표 생성하기'}</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <DpRequestManualSummaryModal
+                    mode={manualModalMode}
+                    editingFolder={editingFolder}
+                    selectedIds={selectedIds}
+                    currentTab={currentTab}
+                    scalePresets={scalePresets}
+                    summaries={summaries}
+                    summaryVariables={summaryVariables}
+                    onClose={() => setIsManualModalOpen(false)}
+                    onConfirm={handleConfirmManualSummary}
+                />
             )}
 
             {/* 요약표 제목 일괄 편집 모달 */}
