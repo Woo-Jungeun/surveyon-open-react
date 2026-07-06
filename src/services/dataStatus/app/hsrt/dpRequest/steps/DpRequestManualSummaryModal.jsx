@@ -267,9 +267,12 @@ const DpRequestManualSummaryModal = ({
             setBands(loadedBands);
         }
     };
-
     const handleConfirm = () => {
         if (currentTab === 'scale') {
+            if (bands.length === 0 && !isMeanIncluded) {
+                modal.showAlert('알림', '최소 하나 이상의 밴드(Top/Bot/Mid) 또는 평균 요약표를 포함해야 합니다.');
+                return;
+            }
             for (let i = 0; i < bands.length; i++) {
                 const band = bands[i];
                 if (getBandValueCount(band.values) === 0) {
@@ -278,12 +281,10 @@ const DpRequestManualSummaryModal = ({
                 }
             }
         } else {
-            if (mode === 'create') {
-                const hasAnyStats = openStats.mean || openStats.median || openStats.mode;
-                if (!hasAnyStats) {
-                    modal.showAlert('알림', '최소 하나 이상의 통계 옵션(평균/중앙값/최빈값)을 선택해 주세요.');
-                    return;
-                }
+            const hasAnyStats = openStats.mean || openStats.median || openStats.mode;
+            if (!hasAnyStats) {
+                modal.showAlert('알림', '최소 하나 이상의 통계 옵션(평균/중앙값/최빈값)을 선택해 주세요.');
+                return;
             }
         }
 
