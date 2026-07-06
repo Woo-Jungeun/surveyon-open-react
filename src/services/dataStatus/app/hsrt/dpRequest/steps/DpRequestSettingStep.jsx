@@ -1,6 +1,10 @@
-import { useState, useEffect, useContext, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, useContext, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { Settings, Layout, Scale, AlertCircle, Info } from 'lucide-react';
+import { Settings, Layout, Scale, AlertCircle, Info, Trash2, ChevronLeft, ChevronRight, Search, Plus } from 'lucide-react';
+import { DropDownList } from '@progress/kendo-react-dropdowns';
+import { Input } from '@progress/kendo-react-inputs';
+import { Popup } from '@progress/kendo-react-popup';
+import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import AnalysisSettingTab from './AnalysisSettingTab';
 import TableSettingTab from './TableSettingTab';
@@ -28,6 +32,86 @@ const getBandScore = (label) => {
     return 99;
 };
 
+// --- 숫자 전용 커스텀 셀 ---
+const NumericEditCell = (props) => {
+    const { dataItem, field, onChange } = props;
+    const value = dataItem[field];
+
+    if (!dataItem.inEdit) {
+        return <td style={{ ...props.style, padding: '0 12px' }}>{value}</td>;
+    }
+
+    return (
+        <td style={{ ...props.style, padding: 0 }} className="k-grid-edit-cell">
+            <Input
+                type="number"
+                value={value}
+                onChange={(e) => onChange({ dataItem, field, syntheticEvent: e.syntheticEvent, value: e.value })}
+                className="no-spin"
+                style={{ width: '100%', height: '100%', border: 'none', outline: 'none' }}
+            />
+        </td>
+    );
+};
+
+// --- 커스텀 헤더 셀 (조건 도움말) ---
+const ConditionHeaderCell = (props) => {
+    const anchorRef = useRef(null);
+    const [show, setShow] = useState(false);
+
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+            <span>{props.title}</span>
+            <div
+                ref={anchorRef}
+                onMouseEnter={() => setShow(true)}
+                onMouseLeave={() => setShow(false)}
+                style={{ cursor: 'pointer', display: 'flex' }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <Info size={14} color="#94a3b8" />
+            </div>
+
+            <Popup
+                anchor={anchorRef.current}
+                show={show}
+                animate={false}
+                popupClass="condition-tooltip-popup"
+                style={{ zIndex: 100000 }}
+            >
+                <div style={{
+                    padding: '12px 16px',
+                    background: '#ffffff',
+                    width: 'max-content',
+                    minWidth: '160px',
+                    lineHeight: '1.6',
+                    color: '#334155',
+                    textAlign: 'left',
+                    border: '1px solid #cbd5e1',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    borderRadius: '8px'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                        <div style={{
+                            width: '18px', height: '18px', borderRadius: '50%',
+                            background: '#e2e8f0', color: '#64748b',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '11px', fontWeight: 'bold'
+                        }}>i</div>
+                        <span style={{ color: '#2563eb', fontWeight: '800', fontSize: '13px' }}>조건</span>
+                    </div>
+                    <div style={{ fontSize: '13px', letterSpacing: '-0.3px', marginLeft: '4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div><span style={{ fontWeight: 600 }}>• 동등 대조:</span> <span>GENDER == 1, REGION == &quot;A&quot;</span></div>
+                        <div><span style={{ fontWeight: 600 }}>• 비교 대조:</span> <span>AGE &gt;= 20, AGE &lt; 30</span></div>
+                        <div><span style={{ fontWeight: 600 }}>• IN 연산:</span> <span>AGE_GROUP in [2, 3, 4]</span></div>
+                        <div><span style={{ fontWeight: 600 }}>• 다중 조건:</span> <span>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</span></div>
+                    </div>
+                </div>
+            </Popup>
+        </div>
+    );
+};
+
 const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
     const { getTableRenderContext, getTableDetail, saveTableSettings, getBaseVariableList, getRecodedOverview, reapplyPreset } = DpRequestPageApi();
@@ -48,6 +132,155 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     }));
 
     const [activeTab, setActiveTab] = useState(0); // 0: 분석, 1: 뷰 설정
+
+    // --- 가중치 설정 탭 상태 관리 ---
+    const [isWeightSidebarOpen, setIsWeightSidebarOpen] = useState(true);
+    const [weightSearch, setWeightSearch] = useState('');
+    const [weights, setWeights] = useState([
+        {
+            id: 'WEIGHT_1',
+            label: '가중치 1',
+            type: 'single',
+            info: [
+                { label2: '1', label: '가중치 그룹 A', logic: '', inEdit: false }
+            ]
+        }
+    ]);
+    const [selectedWeightId, setSelectedWeightId] = useState('WEIGHT_1');
+    const [currentWeightId, setCurrentWeightId] = useState('WEIGHT_1');
+    const [currentWeightLabel, setCurrentWeightLabel] = useState('가중치 1');
+    const [currentWeightType, setCurrentWeightType] = useState('single');
+    const [currentWeightInfo, setCurrentWeightInfo] = useState([
+        { label2: '1', label: '가중치 그룹 A', logic: '', inEdit: false }
+    ]);
+
+    const selectWeight = (w) => {
+        const prevId = selectedWeightId;
+        if (prevId) {
+            setWeights(prev => prev.map(item =>
+                item.id === prevId
+                    ? {
+                        ...item,
+                        id: currentWeightId,
+                        label: currentWeightLabel,
+                        type: currentWeightType,
+                        info: currentWeightInfo
+                    }
+                    : item
+            ));
+        }
+
+        setSelectedWeightId(w.id);
+        setCurrentWeightId(w.id);
+        setCurrentWeightLabel(w.label);
+        setCurrentWeightType(w.type || 'single');
+        setCurrentWeightInfo(w.info || []);
+    };
+
+    const handleUpdateWeightField = (field, val) => {
+        if (field === 'id') {
+            setCurrentWeightId(val);
+        } else if (field === 'label') {
+            setCurrentWeightLabel(val);
+        } else if (field === 'type') {
+            setCurrentWeightType(val);
+        }
+        setWeights(prev => prev.map(item =>
+            item.id === selectedWeightId
+                ? { ...item, [field]: val }
+                : item
+        ));
+        if (onUnsavedChange) onUnsavedChange(true);
+    };
+
+    const updateWeightInfo = (newInfo) => {
+        setCurrentWeightInfo(newInfo);
+        setWeights(prev => prev.map(item =>
+            item.id === selectedWeightId
+                ? { ...item, info: newInfo }
+                : item
+        ));
+        if (onUnsavedChange) onUnsavedChange(true);
+    };
+
+    const handleWeightRowClick = (e) => {
+        setCurrentWeightInfo(prev => prev.map(it => ({ ...it, inEdit: it === e.dataItem })));
+    };
+
+    const handleAddNewWeight = () => {
+        const newId = `WEIGHT_${Date.now()}`;
+        const newW = {
+            id: newId,
+            label: '새 가중치 설정',
+            type: 'single',
+            info: [{ label2: '1', label: '가중치 그룹 A', logic: '', inEdit: true }]
+        };
+
+        if (selectedWeightId) {
+            setWeights(prev => {
+                const updated = prev.map(item =>
+                    item.id === selectedWeightId
+                        ? {
+                            ...item,
+                            id: currentWeightId,
+                            label: currentWeightLabel,
+                            type: currentWeightType,
+                            info: currentWeightInfo
+                        }
+                        : item
+                );
+                return [...updated, newW];
+            });
+        } else {
+            setWeights(prev => [...prev, newW]);
+        }
+
+        setSelectedWeightId(newId);
+        setCurrentWeightId(newId);
+        setCurrentWeightLabel('새 가중치 설정');
+        setCurrentWeightType('single');
+        setCurrentWeightInfo([{ label2: '1', label: '가중치 그룹 A', logic: '', inEdit: true }]);
+        if (onUnsavedChange) onUnsavedChange(true);
+    };
+
+    const handleDeleteWeight = (e, id) => {
+        e.stopPropagation();
+        modal.showConfirm('알림', `가중치 설정(${id})을 삭제하시겠습니까?`, {
+            btns: [
+                { title: "취소", click: () => { } },
+                {
+                    title: "삭제",
+                    click: () => {
+                        const nextList = weights.filter(w => w.id !== id);
+                        setWeights(nextList);
+                        if (selectedWeightId === id) {
+                            if (nextList.length > 0) {
+                                selectWeight(nextList[0]);
+                            } else {
+                                setSelectedWeightId('');
+                                setCurrentWeightId('');
+                                setCurrentWeightLabel('');
+                                setCurrentWeightType('single');
+                                setCurrentWeightInfo([]);
+                            }
+                        }
+                        if (onUnsavedChange) onUnsavedChange(true);
+                    }
+                }
+            ]
+        });
+    };
+
+    const filteredWeights = useMemo(() => {
+        const search = weightSearch.toLowerCase().trim();
+        return weights.filter(w =>
+            (w.label || '').toLowerCase().includes(search) || (w.id || '').toLowerCase().includes(search)
+        );
+    }, [weights, weightSearch]);
+
+    const handleCloseWeightEdit = () => {
+        setCurrentWeightInfo(prev => prev.map(it => ({ ...it, inEdit: false })));
+    };
 
     // --- 상태 관리 ---
     const [settings, setSettings] = useState({
@@ -822,7 +1055,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     // 3. 가중치 설정 탭
     const renderWeightSettingsTab = () => (
-        <div className="dp-setting-section" style={{
+        <div className="dp-setting-section" onClick={handleCloseWeightEdit} style={{
             padding: '20px 24px',
             background: '#F1F5F9',
             boxSizing: 'border-box',
@@ -856,6 +1089,131 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                         <span style={{ color: '#DC2626', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
                             <AlertCircle size={13} /> 가중치 변수가 지정되지 않았습니다.
                         </span>
+                    )}
+                </div>
+            </div>
+
+            {/* 가중치 목록 & 그리드 영역 */}
+            <div className="dp-main-layout" onClick={(e) => e.stopPropagation()} style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
+                {/* 사이드바 */}
+                <div className={`dp-sidebar-container ${!isWeightSidebarOpen ? 'collapsed' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, width: isWeightSidebarOpen ? '260px' : '40px' }}>
+                    {!isWeightSidebarOpen && (
+                        <div className="dp-sidebar-collapsed-bar" onClick={() => setIsWeightSidebarOpen(true)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '100%', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', position: 'relative', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                            <div className="dp-collapsed-header"><ChevronRight size={16} /></div>
+                        </div>
+                    )}
+                    {isWeightSidebarOpen && (
+                        <div className="dp-sidebar custom-scrollbar" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                            <div className="dp-sidebar-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+                                <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>가중치 목록 ({filteredWeights.length})</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <button onClick={handleAddNewWeight} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', height: '24px', padding: '0 8px', borderRadius: '4px', border: '1px solid #2563eb', color: '#2563eb', background: '#eff6ff', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
+                                        <Plus size={12} /> 추가
+                                    </button>
+                                    <button className="dp-sidebar-toggle-btn-compact" onClick={() => setIsWeightSidebarOpen(false)} style={{ display: 'flex', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 0 }}>
+                                        <ChevronLeft size={16} />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="dp-sidebar-header" style={{ display: 'flex', alignItems: 'center', padding: '12px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+                                <div className="dp-search-input-wrapper" style={{ flex: 1, width: '100%', position: 'relative' }}>
+                                    <Search size={14} className="dp-search-input-icon" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                                    <input type="text" placeholder="가중치명 또는 ID 검색" value={weightSearch} onChange={(e) => setWeightSearch(e.target.value)} className="dp-search-input" style={{ width: '100%', padding: '6px 10px 6px 30px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '12px', outline: 'none' }} />
+                                </div>
+                            </div>
+                            <div className="dp-banner-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '8px' }}>
+                                {filteredWeights.map(w => (
+                                    <div key={w.id}
+                                        className={`dp-banner-item ${selectedWeightId === w.id ? 'active' : ''}`}
+                                        onClick={() => selectWeight(w)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            padding: '8px 12px',
+                                            minHeight: '40px',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            background: selectedWeightId === w.id ? '#EFF6FF' : 'transparent',
+                                            color: selectedWeightId === w.id ? '#1D4ED8' : '#1E293B',
+                                            marginBottom: '4px',
+                                            transition: 'all 0.15s'
+                                        }}
+                                    >
+                                        <div className="dp-banner-item-info" style={{ flex: 1, paddingRight: '8px' }}>
+                                            <span className="dp-banner-label" style={{ display: 'block', marginBottom: '1px', lineHeight: 1.3, fontSize: '12px', fontWeight: selectedWeightId === w.id ? 600 : 500 }}>
+                                                {w.label || '(새 가중치 작성 중)'}
+                                            </span>
+                                            <span className="dp-banner-sub" style={{ display: 'block', fontSize: '11px', opacity: 0.6 }}>
+                                                {w.id}
+                                            </span>
+                                        </div>
+                                        <button className="dp-banner-delete" onClick={(e) => handleDeleteWeight(e, w.id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8' }} onMouseEnter={e => e.currentTarget.style.color = '#EF4444'} onMouseLeave={e => e.currentTarget.style.color = '#94A3B8'}>
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* 콘텐츠 영역 */}
+                <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                    {selectedWeightId ? (
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                            <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', flexShrink: 0, borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', marginBottom: '16px', paddingLeft: '16px', paddingRight: '16px', paddingTop: '16px' }}>
+                                <div className="dp-content-label-edit" style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1, minWidth: 0 }}>
+                                    <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>가중치 ID</span>
+                                        <input
+                                            type="text"
+                                            value={currentWeightId}
+                                            onChange={(e) => handleUpdateWeightField('id', e.target.value)}
+                                            className="dp-input"
+                                            style={{ flex: 1, minWidth: 0, height: '32px', padding: '0 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
+                                        />
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>가중치 라벨</span>
+                                        <input
+                                            type="text"
+                                            value={currentWeightLabel}
+                                            onChange={(e) => handleUpdateWeightField('label', e.target.value)}
+                                            className="dp-input"
+                                            style={{ flex: 1, minWidth: 0, height: '32px', padding: '0 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
+                                        />
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>가중치 유형</span>
+                                        <DropDownList
+                                            data={["single", "scale", "multi", "rank", "open(문자)", "open(숫자)"]}
+                                            value={currentWeightType || 'single'}
+                                            onChange={(e) => handleUpdateWeightField('type', e.value)}
+                                            style={{ flex: 1, minWidth: 0, height: '32px', fontSize: '13px', borderRadius: '6px' }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                                <KendoGridV2
+                                    data={currentWeightInfo}
+                                    reorderable showNo deletable addable showNoRecordsAddBtn={false} editField="inEdit"
+                                    onDataChange={updateWeightInfo}
+                                    onRowClick={handleWeightRowClick}
+                                    newRowTemplate={{ label2: '', label: '', logic: '' }}
+                                    style={{ flex: 1, height: '100%', width: '100%' }}
+                                >
+                                    <Column field="label2" title="할당될 값" width="120px" cell={NumericEditCell} />
+                                    <Column field="label" title="보기 라벨" width="300px" />
+                                    <Column field="logic" title="조건" headerCell={ConditionHeaderCell} />
+                                </KendoGridV2>
+                            </div>
+                        </div>
+                    ) : (
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '14px', gap: '8px' }}>
+                            <Info size={24} />
+                            선택된 가중치 설정이 없습니다. 왼쪽 목록에서 선택하거나 새로 추가해 주세요.
+                        </div>
                     )}
                 </div>
             </div>

@@ -846,7 +846,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
 
                 {/* 카드 1: 실제 표 미리보기 (주석 처리) */}
                 {/* 
-                <div className="dp-setting-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #CBD5E1', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
+                <div className="dp-setting-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                     <div className="dp-setting-card-header" style={{ padding: '10px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', fontSize: '13px', background: '#F8FAFC', borderRadius: '8px 8px 0 0', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span>실제 표 미리보기</span>
                         {loadingReal && (
@@ -884,7 +884,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
 
                 {/* 카드 2: 스타일 예시 */}
                 {/* 카드 2: 스타일 예시 (접기/펼치기 아코디언 추가) */}
-                <div className="dp-setting-card" style={{ flex: isExampleCollapsed ? '0 0 auto' : 1, display: 'flex', flexDirection: 'column', minHeight: isExampleCollapsed ? 'auto' : 0, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #CBD5E1', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
+                <div className="dp-setting-card" style={{ flex: isExampleCollapsed ? '0 0 auto' : 1, display: 'flex', flexDirection: 'column', minHeight: isExampleCollapsed ? 'auto' : 0, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                     <div
                         className="dp-setting-card-header"
                         onClick={() => setIsExampleCollapsed(!isExampleCollapsed)}
