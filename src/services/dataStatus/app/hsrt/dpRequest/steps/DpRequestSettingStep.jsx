@@ -853,7 +853,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     const aBands = a.bands || [];
                     const bBands = b.bands || [];
                     if (aBands.length !== bBands.length) return false;
-                    for (let i=0; i<aBands.length; i++) {
+                    for (let i = 0; i < aBands.length; i++) {
                         if (aBands[i].label !== bBands[i].label) return false;
                         if (String(aBands[i].values) !== String(bBands[i].values)) return false;
                     }
@@ -861,7 +861,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     const aCombos = a.combinations || [];
                     const bCombos = b.combinations || [];
                     if (aCombos.length !== bCombos.length) return false;
-                    for (let i=0; i<aCombos.length; i++) {
+                    for (let i = 0; i < aCombos.length; i++) {
                         if (aCombos[i].label !== bCombos[i].label) return false;
                         if (JSON.stringify(aCombos[i].values) !== JSON.stringify(bCombos[i].values)) return false;
                     }
@@ -869,7 +869,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     const aGroups = a.groups || [];
                     const bGroups = b.groups || [];
                     if (aGroups.length !== bGroups.length) return false;
-                    for (let i=0; i<aGroups.length; i++) {
+                    for (let i = 0; i < aGroups.length; i++) {
                         if (aGroups[i].label !== bGroups[i].label) return false;
                         if (String(aGroups[i].values) !== String(bGroups[i].values)) return false;
                     }
@@ -888,7 +888,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     }
                 });
             };
-            
+
             checkChanges(scaleData, originalPresetsRef.current.scale, 'scale');
             checkChanges(rankData, originalPresetsRef.current.rank, 'rank');
             checkChanges(groupData, originalPresetsRef.current.group, 'group');
@@ -1097,39 +1097,39 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             const result = await saveTableSettings.mutateAsync(payload);
             if (result?.message || result?.status === 'success') {
                 if (onUnsavedChange) onUnsavedChange(false); // 저장 성공 시 더티 해제
-                
+
                 // --- 수정된 프리셋이 있다면 스터브 조회 및 재적용 ---
                 if (changedPresetIds.length > 0) {
                     try {
                         const recodedRes = await getRecodedOverview.mutateAsync({ pageid: pageId, user: auth.user.userId });
                         const variablesMap = recodedRes?.resultjson?.variables || recodedRes?.data?.resultjson?.variables || {};
                         const stubItems = recodedRes?.resultjson?.stub_grid_items || recodedRes?.data?.resultjson?.stub_grid_items || [];
-                        
+
                         const targetStubIds = new Set();
-                        
+
                         // 1. stub_grid_items에서 참조 확인
                         stubItems.forEach(stub => {
                             const v = variablesMap[stub.recoded_var_id] || {};
-                            if ((stub.scale_preset_id && changedPresetIds.includes(stub.scale_preset_id)) || 
+                            if ((stub.scale_preset_id && changedPresetIds.includes(stub.scale_preset_id)) ||
                                 (v.scale_preset_id && changedPresetIds.includes(v.scale_preset_id)) ||
-                                (stub.rank_preset_id && changedPresetIds.includes(stub.rank_preset_id)) || 
+                                (stub.rank_preset_id && changedPresetIds.includes(stub.rank_preset_id)) ||
                                 (v.rank_preset_id && changedPresetIds.includes(v.rank_preset_id)) ||
-                                (stub.group_preset_id && changedPresetIds.includes(stub.group_preset_id)) || 
+                                (stub.group_preset_id && changedPresetIds.includes(stub.group_preset_id)) ||
                                 (v.group_preset_id && changedPresetIds.includes(v.group_preset_id))) {
                                 targetStubIds.add(stub.recoded_var_id);
                             }
                         });
-                        
+
                         // 2. variablesMap 자체에서도 참조 확인
                         Object.keys(variablesMap).forEach(key => {
                             const v = variablesMap[key];
-                            if ((v.scale_preset_id && changedPresetIds.includes(v.scale_preset_id)) || 
-                                (v.rank_preset_id && changedPresetIds.includes(v.rank_preset_id)) || 
+                            if ((v.scale_preset_id && changedPresetIds.includes(v.scale_preset_id)) ||
+                                (v.rank_preset_id && changedPresetIds.includes(v.rank_preset_id)) ||
                                 (v.group_preset_id && changedPresetIds.includes(v.group_preset_id))) {
                                 targetStubIds.add(key);
                             }
                         });
-                        
+
                         const targetStubIdsArray = Array.from(targetStubIds);
                         if (targetStubIdsArray.length > 0) {
                             await reapplyPreset.mutateAsync({ pageid: pageId, user: auth.user.userId, recoded_var_ids: targetStubIdsArray });
@@ -1138,7 +1138,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                         console.error("Failed to reapply presets:", e);
                     }
                 }
-                
+
                 modal.showAlert("알림", "설정이 저장되었습니다.");
                 await fetchInitialData();
                 return true;
@@ -1301,7 +1301,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                     {selectedWeightId ? (
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                            <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', flexShrink: 0, borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', marginBottom: '16px', paddingLeft: '16px', paddingRight: '16px', paddingTop: '16px' }}>
+                            <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', flexShrink: 0, borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px', paddingTop: '16px' }}>
                                 <div className="dp-content-label-edit" style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1, minWidth: 0 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>가중치 라벨</span>
