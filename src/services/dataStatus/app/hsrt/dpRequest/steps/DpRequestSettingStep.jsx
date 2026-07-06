@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, forwardRef, useImperativeHandle } from 'react';
 import { useSelector } from 'react-redux';
-import { Settings, Layout } from 'lucide-react';
+import { Settings, Layout, Scale, AlertCircle, Info } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import AnalysisSettingTab from './AnalysisSettingTab';
 import TableSettingTab from './TableSettingTab';
@@ -783,12 +783,14 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const tabs = [
         { label: '분석 설정', icon: <Settings size={18} /> },
         { label: '표 디자인 설정', icon: <Layout size={18} /> },
+        { label: '가중치 설정', icon: <Scale size={18} /> },
     ];
 
     const renderTabContent = () => {
         switch (activeTab) {
             case 0: return renderAnalysisTab();
             case 1: return renderTableSettingsTab();
+            case 2: return renderWeightSettingsTab();
             default: return null;
         }
     };
@@ -818,6 +820,48 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
         />
     );
 
+    // 3. 가중치 설정 탭
+    const renderWeightSettingsTab = () => (
+        <div className="dp-setting-section" style={{
+            padding: '20px 24px',
+            background: '#F1F5F9',
+            boxSizing: 'border-box',
+            width: '100%',
+            maxWidth: '100%',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            minHeight: 0,
+            overflow: 'hidden'
+        }}>
+            {/* 기본 Weight 변수 카드 */}
+            <div className="dp-setting-card" style={{ flexShrink: 0, marginBottom: '0px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: '#334155', fontSize: '13px' }}>
+                        <Info size={16} style={{ color: '#475569' }} /> 기본 Weight(가중치) 변수
+                    </div>
+                    <select
+                        className="dp-select"
+                        style={{ width: '200px', background: '#FFFFFF', border: '1px solid #CBD5E1', color: '#1E293B', padding: '5px 10px', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
+                        value={settings.weight_variable || '없음'}
+                        onChange={(e) => {
+                            setSettings({ ...settings, weight_variable: e.target.value });
+                            if (onUnsavedChange) onUnsavedChange(true);
+                        }}
+                    >
+                        {weightOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                    {settings.weight_variable === '없음' && (
+                        <span style={{ color: '#DC2626', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
+                            <AlertCircle size={13} /> 가중치 변수가 지정되지 않았습니다.
+                        </span>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+
     return (
         <div className="dp-request-container" style={{ background: '#f8fafc', gap: 0, height: 'calc(100vh - 90px)', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E2E8F0', padding: '0 24px', background: '#FFFFFF', flexShrink: 0 }}>
@@ -843,6 +887,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     userSelect: 'none'
                                 }}
                             >
+                                {tab.icon}
                                 {tab.label}
                             </div>
                         );
@@ -850,7 +895,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 </div>
             </div>
 
-            <div style={activeTab === 0 ? { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' } : { flex: 1, overflowY: 'auto' }}>
+            <div style={(activeTab === 0 || activeTab === 2) ? { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' } : { flex: 1, overflowY: 'auto' }}>
                 {renderTabContent()}
             </div>
         </div>

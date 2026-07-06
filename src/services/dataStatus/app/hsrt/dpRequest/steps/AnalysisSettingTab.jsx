@@ -34,9 +34,6 @@ const getBandScore = (label) => {
 
 const AnalysisSettingTab = ({
     contextData,
-    settings,
-    setSettings,
-    weightOptions,
     scaleData,
     setScaleData,
     rankData,
@@ -487,31 +484,6 @@ const AnalysisSettingTab = ({
                     </ul>
                 </div>
             )}
-
-            {/* 기본 Weight 변수 카드 */}
-            <div className="dp-setting-card" style={{ flexShrink: 0, marginBottom: '0px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: '#334155', fontSize: '13px' }}>
-                        <Info size={16} style={{ color: '#475569' }} /> 기본 Weight(가중치) 변수
-                    </div>
-                    <select
-                        className="dp-select"
-                        style={{ width: '200px', background: '#FFFFFF', border: '1px solid #CBD5E1', color: '#1E293B', padding: '5px 10px', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
-                        value={settings.weight_variable || '없음'}
-                        onChange={(e) => {
-                            setSettings({ ...settings, weight_variable: e.target.value });
-                            markUnsaved();
-                        }}
-                    >
-                        {weightOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
-                    {settings.weight_variable === '없음' && (
-                        <span style={{ color: '#DC2626', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
-                            <AlertCircle size={13} /> 가중치 변수가 지정되지 않았습니다.
-                        </span>
-                    )}
-                </div>
-            </div>
 
             {/* 메인 탭 카드 */}
             <div className="dp-setting-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
