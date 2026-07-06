@@ -700,6 +700,11 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         return selectedIds.filter(id => tabVarIds.has(id)).length;
     }, [tabFilteredVariables, selectedIds]);
 
+    const activeTabSelectedIds = useMemo(() => {
+        const tabVarIds = new Set(tabFilteredVariables.map(v => v.id));
+        return selectedIds.filter(id => tabVarIds.has(id));
+    }, [tabFilteredVariables, selectedIds]);
+
     const searchedVariables = useMemo(() => {
         const search = (summarySearchMap[currentTab] || '').toLowerCase().trim();
         if (!search) return tabFilteredVariables;
@@ -1044,11 +1049,11 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     // --- 수동 요약 생성 팝업 핸들러 및 비즈니스 로직 ---
 
     const handleOpenManualSummaryModal = () => {
-        if (selectedIds.length === 0) return;
+        if (activeTabSelectedIds.length === 0) return;
 
         // 척도 정합성 일치 검사 (동일한 척도로만 생성 가능하도록 제한)
         const scalePointsSet = new Set();
-        selectedIds.forEach(id => {
+        activeTabSelectedIds.forEach(id => {
             const v = summaryVariables.find(item => item.id === id);
             if (v && v.scale_points !== undefined && v.scale_points !== null) {
                 scalePointsSet.add(v.scale_points);
@@ -1190,14 +1195,14 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             return;
         }
 
-        if (selectedIds.length === 0) {
+        if (activeTabSelectedIds.length === 0) {
             modal.showAlert('알림', '선택된 변수가 없습니다.');
             return;
         }
 
         // 척도 일치 여부 검사 (다른 척도 혼용 방지)
         const scalePointsSet = new Set();
-        selectedIds.forEach(varId => {
+        activeTabSelectedIds.forEach(varId => {
             const baseVar = summaryVariables.find(v => v.id === varId);
             if (baseVar && baseVar.scale_points !== undefined && baseVar.scale_points !== null) {
                 scalePointsSet.add(baseVar.scale_points);
@@ -1211,7 +1216,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         const newSummaries = [];
         const uniqueFolders = [...folders];
 
-        const firstVarId = selectedIds[0];
+        const firstVarId = activeTabSelectedIds[0];
         const baseVar = baseVariables.find(v => v.id === firstVarId || v.base_id === firstVarId);
         const varLabel = baseVar?.label || baseVar?.name || firstVarId;
         const sp = baseVar?.scale_points || scaleMax;
@@ -1224,8 +1229,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         }
 
         if (currentTab === 'scale') {
-            const folderName = selectedIds.length > 1
-                ? `${varLabel} 외 ${selectedIds.length - 1}개 - 요약표`
+            const folderName = activeTabSelectedIds.length > 1
+                ? `${varLabel} 외 ${activeTabSelectedIds.length - 1}개 - 요약표`
                 : `${varLabel} - 요약표`;
 
             const subItems = [];
@@ -1256,7 +1261,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 type: 'frequency',
                 scale_points: sp,
                 scale_preset_id: presetId !== 'custom' ? presetId : null,
-                items: [...selectedIds],
+                items: [...activeTabSelectedIds],
                 reverse: isReverse === true,
                 mean: isMeanIncluded,
                 median: false,
@@ -1273,8 +1278,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             newSummaries.push(formatted);
         } else {
             // 오픈형 생성
-            const folderName = selectedIds.length > 1
-                ? `${varLabel} 외 ${selectedIds.length - 1}개 - 통계 요약표`
+            const folderName = activeTabSelectedIds.length > 1
+                ? `${varLabel} 외 ${activeTabSelectedIds.length - 1}개 - 통계 요약표`
                 : `${varLabel} - 통계 요약표`;
 
             const subItems = [];
@@ -1291,7 +1296,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 name: folderName,
                 label: folderName,
                 type: 'statistics',
-                items: [...selectedIds],
+                items: [...activeTabSelectedIds],
                 mean: !!openStats.mean,
                 median: !!openStats.median,
                 mode: !!openStats.mode
@@ -1332,7 +1337,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         }
 
         setIsManualModalOpen(false);
-        setSelectedIds([]);
+        setSelectedIds(prev => prev.filter(id => !activeTabSelectedIds.includes(id)));
         modal.showAlert('성공', '선택된 변수로 요약표가 성공적으로 생성되었습니다.');
         if (onUnsavedChange) onUnsavedChange(true);
     };
@@ -3109,7 +3114,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 <DpRequestManualSummaryModal
                     mode={manualModalMode}
                     editingFolder={editingFolder}
-                    selectedIds={selectedIds}
+                    selectedIds={activeTabSelectedIds}
                     currentTab={currentTab}
                     scalePresets={scalePresets}
                     summaries={summaries}
