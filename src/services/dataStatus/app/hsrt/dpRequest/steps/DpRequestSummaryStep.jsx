@@ -2144,42 +2144,43 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     const assocSummary = summaries.find(s => s.id === folder.id) ||
                                         summaries.find(s => folder.items && folder.items.includes(s.id)) ||
                                         summaries.find(s => s.id === (folder.items && folder.items[0]));
-                                    if (assocSummary && Array.isArray(assocSummary.info)) {
-                                        assocSummary.info.forEach(item => {
-                                            if (item.disabled) return;
-                                            const isStatistics = item.type === 'statistics' ||
-                                                item.type === 'mean' ||
-                                                item.mean === true ||
-                                                item.tag === 'mean' ||
-                                                item.value_id === 'mean' ||
-                                                item.tag === 'median' ||
-                                                item.tag === 'mode' ||
-                                                item.value_id === 'median' ||
-                                                item.value_id === 'mode';
-                                            if (isStatistics) {
-                                                const hasMean = item.mean === true || item.mean === 'true' || item.mean === 1 || item.mean === '1' || item.tag === 'mean' || item.value_id === 'mean';
-                                                const hasMedian = item.median === true || item.median === 'true' || item.median === 1 || item.median === '1' || item.tag === 'median' || item.value_id === 'median';
-                                                const hasMode = item.mode === true || item.mode === 'true' || item.mode === 1 || item.mode === '1' || item.tag === 'mode' || item.value_id === 'mode';
 
-                                                if (hasMean) badgeList.push('평균');
-                                                if (hasMedian) badgeList.push('중앙값');
-                                                if (hasMode) badgeList.push('최빈값');
-                                            } else {
-                                                const tagLabel = item.tag || item.label || item.name;
-                                                if (tagLabel) {
-                                                    const cleanLabel = tagLabel.replace(/\s*요약\s*$/, '').trim();
-                                                    badgeList.push(cleanLabel);
+                                    if (isStatistics) {
+                                        if (folder.mean) badgeList.push('평균');
+                                        if (folder.median) badgeList.push('중앙값');
+                                        if (folder.mode) badgeList.push('최빈값');
+                                    } else {
+                                        if (assocSummary && Array.isArray(assocSummary.info)) {
+                                            assocSummary.info.forEach(item => {
+                                                if (item.disabled) return;
+                                                const isStatisticsItem = item.type === 'statistics' ||
+                                                    item.type === 'mean' ||
+                                                    item.mean === true ||
+                                                    item.tag === 'mean' ||
+                                                    item.value_id === 'mean' ||
+                                                    item.tag === 'median' ||
+                                                    item.tag === 'mode' ||
+                                                    item.value_id === 'median' ||
+                                                    item.value_id === 'mode';
+                                                if (isStatisticsItem) {
+                                                    const hasMean = item.mean === true || item.mean === 'true' || item.mean === 1 || item.mean === '1' || item.tag === 'mean' || item.value_id === 'mean';
+                                                    const hasMedian = item.median === true || item.median === 'true' || item.median === 1 || item.median === '1' || item.tag === 'median' || item.value_id === 'median';
+                                                    const hasMode = item.mode === true || item.mode === 'true' || item.mode === 1 || item.mode === '1' || item.tag === 'mode' || item.value_id === 'mode';
+
+                                                    if (hasMean) badgeList.push('평균');
+                                                    if (hasMedian) badgeList.push('중앙값');
+                                                    if (hasMode) badgeList.push('최빈값');
+                                                } else {
+                                                    const tagLabel = item.tag || item.label || item.name;
+                                                    if (tagLabel) {
+                                                        const cleanLabel = tagLabel.replace(/\s*요약\s*$/, '').trim();
+                                                        badgeList.push(cleanLabel);
+                                                    }
                                                 }
-                                            }
-                                        });
-                                    }
+                                            });
+                                        }
 
-                                    if (badgeList.length === 0) {
-                                        if (isStatistics) {
-                                            if (folder.mean) badgeList.push('평균');
-                                            if (folder.median) badgeList.push('중앙값');
-                                            if (folder.mode) badgeList.push('최빈값');
-                                        } else {
+                                        if (badgeList.length === 0) {
                                             const codes = folder.include_codes || '';
                                             const hasTopCodes = codes.includes(String(scalePoints)) || codes.includes(String(scalePoints - 1));
                                             const hasBotCodes = codes.includes('1') || codes.includes('2');
@@ -2437,7 +2438,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             </div>
 
                                             {isExpanded && (
-                                                <div style={{ marginTop: currentTab === 'scale' ? '8px' : '4px', borderTop: '1px solid #f1f5f9', paddingTop: currentTab === 'scale' ? '4px' : '0px' }}>
+                                                <div style={{ marginTop: (currentTab === 'scale' || currentTab === 'open-num') ? '8px' : '4px', borderTop: '1px solid #f1f5f9', paddingTop: (currentTab === 'scale' || currentTab === 'open-num') ? '4px' : '0px' }}>
 
                                                     <div style={{ display: 'none', alignItems: 'center', gap: '8px', padding: '10px 14px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '12px' }}>
                                                         <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>요약표 타이틀명:</span>
@@ -2545,7 +2546,94 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
 
                                                     )}
-                                                    {currentTab === 'scale' && (
+                                                    {currentTab === 'open-num' && (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '10px', padding: '0 4px' }}>
+                                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>포함 요약표 구성 (뱃지):</span>
+                                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                                <span
+                                                                    onClick={() => {
+                                                                        const nextMean = !folder.mean;
+                                                                        if (!nextMean && !folder.median && !folder.mode) {
+                                                                            modal.showAlert('알림', '최소 하나 이상의 통계 옵션(평균/중앙값/최빈값)을 선택해 주세요.');
+                                                                            return;
+                                                                        }
+                                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mean: nextMean } : f));
+                                                                        if (onUnsavedChange) onUnsavedChange(true);
+                                                                    }}
+                                                                    style={{
+                                                                        fontSize: '10.5px',
+                                                                        fontWeight: 600,
+                                                                        padding: '3px 8px',
+                                                                        borderRadius: '12px',
+                                                                        color: folder.mean ? '#10b981' : '#94a3b8',
+                                                                        background: folder.mean ? '#ecfdf5' : '#f8fafc',
+                                                                        border: folder.mean ? '1px solid #a7f3d0' : '1px dashed #cbd5e1',
+                                                                        userSelect: 'none',
+                                                                        cursor: 'pointer',
+                                                                        opacity: folder.mean ? 1 : 0.5,
+                                                                        transition: 'all 0.15s ease-in-out'
+                                                                    }}
+                                                                >
+                                                                    평균
+                                                                </span>
+
+                                                                <span
+                                                                    onClick={() => {
+                                                                        const nextMedian = !folder.median;
+                                                                        if (!folder.mean && !nextMedian && !folder.mode) {
+                                                                            modal.showAlert('알림', '최소 하나 이상의 통계 옵션(평균/중앙값/최빈값)을 선택해 주세요.');
+                                                                            return;
+                                                                        }
+                                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, median: nextMedian } : f));
+                                                                        if (onUnsavedChange) onUnsavedChange(true);
+                                                                    }}
+                                                                    style={{
+                                                                        fontSize: '10.5px',
+                                                                        fontWeight: 600,
+                                                                        padding: '3px 8px',
+                                                                        borderRadius: '12px',
+                                                                        color: folder.median ? '#7c3aed' : '#94a3b8',
+                                                                        background: folder.median ? '#faf5ff' : '#f8fafc',
+                                                                        border: folder.median ? '1px solid #e9d5ff' : '1px dashed #cbd5e1',
+                                                                        userSelect: 'none',
+                                                                        cursor: 'pointer',
+                                                                        opacity: folder.median ? 1 : 0.5,
+                                                                        transition: 'all 0.15s ease-in-out'
+                                                                    }}
+                                                                >
+                                                                    중앙값
+                                                                </span>
+
+                                                                <span
+                                                                    onClick={() => {
+                                                                        const nextMode = !folder.mode;
+                                                                        if (!folder.mean && !folder.median && !nextMode) {
+                                                                            modal.showAlert('알림', '최소 하나 이상의 통계 옵션(평균/중앙값/최빈값)을 선택해 주세요.');
+                                                                            return;
+                                                                        }
+                                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mode: nextMode } : f));
+                                                                        if (onUnsavedChange) onUnsavedChange(true);
+                                                                    }}
+                                                                    style={{
+                                                                        fontSize: '10.5px',
+                                                                        fontWeight: 600,
+                                                                        padding: '3px 8px',
+                                                                        borderRadius: '12px',
+                                                                        color: folder.mode ? '#d97706' : '#94a3b8',
+                                                                        background: folder.mode ? '#fffbeb' : '#f8fafc',
+                                                                        border: folder.mode ? '1px solid #fde68a' : '1px dashed #cbd5e1',
+                                                                        userSelect: 'none',
+                                                                        cursor: 'pointer',
+                                                                        opacity: folder.mode ? 1 : 0.5,
+                                                                        transition: 'all 0.15s ease-in-out'
+                                                                    }}
+                                                                >
+                                                                    최빈값
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {(currentTab === 'scale' || currentTab === 'open-num') && (
                                                         <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '6px 0 10px 0' }} />
                                                     )}
 
@@ -2582,37 +2670,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                             <tbody>
                                                                 {folder.type === 'statistics' ? (
                                                                     (() => {
-                                                                        const assocSummary = summaries.find(s => s.id === folder.id) ||
-                                                                            summaries.find(s => folder.items && folder.items.includes(s.id)) ||
-                                                                            summaries.find(s => s.id === (folder.items && folder.items[0]));
-
-                                                                        let hasMean = folder.mean === true;
-                                                                        let hasMedian = folder.median === true;
-                                                                        let hasMode = folder.mode === true;
-
-                                                                        if (assocSummary && Array.isArray(assocSummary.info)) {
-                                                                            let meanActive = false;
-                                                                            let medianActive = false;
-                                                                            let modeActive = false;
-                                                                            let hasStatInfo = false;
-
-                                                                            assocSummary.info.forEach(item => {
-                                                                                if (item.disabled) return;
-                                                                                const isMean = item.mean === true || item.tag === 'mean' || item.value_id === 'mean';
-                                                                                const isMedian = item.median === true || item.tag === 'median' || item.value_id === 'median';
-                                                                                const isMode = item.mode === true || item.tag === 'mode' || item.value_id === 'mode';
-
-                                                                                if (isMean) { meanActive = true; hasStatInfo = true; }
-                                                                                if (isMedian) { medianActive = true; hasStatInfo = true; }
-                                                                                if (isMode) { modeActive = true; hasStatInfo = true; }
-                                                                            });
-
-                                                                            if (hasStatInfo) {
-                                                                                hasMean = meanActive;
-                                                                                hasMedian = medianActive;
-                                                                                hasMode = modeActive;
-                                                                            }
-                                                                        }
+                                                                        const hasMean = folder.mean === true;
+                                                                        const hasMedian = folder.median === true;
+                                                                        const hasMode = folder.mode === true;
 
                                                                         const activeStats = [];
                                                                         const itemId = folder.items && folder.items[0];
