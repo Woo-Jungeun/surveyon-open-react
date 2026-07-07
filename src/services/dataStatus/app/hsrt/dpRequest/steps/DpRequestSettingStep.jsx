@@ -1374,7 +1374,11 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 .dp-table-container .k-grid tbody tr.k-hover,
                 .dp-table-container .k-grid tbody tr.k-state-hover,
                 .dp-table-container .k-grid tbody tr.k-hover td,
-                .dp-table-container .k-grid tbody tr.k-state-hover td {
+                .dp-table-container .k-grid tbody tr.k-state-hover td,
+                .dp-table-container .k-grid tbody td.k-hover,
+                .dp-table-container .k-grid tbody td.k-state-hover,
+                .dp-table-container .k-grid tbody td.k-focus,
+                .dp-table-container .k-grid tbody td.k-state-focused {
                     background-color: inherit !important;
                 }
 
