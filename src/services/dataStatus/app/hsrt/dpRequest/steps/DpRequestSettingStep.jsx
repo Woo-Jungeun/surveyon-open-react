@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { Settings, Layout, Scale, AlertCircle, Info, Trash2, ChevronLeft, ChevronRight, Search, Plus } from 'lucide-react';
+import { AlertCircle, Info, Trash2, ChevronLeft, ChevronRight, Search, Plus, X } from 'lucide-react';
 
 import { Input } from '@progress/kendo-react-inputs';
 
@@ -34,12 +34,41 @@ const getBandScore = (label) => {
 
 // --- 숫자 전용 커스텀 셀 ---
 const NumericEditCell = (props) => {
-    const { dataItem, field, onChange } = props;
+    const { dataItem, field, onChange, currentWeightInfo, updateWeightInfo, onUnsavedChange } = props;
     const value = dataItem[field];
 
     if (!dataItem.inEdit) {
         return <td style={{ ...props.style, padding: '0 12px' }}>{value}</td>;
     }
+
+    const handlePaste = (e) => {
+        if (currentWeightInfo && updateWeightInfo) {
+            e.preventDefault();
+            const clipboardData = e.clipboardData.getData('Text');
+            const lines = clipboardData.split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
+            if (lines.length > 0) {
+                const startIdx = currentWeightInfo.findIndex(item => String(item.label) === String(dataItem.label));
+                if (startIdx !== -1) {
+                    const updatedInfo = currentWeightInfo.map((item, idx) => {
+                        if (idx >= startIdx) {
+                            const offset = idx - startIdx;
+                            const lineVal = lines[offset];
+                            if (lineVal !== undefined && lineVal !== '') {
+                                const num = Number(lineVal);
+                                return {
+                                    ...item,
+                                    value: isNaN(num) ? lineVal : num
+                                };
+                            }
+                        }
+                        return item;
+                    });
+                    updateWeightInfo(updatedInfo);
+                    if (onUnsavedChange) onUnsavedChange(true);
+                }
+            }
+        }
+    };
 
     return (
         <td style={{ ...props.style, padding: 0 }} className="k-grid-edit-cell">
@@ -47,6 +76,7 @@ const NumericEditCell = (props) => {
                 type="number"
                 value={value}
                 onChange={(e) => onChange({ dataItem, field, syntheticEvent: e.syntheticEvent, value: e.value })}
+                onPaste={handlePaste}
                 className="no-spin"
                 style={{ width: '100%', height: '100%', border: 'none', outline: 'none' }}
             />
@@ -93,6 +123,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [currentWeightInfo, setCurrentWeightInfo] = useState([]);
     const [deletedWeightIds, setDeletedWeightIds] = useState([]);
     const [weightSort, setWeightSort] = useState([]);
+    const [isBulkWeightModalOpen, setIsBulkWeightModalOpen] = useState(false);
+    const [bulkWeightValuesText, setBulkWeightValuesText] = useState('');
 
     const selectWeight = (w) => {
         const prevId = selectedWeightId;
@@ -146,6 +178,33 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     const handleWeightRowClick = (e) => {
         setCurrentWeightInfo(prev => prev.map(it => ({ ...it, inEdit: it === e.dataItem })));
+    };
+
+    const handleOpenBulkWeightModal = () => {
+        const valuesText = currentWeightInfo.map(item => item.value !== undefined && item.value !== null ? item.value : '').join('\n');
+        setBulkWeightValuesText(valuesText);
+        setIsBulkWeightModalOpen(true);
+    };
+
+    const handleApplyBulkWeightValuesText = () => {
+        const lines = bulkWeightValuesText.split('\n').map(l => l.trim());
+        const updatedInfo = currentWeightInfo.map((item, idx) => {
+            const lineVal = lines[idx];
+            let parsedVal = '';
+            if (lineVal !== undefined && lineVal !== '') {
+                const num = Number(lineVal);
+                if (!isNaN(num)) {
+                    parsedVal = num;
+                }
+            }
+            return {
+                ...item,
+                value: parsedVal
+            };
+        });
+        updateWeightInfo(updatedInfo);
+        setIsBulkWeightModalOpen(false);
+        if (onUnsavedChange) onUnsavedChange(true);
     };
 
     const handleWeightSortChange = (e) => {
@@ -1154,9 +1213,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     const tabs = [
-        { label: '분석 설정', icon: <Settings size={18} /> },
-        { label: '표 디자인 설정', icon: <Layout size={18} /> },
-        { label: '가중치 설정', icon: <Scale size={18} /> },
+        { label: '분석 설정' },
+        { label: '표 디자인 설정' },
+        { label: '가중치 설정' },
     ];
 
     const renderTabContent = () => {
@@ -1212,7 +1271,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             <div className="dp-setting-card" style={{ flexShrink: 0, marginBottom: '0px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: '#334155', fontSize: '13px' }}>
-                        <Info size={16} style={{ color: '#475569' }} /> 기본 Weight(가중치) 변수
+                        기본 가중치 변수
                     </div>
                     <select
                         className="dp-select"
@@ -1301,7 +1360,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                     {selectedWeightId ? (
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                            <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', flexShrink: 0, borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px', paddingTop: '16px' }}>
+                            <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px', paddingTop: '16px' }}>
                                 <div className="dp-content-label-edit" style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1, minWidth: 0 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>가중치 라벨</span>
@@ -1313,7 +1372,22 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             style={{ width: '280px', height: '32px', padding: '0 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
                                         />
                                     </div>
+                                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500, userSelect: 'none' }}>
+                                        💡 입력창 중 하나를 선택해 엑셀 열을 붙여넣기(Ctrl+V)하면 아래로 자동 채워집니다.
+                                    </span>
                                 </div>
+                                <button
+                                    onClick={handleOpenBulkWeightModal}
+                                    style={{
+                                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '32px', fontSize: '13px',
+                                        background: '#fff', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '4px',
+                                        padding: '0 16px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
+                                >
+                                    <span>일괄 붙여넣기</span>
+                                </button>
                             </div>
                             <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                                 <KendoGridV2
@@ -1327,7 +1401,14 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     style={{ flex: 1, height: '100%', width: '100%' }}
                                 >
                                     <Column field="label" title="pid" width="200px" cell={PidCell} />
-                                    <Column field="value" title="가중치 비율" cell={NumericEditCell} />
+                                    <Column field="value" title="가중치 비율" cell={(cellProps) => (
+                                        <NumericEditCell
+                                            {...cellProps}
+                                            currentWeightInfo={currentWeightInfo}
+                                            updateWeightInfo={updateWeightInfo}
+                                            onUnsavedChange={onUnsavedChange}
+                                        />
+                                    )} />
                                 </KendoGridV2>
                             </div>
                         </div>
@@ -1361,13 +1442,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     borderBottom: isActive ? '3px solid #3B82F6' : '3px solid transparent',
                                     marginBottom: '-1px', // Overlay parent border
                                     transition: 'all 0.2s ease',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
                                     userSelect: 'none'
                                 }}
                             >
-                                {tab.icon}
                                 {tab.label}
                             </div>
                         );
@@ -1378,6 +1455,96 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             <div style={(activeTab === 0 || activeTab === 2) ? { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' } : { flex: 1, overflowY: 'auto' }}>
                 {renderTabContent()}
             </div>
+
+            {/* 가중치 비율 일괄 수정 모달 */}
+            {isBulkWeightModalOpen && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+                }}>
+                    <div style={{
+                        backgroundColor: '#ffffff', borderRadius: '16px', width: '750px',
+                        display: 'flex', flexDirection: 'column',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)', overflow: 'hidden',
+                        border: '1px solid rgba(226, 232, 240, 0.8)'
+                    }}>
+                        {/* 팝업 헤더 */}
+                        <div style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            padding: '20px 28px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                                <div style={{ width: '4px', height: '18px', background: '#3b82f6', borderRadius: '2px', marginTop: '3px' }}></div>
+                                <div>
+                                    <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>가중치 비율 일괄 수정</h3>
+                                    <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '4px', fontWeight: 500 }}>현재 가중치 설정에 속한 pid들의 가중치 비율 목록입니다. 줄바꿈 단위로 편집하거나, 엑셀 열 데이터를 복사해서 붙여넣으면 일괄 반영됩니다.</div>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setIsBulkWeightModalOpen(false)}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#94a3b8', transition: 'color 0.15s' }}
+                                onMouseEnter={(e) => e.currentTarget.style.color = '#475569'}
+                                onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* 모달 콘텐츠 */}
+                        <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '10px', background: '#ffffff' }}>
+                            <textarea
+                                value={bulkWeightValuesText}
+                                onChange={(e) => setBulkWeightValuesText(e.target.value)}
+                                style={{
+                                    width: '100%', height: '380px', padding: '16px', border: '1px solid #cbd5e1',
+                                    borderRadius: '8px', fontSize: '14.5px', outline: 'none', resize: 'none',
+                                    lineHeight: 1.6, color: '#1e293b', fontFamily: 'inherit',
+                                    transition: 'border-color 0.15s, box-shadow 0.15s'
+                                }}
+                                onFocus={(e) => {
+                                    e.target.style.borderColor = '#3b82f6';
+                                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                                }}
+                                onBlur={(e) => {
+                                    e.target.style.borderColor = '#cbd5e1';
+                                    e.target.style.boxShadow = 'none';
+                                }}
+                                placeholder="0.6000&#10;0.5400&#10;1.2000"
+                            />
+                        </div>
+
+                        {/* 팝업 푸터 */}
+                        <div style={{
+                            display: 'flex', justifyContent: 'flex-end', gap: '8px',
+                            padding: '14px 28px', borderTop: '1px solid #e2e8f0', background: '#f8fafc'
+                        }}>
+                            <button
+                                onClick={() => setIsBulkWeightModalOpen(false)}
+                                style={{
+                                    height: '38px', padding: '0 20px', fontSize: '13px', borderRadius: '6px', border: '1px solid #cbd5e1',
+                                    background: '#ffffff', color: '#475569', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
+                            >
+                                취소
+                            </button>
+                            <button
+                                onClick={handleApplyBulkWeightValuesText}
+                                style={{
+                                    height: '38px', padding: '0 24px', fontSize: '13px', borderRadius: '6px', border: 'none',
+                                    background: '#3b82f6', color: '#ffffff', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#2563eb'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = '#3b82f6'; }}
+                            >
+                                일괄 적용
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 });
