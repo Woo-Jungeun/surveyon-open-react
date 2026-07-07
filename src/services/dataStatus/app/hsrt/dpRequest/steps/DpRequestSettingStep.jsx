@@ -977,9 +977,14 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     info = currentWeightInfo;
                 }
 
+                const originalId = id;
                 if (!id || id.trim() === '' || id.startsWith('new_')) {
                     const cleanId = id.startsWith('new_') ? id.replace('new_', 'weight_') : `weight_${Date.now()}`;
                     id = cleanId;
+                }
+
+                if (settings.weight_variable === originalId && originalId !== id) {
+                    settings.weight_variable = id;
                 }
 
                 const pidValues = {};
