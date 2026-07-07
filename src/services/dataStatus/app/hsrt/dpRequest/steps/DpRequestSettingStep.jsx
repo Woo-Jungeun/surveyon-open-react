@@ -53,7 +53,6 @@ const NumericEditCell = (props) => {
                 padding: '0 12px',
                 backgroundColor: isChanged ? '#eff6ff' : 'transparent',
                 color: isChanged ? '#2563eb' : '#1e293b',
-                fontWeight: isChanged ? '700' : 'normal',
                 transition: 'background-color 0.15s, color 0.15s'
             }}>
                 {value}
@@ -106,7 +105,6 @@ const NumericEditCell = (props) => {
                 style={{
                     width: '100%', height: '100%', border: 'none', outline: 'none',
                     color: isChanged ? '#2563eb' : 'inherit',
-                    fontWeight: isChanged ? '700' : 'normal',
                     backgroundColor: 'transparent'
                 }}
             />
@@ -341,25 +339,10 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             const pidColumn = pidData?.pid_column || 'pid';
             const pids = pidData?.pids || [];
 
-            // Build the info array by checking existing weights loaded from variables/recoded/plain
+            // Build the info array with empty values by default
             const newInfo = pids.map((pid) => {
-                let matchedValue = ''; // default fallback value
-
-                // Loop through all loaded weights to search for info row with label matching pid
-                for (const w of weights) {
-                    const infoList = w.id === selectedWeightId ? currentWeightInfo : (w.info || []);
-                    const matchedItem = infoList.find(infoItem => String(infoItem.label) === String(pid));
-                    if (matchedItem) {
-                        const valNum = Number(matchedItem.value);
-                        if (!isNaN(valNum)) {
-                            matchedValue = valNum;
-                            break;
-                        }
-                    }
-                }
-
                 return {
-                    value: matchedValue,
+                    value: '',
                     label: String(pid),
                     logic: `${pidColumn} == ${pid}`,
                     inEdit: false
@@ -1419,7 +1402,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <div className="dp-sidebar-header" style={{ display: 'flex', alignItems: 'center', padding: '12px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
                                 <div className="dp-search-input-wrapper" style={{ flex: 1, width: '100%', position: 'relative' }}>
                                     <Search size={14} className="dp-search-input-icon" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                                    <input type="text" placeholder="가중치명 또는 ID 검색" value={weightSearch} onChange={(e) => setWeightSearch(e.target.value)} className="dp-search-input" style={{ width: '100%', padding: '6px 10px 6px 30px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '12px', outline: 'none' }} />
+                                    <input type="text" placeholder="가중치ID 또는 라벨 검색" value={weightSearch} onChange={(e) => setWeightSearch(e.target.value)} className="dp-search-input" style={{ width: '100%', padding: '6px 10px 6px 30px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '12px', outline: 'none' }} />
                                 </div>
                             </div>
                             <div className="dp-banner-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '8px' }}>
