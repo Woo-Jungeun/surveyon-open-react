@@ -134,6 +134,15 @@ export function DpRequestPageApi() {
         }
     );
 
+    /** 가중치 설정 저장 API (set-pid) */
+    const saveWeightSetPid = useMutation(
+        async (data) => await api.post(data, "/weight/set-pid", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     /** 변수 리코딩(스터브 등) 삭제 API */
     const deleteRecodedSet = useMutation(
         async (data) => await api.post(data, "/variables/recoded/delete", "API_BASE_URL_DATASTATUS"),
@@ -311,6 +320,7 @@ export function DpRequestPageApi() {
         getRecodedPlain,
         getWeightPidList,
         getNextWeightId,
-        deleteWeight
+        deleteWeight,
+        saveWeightSetPid
     };
 }

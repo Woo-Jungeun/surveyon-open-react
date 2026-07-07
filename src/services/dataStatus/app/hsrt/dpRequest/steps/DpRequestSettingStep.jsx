@@ -122,7 +122,7 @@ const PidCell = (props) => {
 
 const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getTableRenderContext, getTableDetail, saveTableSettings, getBaseVariableList, getRecodedOverview, reapplyPreset, getRecodedPlain, saveRecodedSet, getWeightPidList, getNextWeightId, deleteWeight } = DpRequestPageApi();
+    const { getTableRenderContext, getTableDetail, saveTableSettings, getBaseVariableList, getRecodedOverview, reapplyPreset, getRecodedPlain, getWeightPidList, getNextWeightId, deleteWeight, saveWeightSetPid } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -951,13 +951,11 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             for (const w of weights) {
                 let id = w.id;
                 let label = w.label;
-                let type = w.type;
                 let info = w.info;
 
                 if (w.id === selectedWeightId) {
                     id = currentWeightId;
                     label = currentWeightLabel;
-                    type = currentWeightType;
                     info = currentWeightInfo;
                 }
 
@@ -966,45 +964,23 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     id = cleanId;
                 }
 
-                const infoArray = info.map((opt, index) => ({
-                    index: index + 1,
-                    label: opt.label || '',
-                    label2: '',
-                    label3: '',
-                    logic: opt.logic || '',
-                    type: 'option',
-                    row_role: 'option',
-                    is_internal: null,
-                    prefix: null,
-                    postfix: null,
-                    hide: '',
-                    round: null,
-                    value: Number(opt.value) || 0,
-                    stat_type: null,
-                    target_var: null,
-                    line: null,
-                    color: null
-                }));
+                const pidValues = {};
+                info.forEach(opt => {
+                    if (opt.label) {
+                        const numVal = Number(opt.value);
+                        pidValues[String(opt.label)] = isNaN(numVal) ? 0 : numVal;
+                    }
+                });
 
                 const savePayload = {
                     pageid: pageId,
-                    user: auth.user.userId,
-                    variables: {
-                        [id]: {
-                            id: id,
-                            label: label || `가중치: ${id}`,
-                            type: type || 'single',
-                            recoded_type: 'weight',
-                            variable_role: 'weight',
-                            info: infoArray
-                        }
-                    },
-                    recoded_type: {
-                        [id]: 'weight'
-                    }
+                    weight_variable_label: label || `가중치: ${id}`,
+                    weight_variable_name: id,
+                    pid_values: pidValues,
+                    user: auth.user.userId
                 };
 
-                await saveRecodedSet.mutateAsync(savePayload);
+                await saveWeightSetPid.mutateAsync(savePayload);
             }
 
             const changedPresetIds = [];
