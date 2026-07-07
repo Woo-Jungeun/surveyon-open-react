@@ -166,9 +166,22 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         if (!folder) return;
         const labels = folder.items.map(itemId => {
             const varInfo = summaries.find(s => s.id === itemId);
-            if (varInfo && varInfo.label) return varInfo.label;
             const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
-            return baseVar ? baseVar.label || baseVar.name : itemId;
+            const showLabel = baseVar ? baseVar.label || baseVar.name : itemId;
+
+            let finalLabel = varInfo ? varInfo.label : showLabel;
+            if (varInfo && folder && folder.name) {
+                const isCorrupted = varInfo.label === folder.name ||
+                    varInfo.label.includes('요약표') ||
+                    varInfo.label.includes('(평균)') ||
+                    varInfo.label.includes('(Top') ||
+                    varInfo.label.includes('(Bot') ||
+                    varInfo.label.includes('(Mid');
+                if (isCorrupted) {
+                    finalLabel = showLabel;
+                }
+            }
+            return finalLabel;
         }).join('\n');
 
         setActiveBulkItemFolderId(folderId);
@@ -1448,7 +1461,10 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     name: prop.title,
                     label: prop.title,
                     type: 'statistics',
-                    items: [...prop.items]
+                    items: [...prop.items],
+                    mean: !!(statItem?.mean),
+                    median: !!(statItem?.median),
+                    mode: !!(statItem?.mode)
                 });
             }
 
@@ -1842,10 +1858,15 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 {
                                                     title: "확인",
                                                     click: async () => {
-                                                        const newDeletedIds = [...new Set([...deletedSummaryIds, ...originalFolderIds])];
+                                                        const targetFolderIds = filteredFolders.map(f => f.id);
+                                                        const originalTargetIds = targetFolderIds.filter(id => originalFolderIds.includes(id));
+                                                        const newDeletedIds = [...new Set([...deletedSummaryIds, ...originalTargetIds])];
                                                         setDeletedSummaryIds(newDeletedIds);
-                                                        setFolders([]);
-                                                        await handleSaveSummary([], newDeletedIds, '모든 요약표가 삭제되었습니다.');
+
+                                                        const nextFolders = folders.filter(f => currentTab === 'scale' ? f.type !== 'frequency' : f.type !== 'statistics');
+                                                        setFolders(nextFolders);
+
+                                                        await handleSaveSummary(nextFolders, newDeletedIds, '요약표가 삭제되었습니다.');
                                                     }
                                                 }
                                             ]
