@@ -616,7 +616,20 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     const varInfo = summaries.find(s => s.id === itemId);
                     const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
                     const showLabel = baseVar ? baseVar.label || baseVar.name : itemId;
-                    const finalLabel = varInfo ? varInfo.label : showLabel;
+                    
+                    let finalLabel = varInfo ? varInfo.label : showLabel;
+                    if (varInfo && f && f.name) {
+                        const isCorrupted = varInfo.label === f.name ||
+                            varInfo.label.includes('요약표') ||
+                            varInfo.label.includes('(평균)') ||
+                            varInfo.label.includes('(Top') ||
+                            varInfo.label.includes('(Bot') ||
+                            varInfo.label.includes('(Mid');
+                        if (isCorrupted) {
+                            finalLabel = showLabel;
+                        }
+                    }
+                    
                     return {
                         name: itemId,
                         label: finalLabel
