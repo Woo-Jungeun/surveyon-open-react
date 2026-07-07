@@ -34,11 +34,30 @@ const getBandScore = (label) => {
 
 // --- 숫자 전용 커스텀 셀 ---
 const NumericEditCell = (props) => {
-    const { dataItem, field, onChange, currentWeightInfo, updateWeightInfo, onUnsavedChange } = props;
+    const { dataItem, field, onChange, currentWeightInfo, updateWeightInfo, onUnsavedChange, originalWeightInfoRef } = props;
     const value = dataItem[field];
 
+    const originalList = originalWeightInfoRef?.current || [];
+    const originalItem = originalList.find(orig => String(orig.label) === String(dataItem.label));
+    
+    // Check if the value has changed
+    const isChanged = originalItem 
+        ? String(originalItem.value) !== String(value) 
+        : (value !== undefined && value !== null && value !== '');
+
     if (!dataItem.inEdit) {
-        return <td style={{ ...props.style, padding: '0 12px' }}>{value}</td>;
+        return (
+            <td style={{ 
+                ...props.style, 
+                padding: '0 12px',
+                backgroundColor: isChanged ? '#eff6ff' : 'transparent',
+                color: isChanged ? '#2563eb' : '#1e293b',
+                fontWeight: isChanged ? '700' : 'normal',
+                transition: 'background-color 0.15s, color 0.15s'
+            }}>
+                {value}
+            </td>
+        );
     }
 
     const handlePaste = (e) => {
@@ -71,14 +90,24 @@ const NumericEditCell = (props) => {
     };
 
     return (
-        <td style={{ ...props.style, padding: 0 }} className="k-grid-edit-cell">
+        <td style={{ 
+            ...props.style, 
+            padding: 0,
+            backgroundColor: isChanged ? '#eff6ff' : 'transparent',
+            transition: 'background-color 0.15s'
+        }} className="k-grid-edit-cell">
             <Input
                 type="number"
                 value={value}
                 onChange={(e) => onChange({ dataItem, field, syntheticEvent: e.syntheticEvent, value: e.value })}
                 onPaste={handlePaste}
                 className="no-spin"
-                style={{ width: '100%', height: '100%', border: 'none', outline: 'none' }}
+                style={{ 
+                    width: '100%', height: '100%', border: 'none', outline: 'none',
+                    color: isChanged ? '#2563eb' : 'inherit',
+                    fontWeight: isChanged ? '700' : 'normal',
+                    backgroundColor: 'transparent'
+                }}
             />
         </td>
     );
@@ -98,6 +127,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const modal = useContext(modalContext);
 
     const originalPresetsRef = useRef({ scale: [], rank: [], group: [] });
+    const originalWeightInfoRef = useRef([]);
 
     // --- 히스토리 관리 (Undo/Redo) ---
     const history = useUpdateHistory('dp-setting');
@@ -125,6 +155,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [weightSort, setWeightSort] = useState([]);
     const [isBulkWeightModalOpen, setIsBulkWeightModalOpen] = useState(false);
     const [bulkWeightValuesText, setBulkWeightValuesText] = useState('');
+    const [isTextareaFocused, setIsTextareaFocused] = useState(false);
 
     const selectWeight = (w) => {
         const prevId = selectedWeightId;
@@ -147,6 +178,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
         setCurrentWeightLabel(w.label);
         setCurrentWeightType(w.type || 'single');
         setCurrentWeightInfo(w.info || []);
+        originalWeightInfoRef.current = JSON.parse(JSON.stringify(w.info || []));
         setWeightSort([]);
     };
 
@@ -181,27 +213,72 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     const handleOpenBulkWeightModal = () => {
-        const valuesText = currentWeightInfo.map(item => item.value !== undefined && item.value !== null ? item.value : '').join('\n');
+        const valuesText = currentWeightInfo.map(item => {
+            const val = item.value !== undefined && item.value !== null ? item.value : '';
+            return `${item.label}\t${val}`;
+        }).join('\n');
         setBulkWeightValuesText(valuesText);
         setIsBulkWeightModalOpen(true);
     };
 
     const handleApplyBulkWeightValuesText = () => {
-        const lines = bulkWeightValuesText.split('\n').map(l => l.trim());
-        const updatedInfo = currentWeightInfo.map((item, idx) => {
-            const lineVal = lines[idx];
-            let parsedVal = '';
-            if (lineVal !== undefined && lineVal !== '') {
-                const num = Number(lineVal);
-                if (!isNaN(num)) {
-                    parsedVal = num;
+        const lines = bulkWeightValuesText.split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
+
+        // Detect if the user pasted two columns (PID and Value)
+        const hasPairs = lines.some(line => line.split(/\s+/).length > 1);
+
+        let updatedInfo = [];
+
+        if (hasPairs) {
+            // PID + Value pair mode
+            const weightMap = {};
+            lines.forEach(line => {
+                const parts = line.split(/\s+/);
+                if (parts.length >= 2) {
+                    const pid = parts[0];
+                    const valStr = parts[1];
+                    let parsedVal = '';
+                    if (valStr !== '') {
+                        const num = Number(valStr);
+                        parsedVal = isNaN(num) ? valStr : num;
+                    }
+                    weightMap[String(pid)] = parsedVal;
+                } else if (parts.length === 1) {
+                    // If a line only has one part, treat it as PID with empty value
+                    weightMap[String(parts[0])] = '';
                 }
-            }
-            return {
-                ...item,
-                value: parsedVal
-            };
-        });
+            });
+
+            updatedInfo = currentWeightInfo.map(item => {
+                const pidStr = String(item.label);
+                if (weightMap[pidStr] !== undefined) {
+                    return {
+                        ...item,
+                        value: weightMap[pidStr]
+                    };
+                }
+                return item;
+            });
+        } else {
+            // Value-only mode (order-based)
+            updatedInfo = currentWeightInfo.map((item, idx) => {
+                const lineVal = lines[idx];
+                let parsedVal = item.value; // Keep original if line is undefined
+                if (lineVal !== undefined) {
+                    if (lineVal === '') {
+                        parsedVal = '';
+                    } else {
+                        const num = Number(lineVal);
+                        parsedVal = isNaN(num) ? lineVal : num;
+                    }
+                }
+                return {
+                    ...item,
+                    value: parsedVal
+                };
+            });
+        }
+
         updateWeightInfo(updatedInfo);
         setIsBulkWeightModalOpen(false);
         if (onUnsavedChange) onUnsavedChange(true);
@@ -306,6 +383,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             setCurrentWeightLabel('새 가중치 설정');
             setCurrentWeightType('single');
             setCurrentWeightInfo(newInfo);
+            originalWeightInfoRef.current = JSON.parse(JSON.stringify(newInfo || []));
             if (onUnsavedChange) onUnsavedChange(true);
         } catch (err) {
             console.error("Failed to load PID list for new weight:", err);
@@ -711,12 +789,14 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     setCurrentWeightLabel(exists.label);
                     setCurrentWeightType(exists.type || 'single');
                     setCurrentWeightInfo(exists.info || []);
+                    originalWeightInfoRef.current = JSON.parse(JSON.stringify(exists.info || []));
                 } else {
                     setSelectedWeightId(loadedWeights[0].id);
                     setCurrentWeightId(loadedWeights[0].id);
                     setCurrentWeightLabel(loadedWeights[0].label);
                     setCurrentWeightType(loadedWeights[0].type || 'single');
                     setCurrentWeightInfo(loadedWeights[0].info || []);
+                    originalWeightInfoRef.current = JSON.parse(JSON.stringify(loadedWeights[0].info || []));
                 }
             } else {
                 setSelectedWeightId('');
@@ -1407,6 +1487,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             currentWeightInfo={currentWeightInfo}
                                             updateWeightInfo={updateWeightInfo}
                                             onUnsavedChange={onUnsavedChange}
+                                            originalWeightInfoRef={originalWeightInfoRef}
                                         />
                                     )} />
                                 </KendoGridV2>
@@ -1464,7 +1545,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
                 }}>
                     <div style={{
-                        backgroundColor: '#ffffff', borderRadius: '16px', width: '750px',
+                        backgroundColor: '#ffffff', borderRadius: '16px', width: '580px',
                         display: 'flex', flexDirection: 'column',
                         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)', overflow: 'hidden',
                         border: '1px solid rgba(226, 232, 240, 0.8)'
@@ -1478,7 +1559,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 <div style={{ width: '4px', height: '18px', background: '#3b82f6', borderRadius: '2px', marginTop: '3px' }}></div>
                                 <div>
                                     <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>가중치 비율 일괄 수정</h3>
-                                    <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '4px', fontWeight: 500 }}>현재 가중치 설정에 속한 pid들의 가중치 비율 목록입니다. 줄바꿈 단위로 편집하거나, 엑셀 열 데이터를 복사해서 붙여넣으면 일괄 반영됩니다.</div>
+                                    <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '4px', fontWeight: 500 }}>복사한 데이터를 아래에 붙여넣어 일괄 적용할 수 있습니다.</div>
+                                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px', fontWeight: 500 }}>※ 그리드에 존재하지 않는 PID는 매핑에서 제외되며, 입력하지 않은 기존 값은 안전하게 유지됩니다.</div>
                                 </div>
                             </div>
                             <button
@@ -1493,25 +1575,45 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                         {/* 모달 콘텐츠 */}
                         <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '10px', background: '#ffffff' }}>
-                            <textarea
-                                value={bulkWeightValuesText}
-                                onChange={(e) => setBulkWeightValuesText(e.target.value)}
-                                style={{
-                                    width: '100%', height: '380px', padding: '16px', border: '1px solid #cbd5e1',
-                                    borderRadius: '8px', fontSize: '14.5px', outline: 'none', resize: 'none',
-                                    lineHeight: 1.6, color: '#1e293b', fontFamily: 'inherit',
-                                    transition: 'border-color 0.15s, box-shadow 0.15s'
-                                }}
-                                onFocus={(e) => {
-                                    e.target.style.borderColor = '#3b82f6';
-                                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                                }}
-                                onBlur={(e) => {
-                                    e.target.style.borderColor = '#cbd5e1';
-                                    e.target.style.boxShadow = 'none';
-                                }}
-                                placeholder="0.6000&#10;0.5400&#10;1.2000"
-                            />
+                            {/* Wrapper Div mimicking textarea border */}
+                            <div style={{
+                                width: '100%',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                border: isTextareaFocused ? '1px solid #3b82f6' : '1px solid #cbd5e1',
+                                boxShadow: isTextareaFocused ? '0 0 0 3px rgba(59, 130, 246, 0.1)' : 'none',
+                                borderRadius: '8px',
+                                overflow: 'hidden',
+                                transition: 'border-color 0.15s, box-shadow 0.15s'
+                            }}>
+                                {/* Static Header Row */}
+                                <div style={{
+                                    display: 'flex',
+                                    padding: '12px 16px 8px 16px',
+                                    borderBottom: '1px solid #e2e8f0',
+                                    background: '#f8fafc',
+                                    userSelect: 'none',
+                                    fontFamily: 'monospace'
+                                }}>
+                                    <div style={{ width: '8ch', fontSize: '13px', fontWeight: '700', color: '#64748b' }}>pid</div>
+                                    <div style={{ flex: 1, fontSize: '13px', fontWeight: '700', color: '#64748b', paddingLeft: '8px' }}>가중치 비율</div>
+                                </div>
+
+                                {/* Editable Textarea */}
+                                <textarea
+                                    value={bulkWeightValuesText}
+                                    onChange={(e) => setBulkWeightValuesText(e.target.value)}
+                                    style={{
+                                        width: '100%', height: '340px', padding: '12px 16px', border: 'none',
+                                        outline: 'none', resize: 'none', lineHeight: 1.6, color: '#1e293b',
+                                        fontFamily: 'monospace', fontSize: '14px', background: 'transparent',
+                                        tabSize: 8, MozTabSize: 8
+                                    }}
+                                    onFocus={() => setIsTextareaFocused(true)}
+                                    onBlur={() => setIsTextareaFocused(false)}
+                                    placeholder="이곳에 데이터를 붙여넣거나 입력하세요."
+                                />
+                            </div>
                         </div>
 
                         {/* 팝업 푸터 */}
