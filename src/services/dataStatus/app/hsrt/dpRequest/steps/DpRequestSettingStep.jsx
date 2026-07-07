@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { AlertCircle, Info, Trash2, ChevronLeft, ChevronRight, Search, Plus, X } from 'lucide-react';
 
 import { Input } from '@progress/kendo-react-inputs';
+import { DropDownList } from '@progress/kendo-react-dropdowns';
 
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { DpRequestPageApi } from '../DpRequestPageApi';
@@ -39,16 +40,16 @@ const NumericEditCell = (props) => {
 
     const originalList = originalWeightInfoRef?.current || [];
     const originalItem = originalList.find(orig => String(orig.label) === String(dataItem.label));
-    
+
     // Check if the value has changed
-    const isChanged = originalItem 
-        ? String(originalItem.value) !== String(value) 
+    const isChanged = originalItem
+        ? String(originalItem.value) !== String(value)
         : (value !== undefined && value !== null && value !== '');
 
     if (!dataItem.inEdit) {
         return (
-            <td style={{ 
-                ...props.style, 
+            <td style={{
+                ...props.style,
                 padding: '0 12px',
                 backgroundColor: isChanged ? '#eff6ff' : 'transparent',
                 color: isChanged ? '#2563eb' : '#1e293b',
@@ -90,8 +91,8 @@ const NumericEditCell = (props) => {
     };
 
     return (
-        <td style={{ 
-            ...props.style, 
+        <td style={{
+            ...props.style,
             padding: 0,
             backgroundColor: isChanged ? '#eff6ff' : 'transparent',
             transition: 'background-color 0.15s'
@@ -102,7 +103,7 @@ const NumericEditCell = (props) => {
                 onChange={(e) => onChange({ dataItem, field, syntheticEvent: e.syntheticEvent, value: e.value })}
                 onPaste={handlePaste}
                 className="no-spin"
-                style={{ 
+                style={{
                     width: '100%', height: '100%', border: 'none', outline: 'none',
                     color: isChanged ? '#2563eb' : 'inherit',
                     fontWeight: isChanged ? '700' : 'normal',
@@ -156,6 +157,20 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [isBulkWeightModalOpen, setIsBulkWeightModalOpen] = useState(false);
     const [bulkWeightValuesText, setBulkWeightValuesText] = useState('');
     const [isTextareaFocused, setIsTextareaFocused] = useState(false);
+
+    const weightDropdownData = useMemo(() => {
+        const list = [{ text: '없음', value: '없음' }];
+        weights.forEach(w => {
+            const isSelected = w.id === selectedWeightId;
+            const id = isSelected ? currentWeightId : w.id;
+            const label = isSelected ? currentWeightLabel : w.label;
+            list.push({
+                text: label || '(라벨 없음)',
+                value: id
+            });
+        });
+        return list;
+    }, [weights, selectedWeightId, currentWeightId, currentWeightLabel]);
 
     const selectWeight = (w) => {
         const prevId = selectedWeightId;
@@ -418,6 +433,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     delete_weight_id: targetW.id,
                                     user: auth.user.userId
                                 });
+                            }
+                            if (settings.weight_variable === id) {
+                                setSettings(prev => ({ ...prev, weight_variable: '없음' }));
                             }
                             setWeights(nextList);
                             if (selectedWeightId === id) {
@@ -1352,17 +1370,17 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: '#334155', fontSize: '13px' }}>
                         기본 가중치 변수
                     </div>
-                    <select
-                        className="dp-select"
-                        style={{ width: '200px', background: '#FFFFFF', border: '1px solid #CBD5E1', color: '#1E293B', padding: '5px 10px', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
-                        value={settings.weight_variable || '없음'}
+                    <DropDownList
+                        style={{ width: '220px', fontSize: '13px' }}
+                        data={weightDropdownData}
+                        textField="text"
+                        dataItemKey="value"
+                        value={weightDropdownData.find(item => item.value === (settings.weight_variable || '없음')) || weightDropdownData[0]}
                         onChange={(e) => {
-                            setSettings({ ...settings, weight_variable: e.target.value });
+                            setSettings({ ...settings, weight_variable: e.value.value });
                             if (onUnsavedChange) onUnsavedChange(true);
                         }}
-                    >
-                        {weightOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
+                    />
                     {settings.weight_variable === '없음' && (
                         <span style={{ color: '#DC2626', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
                             <AlertCircle size={13} /> 가중치 변수가 지정되지 않았습니다.
