@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, forwardRef, useImperativeHandle, useMemo } from 'react';
+import { useState, useEffect, useContext, createContext, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { AlertCircle, Info, Trash2, ChevronLeft, ChevronRight, Search, Plus, X } from 'lucide-react';
 
@@ -33,9 +33,12 @@ const getBandScore = (label) => {
     return 99;
 };
 
+const WeightContext = createContext(null);
+
 // --- 숫자 전용 커스텀 셀 ---
 const NumericEditCell = (props) => {
-    const { dataItem, field, onChange, currentWeightInfo, updateWeightInfo, onUnsavedChange, originalWeightInfoRef } = props;
+    const { dataItem, field, onChange } = props;
+    const { currentWeightInfo, updateWeightInfo, onUnsavedChange, originalWeightInfoRef } = useContext(WeightContext);
     const value = dataItem[field];
 
     const originalList = originalWeightInfoRef?.current || [];
@@ -1475,27 +1478,21 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 </button>
                             </div>
                             <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                                <KendoGridV2
-                                    data={currentWeightInfo}
-                                    showNo showNoRecordsAddBtn={false} editField="inEdit"
-                                    onDataChange={updateWeightInfo}
-                                    onRowClick={handleWeightRowClick}
-                                    sortable={true}
-                                    sort={weightSort}
-                                    onSortChange={handleWeightSortChange}
-                                    style={{ flex: 1, height: '100%', width: '100%' }}
-                                >
-                                    <Column field="label" title="pid" width="200px" cell={PidCell} />
-                                    <Column field="value" title="가중치 비율" cell={(cellProps) => (
-                                        <NumericEditCell
-                                            {...cellProps}
-                                            currentWeightInfo={currentWeightInfo}
-                                            updateWeightInfo={updateWeightInfo}
-                                            onUnsavedChange={onUnsavedChange}
-                                            originalWeightInfoRef={originalWeightInfoRef}
-                                        />
-                                    )} />
-                                </KendoGridV2>
+                                <WeightContext.Provider value={{ currentWeightInfo, updateWeightInfo, onUnsavedChange, originalWeightInfoRef }}>
+                                    <KendoGridV2
+                                        data={currentWeightInfo}
+                                        showNo showNoRecordsAddBtn={false} editField="inEdit"
+                                        onDataChange={updateWeightInfo}
+                                        onRowClick={handleWeightRowClick}
+                                        sortable={true}
+                                        sort={weightSort}
+                                        onSortChange={handleWeightSortChange}
+                                        style={{ flex: 1, height: '100%', width: '100%' }}
+                                    >
+                                        <Column field="label" title="pid" width="200px" cell={PidCell} />
+                                        <Column field="value" title="가중치 비율" cell={NumericEditCell} />
+                                    </KendoGridV2>
+                                </WeightContext.Provider>
                             </div>
                         </div>
                     ) : (
