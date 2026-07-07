@@ -122,7 +122,7 @@ const PidCell = (props) => {
 
 const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getTableRenderContext, getTableDetail, saveTableSettings, getBaseVariableList, getRecodedOverview, reapplyPreset, getRecodedPlain, saveRecodedSet, deleteRecodedSet, getWeightPidList } = DpRequestPageApi();
+    const { getTableRenderContext, getTableDetail, saveTableSettings, getBaseVariableList, getRecodedOverview, reapplyPreset, getRecodedPlain, saveRecodedSet, getWeightPidList, getNextWeightId, deleteWeight } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -151,7 +151,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [currentWeightLabel, setCurrentWeightLabel] = useState('');
     const [currentWeightType, setCurrentWeightType] = useState('single');
     const [currentWeightInfo, setCurrentWeightInfo] = useState([]);
-    const [deletedWeightIds, setDeletedWeightIds] = useState([]);
+
     const [weightSort, setWeightSort] = useState([]);
     const [isBulkWeightModalOpen, setIsBulkWeightModalOpen] = useState(false);
     const [bulkWeightValuesText, setBulkWeightValuesText] = useState('');
@@ -351,10 +351,13 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 };
             });
 
-            const newId = `new_${Date.now()}`;
+            // Fetch new weight variable ID from next-id API
+            const nextIdRes = await getNextWeightId.mutateAsync({ pageid: pageId, user: auth.user.userId });
+            const newId = nextIdRes?.resultjson?.weight_variable || nextIdRes?.data?.resultjson?.weight_variable || nextIdRes?.weight_variable || `new_${Date.now()}`;
+
             const newW = {
                 id: newId,
-                label: '새 가중치 설정',
+                label: '',
                 type: 'single',
                 info: newInfo
             };
@@ -380,14 +383,14 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
             setSelectedWeightId(newId);
             setCurrentWeightId(newId);
-            setCurrentWeightLabel('새 가중치 설정');
+            setCurrentWeightLabel('');
             setCurrentWeightType('single');
             setCurrentWeightInfo(newInfo);
             originalWeightInfoRef.current = JSON.parse(JSON.stringify(newInfo || []));
             if (onUnsavedChange) onUnsavedChange(true);
         } catch (err) {
-            console.error("Failed to load PID list for new weight:", err);
-            modal.showAlert("오류", "PID 목록을 조회하는 데 실패했습니다.");
+            console.error("Failed to load PID list or fetch new weight ID:", err);
+            modal.showAlert("오류", "새 가중치 설정을 생성하는 데 실패했습니다.");
         } finally {
             loadingSpinner.hide();
         }
@@ -400,24 +403,42 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 { title: "취소", click: () => { } },
                 {
                     title: "삭제",
-                    click: () => {
+                    click: async () => {
+                        const targetW = weights.find(w => w.id === id);
                         const nextList = weights.filter(w => w.id !== id);
-                        setWeights(nextList);
-                        if (!id.startsWith('new_')) {
-                            setDeletedWeightIds(prev => [...prev, id]);
-                        }
-                        if (selectedWeightId === id) {
-                            if (nextList.length > 0) {
-                                selectWeight(nextList[0]);
-                            } else {
-                                setSelectedWeightId('');
-                                setCurrentWeightId('');
-                                setCurrentWeightLabel('');
-                                setCurrentWeightType('single');
-                                setCurrentWeightInfo([]);
+
+                        loadingSpinner.show();
+                        try {
+                            const pageId = sessionStorage.getItem('pageId');
+                            // Only call delete API if it's not a newly created unsaved weight (ID doesn't start with new_)
+                            if (!id.startsWith('new_') && targetW) {
+                                await deleteWeight.mutateAsync({
+                                    pageid: pageId,
+                                    weight_variable_name: targetW.label || targetW.id,
+                                    delete_weight_id: targetW.id,
+                                    user: auth.user.userId
+                                });
                             }
+                            setWeights(nextList);
+                            if (selectedWeightId === id) {
+                                if (nextList.length > 0) {
+                                    selectWeight(nextList[0]);
+                                } else {
+                                    setSelectedWeightId('');
+                                    setCurrentWeightId('');
+                                    setCurrentWeightLabel('');
+                                    setCurrentWeightType('single');
+                                    setCurrentWeightInfo([]);
+                                }
+                            }
+                            modal.showAlert("알림", "삭제되었습니다.");
+                            if (onUnsavedChange) onUnsavedChange(true);
+                        } catch (err) {
+                            console.error("Failed to delete weight:", err);
+                            modal.showAlert("오류", "삭제에 실패했습니다.");
+                        } finally {
+                            loadingSpinner.hide();
                         }
-                        if (onUnsavedChange) onUnsavedChange(true);
                     }
                 }
             ]
@@ -779,7 +800,6 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             });
 
             setWeights(loadedWeights);
-            setDeletedWeightIds([]);
 
             if (loadedWeights.length > 0) {
                 const exists = loadedWeights.find(w => w.id === selectedWeightId);
@@ -912,16 +932,21 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             return false;
         }
 
+        // Validation: check if any weight has an empty label
+        for (const w of weights) {
+            let label = w.label;
+            if (w.id === selectedWeightId) {
+                label = currentWeightLabel;
+            }
+            if (!label || label.trim() === '') {
+                modal.showAlert("알림", "가중치 라벨을 입력해 주세요.");
+                return false;
+            }
+        }
+
         loadingSpinner.show();
         try {
-            // 0. 가중치 설정 저장/삭제 처리
-            for (const delId of deletedWeightIds) {
-                await deleteRecodedSet.mutateAsync({
-                    pageid: pageId,
-                    user: auth.user.userId,
-                    variables: [delId]
-                });
-            }
+            // 0. 가중치 설정 저장/삭제 처리 (즉시 삭제로 이관됨)
 
             for (const w of weights) {
                 let id = w.id;
@@ -981,8 +1006,6 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                 await saveRecodedSet.mutateAsync(savePayload);
             }
-
-            setDeletedWeightIds([]);
 
             const changedPresetIds = [];
             const isPresetEqual = (a, b, type) => {

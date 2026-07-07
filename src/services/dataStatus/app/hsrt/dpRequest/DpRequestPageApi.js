@@ -143,6 +143,15 @@ export function DpRequestPageApi() {
         }
     );
 
+    /** 가중치 설정 삭제 API */
+    const deleteWeight = useMutation(
+        async (data) => await api.post(data, "/weight/delete", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     /** 신규 스터브 생성 API */
     const createStub = useMutation(
         async (data) => await api.post(data, "/dp-request/recoded/stubs/create", "API_BASE_URL_DATASTATUS"),
@@ -258,6 +267,11 @@ export function DpRequestPageApi() {
         }
     );
 
+    /** 신규 가중치 ID 채번 */
+    const getNextWeightId = useMutation(
+        async (data) => await api.post(data, "/weight/next-id", "API_BASE_URL_DATASTATUS")
+    );
+
     return {
         getBannerDetail,
         getBaseVariableList,
@@ -295,6 +309,8 @@ export function DpRequestPageApi() {
         getAiSummary,
         reapplyPreset,
         getRecodedPlain,
-        getWeightPidList
+        getWeightPidList,
+        getNextWeightId,
+        deleteWeight
     };
 }
