@@ -948,6 +948,19 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             }
         }
 
+        // Validation: check if any weight has all ratio values empty (null)
+        for (const w of weights) {
+            let info = w.info;
+            if (w.id === selectedWeightId) {
+                info = currentWeightInfo;
+            }
+            const hasAnyValue = (info || []).some(opt => opt.value !== '' && opt.value !== undefined && opt.value !== null);
+            if (!hasAnyValue) {
+                modal.showAlert("알림", "가중치 비율을 입력해 주세요.");
+                return false;
+            }
+        }
+
         loadingSpinner.show();
         try {
             // 0. 가중치 설정 저장/삭제 처리 (즉시 삭제로 이관됨)
@@ -976,14 +989,18 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 const pidValues = {};
                 info.forEach(opt => {
                     if (opt.label) {
-                        const numVal = Number(opt.value);
-                        pidValues[String(opt.label)] = isNaN(numVal) ? 0 : numVal;
+                        if (opt.value === '' || opt.value === undefined || opt.value === null) {
+                            pidValues[String(opt.label)] = null;
+                        } else {
+                            const numVal = Number(opt.value);
+                            pidValues[String(opt.label)] = isNaN(numVal) ? null : numVal;
+                        }
                     }
                 });
 
                 const savePayload = {
                     pageid: pageId,
-                    weight_variable_label: label || `가중치: ${id}`,
+                    weight_variable_label: label || '',
                     weight_variable_name: id,
                     pid_values: pidValues,
                     user: auth.user.userId
@@ -1058,7 +1075,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     const band = bands[j];
                     const parsedVals = parseValues(band.values);
                     if (parsedVals.length === 0) {
-                        modal.showAlert("알림", `[${item.name}]의 '${band.label}' 종류에 입력된 값이 없습니다. 값을 지정하거나 해당 밴드를 삭제해 주세요.`);
+                        modal.showAlert("알림", `[${item.name}]의 '${band.label}' 종류에 입력된 값이 없습니다.값을 지정하거나 해당 밴드를 삭제해 주세요.`);
                         loadingSpinner.hide();
                         return false;
                     }
@@ -1067,7 +1084,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
             const scaleDataPayload = scaleData.map(item => {
                 return {
-                    id: item.id || `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                    id: item.id || `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)} `,
                     name: item.name,
                     type: item.type || 'scale',
                     options: {
@@ -1093,14 +1110,14 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             for (let i = 0; i < rankData.length; i++) {
                 const item = rankData[i];
                 if (!item.combinations || item.combinations.length === 0) {
-                    modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'에 유효한 조합이 하나 이상 있어야 합니다.`);
+                    modal.showAlert("알림", `[다중형 순위 설정]'${item.name}'에 유효한 조합이 하나 이상 있어야 합니다.`);
                     loadingSpinner.hide();
                     return false;
                 }
                 for (let j = 0; j < item.combinations.length; j++) {
                     const combo = item.combinations[j];
                     if (!combo.values || combo.values.length === 0) {
-                        modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'의 조합 중 선택된 순위가 없는 항목이 있습니다.`);
+                        modal.showAlert("알림", `[다중형 순위 설정]'${item.name}'의 조합 중 선택된 순위가 없는 항목이 있습니다.`);
                         loadingSpinner.hide();
                         return false;
                     }
@@ -1112,7 +1129,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     return [...c.values].sort((a, b) => a - b).join('+');
                 }).filter(str => str !== '');
                 return {
-                    id: item.id || `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                    id: item.id || `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)} `,
                     name: item.name,
                     type: 'multi',
                     combinations: combos,
@@ -1122,7 +1139,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
             const groupDataPayload = groupData.map(item => {
                 return {
-                    id: item.id || `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                    id: item.id || `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)} `,
                     name: item.name,
                     groups: (item.groups || []).map(g => ({
                         label: g.label || '',
@@ -1383,7 +1400,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             {/* 가중치 목록 & 그리드 영역 */}
             <div className="dp-main-layout" onClick={(e) => e.stopPropagation()} style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
                 {/* 사이드바 */}
-                <div className={`dp-sidebar-container ${!isWeightSidebarOpen ? 'collapsed' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, width: isWeightSidebarOpen ? '260px' : '40px' }}>
+                <div className={`dp - sidebar - container ${!isWeightSidebarOpen ? 'collapsed' : ''} `} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, width: isWeightSidebarOpen ? '260px' : '40px' }}>
                     {!isWeightSidebarOpen && (
                         <div className="dp-sidebar-collapsed-bar" onClick={() => setIsWeightSidebarOpen(true)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '100%', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', position: 'relative', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                             <div className="dp-collapsed-header"><ChevronRight size={16} /></div>
@@ -1411,7 +1428,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <div className="dp-banner-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '8px' }}>
                                 {filteredWeights.map(w => (
                                     <div key={w.id}
-                                        className={`dp-banner-item ${selectedWeightId === w.id ? 'active' : ''}`}
+                                        className={`dp - banner - item ${selectedWeightId === w.id ? 'active' : ''} `}
                                         onClick={() => selectWeight(w)}
                                         style={{
                                             display: 'flex',
