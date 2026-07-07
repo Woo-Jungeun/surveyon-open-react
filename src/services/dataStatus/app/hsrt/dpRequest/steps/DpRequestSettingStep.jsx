@@ -51,12 +51,10 @@ const NumericEditCell = (props) => {
 
     if (!dataItem.inEdit) {
         return (
-            <td style={{
+            <td className={isChanged ? 'changed-cell' : ''} style={{
                 ...props.style,
                 padding: '0 12px',
-                backgroundColor: isChanged ? '#eff6ff' : 'transparent',
-                color: isChanged ? '#2563eb' : '#1e293b',
-                transition: 'background-color 0.15s, color 0.15s'
+                ...(isChanged ? { backgroundColor: '#eff6ff', color: '#2563eb' } : {})
             }}>
                 {value}
             </td>
@@ -96,9 +94,8 @@ const NumericEditCell = (props) => {
         <td style={{
             ...props.style,
             padding: 0,
-            backgroundColor: isChanged ? '#eff6ff' : 'transparent',
-            transition: 'background-color 0.15s'
-        }} className="k-grid-edit-cell">
+            ...(isChanged ? { backgroundColor: '#eff6ff' } : {})
+        }} className={`k-grid-edit-cell ${isChanged ? 'changed-cell' : ''}`}>
             <Input
                 type="number"
                 value={value}
@@ -1372,6 +1369,20 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             minHeight: 0,
             overflow: 'hidden'
         }}>
+            <style>{`
+                /* Disable Kendo's buggy JS-driven hover classes that get stuck on re-renders */
+                .dp-table-container .k-grid tbody tr.k-hover,
+                .dp-table-container .k-grid tbody tr.k-state-hover,
+                .dp-table-container .k-grid tbody tr.k-hover td,
+                .dp-table-container .k-grid tbody tr.k-state-hover td {
+                    background-color: inherit !important;
+                }
+
+                /* Use native CSS :hover which is handled by the browser and never gets stuck */
+                .dp-table-container .k-grid tbody tr:hover td:not(.changed-cell) {
+                    background-color: #e0f2fe !important;
+                }
+            `}</style>
             {/* 기본 Weight 변수 카드 */}
             <div className="dp-setting-card" style={{ flexShrink: 0, marginBottom: '0px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
