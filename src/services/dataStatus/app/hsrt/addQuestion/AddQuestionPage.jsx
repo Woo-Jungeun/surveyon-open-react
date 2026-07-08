@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { useState, useEffect, useContext, createContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Trash2, Search, ChevronLeft, ChevronRight, Wand2, Plus, Info } from 'lucide-react';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
@@ -10,29 +10,77 @@ import DataHeader from "@/services/dataStatus/components/DataHeader";
 import CartesianGeneratorModal from "./CartesianGeneratorModal";
 import { Button } from "@/components/ui/button";
 import { DropDownList } from '@progress/kendo-react-dropdowns';
-import { Input } from '@progress/kendo-react-inputs';
 
-// --- 숫자 전용 커스텀 셀 ---
-const NumericEditCell = (props) => {
+const AddQuestionContext = createContext(null);
+
+const PasteableEditCell = (props) => {
     const { dataItem, field, onChange } = props;
-    const value = dataItem[field];
+    const { currentInfo, updateBannerInfo } = useContext(AddQuestionContext);
+    const value = dataItem[field] ?? '';
 
     if (!dataItem.inEdit) {
-        return <td style={{ ...props.style, padding: '0 12px' }}>{value}</td>;
+        return (
+            <td style={{ ...props.style, padding: '0 12px' }} className={props.className}>
+                {value}
+            </td>
+        );
     }
+
+    const handlePaste = (e) => {
+        e.preventDefault();
+        const clipboardData = e.clipboardData.getData('Text');
+        const lines = clipboardData.split(/\r?\n/).map(l => l.trim());
+        if (lines.length > 0 && currentInfo && updateBannerInfo) {
+            const startIdx = currentInfo.findIndex(item => item === dataItem);
+            if (startIdx !== -1) {
+                const updated = currentInfo.map((item, idx) => {
+                    if (idx >= startIdx) {
+                        const offset = idx - startIdx;
+                        const lineVal = lines[offset];
+                        if (lineVal !== undefined) {
+                            return {
+                                ...item,
+                                [field]: lineVal
+                            };
+                        }
+                    }
+                    return item;
+                });
+                updateBannerInfo(updated);
+            }
+        }
+    };
 
     return (
         <td style={{ ...props.style, padding: 0 }} className="k-grid-edit-cell">
-            <Input
-                type="number"
+            <input
+                type="text"
                 value={value}
-                onChange={(e) => onChange({ dataItem, field, syntheticEvent: e.syntheticEvent, value: e.value })}
-                className="no-spin"
-                style={{ width: '100%', height: '100%', border: 'none', outline: 'none' }}
+                onChange={(e) => {
+                    if (onChange) {
+                        onChange({
+                            dataItem,
+                            field,
+                            syntheticEvent: e.nativeEvent,
+                            value: e.target.value
+                        });
+                    }
+                }}
+                onPaste={handlePaste}
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    outline: 'none',
+                    padding: '0 12px',
+                    boxSizing: 'border-box',
+                    backgroundColor: 'transparent'
+                }}
             />
         </td>
     );
 };
+
 
 // --- 커스텀 헤더 셀 (조건 도움말) ---
 const ConditionHeaderCell = (props) => {
@@ -1065,18 +1113,25 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 </div>
                             </div>
                         </div>
+                        <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px 0 16px', flexShrink: 0 }}>
+                            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500, userSelect: 'none' }}>
+                                💡 입력창 중 하나를 선택해 엑셀 열을 붙여넣기(Ctrl+V)하면 아래로 자동 채워집니다.
+                            </span>
+                        </div>
                         <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                            <KendoGridV2
-                                data={currentInfo}
-                                reorderable showNo deletable addable showNoRecordsAddBtn={false} editField="inEdit"
-                                onDataChange={updateBannerInfo}
-                                onRowClick={handleRowClick}
-                                newRowTemplate={{ label2: '', label: '', logic: '' }}
-                            >
-                                <Column field="label2" title="할당될 값" width="120px" cell={NumericEditCell} />
-                                <Column field="label" title="보기 라벨" width="300px" />
-                                <Column field="logic" title="조건" headerCell={ConditionHeaderCell} />
-                            </KendoGridV2>
+                            <AddQuestionContext.Provider value={{ currentInfo, updateBannerInfo }}>
+                                <KendoGridV2
+                                    data={currentInfo}
+                                    reorderable showNo deletable addable showNoRecordsAddBtn={false} editField="inEdit"
+                                    onDataChange={updateBannerInfo}
+                                    onRowClick={handleRowClick}
+                                    newRowTemplate={{ label2: '', label: '', logic: '' }}
+                                >
+                                    <Column field="label2" title="할당될 값" width="120px" cell={PasteableEditCell} />
+                                    <Column field="label" title="보기 라벨" width="300px" cell={PasteableEditCell} />
+                                    <Column field="logic" title="조건" headerCell={ConditionHeaderCell} cell={PasteableEditCell} />
+                                </KendoGridV2>
+                            </AddQuestionContext.Provider>
                         </div>
                     </div>
                 </div>
