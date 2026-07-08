@@ -500,7 +500,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
     useEffect(() => {
         setAiSummaryData("");
-    }, [banner?.id, selectedXInfo, filterExpression, uiSettings?.weight_col]);
+    }, [banner?.id, selectedXInfo, filterExpression, uiSettings?.weight_variable]);
 
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
     const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
@@ -592,7 +592,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                         stub,
                         banner: bannerVarList
                     },
-                    weight_col: uiSettings?.weight_col || null,
+                    weight_col: uiSettings?.weight_variable || null,
                     filter_expression: filterExpression || ""
                 };
 
@@ -866,7 +866,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                         stub,
                         banner: bannerVarList
                     },
-                    weight_col: uiSettings?.weight_col || null,
+                    weight_col: uiSettings?.weight_variable || null,
                     filter_expression: filterExpression || ""
                 };
 
@@ -892,7 +892,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
         selectedXInfo,
         columns,
         userId,
-        uiSettings?.weight_col,
+        uiSettings?.weight_variable,
         filterExpression,
         defaultBannerId
     ]);
