@@ -1538,6 +1538,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [excelDecimalPct, setExcelDecimalPct] = useState(1); // 엑셀 다운로드 시 % 소수점 자리수
     const [decimalPct, setDecimalPct] = useState(1);
     const [hideZeroBaseColumns, setHideZeroBaseColumns] = useState(false);
+    // eslint-disable-next-line no-unused-vars
     const [selectedXInfo, setSelectedXInfo] = useState('__none__');
     const [uiSettings, setUiSettings] = useState({});
 
@@ -2563,7 +2564,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         </div>
                     </div>
 
-                    {/* X Info Dropdown Group */}
+                    {/* X Info Dropdown Group
                     <div style={{
                         display: 'flex', alignItems: 'center', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', height: '32px', overflow: 'hidden'
                     }}>
@@ -2585,6 +2586,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
                         </div>
                     </div>
+                    */}
 
                     {/* N Control Group */}
                     <div style={{
