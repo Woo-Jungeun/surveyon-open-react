@@ -2188,6 +2188,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 filter_expression: currentFilterExp,
                 use_recoded: true,
                 include_stats: currentSigType === 't-test' ? ["t-test"] : [],
+                weight_mode: currentWeight !== '없음' ? 'weight' : 'none',
                 weight_variable: currentWeight !== '없음' ? currentWeight : null,
                 display_policy: {
                     show_n: isInitialSetupRef.current ? (fetchedUi?.format_show_n ?? showN) : showN,
@@ -2510,6 +2511,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 search: bannerSearch,
                 filter_expression: filterExpression,
                 include_stats: sigType === 't-test' ? ["t-test"] : [],
+                weight_mode: selectedWeight !== '없음' ? 'weight' : 'none',
                 weight_variable: selectedWeight !== '없음' ? selectedWeight : null,
                 excel_show_percent: excelShowPct, // 엑셀 % 표출 여부 추가
                 display_policy: {
