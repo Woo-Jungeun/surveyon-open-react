@@ -2133,8 +2133,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     };
                                 })
                                 .filter(Boolean);
-                        })
-                        .sort((a, b) => a.label.localeCompare(b.label, "ko") || a.id.localeCompare(b.id, "en"));
+                        });
 
                     setComputedFilterOptions(filterOpts);
                 }
