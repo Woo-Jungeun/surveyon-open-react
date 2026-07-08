@@ -470,6 +470,26 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
         }
     };
 
+    const handlePaste = (e) => {
+        e.preventDefault();
+        const clipboardData = e.clipboardData.getData('Text');
+        const lines = clipboardData.split(/\r?\n/).map(l => l.trim());
+        if (lines.length > 0) {
+            const newData = [...data];
+            lines.forEach((lineVal, idx) => {
+                const targetIndex = dataIndex + idx;
+                if (targetIndex < newData.length) {
+                    newData[targetIndex] = {
+                        ...newData[targetIndex],
+                        [field]: lineVal
+                    };
+                }
+            });
+            onUpdate(dataIndex, 1, field, lines[0], newData);
+            setIsEditing(false);
+        }
+    };
+
     if (isEditing) {
         return (
             <td rowSpan={rowSpan} style={{ padding: '1px 4px', verticalAlign: 'middle', background: '#fff', borderBottom: '1px solid #e2e8f0' }}>
@@ -486,6 +506,7 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
                         if (e.key === 'Enter') commit();
                         if (e.key === 'Escape') { setLocalVal(String(dataItem[field] ?? '')); setIsEditing(false); }
                     }}
+                    onPaste={handlePaste}
                     style={{ width: '100%', height: '22px', fontSize: '13px', border: '1px solid #3b82f6', outline: 'none', padding: '0 4px', borderRadius: '2px', textAlign: align, boxSizing: 'border-box' }}
                 />
             </td>
@@ -2219,6 +2240,11 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 </div>
                             </Popup>
 
+                            <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px 0 16px', flexShrink: 0 }}>
+                                <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500, userSelect: 'none' }}>
+                                    💡 입력창 중 하나를 선택해 엑셀 열을 붙여넣기(Ctrl+V)하면 아래로 자동 채워집니다.
+                                </span>
+                            </div>
                             <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                                 <KendoGridV3
                                     data={banners.find(b => b.id === selectedBanner)?.info || []}
