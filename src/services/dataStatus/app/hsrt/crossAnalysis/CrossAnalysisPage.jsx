@@ -1476,7 +1476,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
 const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getOverviewContext, getOverview, getOverviewStyled, savePageSettings, exportOverviewXlsx, createSnapshot, getAiSummary, evaluateChartData, deleteBaseVariable } = DpRequestPageApi();
+    const { getOverviewContext, getOverview, getOverviewStyled, savePageSettings, exportOverviewXlsx, createSnapshot, getAiSummary, evaluateChartData, deleteBaseVariable, getRecodedPlain } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -1550,6 +1550,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     const [localDecimalN, setLocalDecimalN] = useState(0);
     const [localDecimalPct, setLocalDecimalPct] = useState(1);
+    const [selectedWeight, setSelectedWeight] = useState('없음');
+    const [weightOptions, setWeightOptions] = useState([{ text: '없음', value: '없음' }]);
 
     useEffect(() => {
         setLocalDecimalN(decimalN);
@@ -1616,6 +1618,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 stub_group_layout: uiSettings?.stub_group_layout ?? 'merge',
                 base_prefix: uiSettings?.base_prefix ?? "(",
                 base_postfix: uiSettings?.base_postfix ?? ")",
+                weight_variable: selectedWeight === '없음' ? null : selectedWeight,
             };
             setUiSettings(newUi);
 
@@ -1628,7 +1631,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
         return () => clearTimeout(saveTimeout);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [showN, decimalN, showPct, decimalPct, sigType, sigExcludeUnderN, sigExcludeEtc, sigLevel, sigDiffMin, sigDiffMax]);
+    }, [showN, decimalN, showPct, decimalPct, sigType, sigExcludeUnderN, sigExcludeEtc, sigLevel, sigDiffMin, sigDiffMax, selectedWeight]);
     const [xInfoOptions, setXInfoOptions] = useState([]);
 
     const defaultBannerId = useMemo(() => {
@@ -1645,7 +1648,46 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const filterAnchorRef = useRef(null);
     const filterPopupRef = useRef(null);
-    const [filterPopupWidth, setFilterPopupWidth] = useState(180);
+    const [filterSearchQuery, setFilterSearchQuery] = useState('');
+
+    const filteredGroupedFilters = useMemo(() => {
+        const query = filterSearchQuery.trim().toLowerCase();
+        const groups = [];
+
+        computedFilterOptions.forEach(opt => {
+            let group = groups.find(g => g.variableId === opt.variableId);
+            if (!group) {
+                group = {
+                    variableId: opt.variableId,
+                    variableLabel: opt.variableLabel,
+                    options: []
+                };
+                groups.push(group);
+            }
+            group.options.push(opt);
+        });
+
+        if (!query) return groups;
+
+        return groups.map(g => {
+            const parentMatches = g.variableLabel.toLowerCase().includes(query) || g.variableId.toLowerCase().includes(query);
+            const matchedOptions = g.options.filter(o => o.label.toLowerCase().includes(query));
+
+            if (parentMatches) {
+                return g;
+            } else if (matchedOptions.length > 0) {
+                return { ...g, options: matchedOptions };
+            }
+            return null;
+        }).filter(Boolean);
+    }, [computedFilterOptions, filterSearchQuery]);
+
+    useEffect(() => {
+        if (computedFilterOptions && computedFilterOptions.length > 0) {
+            console.log("=== 교차분석 필터 대상 리스트 (computedFilterOptions) ===");
+            console.log(computedFilterOptions);
+        }
+    }, [computedFilterOptions]);
 
     const filterExpression = useMemo(() => {
         if (selectedComputedFilterIds.includes(CROSS_FILTER_ALL_ID)) return "";
@@ -1655,10 +1697,6 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     }, [selectedComputedFilterIds, computedFilterOptions]);
 
     useEffect(() => {
-        if (isFilterOpen && filterAnchorRef.current) {
-            setFilterPopupWidth(Math.max(filterAnchorRef.current.offsetWidth, 180));
-        }
-
         const handleClickOutside = (event) => {
             if (isFilterOpen &&
                 filterAnchorRef.current &&
@@ -1700,16 +1738,103 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         });
     };
 
+    const toggleParentFilter = (group) => {
+        const allChildIds = group.options.map(o => o.id);
+        const checkedChildIds = allChildIds.filter(id => draftComputedFilterIds.includes(id));
+        const isAllChecked = checkedChildIds.length === allChildIds.length;
+
+        setDraftComputedFilterIds(prev => {
+            let next = prev.filter(x => x !== CROSS_FILTER_ALL_ID);
+            if (isAllChecked) {
+                // Uncheck all
+                next = next.filter(id => !allChildIds.includes(id));
+            } else {
+                // Check all
+                allChildIds.forEach(id => {
+                    if (!next.includes(id)) {
+                        next.push(id);
+                    }
+                });
+            }
+            return next.length > 0 ? next : [CROSS_FILTER_ALL_ID];
+        });
+    };
+
+    // eslint-disable-next-line no-unused-vars
     const toggleAllFilters = () => {
-        setDraftComputedFilterIds([CROSS_FILTER_ALL_ID]);
+        const allOptionIds = computedFilterOptions.map(o => o.id);
+        const isAllChecked = allOptionIds.length > 0 && allOptionIds.every(id => draftComputedFilterIds.includes(id));
+        if (isAllChecked) {
+            setDraftComputedFilterIds([CROSS_FILTER_ALL_ID]);
+        } else {
+            setDraftComputedFilterIds(allOptionIds);
+        }
     };
 
     const getFilterButtonText = () => {
-        if (selectedComputedFilterIds.includes(CROSS_FILTER_ALL_ID)) return '전체';
-        const activeOptions = computedFilterOptions.filter(f => selectedComputedFilterIds.includes(f.id));
-        if (activeOptions.length === 0) return '전체';
-        if (activeOptions.length === 1) return activeOptions[0].label;
-        return `${activeOptions[0].label} 외 ${activeOptions.length - 1}건`;
+        const activeIds = selectedComputedFilterIds.filter(id => id !== CROSS_FILTER_ALL_ID);
+        if (activeIds.length === 0) return '필터 선택';
+
+        const groups = {};
+        activeIds.forEach(id => {
+            const opt = computedFilterOptions.find(o => o.id === id);
+            if (opt) {
+                if (!groups[opt.variableId]) {
+                    groups[opt.variableId] = {
+                        variableLabel: opt.variableLabel,
+                        count: 0
+                    };
+                }
+                groups[opt.variableId].count += 1;
+            }
+        });
+
+        const selectedSummary = Object.values(groups).map(g => `${g.variableLabel}(${g.count})`);
+        return selectedSummary.length > 0 ? selectedSummary.join(', ') : '전체';
+    };
+
+    const activeFilterChips = useMemo(() => {
+        if (selectedComputedFilterIds.includes(CROSS_FILTER_ALL_ID)) return [];
+
+        const groups = {};
+        selectedComputedFilterIds.forEach(id => {
+            const opt = computedFilterOptions.find(o => o.id === id);
+            if (opt) {
+                if (!groups[opt.variableId]) {
+                    groups[opt.variableId] = {
+                        variableId: opt.variableId,
+                        variableLabel: opt.variableLabel,
+                        labels: []
+                    };
+                }
+                groups[opt.variableId].labels.push(opt.label);
+            }
+        });
+
+        return Object.values(groups).map(g => {
+            const displayText = `${g.variableLabel} (${g.labels.join(', ')})`;
+            return {
+                variableId: g.variableId,
+                displayText
+            };
+        });
+    }, [selectedComputedFilterIds, computedFilterOptions]);
+
+    const handleRemoveFilterChip = (variableId) => {
+        setSelectedComputedFilterIds(prev => {
+            const next = prev.filter(id => {
+                const opt = computedFilterOptions.find(o => o.id === id);
+                return !opt || opt.variableId !== variableId;
+            });
+            const updated = next.length > 0 ? next : [CROSS_FILTER_ALL_ID];
+            setDraftComputedFilterIds(updated);
+            return updated;
+        });
+    };
+
+    const handleResetAllFilters = () => {
+        setSelectedComputedFilterIds([CROSS_FILTER_ALL_ID]);
+        setDraftComputedFilterIds([CROSS_FILTER_ALL_ID]);
     };
 
     const [selectedBanner, setSelectedBanner] = useState('');
@@ -1834,7 +1959,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     // --- 데이터 로직 ---
-    const fetchCrossAnalysisData = async (mode = 'normal', targetIdToSelect = null, targetPage = currentPage, currentFilterExp = filterExpression, overrideSigSettings = null) => {
+    const fetchCrossAnalysisData = async (mode = 'normal', targetIdToSelect = null, targetPage = currentPage, currentFilterExp = filterExpression, overrideSigSettings = null, overrideWeight = undefined) => {
         // 실제 데이터 연동 시 사용할 주석:
         const pageId = sessionStorage.getItem('pageId');
         const user = auth?.user?.userId;
@@ -1846,6 +1971,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             let fetchedUi = uiSettings;
             let recodedVars = recodedVariablesRef.current;
             let baseVars = baseVariablesRef.current;
+            let initialWeightFromCtx = undefined;
 
             if (!contextFetchedRef.current) {
                 // 1. Context 데이터 가져오기
@@ -1855,6 +1981,26 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 const ctxPayload = contextRes?.resultjson || contextRes || {};
 
                 if (ctxPayload) {
+                    // Parse weight variables from recoded_variables (keys starting with 'weight_')
+                    const recodedVarsForWeights = ctxPayload.recoded_variables || {};
+                    const loadedWeights = [];
+                    Object.keys(recodedVarsForWeights).forEach(key => {
+                        if (key.startsWith("weight_")) {
+                            const item = recodedVarsForWeights[key];
+                            if (item) {
+                                loadedWeights.push({
+                                    text: item.label || item.name || item.id || key,
+                                    value: item.id || key
+                                });
+                            }
+                        }
+                    });
+                    setWeightOptions([{ text: '없음', value: '없음' }, ...loadedWeights]);
+
+                    const initialWeight = ctxPayload.weight_variable || '없음';
+                    setSelectedWeight(initialWeight);
+                    initialWeightFromCtx = initialWeight;
+
                     setProjectNum(ctxPayload.pn || "");
                     const resolvedMeanDigits = ctxPayload.display_policy?.mean_digits ?? ctxPayload.ui_settings?.format_mean_round ?? 2;
                     const resolvedStdDigits = ctxPayload.display_policy?.std_digits ?? ctxPayload.ui_settings?.format_std_round ?? 2;
@@ -1960,7 +2106,14 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     ]);
 
                     const filterOpts = Object.entries(baseVars)
-                        .filter(([, value]) => String(value?.recoded_type ?? "").toLowerCase() === "computed")
+                        .filter(([key, value]) => {
+                            const variableId = String(value?.id ?? key).trim();
+                            const isAddQuestion = variableId.toUpperCase().startsWith("ADD_");
+                            if (isAddQuestion) {
+                                return String(value?.recoded_type ?? "").toLowerCase() === "computed";
+                            }
+                            return true; // 일반 문항은 다 표출
+                        })
                         .flatMap(([key, value]) => {
                             const variableId = String(value?.id ?? key);
                             const variableLabel = String(value?.label ?? key).trim() || variableId;
@@ -2023,6 +2176,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 };
             }
 
+            const currentWeight = overrideWeight !== undefined ? overrideWeight : (initialWeightFromCtx !== undefined ? initialWeightFromCtx : selectedWeight);
+
             const reqData = {
                 pageid: pageId,
                 user: user,
@@ -2033,6 +2188,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 filter_expression: currentFilterExp,
                 use_recoded: true,
                 include_stats: currentSigType === 't-test' ? ["t-test"] : [],
+                weight_variable: currentWeight !== '없음' ? currentWeight : null,
                 display_policy: {
                     show_n: isInitialSetupRef.current ? (fetchedUi?.format_show_n ?? showN) : showN,
                     show_percent: isInitialSetupRef.current ? (fetchedUi?.format_show_percent ?? showPct) : showPct,
@@ -2354,6 +2510,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 search: bannerSearch,
                 filter_expression: filterExpression,
                 include_stats: sigType === 't-test' ? ["t-test"] : [],
+                weight_variable: selectedWeight !== '없음' ? selectedWeight : null,
                 excel_show_percent: excelShowPct, // 엑셀 % 표출 여부 추가
                 display_policy: {
                     show_n: showN,
@@ -2542,27 +2699,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             <DataHeader title="교차분석">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-                    {/* 데이터 필터 Group */}
-                    <div style={{ display: 'flex', alignItems: 'center', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#f8fafc', height: '32px', overflow: 'hidden' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', padding: '0 10px', height: '100%' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>데이터 필터</span>
-                        </div>
-                        <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
-                        <div ref={filterAnchorRef} style={{ padding: '0', display: 'flex', alignItems: 'center', background: '#ffffff', height: '100%' }}>
-                            <div
-                                onClick={handleTogglePopup}
-                                style={{
-                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                    background: 'transparent', color: '#1e293b',
-                                    padding: '0 10px', height: '100%', cursor: 'pointer', fontSize: '12px', fontWeight: 400,
-                                    userSelect: 'none', minWidth: '160px'
-                                }}
-                            >
-                                <span style={{ fontSize: '12px' }}>{getFilterButtonText()}</span>
-                                <ChevronDown size={14} color="#64748b" style={{ marginLeft: '12px' }} />
-                            </div>
-                        </div>
-                    </div>
+
 
                     {/* X Info Dropdown Group
                     <div style={{
@@ -2588,149 +2725,73 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     </div>
                     */}
 
-                    {/* N Control Group */}
+                    {/* 가중치 설정 DropDownList Group */}
                     <div style={{
-                        display: 'flex', alignItems: 'center', borderRadius: '20px', border: '1px solid #cbd5e1', background: '#f8fafc', height: '32px', overflow: 'hidden'
+                        display: 'flex', alignItems: 'center', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', height: '32px', overflow: 'hidden'
                     }}>
-                        <div
-                            onClick={() => {
-                                if (showN && !showPct) {
-                                    modal.showAlert("알림", "최소 1개 이상의 지표(N 또는 %)를 선택해야 합니다.");
-                                    return;
-                                }
-                                setShowN(!showN);
-                            }}
-                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', height: '100%', cursor: 'pointer', background: '#eef2ff' }}
-                        >
-                            <div style={{
-                                width: '16px', height: '16px', borderRadius: '4px',
-                                background: showN ? '#3b82f6' : '#fff',
-                                border: `1.5px solid ${showN ? '#3b82f6' : '#3b82f6'}`,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                flexShrink: 0
-                            }}>
-                                {showN && (
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                )}
-                            </div>
-                            <span style={{ fontSize: '14px', fontWeight: 800, color: '#3730a3', userSelect: 'none' }}>N</span>
+                        <div style={{ display: 'flex', alignItems: 'center', padding: '0 12px', height: '100%', background: '#f8fafc' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>가중치 설정</span>
                         </div>
                         <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', height: '100%', background: showN ? '#ffffff' : '#f8fafc' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 700, color: showN ? '#1e293b' : '#94a3b8' }}>소수점</span>
-                            <div style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                width: '38px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
-                                background: showN ? '#ffffff' : '#f1f5f9'
-                            }}>
-                                <input
-                                    type="text"
-                                    disabled={!showN}
-                                    value={localDecimalN}
-                                    onChange={(e) => {
-                                        let val = e.target.value.replace(/[^0-9]/g, '');
-                                        if (val !== '') {
-                                            let num = parseInt(val);
-                                            if (num > 13) num = 13;
-                                            setLocalDecimalN(num);
-                                        } else {
-                                            setLocalDecimalN('');
-                                        }
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'ArrowUp') {
-                                            e.preventDefault();
-                                            setLocalDecimalN(prev => Math.min(13, (prev === '' ? 0 : prev) + 1));
-                                        } else if (e.key === 'ArrowDown') {
-                                            e.preventDefault();
-                                            setLocalDecimalN(prev => Math.max(0, (prev === '' ? 0 : prev) - 1));
-                                        }
-                                    }}
-                                    onBlur={() => {
-                                        if (localDecimalN === '') setLocalDecimalN(0);
-                                    }}
-                                    style={{
-                                        width: '100%', height: '100%', border: 'none', background: 'transparent',
-                                        textAlign: 'center', fontSize: '13px', fontWeight: 800, color: showN ? '#1e3a8a' : '#94a3b8',
-                                        outline: 'none', padding: 0
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    </div>
+                        <div style={{ height: '100%', display: 'flex', alignItems: 'center', position: 'relative' }}>
+                            <DropDownList
+                                data={weightOptions}
+                                textField="text"
+                                dataItemKey="value"
+                                value={weightOptions.find(o => o.value === selectedWeight) || weightOptions[0]}
+                                onChange={async (e) => {
+                                    const nextVal = (typeof e.value === 'object' && e.value !== null) ? e.value.value : e.value;
+                                    setSelectedWeight(nextVal);
+                                    
+                                    const pageId = sessionStorage.getItem('pageId');
+                                    const user = auth?.user?.userId;
+                                    if (pageId && user) {
+                                        const newUi = {
+                                            ...uiSettings,
+                                            format_show_n: showN,
+                                            format_n_round: decimalN === '' ? 0 : decimalN,
+                                            format_show_percent: showPct,
+                                            format_percent_round: decimalPct === '' ? 0 : decimalPct,
+                                            show_t_test: sigType === 't-test',
+                                            sig_type: sigType,
+                                            sig_diff_fin_mode: sigType === 't-test' ? 't_test' : sigType,
+                                            sig_exclude_under_n: sigExcludeUnderN,
+                                            sig_exclude_etc: sigExcludeEtc,
+                                            sig_level: sigLevel,
+                                            sig_diff_min: sigDiffMin,
+                                            sig_diff_max: sigDiffMax,
+                                            percent_symbol: uiSettings?.percent_symbol ?? false,
+                                            percent_as_column: uiSettings?.percent_as_column ?? uiSettings?.format_percent_as_column ?? false,
+                                            stub_group_layout: uiSettings?.stub_group_layout ?? 'merge',
+                                            base_prefix: uiSettings?.base_prefix ?? "(",
+                                            base_postfix: uiSettings?.base_postfix ?? ")",
+                                            weight_variable: nextVal === '없음' ? null : nextVal
+                                        };
+                                        setUiSettings(newUi);
 
-                    {/* % Control Group */}
-                    <div style={{
-                        display: 'flex', alignItems: 'center', borderRadius: '20px', border: '1px solid #cbd5e1', background: '#f8fafc', height: '32px', overflow: 'hidden'
-                    }}>
-                        <div
-                            onClick={() => {
-                                if (showPct && !showN) {
-                                    modal.showAlert("알림", "최소 1개 이상의 지표(N 또는 %)를 선택해야 합니다.");
-                                    return;
-                                }
-                                setShowPct(!showPct);
-                            }}
-                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', height: '100%', cursor: 'pointer', background: '#eef2ff' }}
-                        >
-                            <div style={{
-                                width: '16px', height: '16px', borderRadius: '4px',
-                                background: showPct ? '#3b82f6' : '#fff',
-                                border: `1.5px solid ${showPct ? '#3b82f6' : '#3b82f6'}`,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                flexShrink: 0
-                            }}>
-                                {showPct && (
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                )}
-                            </div>
-                            <span style={{ fontSize: '14px', fontWeight: 800, color: '#3730a3', userSelect: 'none' }}>%</span>
-                        </div>
-                        <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', height: '100%', background: showPct ? '#ffffff' : '#f8fafc' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 700, color: showPct ? '#1e293b' : '#94a3b8' }}>소수점</span>
-                            <div style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                width: '38px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
-                                background: showPct ? '#ffffff' : '#f1f5f9'
-                            }}>
-                                <input
-                                    type="text"
-                                    disabled={!showPct}
-                                    value={localDecimalPct}
-                                    onChange={(e) => {
-                                        let val = e.target.value.replace(/[^0-9]/g, '');
-                                        if (val !== '') {
-                                            let num = parseInt(val);
-                                            if (num > 13) num = 13;
-                                            setLocalDecimalPct(num);
-                                        } else {
-                                            setLocalDecimalPct('');
+                                        isSavingDirectlyRef.current = true;
+                                        try {
+                                            await savePageSettings.mutateAsync({
+                                                pageid: pageId,
+                                                user: user,
+                                                ui_settings: newUi
+                                            });
+
+                                            await fetchCrossAnalysisData('normal', null, 1, filterExpression, null, nextVal);
+                                        } catch (err) {
+                                            console.error("Failed to save or fetch on weight change", err);
+                                        } finally {
+                                            setTimeout(() => {
+                                                isSavingDirectlyRef.current = false;
+                                            }, 600);
                                         }
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'ArrowUp') {
-                                            e.preventDefault();
-                                            setLocalDecimalPct(prev => Math.min(13, (prev === '' ? 1 : prev) + 1));
-                                        } else if (e.key === 'ArrowDown') {
-                                            e.preventDefault();
-                                            setLocalDecimalPct(prev => Math.max(0, (prev === '' ? 1 : prev) - 1));
-                                        }
-                                    }}
-                                    onBlur={() => {
-                                        if (localDecimalPct === '') setLocalDecimalPct(1);
-                                    }}
-                                    style={{
-                                        width: '100%', height: '100%', border: 'none', background: 'transparent',
-                                        textAlign: 'center', fontSize: '13px', fontWeight: 800, color: showPct ? '#1e3a8a' : '#94a3b8',
-                                        outline: 'none', padding: 0
-                                    }}
-                                />
-                            </div>
+                                    }
+                                }}
+                                style={{ width: '130px', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
+                                className="custom-xinfo-dropdown"
+                                popupSettings={{ className: "custom-xinfo-dropdown" }}
+                            />
+                            <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
                         </div>
                     </div>
 
@@ -2896,6 +2957,154 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         )}
                     </div>
 
+                    {/* N Control Group */}
+                    <div style={{
+                        display: 'flex', alignItems: 'center', borderRadius: '20px', border: '1px solid #cbd5e1', background: '#f8fafc', height: '32px', overflow: 'hidden'
+                    }}>
+                        <div
+                            onClick={() => {
+                                if (showN && !showPct) {
+                                    modal.showAlert("알림", "최소 1개 이상의 지표(N 또는 %)를 선택해야 합니다.");
+                                    return;
+                                }
+                                setShowN(!showN);
+                            }}
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', height: '100%', cursor: 'pointer', background: '#eef2ff' }}
+                        >
+                            <div style={{
+                                width: '16px', height: '16px', borderRadius: '4px',
+                                background: showN ? '#3b82f6' : '#fff',
+                                border: `1.5px solid ${showN ? '#3b82f6' : '#3b82f6'}`,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0
+                            }}>
+                                {showN && (
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                )}
+                            </div>
+                            <span style={{ fontSize: '14px', fontWeight: 800, color: '#3730a3', userSelect: 'none' }}>N</span>
+                        </div>
+                        <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', height: '100%', background: showN ? '#ffffff' : '#f8fafc' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: showN ? '#1e293b' : '#94a3b8' }}>소수점</span>
+                            <div style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                width: '38px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
+                                background: showN ? '#ffffff' : '#f1f5f9'
+                            }}>
+                                <input
+                                    type="text"
+                                    disabled={!showN}
+                                    value={localDecimalN}
+                                    onChange={(e) => {
+                                        let val = e.target.value.replace(/[^0-9]/g, '');
+                                        if (val !== '') {
+                                            let num = parseInt(val);
+                                            if (num > 13) num = 13;
+                                            setLocalDecimalN(num);
+                                        } else {
+                                            setLocalDecimalN('');
+                                        }
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'ArrowUp') {
+                                            e.preventDefault();
+                                            setLocalDecimalN(prev => Math.min(13, (prev === '' ? 0 : prev) + 1));
+                                        } else if (e.key === 'ArrowDown') {
+                                            e.preventDefault();
+                                            setLocalDecimalN(prev => Math.max(0, (prev === '' ? 0 : prev) - 1));
+                                        }
+                                    }}
+                                    onBlur={() => {
+                                        if (localDecimalN === '') setLocalDecimalN(0);
+                                    }}
+                                    style={{
+                                        width: '100%', height: '100%', border: 'none', background: 'transparent',
+                                        textAlign: 'center', fontSize: '13px', fontWeight: 800, color: showN ? '#1e3a8a' : '#94a3b8',
+                                        outline: 'none', padding: 0
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* % Control Group */}
+                    <div style={{
+                        display: 'flex', alignItems: 'center', borderRadius: '20px', border: '1px solid #cbd5e1', background: '#f8fafc', height: '32px', overflow: 'hidden'
+                    }}>
+                        <div
+                            onClick={() => {
+                                if (showPct && !showN) {
+                                    modal.showAlert("알림", "최소 1개 이상의 지표(N 또는 %)를 선택해야 합니다.");
+                                    return;
+                                }
+                                setShowPct(!showPct);
+                            }}
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', height: '100%', cursor: 'pointer', background: '#eef2ff' }}
+                        >
+                            <div style={{
+                                width: '16px', height: '16px', borderRadius: '4px',
+                                background: showPct ? '#3b82f6' : '#fff',
+                                border: `1.5px solid ${showPct ? '#3b82f6' : '#3b82f6'}`,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0
+                            }}>
+                                {showPct && (
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                )}
+                            </div>
+                            <span style={{ fontSize: '14px', fontWeight: 800, color: '#3730a3', userSelect: 'none' }}>%</span>
+                        </div>
+                        <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', height: '100%', background: showPct ? '#ffffff' : '#f8fafc' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: showPct ? '#1e293b' : '#94a3b8' }}>소수점</span>
+                            <div style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                width: '38px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
+                                background: showPct ? '#ffffff' : '#f1f5f9'
+                            }}>
+                                <input
+                                    type="text"
+                                    disabled={!showPct}
+                                    value={localDecimalPct}
+                                    onChange={(e) => {
+                                        let val = e.target.value.replace(/[^0-9]/g, '');
+                                        if (val !== '') {
+                                            let num = parseInt(val);
+                                            if (num > 13) num = 13;
+                                            setLocalDecimalPct(num);
+                                        } else {
+                                            setLocalDecimalPct('');
+                                        }
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'ArrowUp') {
+                                            e.preventDefault();
+                                            setLocalDecimalPct(prev => Math.min(13, (prev === '' ? 1 : prev) + 1));
+                                        } else if (e.key === 'ArrowDown') {
+                                            e.preventDefault();
+                                            setLocalDecimalPct(prev => Math.max(0, (prev === '' ? 1 : prev) - 1));
+                                        }
+                                    }}
+                                    onBlur={() => {
+                                        if (localDecimalPct === '') setLocalDecimalPct(1);
+                                    }}
+                                    style={{
+                                        width: '100%', height: '100%', border: 'none', background: 'transparent',
+                                        textAlign: 'center', fontSize: '13px', fontWeight: 800, color: showPct ? '#1e3a8a' : '#94a3b8',
+                                        outline: 'none', padding: 0
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+
+
                     {/* <button
                         className="dp-btn"
                         onClick={async () => {
@@ -3034,6 +3243,180 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     </button> */}
                 </div>
             </DataHeader>
+
+            {/* 필터 드롭다운 한 줄 영역 */}
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 24px',
+                background: '#ffffff',
+                borderBottom: '1px solid #e2e8f0',
+                zIndex: 99
+            }}>
+                <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>필터</span>
+
+                {/* 필터 선택 드롭다운 */}
+                <div ref={filterAnchorRef} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <div
+                        onClick={handleTogglePopup}
+                        style={{
+                            width: '320px',
+                            height: '32px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            border: `1px solid ${isFilterOpen ? '#3b82f6' : '#cbd5e1'}`,
+                            borderRadius: '4px',
+                            background: '#fff',
+                            padding: '0 12px',
+                            cursor: 'pointer',
+                            userSelect: 'none'
+                        }}
+                    >
+                        <span style={{ fontSize: '12px', color: '#334155', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '275px' }}>
+                            {getFilterButtonText()}
+                        </span>
+                        <ChevronDown size={14} color="#94a3b8" />
+                    </div>
+                </div>
+
+                {/* 필터 추가 버튼 */}
+                <button
+                    onClick={applyFilterAndClose}
+                    style={{
+                        height: '32px',
+                        padding: '0 16px',
+                        background: '#3b82f6',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease-in-out',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                    }}
+                    onMouseOver={(e) => {
+                        e.currentTarget.style.background = '#2563eb';
+                    }}
+                    onMouseOut={(e) => {
+                        e.currentTarget.style.background = '#3b82f6';
+                    }}
+                >
+                    필터 추가
+                </button>
+
+                {/* 적용된 조건 조합 칩 리스트 */}
+                {(() => {
+                    if (activeFilterChips.length === 0) return null;
+
+                    return (
+                        <>
+                            <div style={{ width: '1px', height: '24px', backgroundColor: '#e2e8f0', margin: '0 4px' }} />
+                            <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 600, marginLeft: '8px', whiteSpace: 'nowrap' }}>
+                                적용된 필터
+                            </span>
+
+                            <div style={{ flex: 1, position: 'relative', minWidth: 0, display: 'flex', alignItems: 'center' }}>
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        gap: '6px',
+                                        flexWrap: 'wrap',
+                                        alignItems: 'center',
+                                        flex: 1,
+                                    }}
+                                >
+                                    {activeFilterChips.map((chip) => {
+                                        return (
+                                            <div
+                                                key={`chip-${chip.variableId}`}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '6px',
+                                                    background: '#eff6ff',
+                                                    border: '1px solid #bfdbfe',
+                                                    borderRadius: '16px',
+                                                    padding: '4px 10px',
+                                                    fontSize: '11px',
+                                                    fontWeight: 500,
+                                                    color: '#2563eb',
+                                                    userSelect: 'none',
+                                                }}
+                                            >
+                                                <span style={{ fontSize: '11px', lineHeight: '1.4' }}>{chip.displayText}</span>
+                                                <span
+                                                    onClick={() => handleRemoveFilterChip(chip.variableId)}
+                                                    style={{
+                                                        cursor: 'pointer',
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        width: '12px',
+                                                        height: '12px',
+                                                        borderRadius: '50%',
+                                                        fontSize: '9px',
+                                                        color: '#3b82f6',
+                                                        fontWeight: 700,
+                                                        transition: 'all 0.15s'
+                                                    }}
+                                                    onMouseOver={(e) => {
+                                                        e.currentTarget.style.background = '#dbeafe';
+                                                        e.currentTarget.style.color = '#1d4ed8';
+                                                    }}
+                                                    onMouseOut={(e) => {
+                                                        e.currentTarget.style.background = 'transparent';
+                                                        e.currentTarget.style.color = '#3b82f6';
+                                                    }}
+                                                >
+                                                    ✕
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginLeft: '12px', flexShrink: 0 }}>
+                                <button
+                                    onClick={handleResetAllFilters}
+                                    style={{
+                                        fontSize: '13px',
+                                        color: '#475569',
+                                        background: '#f1f5f9',
+                                        border: '1px solid #cbd5e1',
+                                        borderRadius: '12px',
+                                        padding: '2px 10px',
+                                        cursor: 'pointer',
+                                        fontWeight: 600,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        transition: 'all 0.15s ease-in-out',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                    onMouseOver={(e) => {
+                                        e.currentTarget.style.background = '#e2e8f0';
+                                        e.currentTarget.style.color = '#1e293b';
+                                        e.currentTarget.style.borderColor = '#94a3b8';
+                                    }}
+                                    onMouseOut={(e) => {
+                                        e.currentTarget.style.background = '#f1f5f9';
+                                        e.currentTarget.style.color = '#475569';
+                                        e.currentTarget.style.borderColor = '#cbd5e1';
+                                    }}
+                                >
+                                    전체 초기화
+                                </button>
+                            </div>
+                        </>
+                    );
+                })()}
+            </div>
             <div className="dp-request-container" style={{ flex: 1, minHeight: 0, padding: '16px', gap: '12px' }} onClick={() => updateBannerInfo(banners.find(b => b.id === selectedBanner)?.info.map(it => ({ ...it, inEdit: false })) || [])}>
 
 
@@ -3553,72 +3936,133 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 anchorAlign={{ horizontal: 'left', vertical: 'bottom' }}
                 popupAlign={{ horizontal: 'left', vertical: 'top' }}
                 popupClass="custom-filter-popup"
-                style={{ width: `${filterPopupWidth}px`, marginTop: '4px', zIndex: 1000 }}
+                style={{ width: '320px', marginTop: '4px', zIndex: 1000 }}
             >
-                <div ref={filterPopupRef} style={{ background: '#fff', border: '1px solid #3b82f6', borderRadius: '6px', display: 'flex', flexDirection: 'column', maxHeight: '420px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)' }}>
+                <div ref={filterPopupRef} style={{ background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', display: 'flex', flexDirection: 'column', maxHeight: '420px', overflow: 'hidden', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)' }}>
+                    {/* 검색창 영역 */}
+                    <div style={{ padding: '8px 8px 4px 8px', position: 'relative', borderBottom: '1px solid #e2e8f0' }} onClick={(e) => e.stopPropagation()}>
+                        <input
+                            type="text"
+                            placeholder="필터 검색"
+                            value={filterSearchQuery}
+                            onChange={(e) => setFilterSearchQuery(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '6px 10px 6px 30px',
+                                fontSize: '12px',
+                                border: '1px solid #cbd5e1',
+                                borderRadius: '6px',
+                                outline: 'none',
+                                boxSizing: 'border-box',
+                                height: '32px'
+                            }}
+                        />
+                        <Search size={14} style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                        {filterSearchQuery && (
+                            <X
+                                size={14}
+                                style={{ position: 'absolute', right: '18px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', cursor: 'pointer' }}
+                                onClick={() => setFilterSearchQuery('')}
+                            />
+                        )}
+                    </div>
 
                     <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-                        <div
-                            onClick={toggleAllFilters}
-                            style={{ padding: '8px 14px', fontSize: '12px', color: '#1e293b', cursor: 'pointer', borderBottom: '1px solid #e2e8f0', fontWeight: 400, display: 'flex', alignItems: 'center' }}
-                            className={`filter-item-row ${draftComputedFilterIds.includes(CROSS_FILTER_ALL_ID) ? 'filter-item-selected' : ''}`}
-                        >
-                            <div style={{ width: '22px', display: 'flex', justifyContent: 'flex-start' }}>
-                                <div style={{
-                                    width: '13px', height: '13px', border: draftComputedFilterIds.includes(CROSS_FILTER_ALL_ID) ? '1.5px solid #3b82f6' : '1px solid #cbd5e1',
-                                    borderRadius: '3px', background: '#fff',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }}>
-                                    {draftComputedFilterIds.includes(CROSS_FILTER_ALL_ID) && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
-                                </div>
-                            </div>
-                            <span>전체</span>
-                        </div>
 
+
+                        {/* 문항 그룹 및 자식 필터 */}
                         <div style={{ padding: '2px 0' }}>
-                            {computedFilterOptions.length === 0 ? (
-                                <div style={{ padding: '12px', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
-                                    등록된 파생 문항이 없습니다.
+                            {filteredGroupedFilters.length === 0 ? (
+                                <div style={{ padding: '16px', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
+                                    {computedFilterOptions.length === 0 ? '등록된 파생 문항이 없습니다.' : '검색 결과가 없습니다.'}
                                 </div>
                             ) : (
-                                computedFilterOptions.map(f => {
-                                    const isSelected = draftComputedFilterIds.includes(f.id);
+                                filteredGroupedFilters.map((group, index) => {
+                                    const allChildIds = group.options.map(o => o.id);
+                                    const checkedChildIds = allChildIds.filter(id => draftComputedFilterIds.includes(id));
+                                    const isParentChecked = allChildIds.length > 0 && checkedChildIds.length === allChildIds.length;
+                                    const isParentIndeterminate = checkedChildIds.length > 0 && checkedChildIds.length < allChildIds.length;
+
                                     return (
-                                        <div
-                                            key={f.id}
-                                            onClick={() => toggleFilter(f.id)}
-                                            className={`filter-item-row ${isSelected ? 'filter-item-selected' : ''}`}
-                                            style={{ display: 'flex', alignItems: 'flex-start', padding: '6px 14px', cursor: 'pointer', transition: 'background 0.1s' }}
-                                        >
-                                            <div style={{ width: '22px', display: 'flex', justifyContent: 'flex-start', marginTop: '1px' }}>
+                                        <div key={group.variableId} style={{ display: 'flex', flexDirection: 'column', borderBottom: index === filteredGroupedFilters.length - 1 ? 'none' : '1px solid #cbd5e1', paddingBottom: '6px' }}>
+                                            {/* Parent Node */}
+                                            <div
+                                                onClick={() => toggleParentFilter(group)}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    padding: '6px 14px',
+                                                    cursor: 'pointer',
+                                                    userSelect: 'none'
+                                                }}
+                                            >
                                                 <div style={{
-                                                    width: '13px', height: '13px', border: isSelected ? '1.5px solid #3b82f6' : '1px solid #cbd5e1',
-                                                    borderRadius: '3px', background: '#fff',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                    width: '13px',
+                                                    height: '13px',
+                                                    border: (isParentChecked || isParentIndeterminate) ? '1.5px solid #3b82f6' : '1px solid #cbd5e1',
+                                                    borderRadius: '3px',
+                                                    background: '#fff',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    flexShrink: 0
                                                 }}>
-                                                    {isSelected && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                                                    {isParentChecked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                                                    {isParentIndeterminate && <div style={{ width: '7px', height: '2px', background: '#3b82f6' }} />}
                                                 </div>
+                                                <span style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b' }}>
+                                                    {group.variableLabel}
+                                                </span>
                                             </div>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontSize: '12px', color: '#1e293b', fontWeight: 400, marginBottom: '2px', wordBreak: 'break-all', lineHeight: 1.3 }}>{f.label}</div>
-                                                <div style={{ fontSize: '10.5px', color: '#94a3b8' }}>{f.variableLabel}</div>
+
+                                            {/* Child Nodes */}
+                                            <div style={{ paddingLeft: '28px', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
+                                                {group.options.map(opt => {
+                                                    const isChildChecked = draftComputedFilterIds.includes(opt.id);
+
+                                                    return (
+                                                        <div
+                                                            key={opt.id}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                toggleFilter(opt.id);
+                                                            }}
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '8px',
+                                                                padding: '4px 8px',
+                                                                cursor: 'pointer',
+                                                                borderRadius: '4px',
+                                                                userSelect: 'none'
+                                                            }}
+                                                        >
+                                                            <div style={{
+                                                                width: '13px',
+                                                                height: '13px',
+                                                                border: isChildChecked ? '1.5px solid #3b82f6' : '1px solid #cbd5e1',
+                                                                borderRadius: '3px',
+                                                                background: '#fff',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                flexShrink: 0
+                                                            }}>
+                                                                {isChildChecked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                                                            </div>
+                                                            <span style={{ fontSize: '12px', color: '#475569', fontWeight: 500 }}>
+                                                                {opt.label}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     );
                                 })
                             )}
                         </div>
-                    </div>
-
-                    <div style={{ padding: '8px 10px', borderTop: '1px solid #e2e8f0', background: '#fff' }}>
-                        <button
-                            onClick={applyFilterAndClose}
-                            style={{ width: '100%', height: '30px', background: '#3b5bdb', color: '#fff', borderRadius: '4px', border: 'none', fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'background 0.15s' }}
-                            onMouseOver={(e) => e.target.style.background = '#364fc7'}
-                            onMouseOut={(e) => e.target.style.background = '#3b5bdb'}
-                        >
-                            확인
-                        </button>
                     </div>
                 </div>
             </Popup>
