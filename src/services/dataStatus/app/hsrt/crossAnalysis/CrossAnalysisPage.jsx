@@ -1682,12 +1682,6 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         }).filter(Boolean);
     }, [computedFilterOptions, filterSearchQuery]);
 
-    useEffect(() => {
-        if (computedFilterOptions && computedFilterOptions.length > 0) {
-            console.log("=== 교차분석 필터 대상 리스트 (computedFilterOptions) ===");
-            console.log(computedFilterOptions);
-        }
-    }, [computedFilterOptions]);
 
     const filterExpression = useMemo(() => {
         if (selectedComputedFilterIds.includes(CROSS_FILTER_ALL_ID)) return "";
