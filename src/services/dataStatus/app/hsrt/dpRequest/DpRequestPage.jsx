@@ -246,9 +246,9 @@ const DpRequestPage = () => {
                                     padding: '0 16px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
                                     height: '36px'
                                 }}
-                                title="스터브, 설정,요약표가 모두 초기화되어 대시보드가 처음 상태로 재구성됩니다."
+                                title="스터브, 설정, 요약표가 모두 초기화되어 대시보드가 처음 상태로 재구성됩니다."
                                 onClick={() => {
-                                    modal.showConfirm('알림', '세팅을 초기화하시겠습니까?\n"문항추가" 생성 문항 삭제 및 "스터브", "요약표" 설정이\n초기화되어, 대시보드가 처음 상태로 재구성됩니다.', {
+                                    modal.showConfirm('알림', 'DP의뢰서를 초기화하시겠습니까?\n"문항추가" 생성 문항 삭제 및 "스터브", "요약표" 설정이\n초기화되어, 대시보드가 처음 상태로 재구성됩니다.', {
                                         btns: [
                                             { title: '취소', click: () => { } },
                                             {
