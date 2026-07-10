@@ -22,34 +22,32 @@ const BulkEditConditionsModal = ({ show, currentInfo, onClose, onApply }) => {
     const handleApply = () => {
         if (textareaRef.current) {
             const lines = textareaRef.current.value.split('\n');
+            const parsedLines = lines.map(line => {
+                if (line.includes('\t')) {
+                    const parts = line.split('\t');
+                    return {
+                        label: parts[0].trim(),
+                        logic: parts.slice(1).join('\t').trim()
+                    };
+                } else {
+                    return {
+                        label: line.trim(),
+                        logic: ''
+                    };
+                }
+            });
 
             // 중복 보기라벨 체크
             const seenLabels = new Set();
             const duplicates = [];
-            lines.forEach(line => {
-                let label = '';
-                if (line.includes('\t')) {
-                    const parts = line.split('\t');
-                    label = parts[0].trim();
-                } else {
-                    const trimmed = line.trim();
-                    const parts = trimmed.split(/\s{2,}/);
-                    if (parts.length >= 2) {
-                        label = parts[0].trim();
-                    } else {
-                        const lastSpaceIdx = trimmed.lastIndexOf(' ');
-                        if (lastSpaceIdx !== -1) {
-                            label = trimmed.substring(0, lastSpaceIdx).trim();
+            parsedLines.forEach(item => {
+                if (item.label) {
+                    if (seenLabels.has(item.label)) {
+                        if (!duplicates.includes(item.label)) {
+                            duplicates.push(item.label);
                         }
                     }
-                }
-                if (label) {
-                    if (seenLabels.has(label)) {
-                        if (!duplicates.includes(label)) {
-                            duplicates.push(label);
-                        }
-                    }
-                    seenLabels.add(label);
+                    seenLabels.add(item.label);
                 }
             });
 
@@ -66,34 +64,7 @@ const BulkEditConditionsModal = ({ show, currentInfo, onClose, onApply }) => {
                 return;
             }
 
-            const mapping = {};
-            lines.forEach(line => {
-                let label = '';
-                let condition = '';
-                if (line.includes('\t')) {
-                    const parts = line.split('\t');
-                    label = parts[0].trim();
-                    condition = parts.slice(1).join('\t').trim();
-                } else {
-                    const trimmed = line.trim();
-                    const parts = trimmed.split(/\s{2,}/); // 2 or more spaces
-                    if (parts.length >= 2) {
-                        label = parts[0].trim();
-                        condition = parts.slice(1).join(' ').trim();
-                    } else {
-                        const lastSpaceIdx = trimmed.lastIndexOf(' ');
-                        if (lastSpaceIdx !== -1) {
-                            label = trimmed.substring(0, lastSpaceIdx).trim();
-                            condition = trimmed.substring(lastSpaceIdx + 1).trim();
-                        }
-                    }
-                }
-                if (label) {
-                    mapping[label] = condition;
-                }
-            });
-
-            onApply(mapping);
+            onApply(parsedLines);
         }
         onClose();
     };
@@ -133,13 +104,10 @@ const BulkEditConditionsModal = ({ show, currentInfo, onClose, onApply }) => {
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <div style={{ width: '3px', height: '16px', background: '#2563eb', borderRadius: '2px' }} />
-                            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>조건 일괄 편집</h3>
+                            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>일괄 문구 수정</h3>
                         </div>
                         <p style={{ fontSize: '12px', color: '#475569', margin: '8px 0 0 0', lineHeight: 1.5 }}>
-                            복사한 데이터들을 아래에 붙여넣어 일괄 적용할 수 있습니다.
-                        </p>
-                        <p style={{ fontSize: '11px', color: '#94a3b8', margin: '4px 0 0 0', lineHeight: 1.4 }}>
-                            ※ 그리드에 존재하지 않는 보기라벨은 매핑에서 제외되며, 입력하지 않은 기존 값은 안전하게 유지됩니다.
+                            줄바꿈 단위로 편집하거나, 엑셀 데이터를 복사해서 붙여넣으면 일괄 반영됩니다.
                         </p>
                     </div>
                     <button
@@ -183,7 +151,7 @@ const BulkEditConditionsModal = ({ show, currentInfo, onClose, onApply }) => {
                             color: '#475569',
                             userSelect: 'none'
                         }}>
-                            <div style={{ width: '16ch' }}>보기라벨</div>
+                            <div style={{ width: '150px' }}>보기라벨</div>
                             <div>조건</div>
                         </div>
                         {/* Text Area */}
@@ -198,7 +166,7 @@ const BulkEditConditionsModal = ({ show, currentInfo, onClose, onApply }) => {
                                 outline: 'none',
                                 resize: 'none',
                                 fontSize: '13px',
-                                fontFamily: 'inherit',
+                                fontFamily: 'Consolas, Monaco, monospace',
                                 tabSize: 8,
                                 MozTabSize: 8,
                                 lineHeight: '1.6',

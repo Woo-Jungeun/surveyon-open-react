@@ -1167,7 +1167,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
                                     onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
                                 >
-                                    조건 일괄 편집
+                                    일괄 문구 수정
                                 </button>
                                 <button
                                     onClick={handleCopyGrid}
@@ -1302,13 +1302,13 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 show={isBulkEditModalOpen}
                 currentInfo={currentInfo}
                 onClose={() => setIsBulkEditModalOpen(false)}
-                onApply={(mapping) => {
-                    const updated = currentInfo.map(item => {
-                        const itemLabel = String(item.label ?? '').trim();
-                        if (mapping[itemLabel] !== undefined) {
+                onApply={(parsedLines) => {
+                    const updated = currentInfo.map((item, idx) => {
+                        if (parsedLines[idx] !== undefined) {
                             return {
                                 ...item,
-                                logic: mapping[itemLabel]
+                                label: parsedLines[idx].label,
+                                logic: parsedLines[idx].logic
                             };
                         }
                         return item;

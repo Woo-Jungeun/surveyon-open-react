@@ -1640,7 +1640,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     borderBottom: '1px solid #e2e8f0',
                                     background: '#f8fafc',
                                     userSelect: 'none',
-                                    fontFamily: 'monospace'
+                                    fontFamily: 'Consolas, Monaco, monospace'
                                 }}>
                                     <div style={{ width: '8ch', fontSize: '13px', fontWeight: '700', color: '#64748b' }}>pid</div>
                                     <div style={{ flex: 1, fontSize: '13px', fontWeight: '700', color: '#64748b', paddingLeft: '8px' }}>가중치 비율</div>
@@ -1653,7 +1653,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     style={{
                                         width: '100%', height: '340px', padding: '12px 16px', border: 'none',
                                         outline: 'none', resize: 'none', lineHeight: 1.6, color: '#1e293b',
-                                        fontFamily: 'inherit', fontSize: '13px', background: 'transparent',
+                                        fontFamily: 'Consolas, Monaco, monospace', fontSize: '13px', background: 'transparent',
                                         tabSize: 8, MozTabSize: 8
                                     }}
                                     onFocus={() => setIsTextareaFocused(true)}
