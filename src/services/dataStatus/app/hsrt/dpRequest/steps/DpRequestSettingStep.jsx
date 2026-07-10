@@ -1653,7 +1653,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     style={{
                                         width: '100%', height: '340px', padding: '12px 16px', border: 'none',
                                         outline: 'none', resize: 'none', lineHeight: 1.6, color: '#1e293b',
-                                        fontFamily: 'monospace', fontSize: '14px', background: 'transparent',
+                                        fontFamily: 'inherit', fontSize: '13px', background: 'transparent',
                                         tabSize: 8, MozTabSize: 8
                                     }}
                                     onFocus={() => setIsTextareaFocused(true)}

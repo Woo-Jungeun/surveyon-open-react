@@ -198,7 +198,7 @@ const BulkEditConditionsModal = ({ show, currentInfo, onClose, onApply }) => {
                                 outline: 'none',
                                 resize: 'none',
                                 fontSize: '13px',
-                                fontFamily: 'Consolas, Monaco, monospace',
+                                fontFamily: 'inherit',
                                 tabSize: 8,
                                 MozTabSize: 8,
                                 lineHeight: '1.6',
