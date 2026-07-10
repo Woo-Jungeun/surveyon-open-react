@@ -10,6 +10,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
 import DpRequestStubSettingModal from './DpRequestStubSettingModal';
 import Toast from "@/components/common/Toast";
+import BulkEditLabelsModal from "./BulkEditLabelsModal";
 
 const TableStepContext = React.createContext(null);
 
@@ -1025,6 +1026,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
     const isHistoryAction = useRef(false);
 
     const [toast, setToast] = useState({ show: false, message: '' });
+    const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
 
     const handleCopyGrid = async () => {
         try {
@@ -1950,6 +1952,29 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <button
+                            onClick={() => setIsBulkEditModalOpen(true)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                height: '28px',
+                                padding: '0 12px',
+                                borderRadius: '6px',
+                                border: '1px solid #cbd5e1',
+                                color: '#475569',
+                                background: '#FFFFFF',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                transition: 'all 0.15s',
+                                boxSizing: 'border-box'
+                            }}
+                            onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+                            onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                        >
+                            라벨 일괄 편집
+                        </button>
+                        <button
                             onClick={handleCopyGrid}
                             style={{
                                 display: 'flex',
@@ -2192,6 +2217,25 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     }}
                 />
             )}
+            <BulkEditLabelsModal
+                show={isBulkEditModalOpen}
+                currentInfo={filteredStubs}
+                onClose={() => setIsBulkEditModalOpen(false)}
+                onApply={(lines) => {
+                    const updated = stubs.map(item => {
+                        const idx = filteredStubs.findIndex(x => x.recoded_var_id === item.recoded_var_id);
+                        if (idx !== -1 && lines[idx] !== undefined) {
+                            return {
+                                ...item,
+                                var_label: lines[idx]
+                            };
+                        }
+                        return item;
+                    });
+                    setStubs(updated);
+                    if (onUnsavedChange) onUnsavedChange(true);
+                }}
+            />
             <Toast
                 show={toast.show}
                 message={toast.message}

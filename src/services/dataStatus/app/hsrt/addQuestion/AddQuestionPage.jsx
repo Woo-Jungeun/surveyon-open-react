@@ -8,6 +8,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
 import DataHeader from "@/services/dataStatus/components/DataHeader";
 import CartesianGeneratorModal from "./CartesianGeneratorModal";
+import BulkEditConditionsModal from "./BulkEditConditionsModal";
 import { Button } from "@/components/ui/button";
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import Toast from "@/components/common/Toast";
@@ -528,6 +529,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     const currentInfoRef = useRef([]);
 
     const [toast, setToast] = useState({ show: false, message: '' });
+    const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
 
     const handleCopyGrid = async () => {
         try {
@@ -1143,29 +1145,54 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                             <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500, userSelect: 'none' }}>
                                 💡 입력창 중 하나를 선택해 엑셀 열을 붙여넣기(Ctrl+V)하면 아래로 자동 채워집니다.
                             </span>
-                            <button
-                                onClick={handleCopyGrid}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    height: '28px',
-                                    padding: '0 12px',
-                                    borderRadius: '6px',
-                                    border: '1px solid #cbd5e1',
-                                    color: '#475569',
-                                    background: '#FFFFFF',
-                                    fontSize: '12px',
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                    transition: 'all 0.15s',
-                                    boxSizing: 'border-box'
-                                }}
-                                onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
-                                onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
-                            >
-                                그리드 복사
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <button
+                                    onClick={() => setIsBulkEditModalOpen(true)}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        height: '28px',
+                                        padding: '0 12px',
+                                        borderRadius: '6px',
+                                        border: '1px solid #cbd5e1',
+                                        color: '#475569',
+                                        background: '#FFFFFF',
+                                        fontSize: '12px',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.15s',
+                                        boxSizing: 'border-box'
+                                    }}
+                                    onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                                >
+                                    조건 일괄 편집
+                                </button>
+                                <button
+                                    onClick={handleCopyGrid}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        height: '28px',
+                                        padding: '0 12px',
+                                        borderRadius: '6px',
+                                        border: '1px solid #cbd5e1',
+                                        color: '#475569',
+                                        background: '#FFFFFF',
+                                        fontSize: '12px',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.15s',
+                                        boxSizing: 'border-box'
+                                    }}
+                                    onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                                >
+                                    그리드 복사
+                                </button>
+                            </div>
                         </div>
                         <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                             <AddQuestionContext.Provider value={{ currentInfo, updateBannerInfo }}>
@@ -1269,6 +1296,24 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                         });
                     }
                     if (onUnsavedChange) onUnsavedChange(true);
+                }}
+            />
+            <BulkEditConditionsModal
+                show={isBulkEditModalOpen}
+                currentInfo={currentInfo}
+                onClose={() => setIsBulkEditModalOpen(false)}
+                onApply={(mapping) => {
+                    const updated = currentInfo.map(item => {
+                        const itemLabel = String(item.label ?? '').trim();
+                        if (mapping[itemLabel] !== undefined) {
+                            return {
+                                ...item,
+                                logic: mapping[itemLabel]
+                            };
+                        }
+                        return item;
+                    });
+                    updateBannerInfo(updated);
                 }}
             />
             <Toast

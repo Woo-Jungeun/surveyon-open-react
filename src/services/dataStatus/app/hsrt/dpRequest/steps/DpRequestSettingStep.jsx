@@ -1415,7 +1415,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             {/* 가중치 목록 & 그리드 영역 */}
             <div className="dp-main-layout" onClick={(e) => e.stopPropagation()} style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
                 {/* 사이드바 */}
-                <div className={`dp - sidebar - container ${!isWeightSidebarOpen ? 'collapsed' : ''} `} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, width: isWeightSidebarOpen ? '260px' : '40px' }}>
+                <div className={`dp-sidebar-container ${!isWeightSidebarOpen ? 'collapsed' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, width: isWeightSidebarOpen ? '260px' : '40px' }}>
                     {!isWeightSidebarOpen && (
                         <div className="dp-sidebar-collapsed-bar" onClick={() => setIsWeightSidebarOpen(true)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '100%', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', position: 'relative', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                             <div className="dp-collapsed-header"><ChevronRight size={16} /></div>
@@ -1443,7 +1443,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <div className="dp-banner-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '8px' }}>
                                 {filteredWeights.map(w => (
                                     <div key={w.id}
-                                        className={`dp - banner - item ${selectedWeightId === w.id ? 'active' : ''} `}
+                                        className={`dp-banner-item ${selectedWeightId === w.id ? 'active' : ''}`}
                                         onClick={() => selectWeight(w)}
                                         style={{
                                             display: 'flex',
@@ -1454,6 +1454,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             cursor: 'pointer',
                                             background: selectedWeightId === w.id ? '#EFF6FF' : 'transparent',
                                             color: selectedWeightId === w.id ? '#1D4ED8' : '#1E293B',
+                                            border: selectedWeightId === w.id ? '1.5px solid #2563eb' : '1px solid transparent',
                                             marginBottom: '4px',
                                             transition: 'all 0.15s'
                                         }}
@@ -1499,14 +1500,26 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 <button
                                     onClick={handleOpenBulkWeightModal}
                                     style={{
-                                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '32px', fontSize: '13px',
-                                        background: '#fff', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '4px',
-                                        padding: '0 16px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s'
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '6px',
+                                        height: '28px',
+                                        padding: '0 12px',
+                                        borderRadius: '6px',
+                                        border: '1px solid #cbd5e1',
+                                        color: '#475569',
+                                        background: '#FFFFFF',
+                                        fontSize: '12px',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.15s',
+                                        boxSizing: 'border-box'
                                     }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
+                                    onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
                                 >
-                                    <span>일괄 붙여넣기</span>
+                                    가중치 비율 일괄 편집
                                 </button>
                             </div>
                             <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
