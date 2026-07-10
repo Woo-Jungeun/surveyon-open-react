@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, createContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Trash2, Search, ChevronLeft, ChevronRight, Wand2, Plus, Info } from 'lucide-react';
+import { Trash2, Search, ChevronLeft, ChevronRight, Wand2, Plus, Info, Sparkles } from 'lucide-react';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -9,6 +9,7 @@ import useUpdateHistory from '@/hooks/useUpdateHistory';
 import DataHeader from "@/services/dataStatus/components/DataHeader";
 import CartesianGeneratorModal from "./CartesianGeneratorModal";
 import BulkEditConditionsModal from "./BulkEditConditionsModal";
+// import AiConditionGeneratorModal from "./AiConditionGeneratorModal";
 import { Button } from "@/components/ui/button";
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import Toast from "@/components/common/Toast";
@@ -513,6 +514,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     useImperativeHandle(ref, () => ({ save: async () => await handleSaveBanner() }));
 
     const [isCartesianModalOpen, setIsCartesianModalOpen] = useState(false);
+    // const [isAiModalOpen, setIsAiModalOpen] = useState(false);
     const [banners, setBanners] = useState([]);
     const [selectedBanner, setSelectedBanner] = useState('');
     const [baseVariables, setBaseVariables] = useState([]);
@@ -1029,6 +1031,87 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         return false;
     };
 
+    const handleApplyGeneratedRules = async (rules) => {
+        const mappedRules = rules.map(rule => ({ label2: rule.label2, label: rule.label, logic: rule.logic, inEdit: false }));
+        const pageId = sessionStorage.getItem('pageId');
+        const user = auth?.user?.userId;
+
+        // 현재 선택/작성 중인 문항 ID가 없다면 자동으로 신규 ID를 서버에서 받아와 문항 개설
+        if (!currentId && pageId && user) {
+            try {
+                loadingSpinner.show();
+                const res = await getNextBaseVariableId.mutateAsync({ pageid: pageId, user });
+                if (res?.success === '777' && res.resultjson?.next_id) {
+                    const tempId = getUniqueNextId(res.resultjson.next_id, banners);
+                    const newBanner = { id: tempId, label: '', type: 'single', recoded_type: 'computed', info: mappedRules, isDirty: true };
+
+                    // 현재 active banner의 변경 사항을 임시로 캡처
+                    const prevId = selectedBannerRef.current;
+                    if (prevId) {
+                        const capturedInfo = currentInfoRef.current;
+                        const capturedLabel = currentLabelRef.current;
+                        const capturedXInfo = currentXInfoRef.current;
+                        const capturedId = currentIdRef.current;
+                        setBanners(prev => {
+                            const b = prev.find(x => x.id === prevId);
+                            const isSame = b && b.label === capturedLabel &&
+                                (b.type || 'single') === capturedXInfo &&
+                                b.info === capturedInfo &&
+                                (b.tempId || b.id) === capturedId;
+                            const updated = prev.map(x =>
+                                x.id === prevId
+                                    ? {
+                                        ...x,
+                                        label: capturedLabel,
+                                        type: capturedXInfo,
+                                        tempId: capturedId,
+                                        info: capturedInfo,
+                                        isDirty: isSame ? x.isDirty : true
+                                    }
+                                    : x
+                            );
+                            return [...updated, newBanner];
+                        });
+                    } else {
+                        setBanners(prev => [...prev, newBanner]);
+                    }
+
+                    setTimeout(scrollToBottom, 100);
+                    setSelectedBanner(tempId);
+                    selectedBannerRef.current = tempId;
+
+                    setCurrentId(tempId);
+                    currentIdRef.current = tempId;
+
+                    setCurrentLabel('');
+                    currentLabelRef.current = '';
+
+                    setCurrentXInfo('single');
+                    currentXInfoRef.current = 'single';
+
+                    setCurrentInfo(mappedRules);
+                    currentInfoRef.current = mappedRules;
+                } else {
+                    modal.showAlert('오류', '신규 문항 ID를 받아오지 못했습니다.');
+                }
+            } catch (err) {
+                console.error(err);
+                modal.showAlert('오류', '신규 문항 ID 발급 중 문제가 발생했습니다.');
+            } finally {
+                loadingSpinner.hide();
+            }
+        } else {
+            // 기존 문항이 선택되어 있다면 조합된 보기 덮어쓰기/추가
+            setCurrentInfo(prev => {
+                const newInfo = (prev.length === 1 && !prev[0].label2 && !prev[0].label && !prev[0].logic)
+                    ? mappedRules : [...prev, ...mappedRules];
+                currentInfoRef.current = newInfo;
+                return newInfo;
+            });
+        }
+        if (onUnsavedChange) onUnsavedChange(true);
+    };
+
     const handleCloseEdit = useCallback(() => {
         setCurrentInfo(prev => prev.map(it => ({ ...it, inEdit: false })));
         currentInfoRef.current = currentInfoRef.current.map(it => ({ ...it, inEdit: false }));
@@ -1038,13 +1121,52 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         <>
             <style>{`.dp-add-question-dropdown .k-input-value-text { font-weight: 400 !important; }`}</style>
             <DataHeader title="문항추가" onSave={handleSaveBanner}>
-                <Button
-                    onClick={() => setIsCartesianModalOpen(true)}
-                    className="dp-btn"
-                    style={{ color: '#2563eb', border: '1px solid #2563eb', background: '#ffffff', height: '32px', padding: '0 16px', display: 'flex', alignItems: 'center', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
-                >
-                    <Wand2 size={14} style={{ marginRight: '6px' }} /> 변수 조합기 (자동생성)
-                </Button>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <Button
+                        onClick={() => modal.showAlert('알림', '서비스 개발중입니다.')}
+                        className="dp-btn"
+                        style={{
+                            color: '#2563eb',
+                            border: '1px solid #2563eb',
+                            background: '#ffffff',
+                            height: '32px',
+                            padding: '0 16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            borderRadius: '6px',
+                            fontSize: '13px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.15s'
+                        }}
+                        onMouseOver={(e) => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = '#1d4ed8'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#2563eb'; }}
+                    >
+                        <Sparkles size={14} style={{ marginRight: '6px' }} /> AI조건식 자동생성
+                    </Button>
+                    <Button
+                        onClick={() => setIsCartesianModalOpen(true)}
+                        className="dp-btn"
+                        style={{
+                            color: '#2563eb',
+                            border: '1px solid #2563eb',
+                            background: '#ffffff',
+                            height: '32px',
+                            padding: '0 16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            borderRadius: '6px',
+                            fontSize: '13px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.15s'
+                        }}
+                        onMouseOver={(e) => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = '#1d4ed8'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#2563eb'; }}
+                    >
+                        <Wand2 size={14} style={{ marginRight: '6px' }} /> 변수 조합기 (자동생성)
+                    </Button>
+                </div>
             </DataHeader>
             <div className="dp-request-container" style={{ flex: 1, minHeight: 0, padding: '16px', gap: '12px' }} onClick={handleCloseEdit}>
                 <div className="dp-main-layout" onClick={(e) => e.stopPropagation()} style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
@@ -1217,87 +1339,16 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 show={isCartesianModalOpen}
                 onClose={() => setIsCartesianModalOpen(false)}
                 variables={baseVariables}
-                onApply={async (rules) => {
-                    const mappedRules = rules.map(rule => ({ label2: rule.label2, label: rule.label, logic: rule.logic, inEdit: false }));
-                    const pageId = sessionStorage.getItem('pageId');
-                    const user = auth?.user?.userId;
-
-                    // 현재 선택/작성 중인 문항 ID가 없다면 자동으로 신규 ID를 서버에서 받아와 문항 개설
-                    if (!currentId && pageId && user) {
-                        try {
-                            loadingSpinner.show();
-                            const res = await getNextBaseVariableId.mutateAsync({ pageid: pageId, user });
-                            if (res?.success === '777' && res.resultjson?.next_id) {
-                                const tempId = getUniqueNextId(res.resultjson.next_id, banners);
-                                const newBanner = { id: tempId, label: '', type: 'single', recoded_type: 'computed', info: mappedRules, isDirty: true };
-
-                                // 현재 active banner의 변경 사항을 임시로 캡처
-                                const prevId = selectedBannerRef.current;
-                                if (prevId) {
-                                    const capturedInfo = currentInfoRef.current;
-                                    const capturedLabel = currentLabelRef.current;
-                                    const capturedXInfo = currentXInfoRef.current;
-                                    const capturedId = currentIdRef.current;
-                                    setBanners(prev => {
-                                        const b = prev.find(x => x.id === prevId);
-                                        const isSame = b && b.label === capturedLabel &&
-                                            (b.type || 'single') === capturedXInfo &&
-                                            b.info === capturedInfo &&
-                                            (b.tempId || b.id) === capturedId;
-                                        const updated = prev.map(x =>
-                                            x.id === prevId
-                                                ? {
-                                                    ...x,
-                                                    label: capturedLabel,
-                                                    type: capturedXInfo,
-                                                    tempId: capturedId,
-                                                    info: capturedInfo,
-                                                    isDirty: isSame ? x.isDirty : true
-                                                }
-                                                : x
-                                        );
-                                        return [...updated, newBanner];
-                                    });
-                                } else {
-                                    setBanners(prev => [...prev, newBanner]);
-                                }
-
-                                setTimeout(scrollToBottom, 100);
-                                setSelectedBanner(tempId);
-                                selectedBannerRef.current = tempId;
-
-                                setCurrentId(tempId);
-                                currentIdRef.current = tempId;
-
-                                setCurrentLabel('');
-                                currentLabelRef.current = '';
-
-                                setCurrentXInfo('single');
-                                currentXInfoRef.current = 'single';
-
-                                setCurrentInfo(mappedRules);
-                                currentInfoRef.current = mappedRules;
-                            } else {
-                                modal.showAlert('오류', '신규 문항 ID를 받아오지 못했습니다.');
-                            }
-                        } catch (err) {
-                            console.error(err);
-                            modal.showAlert('오류', '신규 문항 ID 발급 중 문제가 발생했습니다.');
-                        } finally {
-                            loadingSpinner.hide();
-                        }
-                    } else {
-                        // 기존 문항이 선택되어 있다면 조합된 보기 덮어쓰기/추가
-                        setCurrentInfo(prev => {
-                            const newInfo = (prev.length === 1 && !prev[0].label2 && !prev[0].label && !prev[0].logic)
-                                ? mappedRules : [...prev, ...mappedRules];
-                            currentInfoRef.current = newInfo;
-                            return newInfo;
-                        });
-                    }
-                    if (onUnsavedChange) onUnsavedChange(true);
-                }}
+                onApply={handleApplyGeneratedRules}
             />
+            {/*
+            <AiConditionGeneratorModal
+                show={isAiModalOpen}
+                onClose={() => setIsAiModalOpen(false)}
+                variables={baseVariables}
+                onApply={handleApplyGeneratedRules}
+            />
+            */}
             <BulkEditConditionsModal
                 show={isBulkEditModalOpen}
                 currentInfo={currentInfo}
