@@ -383,7 +383,7 @@ const ConditionHeaderCell = (props) => {
             <div
                 onClick={handleOpenHelp}
                 style={{ cursor: 'pointer', display: 'flex' }}
-                title="도움말 새창으로 열기"
+                title="클락하여 도움말 새창으로 열기"
             >
                 <Info size={14} color="#94a3b8" />
             </div>

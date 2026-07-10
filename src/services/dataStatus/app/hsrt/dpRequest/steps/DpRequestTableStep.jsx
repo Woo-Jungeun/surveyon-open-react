@@ -406,7 +406,7 @@ const ConditionHeaderCell = (props) => {
             <div
                 onClick={handleOpenHelp}
                 style={{ cursor: 'pointer', display: 'flex' }}
-                title="도움말 새창으로 열기"
+                title="클락하여 도움말 새창으로 열기"
             >
                 <Info size={14} color="#94a3b8" />
             </div>
@@ -1940,308 +1940,308 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
     return (
         <TableStepContext.Provider value={{ stubs, setStubs, onUnsavedChange }}>
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-            <div style={{ flex: 1, border: '1px solid #cbd5e1', borderRadius: '6px', background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-                <div style={{ padding: '8px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '13px', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div>
-                            전체 <span style={{ color: '#2563eb', fontWeight: 600 }}>{filteredStubs.length}</span>건
+                <div style={{ flex: 1, border: '1px solid #cbd5e1', borderRadius: '6px', background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+                    <div style={{ padding: '8px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '13px', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div>
+                                전체 <span style={{ color: '#2563eb', fontWeight: 600 }}>{filteredStubs.length}</span>건
+                            </div>
+                            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500, userSelect: 'none' }}>
+                                💡 입력창 중 하나를 선택해 엑셀 열을 붙여넣기(Ctrl+V)하면 아래로 자동 채워집니다.
+                            </span>
                         </div>
-                        <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500, userSelect: 'none' }}>
-                            💡 입력창 중 하나를 선택해 엑셀 열을 붙여넣기(Ctrl+V)하면 아래로 자동 채워집니다.
-                        </span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <button
-                            onClick={() => setIsBulkEditModalOpen(true)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                height: '28px',
-                                padding: '0 12px',
-                                borderRadius: '6px',
-                                border: '1px solid #cbd5e1',
-                                color: '#475569',
-                                background: '#FFFFFF',
-                                fontSize: '12px',
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                transition: 'all 0.15s',
-                                boxSizing: 'border-box'
-                            }}
-                            onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
-                            onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
-                        >
-                            라벨 일괄 편집
-                        </button>
-                        <button
-                            onClick={handleCopyGrid}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                height: '28px',
-                                padding: '0 12px',
-                                borderRadius: '6px',
-                                border: '1px solid #cbd5e1',
-                                color: '#475569',
-                                background: '#FFFFFF',
-                                fontSize: '12px',
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                transition: 'all 0.15s',
-                                boxSizing: 'border-box'
-                            }}
-                            onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
-                            onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
-                        >
-                            그리드 복사
-                        </button>
-                        <div style={{ position: 'relative', width: '300px' }}>
-                        <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
-                        <input
-                            type="text"
-                            placeholder="변수 또는 라벨 검색"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{
-                                width: '100%', height: '28px', padding: '0 30px',
-                                border: '1px solid #cbd5e1', borderRadius: '4px',
-                                fontSize: '12px', outline: 'none',
-                                boxSizing: 'border-box'
-                            }}
-                        />
-                        {searchTerm && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <button
-                                onClick={() => setSearchTerm('')}
+                                onClick={() => setIsBulkEditModalOpen(true)}
                                 style={{
-                                    position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
-                                    background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                                    display: 'flex', alignItems: 'center', color: '#94a3b8'
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    height: '28px',
+                                    padding: '0 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #cbd5e1',
+                                    color: '#475569',
+                                    background: '#FFFFFF',
+                                    fontSize: '12px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s',
+                                    boxSizing: 'border-box'
                                 }}
+                                onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+                                onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
                             >
-                                <X size={14} />
+                                라벨 일괄 편집
                             </button>
-                        )}
-                    </div>
-                </div>
-            </div>
-                <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-                        <KendoGridV2
-                            ref={gridRef}
-                            className="dp-compact-stub-grid"
-                            data={filteredStubs}
-                            rowHeight={24}
-                            onDataChange={handleDataChange}
-                            style={{ height: '100%', width: '100%' }}
-                            scrollable="virtual"
-                            dataItemKey="_row_id"
-                            addable={true}
-                            copyable={true}
-                            deletable={true}
-                            reorderable={!searchTerm}
-                            deletePos="start"
-                            onAdd={handleRowAdd}
-                            onCopy={handleRowCopy}
-                            onDelete={handleRowDelete}
-                        >
-
-                            <Column field="recoded_var_id" title="변수" width="115px" headerClassName="k-text-center"
-                                cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" onUpdate={handleCellUpdate} placeholder="" />}
-                            />
-                            <Column field="var_label" title="라벨" width="200px" headerClassName="k-text-center"
-                                cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} />}
-                            />
-                            <Column title="상세 설정" width="65px" headerClassName="k-text-center"
-                                cell={(p) => (
-                                    <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '0 4px' }}>
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedStubForModal(p.dataItem)}
-                                            style={{
-                                                padding: '2px 8px',
-                                                border: '1px solid #3b82f6',
-                                                background: '#ffffff',
-                                                color: '#3b82f6',
-                                                borderRadius: '3px',
-                                                fontSize: '11px',
-                                                cursor: 'pointer',
-                                                fontWeight: 500,
-                                                whiteSpace: 'nowrap'
-                                            }}
-                                            onMouseEnter={(e) => e.currentTarget.style.background = '#eff6ff'}
-                                            onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
-                                        >
-                                            설정
-                                        </button>
-                                    </td>
+                            <button
+                                onClick={handleCopyGrid}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    height: '28px',
+                                    padding: '0 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #cbd5e1',
+                                    color: '#475569',
+                                    background: '#FFFFFF',
+                                    fontSize: '12px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s',
+                                    boxSizing: 'border-box'
+                                }}
+                                onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+                                onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                            >
+                                그리드 복사
+                            </button>
+                            <div style={{ position: 'relative', width: '300px' }}>
+                                <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+                                <input
+                                    type="text"
+                                    placeholder="변수 또는 라벨 검색"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    style={{
+                                        width: '100%', height: '28px', padding: '0 30px',
+                                        border: '1px solid #cbd5e1', borderRadius: '4px',
+                                        fontSize: '12px', outline: 'none',
+                                        boxSizing: 'border-box'
+                                    }}
+                                />
+                                {searchTerm && (
+                                    <button
+                                        onClick={() => setSearchTerm('')}
+                                        style={{
+                                            position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
+                                            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                                            display: 'flex', alignItems: 'center', color: '#94a3b8'
+                                        }}
+                                    >
+                                        <X size={14} />
+                                    </button>
                                 )}
-                            />
-                            <Column field="sort_mode" title="정렬" width="40px" headerClassName="k-text-center"
-                                cell={(p) => {
-                                    const sortMode = p.dataItem.sort_mode || 'none';
-                                    const isDesc = sortMode === 'n_desc';
+                            </div>
+                        </div>
+                    </div>
+                    <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+                            <KendoGridV2
+                                ref={gridRef}
+                                className="dp-compact-stub-grid"
+                                data={filteredStubs}
+                                rowHeight={24}
+                                onDataChange={handleDataChange}
+                                style={{ height: '100%', width: '100%' }}
+                                scrollable="virtual"
+                                dataItemKey="_row_id"
+                                addable={true}
+                                copyable={true}
+                                deletable={true}
+                                reorderable={!searchTerm}
+                                deletePos="start"
+                                onAdd={handleRowAdd}
+                                onCopy={handleRowCopy}
+                                onDelete={handleRowDelete}
+                            >
 
-                                    const handleToggleSort = (e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        const nextSort = isDesc ? 'none' : 'n_desc';
-                                        handleCellUpdate(p.dataItem, 'sort_mode', nextSort);
-                                    };
-
-                                    return (
-                                        <td
-                                            data-field="sort_mode"
-                                            data-row-id={p.dataItem.source_var_id}
-                                            onPointerDownCapture={e => handleStubPointerDownCapture(e, p.dataItem.source_var_id, 'sort_mode')}
-                                            onPointerEnter={e => handleStubPointerEnter(e, p.dataItem.source_var_id, 'sort_mode')}
-                                            onMouseDownCapture={preventCtrlEvent}
-                                            onClickCapture={preventCtrlEvent}
-                                            onMouseDown={e => e.stopPropagation()}
-                                            draggable={true}
-                                            onDragStart={e => { e.stopPropagation(); e.preventDefault(); }}
-                                            className={getStubDragClasses(p.dataItem.source_var_id)}
-                                            onClick={handleToggleSort}
-                                            style={{
-                                                textAlign: 'center',
-                                                verticalAlign: 'middle',
-                                                cursor: 'pointer',
-                                                userSelect: 'none',
-                                                padding: '1px 4px'
-                                            }}
-                                        >
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px' }}>
-                                                {isDesc ? <ArrowDown size={15} color="#2563eb" strokeWidth={3} /> : ''}
-                                            </div>
+                                <Column field="recoded_var_id" title="변수" width="115px" headerClassName="k-text-center"
+                                    cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" onUpdate={handleCellUpdate} placeholder="" />}
+                                />
+                                <Column field="var_label" title="라벨" width="200px" headerClassName="k-text-center"
+                                    cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} />}
+                                />
+                                <Column title="상세 설정" width="65px" headerClassName="k-text-center"
+                                    cell={(p) => (
+                                        <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '0 4px' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedStubForModal(p.dataItem)}
+                                                style={{
+                                                    padding: '2px 8px',
+                                                    border: '1px solid #3b82f6',
+                                                    background: '#ffffff',
+                                                    color: '#3b82f6',
+                                                    borderRadius: '3px',
+                                                    fontSize: '11px',
+                                                    cursor: 'pointer',
+                                                    fontWeight: 500,
+                                                    whiteSpace: 'nowrap'
+                                                }}
+                                                onMouseEnter={(e) => e.currentTarget.style.background = '#eff6ff'}
+                                                onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
+                                            >
+                                                설정
+                                            </button>
                                         </td>
-                                    );
-                                }}
-                            />
-                            <Column field="var_type" title="유형" width="100px" headerClassName="k-text-center"
-                                cell={(p) => <TypeEditCell dataItem={p.dataItem} onUpdate={handleCellUpdate} />}
-                            />
-                            <Column field="condition" title="조건" width="150px" headerClassName="k-text-center"
-                                headerCell={ConditionHeaderCell}
-                                cell={(p) => <TextEditCell dataItem={p.dataItem} field="condition" onUpdate={handleCellUpdate} />}
-                            />
-                            <Column field="x_info" title="배너" width="150px" headerClassName="k-text-center"
-                                cell={(p) => <PresetDropdownCell field="x_info" dataItem={p.dataItem} presets={banners} onChange={handleCellUpdate} />}
-                            />
+                                    )}
+                                />
+                                <Column field="sort_mode" title="정렬" width="40px" headerClassName="k-text-center"
+                                    cell={(p) => {
+                                        const sortMode = p.dataItem.sort_mode || 'none';
+                                        const isDesc = sortMode === 'n_desc';
 
-                            <Column field="group_preset_name" title="그룹" width="150px" headerClassName="k-text-center"
-                                cell={(p) => {
-                                    if (!canUseGroupPreset(p.dataItem.var_type)) {
-                                        return <td style={DISABLED_CELL_STYLE}>-</td>;
-                                    }
-                                    return <PresetDropdownCell field="group_preset_name" dataItem={p.dataItem} presets={groupPresets} onChange={handleCellUpdate} />;
-                                }}
-                            />
-                            <Column field="stat_summary" title="통계 설정" width="150px" headerClassName="k-text-center"
-                                cell={(p) => {
-                                    if (!canUseStatPreset(p.dataItem.var_type)) {
-                                        return <td style={DISABLED_CELL_STYLE}>-</td>;
-                                    }
-                                    return <StatSettingCell dataItem={p.dataItem} selectedValues={p.dataItem.stat_summary} onUpdate={handleCellUpdate} />;
-                                }}
-                            />
-                            <Column field="scale_preset_name" title="척도" width="150px" headerClassName="k-text-center"
-                                cell={(p) => {
-                                    if (!canUseScalePreset(p.dataItem.var_type)) {
-                                        return <td style={DISABLED_CELL_STYLE}>-</td>;
-                                    }
-                                    return <PresetDropdownCell field="scale_preset_name" dataItem={p.dataItem} presets={scalePresets} onChange={handleCellUpdate} />;
-                                }}
-                            />
-                            <Column field="rank_preset_name" title="순위" width="150px" headerClassName="k-text-center"
-                                cell={(p) => {
-                                    if (!canUseRankPreset(p.dataItem.var_type)) {
-                                        return <td style={DISABLED_CELL_STYLE}>-</td>;
-                                    }
-                                    return <PresetDropdownCell field="rank_preset_name" dataItem={p.dataItem} presets={rankPresets} onChange={handleCellUpdate} />;
-                                }}
-                            />
-                        </KendoGridV2>
+                                        const handleToggleSort = (e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            const nextSort = isDesc ? 'none' : 'n_desc';
+                                            handleCellUpdate(p.dataItem, 'sort_mode', nextSort);
+                                        };
+
+                                        return (
+                                            <td
+                                                data-field="sort_mode"
+                                                data-row-id={p.dataItem.source_var_id}
+                                                onPointerDownCapture={e => handleStubPointerDownCapture(e, p.dataItem.source_var_id, 'sort_mode')}
+                                                onPointerEnter={e => handleStubPointerEnter(e, p.dataItem.source_var_id, 'sort_mode')}
+                                                onMouseDownCapture={preventCtrlEvent}
+                                                onClickCapture={preventCtrlEvent}
+                                                onMouseDown={e => e.stopPropagation()}
+                                                draggable={true}
+                                                onDragStart={e => { e.stopPropagation(); e.preventDefault(); }}
+                                                className={getStubDragClasses(p.dataItem.source_var_id)}
+                                                onClick={handleToggleSort}
+                                                style={{
+                                                    textAlign: 'center',
+                                                    verticalAlign: 'middle',
+                                                    cursor: 'pointer',
+                                                    userSelect: 'none',
+                                                    padding: '1px 4px'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px' }}>
+                                                    {isDesc ? <ArrowDown size={15} color="#2563eb" strokeWidth={3} /> : ''}
+                                                </div>
+                                            </td>
+                                        );
+                                    }}
+                                />
+                                <Column field="var_type" title="유형" width="100px" headerClassName="k-text-center"
+                                    cell={(p) => <TypeEditCell dataItem={p.dataItem} onUpdate={handleCellUpdate} />}
+                                />
+                                <Column field="condition" title="조건" width="150px" headerClassName="k-text-center"
+                                    headerCell={ConditionHeaderCell}
+                                    cell={(p) => <TextEditCell dataItem={p.dataItem} field="condition" onUpdate={handleCellUpdate} />}
+                                />
+                                <Column field="x_info" title="배너" width="150px" headerClassName="k-text-center"
+                                    cell={(p) => <PresetDropdownCell field="x_info" dataItem={p.dataItem} presets={banners} onChange={handleCellUpdate} />}
+                                />
+
+                                <Column field="group_preset_name" title="그룹" width="150px" headerClassName="k-text-center"
+                                    cell={(p) => {
+                                        if (!canUseGroupPreset(p.dataItem.var_type)) {
+                                            return <td style={DISABLED_CELL_STYLE}>-</td>;
+                                        }
+                                        return <PresetDropdownCell field="group_preset_name" dataItem={p.dataItem} presets={groupPresets} onChange={handleCellUpdate} />;
+                                    }}
+                                />
+                                <Column field="stat_summary" title="통계 설정" width="150px" headerClassName="k-text-center"
+                                    cell={(p) => {
+                                        if (!canUseStatPreset(p.dataItem.var_type)) {
+                                            return <td style={DISABLED_CELL_STYLE}>-</td>;
+                                        }
+                                        return <StatSettingCell dataItem={p.dataItem} selectedValues={p.dataItem.stat_summary} onUpdate={handleCellUpdate} />;
+                                    }}
+                                />
+                                <Column field="scale_preset_name" title="척도" width="150px" headerClassName="k-text-center"
+                                    cell={(p) => {
+                                        if (!canUseScalePreset(p.dataItem.var_type)) {
+                                            return <td style={DISABLED_CELL_STYLE}>-</td>;
+                                        }
+                                        return <PresetDropdownCell field="scale_preset_name" dataItem={p.dataItem} presets={scalePresets} onChange={handleCellUpdate} />;
+                                    }}
+                                />
+                                <Column field="rank_preset_name" title="순위" width="150px" headerClassName="k-text-center"
+                                    cell={(p) => {
+                                        if (!canUseRankPreset(p.dataItem.var_type)) {
+                                            return <td style={DISABLED_CELL_STYLE}>-</td>;
+                                        }
+                                        return <PresetDropdownCell field="rank_preset_name" dataItem={p.dataItem} presets={rankPresets} onChange={handleCellUpdate} />;
+                                    }}
+                                />
+                            </KendoGridV2>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* 상세설정 팝업 렌더링 */}
-            {!!selectedStubForModal && (
-                <DpRequestStubSettingModal
-                    show={true}
-                    onClose={() => setSelectedStubForModal(null)}
-                    rowData={selectedStubForModal}
-                    variables={stubs} // 임시로 전체 stubs를 넘겨줍니다. 나중에 필요에 따라 수정
-                    onApply={(rules, rankOutputs, sortMode) => {
-                        // 그리드 내부 필드 정리 + 필수 필드 정규화
-                        const STAT_TYPES = ["mean", "median", "mode", "min", "max", "var", "std", "sum", "variance", "rse"];
-                        const normalizedRules = rules.map((opt, i) => {
-                            const isBase = opt.type === 'base';
-                            const isStat = STAT_TYPES.includes(opt.type);
-                            const rowRole = isBase ? 'base' : (isStat ? 'stat' : (opt.row_role || 'option'));
-                            // 그리드 내부 필드(inEdit 등) 제거, 필수 필드 보충
-                            return {
-                                index: i + 1,
-                                label: opt.label || '',
-                                label2: opt.label2 || '',
-                                label3: opt.label3 || '',
-                                logic: opt.logic || '',
-                                type: opt.type || 'option',
-                                row_role: rowRole,
-                                is_internal: opt.is_internal ?? null,
-                                prefix: opt.prefix || null,
-                                postfix: opt.postfix || null,
-                                hide: opt.hide || null,
-                                round: opt.round !== undefined && opt.round !== '' ? Number(opt.round) : (isBase ? 0 : (isStat ? 2 : null)),
-                                value: opt.value !== '' && opt.value !== undefined && opt.value !== null ? opt.value : null,
-                                stat_type: opt.stat_type || null,
-                                target_var: opt.target_var || null,
-                                line: opt.line || null,
-                                color: opt.color || null,
-                            };
-                        });
-                        // 해당 stub의 info 및 rank_outputs 업데이트
-                        setStubs(prev => prev.map(s => {
-                            if (s.recoded_var_id === selectedStubForModal?.recoded_var_id) {
+                {/* 상세설정 팝업 렌더링 */}
+                {!!selectedStubForModal && (
+                    <DpRequestStubSettingModal
+                        show={true}
+                        onClose={() => setSelectedStubForModal(null)}
+                        rowData={selectedStubForModal}
+                        variables={stubs} // 임시로 전체 stubs를 넘겨줍니다. 나중에 필요에 따라 수정
+                        onApply={(rules, rankOutputs, sortMode) => {
+                            // 그리드 내부 필드 정리 + 필수 필드 정규화
+                            const STAT_TYPES = ["mean", "median", "mode", "min", "max", "var", "std", "sum", "variance", "rse"];
+                            const normalizedRules = rules.map((opt, i) => {
+                                const isBase = opt.type === 'base';
+                                const isStat = STAT_TYPES.includes(opt.type);
+                                const rowRole = isBase ? 'base' : (isStat ? 'stat' : (opt.row_role || 'option'));
+                                // 그리드 내부 필드(inEdit 등) 제거, 필수 필드 보충
                                 return {
-                                    ...s,
-                                    info: normalizedRules,
-                                    sort_mode: sortMode,
-                                    ...(rankOutputs ? { rank_outputs: rankOutputs } : {})
+                                    index: i + 1,
+                                    label: opt.label || '',
+                                    label2: opt.label2 || '',
+                                    label3: opt.label3 || '',
+                                    logic: opt.logic || '',
+                                    type: opt.type || 'option',
+                                    row_role: rowRole,
+                                    is_internal: opt.is_internal ?? null,
+                                    prefix: opt.prefix || null,
+                                    postfix: opt.postfix || null,
+                                    hide: opt.hide || null,
+                                    round: opt.round !== undefined && opt.round !== '' ? Number(opt.round) : (isBase ? 0 : (isStat ? 2 : null)),
+                                    value: opt.value !== '' && opt.value !== undefined && opt.value !== null ? opt.value : null,
+                                    stat_type: opt.stat_type || null,
+                                    target_var: opt.target_var || null,
+                                    line: opt.line || null,
+                                    color: opt.color || null,
+                                };
+                            });
+                            // 해당 stub의 info 및 rank_outputs 업데이트
+                            setStubs(prev => prev.map(s => {
+                                if (s.recoded_var_id === selectedStubForModal?.recoded_var_id) {
+                                    return {
+                                        ...s,
+                                        info: normalizedRules,
+                                        sort_mode: sortMode,
+                                        ...(rankOutputs ? { rank_outputs: rankOutputs } : {})
+                                    };
+                                }
+                                return s;
+                            }));
+                            if (onUnsavedChange) onUnsavedChange(true);
+                        }}
+                    />
+                )}
+                <BulkEditLabelsModal
+                    show={isBulkEditModalOpen}
+                    currentInfo={filteredStubs}
+                    onClose={() => setIsBulkEditModalOpen(false)}
+                    onApply={(lines) => {
+                        const updated = stubs.map(item => {
+                            const idx = filteredStubs.findIndex(x => x.recoded_var_id === item.recoded_var_id);
+                            if (idx !== -1 && lines[idx] !== undefined) {
+                                return {
+                                    ...item,
+                                    var_label: lines[idx]
                                 };
                             }
-                            return s;
-                        }));
+                            return item;
+                        });
+                        setStubs(updated);
                         if (onUnsavedChange) onUnsavedChange(true);
                     }}
                 />
-            )}
-            <BulkEditLabelsModal
-                show={isBulkEditModalOpen}
-                currentInfo={filteredStubs}
-                onClose={() => setIsBulkEditModalOpen(false)}
-                onApply={(lines) => {
-                    const updated = stubs.map(item => {
-                        const idx = filteredStubs.findIndex(x => x.recoded_var_id === item.recoded_var_id);
-                        if (idx !== -1 && lines[idx] !== undefined) {
-                            return {
-                                ...item,
-                                var_label: lines[idx]
-                            };
-                        }
-                        return item;
-                    });
-                    setStubs(updated);
-                    if (onUnsavedChange) onUnsavedChange(true);
-                }}
-            />
-            <Toast
-                show={toast.show}
-                message={toast.message}
-                onClose={() => setToast({ ...toast, show: false })}
-            />
-        </div>
+                <Toast
+                    show={toast.show}
+                    message={toast.message}
+                    onClose={() => setToast({ ...toast, show: false })}
+                />
+            </div>
         </TableStepContext.Provider>
     );
 });
