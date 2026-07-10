@@ -7,6 +7,7 @@ import KendoGridV3, { GridColumn as Column } from "@/components/kendo/KendoGridV
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
+import Toast from "@/components/common/Toast";
 
 // --- 커스텀 헤더 셀 (조건 아이콘) ---
 const ConditionHeaderCell = (props) => {
@@ -747,6 +748,33 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [colVars, setColVars] = useState([]);
     const [selectedIds, setSelectedIds] = useState([]);
     const listContainerRef = useRef(null);
+
+    const [toast, setToast] = useState({ show: false, message: '' });
+
+    const handleCopyGrid = async () => {
+        try {
+            const currentInfo = banners.find(b => b.id === selectedBanner)?.info || [];
+            if (!currentInfo || currentInfo.length === 0) {
+                setToast({ show: true, message: '복사할 데이터가 없습니다.' });
+                return;
+            }
+            const headers = ['대분류', '중분류', '소분류', '조건'].join('\t');
+            const rows = currentInfo.map(item => {
+                const label3 = String(item.label3 ?? '').trim();
+                const label2 = String(item.label2 ?? '').trim();
+                const label = String(item.label ?? '').trim();
+                const logic = String(item.logic ?? '').trim();
+                return `${label3}\t${label2}\t${label}\t${logic}`;
+            }).join('\n');
+
+            const text = `${headers}\n${rows}`;
+            await navigator.clipboard.writeText(text);
+            setToast({ show: true, message: '복사 완료 (Ctrl+V)' });
+        } catch (err) {
+            console.error('Failed to copy grid:', err);
+            setToast({ show: true, message: '복사 실패' });
+        }
+    };
     const draggedTypeRef = useRef(null);
 
     const [selectedCells, setSelectedCells] = useState([]); // [{r, c}]
@@ -2165,7 +2193,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             color: '#3b82f6',
                                             height: '32px',
                                             padding: '0 16px',
-                                            borderRadius: '4px',
+                                            borderRadius: '6px',
                                             fontSize: '13px',
                                             fontWeight: 700,
                                             cursor: 'pointer',
@@ -2240,10 +2268,33 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 </div>
                             </Popup>
 
-                            <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px 0 16px', flexShrink: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 0 16px', flexShrink: 0 }}>
                                 <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500, userSelect: 'none' }}>
                                     💡 입력창 중 하나를 선택해 엑셀 열을 붙여넣기(Ctrl+V)하면 아래로 자동 채워집니다.
                                 </span>
+                                <button
+                                    onClick={handleCopyGrid}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        height: '28px',
+                                        padding: '0 12px',
+                                        borderRadius: '6px',
+                                        border: '1px solid #cbd5e1',
+                                        color: '#475569',
+                                        background: '#FFFFFF',
+                                        fontSize: '12px',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.15s',
+                                        boxSizing: 'border-box'
+                                    }}
+                                    onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                                >
+                                    그리드 복사
+                                </button>
                             </div>
                             <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                                 <KendoGridV3
@@ -2314,6 +2365,11 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             </div>
                         </div>
                     )}
+                    <Toast
+                        show={toast.show}
+                        message={toast.message}
+                        onClose={() => setToast({ ...toast, show: false })}
+                    />
                 </div>
             </div>
         </div>

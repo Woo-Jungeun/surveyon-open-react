@@ -10,6 +10,7 @@ import DataHeader from "@/services/dataStatus/components/DataHeader";
 import CartesianGeneratorModal from "./CartesianGeneratorModal";
 import { Button } from "@/components/ui/button";
 import { DropDownList } from '@progress/kendo-react-dropdowns';
+import Toast from "@/components/common/Toast";
 
 const AddQuestionContext = createContext(null);
 
@@ -525,6 +526,31 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     // → 셀 편집 시 banners 전체를 map()하지 않아도 됨 (성능 핵심)
     const [currentInfo, setCurrentInfo] = useState([]);
     const currentInfoRef = useRef([]);
+
+    const [toast, setToast] = useState({ show: false, message: '' });
+
+    const handleCopyGrid = async () => {
+        try {
+            if (!currentInfo || currentInfo.length === 0) {
+                setToast({ show: true, message: '복사할 데이터가 없습니다.' });
+                return;
+            }
+            const headers = ['할당될 값', '보기 라벨', '조건'].join('\t');
+            const rows = currentInfo.map(item => {
+                const val2 = String(item.label2 ?? '').trim();
+                const val = String(item.label ?? '').trim();
+                const logic = String(item.logic ?? '').trim();
+                return `${val2}\t${val}\t${logic}`;
+            }).join('\n');
+
+            const text = `${headers}\n${rows}`;
+            await navigator.clipboard.writeText(text);
+            setToast({ show: true, message: '복사 완료 (Ctrl+V)' });
+        } catch (err) {
+            console.error('Failed to copy grid:', err);
+            setToast({ show: true, message: '복사 실패' });
+        }
+    };
 
     // 선택된 배너 ID 및 입력 상태 ref (callback closure에서 최신값 참조 - 동기 업데이트로 race condition 방지)
     const selectedBannerRef = useRef('');
@@ -1113,10 +1139,33 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 </div>
                             </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px 0 16px', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 0 16px', flexShrink: 0 }}>
                             <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500, userSelect: 'none' }}>
                                 💡 입력창 중 하나를 선택해 엑셀 열을 붙여넣기(Ctrl+V)하면 아래로 자동 채워집니다.
                             </span>
+                            <button
+                                onClick={handleCopyGrid}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    height: '28px',
+                                    padding: '0 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #cbd5e1',
+                                    color: '#475569',
+                                    background: '#FFFFFF',
+                                    fontSize: '12px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s',
+                                    boxSizing: 'border-box'
+                                }}
+                                onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+                                onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                            >
+                                그리드 복사
+                            </button>
                         </div>
                         <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                             <AddQuestionContext.Provider value={{ currentInfo, updateBannerInfo }}>
@@ -1221,6 +1270,11 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                     }
                     if (onUnsavedChange) onUnsavedChange(true);
                 }}
+            />
+            <Toast
+                show={toast.show}
+                message={toast.message}
+                onClose={() => setToast({ ...toast, show: false })}
             />
         </>
     );

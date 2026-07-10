@@ -9,6 +9,9 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
 import DpRequestStubSettingModal from './DpRequestStubSettingModal';
+import Toast from "@/components/common/Toast";
+
+const TableStepContext = React.createContext(null);
 
 // 프리셋이 적용된 source_based 스터브인지 확인
 const canReapplyPreset = (stub) => {
@@ -866,6 +869,7 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
 const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', placeholder = '' }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [localVal, setLocalVal] = useState(String(dataItem[field] ?? ''));
+    const context = useContext(TableStepContext);
 
     // 외부에서 dataItem이 바뀔 때만 동기화 (편집 중에는 무시)
     useEffect(() => {
@@ -877,6 +881,36 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', pl
         if (localVal !== String(dataItem[field] ?? '')) onUpdate(dataItem, field, localVal);
     };
 
+    const handlePaste = (e) => {
+        const clipboardData = e.clipboardData.getData('Text');
+        const lines = clipboardData.split(/\r?\n/).map(l => l.trim());
+        if (lines.length > 1) {
+            e.preventDefault();
+            if (context && context.stubs) {
+                const { stubs, setStubs, onUnsavedChange } = context;
+                const startIdx = stubs.findIndex(item => item._row_id === dataItem._row_id);
+                if (startIdx !== -1) {
+                    const updated = stubs.map((item, idx) => {
+                        if (idx >= startIdx) {
+                            const offset = idx - startIdx;
+                            const lineVal = lines[offset];
+                            if (lineVal !== undefined) {
+                                return {
+                                    ...item,
+                                    [field]: lineVal
+                                };
+                            }
+                        }
+                        return item;
+                    });
+                    setStubs(updated);
+                    if (onUnsavedChange) onUnsavedChange(true);
+                    setIsEditing(false);
+                }
+            }
+        }
+    };
+
     if (isEditing) {
         return (
             <td style={{ padding: '1px 4px', verticalAlign: 'middle' }}>
@@ -886,6 +920,7 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', pl
                     value={localVal}
                     onChange={e => setLocalVal(e.target.value)}
                     onBlur={commit}
+                    onPaste={handlePaste}
                     onKeyDown={e => {
                         if (e.key === 'Enter') e.target.blur();
                         if (e.key === 'Escape') { setLocalVal(String(dataItem[field] ?? '')); setIsEditing(false); }
@@ -988,6 +1023,37 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
 
     const history = useUpdateHistory('dp-table');
     const isHistoryAction = useRef(false);
+
+    const [toast, setToast] = useState({ show: false, message: '' });
+
+    const handleCopyGrid = async () => {
+        try {
+            if (!filteredStubs || filteredStubs.length === 0) {
+                setToast({ show: true, message: '복사할 데이터가 없습니다.' });
+                return;
+            }
+            const headers = ['변수', '라벨', '유형', '조건', '배너', '그룹', '통계 설정', '척도', '순위'].join('\t');
+            const rows = filteredStubs.map(item => {
+                const varId = String(item.recoded_var_id ?? '').trim();
+                const label = String(item.var_label ?? '').trim();
+                const type = String(item.var_type ?? '').trim();
+                const condition = String(item.condition ?? '').trim();
+                const banner = String(item.x_info ?? '').trim();
+                const group = String(item.group_preset_name ?? '').trim();
+                const stat = String(item.stat_summary ?? '').trim();
+                const scale = String(item.scale_preset_name ?? '').trim();
+                const rank = String(item.rank_preset_name ?? '').trim();
+                return `${varId}\t${label}\t${type}\t${condition}\t${banner}\t${group}\t${stat}\t${scale}\t${rank}`;
+            }).join('\n');
+
+            const text = `${headers}\n${rows}`;
+            await navigator.clipboard.writeText(text);
+            setToast({ show: true, message: '복사 완료 (Ctrl+V)' });
+        } catch (err) {
+            console.error('Failed to copy grid:', err);
+            setToast({ show: true, message: '복사 실패' });
+        }
+    };
 
     // 키보드 이벤트 (Undo/Redo)
     useEffect(() => {
@@ -1870,13 +1936,43 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
 
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+        <TableStepContext.Provider value={{ stubs, setStubs, onUnsavedChange }}>
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
             <div style={{ flex: 1, border: '1px solid #cbd5e1', borderRadius: '6px', background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
                 <div style={{ padding: '8px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '13px', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                        전체 <span style={{ color: '#2563eb', fontWeight: 600 }}>{filteredStubs.length}</span>건
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div>
+                            전체 <span style={{ color: '#2563eb', fontWeight: 600 }}>{filteredStubs.length}</span>건
+                        </div>
+                        <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500, userSelect: 'none' }}>
+                            💡 입력창 중 하나를 선택해 엑셀 열을 붙여넣기(Ctrl+V)하면 아래로 자동 채워집니다.
+                        </span>
                     </div>
-                    <div style={{ position: 'relative', width: '300px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <button
+                            onClick={handleCopyGrid}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                height: '28px',
+                                padding: '0 12px',
+                                borderRadius: '6px',
+                                border: '1px solid #cbd5e1',
+                                color: '#475569',
+                                background: '#FFFFFF',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                transition: 'all 0.15s',
+                                boxSizing: 'border-box'
+                            }}
+                            onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+                            onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                        >
+                            그리드 복사
+                        </button>
+                        <div style={{ position: 'relative', width: '300px' }}>
                         <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
                         <input
                             type="text"
@@ -1904,6 +2000,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                         )}
                     </div>
                 </div>
+            </div>
                 <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
                         <KendoGridV2
@@ -2095,7 +2192,13 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     }}
                 />
             )}
+            <Toast
+                show={toast.show}
+                message={toast.message}
+                onClose={() => setToast({ ...toast, show: false })}
+            />
         </div>
+        </TableStepContext.Provider>
     );
 });
 
