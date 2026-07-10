@@ -1454,7 +1454,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             cursor: 'pointer',
                                             background: selectedWeightId === w.id ? '#EFF6FF' : 'transparent',
                                             color: selectedWeightId === w.id ? '#1D4ED8' : '#1E293B',
-                                            border: selectedWeightId === w.id ? '1.5px solid #2563eb' : '1px solid transparent',
+                                            border: selectedWeightId === w.id ? '1.5px solid #2563eb' : '1px solid #cbd5e1',
                                             marginBottom: '4px',
                                             transition: 'all 0.15s'
                                         }}
