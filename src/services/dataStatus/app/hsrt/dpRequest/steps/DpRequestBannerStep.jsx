@@ -415,6 +415,13 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
         if (isSameAsPrev && data[dataIndex][`_unmerged_${field}`]) {
             isSameAsPrev = false;
         }
+
+        const isCurrentRowAll = String(data[dataIndex].label ?? '').trim() === '전체';
+        const isPrevRowAll = String(data[dataIndex - 1].label ?? '').trim() === '전체';
+        if (isCurrentRowAll || isPrevRowAll) {
+            isSameAsPrev = false;
+        }
+
         if (isSameAsPrev) {
             isHidden = true;
             rowSpan = 0;
@@ -422,6 +429,7 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
     }
 
     if (!disableMerge && !isHidden) {
+        const isCurrentRowAll = String(data[dataIndex].label ?? '').trim() === '전체';
         for (let i = dataIndex + 1; i < data.length; i++) {
             let isSame = data[i][field] === data[dataIndex][field];
             if (isSame && dependencies.length > 0) {
@@ -435,6 +443,12 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
             if (isSame && data[i][`_unmerged_${field}`]) {
                 isSame = false;
             }
+
+            const isNextRowAll = String(data[i].label ?? '').trim() === '전체';
+            if (isCurrentRowAll || isNextRowAll) {
+                isSame = false;
+            }
+
             if (isSame) rowSpan++;
             else break;
         }
@@ -481,6 +495,9 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
             lines.forEach((lineVal, idx) => {
                 const targetIndex = dataIndex + idx;
                 if (targetIndex < newData.length) {
+                    if (field === 'label' && String(newData[targetIndex][field] ?? '').trim() === '전체') {
+                        return;
+                    }
                     newData[targetIndex] = {
                         ...newData[targetIndex],
                         [field]: lineVal
@@ -516,6 +533,8 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
     }
 
     const isSelected = selectedCells.some(c => c.r >= dataIndex && c.r < dataIndex + rowSpan && c.c === field);
+    const isAllLabel = field === 'label' && String(dataItem[field] ?? '').trim() === '전체';
+    const isRowAll = String(dataItem.label ?? '').trim() === '전체';
 
     return (
         <td
@@ -523,11 +542,13 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
             style={{
                 padding: '1px 4px',
                 verticalAlign: 'middle',
-                background: isSelected ? '#e0f2fe' : '#fff', // Selected state background
+                background: isSelected ? '#e0f2fe' : (isAllLabel ? '#f8fafc' : '#fff'),
+                color: '#1e293b',
                 textAlign: align,
-                borderBottom: rowSpan > 1 ? '1px solid #e2e8f0' : undefined,
+                borderBottom: '1px solid #e2e8f0',
                 position: 'relative',
-                userSelect: 'none' // 텍스트 드래그 선택 방지
+                userSelect: 'none',
+                cursor: isRowAll ? 'not-allowed' : 'default'
             }}
             onMouseDown={(e) => {
                 if (isEditing) return;
@@ -540,6 +561,7 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
 
                     if (now - lastClick < 500) { // 500ms로 시간 연장
                         // Double click detected manually!
+                        if (isRowAll) return;
                         setIsEditing(true);
                         lastClickTracker.delete(cellKey);
                     } else {
@@ -596,9 +618,9 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
             <div style={{ display: 'flex', alignItems: 'center', height: '100%', minHeight: '26px' }}>
                 {level > 0 && (
                     <div
-                        draggable
+                        draggable={!isRowAll}
                         onMouseDown={(e) => e.stopPropagation()}
-                        onDragStart={(e) => {
+                        onDragStart={!isRowAll ? (e) => {
                             e.stopPropagation();
                             e.dataTransfer.effectAllowed = "move";
                             e.dataTransfer.setData("text/plain", String(level));
@@ -609,18 +631,18 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
                                 parentLabel3: dataItem.label3,
                                 parentLabel2: dataItem.label2
                             };
-                        }}
-                        onDragEnd={() => {
+                        } : undefined}
+                        onDragEnd={!isRowAll ? () => {
                             currentDragState = null;
-                        }}
-                        style={{ cursor: 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', color: '#94a3b8' }}
-                        title="드래그하여 순서 변경"
+                        } : undefined}
+                        style={{ cursor: isRowAll ? 'default' : 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', color: '#94a3b8' }}
+                        title={isRowAll ? undefined : "드래그하여 순서 변경"}
                     >
-                        <GripVertical size={14} />
+                        {!isRowAll && <GripVertical size={14} />}
                     </div>
                 )}
-                <div style={{ flex: 1, minWidth: 0, paddingLeft: level ? '2px' : '0', cursor: disableMerge ? 'text' : 'pointer', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }} onDoubleClick={() => setIsEditing(true)}>
-                    {localVal || (placeholder ? <span style={{ fontSize: '11px', opacity: 0.7 }}>{placeholder}</span> : (field === 'logic' ? '' : '-'))}
+                <div style={{ flex: 1, minWidth: 0, paddingLeft: level ? '2px' : '0', cursor: isRowAll ? 'not-allowed' : (disableMerge ? 'text' : 'pointer'), whiteSpace: 'pre-wrap', wordBreak: 'break-word' }} onDoubleClick={() => { if (!isRowAll) setIsEditing(true); }}>
+                    {isRowAll && field === 'logic' ? '-' : (localVal || (placeholder ? <span style={{ fontSize: '11px', opacity: 0.7 }}>{placeholder}</span> : (field === 'logic' ? '' : '-')))}
                 </div>
             </div>
         </td>
@@ -1456,9 +1478,18 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     const updateBannerInfo = useCallback((newInfo) => {
+        const currentInfo = banners.find(b => b.id === selectedBanner)?.info || [];
+        if (newInfo.length < currentInfo.length) {
+            const deletedItems = currentInfo.filter(item => !newInfo.includes(item));
+            const hasAllLabelDeleted = deletedItems.some(item => String(item.label ?? '').trim() === '전체');
+            if (hasAllLabelDeleted) {
+                modal.showAlert('알림', '소분류 레이블이 "전체"인 행은 삭제할 수 없습니다.');
+                return;
+            }
+        }
         setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: newInfo, isDirty: true } : b));
         if (onUnsavedChange) onUnsavedChange(true);
-    }, [selectedBanner, onUnsavedChange]);
+    }, [selectedBanner, banners, onUnsavedChange, modal]);
 
     const handleMergedUpdate = useCallback((dataIndex, rowSpan, field, value, data) => {
         const newData = [...data];
@@ -2330,6 +2361,8 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     onDataChange={updateBannerInfo}
                                     onRowClick={handleRowClick}
                                     newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}
+                                    isDeletableRow={(item) => String(item.label ?? '').trim() !== '전체'}
+                                    isReorderableRow={(item) => String(item.label ?? '').trim() !== '전체'}
                                 >
                                     <Column field="label3" title="대분류" width="150px" cell={(p) => <MergedTextEditCell {...p} data={banners.find(b => b.id === selectedBanner)?.info || []} onUpdate={handleMergedUpdate} level={3} handleDrop={handleReorderBlock} selectedCells={selectedCells} onCellMouseDown={handleCellMouseDown} onCellMouseEnter={handleCellMouseEnter} onContextMenu={handleContextMenu} />} />
                                     <Column field="label2" title="중분류" width="150px" cell={(p) => <MergedTextEditCell {...p} data={banners.find(b => b.id === selectedBanner)?.info || []} dependencies={['label3']} onUpdate={handleMergedUpdate} level={2} handleDrop={handleReorderBlock} selectedCells={selectedCells} onCellMouseDown={handleCellMouseDown} onCellMouseEnter={handleCellMouseEnter} onContextMenu={handleContextMenu} />} />
@@ -2398,12 +2431,18 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                         onClose={() => setIsBulkEditModalOpen(false)}
                         onApply={(lines) => {
                             const currentInfo = banners.find(b => b.id === selectedBanner)?.info || [];
-                            const updatedInfo = currentInfo.map((item, idx) => {
-                                if (lines[idx] !== undefined) {
-                                    return {
+                            let lineIdx = 0;
+                            const updatedInfo = currentInfo.map((item) => {
+                                if (String(item.label ?? '').trim() === '전체') {
+                                    return item;
+                                }
+                                if (lines[lineIdx] !== undefined) {
+                                    const updated = {
                                         ...item,
-                                        label: lines[idx]
+                                        label: lines[lineIdx]
                                     };
+                                    lineIdx++;
+                                    return updated;
                                 }
                                 return item;
                             });

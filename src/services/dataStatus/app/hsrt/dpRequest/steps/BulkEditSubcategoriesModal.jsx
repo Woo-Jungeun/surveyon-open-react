@@ -7,6 +7,7 @@ const BulkEditSubcategoriesModal = ({ show, currentInfo, onClose, onApply }) => 
     useEffect(() => {
         if (show && currentInfo && textareaRef.current) {
             const initialText = currentInfo
+                .filter(item => String(item.label ?? '').trim() !== '전체')
                 .map(item => String(item.label ?? '').trim())
                 .join('\n');
             textareaRef.current.value = initialText;
