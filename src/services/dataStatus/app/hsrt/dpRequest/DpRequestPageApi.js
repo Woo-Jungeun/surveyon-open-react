@@ -267,6 +267,15 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/AiSummary", "API_BASE_URL_OPENAI")
     );
 
+    /** AI 조건식 자동생성 API */
+    const autoGenerateLogic = useMutation(
+        async (data) => await api.post(data, "/variables/ai/auto-generate-logic", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     /** DP 의뢰서 - 설정 재적용 (source_based 부모 스터브만 가능) */
     const reapplyPreset = useMutation(
         async (data) => await api.post(data, "/dp-request/recoded/overview/reapply-preset", "API_BASE_URL_DATASTATUS"),
@@ -321,6 +330,7 @@ export function DpRequestPageApi() {
         getWeightPidList,
         getNextWeightId,
         deleteWeight,
-        saveWeightSetPid
+        saveWeightSetPid,
+        autoGenerateLogic
     };
 }

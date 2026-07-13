@@ -9,7 +9,7 @@ import useUpdateHistory from '@/hooks/useUpdateHistory';
 import DataHeader from "@/services/dataStatus/components/DataHeader";
 import CartesianGeneratorModal from "./CartesianGeneratorModal";
 import BulkEditConditionsModal from "./BulkEditConditionsModal";
-// import AiConditionGeneratorModal from "./AiConditionGeneratorModal";
+import AiConditionGeneratorModal from "./AiConditionGeneratorModal";
 import { Button } from "@/components/ui/button";
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import Toast from "@/components/common/Toast";
@@ -505,7 +505,7 @@ const getUniqueNextId = (baseId, existingBanners) => {
 
 const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getBaseVariableList, getComputedVariableList, getNextBaseVariableId, saveBaseVariableMerge, recomputeComputedVariables, deleteBaseVariable } = DpRequestPageApi();
+    const { getBaseVariableList, getComputedVariableList, getNextBaseVariableId, saveBaseVariableMerge, recomputeComputedVariables, deleteBaseVariable, autoGenerateLogic } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
     const history = useUpdateHistory('dp-banner');
@@ -514,7 +514,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     useImperativeHandle(ref, () => ({ save: async () => await handleSaveBanner() }));
 
     const [isCartesianModalOpen, setIsCartesianModalOpen] = useState(false);
-    // const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+    const [isAiModalOpen, setIsAiModalOpen] = useState(false);
     const [banners, setBanners] = useState([]);
     const [selectedBanner, setSelectedBanner] = useState('');
     const [baseVariables, setBaseVariables] = useState([]);
@@ -1123,7 +1123,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
             <DataHeader title="문항추가" onSave={handleSaveBanner}>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <Button
-                        onClick={() => modal.showAlert('알림', '서비스 개발중입니다.')}
+                        onClick={() => setIsAiModalOpen(true)}
                         className="dp-btn"
                         style={{
                             color: '#2563eb',
@@ -1341,14 +1341,13 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 variables={baseVariables}
                 onApply={handleApplyGeneratedRules}
             />
-            {/*
             <AiConditionGeneratorModal
                 show={isAiModalOpen}
                 onClose={() => setIsAiModalOpen(false)}
-                variables={baseVariables}
                 onApply={handleApplyGeneratedRules}
+                autoGenerateLogic={autoGenerateLogic}
+                user={auth?.user?.userId}
             />
-            */}
             <BulkEditConditionsModal
                 show={isBulkEditModalOpen}
                 currentInfo={currentInfo}

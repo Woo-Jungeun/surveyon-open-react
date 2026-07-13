@@ -1,367 +1,303 @@
-import { useState, useMemo, useEffect } from 'react';
-import { X, Sparkles, Check, HelpCircle, Search } from 'lucide-react';
+import { useState, useEffect, useContext } from 'react';
+import { X, Trash2, Plus } from 'lucide-react';
+import { DropDownList } from '@progress/kendo-react-dropdowns';
+import { modalContext } from "@/components/common/Modal.jsx";
+import '@/components/common/popup/ConditionBuilderPopup.css';
 
-const AiConditionGeneratorModal = ({ show, onClose, variables = [], onApply }) => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedVars, setSelectedVars] = useState([]);
+const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, user }) => {
+    const modal = useContext(modalContext);
     const [promptText, setPromptText] = useState('');
+    const [modelKey, setModelKey] = useState('llm-gpt-oss-120b');
     const [generatedRules, setGeneratedRules] = useState([]);
     const [isGenerating, setIsGenerating] = useState(false);
-    const [errorMsg, setErrorMsg] = useState('');
 
     useEffect(() => {
         if (!show) {
-            setSearchTerm('');
-            setSelectedVars([]);
             setPromptText('');
+            setModelKey('llm-gpt-oss-120b');
             setGeneratedRules([]);
             setIsGenerating(false);
-            setErrorMsg('');
         }
     }, [show]);
 
-    const filteredVars = useMemo(() => {
-        return variables.filter(v =>
-            (v.id && v.id.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (v.label && v.label.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-    }, [variables, searchTerm]);
-
-    const handleToggleVar = (varId) => {
-        setSelectedVars(prev =>
-            prev.includes(varId) ? prev.filter(x => x !== varId) : [...prev, varId]
-        );
-    };
-
-    // 자연어 프롬프트를 해석하여 규칙들을 자동생성하는 스마트 파서
-    const handleGenerate = () => {
+    // AI 조건식 생성 API 호출
+    const handleExecute = async () => {
         if (!promptText.trim()) {
-            setErrorMsg('프롬프트를 입력해 주세요.');
+            modal.showAlert('알림', '조건식 설명을 입력해 주세요.');
             return;
         }
-        setErrorMsg('');
         setIsGenerating(true);
 
-        setTimeout(() => {
-            try {
-                // 프롬프트 및 선택된 변수 추출
-                const prompt = promptText.trim();
-                const vList = selectedVars.length > 0 ? selectedVars : (variables.map(v => v.id).filter(id => prompt.toLowerCase().includes(id.toLowerCase())) || []);
+        try {
+            const pageId = sessionStorage.getItem('pageId');
+            const res = await autoGenerateLogic.mutateAsync({
+                pageId: pageId || '',
+                userInput: promptText.trim(),
+                modelKey: modelKey,
+                user: user || ''
+            });
 
-                if (vList.length === 0) {
-                    // 프롬프트에서 변수명 매칭 시도 (예: q1, q250 등)
-                    const matches = prompt.match(/[qQ][0-9]+(_[a-zA-Z0-9]+)*/g);
-                    if (matches && matches.length > 0) {
-                        // 중복 제거
-                        const uniqueMatches = Array.from(new Set(matches.map(m => m.toLowerCase())));
-                        variables.forEach(v => {
-                            if (uniqueMatches.includes(v.id.toLowerCase())) {
-                                vList.push(v.id);
-                            }
-                        });
-                    }
-                }
-
-                if (vList.length === 0) {
-                    setErrorMsg('대상 변수를 찾지 못했습니다. 왼쪽에서 변수를 선택하거나 프롬프트에 정확한 변수명(예: q1)을 포함해 주세요.');
-                    setIsGenerating(false);
-                    return;
-                }
-
-                let rules = [];
-                
-                // 간단한 스마트 매핑 로직
-                const firstVarId = vList[0];
-                const variableObj = variables.find(x => x.id === firstVarId);
-                const varInfo = variableObj?.info || [];
-
-                // 프롬프트 내 숫자 추출
-                const numberMatches = prompt.match(/\b\d+\b/g);
-                const numbers = numberMatches ? Array.from(new Set(numberMatches.map(Number))) : [];
-
-                // 교차 생성 패턴이 포함되어 있는지 감지 (예: 교차, 곱하기, * , and)
-                const isCrossPattern = prompt.includes('교차') || prompt.includes('조합') || prompt.includes('*') || prompt.includes('and') || vList.length > 1;
-
-                if (isCrossPattern && vList.length >= 2) {
-                    // 데카르트 곱 조합 생성
-                    const varInfos = vList.map(vid => {
-                        const v = variables.find(x => x.id === vid) || { info: [] };
-                        if (!v.info || v.info.length === 0) {
-                            return [{ value: "ANY", label: `Any ${vid}` }];
-                        }
-                        return v.info.filter(item => item.value !== null && item.value !== "");
-                    });
-
-                    const cartesian = varInfos.reduce((acc, current) => {
-                        return acc.flatMap(combo => current.map(item => [...combo, item]));
-                    }, [[]]);
-
-                    let counter = 1;
-                    rules = cartesian.map(comboItems => {
-                        const labels = comboItems.map(item => item.label || String(item.value));
-                        const logics = comboItems.map((item, idx) => {
-                            const varId = vList[idx];
-                            let val = item.value;
-                            if (val !== 'ANY' && isNaN(Number(val))) {
-                                val = `'${val}'`;
-                            }
-                            return `${varId} == ${val}`;
-                        });
-
-                        return {
-                            label2: String(counter++),
-                            label: labels.join(" * "),
-                            logic: logics.join(" and ")
-                        };
-                    });
-                } else {
-                    // 단일 변수의 보기별 조건 생성
-                    if (varInfo.length > 0) {
-                        let targetItems = varInfo;
-                        // 특정 번호가 프롬프트에 명시된 경우 필터링
-                        if (numbers.length > 0) {
-                            targetItems = varInfo.filter(item => numbers.includes(Number(item.value)));
-                        }
-                        
-                        // 타겟 아이템이 없으면 프롬프트 내 숫자들로 임시 생성
-                        if (targetItems.length === 0 && numbers.length > 0) {
-                            targetItems = numbers.map(num => ({ value: String(num), label: `${firstVarId} 보기 ${num}` }));
-                        }
-
-                        let counter = 1;
-                        rules = targetItems.map(item => {
-                            let val = item.value;
-                            if (val !== 'ANY' && isNaN(Number(val))) {
-                                val = `'${val}'`;
-                            }
-                            return {
-                                label2: String(counter++),
-                                label: item.label || `${firstVarId} 보기 ${val}`,
-                                logic: `${firstVarId} == ${val}`
-                            };
-                        });
-                    } else {
-                        // 기본 정보가 없는 경우 숫자를 기반으로 임시 뼈대 생성
-                        const vals = numbers.length > 0 ? numbers : [1, 2, 3];
-                        let counter = 1;
-                        rules = vals.map(val => {
-                            return {
-                                label2: String(counter++),
-                                label: `${firstVarId} 보기 ${val}`,
-                                logic: `${firstVarId} == ${val}`
-                            };
-                        });
-                    }
-                }
-
-                if (rules.length === 0) {
-                    setErrorMsg('조건식을 생성할 수 없습니다. 프롬프트를 다른 단어로 변경해 보세요.');
-                } else {
-                    setGeneratedRules(rules);
-                }
-            } catch (err) {
-                console.error(err);
-                setErrorMsg('조건 생성 중 예측하지 못한 오류가 발생했습니다.');
-            } finally {
-                setIsGenerating(false);
+            const rules = res?.resultjson?.rules || res?.rules;
+            if (res?.success === '777' && Array.isArray(rules)) {
+                setGeneratedRules(rules);
+            } else {
+                modal.showAlert('오류', res?.message || '조건식 생성에 실패했습니다.');
             }
-        }, 1200);
+        } catch (err) {
+            console.error(err);
+            modal.showAlert('오류', '서버와 통신 중 오류가 발생했습니다.');
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
+    // 행 추가
+    const handleAddRow = () => {
+        const nextVal = String(generatedRules.length + 1);
+        setGeneratedRules(prev => [
+            ...prev,
+            { value: nextVal, label: '', logic: '' }
+        ]);
+    };
+
+    // 행 삭제
+    const handleDeleteRow = (index) => {
+        setGeneratedRules(prev => prev.filter((_, idx) => idx !== index));
+    };
+
+    // 값 업데이트
+    const handleUpdateRule = (index, field, value) => {
+        setGeneratedRules(prev => prev.map((item, idx) =>
+            idx === index ? { ...item, [field]: value } : item
+        ));
+    };
+
+    // 문항 등록 적용
     const handleApplyRules = () => {
         if (generatedRules.length === 0) return;
-        onApply(generatedRules);
+        // 문항 추가 탭이 요구하는 규칙 포맷 매핑
+        const formatted = generatedRules.map(r => ({
+            label2: r.value,
+            label: r.label,
+            logic: r.logic
+        }));
+        onApply(formatted);
         onClose();
     };
 
     if (!show) return null;
 
     return (
-        <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.6)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', zIndex: 100000
-        }}>
-            <div style={{
-                width: '1000px', height: '640px', background: '#ffffff',
-                borderRadius: '12px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
-                display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid #e2e8f0'
-            }} onClick={(e) => e.stopPropagation()}>
-                {/* Header */}
-                <div style={{
-                    padding: '16px 24px', borderBottom: '1px solid #f1f5f9',
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Sparkles size={18} style={{ color: '#2563eb' }} />
-                        <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>AI 조건식 자동생성</h3>
+        <div className="advanced-filter-overlay-cbp theme-blue" onClick={onClose}>
+            <div className="advanced-filter-content-cbp" onClick={(e) => e.stopPropagation()} style={{ width: '840px', height: '680px', display: 'flex', flexDirection: 'column' }}>
+
+                {/* 헤더 영역 (변수조합기 팝업과 일치) */}
+                <div className="filter-popup-header-cbp">
+                    <div className="header-title-cbp">
+                        <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            AI 조건식 자동 생성
+                        </h3>
+                        <p>
+                            자연어로 조건 설명을 입력하면 내부 로컬 LLM이 페이지의 문항 및 보기 라벨들을 분석하여 매핑 조건식 행을 자동으로 생성해 줍니다.
+                        </p>
                     </div>
-                    <button onClick={onClose} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#94a3b8' }}>
-                        <X size={18} />
-                    </button>
+                    <div className="header-actions-cbp">
+                        <button onClick={onClose} className="close-btn-cbp"><X size={20} /></button>
+                    </div>
                 </div>
+                <div className="filter-popup-container-cbp" style={{ display: 'flex', flexDirection: 'column', padding: '16px', gap: '16px', background: '#f0f7ff', boxSizing: 'border-box', flex: 1, minHeight: 0 }}>
 
-                {/* Body Content */}
-                <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
-                    {/* Left Panel: Variables list */}
-                    <div style={{ width: '280px', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', background: '#f8fafc' }}>
-                        <div style={{ padding: '12px' }}>
-                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                                <input
-                                    type="text"
-                                    placeholder="변수명/라벨 검색"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    style={{
-                                        width: '100%', height: '32px', padding: '0 12px 0 32px',
-                                        border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '12px', outline: 'none'
-                                    }}
-                                />
-                                <Search size={14} style={{ position: 'absolute', left: '10px', color: '#94a3b8' }} />
-                            </div>
+                    {/* 상단 컨트롤 패널 */}
+                    <div style={{
+                        border: '1px solid #cbd5e1', borderRadius: '6px', padding: '16px 20px',
+                        background: '#ffffff', display: 'flex', gap: '16px', flexShrink: 0
+                    }}>
+                        {/* 조건식 설명 입력 */}
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#1e293b' }}>조건식 설명 입력</label>
+                            <textarea
+                                value={promptText}
+                                onChange={(e) => setPromptText(e.target.value)}
+                                placeholder="G3=1,2는 소가족이고 G3 그 외 보기는 대가족으로 구분해줘."
+                                className="ai-prompt-textarea"
+                                style={{
+                                    width: '100%', height: '84px', padding: '12px', border: '1px solid #3b82f6',
+                                    borderRadius: '4px', fontSize: '13px', fontFamily: 'inherit', outline: 'none', resize: 'none',
+                                    lineHeight: '1.5', color: '#1e293b', boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.08)'
+                                }}
+                            />
                         </div>
-                        <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 12px 12px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                {filteredVars.map(v => {
-                                    const isSelected = selectedVars.includes(v.id);
-                                    return (
-                                        <div
-                                            key={v.id}
-                                            onClick={() => handleToggleVar(v.id)}
-                                            style={{
-                                                padding: '8px 10px', borderRadius: '6px', cursor: 'pointer',
-                                                border: isSelected ? '1.5px solid #2563eb' : '1px solid #cbd5e1',
-                                                background: isSelected ? '#eff6ff' : '#ffffff', transition: 'all 0.1s'
-                                            }}
-                                        >
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontSize: '12px', fontWeight: 700, color: isSelected ? '#1d4ed8' : '#334155' }}>{v.id}</span>
-                                                {isSelected && <Check size={12} style={{ color: '#2563eb' }} />}
-                                            </div>
-                                            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                                {v.label || '(라벨 없음)'}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+
+                        {/* 모델 및 실행 버튼 */}
+                        <div style={{ width: '240px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#1e293b' }}>분석 LLM모델</label>
+                            <DropDownList
+                                data={[
+                                    { text: "GTP-OSS-120B (내부로컬)", value: "llm-gpt-oss-120b" },
+                                    { text: "GEMMA-4-31B-IT (내부로컬)", value: "llm-gemma-4-31b-it" }
+                                ]}
+                                textField="text"
+                                dataItemKey="value"
+                                value={
+                                    modelKey === 'llm-gpt-oss-120b'
+                                        ? { text: "GTP-OSS-120B (내부로컬)", value: "llm-gpt-oss-120b" }
+                                        : { text: "GEMMA-4-31B-IT (내부로컬)", value: "llm-gemma-4-31b-it" }
+                                }
+                                onChange={(e) => setModelKey(e.value.value)}
+                                style={{
+                                    width: '100%', height: '36px', fontSize: '13px', borderRadius: '4px'
+                                }}
+                            />
+
+                            <button
+                                onClick={handleExecute}
+                                disabled={isGenerating}
+                                style={{
+                                    width: '100%', height: '36px', border: 'none', borderRadius: '4px',
+                                    background: '#2563eb', color: '#ffffff', fontSize: '13px', fontWeight: 600,
+                                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    gap: '6px', transition: 'background 0.15s', marginTop: '12px'
+                                }}
+                                onMouseOver={(e) => { if (!isGenerating) e.currentTarget.style.background = '#1d4ed8'; }}
+                                onMouseOut={(e) => { if (!isGenerating) e.currentTarget.style.background = '#2563eb'; }}
+                            >
+                                {isGenerating ? (
+                                    <>
+                                        <div className="animate-spin" style={{ width: '12px', height: '12px', border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%' }} />
+                                        <span>분석 중...</span>
+                                    </>
+                                ) : (
+                                    <span>▶ 실행</span>
+                                )}
+                            </button>
                         </div>
                     </div>
 
-                    {/* Right Panel: Prompt and Preview */}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px', gap: '16px', minWidth: 0 }}>
-                        {/* Prompt Input */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                AI 조건식 생성 지시어
-                                <HelpCircle size={14} style={{ color: '#94a3b8' }} title="왼쪽에서 변수를 클릭해 선택한 뒤, 아래에 원하는 조건의 규칙을 자연어로 작성해 주세요." />
-                            </label>
-                            <div style={{ position: 'relative' }}>
-                                <textarea
-                                    value={promptText}
-                                    onChange={(e) => setPromptText(e.target.value)}
-                                    placeholder="예시:&#10;- q1의 모든 보기에 대해 단일 조건 생성해줘&#10;- q1의 1~3번과 q2의 1~5번 보기를 서로 교차조합하여 조건식을 만들어줘"
-                                    style={{
-                                        width: '100%', height: '80px', padding: '12px', border: '1px solid #cbd5e1',
-                                        borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit', outline: 'none', resize: 'none'
-                                    }}
-                                />
-                                <button
-                                    onClick={handleGenerate}
-                                    disabled={isGenerating}
-                                    style={{
-                                        position: 'absolute', bottom: '12px', right: '12px',
-                                        height: '28px', padding: '0 12px', border: 'none', borderRadius: '6px',
-                                        background: '#2563eb', color: '#ffffff', fontSize: '12px', fontWeight: 600,
-                                        display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', opacity: isGenerating ? 0.7 : 1
-                                    }}
-                                >
-                                    <Sparkles size={12} />
-                                    {isGenerating ? '분석 중...' : '조건 생성'}
-                                </button>
-                            </div>
-                            {errorMsg && <div style={{ fontSize: '12px', color: '#ef4444' }}>{errorMsg}</div>}
+
+                    {/* 하단 결과 패널 */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', padding: '12px', boxSizing: 'border-box' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>분석 및 생성 결과 규칙</span>
+                            <button
+                                onClick={handleAddRow}
+                                style={{
+                                    height: '28px', padding: '0 12px', border: '1px solid #3b82f6', borderRadius: '4px',
+                                    background: '#eff6ff', color: '#1d4ed8', fontSize: '12px', fontWeight: 600,
+                                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s'
+                                }}
+                                onMouseOver={(e) => { e.currentTarget.style.background = '#dbeafe'; }}
+                                onMouseOut={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
+                            >
+                                <Plus size={12} /> 행 추가
+                            </button>
                         </div>
 
-                        {/* Generated Rules Preview */}
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>
-                                생성된 조건식 미리보기 ({generatedRules.length})
-                            </div>
+                        {/* 결과 목록 리스트 */}
+                        <div style={{
+                            flex: 1, border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden',
+                            display: 'flex', flexDirection: 'column', background: '#f8fafc', minHeight: 0
+                        }}>
+                            {/* 컬럼 헤더 */}
                             <div style={{
-                                flex: 1, border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden',
-                                display: 'flex', flexDirection: 'column', background: '#f8fafc', minHeight: 0
+                                display: 'flex', background: '#f1f5f9', borderBottom: '1px solid #cbd5e1',
+                                padding: '8px 16px', fontSize: '12px', fontWeight: 700, color: '#475569', gap: '12px',
+                                alignItems: 'center'
                             }}>
-                                {/* Grid Header */}
-                                <div style={{
-                                    display: 'flex', background: '#f1f5f9', borderBottom: '1px solid #cbd5e1',
-                                    padding: '8px 12px', fontSize: '12px', fontWeight: 700, color: '#475569'
-                                }}>
-                                    <div style={{ width: '80px' }}>할당될 값</div>
-                                    <div style={{ width: '200px' }}>보기 라벨</div>
-                                    <div style={{ flex: 1 }}>조건</div>
-                                </div>
-                                {/* Grid Rows */}
-                                <div style={{ flex: 1, overflowY: 'auto' }}>
-                                    {isGenerating ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '8px' }}>
-                                            <div className="animate-spin" style={{ width: '24px', height: '24px', border: '3px solid #cbd5e1', borderTopColor: '#2563eb', borderRadius: '50%' }} />
-                                            <span style={{ fontSize: '12px', color: '#64748b' }}>AI가 조건문을 파싱하고 설계하는 중입니다...</span>
-                                        </div>
-                                    ) : generatedRules.length === 0 ? (
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', fontSize: '12px' }}>
-                                            생성 지시어를 입력한 뒤 &apos;조건 생성&apos; 버튼을 클릭해 주세요.
-                                        </div>
-                                    ) : (
-                                        generatedRules.map((rule, idx) => (
+                                <div style={{ width: '110px', textAlign: 'center' }}>할당될 값</div>
+                                <div style={{ width: '220px', paddingLeft: '12px', boxSizing: 'border-box' }}>보기 라벨</div>
+                                <div style={{ flex: 1, paddingLeft: '12px', boxSizing: 'border-box' }}>조건</div>
+                                <div style={{ width: '40px', textAlign: 'center' }}>삭제</div>
+                            </div>
+
+                            {/* 데이터 행들 */}
+                            <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
+                                {generatedRules.length === 0 ? (
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', fontSize: '12px' }}>
+                                        조건식 설명을 작성하고 &apos;실행&apos; 버튼을 누르면 AI 분석 결과가 이곳에 생성됩니다.
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        {generatedRules.map((rule, idx) => (
                                             <div
                                                 key={idx}
                                                 style={{
-                                                    display: 'flex', padding: '8px 12px', borderBottom: '1px solid #e2e8f0',
-                                                    fontSize: '12px', color: '#334155', background: '#ffffff'
+                                                    display: 'flex', alignItems: 'center', background: '#ffffff',
+                                                    border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 16px',
+                                                    gap: '12px'
                                                 }}
                                             >
-                                                <div style={{ width: '80px', fontWeight: 600 }}>{rule.label2}</div>
-                                                <div style={{ width: '200px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', paddingRight: '12px' }}>{rule.label}</div>
-                                                <div style={{ flex: 1, fontFamily: 'monospace', color: '#0978eb' }}>{rule.logic}</div>
+                                                {/* 할당값 입력 */}
+                                                <input
+                                                    type="text"
+                                                    value={rule.value || ''}
+                                                    onChange={(e) => handleUpdateRule(idx, 'value', e.target.value)}
+                                                    style={{
+                                                        width: '110px', height: '32px', border: '1px solid #cbd5e1', background: '#ffffff',
+                                                        borderRadius: '4px', fontSize: '13px', outline: 'none', textAlign: 'center',
+                                                        fontWeight: '600', color: '#1e293b'
+                                                    }}
+                                                />
+                                                {/* 라벨 입력 */}
+                                                <input
+                                                    type="text"
+                                                    value={rule.label || ''}
+                                                    onChange={(e) => handleUpdateRule(idx, 'label', e.target.value)}
+                                                    style={{
+                                                        width: '220px', height: '32px', border: '1px solid #cbd5e1', background: '#ffffff',
+                                                        borderRadius: '4px', fontSize: '13px', outline: 'none', padding: '0 12px',
+                                                        color: '#1e293b'
+                                                    }}
+                                                />
+                                                {/* 조건식 입력 */}
+                                                <input
+                                                    type="text"
+                                                    value={rule.logic || ''}
+                                                    onChange={(e) => handleUpdateRule(idx, 'logic', e.target.value)}
+                                                    style={{
+                                                        flex: 1, height: '32px', border: '1px solid #cbd5e1', background: '#ffffff',
+                                                        borderRadius: '4px', fontSize: '13px', outline: 'none', padding: '0 12px',
+                                                        fontFamily: 'Consolas, Monaco, monospace', color: '#0978eb'
+                                                    }}
+                                                />
+                                                {/* 삭제 버튼 */}
+                                                <button
+                                                    onClick={() => handleDeleteRow(idx)}
+                                                    style={{
+                                                        width: '40px', border: 'none', background: 'transparent',
+                                                        cursor: 'pointer', color: '#94a3b8', display: 'flex',
+                                                        alignItems: 'center', justifyContent: 'center', transition: 'color 0.15s'
+                                                    }}
+                                                    onMouseOver={(e) => { e.currentTarget.style.color = '#ef4444'; }}
+                                                    onMouseOut={(e) => { e.currentTarget.style.color = '#94a3b8'; }}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
                                             </div>
-                                        ))
-                                    )}
-                                </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Footer */}
-                <div style={{
-                    padding: '12px 24px', borderTop: '1px solid #f1f5f9', background: '#f8fafc',
-                    display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px'
-                }}>
-                    <button
-                        onClick={onClose}
-                        style={{
-                            height: '32px', padding: '0 16px', border: '1px solid #cbd5e1',
-                            borderRadius: '6px', color: '#475569', background: '#ffffff',
-                            fontSize: '13px', fontWeight: 600, cursor: 'pointer'
-                        }}
-                    >
-                        취소
-                    </button>
-                    <button
-                        onClick={handleApplyRules}
-                        disabled={generatedRules.length === 0}
-                        style={{
-                            height: '32px', padding: '0 16px', border: 'none', borderRadius: '6px',
-                            background: '#2563eb', color: '#ffffff', fontSize: '13px', fontWeight: 600,
-                            cursor: generatedRules.length === 0 ? 'not-allowed' : 'pointer', opacity: generatedRules.length === 0 ? 0.6 : 1
-                        }}
-                    >
-                        문항에 적용
-                    </button>
+                {/* 푸터 영역 (변수조합기 팝업과 일치) */}
+                <div className="filter-popup-footer-cbp">
+                    <div className="footer-right-cbp">
+                        <button className="btn-cancel-cbp" onClick={onClose}>취소</button>
+                        <button
+                            className="btn-apply-cbp"
+                            onClick={handleApplyRules}
+                            disabled={generatedRules.length === 0}
+                            style={{ opacity: generatedRules.length === 0 ? 0.5 : 1 }}
+                        >
+                            등록
+                        </button>
+                    </div>
                 </div>
             </div>
-            {/* Simple CSS animation style inside react render */}
+
+            {/* Spin CSS style inside react render */}
             <style>{`
                 @keyframes spin {
                     0% { transform: rotate(0deg); }
@@ -369,6 +305,10 @@ const AiConditionGeneratorModal = ({ show, onClose, variables = [], onApply }) =
                 }
                 .animate-spin {
                     animation: spin 1s linear infinite;
+                }
+                .ai-prompt-textarea::placeholder {
+                    color: #94a3b8 !important;
+                    opacity: 0.65 !important;
                 }
             `}</style>
         </div>
