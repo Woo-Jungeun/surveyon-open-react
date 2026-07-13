@@ -505,7 +505,7 @@ const getUniqueNextId = (baseId, existingBanners) => {
 
 const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getBaseVariableList, getComputedVariableList, getNextBaseVariableId, saveBaseVariableMerge, recomputeComputedVariables, deleteBaseVariable, autoGenerateLogic } = DpRequestPageApi();
+    const { getBaseVariableList, getComputedVariableList, getNextBaseVariableId, saveBaseVariableMerge, recomputeComputedVariables, deleteBaseVariable, autoGenerateLogic, getAiModels } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
     const history = useUpdateHistory('dp-banner');
@@ -1346,6 +1346,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 onClose={() => setIsAiModalOpen(false)}
                 onApply={handleApplyGeneratedRules}
                 autoGenerateLogic={autoGenerateLogic}
+                getAiModels={getAiModels}
                 user={auth?.user?.userId}
             />
             <BulkEditConditionsModal

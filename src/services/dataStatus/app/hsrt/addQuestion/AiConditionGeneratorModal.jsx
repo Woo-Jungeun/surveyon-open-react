@@ -4,20 +4,41 @@ import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { modalContext } from "@/components/common/Modal.jsx";
 import '@/components/common/popup/ConditionBuilderPopup.css';
 
-const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, user }) => {
+const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, getAiModels, user }) => {
     const modal = useContext(modalContext);
     const [promptText, setPromptText] = useState('');
     const [modelKey, setModelKey] = useState('llm-gpt-oss-120b');
+    const [models, setModels] = useState([
+        { text: "GTP-OSS-120B (내부로컬)", value: "llm-gpt-oss-120b" },
+        { text: "GEMMA-4-31B-IT (내부로컬)", value: "llm-gemma-4-31b-it" }
+    ]);
     const [generatedRules, setGeneratedRules] = useState([]);
     const [isGenerating, setIsGenerating] = useState(false);
 
     useEffect(() => {
-        if (!show) {
+        if (show) {
+            const fetchModels = async () => {
+                try {
+                    const res = await getAiModels.mutateAsync({ user: user || '' });
+                    if (res?.success === '777' && Array.isArray(res?.resultjson)) {
+                        const mapped = res.resultjson.map(m => ({ text: m.label, value: m.value }));
+                        setModels(mapped);
+                        if (mapped.length > 0) {
+                            setModelKey(mapped[0].value);
+                        }
+                    }
+                } catch (e) {
+                    console.error("AI 모델 조회 오류:", e);
+                }
+            };
+            fetchModels();
+        } else {
             setPromptText('');
             setModelKey('llm-gpt-oss-120b');
             setGeneratedRules([]);
             setIsGenerating(false);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [show]);
 
     // AI 조건식 생성 API 호출
@@ -132,16 +153,11 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
                         <div style={{ width: '240px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                             <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#1e293b' }}>분석 LLM모델</label>
                             <DropDownList
-                                data={[
-                                    { text: "GTP-OSS-120B (내부로컬)", value: "llm-gpt-oss-120b" },
-                                    { text: "GEMMA-4-31B-IT (내부로컬)", value: "llm-gemma-4-31b-it" }
-                                ]}
+                                data={models}
                                 textField="text"
                                 dataItemKey="value"
                                 value={
-                                    modelKey === 'llm-gpt-oss-120b'
-                                        ? { text: "GTP-OSS-120B (내부로컬)", value: "llm-gpt-oss-120b" }
-                                        : { text: "GEMMA-4-31B-IT (내부로컬)", value: "llm-gemma-4-31b-it" }
+                                    models.find(m => m.value === modelKey) || models[0] || null
                                 }
                                 onChange={(e) => setModelKey(e.value.value)}
                                 style={{
