@@ -28,7 +28,8 @@ const getMenuItems = () => {
       label: "",
       items: [
         { label: "설문지 인식", path: "/data_management/qa", icon: BrainCircuit },
-        { label: "설문&스크립트 교차검증", path: "/data_management/survey_test", icon: ClipboardCheck }
+        { label: "설문&스크립트 교차검증", path: "/data_management/survey_test", icon: ClipboardCheck },
+        // { label: "AI 데이터 생성", path: "/data_management/ai_data", icon: Sparkles }
       ]
     });
   }
