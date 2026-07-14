@@ -719,16 +719,22 @@ const AiDataPage = () => {
                                     내보내기
                                 </button>
                                 {checkedIds.length > 0 && (
-                                    <button
-                                        onClick={handleDeleteSelected}
-                                        style={{
-                                            height: '30px', padding: '0 10px', border: '1px solid #fecaca', borderRadius: '6px',
-                                            background: '#fff1f1', fontSize: '12px', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'
-                                        }}
-                                    >
-                                        <Trash2 size={12} />
-                                        선택 삭제
-                                    </button>
+                                    <>
+                                        <div style={{ width: '1px', height: '16px', backgroundColor: '#e2e8f0', margin: '0 4px' }} />
+                                        <button
+                                            onClick={handleDeleteSelected}
+                                            style={{
+                                                height: '30px', padding: '0 10px', border: '1px solid #fca5a5', borderRadius: '6px',
+                                                background: '#fef2f2', fontSize: '12px', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer',
+                                                transition: 'all 0.15s'
+                                            }}
+                                            onMouseOver={(e) => { e.currentTarget.style.background = '#fee2e2'; }}
+                                            onMouseOut={(e) => { e.currentTarget.style.background = '#fef2f2'; }}
+                                        >
+                                            <Trash2 size={12} />
+                                            선택 삭제 ({checkedIds.length})
+                                        </button>
+                                    </>
                                 )}
                             </div>
                         </div>
