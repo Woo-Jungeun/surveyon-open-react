@@ -1116,7 +1116,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             if (!targetFolder) return;
 
             const varId = targetFolder.items[0];
-            const baseVar = baseVariables.find(v => v.id === varId);
+            const baseVar = baseVariables.find(v => v.id === varId || v.base_id === varId);
             const varLabel = baseVar?.label || baseVar?.name || varId;
             const sp = scaleMax;
 
@@ -1124,7 +1124,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 const subItems = [];
                 subItems.push({
                     type: 'statistics',
-                    name: `${varLabel} - 통계 요약표`,
+                    name: targetFolder.name || `${varLabel} - 통계 요약표`,
                     mean: !!openStats.mean,
                     median: !!openStats.median,
                     mode: !!openStats.mode
@@ -1134,8 +1134,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     if (f.id === editingFolder.id) {
                         return {
                             ...f,
-                            name: `${varLabel} - 통계 요약표`,
-                            label: `${varLabel} - 통계 요약표`,
                             mean: !!openStats.mean,
                             median: !!openStats.median,
                             mode: !!openStats.mode
@@ -1150,7 +1148,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     if (isTarget) {
                         return {
                             ...s,
-                            label: `${varLabel} - 통계 요약표`,
                             info: subItems.map(si => ({ ...si, inEdit: false }))
                         };
                     }
