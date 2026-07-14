@@ -741,7 +741,7 @@ const AiDataPage = () => {
 
                         {/* 가이드 메시지 */}
                         <div style={{ fontSize: '11.5px', color: '#64748b', background: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '10px', shrink: 0 }}>
-                            💡 행을 클릭하면 오른쪽 중단 발견 리포트에서 실시간 봇 로그를 추적할 수 있습니다. 체크박스로 선택하면 삭제할 수 있습니다.
+                            💡 행을 클릭하면 우측 리포트에서 상세 로그가 조회됩니다. 체크박스 선택 시 '선택 삭제' 버튼이 활성화됩니다.
                         </div>
 
                         {/* 그리드 영역 */}
