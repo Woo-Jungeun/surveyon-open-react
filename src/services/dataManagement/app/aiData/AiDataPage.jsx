@@ -1,21 +1,12 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, cloneElement, useMemo } from 'react';
 import {
     Search, RotateCcw, Download, ExternalLink, Play, AlertTriangle,
-    CheckCircle2, Trash2
+    CheckCircle2, Trash2, X
 } from 'lucide-react';
-import { DropDownList } from '@progress/kendo-react-dropdowns';
 import DataHeader from '@/services/dataStatus/components/DataHeader';
 import { modalContext } from "@/components/common/Modal.jsx";
+import KendoGridV2, { GridColumn as Column } from '@/components/kendo/KendoGridV2';
 
-const DISTRIBUTION_OPTIONS = [
-    { text: "브라우저 실행 (EtoE)", value: "browser" },
-    { text: "엔진 실행 (API 호출)", value: "engine" }
-];
-
-const SCREEN_CONDITION_OPTIONS = [
-    { text: "미포함", value: "exclude" },
-    { text: "포함", value: "include" }
-];
 
 // 전체 응답자 모크 데이터 리스트 (스크린샷 기반 설계)
 const INITIAL_RESPONDENTS = [
@@ -46,7 +37,7 @@ const INITIAL_RESPONDENTS = [
             "533 [브라우저] BOT_DEBUG parsedrealvars: [10, sq10, sq20, sq30, sq31, sq32 ...]",
             "534 [경고] 조건 분기 경로 불일치 - 재시도 4/6",
             "535 [경고] 조건 분기 경로 불일치 - 재시도 5/6",
-            "536 [오류] 6회 교정 실패 -> 타임아웃, 결함으로 종료."
+            "536 [오류] 6회 교정 실패 -> 타임아웃, 중단으로 종료."
         ]
     },
     {
@@ -125,6 +116,9 @@ const AiDataPage = () => {
     const [selectedPid, setSelectedPid] = useState("999619002"); // 기본으로 스크린샷과 동일하게 999619002 선택
     const [checkedIds, setCheckedIds] = useState([]);
 
+    // 내보내기 팝업 표시 여부
+    const [showExportModal, setShowExportModal] = useState(false);
+
     // 필터 & 검색
     const [filterStatus, setFilterStatus] = useState("all"); // 'all' | 'pass' | 'defect'
     const [searchQuery, setSearchQuery] = useState("");
@@ -146,20 +140,13 @@ const AiDataPage = () => {
         return matchesStatus && matchesSearch;
     });
 
-    // 전체 선택 핸들러
-    const handleHeaderCheckboxChange = (e) => {
-        if (e.target.checked) {
-            setCheckedIds(filteredRespondents.map(r => r.id));
-        } else {
-            setCheckedIds([]);
-        }
-    };
-
-    const handleRowCheckboxChange = (id) => {
-        setCheckedIds(prev =>
-            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-        );
-    };
+    // Kendo Grid re-render를 강제 유도하고 selected 상태를 각 데이터 아이템에 주입하기 위한 메모이징 데이터
+    const gridData = useMemo(() => {
+        return filteredRespondents.map(r => ({
+            ...r,
+            _selected: r.id === selectedPid
+        }));
+    }, [filteredRespondents, selectedPid]);
 
     // 행 삭제
     const handleDeleteSelected = () => {
@@ -181,6 +168,147 @@ const AiDataPage = () => {
         setSearchQuery("");
         setProgress(100);
         modal.showAlert("알림", "응답자 목록이 초기 상태로 복원되었습니다.");
+    };
+
+    // 내보내기 형식 실행
+    const handleExportFormat = (format) => {
+        setShowExportModal(false);
+        modal.showAlert("알림", `${format} 양식 파일로 성공적으로 내보냈습니다.`);
+    };
+
+    // ── Kendo Grid 커스텀 셀 및 렌더러 ──
+    const RowCheckboxCell = (props) => {
+        const { dataItem, style, className } = props;
+        const isChecked = checkedIds.includes(dataItem.id);
+        const handleChange = (e) => {
+            e.stopPropagation();
+            if (isChecked) {
+                setCheckedIds(prev => prev.filter(id => id !== dataItem.id));
+            } else {
+                setCheckedIds(prev => [...prev, dataItem.id]);
+            }
+        };
+
+        return (
+            <td style={{ ...style, padding: '8px 12px', textAlign: 'center', verticalAlign: 'middle' }} className={className} onClick={(e) => e.stopPropagation()}>
+                <span className="k-checkbox-wrap">
+                    <input
+                        type="checkbox"
+                        className="k-checkbox k-checkbox-md k-rounded-md"
+                        checked={isChecked}
+                        onChange={handleChange}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ cursor: 'pointer' }}
+                    />
+                </span>
+            </td>
+        );
+    };
+
+    const HeaderCheckboxCell = () => {
+        const allChecked = filteredRespondents.length > 0 && checkedIds.length === filteredRespondents.length;
+        const someChecked = checkedIds.length > 0 && !allChecked;
+
+        const handleChange = () => {
+            if (allChecked) {
+                setCheckedIds([]);
+            } else {
+                setCheckedIds(filteredRespondents.map(r => r.id));
+            }
+        };
+
+        return (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }} onClick={(e) => e.stopPropagation()}>
+                <span className="k-checkbox-wrap">
+                    <input
+                        type="checkbox"
+                        className="k-checkbox k-checkbox-md k-rounded-md"
+                        checked={allChecked}
+                        ref={el => { if (el) el.indeterminate = someChecked; }}
+                        onChange={handleChange}
+                        style={{ cursor: 'pointer' }}
+                    />
+                </span>
+            </div>
+        );
+    };
+
+    const IdCell = (props) => (
+        <td style={{ ...props.style, padding: '8px 12px', verticalAlign: 'middle', fontWeight: 600, color: '#0f172a' }} className={props.className}>
+            {props.dataItem.id}
+        </td>
+    );
+
+    const StatusCell = (props) => {
+        const { status } = props.dataItem;
+        return (
+            <td style={{ ...props.style, padding: '8px 12px', verticalAlign: 'middle' }} className={props.className}>
+                <span style={{
+                    padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700,
+                    background: status === "pass" ? '#f0fdf4' : '#fff1f1',
+                    color: status === "pass" ? '#16a34a' : '#dc2626',
+                    border: status === "pass" ? '1px solid #bbf7d0' : '1px solid #fecaca',
+                    whiteSpace: 'nowrap'
+                }}>
+                    {status === "pass" ? "✓ 통과" : "✕ 중단"}
+                </span>
+            </td>
+        );
+    };
+
+    const FinalQuestionCell = (props) => {
+        const { finalQuestion } = props.dataItem;
+        return (
+            <td style={{ ...props.style, padding: '8px 12px', verticalAlign: 'middle' }} className={props.className}>
+                {finalQuestion !== "-" ? (
+                    <span style={{
+                        padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600,
+                        background: '#fff1f1', color: '#dc2626', border: '1px solid #fecaca'
+                    }}>
+                        {finalQuestion}
+                    </span>
+                ) : (
+                    <span style={{ color: '#94a3b8' }}>-</span>
+                )}
+            </td>
+        );
+    };
+
+    const MessageCell = (props) => {
+        const { status, message, errorCategory } = props.dataItem;
+        return (
+            <td style={{ ...props.style, padding: '8px 12px', verticalAlign: 'middle', color: '#475569' }} className={props.className}>
+                {status === "pass" ? message : (errorCategory || "-")}
+            </td>
+        );
+    };
+
+    const DurationCell = (props) => (
+        <td style={{ ...props.style, padding: '8px 12px', verticalAlign: 'middle', color: '#64748b', fontWeight: 500 }} className={props.className}>
+            {props.dataItem.duration}
+        </td>
+    );
+
+    const rowRender = (trElement, props) => {
+        const { dataItem } = props;
+        const isSelected = !!dataItem?._selected;
+        const isChecked = checkedIds.includes(dataItem?.id);
+
+        const baseClass = (trElement.props.className || "")
+            .replace(/\bk-selected\b/g, "")
+            .replace(/\bk-state-selected\b/g, "");
+
+        const trProps = {
+            ...trElement.props,
+            className: `${baseClass} ${isSelected ? 'selected-pid-row' : ''}`.trim(),
+            style: {
+                ...trElement.props.style,
+                background: isSelected ? '#f0fdf4' : (isChecked ? '#f8fafc' : '#ffffff'),
+                cursor: 'pointer'
+            }
+        };
+
+        return cloneElement(trElement, { ...trProps }, trElement.props.children);
     };
 
     // 봇 실행 시뮬레이션
@@ -221,7 +349,7 @@ const AiDataPage = () => {
     const selectedRespondent = respondents.find(r => r.id === selectedPid);
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f1f5f9', overflow: 'hidden' }}>
+        <div className="ai-data-page" style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f1f5f9', overflow: 'hidden' }}>
             <DataHeader title="AI 데이터 생성" />
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px', padding: '12px', boxSizing: 'border-box', minHeight: 0, overflowY: 'auto' }}>
@@ -248,21 +376,61 @@ const AiDataPage = () => {
                         />
                     </div>
 
-                    {/* 테스트 PID 자동생성 토글 */}
+                    {/* 테스트 PID 자동생성 선택 (Segmented Control) */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>
                             PID 자동생성
                         </span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px' }}>
-                            <label className="toggle-switch" style={{ transform: 'scale(0.85)', transformOrigin: 'left center' }}>
-                                <input type="checkbox" checked={autoPid} onChange={() => setAutoPid(!autoPid)} />
-                                <span className="slider round"></span>
-                            </label>
-                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#1e293b', whiteSpace: 'nowrap', marginLeft: '-6px' }}>
-                                {autoPid ? "자동" : "수동"}
-                            </span>
+                        <div style={{
+                            display: 'flex',
+                            background: '#f1f5f9',
+                            borderRadius: '6px',
+                            padding: '2px',
+                            height: '32px',
+                            boxSizing: 'border-box',
+                            alignItems: 'center'
+                        }}>
+                            <button
+                                onClick={() => setAutoPid(true)}
+                                style={{
+                                    border: autoPid ? '1px solid #16a34a' : '1px solid transparent',
+                                    borderRadius: '4px',
+                                    padding: '0 10px',
+                                    height: '100%',
+                                    fontSize: '11.5px',
+                                    fontWeight: autoPid ? '700' : '500',
+                                    color: autoPid ? '#16a34a' : '#64748b',
+                                    background: autoPid ? '#fff' : 'transparent',
+                                    boxShadow: autoPid ? '0 1px 2px rgba(22, 163, 74, 0.1)' : 'none',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease',
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
+                                자동
+                            </button>
+                            <button
+                                onClick={() => setAutoPid(false)}
+                                style={{
+                                    border: !autoPid ? '1px solid #16a34a' : '1px solid transparent',
+                                    borderRadius: '4px',
+                                    padding: '0 10px',
+                                    height: '100%',
+                                    fontSize: '11.5px',
+                                    fontWeight: !autoPid ? '700' : '500',
+                                    color: !autoPid ? '#16a34a' : '#64748b',
+                                    background: !autoPid ? '#fff' : 'transparent',
+                                    boxShadow: !autoPid ? '0 1px 2px rgba(22, 163, 74, 0.1)' : 'none',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease',
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
+                                수동
+                            </button>
                         </div>
                     </div>
+
 
                     {/* 조건별 렌더링: 랜덤(카운터) / 수동(직접 입력란) */}
                     {autoPid ? (
@@ -309,42 +477,114 @@ const AiDataPage = () => {
                     {/* 구분선 */}
                     <div style={{ width: '1px', height: '16px', backgroundColor: '#cbd5e1', alignSelf: 'center' }} />
 
-                    {/* 응답 분포 드롭다운 */}
+                    {/* 응답 분포 선택 (Segmented Control) */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>
                             응답 분포
                         </span>
-                        <DropDownList
-                            className="ai-kendo-dropdown"
-                            popupClass="ai-dropdown-popup"
-                            data={DISTRIBUTION_OPTIONS}
-                            textField="text"
-                            dataItemKey="value"
-                            value={DISTRIBUTION_OPTIONS.find(opt => opt.value === distribution) || DISTRIBUTION_OPTIONS[0]}
-                            onChange={(e) => setDistribution(e.value.value)}
-                            style={{
-                                width: '200px', height: '32px', fontSize: '12px', borderRadius: '6px'
-                            }}
-                        />
+                        <div style={{
+                            display: 'flex',
+                            background: '#f1f5f9',
+                            borderRadius: '6px',
+                            padding: '2px',
+                            height: '32px',
+                            boxSizing: 'border-box',
+                            alignItems: 'center'
+                        }}>
+                            <button
+                                onClick={() => setDistribution('browser')}
+                                style={{
+                                    border: distribution === 'browser' ? '1px solid #16a34a' : '1px solid transparent',
+                                    borderRadius: '4px',
+                                    padding: '0 10px',
+                                    height: '100%',
+                                    fontSize: '11.5px',
+                                    fontWeight: distribution === 'browser' ? '700' : '500',
+                                    color: distribution === 'browser' ? '#16a34a' : '#64748b',
+                                    background: distribution === 'browser' ? '#fff' : 'transparent',
+                                    boxShadow: distribution === 'browser' ? '0 1px 2px rgba(22, 163, 74, 0.1)' : 'none',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease',
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
+                                브라우저 실행 (EtoE)
+                            </button>
+                            <button
+                                onClick={() => setDistribution('engine')}
+                                style={{
+                                    border: distribution === 'engine' ? '1px solid #16a34a' : '1px solid transparent',
+                                    borderRadius: '4px',
+                                    padding: '0 10px',
+                                    height: '100%',
+                                    fontSize: '11.5px',
+                                    fontWeight: distribution === 'engine' ? '700' : '500',
+                                    color: distribution === 'engine' ? '#16a34a' : '#64748b',
+                                    background: distribution === 'engine' ? '#fff' : 'transparent',
+                                    boxShadow: distribution === 'engine' ? '0 1px 2px rgba(22, 163, 74, 0.1)' : 'none',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease',
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
+                                엔진 실행 (API 호출)
+                            </button>
+                        </div>
                     </div>
 
-                    {/* 스크린 조건 드롭다운 */}
+                    {/* 스크린 조건 선택 (Segmented Control) */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>
                             스크린 조건
                         </span>
-                        <DropDownList
-                            className="ai-kendo-dropdown"
-                            popupClass="ai-dropdown-popup"
-                            data={SCREEN_CONDITION_OPTIONS}
-                            textField="text"
-                            dataItemKey="value"
-                            value={SCREEN_CONDITION_OPTIONS.find(opt => opt.value === screenCondition) || SCREEN_CONDITION_OPTIONS[0]}
-                            onChange={(e) => setScreenCondition(e.value.value)}
-                            style={{
-                                width: '120px', height: '32px', fontSize: '12px', borderRadius: '6px'
-                            }}
-                        />
+                        <div style={{
+                            display: 'flex',
+                            background: '#f1f5f9',
+                            borderRadius: '6px',
+                            padding: '2px',
+                            height: '32px',
+                            boxSizing: 'border-box',
+                            alignItems: 'center'
+                        }}>
+                            <button
+                                onClick={() => setScreenCondition('exclude')}
+                                style={{
+                                    border: screenCondition === 'exclude' ? '1px solid #16a34a' : '1px solid transparent',
+                                    borderRadius: '4px',
+                                    padding: '0 10px',
+                                    height: '100%',
+                                    fontSize: '11.5px',
+                                    fontWeight: screenCondition === 'exclude' ? '700' : '500',
+                                    color: screenCondition === 'exclude' ? '#16a34a' : '#64748b',
+                                    background: screenCondition === 'exclude' ? '#fff' : 'transparent',
+                                    boxShadow: screenCondition === 'exclude' ? '0 1px 2px rgba(22, 163, 74, 0.1)' : 'none',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease',
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
+                                미포함
+                            </button>
+                            <button
+                                onClick={() => setScreenCondition('include')}
+                                style={{
+                                    border: screenCondition === 'include' ? '1px solid #16a34a' : '1px solid transparent',
+                                    borderRadius: '4px',
+                                    padding: '0 10px',
+                                    height: '100%',
+                                    fontSize: '11.5px',
+                                    fontWeight: screenCondition === 'include' ? '700' : '500',
+                                    color: screenCondition === 'include' ? '#16a34a' : '#64748b',
+                                    background: screenCondition === 'include' ? '#fff' : 'transparent',
+                                    boxShadow: screenCondition === 'include' ? '0 1px 2px rgba(22, 163, 74, 0.1)' : 'none',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease',
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
+                                포함
+                            </button>
+                        </div>
                     </div>
 
                     {/* 시뮬레이션 시작 버튼 */}
@@ -367,14 +607,14 @@ const AiDataPage = () => {
                 </div>
 
                 {/* ── 상단 2: 생성 진행 상태 및 요약 통계 ── */}
-                <div style={{
+                <div className="ai-stats-bar" style={{
                     background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
                     padding: '12px 20px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.05)', shrink: 0
                 }}>
                     {/* 진행률 바 */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '280px' }}>
-                        <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap' }}>
                             ⚡ 생성 진행 상태 <span style={{ color: '#16a34a' }}>{progress}%</span>
                         </span>
                         <div style={{ flex: 1, height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
@@ -383,14 +623,14 @@ const AiDataPage = () => {
                     </div>
 
                     {/* 통계 지표들 */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px', fontSize: '12.5px', color: '#64748b' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px', fontSize: '12px', color: '#64748b' }}>
                         <div>총 응답자 <strong style={{ color: '#1e293b' }}>{currentTotal}</strong></div>
                         <div style={{ color: '#cbd5e1' }}>|</div>
                         <div>완료 <strong style={{ color: '#1e293b' }}>{passCount + defectCount}</strong></div>
                         <div style={{ color: '#cbd5e1' }}>|</div>
                         <div>성공 <strong style={{ color: '#16a34a' }}>{passCount}</strong></div>
                         <div style={{ color: '#cbd5e1' }}>|</div>
-                        <div>결함 <strong style={{ color: '#dc2626' }}>{defectCount}</strong></div>
+                        <div>중단 <strong style={{ color: '#dc2626' }}>{defectCount}</strong></div>
                         <div style={{ color: '#cbd5e1' }}>|</div>
                         <div>평균소요 <strong style={{ color: '#1e293b' }}>{avgDuration}</strong></div>
                         <div style={{ color: '#cbd5e1' }}>|</div>
@@ -437,7 +677,7 @@ const AiDataPage = () => {
                                             cursor: 'pointer', background: filterStatus === "defect" ? '#fff1f1' : '#fff', color: '#dc2626'
                                         }}
                                     >
-                                        결함 {defectCount}
+                                        중단 {defectCount}
                                     </button>
                                 </div>
                             </div>
@@ -469,7 +709,7 @@ const AiDataPage = () => {
                                     초기화
                                 </button>
                                 <button
-                                    onClick={() => modal.showAlert("알림", "엑셀 내보내기 기능이 준비되었습니다.")}
+                                    onClick={() => setShowExportModal(true)}
                                     style={{
                                         height: '30px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
                                         background: '#fff', fontSize: '12px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'
@@ -495,98 +735,69 @@ const AiDataPage = () => {
 
                         {/* 가이드 메시지 */}
                         <div style={{ fontSize: '11.5px', color: '#64748b', background: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '10px', shrink: 0 }}>
-                            💡 행을 클릭하면 오른쪽 결함 발견 리포트에서 실시간 봇 로그를 추적할 수 있습니다. 체크박스로 선택하면 삭제할 수 있습니다.
+                            💡 행을 클릭하면 오른쪽 중단 발견 리포트에서 실시간 봇 로그를 추적할 수 있습니다. 체크박스로 선택하면 삭제할 수 있습니다.
                         </div>
 
-                        {/* 테이블 컨테이너 */}
-                        <div style={{ flex: 1, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px', textAlign: 'left' }}>
-                                <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', position: 'sticky', top: 0, zIndex: 5 }}>
-                                    <tr>
-                                        <th style={{ padding: '10px 12px', width: '32px' }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={filteredRespondents.length > 0 && checkedIds.length === filteredRespondents.length}
-                                                onChange={handleHeaderCheckboxChange}
-                                                style={{ cursor: 'pointer' }}
-                                            />
-                                        </th>
-                                        <th style={{ padding: '10px 12px', fontWeight: 600, color: '#475569' }}>응답자 ID (PID)</th>
-                                        <th style={{ padding: '10px 12px', fontWeight: 600, color: '#475569' }}>결과 상태</th>
-                                        <th style={{ padding: '10px 12px', fontWeight: 600, color: '#475569' }}>최종 감지 문항</th>
-                                        <th style={{ padding: '10px 12px', fontWeight: 600, color: '#475569' }}>종료 메시지 / 중단 사유</th>
-                                        <th style={{ padding: '10px 12px', fontWeight: 600, color: '#475569', width: '90px' }}>수행 시간</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredRespondents.length > 0 ? (
-                                        filteredRespondents.map((item) => {
-                                            const isSelected = selectedPid === item.id;
-                                            const isChecked = checkedIds.includes(item.id);
-                                            return (
-                                                <tr
-                                                    key={item.id}
-                                                    onClick={() => setSelectedPid(item.id)}
-                                                    style={{
-                                                        borderBottom: '1px solid #f1f5f9',
-                                                        background: isSelected ? '#f0fdf4' : (isChecked ? '#f8fafc' : '#ffffff'),
-                                                        cursor: 'pointer',
-                                                        transition: 'background 0.15s'
-                                                    }}
-                                                    onMouseOver={(e) => { if (!isSelected) e.currentTarget.style.background = '#f8fafc'; }}
-                                                    onMouseOut={(e) => { if (!isSelected) e.currentTarget.style.background = isChecked ? '#f8fafc' : '#ffffff'; }}
-                                                >
-                                                    <td style={{ padding: '10px 12px' }} onClick={(e) => e.stopPropagation()}>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={isChecked}
-                                                            onChange={() => handleRowCheckboxChange(item.id)}
-                                                            style={{ cursor: 'pointer' }}
-                                                        />
-                                                    </td>
-                                                    <td style={{ padding: '10px 12px', fontWeight: 600, color: '#0f172a' }}>{item.id}</td>
-                                                    <td style={{ padding: '10px 12px' }}>
-                                                        <span style={{
-                                                            padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700,
-                                                            background: item.status === "pass" ? '#f0fdf4' : '#fff1f1',
-                                                            color: item.status === "pass" ? '#16a34a' : '#dc2626',
-                                                            border: item.status === "pass" ? '1px solid #bbf7d0' : '1px solid #fecaca'
-                                                        }}>
-                                                            {item.status === "pass" ? "✓ 통과" : "✕ 결함"}
-                                                        </span>
-                                                    </td>
-                                                    <td style={{ padding: '10px 12px' }}>
-                                                        {item.finalQuestion !== "-" ? (
-                                                            <span style={{
-                                                                padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600,
-                                                                background: '#fff1f1', color: '#dc2626', border: '1px solid #fecaca'
-                                                            }}>
-                                                                {item.finalQuestion}
-                                                            </span>
-                                                        ) : (
-                                                            <span style={{ color: '#94a3b8' }}>-</span>
-                                                        )}
-                                                    </td>
-                                                    <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                                        {item.status === "pass" ? item.message : <span style={{ color: '#94a3b8' }}>-</span>}
-                                                    </td>
-                                                    <td style={{ padding: '10px 12px', color: '#64748b', fontWeight: 500 }}>{item.duration}</td>
-                                                </tr>
-                                            );
-                                        })
-                                    ) : (
-                                        <tr>
-                                            <td colSpan="6" style={{ padding: '40px 0', textAlign: 'center', color: '#94a3b8' }}>
-                                                조건에 일치하는 응답자 데이터가 존재하지 않습니다.
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                        {/* 그리드 영역 */}
+                        <div className="cmn_grid singlehead" style={{ flex: 1, minHeight: 0 }}>
+                            <KendoGridV2
+                                data={gridData}
+                                dataItemKey="id"
+                                height="100%"
+                                rowRender={rowRender}
+                                onRowClick={(e) => setSelectedPid(e.dataItem.id)}
+                                reorderable={false}
+                                addable={false}
+                                deletable={false}
+                                copyable={false}
+                            >
+                                <Column
+                                    field="checkbox"
+                                    width="45px"
+                                    resizable={false}
+                                    headerCell={HeaderCheckboxCell}
+                                    cell={RowCheckboxCell}
+                                    headerClassName="k-header-center"
+                                />
+                                <Column
+                                    field="id"
+                                    title="응답자 ID (PID)"
+                                    width="130px"
+                                    cell={IdCell}
+                                    headerClassName="k-header-center"
+                                />
+                                <Column
+                                    field="status"
+                                    title="결과 상태"
+                                    width="90px"
+                                    cell={StatusCell}
+                                    headerClassName="k-header-center"
+                                />
+                                <Column
+                                    field="finalQuestion"
+                                    title="최종 감지 문항"
+                                    width="120px"
+                                    cell={FinalQuestionCell}
+                                    headerClassName="k-header-center"
+                                />
+                                <Column
+                                    field="message"
+                                    title="종료 메시지 / 중단 사유"
+                                    cell={MessageCell}
+                                    headerClassName="k-header-center"
+                                />
+                                <Column
+                                    field="duration"
+                                    title="수행 시간"
+                                    width="90px"
+                                    cell={DurationCell}
+                                    headerClassName="k-header-center"
+                                />
+                            </KendoGridV2>
                         </div>
                     </div>
 
-                    {/* [우] 결함 발견 리포트 */}
+                    {/* [우] 중단 발견 리포트 */}
                     <div className="st-panel" style={{ flex: 4, padding: '16px', display: 'flex', flexDirection: 'column', minHeight: 0, boxSizing: 'border-box', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
 
                         {selectedRespondent ? (
@@ -598,97 +809,121 @@ const AiDataPage = () => {
                                         {selectedRespondent.status === "defect" ? (
                                             <>
                                                 <AlertTriangle size={18} color="#dc2626" />
-                                                <span style={{ fontSize: '14.5px', fontWeight: 800, color: '#dc2626' }}>결함 발견 리포트</span>
+                                                <span style={{ fontSize: '14.5px', fontWeight: 800, color: '#dc2626' }}>
+                                                    중단 발견 리포트
+                                                </span>
                                             </>
                                         ) : (
                                             <>
                                                 <CheckCircle2 size={18} color="#16a34a" />
-                                                <span style={{ fontSize: '14.5px', fontWeight: 800, color: '#16a34a' }}>수행 완료 리포트</span>
+                                                <span style={{ fontSize: '14.5px', fontWeight: 800, color: '#16a34a' }}>
+                                                    수행 완료 리포트
+                                                </span>
                                             </>
                                         )}
                                     </div>
                                     <span style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8' }}>PID {selectedRespondent.id}</span>
                                 </div>
 
-                                {/* 상세 리포트 정보 (결함 상태일 때만) */}
                                 {selectedRespondent.status === "defect" ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px', shrink: 0 }}>
-                                        {/* 중단 사유 분류 */}
-                                        <div style={{ background: '#fff1f1', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px 14px' }}>
-                                            <span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>① 중단 사유 분류</span>
-                                            <span style={{ fontSize: '14px', fontWeight: 700, color: '#dc2626' }}>{selectedRespondent.errorCategory}</span>
-                                        </div>
+                                    // 중단 상태일 때는 상세 리포트 정보와 로그 단말기 표시
+                                    <>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px', shrink: 0 }}>
+                                            {/* 중단 사유 분류 */}
+                                            <div style={{ background: '#fff1f1', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px 14px' }}>
+                                                <span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>① 중단 사유 분류</span>
+                                                <span style={{ fontSize: '14px', fontWeight: 700, color: '#dc2626' }}>{selectedRespondent.errorCategory}</span>
+                                            </div>
 
-                                        {/* 상세 오류 내용 */}
-                                        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px 14px' }}>
-                                            <span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '6px' }}>② 상세 오류 내용</span>
-                                            <p style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.5', margin: '0 0 12px 0', wordBreak: 'break-all' }}>
-                                                {selectedRespondent.errorDetail}
-                                            </p>
+                                            {/* 상세 오류 내용 */}
+                                            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px 14px' }}>
+                                                <span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '6px' }}>② 상세 오류 내용</span>
+                                                <p style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.5', margin: '0 0 12px 0', wordBreak: 'break-all' }}>
+                                                    {selectedRespondent.errorDetail}
+                                                </p>
 
-                                            <div style={{ display: 'flex', gap: '8px' }}>
-                                                <button
-                                                    onClick={() => modal.showAlert("알림", "결함이 발견된 브라우저 실패 화면 이미지 스냅샷 페이지로 이동합니다.")}
-                                                    style={{
-                                                        height: '28px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '4px',
-                                                        background: '#fff', fontSize: '11.5px', fontWeight: 600, color: '#475569',
-                                                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
-                                                    }}
-                                                >
-                                                    <ExternalLink size={11} />
-                                                    실패 화면 링크 바로가기
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        modal.showAlert("알림", `PID ${selectedRespondent.id} 응답자에 대한 시뮬레이션 재수행을 요청하였습니다.`);
-                                                    }}
-                                                    style={{
-                                                        height: '28px', padding: '0 10px', border: 'none', borderRadius: '4px',
-                                                        background: '#16a34a', fontSize: '11.5px', fontWeight: 600, color: '#fff',
-                                                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
-                                                    }}
-                                                >
-                                                    <RotateCcw size={11} />
-                                                    테스트 재시도
-                                                </button>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button
+                                                        onClick={() => modal.showAlert("알림", "중단이 발생한 브라우저 실패 화면 이미지 스냅샷 페이지로 이동합니다.")}
+                                                        style={{
+                                                            height: '28px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '4px',
+                                                            background: '#fff', fontSize: '11.5px', fontWeight: 600, color: '#475569',
+                                                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
+                                                        }}
+                                                    >
+                                                        <ExternalLink size={11} />
+                                                        실패 화면 링크 바로가기
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            modal.showAlert("알림", "서비스 준비중입니다.");
+                                                        }}
+                                                        style={{
+                                                            height: '28px', padding: '0 12px', border: '1px solid #16a34a', borderRadius: '4px',
+                                                            background: '#fff', fontSize: '11.5px', fontWeight: 600, color: '#16a34a',
+                                                            cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                                            transition: 'all 0.15s'
+                                                        }}
+                                                        onMouseOver={(e) => { e.currentTarget.style.background = '#f0fdf4'; }}
+                                                        onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; }}
+                                                    >
+                                                        테스트 재시도
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+
+                                        {/* 실시간 실행 로그 단말기 */}
+                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '8px', display: 'block', shrink: 0 }}>
+                                                ⌨️ 실시간 실행 로그 단말기
+                                            </span>
+                                            <div style={{
+                                                flex: 1, background: '#0f172a', borderRadius: '8px', padding: '12px 16px',
+                                                overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px',
+                                                fontFamily: 'Consolas, Monaco, monospace', fontSize: '11.5px', border: '1px solid #1e293b'
+                                            }}>
+                                                {selectedRespondent.logs.map((logLine, idx) => {
+                                                    let color = '#cbd5e1'; // 기본 연한 회색
+                                                    if (logLine.includes('[시스템]')) color = '#4ade80'; // 녹색
+                                                    if (logLine.includes('[브라우저]')) color = '#38bdf8'; // 청색
+                                                    if (logLine.includes('[오류]')) color = '#f87171'; // 적색
+                                                    if (logLine.includes('[경고]')) color = '#fb923c'; // 주황색
+
+                                                    return (
+                                                        <div key={idx} style={{ color, lineHeight: '1.4', wordBreak: 'break-all' }}>
+                                                            {logLine}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </>
                                 ) : (
-                                    <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', shrink: 0 }}>
-                                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#16a34a', display: 'block', marginBottom: '4px' }}>최종 수행 결과</span>
-                                        <span style={{ fontSize: '14px', fontWeight: 700, color: '#15803d', display: 'block', marginBottom: '6px' }}>설문 자동 응답 완료 (성공)</span>
-                                        <p style={{ fontSize: '12px', color: '#166534', margin: 0, lineHeight: 1.5 }}>
-                                            설문 구조에 정의된 모든 조건(문항 로직 분기, 선택 제약 조건)을 만족하며 정상 종료 페이지까지 응답 시뮬레이션을 완료했습니다.
-                                        </p>
+                                    // 통과 상태일 때는 단순 성공 안내 이미지 카드 표시 (실행 로그 가림)
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
+                                        <div style={{
+                                            width: '56px',
+                                            height: '56px',
+                                            borderRadius: '50%',
+                                            background: '#f0fdf4',
+                                            border: '1px solid #bbf7d0',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            marginBottom: '16px'
+                                        }}>
+                                            <CheckCircle2 size={28} color="#16a34a" />
+                                        </div>
+                                        <div style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', marginBottom: '8px', textAlign: 'center' }}>
+                                            PID {selectedRespondent.id} · 정상 완료
+                                        </div>
+                                        <div style={{ fontSize: '12.5px', color: '#64748b', textAlign: 'center', lineHeight: '1.6' }}>
+                                            설문 완료 화면까지 중단 없이 도달했습니다.<br />
+                                            중단 리포트가 없습니다.
+                                        </div>
                                     </div>
                                 )}
-
-                                {/* 실시간 실행 로그 단말기 */}
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '8px', display: 'block', shrink: 0 }}>
-                                        ⌨️ 실시간 실행 로그 단말기
-                                    </span>
-                                    <div style={{
-                                        flex: 1, background: '#0f172a', borderRadius: '8px', padding: '12px 16px',
-                                        overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px',
-                                        fontFamily: 'Consolas, Monaco, monospace', fontSize: '11.5px', border: '1px solid #1e293b'
-                                    }}>
-                                        {selectedRespondent.logs.map((logLine, idx) => {
-                                            let color = '#cbd5e1'; // 기본 연한 회색
-                                            if (logLine.includes('[시스템]')) color = '#4ade80'; // 녹색
-                                            else if (logLine.includes('[브라우저]')) color = '#38bdf8'; // 청색
-                                            else if (logLine.includes('[오류]')) color = '#f87171'; // 적색
-                                            else if (logLine.includes('[경고]')) color = '#fb923c'; // 주황색
-
-                                            return (
-                                                <div key={idx} style={{ color, lineHeight: '1.4', wordBreak: 'break-all' }}>
-                                                    {logLine}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
                             </div>
                         ) : (
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', gap: '10px' }}>
@@ -699,6 +934,31 @@ const AiDataPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* SAV/Excel 내보내기 포맷 선택 팝업 */}
+            {showExportModal && (
+                <div className="nd-modal-overlay">
+                    <div className="nd-modal-container">
+                        <div className="nd-modal-header">
+                            <h3 className="with-bar">데이터 내보내기</h3>
+                            <button className="nd-close-btn" onClick={() => setShowExportModal(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="nd-modal-body">
+                            <p style={{ marginBottom: '16px' }}>다운로드할 파일 양식을 선택하세요.</p>
+                            <button className="ai-export-btn" onClick={() => handleExportFormat('SAV')}>
+                                <span>SAV 파일 (.sav)</span>
+                                <Download size={16} className="download-icon" />
+                            </button>
+                            <button className="ai-export-btn" onClick={() => handleExportFormat('Excel')}>
+                                <span>Excel 파일 (.xlsx)</span>
+                                <Download size={16} className="download-icon" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* 슬라이더 스위치 & 필터 칩 CSS 스타일 */}
             <style dangerouslySetInnerHTML={{
@@ -808,6 +1068,173 @@ const AiDataPage = () => {
                 .ai-dropdown-popup .k-list-item.k-selected {
                     background-color: #f0fdf4 !important;
                     color: #16a34a !important;
+                }
+
+                /* Selected PID row styling for Kendo Grid (with clean continuous outline border) */
+                .ai-data-page .selected-pid-row {
+                    background-color: #f0fdf4 !important;
+                    outline: 1px solid #22c55e !important;
+                    outline-offset: -1px !important;
+                }
+                .ai-data-page .selected-pid-row td {
+                    background-color: #f0fdf4 !important;
+                }
+
+                /* Scoped Hover Color for AI Data Grid (Green theme instead of sky blue #e0f2fe) */
+                html body .ai-data-page .cmn_grid .dp-excel-grid-v2 tbody tr:hover td,
+                html body .ai-data-page .cmn_grid .dp-excel-grid-v2 tbody tr.k-hover td,
+                html body .ai-data-page .cmn_grid .dp-excel-grid-v2 tbody tr.k-state-hover td {
+                    background-color: #f0faf5 !important;
+                }
+                html body .ai-data-page .cmn_grid .dp-excel-grid-v2 tbody tr.selected-pid-row:hover td {
+                    background-color: #f0fdf4 !important;
+                }
+
+                /* Checkbox size and icon size overrides for Kendo Grid */
+                .ai-data-page .cmn_grid .k-checkbox-wrap .k-checkbox[type='checkbox'] {
+                    width: 16px !important;
+                    height: 16px !important;
+                    border-radius: 4px !important;
+                }
+                .ai-data-page .cmn_grid .k-checkbox-wrap .k-checkbox[type='checkbox']:checked::before {
+                    -webkit-mask-size: 10px 8px !important;
+                    mask-size: 10px 8px !important;
+                }
+
+                /* Add vertical breathing room and comfortable height for AI Data page grid rows (override high-specificity rules in kendo_custom.css) */
+                html body .ai-data-page .cmn_grid.singlehead .k-grid .k-grid-container .k-grid-content td,
+                html body .ai-data-page .cmn_grid.singlehead .k-grid .k-grid-container .k-grid-content td.k-table-td {
+                    height: 38px !important;
+                    padding: 8px 12px !important;
+                    vertical-align: middle !important;
+                    line-height: 1.2 !important;
+                }
+                html body .ai-data-page .cmn_grid.singlehead .k-grid-header th.k-header,
+                html body .ai-data-page .cmn_grid.singlehead .k-grid-header th.k-table-th {
+                    height: 38px !important;
+                    padding: 8px 12px !important;
+                    vertical-align: middle !important;
+                }
+
+                /* Disable blue focus/selection background on AI Data page grid cells */
+                .ai-data-page .cmn_grid .k-grid td.k-selected,
+                .ai-data-page .cmn_grid .k-grid .k-table-td.k-selected,
+                .ai-data-page .cmn_grid .k-grid .k-table-row.k-selected>td,
+                .ai-data-page .cmn_grid .k-grid .k-table-row.k-selected>.k-table-td,
+                .ai-data-page .cmn_grid .k-grid td:focus,
+                .ai-data-page .cmn_grid .k-grid .k-table-td:focus,
+                .ai-data-page .cmn_grid .k-grid .k-table-row:focus td {
+                    background-color: transparent !important;
+                }
+
+                /* Export Popup Styles (matched to NewDataModal.css with data-management-theme green) */
+                .ai-data-page .nd-modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.4);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 9999;
+                }
+                .ai-data-page .nd-modal-container {
+                    width: 440px;
+                    max-width: 95vw;
+                    padding: 24px;
+                    background: #ffffff;
+                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+                    border-radius: 12px;
+                    font-family: 'Pretendard', sans-serif;
+                }
+                .ai-data-page .nd-modal-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    padding-bottom: 16px;
+                    border-bottom: 1px solid #e2e8f0;
+                }
+                .ai-data-page .nd-modal-header h3 {
+                    font-size: 18px;
+                    font-weight: 700;
+                    margin: 0;
+                    color: #1e293b;
+                    display: flex;
+                    align-items: center;
+                }
+                .ai-data-page .nd-modal-header h3.with-bar::before {
+                    content: '';
+                    display: block;
+                    width: 4px;
+                    height: 18px;
+                    background-color: #16a34a; /* Green theme! */
+                    border-radius: 2px;
+                    margin-right: 8px;
+                }
+                .ai-data-page .nd-close-btn {
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    color: #64748b;
+                    padding: 6px;
+                    border-radius: 6px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.15s;
+                }
+                .ai-data-page .nd-close-btn:hover {
+                    background: #f8fafc;
+                    color: #1e293b;
+                }
+                .ai-data-page .nd-modal-body p {
+                    color: #64748b;
+                    font-size: 14px;
+                    margin: 0 0 16px 0;
+                }
+                .ai-data-page .ai-export-btn {
+                    width: 100%;
+                    padding: 16px 20px;
+                    margin-bottom: 10px;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 8px;
+                    background: #ffffff;
+                    font-size: 14.5px;
+                    font-weight: 600;
+                    color: #1e293b;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    text-align: left;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                }
+                .ai-data-page .ai-export-btn:hover {
+                    border-color: #16a34a;
+                    background: #f0fdf4;
+                    color: #16a34a;
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.1);
+                }
+                .ai-data-page .ai-export-btn .download-icon {
+                    color: #94a3b8 !important;
+                    transition: all 0.2s ease;
+                }
+                .ai-data-page .ai-export-btn:hover .download-icon {
+                    color: #16a34a !important;
+                    transform: translateY(2px);
+                }
+
+                /* Statistics Bar Font Size Override (reset.css defaults strong, div, span to 14px) */
+                .ai-data-page .ai-stats-bar,
+                .ai-data-page .ai-stats-bar div,
+                .ai-data-page .ai-stats-bar span,
+                .ai-data-page .ai-stats-bar strong {
+                    font-size: 12px !important;
                 }
             `}} />
         </div>
