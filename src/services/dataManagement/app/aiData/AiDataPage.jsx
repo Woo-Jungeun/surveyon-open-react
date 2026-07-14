@@ -693,7 +693,7 @@ const AiDataPage = () => {
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         style={{
                                             height: '30px', padding: '0 10px 0 28px', border: '1px solid #cbd5e1',
-                                            borderRadius: '6px', fontSize: '12px', width: '120px', outline: 'none'
+                                            borderRadius: '6px', fontSize: '12px', width: '180px', outline: 'none'
                                         }}
                                     />
                                 </div>
@@ -741,7 +741,7 @@ const AiDataPage = () => {
 
                         {/* 가이드 메시지 */}
                         <div style={{ fontSize: '11.5px', color: '#64748b', background: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '10px', shrink: 0 }}>
-                            💡 행을 클릭하면 우측 리포트에서 상세 로그가 조회됩니다. 체크박스 선택 시 '선택 삭제' 버튼이 활성화됩니다.
+                            💡 행을 클릭하면 우측 리포트에서 상세 로그가 조회됩니다. 체크박스 선택 시 {"'선택 삭제'"} 버튼이 활성화됩니다.
                         </div>
 
                         {/* 그리드 영역 */}
