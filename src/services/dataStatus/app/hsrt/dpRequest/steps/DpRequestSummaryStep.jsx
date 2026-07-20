@@ -462,9 +462,23 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         mode: table.stats ? (table.stats.mode === true || table.stats.mode === 'true' || table.stats.mode === 1 || table.stats.mode === '1') : false
                     });
 
-                    (table.vars || []).forEach(v => {
+                    (table.vars || []).forEach((v, index) => {
                         const infoList = [];
-                        const baseName = v.name.replace(/_(mean|median|mode)$/, '');
+                        let resolvedName = v.name;
+
+                        // 통계 요약표(statistics)이고 변수명에 접미사(_mean, _median, _mode)가 없는 경우 복원
+                        if (folderType === 'statistics' && !v.name.endsWith('_mean') && !v.name.endsWith('_median') && !v.name.endsWith('_mode')) {
+                            const activeKeys = [];
+                            if (table.stats?.mean === true || table.stats?.mean === 'true' || table.stats?.mean === 1 || table.stats?.mean === '1') activeKeys.push('mean');
+                            if (table.stats?.median === true || table.stats?.median === 'true' || table.stats?.median === 1 || table.stats?.median === '1') activeKeys.push('median');
+                            if (table.stats?.mode === true || table.stats?.mode === 'true' || table.stats?.mode === 1 || table.stats?.mode === '1') activeKeys.push('mode');
+
+                            if (activeKeys.length === 0) activeKeys.push('mean');
+                            const statKey = activeKeys[index] || activeKeys[0];
+                            resolvedName = `${v.name}_${statKey}`;
+                        }
+
+                        const baseName = resolvedName.replace(/_(mean|median|mode)$/, '');
                         if (folderType === 'frequency') {
                             if (table.bands && Array.isArray(table.bands)) {
                                 table.bands.forEach(b => {
@@ -501,9 +515,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         }
 
                         formattedSummaries.push({
-                            id: v.name,
+                            id: resolvedName,
                             label: v.label || baseName,
-                            subId: v.name,
+                            subId: resolvedName,
                             info: infoList.map(item => ({ ...item, inEdit: false }))
                         });
                     });
@@ -612,16 +626,16 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     const hasMedian = medianVal;
                     const hasMode = modeVal;
 
-                    const meanLabel = summaries.find(s => s.id === itemId + '_mean')?.label ?? 'mean';
-                    const medianLabel = summaries.find(s => s.id === itemId + '_median')?.label ?? 'median';
-                    const modeLabel = summaries.find(s => s.id === itemId + '_mode')?.label ?? 'mode';
+                    const meanLabel = summaries.find(s => s.id === itemId + '_mean' || s.id === itemId)?.label ?? 'mean';
+                    const medianLabel = summaries.find(s => s.id === itemId + '_median' || s.id === itemId)?.label ?? 'median';
+                    const modeLabel = summaries.find(s => s.id === itemId + '_mode' || s.id === itemId)?.label ?? 'mode';
 
-                    if (hasMean) vars.push({ name: itemId + '_mean', label: meanLabel });
-                    if (hasMedian) vars.push({ name: itemId + '_median', label: medianLabel });
-                    if (hasMode) vars.push({ name: itemId + '_mode', label: modeLabel });
+                    if (hasMean) vars.push({ name: itemId, label: meanLabel });
+                    if (hasMedian) vars.push({ name: itemId, label: medianLabel });
+                    if (hasMode) vars.push({ name: itemId, label: modeLabel });
 
                     if (vars.length === 0) {
-                        vars.push({ name: itemId + '_mean', label: meanLabel });
+                        vars.push({ name: itemId, label: meanLabel });
                     }
                 });
             } else {
@@ -629,7 +643,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     const varInfo = summaries.find(s => s.id === itemId);
                     const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
                     const showLabel = baseVar ? baseVar.label || baseVar.name : itemId;
-                    
+
                     let finalLabel = varInfo ? varInfo.label : showLabel;
                     if (varInfo && f && f.name) {
                         const isCorrupted = varInfo.label === f.name ||
@@ -642,7 +656,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             finalLabel = showLabel;
                         }
                     }
-                    
+
                     return {
                         name: itemId,
                         label: finalLabel
@@ -680,12 +694,13 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         try {
             loadingSpinner.show();
             const result = await saveSummaryDetail.mutateAsync(payload);
-            if (result?.success === "777" || result?.message) {
+            if (result?.success === "777") {
                 if (onUnsavedChange) onUnsavedChange(false);
                 modal.showAlert('알림', successMessage);
                 await fetchSummaryData(); // 재조회 실행
                 return true;
             }
+            modal.showAlert('오류', '요약표 처리 중 오류가 발생했습니다.');
             return false;
         } catch (error) {
             console.error('Save error:', error);
@@ -1244,10 +1259,11 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         const varLabel = baseVar?.label || baseVar?.name || firstVarId;
         const sp = baseVar?.scale_points || scaleMax;
 
-        let folderId = firstVarId;
+        const prefix = currentTab === 'scale' ? 'summary_freq' : 'summary_stat';
+        let folderId = `${prefix}_${firstVarId}`;
         let counter = 2;
         while (folders.some(f => f.id === folderId)) {
-            folderId = `${firstVarId}_${counter}`;
+            folderId = `${prefix}_${firstVarId}_${counter}`;
             counter++;
         }
 
@@ -1398,7 +1414,14 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         const newSummariesToAdd = [];
 
         selectedProposals.forEach(prop => {
-            const folderId = prop.items[0];
+            const prefix = wizardTab === 'scale' ? 'summary_freq' : 'summary_stat';
+            const baseFolderId = `${prefix}_${prop.items[0]}`;
+            let folderId = baseFolderId;
+            let counter = 2;
+            while (folders.some(f => f.id === folderId)) {
+                folderId = `${baseFolderId}_${counter}`;
+                counter++;
+            }
             const subItems = [];
 
             if (wizardTab === 'scale') {
