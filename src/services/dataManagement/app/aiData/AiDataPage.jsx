@@ -210,7 +210,9 @@ const AiDataPage = () => {
     const aiCost = progressInfo ? `$${progressInfo.totalAiCostUsd}` : "$0";
 
     const progressPct = progressInfo
-        ? (progressInfo.isFinished ? 100 : Math.round((progressInfo.completed / (progressInfo.totalRespondents || 1)) * 100))
+        ? ((!progressInfo.totalRespondents || progressInfo.totalRespondents === 0)
+            ? 0
+            : (progressInfo.isFinished ? 100 : Math.round((progressInfo.completed / progressInfo.totalRespondents) * 100)))
         : 0;
 
     // 검색 & 필터 적용된 리스트
@@ -341,14 +343,13 @@ const AiDataPage = () => {
                 }
 
                 const blob = response.data;
-                let filename = `${projectnum}_e2e_testdata_${new Date().toISOString().replace(/[-T:]/g, '').slice(0, 14)}.sav`;
-
-                const contentDisposition = response.headers?.['content-disposition'];
-                if (contentDisposition) {
-                    const match = contentDisposition.match(/filename\*?=["']?([^"';]+)["']?/);
-                    if (match && match[1]) {
-                        filename = decodeURIComponent(match[1].replace(/UTF-8''/i, ''));
-                    }
+                let filename = "";
+                if (checkedIds.length === 1) {
+                    filename = `${projectnum}_${checkedIds[0]}.sav`;
+                } else if (checkedIds.length > 1) {
+                    filename = `${projectnum}_multiple.sav`;
+                } else {
+                    filename = `${projectnum}_all.sav`;
                 }
 
                 const downloadUrl = window.URL.createObjectURL(blob);
