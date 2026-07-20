@@ -24,7 +24,7 @@ const menuItems = [
     description:
       "문항집계, 교차분석, AI 분석, AI 보고서를 통해 수집된 데이터를 종합적으로 분석합니다.",
     icon: BarChart3,
-    status: "1차오픈",
+    status: "정식오픈",
     color: "#4EA3FF",
     bg: "rgba(78,163,255,0.12)",
     statusColor: "#2DB670"
