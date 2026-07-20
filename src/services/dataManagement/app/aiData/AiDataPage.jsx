@@ -1047,7 +1047,7 @@ const AiDataPage = () => {
                                     onClick={() => triggerFetchJob(checkedIds.length > 0 ? checkedIds : undefined)}
                                     style={{
                                         height: '30px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
-                                        background: '#fff', fontSize: '12px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'
+                                        background: '#fff', fontSize: '11.5px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', whiteSpace: 'nowrap'
                                     }}
                                     title="진행상태 및 상세결과 새로고침"
                                 >
@@ -1059,7 +1059,7 @@ const AiDataPage = () => {
                                     onClick={handleExportSAV}
                                     style={{
                                         height: '30px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
-                                        background: '#fff', fontSize: '12px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'
+                                        background: '#fff', fontSize: '11.5px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', whiteSpace: 'nowrap'
                                     }}
                                 >
                                     <Download size={12} />
@@ -1072,8 +1072,8 @@ const AiDataPage = () => {
                                             onClick={handleDeleteSelected}
                                             style={{
                                                 height: '30px', padding: '0 10px', border: '1px solid #fca5a5', borderRadius: '6px',
-                                                background: '#fef2f2', fontSize: '12px', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer',
-                                                transition: 'all 0.15s'
+                                                background: '#fef2f2', fontSize: '11.5px', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer',
+                                                transition: 'all 0.15s', whiteSpace: 'nowrap'
                                             }}
                                             onMouseOver={(e) => { e.currentTarget.style.background = '#fee2e2'; }}
                                             onMouseOut={(e) => { e.currentTarget.style.background = '#fef2f2'; }}
