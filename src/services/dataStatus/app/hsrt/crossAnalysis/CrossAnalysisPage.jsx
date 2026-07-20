@@ -1843,6 +1843,44 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [totalTables, setTotalTables] = useState(0);
     const PAGE_SIZE = 20;
 
+    // Refs to avoid stale closures in event listeners
+    const showNRef = useRef(showN);
+    const showPctRef = useRef(showPct);
+    const decimalNRef = useRef(decimalN);
+    const decimalPctRef = useRef(decimalPct);
+    const hideZeroBaseColumnsRef = useRef(hideZeroBaseColumns);
+    const selectedWeightRef = useRef(selectedWeight);
+    const bannerSearchRef = useRef(bannerSearch);
+    const selectedXInfoRef = useRef(selectedXInfo);
+    const sigTypeRef = useRef(sigType);
+    const sigExcludeUnderNRef = useRef(sigExcludeUnderN);
+    const sigExcludeEtcRef = useRef(sigExcludeEtc);
+    const sigLevelRef = useRef(sigLevel);
+    const sigDiffMinRef = useRef(sigDiffMin);
+    const sigDiffMaxRef = useRef(sigDiffMax);
+    const uiSettingsRef = useRef(uiSettings);
+
+    useEffect(() => {
+        showNRef.current = showN;
+        showPctRef.current = showPct;
+        decimalNRef.current = decimalN;
+        decimalPctRef.current = decimalPct;
+        hideZeroBaseColumnsRef.current = hideZeroBaseColumns;
+        selectedWeightRef.current = selectedWeight;
+        bannerSearchRef.current = bannerSearch;
+        selectedXInfoRef.current = selectedXInfo;
+        sigTypeRef.current = sigType;
+        sigExcludeUnderNRef.current = sigExcludeUnderN;
+        sigExcludeEtcRef.current = sigExcludeEtc;
+        sigLevelRef.current = sigLevel;
+        sigDiffMinRef.current = sigDiffMin;
+        sigDiffMaxRef.current = sigDiffMax;
+        uiSettingsRef.current = uiSettings;
+    }, [
+        showN, showPct, decimalN, decimalPct, hideZeroBaseColumns, selectedWeight, bannerSearch, selectedXInfo,
+        sigType, sigExcludeUnderN, sigExcludeEtc, sigLevel, sigDiffMin, sigDiffMax, uiSettings
+    ]);
+
 
     // 키보드 이벤트 (Undo/Redo)
     useEffect(() => {
@@ -1962,10 +2000,16 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         try {
             loadingSpinner.show();
 
-            let fetchedUi = uiSettings;
+            let fetchedUi = uiSettingsRef.current;
             let recodedVars = recodedVariablesRef.current;
             let baseVars = baseVariablesRef.current;
             let initialWeightFromCtx = undefined;
+
+            let currentShowN = showNRef.current;
+            let currentShowPct = showPctRef.current;
+            let currentDecimalN = decimalNRef.current;
+            let currentDecimalPct = decimalPctRef.current;
+            let currentHideZeroBaseColumns = hideZeroBaseColumnsRef.current;
 
             if (!contextFetchedRef.current) {
                 // 1. Context 데이터 가져오기
@@ -1993,6 +2037,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
                     const initialWeight = ctxPayload.weight_variable || '없음';
                     setSelectedWeight(initialWeight);
+                    selectedWeightRef.current = initialWeight;
                     initialWeightFromCtx = initialWeight;
 
                     setProjectNum(ctxPayload.pn || "");
@@ -2018,13 +2063,28 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         percent_digits: resolvedPercentDigits,
                     };
                     setUiSettings(fetchedUi);
-                    setShowN(fetchedUi.format_show_n ?? true);
-                    setDecimalN(fetchedUi.format_n_round ?? ctxPayload.n_digits ?? 0);
-                    setShowPct(fetchedUi.format_show_percent ?? true);
-                    setDecimalPct(fetchedUi.format_percent_round ?? ctxPayload.percent_digits ?? 1);
-                    setHideZeroBaseColumns(fetchedUi.hide_zero_base_columns ?? false);
+                    uiSettingsRef.current = fetchedUi;
+                    currentShowN = fetchedUi.format_show_n ?? true;
+                    currentDecimalN = fetchedUi.format_n_round ?? ctxPayload.n_digits ?? 0;
+                    currentShowPct = fetchedUi.format_show_percent ?? true;
+                    currentDecimalPct = fetchedUi.format_percent_round ?? ctxPayload.percent_digits ?? 1;
+                    currentHideZeroBaseColumns = fetchedUi.hide_zero_base_columns ?? false;
+
+                    // Update refs immediately so they are fresh for this synchronous execution
+                    showNRef.current = currentShowN;
+                    decimalNRef.current = currentDecimalN;
+                    showPctRef.current = currentShowPct;
+                    decimalPctRef.current = currentDecimalPct;
+                    hideZeroBaseColumnsRef.current = currentHideZeroBaseColumns;
+
+                    setShowN(currentShowN);
+                    setDecimalN(currentDecimalN);
+                    setShowPct(currentShowPct);
+                    setDecimalPct(currentDecimalPct);
+                    setHideZeroBaseColumns(currentHideZeroBaseColumns);
                     const resolvedSigType = fetchedUi.sig_diff_fin_mode === 't_test' ? 't-test' : (fetchedUi.sig_diff_fin_mode ?? fetchedUi.sig_type ?? (fetchedUi.show_t_test ? 't-test' : 'none'));
                     setSigType(resolvedSigType);
+                    sigTypeRef.current = resolvedSigType;
 
                     let defaultExcludeN = 3;
                     let defaultExcludeEtc = true;
@@ -2054,6 +2114,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     setSigLevel(initialLevel);
                     setSigDiffMin(initialDiffMin);
                     setSigDiffMax(initialDiffMax);
+
+                    sigExcludeUnderNRef.current = initialExcludeN;
+                    sigExcludeEtcRef.current = initialExcludeEtc;
+                    sigLevelRef.current = initialLevel;
+                    sigDiffMinRef.current = initialDiffMin;
+                    sigDiffMaxRef.current = initialDiffMax;
 
                     setLocalSigExcludeUnderN(initialExcludeN);
                     setLocalSigExcludeEtc(initialExcludeEtc);
@@ -2138,12 +2204,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
             // 2. 전체표 목록 (Overview) 가져오기
             let sigPolicy = {};
-            const currentSigType = overrideSigSettings && overrideSigSettings.sigType ? overrideSigSettings.sigType : (isInitialSetupRef.current ? (fetchedUi?.sig_type ?? (fetchedUi?.show_t_test ? 't-test' : 'none')) : sigType);
-            const currentExcludeN = overrideSigSettings ? overrideSigSettings.excludeN : (isInitialSetupRef.current ? (fetchedUi?.sig_exclude_under_n ?? sigExcludeUnderN) : sigExcludeUnderN);
-            const currentExcludeEtc = overrideSigSettings ? overrideSigSettings.excludeEtc : (isInitialSetupRef.current ? (fetchedUi?.sig_exclude_etc ?? sigExcludeEtc) : sigExcludeEtc);
-            const currentSigLevel = overrideSigSettings ? overrideSigSettings.level : (isInitialSetupRef.current ? (fetchedUi?.sig_level ?? sigLevel) : sigLevel);
-            const currentDiffMin = overrideSigSettings ? overrideSigSettings.diffMin : (isInitialSetupRef.current ? (fetchedUi?.sig_diff_min ?? sigDiffMin) : sigDiffMin);
-            const currentDiffMax = overrideSigSettings ? overrideSigSettings.diffMax : (isInitialSetupRef.current ? (fetchedUi?.sig_diff_max ?? sigDiffMax) : sigDiffMax);
+            const currentSigType = overrideSigSettings && overrideSigSettings.sigType ? overrideSigSettings.sigType : (isInitialSetupRef.current ? (fetchedUi?.sig_type ?? (fetchedUi?.show_t_test ? 't-test' : 'none')) : sigTypeRef.current);
+            const currentExcludeN = overrideSigSettings ? overrideSigSettings.excludeN : (isInitialSetupRef.current ? (fetchedUi?.sig_exclude_under_n ?? sigExcludeUnderNRef.current) : sigExcludeUnderNRef.current);
+            const currentExcludeEtc = overrideSigSettings ? overrideSigSettings.excludeEtc : (isInitialSetupRef.current ? (fetchedUi?.sig_exclude_etc ?? sigExcludeEtcRef.current) : sigExcludeEtcRef.current);
+            const currentSigLevel = overrideSigSettings ? overrideSigSettings.level : (isInitialSetupRef.current ? (fetchedUi?.sig_level ?? sigLevelRef.current) : sigLevelRef.current);
+            const currentDiffMin = overrideSigSettings ? overrideSigSettings.diffMin : (isInitialSetupRef.current ? (fetchedUi?.sig_diff_min ?? sigDiffMinRef.current) : sigDiffMinRef.current);
+            const currentDiffMax = overrideSigSettings ? overrideSigSettings.diffMax : (isInitialSetupRef.current ? (fetchedUi?.sig_diff_max ?? sigDiffMaxRef.current) : sigDiffMaxRef.current);
 
             if (currentSigType === 'none') {
                 sigPolicy = {
@@ -2169,41 +2235,41 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 };
             }
 
-            const currentWeight = overrideWeight !== undefined ? overrideWeight : (initialWeightFromCtx !== undefined ? initialWeightFromCtx : selectedWeight);
+            const currentWeight = overrideWeight !== undefined ? overrideWeight : (initialWeightFromCtx !== undefined ? initialWeightFromCtx : selectedWeightRef.current);
 
             const reqData = {
                 pageid: pageId,
                 user: user,
-                banner_mode: selectedXInfo === '__none__' ? 'stub' : 'override',
+                banner_mode: selectedXInfoRef.current === '__none__' ? 'stub' : 'override',
                 start: (targetPage - 1) * PAGE_SIZE,
                 limit: PAGE_SIZE,
-                search: bannerSearch,
+                search: bannerSearchRef.current,
                 filter_expression: currentFilterExp,
                 use_recoded: true,
                 include_stats: currentSigType === 't-test' ? ["t-test"] : [],
                 weight_mode: currentWeight !== '없음' ? 'weight' : 'none',
                 weight_variable: currentWeight !== '없음' ? currentWeight : null,
                 display_policy: {
-                    show_n: isInitialSetupRef.current ? (fetchedUi?.format_show_n ?? showN) : showN,
-                    show_percent: isInitialSetupRef.current ? (fetchedUi?.format_show_percent ?? showPct) : showPct,
-                    percent_symbol: isInitialSetupRef.current ? (fetchedUi?.percent_symbol ?? fetchedUi?.format_show_percent ?? showPct) : (uiSettings?.percent_symbol ?? showPct),
-                    percent_as_column: isInitialSetupRef.current ? (fetchedUi?.percent_as_column ?? fetchedUi?.format_percent_as_column ?? false) : (uiSettings?.percent_as_column ?? uiSettings?.format_percent_as_column ?? false),
-                    stub_group_layout: isInitialSetupRef.current ? (fetchedUi?.stub_group_layout ?? 'merge') : (uiSettings?.stub_group_layout ?? 'merge'),
-                    hide_zero_base_columns: isInitialSetupRef.current ? (fetchedUi?.hide_zero_base_columns ?? hideZeroBaseColumns) : hideZeroBaseColumns,
-                    hide_zero_stubs: isInitialSetupRef.current ? (fetchedUi?.hide_zero_stubs ?? false) : (uiSettings?.hide_zero_stubs ?? false),
-                    hide_zero_banners: isInitialSetupRef.current ? (fetchedUi?.hide_zero_banners ?? false) : (uiSettings?.hide_zero_banners ?? false),
-                    n_digits: Number(isInitialSetupRef.current ? (fetchedUi?.format_n_round ?? (decimalN === '' ? 0 : decimalN)) : (decimalN === '' ? 0 : decimalN)),
-                    percent_digits: Number(isInitialSetupRef.current ? (fetchedUi?.format_percent_round ?? (decimalPct === '' ? 1 : decimalPct)) : (decimalPct === '' ? 1 : decimalPct)),
-                    mean_digits: fetchedUi?.mean_digits ?? uiSettings?.mean_digits ?? 2,
-                    std_digits: fetchedUi?.std_digits ?? uiSettings?.std_digits ?? 2,
-                    median_digits: fetchedUi?.median_digits ?? uiSettings?.median_digits ?? 2,
-                    min_digits: fetchedUi?.min_digits ?? uiSettings?.min_digits ?? 0,
-                    max_digits: fetchedUi?.max_digits ?? uiSettings?.max_digits ?? 0,
-                    var_digits: fetchedUi?.var_digits ?? uiSettings?.var_digits ?? 2,
-                    zero_display: fetchedUi?.zero_display || uiSettings?.zero_display || "0",
-                    empty_display: fetchedUi?.empty_display || uiSettings?.empty_display || "blank",
-                    base_prefix: isInitialSetupRef.current ? (fetchedUi?.base_prefix ?? "(") : (uiSettings?.base_prefix ?? "("),
-                    base_postfix: isInitialSetupRef.current ? (fetchedUi?.base_postfix ?? ")") : (uiSettings?.base_postfix ?? ")"),
+                    show_n: currentShowN,
+                    show_percent: currentShowPct,
+                    percent_symbol: isInitialSetupRef.current ? (fetchedUi?.percent_symbol ?? fetchedUi?.format_show_percent ?? currentShowPct) : (uiSettingsRef.current?.percent_symbol ?? currentShowPct),
+                    percent_as_column: isInitialSetupRef.current ? (fetchedUi?.percent_as_column ?? fetchedUi?.format_percent_as_column ?? false) : (uiSettingsRef.current?.percent_as_column ?? uiSettingsRef.current?.format_percent_as_column ?? false),
+                    stub_group_layout: isInitialSetupRef.current ? (fetchedUi?.stub_group_layout ?? 'merge') : (uiSettingsRef.current?.stub_group_layout ?? 'merge'),
+                    hide_zero_base_columns: currentHideZeroBaseColumns,
+                    hide_zero_stubs: isInitialSetupRef.current ? (fetchedUi?.hide_zero_stubs ?? false) : (uiSettingsRef.current?.hide_zero_stubs ?? false),
+                    hide_zero_banners: isInitialSetupRef.current ? (fetchedUi?.hide_zero_banners ?? false) : (uiSettingsRef.current?.hide_zero_banners ?? false),
+                    n_digits: Number(currentDecimalN === '' ? 0 : currentDecimalN),
+                    percent_digits: Number(currentDecimalPct === '' ? 1 : currentDecimalPct),
+                    mean_digits: fetchedUi?.mean_digits ?? uiSettingsRef.current?.mean_digits ?? 2,
+                    std_digits: fetchedUi?.std_digits ?? uiSettingsRef.current?.std_digits ?? 2,
+                    median_digits: fetchedUi?.median_digits ?? uiSettingsRef.current?.median_digits ?? 2,
+                    min_digits: fetchedUi?.min_digits ?? uiSettingsRef.current?.min_digits ?? 0,
+                    max_digits: fetchedUi?.max_digits ?? uiSettingsRef.current?.max_digits ?? 0,
+                    var_digits: fetchedUi?.var_digits ?? uiSettingsRef.current?.var_digits ?? 2,
+                    zero_display: fetchedUi?.zero_display || uiSettingsRef.current?.zero_display || "0",
+                    empty_display: fetchedUi?.empty_display || uiSettingsRef.current?.empty_display || "blank",
+                    base_prefix: isInitialSetupRef.current ? (fetchedUi?.base_prefix ?? "(") : (uiSettingsRef.current?.base_prefix ?? "("),
+                    base_postfix: isInitialSetupRef.current ? (fetchedUi?.base_postfix ?? ")") : (uiSettingsRef.current?.base_postfix ?? ")"),
                     ...sigPolicy
                 },
                 _config: {
@@ -2212,8 +2278,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     }
                 }
             };
-            if (selectedXInfo !== '__none__') {
-                reqData.banner = [selectedXInfo];
+            if (selectedXInfoRef.current !== '__none__') {
+                reqData.banner = [selectedXInfoRef.current];
             }
 
             const overviewRes = await getOverviewStyled.mutateAsync(reqData);
