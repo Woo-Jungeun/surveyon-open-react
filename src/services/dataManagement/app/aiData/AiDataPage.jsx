@@ -1,7 +1,7 @@
 import { useState, useContext, cloneElement, useMemo, useEffect, useRef } from 'react';
 import {
-    Search, RotateCcw, Download, ExternalLink, Play, AlertTriangle,
-    CheckCircle2, X, RefreshCw
+    Search, Download, ExternalLink, Play, AlertTriangle,
+    CheckCircle2, X, RefreshCw, Clock, Loader2, Trash2
 } from 'lucide-react';
 import DataHeader from '@/services/dataStatus/components/DataHeader';
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -35,9 +35,10 @@ const AiDataPage = () => {
     const [isSimulating, setIsSimulating] = useState(false);
     const [respondents, setRespondents] = useState([]);
     const [selectedPid, setSelectedPid] = useState("");
+    const [checkedIds, setCheckedIds] = useState([]);
 
-    // 내보내기 팝업 표시 여부
-    const [showExportModal, setShowExportModal] = useState(false);
+    // 내보내기 팝업 표시 여부 (보류로 인한 비활성화)
+    // const [showExportModal, setShowExportModal] = useState(false);
 
     // 필터 & 검색
     const [filterStatus, setFilterStatus] = useState("all"); // 'all' | 'pass' | 'defect'
@@ -47,7 +48,7 @@ const AiDataPage = () => {
     const auth = useSelector((store) => store.auth);
     const [progressInfo, setProgressInfo] = useState(null);
     const [jobError, setJobError] = useState("");
-    const { viewQaJobs, getQaTicket, runQaE2eJobs, resetTestPids } = AiDataPageApi();
+    const { viewQaJobs, getQaTicket, runQaE2eJobs, resetTestPids, exportTestData } = AiDataPageApi();
 
     // 티켓 관리 (티켓은 미리 받아둔다. 단, 타이머 폴링 금지)
     const ticketRef = useRef(null);
@@ -91,12 +92,16 @@ const AiDataPage = () => {
     };
 
     // 최신 작업 상태 조회 (수동 새로고침 겸용)
-    const triggerFetchJob = async () => {
+    const triggerFetchJob = async (pids) => {
         const projectnum = sessionStorage.getItem("projectnum");
         const userId = auth?.user?.userId || sessionStorage.getItem("userId");
         if (!projectnum || !userId) return;
         try {
-            const res = await viewQaJobs.mutateAsync({ pn: projectnum, user: userId });
+            const reqData = { pn: projectnum, user: userId };
+            if (Array.isArray(pids) && pids.length > 0) {
+                reqData.pids = pids;
+            }
+            const res = await viewQaJobs.mutateAsync(reqData);
             if (res?.success === "777" && res?.resultjson) {
                 const payload = res.resultjson;
                 if (payload.startUrl) {
@@ -139,7 +144,18 @@ const AiDataPage = () => {
                                 lastUrl: item.lastUrl || null
                             };
                         });
-                        setRespondents(mapped);
+
+                        if (Array.isArray(pids) && pids.length > 0) {
+                            setRespondents(prev => {
+                                const newMap = new Map(prev.map(r => [r.id, r]));
+                                mapped.forEach(m => {
+                                    newMap.set(m.id, m);
+                                });
+                                return Array.from(newMap.values());
+                            });
+                        } else {
+                            setRespondents(mapped);
+                        }
 
                         // 러너 응답 확인: 하나라도 pending이 아니면(running, success, fail) 러너 기동 완료 처리
                         const hasActiveRunner = mapped.some(p => p.status !== 'pending');
@@ -151,15 +167,10 @@ const AiDataPage = () => {
                             }
                         }
 
-                        // 선택된 응답자가 현재 목록에 없으면 첫 결함 또는 첫 행 선택
+                        // 선택된 응답자가 현재 목록에 없으면 선택 해제
                         const isStillPresent = mapped.some(r => r.id === selectedPid);
                         if (!isStillPresent) {
-                            const firstDefect = mapped.find(r => r.status === "defect");
-                            if (firstDefect) {
-                                setSelectedPid(firstDefect.id);
-                            } else if (mapped.length > 0) {
-                                setSelectedPid(mapped[0].id);
-                            }
+                            setSelectedPid("");
                         }
                     }
                 }
@@ -235,8 +246,12 @@ const AiDataPage = () => {
         }));
     }, [filteredRespondents, selectedPid]);
 
-    // 초기화 및 테스트 데이터 정리
-    const handleReset = async () => {
+    // 선택 삭제 (백엔드 API 호출)
+    const handleDeleteSelected = async () => {
+        if (checkedIds.length === 0) {
+            modal.showAlert("알림", "삭제할 응답자를 선택해 주세요.");
+            return;
+        }
         const projectnum = sessionStorage.getItem("projectnum");
         const userId = auth?.user?.userId || sessionStorage.getItem("userId");
         if (!projectnum || !userId) {
@@ -244,43 +259,90 @@ const AiDataPage = () => {
             return;
         }
 
-        if (respondents.length === 0) {
-            modal.showAlert("알림", "정리할 테스트 데이터가 존재하지 않습니다.");
-            return;
-        }
-
         try {
-            const pidsToReset = respondents.map(r => r.id).slice(0, 500);
             const resetRes = await resetTestPids.mutateAsync({
                 pn: projectnum,
                 user: userId,
-                pids: pidsToReset
+                pids: checkedIds
             });
 
             if (resetRes?.success === "777") {
                 const deletedPids = resetRes?.resultjson?.deletedPids || [];
                 const skippedList = resetRes?.resultjson?.skipped || [];
-                let msg = `테스트 데이터가 정리되었습니다. (삭제된 PID: ${deletedPids.length}개)`;
+                let msg = `선택한 테스트 데이터가 정리되었습니다. (삭제된 PID: ${deletedPids.length}개)`;
                 if (skippedList.length > 0) {
                     msg += `\n\n[정리 제외 항목]:\n` + skippedList.map(s => `- ${s.pid}: ${s.reason}`).join('\n');
                 }
                 modal.showAlert("알림", msg);
-
+                setCheckedIds([]);
                 // 작업 상태 갱신
                 await triggerFetchJob();
             } else {
-                modal.showAlert("알림", resetRes?.resultjson?.errorcontent || "데이터 정리 중 오류가 발생했습니다.");
+                modal.showAlert("알림", resetRes?.resultjson?.errorcontent || "선택 삭제 중 오류가 발생했습니다.");
             }
         } catch (err) {
-            console.error("handleReset error:", err);
-            modal.showAlert("알림", "데이터 정리 중 오류가 발생했습니다.");
+            console.error("handleDeleteSelected error:", err);
+            modal.showAlert("알림", "선택 삭제 중 오류가 발생했습니다.");
         }
     };
 
-    // 내보내기 형식 실행
-    const handleExportFormat = () => {
-        setShowExportModal(false);
-        modal.showAlert("알림", "서비스 준비중인 API입니다.");
+
+    // SAV 파일 직접 내보내기 및 다운로드
+    const handleExportSAV = async () => {
+        const projectnum = sessionStorage.getItem("projectnum");
+        const userId = auth?.user?.userId || sessionStorage.getItem("userId");
+        if (!projectnum || !userId) {
+            modal.showAlert("알림", "프로젝트 정보 또는 사용자 정보가 올바르지 않습니다.");
+            return;
+        }
+
+        try {
+            const reqData = { pn: projectnum, user: userId };
+            if (checkedIds.length > 0) {
+                reqData.pids = checkedIds;
+            }
+
+            const response = await exportTestData.mutateAsync(reqData);
+
+            if (response && response.data) {
+                const text = await response.data.text();
+                try {
+                    const parsed = JSON.parse(text);
+                    if (parsed.success === "900" || parsed.success === 900) {
+                        const errMsg = parsed.message || "잘못된 요청입니다.";
+                        modal.showAlert("알림", `${errMsg}`);
+                        return;
+                    }
+                } catch (e) {
+                    // JSON 파싱 실패 -> 바이너리 .sav 파일 다운로드 진행
+                }
+
+                const blob = response.data;
+                let filename = `${projectnum}_e2e_testdata_${new Date().toISOString().replace(/[-T:]/g, '').slice(0, 14)}.sav`;
+
+                const contentDisposition = response.headers?.['content-disposition'];
+                if (contentDisposition) {
+                    const match = contentDisposition.match(/filename\*?=["']?([^"';]+)["']?/);
+                    if (match && match[1]) {
+                        filename = decodeURIComponent(match[1].replace(/UTF-8''/i, ''));
+                    }
+                }
+
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.setAttribute('download', filename);
+                document.body.appendChild(link);
+                link.click();
+                link.parentNode.removeChild(link);
+                window.URL.revokeObjectURL(downloadUrl);
+            } else {
+                modal.showAlert("알림", "파일을 다운로드할 수 없습니다.");
+            }
+        } catch (err) {
+            console.error("handleExportSAV error:", err);
+            modal.showAlert("알림", "데이터 내보내기 중 오류가 발생했습니다.");
+        }
     };
 
 
@@ -365,9 +427,66 @@ const AiDataPage = () => {
         </td>
     );
 
+    const RowCheckboxCell = (props) => {
+        const { dataItem, style, className } = props;
+        const isChecked = checkedIds.includes(dataItem.id);
+        const handleChange = (e) => {
+            e.stopPropagation();
+            if (isChecked) {
+                setCheckedIds(prev => prev.filter(id => id !== dataItem.id));
+            } else {
+                setCheckedIds(prev => [...prev, dataItem.id]);
+            }
+        };
+
+        return (
+            <td style={{ ...style, padding: '8px 12px', textAlign: 'center', verticalAlign: 'middle' }} className={className} onClick={(e) => e.stopPropagation()}>
+                <span className="k-checkbox-wrap">
+                    <input
+                        type="checkbox"
+                        className="k-checkbox k-checkbox-md k-rounded-md"
+                        checked={isChecked}
+                        onChange={handleChange}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ cursor: 'pointer' }}
+                    />
+                </span>
+            </td>
+        );
+    };
+
+    const HeaderCheckboxCell = () => {
+        const allChecked = filteredRespondents.length > 0 && checkedIds.length === filteredRespondents.length;
+        const someChecked = checkedIds.length > 0 && !allChecked;
+
+        const handleChange = () => {
+            if (allChecked) {
+                setCheckedIds([]);
+            } else {
+                setCheckedIds(filteredRespondents.map(r => r.id));
+            }
+        };
+
+        return (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }} onClick={(e) => e.stopPropagation()}>
+                <span className="k-checkbox-wrap">
+                    <input
+                        type="checkbox"
+                        className="k-checkbox k-checkbox-md k-rounded-md"
+                        checked={allChecked}
+                        ref={el => { if (el) el.indeterminate = someChecked; }}
+                        onChange={handleChange}
+                        style={{ cursor: 'pointer' }}
+                    />
+                </span>
+            </div>
+        );
+    };
+
     const rowRender = (trElement, props) => {
         const { dataItem } = props;
         const isSelected = !!dataItem?._selected;
+        const isChecked = checkedIds.includes(dataItem?.id);
 
         const baseClass = (trElement.props.className || "")
             .replace(/\bk-selected\b/g, "")
@@ -378,7 +497,7 @@ const AiDataPage = () => {
             className: `${baseClass} ${isSelected ? 'selected-pid-row' : ''}`.trim(),
             style: {
                 ...trElement.props.style,
-                background: isSelected ? '#f0fdf4' : '#ffffff',
+                background: isSelected ? '#f0fdf4' : (isChecked ? '#f8fafc' : '#ffffff'),
                 cursor: 'pointer'
             }
         };
@@ -925,7 +1044,7 @@ const AiDataPage = () => {
                                     />
                                 </div>
                                 <button
-                                    onClick={triggerFetchJob}
+                                    onClick={() => triggerFetchJob(checkedIds.length > 0 ? checkedIds : undefined)}
                                     style={{
                                         height: '30px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
                                         background: '#fff', fontSize: '12px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'
@@ -933,36 +1052,44 @@ const AiDataPage = () => {
                                     title="진행상태 및 상세결과 새로고침"
                                 >
                                     <RefreshCw size={12} />
-                                    새로고침
+                                    {checkedIds.length > 0 ? `선택 새로고침 (${checkedIds.length})` : '새로고침'}
                                 </button>
+
                                 <button
-                                    onClick={handleReset}
-                                    style={{
-                                        height: '30px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
-                                        background: '#fff', fontSize: '12px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'
-                                    }}
-                                    title="테스트 데이터 청소 및 정리"
-                                >
-                                    <RotateCcw size={12} />
-                                    데이터 정리
-                                </button>
-                                <button
-                                    onClick={() => setShowExportModal(true)}
+                                    onClick={handleExportSAV}
                                     style={{
                                         height: '30px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
                                         background: '#fff', fontSize: '12px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'
                                     }}
                                 >
                                     <Download size={12} />
-                                    내보내기
+                                    {checkedIds.length > 0 ? `선택 내보내기 (${checkedIds.length})` : '내보내기'}
                                 </button>
+                                {checkedIds.length > 0 && (
+                                    <>
+                                        <div style={{ width: '1px', height: '16px', backgroundColor: '#e2e8f0', margin: '0 4px' }} />
+                                        <button
+                                            onClick={handleDeleteSelected}
+                                            style={{
+                                                height: '30px', padding: '0 10px', border: '1px solid #fca5a5', borderRadius: '6px',
+                                                background: '#fef2f2', fontSize: '12px', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer',
+                                                transition: 'all 0.15s'
+                                            }}
+                                            onMouseOver={(e) => { e.currentTarget.style.background = '#fee2e2'; }}
+                                            onMouseOut={(e) => { e.currentTarget.style.background = '#fef2f2'; }}
+                                        >
+                                            <Trash2 size={12} />
+                                            선택 삭제 ({checkedIds.length})
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </div>
 
                         {/* 가이드 메시지 */}
                         {!jobError && (
                             <div style={{ fontSize: '11.5px', color: '#64748b', background: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '10px', shrink: 0 }}>
-                                💡 행을 클릭하면 우측 리포트에서 상세 로그가 조회됩니다.
+                                💡 행을 클릭하면 우측 리포트에서 상세 로그가 조회됩니다. 체크박스 선택 시 {"'선택 삭제'"} 버튼이 활성화됩니다.
                             </div>
                         )}
 
@@ -1002,6 +1129,14 @@ const AiDataPage = () => {
                                     copyable={false}
                                 >
 
+                                    <Column
+                                        field="checkbox"
+                                        width="45px"
+                                        resizable={false}
+                                        headerCell={HeaderCheckboxCell}
+                                        cell={RowCheckboxCell}
+                                        headerClassName="k-header-center"
+                                    />
                                     <Column
                                         field="id"
                                         title="응답자 ID (PID)"
@@ -1050,14 +1185,15 @@ const AiDataPage = () => {
                                 {/* 리포트 헤더 */}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px', marginBottom: '12px', shrink: 0 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        {selectedRespondent.status === "defect" ? (
+                                        {selectedRespondent.status === "defect" && (
                                             <>
                                                 <AlertTriangle size={18} color="#dc2626" />
                                                 <span style={{ fontSize: '14.5px', fontWeight: 800, color: '#dc2626' }}>
                                                     중단 발견 리포트
                                                 </span>
                                             </>
-                                        ) : (
+                                        )}
+                                        {selectedRespondent.status === "pass" && (
                                             <>
                                                 <CheckCircle2 size={18} color="#16a34a" />
                                                 <span style={{ fontSize: '14.5px', fontWeight: 800, color: '#16a34a' }}>
@@ -1065,12 +1201,27 @@ const AiDataPage = () => {
                                                 </span>
                                             </>
                                         )}
+                                        {selectedRespondent.status === "running" && (
+                                            <>
+                                                <Loader2 size={18} className="ai-spin" color="#2563eb" />
+                                                <span style={{ fontSize: '14.5px', fontWeight: 800, color: '#2563eb' }}>
+                                                    수행 진행 리포트
+                                                </span>
+                                            </>
+                                        )}
+                                        {selectedRespondent.status === "pending" && (
+                                            <>
+                                                <Clock size={18} color="#64748b" />
+                                                <span style={{ fontSize: '14.5px', fontWeight: 800, color: '#64748b' }}>
+                                                    수행 대기 리포트
+                                                </span>
+                                            </>
+                                        )}
                                     </div>
                                     <span style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8' }}>PID {selectedRespondent.id}</span>
                                 </div>
 
-                                {selectedRespondent.status === "defect" ? (
-                                    // 중단 상태일 때는 상세 리포트 정보와 로그 단말기 표시
+                                {selectedRespondent.status === "defect" && (
                                     <>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px', shrink: 0 }}>
                                             {/* 중단 사유 분류 */}
@@ -1158,8 +1309,9 @@ const AiDataPage = () => {
                                             </div>
                                         </div>
                                     </>
-                                ) : (
-                                    // 통과 상태일 때는 단순 성공 안내 이미지 카드 표시 (실행 로그 가림)
+                                )}
+
+                                {selectedRespondent.status === "pass" && (
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
                                         <div style={{
                                             width: '56px',
@@ -1183,6 +1335,78 @@ const AiDataPage = () => {
                                         </div>
                                     </div>
                                 )}
+
+                                {selectedRespondent.status === "running" && (
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                        <div style={{
+                                            background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px',
+                                            padding: '12px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px', shrink: 0
+                                        }}>
+                                            <Loader2 size={18} className="ai-spin" color="#2563eb" style={{ shrink: 0 }} />
+                                            <div>
+                                                <div style={{ fontSize: '13px', fontWeight: 700, color: '#1d4ed8' }}>현재 설문 검증 진행 중</div>
+                                                <div style={{ fontSize: '11.5px', color: '#1e40af', marginTop: '2px' }}>봇이 브라우저를 실행해 실시간으로 문항을 기입하며 응답하고 있습니다.</div>
+                                            </div>
+                                        </div>
+
+                                        {/* 실시간 실행 로그 단말기 */}
+                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '8px', display: 'block', shrink: 0 }}>
+                                                ⌨️ 실시간 실행 로그 단말기
+                                            </span>
+                                            <div style={{
+                                                flex: 1, background: '#0f172a', borderRadius: '8px', padding: '12px 16px',
+                                                overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px',
+                                                fontFamily: 'Consolas, Monaco, monospace', fontSize: '11.5px', border: '1px solid #1e293b'
+                                            }}>
+                                                {selectedRespondent.logs.length > 0 ? (
+                                                    selectedRespondent.logs.map((logLine, idx) => {
+                                                        let color = '#cbd5e1';
+                                                        if (logLine.includes('[시스템]')) color = '#4ade80';
+                                                        if (logLine.includes('[브라우저]')) color = '#38bdf8';
+                                                        if (logLine.includes('[오류]')) color = '#f87171';
+                                                        if (logLine.includes('[경고]')) color = '#fb923c';
+
+                                                        return (
+                                                            <div key={idx} style={{ color, lineHeight: '1.4', wordBreak: 'break-all' }}>
+                                                                {logLine}
+                                                            </div>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    <div style={{ color: '#64748b', fontSize: '11.5px', fontStyle: 'italic' }}>
+                                                        실시간 로그를 대기 중입니다...
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {selectedRespondent.status === "pending" && (
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 0, padding: '20px' }}>
+                                        <div style={{
+                                            width: '56px',
+                                            height: '56px',
+                                            borderRadius: '50%',
+                                            background: '#f8fafc',
+                                            border: '1px solid #e2e8f0',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            marginBottom: '16px'
+                                        }}>
+                                            <Clock size={28} color="#64748b" />
+                                        </div>
+                                        <div style={{ fontSize: '15px', fontWeight: 700, color: '#475569', marginBottom: '8px', textAlign: 'center' }}>
+                                            PID {selectedRespondent.id} · 수행 대기 중
+                                        </div>
+                                        <div style={{ fontSize: '12.5px', color: '#64748b', textAlign: 'center', lineHeight: '1.6', maxWidth: '280px' }}>
+                                            작업 큐에 등록되어 러너의 실행을 기다리고 있습니다.
+                                        </div>
+                                    </div>
+                                )}
+
                             </div>
                         ) : (
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', gap: '10px' }}>
@@ -1195,7 +1419,7 @@ const AiDataPage = () => {
             </div>
 
             {/* SAV/Excel 내보내기 포맷 선택 팝업 */}
-            {showExportModal && (
+            {/* showExportModal && (
                 <div className="nd-modal-overlay">
                     <div className="nd-modal-container">
                         <div className="nd-modal-header">
@@ -1217,13 +1441,21 @@ const AiDataPage = () => {
                         </div>
                     </div>
                 </div>
-            )}
+            ) */}
 
 
 
             {/* 슬라이더 스위치 & 필터 칩 CSS 스타일 */}
             <style dangerouslySetInnerHTML={{
                 __html: `
+                @keyframes ai-spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                .ai-spin {
+                    animation: ai-spin 1s linear infinite;
+                }
+
                 /* 토글 스위치 */
                 .toggle-switch {
                     position: relative;

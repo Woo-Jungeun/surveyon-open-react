@@ -27,11 +27,17 @@ export function AiDataPageApi() {
         async (data) => await api.post(data, "/qa/reset-test-pid", "API_BASE_URL_DATAMANAGEMENT")
     );
 
+    /** 테스트 데이터 내보내기 (SAV 파일 다운로드) */
+    const exportTestData = useMutation(
+        async (data) => await api.file(data, "/qa/export-test-data", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
     return {
         viewQaJobs,
         getQaTicket,
         runQaE2eJobs,
         listQaJobs,
-        resetTestPids
+        resetTestPids,
+        exportTestData
     };
 }
