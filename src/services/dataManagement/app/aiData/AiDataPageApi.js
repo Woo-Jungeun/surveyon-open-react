@@ -32,12 +32,18 @@ export function AiDataPageApi() {
         async (data) => await api.file(data, "/qa/export-test-data", "API_BASE_URL_DATAMANAGEMENT")
     );
 
+    /** 러너 구동 확인 */
+    const checkRunnerStatus = useMutation(
+        async (data) => await api.post(data, "/qa/runner/check", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
     return {
         viewQaJobs,
         getQaTicket,
         runQaE2eJobs,
         listQaJobs,
         resetTestPids,
-        exportTestData
+        exportTestData,
+        checkRunnerStatus
     };
 }

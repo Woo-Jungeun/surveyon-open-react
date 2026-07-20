@@ -1,7 +1,7 @@
 import { useState, useContext, cloneElement, useMemo, useEffect, useRef } from 'react';
 import {
     Search, Download, ExternalLink, Play, AlertTriangle,
-    CheckCircle2, X, RefreshCw, Clock, Loader2, Trash2
+    CheckCircle2, X, RefreshCw, Clock, Loader2, Trash2, Info, RotateCcw
 } from 'lucide-react';
 import DataHeader from '@/services/dataStatus/components/DataHeader';
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -48,15 +48,14 @@ const AiDataPage = () => {
     const auth = useSelector((store) => store.auth);
     const [progressInfo, setProgressInfo] = useState(null);
     const [jobError, setJobError] = useState("");
-    const { viewQaJobs, getQaTicket, runQaE2eJobs, resetTestPids, exportTestData } = AiDataPageApi();
+    const { viewQaJobs, getQaTicket, runQaE2eJobs, resetTestPids, exportTestData, checkRunnerStatus } = AiDataPageApi();
 
-    // 티켓 관리 (티켓은 미리 받아둔다. 단, 타이머 폴링 금지)
-    const ticketRef = useRef(null);
-    const ticketAtRef = useRef(0);
-    const ticketTtlRef = useRef(180);
+    // 티켓 관리 (시뮬레이션 실행 시작 시에만 발급)
 
     // 러너 실행 감지
     const [runnerNotResponding, setRunnerNotResponding] = useState(false);
+    const [isRunnerStarting, setIsRunnerStarting] = useState(false);
+    const [runnerGuide, setRunnerGuide] = useState(null);
     const runnerCheckTimerRef = useRef(null);
 
     // Runner 고유 식별자 생성
@@ -69,26 +68,21 @@ const AiDataPage = () => {
         return rid;
     }, []);
 
-    // 1회용 티켓 발급/갱신 (신선하면 재사용)
-    const refreshTicket = async (force = false) => {
+    // 1회용 티켓 발급
+    const fetchFreshTicket = async () => {
         const projectnum = sessionStorage.getItem("projectnum");
         const userId = auth?.user?.userId || sessionStorage.getItem("userId");
-        if (!projectnum || !userId) return;
-
-        if (!force && ticketRef.current && (Date.now() - ticketAtRef.current) < ticketTtlRef.current * 500) {
-            return; // 신선하면 skip
-        }
+        if (!projectnum || !userId) return null;
 
         try {
             const res = await getQaTicket.mutateAsync({ pn: projectnum, user: userId });
             if (res?.success === "777" && res?.resultjson) {
-                ticketRef.current = res.resultjson.ticket;
-                ticketAtRef.current = Date.now();
-                ticketTtlRef.current = res.resultjson.expiresInSec || 180;
+                return res.resultjson.ticket;
             }
         } catch (err) {
-            console.error("refreshTicket error:", err);
+            console.error("fetchFreshTicket error:", err);
         }
+        return null;
     };
 
     // 최신 작업 상태 조회 (수동 새로고침 겸용)
@@ -118,7 +112,7 @@ const AiDataPage = () => {
                         defect: 0,
                         avgTimeSec: 0,
                         totalAiCostUsd: 0,
-                        isFinished: false
+                        isFinished: true
                     });
                 } else {
                     setJobError("");
@@ -192,27 +186,18 @@ const AiDataPage = () => {
         }
     };
 
-    // 마운트 시 티켓 발급, 작업상태 조회
+    // 마운트 시 작업상태 조회
     useEffect(() => {
-        refreshTicket();
         triggerFetchJob();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [auth?.user?.userId]);
 
-    // Visibility 변경 시 티켓 갱신
+    // 언마운트 시 타이머 정리
     useEffect(() => {
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible') {
-                refreshTicket();
-            }
-        };
-        document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => {
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
             if (runnerCheckTimerRef.current) clearTimeout(runnerCheckTimerRef.current);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [auth?.user?.userId]);
+    }, []);
 
 
 
@@ -284,6 +269,44 @@ const AiDataPage = () => {
             console.error("handleDeleteSelected error:", err);
             modal.showAlert("알림", "선택 삭제 중 오류가 발생했습니다.");
         }
+    };
+
+    // 전체 초기화 (백엔드 API 호출)
+    const handleResetAll = async () => {
+        const projectnum = sessionStorage.getItem("projectnum");
+        const userId = auth?.user?.userId || sessionStorage.getItem("userId");
+        if (!projectnum || !userId) {
+            modal.showAlert("알림", "프로젝트 정보 또는 사용자 정보가 올바르지 않습니다.");
+            return;
+        }
+
+        modal.showConfirm("알림", "정말로 이 프로젝트의 모든 테스트 데이터를 초기화하시겠습니까?", async (confirm) => {
+            if (!confirm) return;
+            try {
+                // 현재 목록에 있는 모든 PID를 초기화 대상으로 전달
+                const allPids = respondents.map(r => r.id);
+                if (allPids.length === 0) {
+                    modal.showAlert("알림", "초기화할 테스트 데이터가 없습니다.");
+                    return;
+                }
+                const resetRes = await resetTestPids.mutateAsync({
+                    pn: projectnum,
+                    user: userId,
+                    pids: allPids
+                });
+
+                if (resetRes?.success === "777") {
+                    modal.showAlert("알림", "모든 테스트 데이터가 초기화되었습니다.");
+                    setCheckedIds([]);
+                    await triggerFetchJob();
+                } else {
+                    modal.showAlert("알림", resetRes?.resultjson?.errorcontent || "초기화 중 오류가 발생했습니다.");
+                }
+            } catch (err) {
+                console.error("handleResetAll error:", err);
+                modal.showAlert("알림", "초기화 중 오류가 발생했습니다.");
+            }
+        });
     };
 
 
@@ -376,7 +399,7 @@ const AiDataPage = () => {
             color = '#16a34a';
             border = '1px solid #bbf7d0';
         } else if (status === 'fail' || status === 'defect') {
-            text = '✕ 결함';
+            text = '✕ 중단';
             bg = '#fff1f1';
             color = '#dc2626';
             border = '1px solid #fecaca';
@@ -561,17 +584,13 @@ const AiDataPage = () => {
             setRunnerNotResponding(false);
 
             // 1. 프로토콜에 실을 티켓 발급
-            await refreshTicket(true); // 항상 신선한 티켓 강제 발급
-            const ticket = ticketRef.current;
+            const ticket = await fetchFreshTicket();
 
-            // 2. 프로토콜 즉시 실행 (await 앞에서 동기 실행)
+            // 2. 프로토콜 즉시 실행
             if (ticket) {
                 const enc = encodeURIComponent;
                 const host = window.API_CONFIG?.API_BASE_URL_DATAMANAGEMENT || window.location.origin;
                 window.location.href = `surveyonrunner://run?central=${enc(host)}&ticket=${enc(ticket)}&runnerId=${enc(runnerId)}`;
-
-                ticketRef.current = null;
-                setTimeout(() => refreshTicket(true), 500); // 1회용 → 폐기 후 재발급
             } else {
                 console.warn("Ticket generation failed, launching protocol skipped.");
             }
@@ -589,27 +608,42 @@ const AiDataPage = () => {
             });
 
             if (runRes?.success === "777") {
-                if (runRes?.resultjson?.resuming) {
-                    modal.showAlert("알림", "이전에 멈춘 작업을 이어서 재개합니다. \n러너가 곧 남은 항목을 처리합니다.");
-                } else {
-                    modal.showAlert("알림", "러너 실행 대기 job이 생성되었습니다. 러너가 claim하여 실행합니다.");
-                }
+                // 러너 실행 시동 중 UI 표출
+                setIsRunnerStarting(true);
+
+                const checkAfterSec = 10;
+
+                // 타이머 시작 (checkAfterSec초 후 확인 API 호출)
+                if (runnerCheckTimerRef.current) clearTimeout(runnerCheckTimerRef.current);
+                runnerCheckTimerRef.current = setTimeout(async () => {
+                    try {
+                        const checkRes = await checkRunnerStatus.mutateAsync({
+                            pn: projectnum,
+                            user: userId
+                        });
+
+                        setIsRunnerStarting(false);
+
+                        const payload = checkRes?.resultjson || checkRes?.data;
+                        if (checkRes?.success === "777" && payload?.claimed === true) {
+                            // 정상 기동 및 수령됨
+                            setRunnerNotResponding(false);
+                            setRunnerGuide(null);
+                            await triggerFetchJob();
+                        } else {
+                            // 미기동 또는 수령 안 됨 → 가이드 셋팅 및 경고창
+                            setRunnerGuide(payload?.guide || null);
+                            setRunnerNotResponding(true);
+                        }
+                    } catch (e) {
+                        console.error("runnerCheck error:", e);
+                        setIsRunnerStarting(false);
+                        setRunnerNotResponding(true);
+                    }
+                }, checkAfterSec * 1000);
             } else if (runRes?.success === "900") {
-                modal.showAlert("알림", runRes?.resultjson?.errorcontent || "이미 진행 중인 작업이 있습니다. 완료된 후 다시 시작해주세요.");
+                modal.showAlert("알림", "잘못된 요청입니다.");
             }
-
-            // 작업 상태 갱신
-            await triggerFetchJob();
-
-            // 15초 타이머 시작 (러너가 응답 안 올 때 감지)
-            if (runnerCheckTimerRef.current) clearTimeout(runnerCheckTimerRef.current);
-            runnerCheckTimerRef.current = setTimeout(async () => {
-                await triggerFetchJob();
-                // 15초 후에도 pids가 있고 모두 pending이면 러너 미기동 경고 표시
-                setRunnerNotResponding(true);
-                // 떠있는 이전 작업 시작 알림창이 있다면 닫기
-                modal.close();
-            }, 15000);
 
         } catch (err) {
             console.error("handleRunSimulation error:", err);
@@ -883,19 +917,22 @@ const AiDataPage = () => {
                         {/* 시뮬레이션 시작 버튼 */}
                         <button
                             onClick={handleRunSimulation}
-                            disabled={isSimulating}
+                            disabled={isSimulating || progressInfo?.isFinished === false}
                             style={{
                                 height: '32px', padding: '0 16px', border: 'none', borderRadius: '6px',
-                                background: '#16a34a', color: '#fff', fontSize: '12px', fontWeight: 500,
-                                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
-                                boxShadow: '0 2px 6px rgba(22, 163, 74, 0.2)', opacity: isSimulating ? 0.7 : 1,
+                                background: (isSimulating || progressInfo?.isFinished === false) ? '#cbd5e1' : '#16a34a',
+                                color: (isSimulating || progressInfo?.isFinished === false) ? '#94a3b8' : '#fff',
+                                fontSize: '12px', fontWeight: 500,
+                                cursor: (isSimulating || progressInfo?.isFinished === false) ? 'not-allowed' : 'pointer',
+                                display: 'flex', alignItems: 'center', gap: '6px',
+                                boxShadow: (isSimulating || progressInfo?.isFinished === false) ? 'none' : '0 2px 6px rgba(22, 163, 74, 0.2)',
+                                opacity: 1,
                                 boxSizing: 'border-box'
                             }}
-                            onMouseOver={(e) => { if (!isSimulating) e.currentTarget.style.background = '#15803d'; }}
-                            onMouseOut={(e) => { if (!isSimulating) e.currentTarget.style.background = '#16a34a'; }}
-                            onMouseEnter={() => refreshTicket()}
+                            onMouseOver={(e) => { if (!isSimulating && progressInfo?.isFinished !== false) e.currentTarget.style.background = '#15803d'; }}
+                            onMouseOut={(e) => { if (!isSimulating && progressInfo?.isFinished !== false) e.currentTarget.style.background = '#16a34a'; }}
                         >
-                            <Play size={11} fill="#fff" />
+                            <Play size={11} fill={isSimulating || progressInfo?.isFinished === false ? '#94a3b8' : '#fff'} />
                             <span style={{ whiteSpace: 'nowrap' }}>AI 데이터 생성 시작</span>
                         </button>
                     </div>
@@ -904,12 +941,13 @@ const AiDataPage = () => {
                 {/* ── 상단 2: 생성 진행 상태 및 요약 통계 ── */}
                 <div className="ai-stats-bar" style={{
                     background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
-                    padding: '12px 20px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
+                    padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '8px',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.05)', shrink: 0
                 }}>
-                    {/* 진행률 바 */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '280px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {/* 상단 행: 진행률 및 통계 지표 */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px', width: '100%' }}>
+                        {/* 진행률 바 */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '280px' }}>
                             <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap' }}>
                                 ⚡ 생성 진행 상태 <span style={{ color: '#16a34a' }}>{progressPct}%</span>
                             </span>
@@ -917,62 +955,221 @@ const AiDataPage = () => {
                                 <div style={{ width: `${progressPct}%`, height: '100%', background: '#10b981', transition: 'width 0.3s ease' }} />
                             </div>
                         </div>
-                        <span style={{ fontSize: '10.5px', color: '#94a3b8' }}>
-                            ※ 동시 실행 한도 5개 제한으로 인해 일부 응답자는 pending(대기) 상태로 노출될 수 있습니다. (인당 약 6분 소요)
-                        </span>
+
+                        {/* 통계 지표들 및 새로고침 버튼 */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '14px', fontSize: '12px', color: '#64748b' }}>
+                            <div>총 응답자 <strong style={{ color: '#1e293b' }}>{currentTotal}</strong></div>
+                            <div style={{ color: '#cbd5e1' }}>|</div>
+                            <div>완료 <strong style={{ color: '#1e293b' }}>{completedCount}</strong></div>
+                            <div style={{ color: '#cbd5e1' }}>|</div>
+                            <div>성공 <strong style={{ color: '#16a34a' }}>{passCount}</strong></div>
+                            <div style={{ color: '#cbd5e1' }}>|</div>
+                            <div>중단 <strong style={{ color: '#dc2626' }}>{defectCount}</strong></div>
+                            <div style={{ color: '#cbd5e1' }}>|</div>
+                            <div>평균소요 <strong style={{ color: '#1e293b' }}>{avgDuration}</strong></div>
+                            <div style={{ color: '#cbd5e1' }}>|</div>
+                            <div>총 AI 비용 <strong style={{ color: '#8b5cf6' }}>{aiCost}</strong></div>
+
+                            {/* 상단 통합 새로고침 버튼 */}
+                            <div style={{ width: '1px', height: '14px', backgroundColor: '#e2e8f0', margin: '0 4px' }} />
+                            <button
+                                onClick={() => triggerFetchJob()}
+                                style={{
+                                    height: '28px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
+                                    background: '#fff', fontSize: '11.5px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', whiteSpace: 'nowrap',
+                                    transition: 'all 0.15s'
+                                }}
+                                onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
+                                onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; }}
+                                title="진행상태 및 상세결과 새로고침"
+                            >
+                                <RefreshCw size={11} />
+                                새로고침
+                            </button>
+                        </div>
                     </div>
 
-                    {/* 통계 지표들 */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px', fontSize: '12px', color: '#64748b' }}>
-                        <div>총 응답자 <strong style={{ color: '#1e293b' }}>{currentTotal}</strong></div>
-                        <div style={{ color: '#cbd5e1' }}>|</div>
-                        <div>완료 <strong style={{ color: '#1e293b' }}>{completedCount}</strong></div>
-                        <div style={{ color: '#cbd5e1' }}>|</div>
-                        <div>성공 <strong style={{ color: '#16a34a' }}>{passCount}</strong></div>
-                        <div style={{ color: '#cbd5e1' }}>|</div>
-                        <div>중단 <strong style={{ color: '#dc2626' }}>{defectCount}</strong></div>
-                        <div style={{ color: '#cbd5e1' }}>|</div>
-                        <div>평균소요 <strong style={{ color: '#1e293b' }}>{avgDuration}</strong></div>
-                        <div style={{ color: '#cbd5e1' }}>|</div>
-                        <div>총 AI 비용 <strong style={{ color: '#8b5cf6' }}>{aiCost}</strong></div>
-                    </div>
+                    {/* 하단 행: 설명 문구 */}
+                    <span style={{ fontSize: '10.5px', color: '#94a3b8' }}>
+                        ※ 동시 실행 한도 5개 제한으로 인해 일부 응답자는 pending(대기) 상태로 노출될 수 있습니다. (인당 약 6분 소요)
+                    </span>
                 </div>
 
                 {/* 러너 미기동 오류 경고 모달 */}
                 {runnerNotResponding && (
                     <div className="nd-modal-overlay">
-                        <div className="nd-modal-container" style={{ width: '480px' }}>
+                        <div className="nd-modal-container" style={{ width: '550px' }}>
                             <div className="nd-modal-header">
-                                <h3 className="with-bar">러너 미기동 감지</h3>
+                                <h3 className="with-bar" style={{ fontSize: '17px' }}>러너 실행 실패</h3>
                                 <button className="nd-close-btn" onClick={() => setRunnerNotResponding(false)}>
-                                    <X size={20} />
+                                    <X size={22} />
                                 </button>
                             </div>
-                            <div className="nd-modal-body">
-                                <p style={{ fontSize: '13px', color: '#334155', lineHeight: '1.6', margin: '0 0 16px 0' }}>
-                                    작업을 시작했으나 E2E 봇 러너(Runner)가 실행되지 않았습니다.<br /><br />
-                                    <strong>[해결 방법]</strong><br />
-                                    ① 러너를 아직 설치하지 않았다면 아래 <strong>[러너 다운로드]</strong> 버튼을 클릭하여 설치 후 실행해 주세요.<br />
-                                    ② 설치 후에도 실행되지 않는다면 크롬 주소창에 <code style={{ background: '#f1f5f9', padding: '2px 4px', borderRadius: '3px', fontSize: '11px', color: '#dc2626' }}>chrome://extensions</code>를 입력하여 보안 프로그램 및 VPN 확장 프로그램들을 일시적으로 꺼두고 다시 시도해 주세요.
-                                </p>
+                            <div className="nd-modal-body" style={{ padding: '10px 10px' }}>
+                                {runnerGuide ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+                                        {/* 체크리스트 단계별 정보 */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', position: 'relative' }}>
+                                            {/* 수직 연결선 */}
+                                            <div style={{
+                                                position: 'absolute', left: '12px', top: '28px', bottom: '12px',
+                                                width: '1px', backgroundColor: '#e2e8f0', zIndex: 0
+                                            }} />
 
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+                                            {/* Step 1 */}
+                                            <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
+                                                <span style={{
+                                                    width: '24px', height: '24px', borderRadius: '50%', background: '#f1f5f9', color: '#64748b',
+                                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '13.5px', fontWeight: 700, flexShrink: 0, marginTop: '2px',
+                                                    position: 'relative', zIndex: 2
+                                                }}>
+                                                    1
+                                                </span>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                    <span style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b' }}>러너 프로그램 설치</span>
+                                                    <span style={{ color: '#475569', fontSize: '13.5px', lineHeight: '1.5' }}>러너가 설치되지 않았다면 아래 [러너 다운로드] 버튼을 클릭해 설치해 주세요.</span>
+                                                    {runnerGuide.smartScreen && (
+                                                        <span style={{ color: '#475569', fontSize: '12.5px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '6px 10px', marginTop: '4px', display: 'inline-block', width: 'fit-content', lineHeight: '1.4' }}>
+                                                            {runnerGuide.smartScreen.replace(/['']/g, '').replace('[추가 정보] → [실행]', '우측 상단 [추가 정보] 클릭 후 [실행] 선택')}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Step 2 */}
+                                            <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
+                                                <span style={{
+                                                    width: '24px', height: '24px', borderRadius: '50%', background: '#f1f5f9', color: '#64748b',
+                                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '13.5px', fontWeight: 700, flexShrink: 0, marginTop: '2px',
+                                                    position: 'relative', zIndex: 2
+                                                }}>
+                                                    2
+                                                </span>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                    <span style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b' }}>브라우저 확장 프로그램 확인</span>
+                                                    <span style={{ color: '#475569', fontSize: '13.5px', lineHeight: '1.5' }}>
+                                                        {Array.isArray(runnerGuide.reasons) && runnerGuide.reasons[1]
+                                                            ? runnerGuide.reasons[1].replace(/^[①②]\s*/, '').replace(/^이미 설치했다면\s*→\s*/, '')
+                                                            : "이미 러너를 설치했다면 브라우저 확장 프로그램(보안/VPN) 차단 여부를 확인해 주세요."}
+                                                    </span>
+                                                    <span style={{ color: '#64748b', fontSize: '12.5px', marginTop: '2px' }}>
+                                                        (주소창에 <code style={{ background: '#f1f5f9', padding: '1px 3px', borderRadius: '3px', color: '#dc2626' }}>chrome://extensions</code> 입력 후 관련 확장 해제)
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* 구분선 및 재시도 안내 */}
+                                        {runnerGuide.retry && (() => {
+                                            const parts = runnerGuide.retry.split('(');
+                                            const mainText = parts[0]?.trim();
+                                            const subText = parts[1] ? `(${parts[1]}` : '';
+                                            return (
+                                                <div style={{
+                                                    borderTop: '1px solid #f1f5f9', paddingTop: '16px', marginTop: '6px',
+                                                    display: 'flex', gap: '10px', alignItems: 'flex-start'
+                                                }}>
+                                                    <Info size={16} style={{ color: '#3b82f6', marginTop: '2px', flexShrink: 0 }} />
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', lineHeight: '1.4' }}>
+                                                        <span style={{ fontSize: '13.5px', color: '#334155', fontWeight: 500 }}>{mainText}</span>
+                                                        {subText && (
+                                                            <span style={{ fontSize: '12.5px', color: '#64748b' }}>{subText}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+                                        {/* 체크리스트 단계별 정보 */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', position: 'relative' }}>
+                                            {/* 수직 연결선 */}
+                                            <div style={{
+                                                position: 'absolute', left: '12px', top: '28px', bottom: '12px',
+                                                width: '1px', backgroundColor: '#e2e8f0', zIndex: 0
+                                            }} />
+
+                                            {/* Step 1 */}
+                                            <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
+                                                <span style={{
+                                                    width: '24px', height: '24px', borderRadius: '50%', background: '#f1f5f9', color: '#64748b',
+                                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '13.5px', fontWeight: 700, flexShrink: 0, marginTop: '2px',
+                                                    position: 'relative', zIndex: 2
+                                                }}>
+                                                    1
+                                                </span>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                    <span style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b' }}>러너 프로그램 설치</span>
+                                                    <span style={{ color: '#475569', fontSize: '13.5px', lineHeight: '1.5' }}>러너가 설치되지 않았다면 아래 [러너 다운로드] 버튼을 클릭해 설치해 주세요.</span>
+                                                    <span style={{ color: '#475569', fontSize: '12.5px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 8px', marginTop: '4px', display: 'inline-block', width: 'fit-content' }}>
+                                                        <span style={{ color: '#b45309', fontWeight: 600 }}>※ Windows 보호 창 노출 시:</span> 우측 상단 [추가 정보] 클릭 후 [실행] 선택
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Step 2 */}
+                                            <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
+                                                <span style={{
+                                                    width: '24px', height: '24px', borderRadius: '50%', background: '#f1f5f9', color: '#64748b',
+                                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '13.5px', fontWeight: 700, flexShrink: 0, marginTop: '2px',
+                                                    position: 'relative', zIndex: 2
+                                                }}>
+                                                    2
+                                                </span>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                    <span style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b' }}>브라우저 확장 프로그램 확인</span>
+                                                    <span style={{ color: '#475569', fontSize: '13.5px', lineHeight: '1.5' }}>이미 설치했다면 브라우저 확장 프로그램(보안/VPN) 차단 여부를 확인해 주세요.</span>
+                                                    <span style={{ color: '#64748b', fontSize: '12.5px', marginTop: '2px' }}>
+                                                        (주소창에 <code style={{ background: '#f1f5f9', padding: '1px 3px', borderRadius: '3px', color: '#dc2626' }}>chrome://extensions</code> 입력 후 관련 확장 해제)
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* 구분선 및 재시도 안내 */}
+                                        <div style={{
+                                            borderTop: '1px solid #f1f5f9', paddingTop: '16px', marginTop: '6px',
+                                            display: 'flex', gap: '10px', alignItems: 'flex-start'
+                                        }}>
+                                            <Info size={16} style={{ color: '#3b82f6', marginTop: '2px', flexShrink: 0 }} />
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', lineHeight: '1.4' }}>
+                                                <span style={{ fontSize: '13.5px', color: '#334155', fontWeight: 500 }}>설치가 끝나면 [시작] 버튼을 다시 눌러주세요.</span>
+                                                <span style={{ fontSize: '12.5px', color: '#64748b' }}>(자동으로 재시도되지 않습니다)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid #e2e8f0', paddingTop: '20px', marginTop: '20px' }}>
                                     <button
                                         onClick={() => setRunnerNotResponding(false)}
                                         style={{
                                             background: '#fff', border: '1px solid #cbd5e1', color: '#475569',
-                                            fontSize: '12px', fontWeight: 600, padding: '8px 16px', borderRadius: '6px', cursor: 'pointer'
+                                            fontSize: '13.5px', fontWeight: 600, padding: '10px 20px', borderRadius: '6px', cursor: 'pointer'
                                         }}
                                     >
                                         닫기
                                     </button>
                                     <a
-                                        href="/downloads/surveyon-runner.zip"
-                                        download
+                                        href={(() => {
+                                            let base = window.API_CONFIG?.API_BASE_URL_DATAMANAGEMENT || "";
+                                            if (import.meta.env.DEV && base.startsWith("http")) {
+                                                try {
+                                                    const urlObj = new URL(base);
+                                                    base = urlObj.pathname;
+                                                } catch (e) {
+                                                    console.warn(e);
+                                                }
+                                            }
+                                            return base.replace(/\/+$/, '') + '/qa/runner/download';
+                                        })()}
+                                        download="SurveyonRunner.exe"
+                                        onClick={() => setRunnerNotResponding(false)}
                                         style={{
                                             display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                            background: '#16a34a', color: '#fff', fontSize: '12px', fontWeight: 700,
-                                            padding: '8px 16px', borderRadius: '6px', textDecoration: 'none',
+                                            background: '#16a34a', color: '#fff', fontSize: '13.5px', fontWeight: 700,
+                                            padding: '10px 20px', borderRadius: '6px', textDecoration: 'none',
                                             boxShadow: '0 2px 4px rgba(22, 163, 74, 0.2)'
                                         }}
                                     >
@@ -984,6 +1181,20 @@ const AiDataPage = () => {
                     </div>
                 )}
 
+                {/* 러너 시동 중 로딩 오버레이 */}
+                {isRunnerStarting && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                        background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                        zIndex: 99999, color: '#fff', fontFamily: 'Pretendard, sans-serif'
+                    }}>
+                        <Loader2 size={48} className="ai-spin" color="#10b981" style={{ marginBottom: '16px' }} />
+                        <div style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>러너를 실행하는 중...</div>
+                        <div style={{ fontSize: '13.5px', color: '#94a3b8' }}>사용자 PC의 Surveyon E2E 러너가 작업을 수령하고 있습니다. 잠시만 기다려 주세요.</div>
+                    </div>
+                )}
+
                 {/* ── 하단 분할 영역 (좌: 리스트, 우: 디테일 리포트) ── */}
                 <div style={{ flex: 1, display: 'flex', gap: '12px', minHeight: 0 }}>
 
@@ -991,7 +1202,7 @@ const AiDataPage = () => {
                     <div className="st-panel" style={{ flex: 6, padding: '16px', display: 'flex', flexDirection: 'column', minHeight: 0, boxSizing: 'border-box', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', shrink: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ fontSize: '14.5px', fontWeight: 700, color: '#1e293b' }}>개별 응답자 생성 목록</span>
+                                <span style={{ fontSize: '14.5px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap' }}>개별 응답자 생성 목록</span>
 
                                 {/* 필터 칩 */}
                                 <div style={{ display: 'flex', gap: '4px', marginLeft: '12px' }}>
@@ -1043,16 +1254,18 @@ const AiDataPage = () => {
                                         }}
                                     />
                                 </div>
+
+
                                 <button
-                                    onClick={() => triggerFetchJob(checkedIds.length > 0 ? checkedIds : undefined)}
+                                    onClick={handleResetAll}
                                     style={{
                                         height: '30px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
                                         background: '#fff', fontSize: '11.5px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', whiteSpace: 'nowrap'
                                     }}
-                                    title="진행상태 및 상세결과 새로고침"
+                                    title="전체 테스트 데이터 초기화"
                                 >
-                                    <RefreshCw size={12} />
-                                    {checkedIds.length > 0 ? `선택 새로고침 (${checkedIds.length})` : '새로고침'}
+                                    <RotateCcw size={12} />
+                                    초기화
                                 </button>
 
                                 <button
@@ -1229,7 +1442,7 @@ const AiDataPage = () => {
                                                 <span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>① 중단 사유 분류</span>
                                                 <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                                                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#dc2626' }}>
-                                                        {FAILURE_CLASS_MAP[selectedRespondent.errorCategory]?.label || selectedRespondent.errorCategory || "기타 결함"}
+                                                        {FAILURE_CLASS_MAP[selectedRespondent.errorCategory]?.label || selectedRespondent.errorCategory || "기타 중단"}
                                                     </span>
                                                     {FAILURE_CLASS_MAP[selectedRespondent.errorCategory]?.advice && FAILURE_CLASS_MAP[selectedRespondent.errorCategory]?.advice !== "-" && (
                                                         <span style={{ fontSize: '11px', fontWeight: 600, color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: '4px' }}>
@@ -1264,7 +1477,7 @@ const AiDataPage = () => {
                                                         <ExternalLink size={11} />
                                                         실패 화면 링크 바로가기
                                                     </button>
-                                                    <button
+                                                    {/* <button
                                                         onClick={() => {
                                                             modal.showAlert("알림", "서비스 준비중입니다.");
                                                         }}
@@ -1278,7 +1491,7 @@ const AiDataPage = () => {
                                                         onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; }}
                                                     >
                                                         테스트 재시도
-                                                    </button>
+                                                    </button> */}
                                                 </div>
                                             </div>
                                         </div>
