@@ -140,9 +140,14 @@ apiAxios.interceptors.request.use(
             config.headers["X-Auth-Token"] = xAuthToken;
         }
 
-        // hrc 헤더 추가 (userId 암호화)
+        // X-User-Id 헤더 추가
         const state = store.getState();
-        const userId = state?.auth?.user?.userId;
+        const userId = state?.auth?.user?.userId || sessionStorage.getItem("userId");
+        if (userId) {
+            config.headers["X-User-Id"] = userId;
+        }
+
+        // hrc 헤더 추가 (userId 암호화)
         if (userId) {
             config.headers["hrc"] = AES256.Crypto.encryptAES256(String(userId));
         }

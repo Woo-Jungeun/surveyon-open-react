@@ -1,7 +1,7 @@
-import { useState, useContext, cloneElement, useMemo, useEffect } from 'react';
+import { useState, useContext, cloneElement, useMemo, useEffect, useRef } from 'react';
 import {
     Search, RotateCcw, Download, ExternalLink, Play, AlertTriangle,
-    CheckCircle2, Trash2, X
+    CheckCircle2, X, RefreshCw
 } from 'lucide-react';
 import DataHeader from '@/services/dataStatus/components/DataHeader';
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -10,111 +10,31 @@ import { useSelector } from 'react-redux';
 import { AiDataPageApi } from './AiDataPageApi';
 
 
-// 전체 응답자 모크 데이터 리스트 (스크린샷 기반 설계)
-const INITIAL_RESPONDENTS = [
-    {
-        id: "999619001", status: "pass", finalQuestion: "-", message: "Completed (설문 완료)", duration: "88.5s",
-        errorCategory: "", errorDetail: "",
-        logs: [
-            "501 [시스템] 봇 세션 초기화 완료. 대상 URL: https://rpssurvey.hrcglobal.com/?t=tapi&pn=q26100",
-            "502 [시스템] PID 자동 채번 완료: 999619001",
-            "503 [브라우저] 설문 시작 페이지 진입 성공.",
-            "504 [브라우저] q1 ~ q10 문항 자동 입력 완료.",
-            "505 [브라우저] q11 (성별) -> '여성' 응답 선택.",
-            "506 [브라우저] q12 (결혼 여부) -> '기혼' 응답 선택.",
-            "507 [브라우저] q13 ~ q25 문항 자동 응답 완료.",
-            "508 [브라우저] q26 (자녀수) -> '2명' 응답 - 조건식 상호 모순 검사 통과.",
-            "509 [브라우저] q27 ~ q34 문항 최종 입력 완료.",
-            "510 [시스템] 설문 완료 페이지 감지. 응답 패킷 저장 완료 (수행 시간: 88.5s)."
-        ]
-    },
-    {
-        id: "999619002", status: "defect", finalQuestion: "스크리닝 42번", message: "-", duration: "212.7s",
-        errorCategory: "설문 응답 오류 (6회 교정 실패)",
-        errorDetail: "sq42_op32 선택 후 조건 로직이 예상 경로로 분기하지 않음. 봇이 6회 재시도했으나 다음 문항으로 진행 불가 -> 타임아웃 처리.",
-        logs: [
-            "530 [브라우저] parsedRealVars: [10, sq10, sq20, sq30, sq31, sq32, sq40, sq41, sq42 ...]",
-            "531 [브라우저] BOT_DEBUG ALL INPUTS: [sq42_op32, sq42_op33, sq42_op34, keyword]",
-            "532 [브라우저] BOT_DEBUG INPUT: sq42_op32 visible: true cleaned: sq42",
-            "533 [브라우저] BOT_DEBUG parsedrealvars: [10, sq10, sq20, sq30, sq31, sq32 ...]",
-            "534 [경고] 조건 분기 경로 불일치 - 재시도 4/6",
-            "535 [경고] 조건 분기 경로 불일치 - 재시도 5/6",
-            "536 [오류] 6회 교정 실패 -> 타임아웃, 중단으로 종료."
-        ]
-    },
-    {
-        id: "999619003", status: "pass", finalQuestion: "-", message: "Completed (설문 완료)", duration: "83.7s",
-        errorCategory: "", errorDetail: "",
-        logs: [
-            "101 [시스템] 봇 세션 초기화 완료. 대상 URL: https://rpssurvey.hrcglobal.com/?t=tapi&pn=q26100",
-            "102 [시스템] PID 자동 채번 완료: 999619003",
-            "103 [브라우저] q1 ~ q15 문항 자동 응답 완료.",
-            "104 [브라우저] q16 ~ q34 문항 최종 입력 완료.",
-            "105 [시스템] 설문 완료 페이지 감지. 응답 패킷 저장 완료 (수행 시간: 83.7s)."
-        ]
-    },
-    {
-        id: "999619004", status: "pass", finalQuestion: "-", message: "Completed (설문 완료)", duration: "79.2s",
-        errorCategory: "", errorDetail: "",
-        logs: [
-            "201 [시스템] 봇 세션 초기화 완료. 대상 URL: https://rpssurvey.hrcglobal.com/?t=tapi&pn=q26100",
-            "202 [시스템] PID 자동 채번 완료: 999619004",
-            "203 [브라우저] q1 ~ q34 문항 전체 무인 응답 처리 완료.",
-            "204 [시스템] 설문 완료 페이지 감지. 응답 패킷 저장 완료 (수행 시간: 79.2s)."
-        ]
-    },
-    {
-        id: "999619005", status: "defect", finalQuestion: "문항 18번", message: "-", duration: "154.0s",
-        errorCategory: "논리 모순 감지 (비정상 응답 차단)",
-        errorDetail: "q18 문항에서 이전 문항(q12) 응답 결과인 '미혼'과 대치되는 '자녀 수 2명' 선택 시도. 봇이 논리 모순을 감지하여 응답 중단 처리.",
-        logs: [
-            "412 [브라우저] q12 (결혼 여부) -> '미혼' 응답 완료.",
-            "413 [브라우저] q13 ~ q17 문항 응답 완료.",
-            "414 [브라우저] q18 (자녀 정보 입력) 진입.",
-            "415 [시스템] 자녀 정보 입력란 활성화 시도 감지.",
-            "416 [경고] '미혼' 응답자 세그먼트에서 자녀 문항 입력 시도 검출.",
-            "417 [오류] 설문 스크립트 논리 검증 실패 - q12(미혼)와 q18(자녀수 2명) 상호 논리적 모순 감지. 봇 실행 중단."
-        ]
-    },
-    {
-        id: "999619006", status: "pass", finalQuestion: "-", message: "Completed (설문 완료)", duration: "85.6s",
-        errorCategory: "", errorDetail: "",
-        logs: [
-            "601 [시스템] 봇 세션 초기화 완료. 대상 URL: https://rpssurvey.hrcglobal.com/?t=tapi&pn=q26100",
-            "602 [시스템] PID 자동 채번 완료: 999619006",
-            "603 [브라우저] q1 ~ q34 문항 무결성 응답 통과.",
-            "604 [시스템] 설문 완료 페이지 감지. 응답 패킷 저장 완료 (수행 시간: 85.6s)."
-        ]
-    },
-    {
-        id: "999619007", status: "pass", finalQuestion: "-", message: "Completed (설문 완료)", duration: "91.1s",
-        errorCategory: "", errorDetail: "",
-        logs: [
-            "701 [시스템] 봇 세션 초기화 완료. 대상 URL: https://rpssurvey.hrcglobal.com/?t=tapi&pn=q26100",
-            "702 [시스템] PID 자동 채번 완료: 999619007",
-            "703 [브라우저] q1 ~ q34 문항 응답 통과 및 수집 완료.",
-            "704 [시스템] 설문 완료 페이지 감지. 응답 패킷 저장 완료 (수행 시간: 91.1s)."
-        ]
-    }
-];
+const FAILURE_CLASS_MAP = {
+    Completed: { label: "완주", advice: "-" },
+    ScreenoutQuota: { label: "탈락·쿼터", advice: "봇 회피 로직 점검" },
+    ServerEngineException: { label: "서버 엔진 예외", advice: "QMaster측 문항 확인(봇 문제 아님)" },
+    SurveyScriptDefect: { label: "설문 결함", advice: "설문 기획 수정" },
+    BotUnsupported: { label: "봇 미지원", advice: "수동 검증" },
+    SurveyClosed: { label: "설문 마감", advice: "설문 상태 확인" },
+    WrongServerOrUrl: { label: "서버/URL 오류", advice: "진입 URL 확인" },
+    ValidationUnresolved: { label: "검증 실패", advice: "케이스 확인" }
+};
 
 const AiDataPage = () => {
     const modal = useContext(modalContext);
 
     // 상단 상태 값
-    const [startUrl, setStartUrl] = useState("https://rpssurvey.hrcglobal.com/?t=tapi&pn=q26100");
+    const [startUrl, setStartUrl] = useState("");
     const [autoPid, setAutoPid] = useState(true);
     const [testCount, setTestCount] = useState(10);
     const [manualPidList, setManualPidList] = useState("");
 
 
 
-    // 시뮬레이션 상태
     const [isSimulating, setIsSimulating] = useState(false);
-    const [progress, setProgress] = useState(100);
-    const [respondents, setRespondents] = useState(INITIAL_RESPONDENTS);
-    const [selectedPid, setSelectedPid] = useState("999619002"); // 기본으로 스크린샷과 동일하게 999619002 선택
-    const [checkedIds, setCheckedIds] = useState([]);
+    const [respondents, setRespondents] = useState([]);
+    const [selectedPid, setSelectedPid] = useState("");
 
     // 내보내기 팝업 표시 여부
     const [showExportModal, setShowExportModal] = useState(false);
@@ -127,17 +47,75 @@ const AiDataPage = () => {
     const auth = useSelector((store) => store.auth);
     const [progressInfo, setProgressInfo] = useState(null);
     const [jobError, setJobError] = useState("");
-    const { viewQaJobs } = AiDataPageApi();
+    const { viewQaJobs, getQaTicket, runQaE2eJobs, resetTestPids } = AiDataPageApi();
 
-    useEffect(() => {
-        const fetchJob = async () => {
-            const projectnum = sessionStorage.getItem("projectnum");
-            const userId = auth?.user?.userId || sessionStorage.getItem("userId");
-            if (!projectnum || !userId) return;
-            try {
-                const res = await viewQaJobs.mutateAsync({ pn: projectnum, user: userId });
-                if (res?.success === "777" && res?.resultjson) {
-                    const payload = res.resultjson;
+    // 티켓 관리 (티켓은 미리 받아둔다. 단, 타이머 폴링 금지)
+    const ticketRef = useRef(null);
+    const ticketAtRef = useRef(0);
+    const ticketTtlRef = useRef(180);
+
+    // 러너 실행 감지
+    const [runnerNotResponding, setRunnerNotResponding] = useState(false);
+    const runnerCheckTimerRef = useRef(null);
+
+    // Runner 고유 식별자 생성
+    const runnerId = useMemo(() => {
+        let rid = localStorage.getItem("runnerId");
+        if (!rid) {
+            rid = "runner_" + Math.random().toString(36).substring(2, 15);
+            localStorage.setItem("runnerId", rid);
+        }
+        return rid;
+    }, []);
+
+    // 1회용 티켓 발급/갱신 (신선하면 재사용)
+    const refreshTicket = async (force = false) => {
+        const projectnum = sessionStorage.getItem("projectnum");
+        const userId = auth?.user?.userId || sessionStorage.getItem("userId");
+        if (!projectnum || !userId) return;
+
+        if (!force && ticketRef.current && (Date.now() - ticketAtRef.current) < ticketTtlRef.current * 500) {
+            return; // 신선하면 skip
+        }
+
+        try {
+            const res = await getQaTicket.mutateAsync({ pn: projectnum, user: userId });
+            if (res?.success === "777" && res?.resultjson) {
+                ticketRef.current = res.resultjson.ticket;
+                ticketAtRef.current = Date.now();
+                ticketTtlRef.current = res.resultjson.expiresInSec || 180;
+            }
+        } catch (err) {
+            console.error("refreshTicket error:", err);
+        }
+    };
+
+    // 최신 작업 상태 조회 (수동 새로고침 겸용)
+    const triggerFetchJob = async () => {
+        const projectnum = sessionStorage.getItem("projectnum");
+        const userId = auth?.user?.userId || sessionStorage.getItem("userId");
+        if (!projectnum || !userId) return;
+        try {
+            const res = await viewQaJobs.mutateAsync({ pn: projectnum, user: userId });
+            if (res?.success === "777" && res?.resultjson) {
+                const payload = res.resultjson;
+                if (payload.startUrl) {
+                    setStartUrl(payload.startUrl);
+                }
+
+                if (payload.hasJob === false) {
+                    setJobError("해당 프로젝트의 작업이 없습니다.");
+                    setRespondents([]);
+                    setProgressInfo({
+                        totalRespondents: 0,
+                        completed: 0,
+                        success: 0,
+                        defect: 0,
+                        avgTimeSec: 0,
+                        totalAiCostUsd: 0,
+                        isFinished: false
+                    });
+                } else {
                     setJobError("");
                     setProgressInfo(payload.progress || null);
                     if (Array.isArray(payload.pids)) {
@@ -162,52 +140,82 @@ const AiDataPage = () => {
                             };
                         });
                         setRespondents(mapped);
-                        const firstDefect = mapped.find(r => r.status === "defect");
-                        if (firstDefect) {
-                            setSelectedPid(firstDefect.id);
-                        } else if (mapped.length > 0) {
-                            setSelectedPid(mapped[0].id);
+
+                        // 러너 응답 확인: 하나라도 pending이 아니면(running, success, fail) 러너 기동 완료 처리
+                        const hasActiveRunner = mapped.some(p => p.status !== 'pending');
+                        if (hasActiveRunner) {
+                            setRunnerNotResponding(false);
+                            if (runnerCheckTimerRef.current) {
+                                clearTimeout(runnerCheckTimerRef.current);
+                                runnerCheckTimerRef.current = null;
+                            }
+                        }
+
+                        // 선택된 응답자가 현재 목록에 없으면 첫 결함 또는 첫 행 선택
+                        const isStillPresent = mapped.some(r => r.id === selectedPid);
+                        if (!isStillPresent) {
+                            const firstDefect = mapped.find(r => r.status === "defect");
+                            if (firstDefect) {
+                                setSelectedPid(firstDefect.id);
+                            } else if (mapped.length > 0) {
+                                setSelectedPid(mapped[0].id);
+                            }
                         }
                     }
-                } else if (res?.success === "900") {
-                    setJobError(res?.resultjson?.errorcontent || "해당 프로젝트의 작업이 없습니다.");
-                    setRespondents([]);
-                    setProgressInfo({
-                        totalRespondents: 0,
-                        completed: 0,
-                        success: 0,
-                        defect: 0,
-                        avgTimeSec: 0,
-                        totalAiCostUsd: 0,
-                        isFinished: false
-                    });
                 }
-            } catch (err) {
-                console.error("fetchJob error:", err);
+            } else if (res?.success === "900") {
+                setJobError(res?.resultjson?.errorcontent || "해당 프로젝트의 작업이 없습니다.");
+                setRespondents([]);
+                setProgressInfo({
+                    totalRespondents: 0,
+                    completed: 0,
+                    success: 0,
+                    defect: 0,
+                    avgTimeSec: 0,
+                    totalAiCostUsd: 0,
+                    isFinished: false
+                });
             }
-        };
-        fetchJob();
+        } catch (err) {
+            console.error("triggerFetchJob error:", err);
+        }
+    };
+
+    // 마운트 시 티켓 발급, 작업상태 조회
+    useEffect(() => {
+        refreshTicket();
+        triggerFetchJob();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [auth?.user?.userId]);
 
+    // Visibility 변경 시 티켓 갱신
     useEffect(() => {
-        const pnForUrl = sessionStorage.getItem("projectnum");
-        if (pnForUrl) {
-            setStartUrl(`https://rpssurvey.hrcglobal.com/?t=tapi&pn=q${pnForUrl}`);
-        }
-    }, []);
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                refreshTicket();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            if (runnerCheckTimerRef.current) clearTimeout(runnerCheckTimerRef.current);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [auth?.user?.userId]);
+
+
 
     // 통계 계산
     const currentTotal = progressInfo ? progressInfo.totalRespondents : respondents.length;
     const passCount = progressInfo ? progressInfo.success : respondents.filter(r => r.status === "pass").length;
     const defectCount = progressInfo ? progressInfo.defect : respondents.filter(r => r.status === "defect").length;
     const completedCount = progressInfo ? progressInfo.completed : (passCount + defectCount);
-    const avgDuration = progressInfo ? `${progressInfo.avgTimeSec}s` : "128.3s";
-    const aiCost = progressInfo ? `$${progressInfo.totalAiCostUsd}` : "$0.0033";
+    const avgDuration = progressInfo ? `${progressInfo.avgTimeSec}s` : "0s";
+    const aiCost = progressInfo ? `$${progressInfo.totalAiCostUsd}` : "$0";
 
     const progressPct = progressInfo
         ? (progressInfo.isFinished ? 100 : Math.round((progressInfo.completed / (progressInfo.totalRespondents || 1)) * 100))
-        : progress;
+        : 0;
 
     // 검색 & 필터 적용된 리스트
     const filteredRespondents = respondents.filter(r => {
@@ -227,91 +235,55 @@ const AiDataPage = () => {
         }));
     }, [filteredRespondents, selectedPid]);
 
-    // 행 삭제
-    const handleDeleteSelected = () => {
-        if (checkedIds.length === 0) {
-            modal.showAlert("알림", "삭제할 응답자를 선택해 주세요.");
+    // 초기화 및 테스트 데이터 정리
+    const handleReset = async () => {
+        const projectnum = sessionStorage.getItem("projectnum");
+        const userId = auth?.user?.userId || sessionStorage.getItem("userId");
+        if (!projectnum || !userId) {
+            modal.showAlert("알림", "프로젝트 정보 또는 사용자 정보가 올바르지 않습니다.");
             return;
         }
-        setRespondents(prev => prev.filter(r => !checkedIds.includes(r.id)));
-        setCheckedIds([]);
-        modal.showAlert("알림", "선택된 응답자 데이터가 임시 삭제되었습니다.");
-    };
 
-    // 초기화
-    const handleReset = () => {
-        setRespondents(INITIAL_RESPONDENTS);
-        setSelectedPid("999619002");
-        setCheckedIds([]);
-        setFilterStatus("all");
-        setSearchQuery("");
-        setProgress(100);
-        setProgressInfo(null);
-        modal.showAlert("알림", "응답자 목록이 초기 상태로 복원되었습니다.");
+        if (respondents.length === 0) {
+            modal.showAlert("알림", "정리할 테스트 데이터가 존재하지 않습니다.");
+            return;
+        }
+
+        try {
+            const pidsToReset = respondents.map(r => r.id).slice(0, 500);
+            const resetRes = await resetTestPids.mutateAsync({
+                pn: projectnum,
+                user: userId,
+                pids: pidsToReset
+            });
+
+            if (resetRes?.success === "777") {
+                const deletedPids = resetRes?.resultjson?.deletedPids || [];
+                const skippedList = resetRes?.resultjson?.skipped || [];
+                let msg = `테스트 데이터가 정리되었습니다. (삭제된 PID: ${deletedPids.length}개)`;
+                if (skippedList.length > 0) {
+                    msg += `\n\n[정리 제외 항목]:\n` + skippedList.map(s => `- ${s.pid}: ${s.reason}`).join('\n');
+                }
+                modal.showAlert("알림", msg);
+
+                // 작업 상태 갱신
+                await triggerFetchJob();
+            } else {
+                modal.showAlert("알림", resetRes?.resultjson?.errorcontent || "데이터 정리 중 오류가 발생했습니다.");
+            }
+        } catch (err) {
+            console.error("handleReset error:", err);
+            modal.showAlert("알림", "데이터 정리 중 오류가 발생했습니다.");
+        }
     };
 
     // 내보내기 형식 실행
-    const handleExportFormat = (format) => {
+    const handleExportFormat = () => {
         setShowExportModal(false);
-        modal.showAlert("알림", `${format} 양식 파일로 성공적으로 내보냈습니다.`);
+        modal.showAlert("알림", "서비스 준비중인 API입니다.");
     };
 
-    // ── Kendo Grid 커스텀 셀 및 렌더러 ──
-    const RowCheckboxCell = (props) => {
-        const { dataItem, style, className } = props;
-        const isChecked = checkedIds.includes(dataItem.id);
-        const handleChange = (e) => {
-            e.stopPropagation();
-            if (isChecked) {
-                setCheckedIds(prev => prev.filter(id => id !== dataItem.id));
-            } else {
-                setCheckedIds(prev => [...prev, dataItem.id]);
-            }
-        };
 
-        return (
-            <td style={{ ...style, padding: '8px 12px', textAlign: 'center', verticalAlign: 'middle' }} className={className} onClick={(e) => e.stopPropagation()}>
-                <span className="k-checkbox-wrap">
-                    <input
-                        type="checkbox"
-                        className="k-checkbox k-checkbox-md k-rounded-md"
-                        checked={isChecked}
-                        onChange={handleChange}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{ cursor: 'pointer' }}
-                    />
-                </span>
-            </td>
-        );
-    };
-
-    const HeaderCheckboxCell = () => {
-        const allChecked = filteredRespondents.length > 0 && checkedIds.length === filteredRespondents.length;
-        const someChecked = checkedIds.length > 0 && !allChecked;
-
-        const handleChange = () => {
-            if (allChecked) {
-                setCheckedIds([]);
-            } else {
-                setCheckedIds(filteredRespondents.map(r => r.id));
-            }
-        };
-
-        return (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }} onClick={(e) => e.stopPropagation()}>
-                <span className="k-checkbox-wrap">
-                    <input
-                        type="checkbox"
-                        className="k-checkbox k-checkbox-md k-rounded-md"
-                        checked={allChecked}
-                        ref={el => { if (el) el.indeterminate = someChecked; }}
-                        onChange={handleChange}
-                        style={{ cursor: 'pointer' }}
-                    />
-                </span>
-            </div>
-        );
-    };
 
     const IdCell = (props) => (
         <td style={{ ...props.style, padding: '8px 12px', verticalAlign: 'middle', fontWeight: 600, color: '#0f172a' }} className={props.className}>
@@ -321,16 +293,40 @@ const AiDataPage = () => {
 
     const StatusCell = (props) => {
         const { status } = props.dataItem;
+        let text = status;
+        let bg = '#f1f5f9';
+        let color = '#475569';
+        let border = '1px solid #cbd5e1';
+
+        if (status === 'pending') {
+            text = '대기';
+            bg = '#fffbeb';
+            color = '#d97706';
+            border = '1px solid #fde68a';
+        } else if (status === 'running') {
+            text = '실행중';
+            bg = '#f0f9ff';
+            color = '#0284c7';
+            border = '1px solid #bae6fd';
+        } else if (status === 'success' || status === 'pass') {
+            text = '✓ 통과';
+            bg = '#f0fdf4';
+            color = '#16a34a';
+            border = '1px solid #bbf7d0';
+        } else if (status === 'fail' || status === 'defect') {
+            text = '✕ 결함';
+            bg = '#fff1f1';
+            color = '#dc2626';
+            border = '1px solid #fecaca';
+        }
+
         return (
             <td style={{ ...props.style, padding: '8px 12px', verticalAlign: 'middle' }} className={props.className}>
                 <span style={{
                     padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700,
-                    background: status === "pass" ? '#f0fdf4' : '#fff1f1',
-                    color: status === "pass" ? '#16a34a' : '#dc2626',
-                    border: status === "pass" ? '1px solid #bbf7d0' : '1px solid #fecaca',
-                    whiteSpace: 'nowrap'
+                    background: bg, color: color, border: border, whiteSpace: 'nowrap'
                 }}>
-                    {status === "pass" ? "✓ 통과" : "✕ 중단"}
+                    {text}
                 </span>
             </td>
         );
@@ -372,7 +368,6 @@ const AiDataPage = () => {
     const rowRender = (trElement, props) => {
         const { dataItem } = props;
         const isSelected = !!dataItem?._selected;
-        const isChecked = checkedIds.includes(dataItem?.id);
 
         const baseClass = (trElement.props.className || "")
             .replace(/\bk-selected\b/g, "")
@@ -383,7 +378,7 @@ const AiDataPage = () => {
             className: `${baseClass} ${isSelected ? 'selected-pid-row' : ''}`.trim(),
             style: {
                 ...trElement.props.style,
-                background: isSelected ? '#f0fdf4' : (isChecked ? '#f8fafc' : '#ffffff'),
+                background: isSelected ? '#f0fdf4' : '#ffffff',
                 cursor: 'pointer'
             }
         };
@@ -407,59 +402,102 @@ const AiDataPage = () => {
         }
     };
 
-    // 봇 실행 시뮬레이션
-    const handleRunSimulation = () => {
+
+
+    // E2E Playwright 실행 시작
+    const handleRunSimulation = async () => {
+        const projectnum = sessionStorage.getItem("projectnum");
+        const userId = auth?.user?.userId || sessionStorage.getItem("userId");
+        if (!projectnum || !userId) {
+            modal.showAlert("알림", "프로젝트 정보 또는 사용자 정보가 올바르지 않습니다.");
+            return;
+        }
+
+        let parsedCount = 0;
+        let pidsArray = [];
+
         if (autoPid) {
-            const countNum = parseInt(testCount, 10);
-            if (isNaN(countNum) || countNum < 1 || countNum > 50) {
+            parsedCount = parseInt(testCount, 10);
+            if (isNaN(parsedCount) || parsedCount < 1 || parsedCount > 50) {
                 modal.showAlert("알림", "자동 생성 개수는 1개부터 50개까지만 가능합니다.");
                 return;
             }
         } else {
-            const pids = manualPidList.split(',').map(p => p.trim()).filter(p => p !== "");
-            const count = pids.length;
-            if (count === 0) {
+            pidsArray = manualPidList.split(',').map(p => p.trim()).filter(p => p !== "");
+            parsedCount = pidsArray.length;
+            if (parsedCount === 0) {
                 modal.showAlert("알림", "생성할 PID 목록을 입력해 주세요.");
                 return;
             }
-            if (count < 1 || count > 50) {
-                modal.showAlert("알림", `수동 생성할 PID 개수는 1개부터 최대 50개까지만 가능합니다. \n(현재: ${count}개)`);
+            if (parsedCount < 1 || parsedCount > 50) {
+                modal.showAlert("알림", `수동 생성할 PID 개수는 1개부터 최대 50개까지만 가능합니다. \n(현재: ${parsedCount}개)`);
                 return;
             }
         }
 
-        setIsSimulating(true);
-        setProgress(0);
-        setProgressInfo(null);
-        setRespondents([]);
-        setSelectedPid("");
-        setCheckedIds([]);
+        try {
+            setIsSimulating(true);
+            setProgressInfo(null);
+            setJobError("");
+            setRunnerNotResponding(false);
 
-        let pct = 0;
-        const interval = setInterval(() => {
-            pct += 10;
-            setProgress(pct);
+            // 1. 프로토콜에 실을 티켓 발급
+            await refreshTicket(true); // 항상 신선한 티켓 강제 발급
+            const ticket = ticketRef.current;
 
-            // 단계적으로 행 추가 시뮬레이션
-            if (pct === 20) {
-                setRespondents([INITIAL_RESPONDENTS[0]]);
-                setSelectedPid(INITIAL_RESPONDENTS[0].id);
-            } else if (pct === 40) {
-                setRespondents(prev => [...prev, INITIAL_RESPONDENTS[1]]);
-                setSelectedPid(INITIAL_RESPONDENTS[1].id);
-            } else if (pct === 60) {
-                setRespondents(prev => [...prev, INITIAL_RESPONDENTS[2], INITIAL_RESPONDENTS[3]]);
-            } else if (pct === 80) {
-                setRespondents(prev => [...prev, INITIAL_RESPONDENTS[4]]);
-                setSelectedPid(INITIAL_RESPONDENTS[4].id);
-            } else if (pct === 100) {
-                setRespondents(INITIAL_RESPONDENTS);
-                setSelectedPid("999619002");
-                clearInterval(interval);
-                setIsSimulating(false);
-                modal.showAlert("알림", "AI 응답 봇이 설문지 전체 시나리오를 정상 완료했습니다.");
+            // 2. 프로토콜 즉시 실행 (await 앞에서 동기 실행)
+            if (ticket) {
+                const enc = encodeURIComponent;
+                const host = window.API_CONFIG?.API_BASE_URL_DATAMANAGEMENT || window.location.origin;
+                window.location.href = `surveyonrunner://run?central=${enc(host)}&ticket=${enc(ticket)}&runnerId=${enc(runnerId)}`;
+
+                ticketRef.current = null;
+                setTimeout(() => refreshTicket(true), 500); // 1회용 → 폐기 후 재발급
+            } else {
+                console.warn("Ticket generation failed, launching protocol skipped.");
             }
-        }, 600);
+
+            // 3. E2E 비동기 작업 시작 API 호출
+            const runRes = await runQaE2eJobs.mutateAsync({
+                pn: projectnum,
+                user: userId,
+                url: startUrl,
+                autoGenPids: autoPid,
+                count: autoPid ? parsedCount : 0,
+                pids: autoPid ? [] : pidsArray,
+                runTarget: "runner",
+                strategy: {}
+            });
+
+            if (runRes?.success === "777") {
+                if (runRes?.resultjson?.resuming) {
+                    modal.showAlert("알림", "이전에 멈춘 작업을 이어서 재개합니다. \n러너가 곧 남은 항목을 처리합니다.");
+                } else {
+                    modal.showAlert("알림", "러너 실행 대기 job이 생성되었습니다. 러너가 claim하여 실행합니다.");
+                }
+            } else if (runRes?.success === "900") {
+                modal.showAlert("알림", runRes?.resultjson?.errorcontent || "이미 진행 중인 작업이 있습니다. 완료된 후 다시 시작해주세요.");
+            }
+
+            // 작업 상태 갱신
+            await triggerFetchJob();
+
+            // 15초 타이머 시작 (러너가 응답 안 올 때 감지)
+            if (runnerCheckTimerRef.current) clearTimeout(runnerCheckTimerRef.current);
+            runnerCheckTimerRef.current = setTimeout(async () => {
+                await triggerFetchJob();
+                // 15초 후에도 pids가 있고 모두 pending이면 러너 미기동 경고 표시
+                setRunnerNotResponding(true);
+                // 떠있는 이전 작업 시작 알림창이 있다면 닫기
+                modal.close();
+            }, 15000);
+
+        } catch (err) {
+            console.error("handleRunSimulation error:", err);
+            modal.showAlert("알림", "작업 시작 중 오류가 발생했습니다.");
+        } finally {
+            setIsSimulating(false);
+        }
     };
 
     const selectedRespondent = respondents.find(r => r.id === selectedPid);
@@ -487,7 +525,7 @@ const AiDataPage = () => {
                             onChange={(e) => setStartUrl(e.target.value)}
                             style={{
                                 height: '32px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
-                                fontSize: '12px', color: '#1e293b', outline: 'none', background: '#f8fafc', width: '320px', boxSizing: 'border-box'
+                                fontSize: '12px', color: '#1e293b', outline: 'none', background: '#f8fafc', width: '360px', boxSizing: 'border-box'
                             }}
                         />
                     </div>
@@ -722,23 +760,26 @@ const AiDataPage = () => {
                         </div>
                     </div>
 
-                    {/* 시뮬레이션 시작 버튼 */}
-                    <button
-                        onClick={handleRunSimulation}
-                        disabled={isSimulating}
-                        style={{
-                            height: '32px', padding: '0 16px', border: 'none', borderRadius: '6px',
-                            background: '#16a34a', color: '#fff', fontSize: '12px', fontWeight: 500,
-                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
-                            boxShadow: '0 2px 6px rgba(22, 163, 74, 0.2)', opacity: isSimulating ? 0.7 : 1,
-                            boxSizing: 'border-box', marginLeft: 'auto'
-                        }}
-                        onMouseOver={(e) => { if (!isSimulating) e.currentTarget.style.background = '#15803d'; }}
-                        onMouseOut={(e) => { if (!isSimulating) e.currentTarget.style.background = '#16a34a'; }}
-                    >
-                        <Play size={11} fill="#fff" />
-                        <span style={{ whiteSpace: 'nowrap' }}>AI 데이터 생성 시작</span>
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                        {/* 시뮬레이션 시작 버튼 */}
+                        <button
+                            onClick={handleRunSimulation}
+                            disabled={isSimulating}
+                            style={{
+                                height: '32px', padding: '0 16px', border: 'none', borderRadius: '6px',
+                                background: '#16a34a', color: '#fff', fontSize: '12px', fontWeight: 500,
+                                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                                boxShadow: '0 2px 6px rgba(22, 163, 74, 0.2)', opacity: isSimulating ? 0.7 : 1,
+                                boxSizing: 'border-box'
+                            }}
+                            onMouseOver={(e) => { if (!isSimulating) e.currentTarget.style.background = '#15803d'; }}
+                            onMouseOut={(e) => { if (!isSimulating) e.currentTarget.style.background = '#16a34a'; }}
+                            onMouseEnter={() => refreshTicket()}
+                        >
+                            <Play size={11} fill="#fff" />
+                            <span style={{ whiteSpace: 'nowrap' }}>AI 데이터 생성 시작</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* ── 상단 2: 생성 진행 상태 및 요약 통계 ── */}
@@ -748,13 +789,18 @@ const AiDataPage = () => {
                     boxShadow: '0 1px 3px rgba(0,0,0,0.05)', shrink: 0
                 }}>
                     {/* 진행률 바 */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '280px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap' }}>
-                            ⚡ 생성 진행 상태 <span style={{ color: '#16a34a' }}>{progressPct}%</span>
-                        </span>
-                        <div style={{ flex: 1, height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div style={{ width: `${progressPct}%`, height: '100%', background: '#10b981', transition: 'width 0.3s ease' }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '280px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap' }}>
+                                ⚡ 생성 진행 상태 <span style={{ color: '#16a34a' }}>{progressPct}%</span>
+                            </span>
+                            <div style={{ flex: 1, height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div style={{ width: `${progressPct}%`, height: '100%', background: '#10b981', transition: 'width 0.3s ease' }} />
+                            </div>
                         </div>
+                        <span style={{ fontSize: '10.5px', color: '#94a3b8' }}>
+                            ※ 동시 실행 한도 5개 제한으로 인해 일부 응답자는 pending(대기) 상태로 노출될 수 있습니다. (인당 약 6분 소요)
+                        </span>
                     </div>
 
                     {/* 통계 지표들 */}
@@ -772,6 +818,52 @@ const AiDataPage = () => {
                         <div>총 AI 비용 <strong style={{ color: '#8b5cf6' }}>{aiCost}</strong></div>
                     </div>
                 </div>
+
+                {/* 러너 미기동 오류 경고 모달 */}
+                {runnerNotResponding && (
+                    <div className="nd-modal-overlay">
+                        <div className="nd-modal-container" style={{ width: '480px' }}>
+                            <div className="nd-modal-header">
+                                <h3 className="with-bar">러너 미기동 감지</h3>
+                                <button className="nd-close-btn" onClick={() => setRunnerNotResponding(false)}>
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <div className="nd-modal-body">
+                                <p style={{ fontSize: '13px', color: '#334155', lineHeight: '1.6', margin: '0 0 16px 0' }}>
+                                    작업을 시작했으나 E2E 봇 러너(Runner)가 실행되지 않았습니다.<br /><br />
+                                    <strong>[해결 방법]</strong><br />
+                                    ① 러너를 아직 설치하지 않았다면 아래 <strong>[러너 다운로드]</strong> 버튼을 클릭하여 설치 후 실행해 주세요.<br />
+                                    ② 설치 후에도 실행되지 않는다면 크롬 주소창에 <code style={{ background: '#f1f5f9', padding: '2px 4px', borderRadius: '3px', fontSize: '11px', color: '#dc2626' }}>chrome://extensions</code>를 입력하여 보안 프로그램 및 VPN 확장 프로그램들을 일시적으로 꺼두고 다시 시도해 주세요.
+                                </p>
+
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+                                    <button
+                                        onClick={() => setRunnerNotResponding(false)}
+                                        style={{
+                                            background: '#fff', border: '1px solid #cbd5e1', color: '#475569',
+                                            fontSize: '12px', fontWeight: 600, padding: '8px 16px', borderRadius: '6px', cursor: 'pointer'
+                                        }}
+                                    >
+                                        닫기
+                                    </button>
+                                    <a
+                                        href="/downloads/surveyon-runner.zip"
+                                        download
+                                        style={{
+                                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                            background: '#16a34a', color: '#fff', fontSize: '12px', fontWeight: 700,
+                                            padding: '8px 16px', borderRadius: '6px', textDecoration: 'none',
+                                            boxShadow: '0 2px 4px rgba(22, 163, 74, 0.2)'
+                                        }}
+                                    >
+                                        러너 다운로드
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* ── 하단 분할 영역 (좌: 리스트, 우: 디테일 리포트) ── */}
                 <div style={{ flex: 1, display: 'flex', gap: '12px', minHeight: 0 }}>
@@ -833,15 +925,26 @@ const AiDataPage = () => {
                                     />
                                 </div>
                                 <button
+                                    onClick={triggerFetchJob}
+                                    style={{
+                                        height: '30px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
+                                        background: '#fff', fontSize: '12px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'
+                                    }}
+                                    title="진행상태 및 상세결과 새로고침"
+                                >
+                                    <RefreshCw size={12} />
+                                    새로고침
+                                </button>
+                                <button
                                     onClick={handleReset}
                                     style={{
                                         height: '30px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
                                         background: '#fff', fontSize: '12px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'
                                     }}
-                                    title="전체 복원 초기화"
+                                    title="테스트 데이터 청소 및 정리"
                                 >
                                     <RotateCcw size={12} />
-                                    초기화
+                                    데이터 정리
                                 </button>
                                 <button
                                     onClick={() => setShowExportModal(true)}
@@ -853,31 +956,13 @@ const AiDataPage = () => {
                                     <Download size={12} />
                                     내보내기
                                 </button>
-                                {checkedIds.length > 0 && (
-                                    <>
-                                        <div style={{ width: '1px', height: '16px', backgroundColor: '#e2e8f0', margin: '0 4px' }} />
-                                        <button
-                                            onClick={handleDeleteSelected}
-                                            style={{
-                                                height: '30px', padding: '0 10px', border: '1px solid #fca5a5', borderRadius: '6px',
-                                                background: '#fef2f2', fontSize: '12px', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer',
-                                                transition: 'all 0.15s'
-                                            }}
-                                            onMouseOver={(e) => { e.currentTarget.style.background = '#fee2e2'; }}
-                                            onMouseOut={(e) => { e.currentTarget.style.background = '#fef2f2'; }}
-                                        >
-                                            <Trash2 size={12} />
-                                            선택 삭제 ({checkedIds.length})
-                                        </button>
-                                    </>
-                                )}
                             </div>
                         </div>
 
                         {/* 가이드 메시지 */}
                         {!jobError && (
                             <div style={{ fontSize: '11.5px', color: '#64748b', background: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '10px', shrink: 0 }}>
-                                💡 행을 클릭하면 우측 리포트에서 상세 로그가 조회됩니다. 체크박스 선택 시 {"'선택 삭제'"} 버튼이 활성화됩니다.
+                                💡 행을 클릭하면 우측 리포트에서 상세 로그가 조회됩니다.
                             </div>
                         )}
 
@@ -916,14 +1001,7 @@ const AiDataPage = () => {
                                     deletable={false}
                                     copyable={false}
                                 >
-                                    <Column
-                                        field="checkbox"
-                                        width="45px"
-                                        resizable={false}
-                                        headerCell={HeaderCheckboxCell}
-                                        cell={RowCheckboxCell}
-                                        headerClassName="k-header-center"
-                                    />
+
                                     <Column
                                         field="id"
                                         title="응답자 ID (PID)"
@@ -998,19 +1076,34 @@ const AiDataPage = () => {
                                             {/* 중단 사유 분류 */}
                                             <div style={{ background: '#fff1f1', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px 14px' }}>
                                                 <span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>① 중단 사유 분류</span>
-                                                <span style={{ fontSize: '14px', fontWeight: 700, color: '#dc2626' }}>{selectedRespondent.errorCategory}</span>
+                                                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                                                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#dc2626' }}>
+                                                        {FAILURE_CLASS_MAP[selectedRespondent.errorCategory]?.label || selectedRespondent.errorCategory || "기타 결함"}
+                                                    </span>
+                                                    {FAILURE_CLASS_MAP[selectedRespondent.errorCategory]?.advice && FAILURE_CLASS_MAP[selectedRespondent.errorCategory]?.advice !== "-" && (
+                                                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: '4px' }}>
+                                                            💡 권고: {FAILURE_CLASS_MAP[selectedRespondent.errorCategory].advice}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
 
                                             {/* 상세 오류 내용 */}
                                             <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px 14px' }}>
                                                 <span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '6px' }}>② 상세 오류 내용</span>
                                                 <p style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.5', margin: '0 0 12px 0', wordBreak: 'break-all' }}>
-                                                    {selectedRespondent.errorDetail}
+                                                    {selectedRespondent.errorDetail || "상세 오류 기록이 없습니다."}
                                                 </p>
 
                                                 <div style={{ display: 'flex', gap: '8px' }}>
                                                     <button
-                                                        onClick={() => modal.showAlert("알림", "중단이 발생한 브라우저 실패 화면 이미지 스냅샷 페이지로 이동합니다.")}
+                                                        onClick={() => {
+                                                            if (selectedRespondent.lastUrl) {
+                                                                window.open(selectedRespondent.lastUrl, '_blank');
+                                                            } else {
+                                                                modal.showAlert("알림", "실패 화면 스냅샷 URL이 없습니다.");
+                                                            }
+                                                        }}
                                                         style={{
                                                             height: '28px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '4px',
                                                             background: '#fff', fontSize: '11.5px', fontWeight: 600, color: '#475569',
@@ -1125,6 +1218,8 @@ const AiDataPage = () => {
                     </div>
                 </div>
             )}
+
+
 
             {/* 슬라이더 스위치 & 필터 칩 CSS 스타일 */}
             <style dangerouslySetInnerHTML={{
