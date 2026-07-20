@@ -1,4 +1,4 @@
-import { useState, useContext, cloneElement, useMemo } from 'react';
+import { useState, useContext, cloneElement, useMemo, useEffect } from 'react';
 import {
     Search, RotateCcw, Download, ExternalLink, Play, AlertTriangle,
     CheckCircle2, Trash2, X
@@ -6,6 +6,8 @@ import {
 import DataHeader from '@/services/dataStatus/components/DataHeader';
 import { modalContext } from "@/components/common/Modal.jsx";
 import KendoGridV2, { GridColumn as Column } from '@/components/kendo/KendoGridV2';
+import { useSelector } from 'react-redux';
+import { AiDataPageApi } from './AiDataPageApi';
 
 
 // 전체 응답자 모크 데이터 리스트 (스크린샷 기반 설계)
@@ -105,9 +107,7 @@ const AiDataPage = () => {
     const [testCount, setTestCount] = useState(10);
     const [manualPidList, setManualPidList] = useState("");
 
-    // 응답 생성 전략
-    const [distribution, setDistribution] = useState("browser"); // 'browser' | 'engine'
-    const [screenCondition, setScreenCondition] = useState("exclude"); // 'exclude' | 'include'
+
 
     // 시뮬레이션 상태
     const [isSimulating, setIsSimulating] = useState(false);
@@ -123,12 +123,91 @@ const AiDataPage = () => {
     const [filterStatus, setFilterStatus] = useState("all"); // 'all' | 'pass' | 'defect'
     const [searchQuery, setSearchQuery] = useState("");
 
+    // AI 데이터 작업 상태
+    const auth = useSelector((store) => store.auth);
+    const [progressInfo, setProgressInfo] = useState(null);
+    const [jobError, setJobError] = useState("");
+    const { viewQaJobs } = AiDataPageApi();
+
+    useEffect(() => {
+        const fetchJob = async () => {
+            const projectnum = sessionStorage.getItem("projectnum");
+            const userId = auth?.user?.userId || sessionStorage.getItem("userId");
+            if (!projectnum || !userId) return;
+            try {
+                const res = await viewQaJobs.mutateAsync({ pn: projectnum, user: userId });
+                if (res?.success === "777" && res?.resultjson) {
+                    const payload = res.resultjson;
+                    setJobError("");
+                    setProgressInfo(payload.progress || null);
+                    if (Array.isArray(payload.pids)) {
+                        const mapped = payload.pids.map(item => {
+                            let parsedLogs = [];
+                            try {
+                                parsedLogs = JSON.parse(item.logs || "[]");
+                                if (!Array.isArray(parsedLogs)) parsedLogs = [];
+                            } catch (e) {
+                                parsedLogs = [];
+                            }
+                            return {
+                                id: item.pid,
+                                status: item.status === "success" ? "pass" : (item.status === "fail" ? "defect" : item.status),
+                                finalQuestion: item.failureReason || "-",
+                                message: item.message || "",
+                                duration: item.processingTimeSec ? `${item.processingTimeSec}s` : "-",
+                                errorCategory: item.failureClass || "",
+                                errorDetail: item.failureDetail || "",
+                                logs: parsedLogs,
+                                lastUrl: item.lastUrl || null
+                            };
+                        });
+                        setRespondents(mapped);
+                        const firstDefect = mapped.find(r => r.status === "defect");
+                        if (firstDefect) {
+                            setSelectedPid(firstDefect.id);
+                        } else if (mapped.length > 0) {
+                            setSelectedPid(mapped[0].id);
+                        }
+                    }
+                } else if (res?.success === "900") {
+                    setJobError(res?.resultjson?.errorcontent || "해당 프로젝트의 작업이 없습니다.");
+                    setRespondents([]);
+                    setProgressInfo({
+                        totalRespondents: 0,
+                        completed: 0,
+                        success: 0,
+                        defect: 0,
+                        avgTimeSec: 0,
+                        totalAiCostUsd: 0,
+                        isFinished: false
+                    });
+                }
+            } catch (err) {
+                console.error("fetchJob error:", err);
+            }
+        };
+        fetchJob();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [auth?.user?.userId]);
+
+    useEffect(() => {
+        const pnForUrl = sessionStorage.getItem("projectnum");
+        if (pnForUrl) {
+            setStartUrl(`https://rpssurvey.hrcglobal.com/?t=tapi&pn=q${pnForUrl}`);
+        }
+    }, []);
+
     // 통계 계산
-    const currentTotal = respondents.length;
-    const passCount = respondents.filter(r => r.status === "pass").length;
-    const defectCount = respondents.filter(r => r.status === "defect").length;
-    const avgDuration = "128.3s";
-    const aiCost = "$0.0033";
+    const currentTotal = progressInfo ? progressInfo.totalRespondents : respondents.length;
+    const passCount = progressInfo ? progressInfo.success : respondents.filter(r => r.status === "pass").length;
+    const defectCount = progressInfo ? progressInfo.defect : respondents.filter(r => r.status === "defect").length;
+    const completedCount = progressInfo ? progressInfo.completed : (passCount + defectCount);
+    const avgDuration = progressInfo ? `${progressInfo.avgTimeSec}s` : "128.3s";
+    const aiCost = progressInfo ? `$${progressInfo.totalAiCostUsd}` : "$0.0033";
+
+    const progressPct = progressInfo
+        ? (progressInfo.isFinished ? 100 : Math.round((progressInfo.completed / (progressInfo.totalRespondents || 1)) * 100))
+        : progress;
 
     // 검색 & 필터 적용된 리스트
     const filteredRespondents = respondents.filter(r => {
@@ -167,6 +246,7 @@ const AiDataPage = () => {
         setFilterStatus("all");
         setSearchQuery("");
         setProgress(100);
+        setProgressInfo(null);
         modal.showAlert("알림", "응답자 목록이 초기 상태로 복원되었습니다.");
     };
 
@@ -311,10 +391,46 @@ const AiDataPage = () => {
         return cloneElement(trElement, { ...trProps }, trElement.props.children);
     };
 
+    const handleTestCountChange = (e) => {
+        const val = e.target.value.replace(/[^0-9]/g, '');
+        setTestCount(val);
+    };
+
+    const handleTestCountBlur = () => {
+        let num = parseInt(testCount, 10);
+        if (isNaN(num) || num < 1) {
+            setTestCount(1);
+        } else if (num > 50) {
+            setTestCount(50);
+        } else {
+            setTestCount(num);
+        }
+    };
+
     // 봇 실행 시뮬레이션
     const handleRunSimulation = () => {
+        if (autoPid) {
+            const countNum = parseInt(testCount, 10);
+            if (isNaN(countNum) || countNum < 1 || countNum > 50) {
+                modal.showAlert("알림", "자동 생성 개수는 1개부터 50개까지만 가능합니다.");
+                return;
+            }
+        } else {
+            const pids = manualPidList.split(',').map(p => p.trim()).filter(p => p !== "");
+            const count = pids.length;
+            if (count === 0) {
+                modal.showAlert("알림", "생성할 PID 목록을 입력해 주세요.");
+                return;
+            }
+            if (count < 1 || count > 50) {
+                modal.showAlert("알림", `수동 생성할 PID 개수는 1개부터 최대 50개까지만 가능합니다. \n(현재: ${count}개)`);
+                return;
+            }
+        }
+
         setIsSimulating(true);
         setProgress(0);
+        setProgressInfo(null);
         setRespondents([]);
         setSelectedPid("");
         setCheckedIds([]);
@@ -446,9 +562,26 @@ const AiDataPage = () => {
                                 >
                                     -
                                 </button>
-                                <div style={{ flex: 1, textAlign: 'center', fontSize: '12px', fontWeight: '700', color: '#1e293b' }}>{testCount}</div>
+                                <input
+                                    type="text"
+                                    value={testCount}
+                                    onChange={handleTestCountChange}
+                                    onBlur={handleTestCountBlur}
+                                    style={{
+                                        flex: 1,
+                                        width: '100%',
+                                        textAlign: 'center',
+                                        fontSize: '12px',
+                                        fontWeight: '700',
+                                        color: '#1e293b',
+                                        border: 'none',
+                                        outline: 'none',
+                                        background: 'transparent',
+                                        padding: 0
+                                    }}
+                                />
                                 <button
-                                    onClick={() => setTestCount(prev => prev + 1)}
+                                    onClick={() => setTestCount(prev => Math.min(50, prev + 1))}
                                     style={{ width: '28px', height: '100%', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#64748b' }}
                                 >
                                     +
@@ -492,18 +625,18 @@ const AiDataPage = () => {
                             alignItems: 'center'
                         }}>
                             <button
-                                onClick={() => setDistribution('browser')}
+                                disabled={true}
                                 style={{
-                                    border: distribution === 'browser' ? '1px solid #16a34a' : '1px solid transparent',
+                                    border: '1px solid #16a34a',
                                     borderRadius: '4px',
                                     padding: '0 10px',
                                     height: '100%',
                                     fontSize: '11.5px',
-                                    fontWeight: distribution === 'browser' ? '700' : '500',
-                                    color: distribution === 'browser' ? '#16a34a' : '#64748b',
-                                    background: distribution === 'browser' ? '#fff' : 'transparent',
-                                    boxShadow: distribution === 'browser' ? '0 1px 2px rgba(22, 163, 74, 0.1)' : 'none',
-                                    cursor: 'pointer',
+                                    fontWeight: '700',
+                                    color: '#16a34a',
+                                    background: '#fff',
+                                    boxShadow: '0 1px 2px rgba(22, 163, 74, 0.1)',
+                                    cursor: 'default',
                                     transition: 'all 0.15s ease',
                                     whiteSpace: 'nowrap'
                                 }}
@@ -511,18 +644,19 @@ const AiDataPage = () => {
                                 브라우저 실행 (EtoE)
                             </button>
                             <button
-                                onClick={() => setDistribution('engine')}
+                                disabled={true}
                                 style={{
-                                    border: distribution === 'engine' ? '1px solid #16a34a' : '1px solid transparent',
+                                    border: '1px solid transparent',
                                     borderRadius: '4px',
                                     padding: '0 10px',
                                     height: '100%',
                                     fontSize: '11.5px',
-                                    fontWeight: distribution === 'engine' ? '700' : '500',
-                                    color: distribution === 'engine' ? '#16a34a' : '#64748b',
-                                    background: distribution === 'engine' ? '#fff' : 'transparent',
-                                    boxShadow: distribution === 'engine' ? '0 1px 2px rgba(22, 163, 74, 0.1)' : 'none',
-                                    cursor: 'pointer',
+                                    fontWeight: '500',
+                                    color: '#64748b',
+                                    background: 'transparent',
+                                    boxShadow: 'none',
+                                    cursor: 'default',
+                                    opacity: 0.5,
                                     transition: 'all 0.15s ease',
                                     whiteSpace: 'nowrap'
                                 }}
@@ -547,18 +681,18 @@ const AiDataPage = () => {
                             alignItems: 'center'
                         }}>
                             <button
-                                onClick={() => setScreenCondition('exclude')}
+                                disabled={true}
                                 style={{
-                                    border: screenCondition === 'exclude' ? '1px solid #16a34a' : '1px solid transparent',
+                                    border: '1px solid #16a34a',
                                     borderRadius: '4px',
                                     padding: '0 10px',
                                     height: '100%',
                                     fontSize: '11.5px',
-                                    fontWeight: screenCondition === 'exclude' ? '700' : '500',
-                                    color: screenCondition === 'exclude' ? '#16a34a' : '#64748b',
-                                    background: screenCondition === 'exclude' ? '#fff' : 'transparent',
-                                    boxShadow: screenCondition === 'exclude' ? '0 1px 2px rgba(22, 163, 74, 0.1)' : 'none',
-                                    cursor: 'pointer',
+                                    fontWeight: '700',
+                                    color: '#16a34a',
+                                    background: '#fff',
+                                    boxShadow: '0 1px 2px rgba(22, 163, 74, 0.1)',
+                                    cursor: 'default',
                                     transition: 'all 0.15s ease',
                                     whiteSpace: 'nowrap'
                                 }}
@@ -566,18 +700,19 @@ const AiDataPage = () => {
                                 미포함
                             </button>
                             <button
-                                onClick={() => setScreenCondition('include')}
+                                disabled={true}
                                 style={{
-                                    border: screenCondition === 'include' ? '1px solid #16a34a' : '1px solid transparent',
+                                    border: '1px solid transparent',
                                     borderRadius: '4px',
                                     padding: '0 10px',
                                     height: '100%',
                                     fontSize: '11.5px',
-                                    fontWeight: screenCondition === 'include' ? '700' : '500',
-                                    color: screenCondition === 'include' ? '#16a34a' : '#64748b',
-                                    background: screenCondition === 'include' ? '#fff' : 'transparent',
-                                    boxShadow: screenCondition === 'include' ? '0 1px 2px rgba(22, 163, 74, 0.1)' : 'none',
-                                    cursor: 'pointer',
+                                    fontWeight: '500',
+                                    color: '#64748b',
+                                    background: 'transparent',
+                                    boxShadow: 'none',
+                                    cursor: 'default',
+                                    opacity: 0.5,
                                     transition: 'all 0.15s ease',
                                     whiteSpace: 'nowrap'
                                 }}
@@ -615,10 +750,10 @@ const AiDataPage = () => {
                     {/* 진행률 바 */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '280px' }}>
                         <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap' }}>
-                            ⚡ 생성 진행 상태 <span style={{ color: '#16a34a' }}>{progress}%</span>
+                            ⚡ 생성 진행 상태 <span style={{ color: '#16a34a' }}>{progressPct}%</span>
                         </span>
                         <div style={{ flex: 1, height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div style={{ width: `${progress}%`, height: '100%', background: '#10b981', transition: 'width 0.3s ease' }} />
+                            <div style={{ width: `${progressPct}%`, height: '100%', background: '#10b981', transition: 'width 0.3s ease' }} />
                         </div>
                     </div>
 
@@ -626,7 +761,7 @@ const AiDataPage = () => {
                     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px', fontSize: '12px', color: '#64748b' }}>
                         <div>총 응답자 <strong style={{ color: '#1e293b' }}>{currentTotal}</strong></div>
                         <div style={{ color: '#cbd5e1' }}>|</div>
-                        <div>완료 <strong style={{ color: '#1e293b' }}>{passCount + defectCount}</strong></div>
+                        <div>완료 <strong style={{ color: '#1e293b' }}>{completedCount}</strong></div>
                         <div style={{ color: '#cbd5e1' }}>|</div>
                         <div>성공 <strong style={{ color: '#16a34a' }}>{passCount}</strong></div>
                         <div style={{ color: '#cbd5e1' }}>|</div>
@@ -740,66 +875,91 @@ const AiDataPage = () => {
                         </div>
 
                         {/* 가이드 메시지 */}
-                        <div style={{ fontSize: '11.5px', color: '#64748b', background: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '10px', shrink: 0 }}>
-                            💡 행을 클릭하면 우측 리포트에서 상세 로그가 조회됩니다. 체크박스 선택 시 {"'선택 삭제'"} 버튼이 활성화됩니다.
-                        </div>
+                        {!jobError && (
+                            <div style={{ fontSize: '11.5px', color: '#64748b', background: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '10px', shrink: 0 }}>
+                                💡 행을 클릭하면 우측 리포트에서 상세 로그가 조회됩니다. 체크박스 선택 시 {"'선택 삭제'"} 버튼이 활성화됩니다.
+                            </div>
+                        )}
 
                         {/* 그리드 영역 */}
-                        <div className="cmn_grid singlehead" style={{ flex: 1, minHeight: 0 }}>
-                            <KendoGridV2
-                                data={gridData}
-                                dataItemKey="id"
-                                height="100%"
-                                rowRender={rowRender}
-                                onRowClick={(e) => setSelectedPid(e.dataItem.id)}
-                                reorderable={false}
-                                addable={false}
-                                deletable={false}
-                                copyable={false}
-                            >
-                                <Column
-                                    field="checkbox"
-                                    width="45px"
-                                    resizable={false}
-                                    headerCell={HeaderCheckboxCell}
-                                    cell={RowCheckboxCell}
-                                    headerClassName="k-header-center"
-                                />
-                                <Column
-                                    field="id"
-                                    title="응답자 ID (PID)"
-                                    width="130px"
-                                    cell={IdCell}
-                                    headerClassName="k-header-center"
-                                />
-                                <Column
-                                    field="status"
-                                    title="결과 상태"
-                                    width="90px"
-                                    cell={StatusCell}
-                                    headerClassName="k-header-center"
-                                />
-                                <Column
-                                    field="finalQuestion"
-                                    title="최종 감지 문항"
-                                    width="120px"
-                                    cell={FinalQuestionCell}
-                                    headerClassName="k-header-center"
-                                />
-                                <Column
-                                    field="message"
-                                    title="종료 메시지 / 중단 사유"
-                                    cell={MessageCell}
-                                    headerClassName="k-header-center"
-                                />
-                                <Column
-                                    field="duration"
-                                    title="수행 시간"
-                                    width="90px"
-                                    cell={DurationCell}
-                                    headerClassName="k-header-center"
-                                />
-                            </KendoGridV2>
+                        <div className="cmn_grid singlehead" style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+                            {jobError ? (
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    height: '100%',
+                                    gap: '6px',
+                                    background: '#f8fafc',
+                                    border: '1px solid #cbd5e1',
+                                    borderRadius: '8px',
+                                    textAlign: 'center'
+                                }}>
+                                    <AlertTriangle size={32} color="#f59e0b" style={{ marginBottom: '8px' }} />
+                                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b' }}>
+                                        해당 프로젝트의 작업이 없습니다.
+                                    </span>
+                                    <span style={{ fontSize: '12.5px', color: '#64748b' }}>
+                                        AI데이터 생성을 실행해 주세요.
+                                    </span>
+                                </div>
+                            ) : (
+                                <KendoGridV2
+                                    data={gridData}
+                                    dataItemKey="id"
+                                    height="100%"
+                                    rowRender={rowRender}
+                                    onRowClick={(e) => setSelectedPid(e.dataItem.id)}
+                                    reorderable={false}
+                                    addable={false}
+                                    deletable={false}
+                                    copyable={false}
+                                >
+                                    <Column
+                                        field="checkbox"
+                                        width="45px"
+                                        resizable={false}
+                                        headerCell={HeaderCheckboxCell}
+                                        cell={RowCheckboxCell}
+                                        headerClassName="k-header-center"
+                                    />
+                                    <Column
+                                        field="id"
+                                        title="응답자 ID (PID)"
+                                        width="130px"
+                                        cell={IdCell}
+                                        headerClassName="k-header-center"
+                                    />
+                                    <Column
+                                        field="status"
+                                        title="결과 상태"
+                                        width="90px"
+                                        cell={StatusCell}
+                                        headerClassName="k-header-center"
+                                    />
+                                    <Column
+                                        field="finalQuestion"
+                                        title="최종 감지 문항"
+                                        width="120px"
+                                        cell={FinalQuestionCell}
+                                        headerClassName="k-header-center"
+                                    />
+                                    <Column
+                                        field="message"
+                                        title="종료 메시지 / 중단 사유"
+                                        cell={MessageCell}
+                                        headerClassName="k-header-center"
+                                    />
+                                    <Column
+                                        field="duration"
+                                        title="수행 시간"
+                                        width="90px"
+                                        cell={DurationCell}
+                                        headerClassName="k-header-center"
+                                    />
+                                </KendoGridV2>
+                            )}
                         </div>
                     </div>
 
