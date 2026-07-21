@@ -27,6 +27,7 @@ const AiDataPage = () => {
 
     // 상단 상태 값
     const [startUrl, setStartUrl] = useState("");
+    const initialStartUrlRef = useRef("");
     const [autoPid, setAutoPid] = useState(true);
     const [testCount, setTestCount] = useState(10);
     const [manualPidList, setManualPidList] = useState("");
@@ -112,6 +113,9 @@ const AiDataPage = () => {
                 const payload = res.resultjson;
                 if (payload.startUrl) {
                     setStartUrl(payload.startUrl);
+                    if (!initialStartUrlRef.current) {
+                        initialStartUrlRef.current = payload.startUrl;
+                    }
                 }
 
                 if (payload.hasJob === false) {
@@ -755,6 +759,62 @@ const AiDataPage = () => {
         }
     };
 
+    // AI 데이터 생성 시작 버튼 클릭 시 START URL 변경 감지 확인
+    const handleStartClick = () => {
+        const initialUrl = initialStartUrlRef.current?.trim() || "";
+        const currentUrl = startUrl?.trim() || "";
+
+        if (initialUrl && currentUrl !== initialUrl) {
+            let diffText = "";
+            try {
+                const u1 = new URL(initialUrl);
+                const u2 = new URL(currentUrl);
+                const diffs = [];
+
+                if (u1.origin !== u2.origin || u1.pathname !== u2.pathname) {
+                    diffs.push("도메인/경로 변경");
+                }
+
+                const p1 = new URLSearchParams(u1.search);
+                const p2 = new URLSearchParams(u2.search);
+                const allKeys = new Set([...p1.keys(), ...p2.keys()]);
+
+                allKeys.forEach(k => {
+                    const v1 = p1.get(k);
+                    const v2 = p2.get(k);
+                    if (v1 !== v2) {
+                        if (v1 === null) diffs.push(`${k}: (없음) ➔ ${v2}`);
+                        else if (v2 === null) diffs.push(`${k}: ${v1} ➔ (삭제됨)`);
+                        else diffs.push(`${k}: ${v1} ➔ ${v2}`);
+                    }
+                });
+            } catch (e) {
+                // URL 파싱 실패 시 기본 비교
+            }
+
+            const confirmMsg = `START URL 설정이 변경되었습니다.\n변경된 URL로 생성 작업을 진행하시겠습니까?${diffText}\n---------------------------------------\n[기존 URL]\n${initialUrl}\n\n[변경 URL]\n${currentUrl}`;
+
+            modal.showConfirm(
+                "알림",
+                confirmMsg,
+                {
+                    btns: [
+                        { title: "취소", click: () => { } },
+                        {
+                            title: "실행",
+                            click: () => {
+                                initialStartUrlRef.current = currentUrl;
+                                handleRunSimulation();
+                            }
+                        }
+                    ]
+                }
+            );
+        } else {
+            handleRunSimulation();
+        }
+    };
+
     const selectedRespondent = respondents.find(r => r.id === selectedPid);
 
     return (
@@ -1018,7 +1078,7 @@ const AiDataPage = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
                         {/* 시뮬레이션 시작 버튼 */}
                         <button
-                            onClick={handleRunSimulation}
+                            onClick={handleStartClick}
                             disabled={isSimulating || progressInfo?.isFinished === false}
                             style={{
                                 height: '32px', padding: '0 16px', border: 'none', borderRadius: '6px',
