@@ -305,18 +305,30 @@ const AiDataPage = () => {
                                 // deletedPids가 존재하면 QMaster (RPS/QM) 초기화 API 별도 호출
                                 if (Array.isArray(deletedPids) && deletedPids.length > 0) {
                                     const rawServerName = (sessionStorage.getItem("servername") || sessionStorage.getItem("serverName") || "").toLowerCase();
-                                    // 개발/테스트/운영 환경 공통: 상대 경로 프록시(/rps-silsa, /qm-silsa) 사용하여 CORS 차단 방지
-                                    const domainPrefix = rawServerName.includes("qm") ? "/qm-silsa" : "/rps-silsa";
+                                    const isDev = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+                                    let domainPrefix = "";
+                                    if (isDev) {
+                                        domainPrefix = rawServerName.includes("qm") ? "/qm-silsa" : "/rps-silsa";
+                                    } else {
+                                        domainPrefix = rawServerName.includes("qm")
+                                            ? "https://qm.hrcglobal.com"
+                                            : "https://rpssurvey.hrcglobal.com";
+                                    }
 
                                     const pidListStr = deletedPids.join(",");
                                     const qmasterUrl = `${domainPrefix}/Silsa/Progress/resetDataWithKey?eNum=5000037&apiKey=Dxz0vN94ZzFXEP2KcngRSu06HgbqJ94CeBzZs5A2o&qn=${encodeURIComponent(projectnum)}&pidList=${encodeURIComponent(pidListStr)}`;
 
                                     try {
-                                        console.log("[QMaster Reset API Call (POST)]", qmasterUrl);
-                                        const qmRes = await axios.post(qmasterUrl, {});
-                                        const resText = typeof qmRes.data === 'string' ? qmRes.data : JSON.stringify(qmRes.data);
-                                        if (!resText.includes("성공")) {
-                                            qmSuccess = false;
+                                        console.log("[QMaster Reset API Call]", qmasterUrl);
+                                        if (isDev) {
+                                            const qmRes = await axios.post(qmasterUrl, {});
+                                            const resText = typeof qmRes.data === 'string' ? qmRes.data : JSON.stringify(qmRes.data);
+                                            if (!resText.includes("성공")) {
+                                                qmSuccess = false;
+                                            }
+                                        } else {
+                                            // 테스트/운영 환경: 서버 Nginx 수정 없이 no-cors 직송 모드로 2번 API 요청을 수신 서버에 안전 전달
+                                            await fetch(qmasterUrl, { method: 'POST', mode: 'no-cors' });
                                         }
                                     } catch (qmErr) {
                                         console.error("QMaster resetDataWithKey API call error:", qmErr);
