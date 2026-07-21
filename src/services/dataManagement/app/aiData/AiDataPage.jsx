@@ -216,6 +216,7 @@ const AiDataPage = () => {
 
 
     // 통계 계산
+    const totalQuestions = progressInfo ? (progressInfo.totalQuestions ?? progressInfo.totalQuestionCount ?? 0) : 0;
     const currentTotal = progressInfo ? progressInfo.totalRespondents : respondents.length;
     const passCount = progressInfo ? progressInfo.success : respondents.filter(r => r.status === "pass").length;
     const defectCount = progressInfo ? progressInfo.defect : respondents.filter(r => r.status === "defect").length;
@@ -1082,6 +1083,11 @@ const AiDataPage = () => {
 
                         {/* 요약 배지 목록 */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto' }}>
+                            {/* 총 문항수 */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#475569' }}>
+                                <span style={{ fontWeight: 600 }}>총 문항수</span>
+                                <strong style={{ color: '#1e293b' }}>{totalQuestions}</strong>
+                            </div>
                             {/* 총 응답자 */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#475569' }}>
                                 <span style={{ fontWeight: 600 }}>총 응답자</span>
