@@ -273,7 +273,7 @@ const AiDataPage = () => {
         }
     };
 
-    // 전체 초기화 (백엔드 API 호출)
+    // 테스트 데이터 초기화 (선택 항목 우선, 미선택 시 전체)
     const handleResetAll = async () => {
         const projectnum = sessionStorage.getItem("projectnum");
         const userId = auth?.user?.userId || sessionStorage.getItem("userId");
@@ -282,23 +282,32 @@ const AiDataPage = () => {
             return;
         }
 
-        modal.showConfirm("알림", "정말로 이 프로젝트의 모든 테스트 데이터를 초기화하시겠습니까?", async (confirm) => {
+        const isSelected = checkedIds.length > 0;
+        const targetPids = isSelected ? checkedIds : respondents.map(r => r.id);
+
+        if (targetPids.length === 0) {
+            modal.showAlert("알림", "초기화할 테스트 데이터가 없습니다.");
+            return;
+        }
+
+        const confirmMsg = isSelected
+            ? `정말로 선택한 ${checkedIds.length}개의 테스트 데이터를 초기화하시겠습니까?`
+            : "정말로 이 프로젝트의 모든 테스트 데이터를 초기화하시겠습니까?";
+
+        modal.showConfirm("알림", confirmMsg, async (confirm) => {
             if (!confirm) return;
             try {
-                // 현재 목록에 있는 모든 PID를 초기화 대상으로 전달
-                const allPids = respondents.map(r => r.id);
-                if (allPids.length === 0) {
-                    modal.showAlert("알림", "초기화할 테스트 데이터가 없습니다.");
-                    return;
-                }
                 const resetRes = await resetTestPids.mutateAsync({
                     pn: projectnum,
                     user: userId,
-                    pids: allPids
+                    pids: targetPids
                 });
 
                 if (resetRes?.success === "777") {
-                    modal.showAlert("알림", "모든 테스트 데이터가 초기화되었습니다.");
+                    const successMsg = isSelected
+                        ? "선택한 테스트 데이터가 초기화되었습니다."
+                        : "모든 테스트 데이터가 초기화되었습니다.";
+                    modal.showAlert("알림", successMsg);
                     setCheckedIds([]);
                     await triggerFetchJob();
                 } else {
@@ -942,56 +951,78 @@ const AiDataPage = () => {
                 {/* ── 상단 2: 생성 진행 상태 및 요약 통계 ── */}
                 <div className="ai-stats-bar" style={{
                     background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px',
-                    padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '8px',
+                    padding: '10px 16px', display: 'flex', flexDirection: 'column', gap: '4px',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.05)', shrink: 0
                 }}>
-                    {/* 상단 행: 진행률 및 통계 지표 */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px', width: '100%' }}>
-                        {/* 진행률 바 */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '280px' }}>
-                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap' }}>
-                                ⚡ 생성 진행 상태 <span style={{ color: '#16a34a' }}>{progressPct}%</span>
+                    {/* 상단 행: 진행률 및 요약 배지, 새로고침 */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', width: '100%' }}>
+                        {/* 진행률 바 및 새로고침 버튼 */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, marginRight: '16px' }}>
+                            <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>
+                                ⚡ 생성 진행률 <span style={{ color: '#10b981', fontWeight: 800 }}>{progressPct}%</span>
                             </span>
-                            <div style={{ flex: 1, height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
-                                <div style={{ width: `${progressPct}%`, height: '100%', background: '#10b981', transition: 'width 0.3s ease' }} />
+                            <div style={{ flex: 1, height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div style={{ width: `${progressPct}%`, height: '100%', background: 'linear-gradient(90deg, #10b981, #059669)', borderRadius: '3px', transition: 'width 0.3s ease' }} />
                             </div>
-                        </div>
-
-                        {/* 통계 지표들 및 새로고침 버튼 */}
-                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '14px', fontSize: '12px', color: '#64748b' }}>
-                            <div>총 응답자 <strong style={{ color: '#1e293b' }}>{currentTotal}</strong></div>
-                            <div style={{ color: '#cbd5e1' }}>|</div>
-                            <div>완료 <strong style={{ color: '#1e293b' }}>{completedCount}</strong></div>
-                            <div style={{ color: '#cbd5e1' }}>|</div>
-                            <div>성공 <strong style={{ color: '#16a34a' }}>{passCount}</strong></div>
-                            <div style={{ color: '#cbd5e1' }}>|</div>
-                            <div>중단 <strong style={{ color: '#dc2626' }}>{defectCount}</strong></div>
-                            <div style={{ color: '#cbd5e1' }}>|</div>
-                            <div>평균소요 <strong style={{ color: '#1e293b' }}>{avgDuration}</strong></div>
-                            <div style={{ color: '#cbd5e1' }}>|</div>
-                            <div>총 AI 비용 <strong style={{ color: '#8b5cf6' }}>{aiCost}</strong></div>
-
-                            {/* 상단 통합 새로고침 버튼 */}
-                            <div style={{ width: '1px', height: '14px', backgroundColor: '#e2e8f0', margin: '0 4px' }} />
+                            
+                            {/* 게이지 바로 우측에 배치되는 새로고침 버튼 */}
                             <button
                                 onClick={() => triggerFetchJob()}
                                 style={{
                                     height: '28px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
                                     background: '#fff', fontSize: '11.5px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', whiteSpace: 'nowrap',
-                                    transition: 'all 0.15s'
+                                    transition: 'all 0.15s', fontWeight: 600, marginLeft: '6px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                                    boxSizing: 'border-box'
                                 }}
                                 onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
                                 onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; }}
                                 title="진행상태 및 상세결과 새로고침"
                             >
-                                <RefreshCw size={11} />
-                                새로고침
+                                <RefreshCw size={11} color="#10b981" style={{ strokeWidth: 2.5 }} />
+                                <span>새로고침</span>
                             </button>
+                        </div>
+
+                        {/* 구분 세로선 */}
+                        <div style={{ width: '1px', height: '16px', backgroundColor: '#e2e8f0', marginRight: '6px' }} />
+
+                        {/* 요약 배지 목록 */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto' }}>
+                            {/* 총 응답자 */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#475569' }}>
+                                <span style={{ fontWeight: 600 }}>총 응답자</span>
+                                <strong style={{ color: '#1e293b' }}>{currentTotal}</strong>
+                            </div>
+                            {/* 완료 */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f0f9ff', border: '1px solid #bae6fd', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#0369a1' }}>
+                                <span style={{ fontWeight: 600 }}>완료</span>
+                                <strong style={{ color: '#0369a1' }}>{completedCount}</strong>
+                            </div>
+                            {/* 성공 */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#15803d' }}>
+                                <span style={{ fontWeight: 600 }}>성공</span>
+                                <strong style={{ color: '#15803d' }}>{passCount}</strong>
+                            </div>
+                            {/* 중단 */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#fff1f1', border: '1px solid #fecaca', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#b91c1c' }}>
+                                <span style={{ fontWeight: 600 }}>중단</span>
+                                <strong style={{ color: '#b91c1c' }}>{defectCount}</strong>
+                            </div>
+                            {/* 평균소요 */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#fffbeb', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#b45309' }}>
+                                <span style={{ fontWeight: 600 }}>평균소요</span>
+                                <strong style={{ color: '#b45309' }}>{avgDuration}</strong>
+                            </div>
+                            {/* 총 AI 비용 */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#faf5ff', border: '1px solid #e9d5ff', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#6d28d9' }}>
+                                <span style={{ fontWeight: 600 }}>총 AI 비용</span>
+                                <strong style={{ color: '#6d28d9' }}>{aiCost}</strong>
+                            </div>
                         </div>
                     </div>
 
                     {/* 하단 행: 설명 문구 */}
-                    <span style={{ fontSize: '10.5px', color: '#94a3b8' }}>
+                    <span style={{ fontSize: '9.5px', color: '#94a3b8', width: '100%', textAlign: 'left' }}>
                         ※ 동시 실행 한도 5개 제한으로 인해 일부 응답자는 pending(대기) 상태로 노출될 수 있습니다. (인당 약 6분 소요)
                     </span>
                 </div>
@@ -1263,10 +1294,10 @@ const AiDataPage = () => {
                                         height: '30px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
                                         background: '#fff', fontSize: '11.5px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', whiteSpace: 'nowrap'
                                     }}
-                                    title="전체 테스트 데이터 초기화"
+                                    title={checkedIds.length > 0 ? "선택한 테스트 데이터 초기화" : "전체 테스트 데이터 초기화"}
                                 >
                                     <RotateCcw size={12} />
-                                    초기화
+                                    {checkedIds.length > 0 ? `선택 초기화 (${checkedIds.length})` : '초기화'}
                                 </button>
 
                                 <button
