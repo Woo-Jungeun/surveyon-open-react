@@ -34,6 +34,8 @@ const AiDataPage = () => {
 
 
     const [isSimulating, setIsSimulating] = useState(false);
+    const [isProcessingReset, setIsProcessingReset] = useState(false);
+    const [isGridLoading, setIsGridLoading] = useState(false);
     const [respondents, setRespondents] = useState([]);
     const [selectedPid, setSelectedPid] = useState("");
     const [checkedIds, setCheckedIds] = useState([]);
@@ -98,6 +100,7 @@ const AiDataPage = () => {
         const projectnum = sessionStorage.getItem("projectnum");
         const userId = auth?.user?.userId || sessionStorage.getItem("userId");
         if (!projectnum || !userId) return;
+        setIsGridLoading(true);
         try {
             const reqData = { pn: projectnum, user: userId };
             if (Array.isArray(pids) && pids.length > 0) {
@@ -192,6 +195,8 @@ const AiDataPage = () => {
             }
         } catch (err) {
             console.error("triggerFetchJob error:", err);
+        } finally {
+            setIsGridLoading(false);
         }
     };
 
@@ -281,6 +286,7 @@ const AiDataPage = () => {
                 {
                     title: actionLabel,
                     click: async () => {
+                        setIsProcessingReset(true);
                         try {
                             const resetRes = await resetTestPids.mutateAsync({
                                 pn: String(projectnum),
@@ -347,17 +353,22 @@ const AiDataPage = () => {
                                     }
                                 }
 
+                                setIsProcessingReset(false);
                                 modal.showAlert("알림", msg);
                                 setCheckedIds([]);
                                 // 상태 및 목록 갱신
                                 await triggerFetchJob();
                             } else {
                                 // [경우 4] 1번 API 실패 (success !== "777")
+                                setIsProcessingReset(false);
                                 modal.showAlert("알림", resetRes?.resultjson?.errorcontent || resetRes?.message || `${actionLabel} 중 오류가 발생했습니다.`);
                             }
                         } catch (err) {
                             console.error(`executeResetOrDelete (${actionType}) error:`, err);
+                            setIsProcessingReset(false);
                             modal.showAlert("알림", `${actionLabel} 처리 중 오류가 발생했습니다.`);
+                        } finally {
+                            setIsProcessingReset(false);
                         }
                     }
                 }
@@ -1310,9 +1321,28 @@ const AiDataPage = () => {
                                 러너를 실행하는 중...
                             </div>
                             <div style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.55' }}>
-                                Surveyon E2E 러너가 작업을 수령 중입니다.<br />
+                                Surveyon E2E 러너가 작업을 가져오는 중입니다.<br />
                                 잠시만 기다려 주세요.
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* 데이터 초기화/삭제 처리 중 콤팩트 플로팅 토스트 스피너 (배경 어둡게 처리 X) */}
+                {isProcessingReset && (
+                    <div style={{
+                        position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)',
+                        zIndex: 99999, pointerEvents: 'none'
+                    }}>
+                        <div style={{
+                            background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '30px',
+                            padding: '8px 18px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                            display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Pretendard, sans-serif'
+                        }}>
+                            <Loader2 size={16} className="ai-spin" color="#10b981" />
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>
+                                데이터 처리 중... (QMaster 연동 진행)
+                            </span>
                         </div>
                     </div>
                 )}
@@ -1433,6 +1463,25 @@ const AiDataPage = () => {
 
                         {/* 그리드 영역 */}
                         <div className="cmn_grid singlehead" style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+                            {/* 그리드 조회 중 로딩 영역 (조회된 데이터가 없습니다 완전히 덮어서 대체) */}
+                            {isGridLoading && (
+                                <div style={{
+                                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                                    background: '#ffffff',
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                    zIndex: 50, borderRadius: '8px', pointerEvents: 'none'
+                                }}>
+                                    <div style={{
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px'
+                                    }}>
+                                        <Loader2 size={26} className="ai-spin" color="#10b981" />
+                                        <span style={{ fontSize: '13.5px', fontWeight: 600, color: '#475569' }}>
+                                            데이터를 불러오는 중입니다...
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
                             {jobError ? (
                                 <div style={{
                                     display: 'flex',
