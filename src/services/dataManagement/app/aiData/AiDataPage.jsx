@@ -38,6 +38,13 @@ const AiDataPage = () => {
     const [selectedPid, setSelectedPid] = useState("");
     const [checkedIds, setCheckedIds] = useState([]);
 
+    // 현재 respondents에 실제 존재하는 checkedIds만 동기화 (String 타입 통일 및 중단/삭제된 ID 자동 필터링)
+    const validCheckedIds = useMemo(() => {
+        const existingSet = new Set(respondents.map(r => String(r.id)));
+        const uniqueChecked = Array.from(new Set(checkedIds.map(String)));
+        return uniqueChecked.filter(id => existingSet.has(id));
+    }, [checkedIds, respondents]);
+
     // 내보내기 팝업 표시 여부 (보류로 인한 비활성화)
     // const [showExportModal, setShowExportModal] = useState(false);
 
@@ -128,7 +135,7 @@ const AiDataPage = () => {
                                 parsedLogs = [];
                             }
                             return {
-                                id: item.pid,
+                                id: String(item.pid),
                                 status: item.status === "success" ? "pass" : (item.status === "fail" ? "defect" : item.status),
                                 finalQuestion: item.failedQuestionNum || item.failedQuestion || "-",
                                 failureReason: item.failureReason || "",
@@ -143,9 +150,9 @@ const AiDataPage = () => {
 
                         if (Array.isArray(pids) && pids.length > 0) {
                             setRespondents(prev => {
-                                const newMap = new Map(prev.map(r => [r.id, r]));
+                                const newMap = new Map(prev.map(r => [String(r.id), r]));
                                 mapped.forEach(m => {
-                                    newMap.set(m.id, m);
+                                    newMap.set(String(m.id), m);
                                 });
                                 return Array.from(newMap.values());
                             });
@@ -249,8 +256,8 @@ const AiDataPage = () => {
             return;
         }
 
-        const isSelected = checkedIds.length > 0;
-        const targetPids = isSelected ? checkedIds : respondents.map(r => r.id);
+        const isSelected = validCheckedIds.length > 0;
+        const targetPids = isSelected ? validCheckedIds : respondents.map(r => String(r.id));
 
         const actionLabel = actionType === "delete" ? "삭제" : "초기화";
 
@@ -265,7 +272,7 @@ const AiDataPage = () => {
         }
 
         const confirmMsg = isSelected
-            ? `선택한 ${checkedIds.length}개의 응답자 ID를 ${actionLabel}하시겠습니까?`
+            ? `선택한 ${validCheckedIds.length}개의 응답자 ID를 ${actionLabel}하시겠습니까?`
             : `프로젝트의 모든 응답자 ID (${targetPids.length}개)를 ${actionLabel}하시겠습니까?`;
 
         modal.showConfirm("알림", confirmMsg, {
@@ -288,7 +295,6 @@ const AiDataPage = () => {
                                 const skippedList = resJson.skipped || [];
 
                                 let qmSuccess = true;
-                                let qmErrorMsg = "";
 
                                 // deletedPids가 존재하면 QMaster (RPS/QM) 초기화 API 별도 호출
                                 if (Array.isArray(deletedPids) && deletedPids.length > 0) {
@@ -312,22 +318,33 @@ const AiDataPage = () => {
                                         const resText = typeof qmRes.data === 'string' ? qmRes.data : JSON.stringify(qmRes.data);
                                         if (!resText.includes("성공")) {
                                             qmSuccess = false;
-                                            qmErrorMsg = resText;
                                         }
                                     } catch (qmErr) {
                                         console.error("QMaster resetDataWithKey API call error:", qmErr);
                                         qmSuccess = false;
-                                        qmErrorMsg = qmErr.message || "통신 오류";
                                     }
                                 }
 
-                                let msg = `${actionLabel} 처리 완료: ${deletedCount}개의 응답이 ${actionLabel}되었습니다.`;
+                                let msg = "";
                                 if (!qmSuccess) {
-                                    msg += `\n(⚠️ 단, QMaster ${actionLabel} 처리 중 오류 발생${qmErrorMsg ? `: ${qmErrorMsg}` : ''})`;
-                                }
-                                if (skippedList.length > 0) {
-                                    msg += `\n\n[실사 보호 거부 항목 (${skippedList.length}개)]:\n` +
-                                        skippedList.map(s => `- PID ${s.pid}: ${s.reason}`).join('\n');
+                                    // [경우 2] 1번 API 성공 + 2번 API 실패 (QMaster 연동 오류)
+                                    msg = `${actionLabel}에 실패하였습니다.\n` +
+                                        `이미 ${actionLabel}된 아이디를 다시 ${actionLabel}할 경우 에러가 발생할 수 있습니다.\n` +
+                                        `해당 아이디를 재사용해 보시고 문제가 발생할 경우 AI솔루션팀에 문의해주세요.`;
+                                } else if (deletedCount === 0) {
+                                    // [경우 3] 1번 API 성공했으나 0개 처리된 경우 (실사 차단 등)
+                                    msg = `${actionLabel}된 응답이 없습니다.`;
+                                    if (skippedList.length > 0) {
+                                        msg += `\n\n[실사 보호 거부 항목 (${skippedList.length}개)]:\n` +
+                                            skippedList.map(s => `- PID ${s.pid}: ${s.reason}`).join('\n');
+                                    }
+                                } else {
+                                    // [경우 1] 1번 API 성공 + 2번 API 성공 (완전 성공)
+                                    msg = `${actionLabel} 처리 완료: ${deletedCount}개의 응답이 ${actionLabel}되었습니다.`;
+                                    if (skippedList.length > 0) {
+                                        msg += `\n\n[실사 보호 거부 항목 (${skippedList.length}개)]:\n` +
+                                            skippedList.map(s => `- PID ${s.pid}: ${s.reason}`).join('\n');
+                                    }
                                 }
 
                                 modal.showAlert("알림", msg);
@@ -335,6 +352,7 @@ const AiDataPage = () => {
                                 // 상태 및 목록 갱신
                                 await triggerFetchJob();
                             } else {
+                                // [경우 4] 1번 API 실패 (success !== "777")
                                 modal.showAlert("알림", resetRes?.resultjson?.errorcontent || resetRes?.message || `${actionLabel} 중 오류가 발생했습니다.`);
                             }
                         } catch (err) {
@@ -362,8 +380,8 @@ const AiDataPage = () => {
 
         try {
             const reqData = { pn: projectnum, user: userId };
-            if (checkedIds.length > 0) {
-                reqData.pids = checkedIds;
+            if (validCheckedIds.length > 0) {
+                reqData.pids = validCheckedIds;
             }
 
             const response = await exportTestData.mutateAsync(reqData);
@@ -383,9 +401,9 @@ const AiDataPage = () => {
 
                 const blob = response.data;
                 let filename = "";
-                if (checkedIds.length === 1) {
-                    filename = `${projectnum}_${checkedIds[0]}.sav`;
-                } else if (checkedIds.length > 1) {
+                if (validCheckedIds.length === 1) {
+                    filename = `${projectnum}_${validCheckedIds[0]}.sav`;
+                } else if (validCheckedIds.length > 1) {
                     filename = `${projectnum}_multiple.sav`;
                 } else {
                     filename = `${projectnum}_all.sav`;
@@ -510,13 +528,14 @@ const AiDataPage = () => {
 
     const RowCheckboxCell = (props) => {
         const { dataItem, style, className } = props;
-        const isChecked = checkedIds.includes(dataItem.id);
+        const strId = String(dataItem.id);
+        const isChecked = validCheckedIds.includes(strId);
         const handleChange = (e) => {
             e.stopPropagation();
             if (isChecked) {
-                setCheckedIds(prev => prev.filter(id => id !== dataItem.id));
+                setCheckedIds(prev => prev.map(String).filter(id => id !== strId));
             } else {
-                setCheckedIds(prev => [...prev, dataItem.id]);
+                setCheckedIds(prev => Array.from(new Set([...prev.map(String), strId])));
             }
         };
 
@@ -537,14 +556,17 @@ const AiDataPage = () => {
     };
 
     const HeaderCheckboxCell = () => {
-        const allChecked = filteredRespondents.length > 0 && checkedIds.length === filteredRespondents.length;
-        const someChecked = checkedIds.length > 0 && !allChecked;
+        const filteredIds = filteredRespondents.map(r => String(r.id));
+        const validFilteredChecked = validCheckedIds.filter(id => filteredIds.includes(id));
+        const allChecked = filteredIds.length > 0 && validFilteredChecked.length === filteredIds.length;
+        const someChecked = validFilteredChecked.length > 0 && !allChecked;
 
         const handleChange = () => {
             if (allChecked) {
-                setCheckedIds([]);
+                const filteredSet = new Set(filteredIds);
+                setCheckedIds(prev => prev.map(String).filter(id => !filteredSet.has(id)));
             } else {
-                setCheckedIds(filteredRespondents.map(r => r.id));
+                setCheckedIds(prev => Array.from(new Set([...prev.map(String), ...filteredIds])));
             }
         };
 
@@ -567,7 +589,7 @@ const AiDataPage = () => {
     const rowRender = (trElement, props) => {
         const { dataItem } = props;
         const isSelected = !!dataItem?._selected;
-        const isChecked = checkedIds.includes(dataItem?.id);
+        const isChecked = validCheckedIds.includes(String(dataItem?.id));
 
         const baseClass = (trElement.props.className || "")
             .replace(/\bk-selected\b/g, "")
@@ -1072,7 +1094,7 @@ const AiDataPage = () => {
 
                     {/* 하단 행: 설명 문구 */}
                     <span style={{ fontSize: '9.5px', color: '#94a3b8', width: '100%', textAlign: 'left' }}>
-                        ※ 동시 실행 한도 5개 제한으로 인해 일부 응답자는 pending(대기) 상태로 노출될 수 있습니다. (인당 약 6분 소요)
+                        ※ 동시 실행 한도 5개 제한으로 인해 일부 응답자는 대기 상태로 노출될 수 있습니다. (인당 약 6분 소요)
                     </span>
                 </div>
 
@@ -1356,7 +1378,7 @@ const AiDataPage = () => {
                                 </div>
 
 
-                                {checkedIds.length > 0 && (
+                                {validCheckedIds.length > 0 && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                         <button
                                             onClick={handleResetAll}
@@ -1367,7 +1389,7 @@ const AiDataPage = () => {
                                             title="선택한 응답자 ID 초기화"
                                         >
                                             <RotateCcw size={12} />
-                                            선택 초기화 ({checkedIds.length})
+                                            선택 초기화 ({validCheckedIds.length})
                                         </button>
 
                                         <button
@@ -1379,7 +1401,7 @@ const AiDataPage = () => {
                                             title="선택한 응답자 내보내기"
                                         >
                                             <Download size={12} />
-                                            선택 내보내기 ({checkedIds.length})
+                                            선택 내보내기 ({validCheckedIds.length})
                                         </button>
 
                                         <div style={{ width: '1px', height: '16px', backgroundColor: '#e2e8f0', margin: '0 2px' }} />
@@ -1395,7 +1417,7 @@ const AiDataPage = () => {
                                             onMouseOut={(e) => { e.currentTarget.style.background = '#fef2f2'; }}
                                         >
                                             <Trash2 size={12} />
-                                            선택 삭제 ({checkedIds.length})
+                                            선택 삭제 ({validCheckedIds.length})
                                         </button>
                                     </div>
                                 )}
