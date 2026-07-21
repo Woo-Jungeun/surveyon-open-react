@@ -215,6 +215,11 @@ const AiDataPage = () => {
             : (progressInfo.isFinished ? 100 : Math.round((progressInfo.completed / progressInfo.totalRespondents) * 100)))
         : 0;
 
+    // 현재 진행중이거나 대기중인 응답자가 있는지 여부 (새로고침 강조용)
+    const isJobRunning = isSimulating ||
+        progressInfo?.isFinished === false ||
+        respondents.some(r => r.status === "running" || r.status === "pending");
+
     // 검색 & 필터 적용된 리스트
     const filteredRespondents = respondents.filter(r => {
         const matchesStatus =
@@ -233,48 +238,8 @@ const AiDataPage = () => {
         }));
     }, [filteredRespondents, selectedPid]);
 
-    // 선택 삭제 (백엔드 API 호출)
-    const handleDeleteSelected = async () => {
-        if (checkedIds.length === 0) {
-            modal.showAlert("알림", "삭제할 응답자를 선택해 주세요.");
-            return;
-        }
-        const projectnum = sessionStorage.getItem("projectnum");
-        const userId = auth?.user?.userId || sessionStorage.getItem("userId");
-        if (!projectnum || !userId) {
-            modal.showAlert("알림", "프로젝트 정보 또는 사용자 정보가 올바르지 않습니다.");
-            return;
-        }
-
-        try {
-            const resetRes = await resetTestPids.mutateAsync({
-                pn: projectnum,
-                user: userId,
-                pids: checkedIds
-            });
-
-            if (resetRes?.success === "777") {
-                const deletedPids = resetRes?.resultjson?.deletedPids || [];
-                const skippedList = resetRes?.resultjson?.skipped || [];
-                let msg = `선택한 테스트 데이터가 정리되었습니다. (삭제된 PID: ${deletedPids.length}개)`;
-                if (skippedList.length > 0) {
-                    msg += `\n\n[정리 제외 항목]:\n` + skippedList.map(s => `- ${s.pid}: ${s.reason}`).join('\n');
-                }
-                modal.showAlert("알림", msg);
-                setCheckedIds([]);
-                // 작업 상태 갱신
-                await triggerFetchJob();
-            } else {
-                modal.showAlert("알림", resetRes?.resultjson?.errorcontent || "선택 삭제 중 오류가 발생했습니다.");
-            }
-        } catch (err) {
-            console.error("handleDeleteSelected error:", err);
-            modal.showAlert("알림", "선택 삭제 중 오류가 발생했습니다.");
-        }
-    };
-
-    // 테스트 데이터 초기화 (선택 항목 우선, 미선택 시 전체)
-    const handleResetAll = async () => {
+    // 공통 테스트 데이터 삭제/초기화 실행 함수 (APIs/d/qa/reset-test-pid API 연동)
+    const executeResetOrDelete = async (actionType = "reset") => {
         const projectnum = sessionStorage.getItem("projectnum");
         const userId = auth?.user?.userId || sessionStorage.getItem("userId");
         if (!projectnum || !userId) {
@@ -285,40 +250,65 @@ const AiDataPage = () => {
         const isSelected = checkedIds.length > 0;
         const targetPids = isSelected ? checkedIds : respondents.map(r => r.id);
 
+        const actionLabel = actionType === "delete" ? "삭제" : "초기화";
+
         if (targetPids.length === 0) {
-            modal.showAlert("알림", "초기화할 테스트 데이터가 없습니다.");
+            modal.showAlert("알림", `${actionLabel}할 테스트 데이터가 없습니다.`);
+            return;
+        }
+
+        if (targetPids.length > 500) {
+            modal.showAlert("알림", `${actionLabel} 대상 PID가 500개를 초과했습니다. (한 번에 최대 500개까지 요청 가능)`);
             return;
         }
 
         const confirmMsg = isSelected
-            ? `정말로 선택한 ${checkedIds.length}개의 테스트 데이터를 초기화하시겠습니까?`
-            : "정말로 이 프로젝트의 모든 테스트 데이터를 초기화하시겠습니까?";
+            ? `정말로 선택한 ${checkedIds.length}개의 테스트 데이터를 ${actionLabel}하시겠습니까?`
+            : `정말로 이 프로젝트의 모든 테스트 데이터(${targetPids.length}개)를 ${actionLabel}하시겠습니까?`;
 
-        modal.showConfirm("알림", confirmMsg, async (confirm) => {
-            if (!confirm) return;
-            try {
-                const resetRes = await resetTestPids.mutateAsync({
-                    pn: projectnum,
-                    user: userId,
-                    pids: targetPids
-                });
+        modal.showConfirm("알림", confirmMsg, {
+            btns: [
+                { title: "취소", click: () => { } },
+                {
+                    title: actionLabel,
+                    click: async () => {
+                        try {
+                            const resetRes = await resetTestPids.mutateAsync({
+                                pn: String(projectnum),
+                                user: String(userId),
+                                pids: targetPids.map(String)
+                            });
 
-                if (resetRes?.success === "777") {
-                    const successMsg = isSelected
-                        ? "선택한 테스트 데이터가 초기화되었습니다."
-                        : "모든 테스트 데이터가 초기화되었습니다.";
-                    modal.showAlert("알림", successMsg);
-                    setCheckedIds([]);
-                    await triggerFetchJob();
-                } else {
-                    modal.showAlert("알림", resetRes?.resultjson?.errorcontent || "초기화 중 오류가 발생했습니다.");
+                            if (resetRes?.success === "777") {
+                                const resJson = resetRes?.resultjson || {};
+                                const deletedCount = resJson.deleted ?? resJson.deletedPids?.length ?? 0;
+                                const skippedList = resJson.skipped || [];
+
+                                let msg = resetRes?.message || `${actionLabel} 처리 완료: ${deletedCount}개의 테스트 응답이 삭제되었습니다.`;
+                                if (skippedList.length > 0) {
+                                    msg += `\n\n[실사 보호 거부 항목 (${skippedList.length}개)]:\n` +
+                                        skippedList.map(s => `- PID ${s.pid}: ${s.reason}`).join('\n');
+                                }
+
+                                modal.showAlert("알림", msg);
+                                setCheckedIds([]);
+                                // 상태 및 목록 갱신
+                                await triggerFetchJob();
+                            } else {
+                                modal.showAlert("알림", resetRes?.resultjson?.errorcontent || resetRes?.message || `${actionLabel} 중 오류가 발생했습니다.`);
+                            }
+                        } catch (err) {
+                            console.error(`executeResetOrDelete (${actionType}) error:`, err);
+                            modal.showAlert("알림", `${actionLabel} 처리 중 오류가 발생했습니다.`);
+                        }
+                    }
                 }
-            } catch (err) {
-                console.error("handleResetAll error:", err);
-                modal.showAlert("알림", "초기화 중 오류가 발생했습니다.");
-            }
+            ]
         });
     };
+
+    const handleDeleteSelected = () => executeResetOrDelete("delete");
+    const handleResetAll = () => executeResetOrDelete("reset");
 
 
     // SAV 파일 직접 내보내기 및 다운로드
@@ -429,13 +419,23 @@ const AiDataPage = () => {
 
     const FinalQuestionCell = (props) => {
         const { finalQuestion } = props.dataItem;
+        const isHasQuestion = finalQuestion && finalQuestion !== "-";
         return (
-            <td style={{ ...props.style, padding: '8px 12px', verticalAlign: 'middle' }} className={props.className}>
-                {finalQuestion !== "-" ? (
-                    <span style={{
-                        padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600,
-                        background: '#fff1f1', color: '#dc2626', border: '1px solid #fecaca'
-                    }}>
+            <td
+                title={isHasQuestion ? finalQuestion : undefined}
+                style={{ ...props.style, padding: '8px 12px', verticalAlign: 'middle', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                className={props.className}
+            >
+                {isHasQuestion ? (
+                    <span
+                        title={finalQuestion}
+                        style={{
+                            padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600,
+                            background: '#fff1f1', color: '#dc2626', border: '1px solid #fecaca',
+                            display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            verticalAlign: 'middle', boxSizing: 'border-box', cursor: 'pointer'
+                        }}
+                    >
                         {finalQuestion}
                     </span>
                 ) : (
@@ -447,9 +447,17 @@ const AiDataPage = () => {
 
     const MessageCell = (props) => {
         const { status, message, errorCategory } = props.dataItem;
+        const text = status === "pass" ? message : (errorCategory || "-");
         return (
-            <td style={{ ...props.style, padding: '8px 12px', verticalAlign: 'middle', color: '#475569' }} className={props.className}>
-                {status === "pass" ? message : (errorCategory || "-")}
+            <td
+                title={text !== "-" ? text : undefined}
+                style={{
+                    ...props.style, padding: '8px 12px', verticalAlign: 'middle', color: '#475569',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                }}
+                className={props.className}
+            >
+                {text}
             </td>
         );
     };
@@ -968,17 +976,18 @@ const AiDataPage = () => {
                             {/* 게이지 바로 우측에 배치되는 새로고침 버튼 */}
                             <button
                                 onClick={() => triggerFetchJob()}
+                                className={isJobRunning ? "refresh-btn-pulse" : ""}
                                 style={{
-                                    height: '28px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
+                                    height: '24px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '4px',
                                     background: '#fff', fontSize: '11.5px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', whiteSpace: 'nowrap',
                                     transition: 'all 0.15s', fontWeight: 600, marginLeft: '6px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
                                     boxSizing: 'border-box'
                                 }}
-                                onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
-                                onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; }}
+                                onMouseOver={(e) => { if (!isJobRunning) e.currentTarget.style.background = '#f8fafc'; }}
+                                onMouseOut={(e) => { if (!isJobRunning) e.currentTarget.style.background = '#fff'; }}
                                 title="진행상태 및 상세결과 새로고침"
                             >
-                                <RefreshCw size={11} color="#10b981" style={{ strokeWidth: 2.5 }} />
+                                <RefreshCw size={11} color={isJobRunning ? "#047857" : "#10b981"} className={isJobRunning ? "ai-spin" : ""} style={{ strokeWidth: 2.5 }} />
                                 <span>새로고침</span>
                             </button>
                         </div>
@@ -1828,7 +1837,7 @@ const AiDataPage = () => {
                     background-color: #f0fdf4 !important;
                 }
 
-                /* Checkbox size and icon size overrides for Kendo Grid */
+                /* Checkbox size and alignment fix for Kendo Grid */
                 .ai-data-page .cmn_grid .k-checkbox-wrap .k-checkbox[type='checkbox'] {
                     width: 16px !important;
                     height: 16px !important;
@@ -1839,7 +1848,7 @@ const AiDataPage = () => {
                     mask-size: 10px 8px !important;
                 }
 
-                /* Add vertical breathing room and comfortable height for AI Data page grid rows (override high-specificity rules in kendo_custom.css) */
+                /* Add vertical breathing room and comfortable height for AI Data page grid rows */
                 html body .ai-data-page .cmn_grid.singlehead .k-grid .k-grid-container .k-grid-content td,
                 html body .ai-data-page .cmn_grid.singlehead .k-grid .k-grid-container .k-grid-content td.k-table-td {
                     height: 38px !important;
@@ -1973,6 +1982,30 @@ const AiDataPage = () => {
                 .ai-data-page .ai-stats-bar span,
                 .ai-data-page .ai-stats-bar strong {
                     font-size: 12px !important;
+                }
+
+                @keyframes refreshPulse {
+                    0% {
+                        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
+                    }
+                    70% {
+                        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+                    }
+                    100% {
+                        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+                    }
+                }
+                .ai-data-page .refresh-btn-pulse {
+                    animation: refreshPulse 1.8s infinite !important;
+                    border-color: #10b981 !important;
+                    background: #f0fdf4 !important;
+                    color: #047857 !important;
+                    font-weight: 700 !important;
+                }
+                .ai-data-page .refresh-btn-pulse:hover {
+                    background: #dcfce7 !important;
+                    border-color: #059669 !important;
+                    color: #065f46 !important;
                 }
             `}} />
         </div>
