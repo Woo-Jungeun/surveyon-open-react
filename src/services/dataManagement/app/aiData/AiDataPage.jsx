@@ -35,6 +35,7 @@ const AiDataPage = () => {
 
     const [isSimulating, setIsSimulating] = useState(false);
     const [isProcessingReset, setIsProcessingReset] = useState(false);
+    const [resetActionLabel, setResetActionLabel] = useState("초기화");
     const [isGridLoading, setIsGridLoading] = useState(false);
     const [respondents, setRespondents] = useState([]);
     const [selectedPid, setSelectedPid] = useState("");
@@ -288,6 +289,7 @@ const AiDataPage = () => {
                     title: actionLabel,
                     click: async () => {
                         const startTime = Date.now();
+                        setResetActionLabel(actionLabel);
                         setIsProcessingReset(true);
                         try {
                             const resetRes = await resetTestPids.mutateAsync({
@@ -1346,21 +1348,35 @@ const AiDataPage = () => {
                     </div>
                 )}
 
-                {/* 데이터 초기화/삭제 처리 중 콤팩트 플로팅 토스트 스피너 (배경 어둡게 처리 X) */}
+                {/* 데이터 초기화/삭제 처리 중 로딩 오버레이 모달 */}
                 {isProcessingReset && (
                     <div style={{
-                        position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)',
-                        zIndex: 99999, pointerEvents: 'none'
+                        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                        background: 'rgba(15, 23, 42, 0.18)', backdropFilter: 'blur(1px)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        zIndex: 99999, fontFamily: 'Pretendard, sans-serif'
                     }}>
                         <div style={{
-                            background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '30px',
-                            padding: '8px 18px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                            display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Pretendard, sans-serif'
+                            background: '#ffffff', borderRadius: '16px', padding: '32px 36px',
+                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
+                            border: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column',
+                            alignItems: 'center', textAlign: 'center', maxWidth: '380px', width: '90%'
                         }}>
-                            <Loader2 size={16} className="ai-spin" color="#10b981" />
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>
-                                데이터 처리 중... (QMaster 연동 진행)
-                            </span>
+                            <div style={{
+                                width: '52px', height: '52px', borderRadius: '50%',
+                                background: '#ecfdf5', border: '1px solid #a7f3d0',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                marginBottom: '16px'
+                            }}>
+                                <Loader2 size={26} className="ai-spin" color="#10b981" />
+                            </div>
+                            <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>
+                                데이터 {resetActionLabel} 중...
+                            </div>
+                            <div style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.55' }}>
+                                선택한 응답자 {resetActionLabel} 작업 진행 중입니다.<br />
+                                잠시만 기다려 주세요.
+                            </div>
                         </div>
                     </div>
                 )}
