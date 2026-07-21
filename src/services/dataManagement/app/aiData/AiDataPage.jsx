@@ -305,15 +305,8 @@ const AiDataPage = () => {
                                 // deletedPids가 존재하면 QMaster (RPS/QM) 초기화 API 별도 호출
                                 if (Array.isArray(deletedPids) && deletedPids.length > 0) {
                                     const rawServerName = (sessionStorage.getItem("servername") || sessionStorage.getItem("serverName") || "").toLowerCase();
-                                    const isDev = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-                                    let domainPrefix = "";
-                                    if (isDev) {
-                                        domainPrefix = rawServerName.includes("qm") ? "/qm-silsa" : "/rps-silsa";
-                                    } else {
-                                        domainPrefix = rawServerName.includes("qm")
-                                            ? "https://qm.hrcglobal.com"
-                                            : "https://rpssurvey.hrcglobal.com";
-                                    }
+                                    // 개발/테스트/운영 환경 공통: 상대 경로 프록시(/rps-silsa, /qm-silsa) 사용하여 CORS 차단 방지
+                                    const domainPrefix = rawServerName.includes("qm") ? "/qm-silsa" : "/rps-silsa";
 
                                     const pidListStr = deletedPids.join(",");
                                     const qmasterUrl = `${domainPrefix}/Silsa/Progress/resetDataWithKey?eNum=5000037&apiKey=Dxz0vN94ZzFXEP2KcngRSu06HgbqJ94CeBzZs5A2o&qn=${encodeURIComponent(projectnum)}&pidList=${encodeURIComponent(pidListStr)}`;
