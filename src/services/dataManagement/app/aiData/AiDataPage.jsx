@@ -426,14 +426,10 @@ const AiDataPage = () => {
                 }
 
                 const blob = response.data;
-                let filename = "";
-                if (validCheckedIds.length === 1) {
-                    filename = `${projectnum}_${validCheckedIds[0]}.sav`;
-                } else if (validCheckedIds.length > 1) {
-                    filename = `${projectnum}_multiple.sav`;
-                } else {
-                    filename = `${projectnum}_all.sav`;
-                }
+                const now = new Date();
+                const pad = (n) => String(n).padStart(2, '0');
+                const timeStamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+                const filename = `${projectnum}_${userId}_${timeStamp}.sav`;
 
                 const downloadUrl = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
