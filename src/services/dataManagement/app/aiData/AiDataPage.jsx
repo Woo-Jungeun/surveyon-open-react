@@ -707,7 +707,7 @@ const AiDataPage = () => {
                 // 러너 실행 시동 중 UI 표출
                 setIsRunnerStarting(true);
 
-                const checkAfterSec = 10;
+                const checkAfterSec = 15;
 
                 // 타이머 시작 (checkAfterSec초 후 확인 API 호출)
                 if (runnerCheckTimerRef.current) clearTimeout(runnerCheckTimerRef.current);
