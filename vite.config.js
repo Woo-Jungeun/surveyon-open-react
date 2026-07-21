@@ -53,6 +53,19 @@ export default defineConfig(({ mode }) => {
                             "apikey": "xDhxuxOyYA11l8GOKT1D7ixLMM5nriduk3Wx8j7YadswCPii8P35DMEQE9i7ALElIQaM/DT9OELQM3oYx+MatQLiRYU1hlFM+b0k9t/+hbc="
                         }
                     },
+                    // RPS / QM 실사 데이터 초기화 API 프록시 (CORS 방지)
+                    "/rps-silsa": {
+                        target: "https://rpssurvey.hrcglobal.com",
+                        changeOrigin: true,
+                        secure: false,
+                        rewrite: (path) => path.replace(/^\/rps-silsa/, "")
+                    },
+                    "/qm-silsa": {
+                        target: "https://qm.hrcglobal.com",
+                        changeOrigin: true,
+                        secure: false,
+                        rewrite: (path) => path.replace(/^\/qm-silsa/, "")
+                    }
                 }
                 : {
                     // H-PRO API 프록시 미사용 환경에서도 API는 프록시 필요
@@ -64,6 +77,18 @@ export default defineConfig(({ mode }) => {
                             "apikey": "xDhxuxOyYA11l8GOKT1D7ixLMM5nriduk3Wx8j7YadswCPii8P35DMEQE9i7ALElIQaM/DT9OELQM3oYx+MatQLiRYU1hlFM+b0k9t/+hbc="
                         }
                     },
+                    "/rps-silsa": {
+                        target: "https://rpssurvey.hrcglobal.com",
+                        changeOrigin: true,
+                        secure: false,
+                        rewrite: (path) => path.replace(/^\/rps-silsa/, "")
+                    },
+                    "/qm-silsa": {
+                        target: "https://qm.hrcglobal.com",
+                        changeOrigin: true,
+                        secure: false,
+                        rewrite: (path) => path.replace(/^\/qm-silsa/, "")
+                    }
                 },
         },
     };

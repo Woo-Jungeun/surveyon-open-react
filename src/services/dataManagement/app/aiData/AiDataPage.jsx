@@ -1,4 +1,5 @@
 import { useState, useContext, cloneElement, useMemo, useEffect, useRef } from 'react';
+import axios from 'axios';
 import {
     Search, Download, ExternalLink, Play, AlertTriangle,
     CheckCircle2, X, RefreshCw, Clock, Loader2, Trash2, Info, RotateCcw
@@ -129,7 +130,8 @@ const AiDataPage = () => {
                             return {
                                 id: item.pid,
                                 status: item.status === "success" ? "pass" : (item.status === "fail" ? "defect" : item.status),
-                                finalQuestion: item.failureReason || "-",
+                                finalQuestion: item.failedQuestionNum || item.failedQuestion || "-",
+                                failureReason: item.failureReason || "",
                                 message: item.message || "",
                                 duration: item.processingTimeSec ? `${item.processingTimeSec}s` : "-",
                                 errorCategory: item.failureClass || "",
@@ -238,7 +240,7 @@ const AiDataPage = () => {
         }));
     }, [filteredRespondents, selectedPid]);
 
-    // 공통 테스트 데이터 삭제/초기화 실행 함수 (APIs/d/qa/reset-test-pid API 연동)
+    // 공통 응답자 ID 삭제/초기화 실행 함수 (APIs/d/qa/reset-test-pid API 연동)
     const executeResetOrDelete = async (actionType = "reset") => {
         const projectnum = sessionStorage.getItem("projectnum");
         const userId = auth?.user?.userId || sessionStorage.getItem("userId");
@@ -253,7 +255,7 @@ const AiDataPage = () => {
         const actionLabel = actionType === "delete" ? "삭제" : "초기화";
 
         if (targetPids.length === 0) {
-            modal.showAlert("알림", `${actionLabel}할 테스트 데이터가 없습니다.`);
+            modal.showAlert("알림", `${actionLabel}할 응답자 ID가 없습니다.`);
             return;
         }
 
@@ -263,8 +265,8 @@ const AiDataPage = () => {
         }
 
         const confirmMsg = isSelected
-            ? `정말로 선택한 ${checkedIds.length}개의 테스트 데이터를 ${actionLabel}하시겠습니까?`
-            : `정말로 이 프로젝트의 모든 테스트 데이터(${targetPids.length}개)를 ${actionLabel}하시겠습니까?`;
+            ? `선택한 ${checkedIds.length}개의 응답자 ID를 ${actionLabel}하시겠습니까?`
+            : `프로젝트의 모든 응답자 ID (${targetPids.length}개)를 ${actionLabel}하시겠습니까?`;
 
         modal.showConfirm("알림", confirmMsg, {
             btns: [
@@ -281,10 +283,48 @@ const AiDataPage = () => {
 
                             if (resetRes?.success === "777") {
                                 const resJson = resetRes?.resultjson || {};
-                                const deletedCount = resJson.deleted ?? resJson.deletedPids?.length ?? 0;
+                                const deletedPids = resJson.deletedPids || [];
+                                const deletedCount = resJson.deleted ?? deletedPids.length ?? 0;
                                 const skippedList = resJson.skipped || [];
 
-                                let msg = resetRes?.message || `${actionLabel} 처리 완료: ${deletedCount}개의 테스트 응답이 삭제되었습니다.`;
+                                let qmSuccess = true;
+                                let qmErrorMsg = "";
+
+                                // deletedPids가 존재하면 QMaster (RPS/QM) 초기화 API 별도 호출
+                                if (Array.isArray(deletedPids) && deletedPids.length > 0) {
+                                    const rawServerName = (sessionStorage.getItem("servername") || sessionStorage.getItem("serverName") || "").toLowerCase();
+                                    const isDev = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+                                    let domainPrefix = "";
+                                    if (isDev) {
+                                        domainPrefix = rawServerName.includes("qm") ? "/qm-silsa" : "/rps-silsa";
+                                    } else {
+                                        domainPrefix = rawServerName.includes("qm")
+                                            ? "https://qm.hrcglobal.com"
+                                            : "https://rpssurvey.hrcglobal.com";
+                                    }
+
+                                    const pidListStr = deletedPids.join(",");
+                                    const qmasterUrl = `${domainPrefix}/Silsa/Progress/resetDataWithKey?eNum=5000037&apiKey=Dxz0vN94ZzFXEP2KcngRSu06HgbqJ94CeBzZs5A2o&qn=${encodeURIComponent(projectnum)}&pidList=${encodeURIComponent(pidListStr)}`;
+
+                                    try {
+                                        console.log("[QMaster Reset API Call (POST)]", qmasterUrl);
+                                        const qmRes = await axios.post(qmasterUrl, {});
+                                        const resText = typeof qmRes.data === 'string' ? qmRes.data : JSON.stringify(qmRes.data);
+                                        if (!resText.includes("성공")) {
+                                            qmSuccess = false;
+                                            qmErrorMsg = resText;
+                                        }
+                                    } catch (qmErr) {
+                                        console.error("QMaster resetDataWithKey API call error:", qmErr);
+                                        qmSuccess = false;
+                                        qmErrorMsg = qmErr.message || "통신 오류";
+                                    }
+                                }
+
+                                let msg = `${actionLabel} 처리 완료: ${deletedCount}개의 응답이 ${actionLabel}되었습니다.`;
+                                if (!qmSuccess) {
+                                    msg += `\n(⚠️ 단, QMaster ${actionLabel} 처리 중 오류 발생${qmErrorMsg ? `: ${qmErrorMsg}` : ''})`;
+                                }
                                 if (skippedList.length > 0) {
                                     msg += `\n\n[실사 보호 거부 항목 (${skippedList.length}개)]:\n` +
                                         skippedList.map(s => `- PID ${s.pid}: ${s.reason}`).join('\n');
@@ -446,8 +486,8 @@ const AiDataPage = () => {
     };
 
     const MessageCell = (props) => {
-        const { status, message, errorCategory } = props.dataItem;
-        const text = status === "pass" ? message : (errorCategory || "-");
+        const { status, message, failureReason, errorCategory } = props.dataItem;
+        const text = status === "pass" ? (message || "-") : (failureReason || errorCategory || "-");
         return (
             <td
                 title={text !== "-" ? text : undefined}
@@ -972,7 +1012,7 @@ const AiDataPage = () => {
                             <div style={{ flex: 1, height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
                                 <div style={{ width: `${progressPct}%`, height: '100%', background: 'linear-gradient(90deg, #10b981, #059669)', borderRadius: '3px', transition: 'width 0.3s ease' }} />
                             </div>
-                            
+
                             {/* 게이지 바로 우측에 배치되는 새로고침 버튼 */}
                             <button
                                 onClick={() => triggerFetchJob()}
@@ -1226,13 +1266,32 @@ const AiDataPage = () => {
                 {isRunnerStarting && (
                     <div style={{
                         position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-                        background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                        zIndex: 99999, color: '#fff', fontFamily: 'Pretendard, sans-serif'
+                        background: 'rgba(15, 23, 42, 0.18)', backdropFilter: 'blur(1px)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        zIndex: 99999, fontFamily: 'Pretendard, sans-serif'
                     }}>
-                        <Loader2 size={48} className="ai-spin" color="#10b981" style={{ marginBottom: '16px' }} />
-                        <div style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>러너를 실행하는 중...</div>
-                        <div style={{ fontSize: '13.5px', color: '#94a3b8' }}>사용자 PC의 Surveyon E2E 러너가 작업을 수령하고 있습니다. 잠시만 기다려 주세요.</div>
+                        <div style={{
+                            background: '#ffffff', borderRadius: '16px', padding: '32px 36px',
+                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
+                            border: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column',
+                            alignItems: 'center', textAlign: 'center', maxWidth: '380px', width: '90%'
+                        }}>
+                            <div style={{
+                                width: '52px', height: '52px', borderRadius: '50%',
+                                background: '#ecfdf5', border: '1px solid #a7f3d0',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                marginBottom: '16px'
+                            }}>
+                                <Loader2 size={26} className="ai-spin" color="#10b981" />
+                            </div>
+                            <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>
+                                러너를 실행하는 중...
+                            </div>
+                            <div style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.55' }}>
+                                Surveyon E2E 러너가 작업을 수령 중입니다.<br />
+                                잠시만 기다려 주세요.
+                            </div>
+                        </div>
                     </div>
                 )}
 
@@ -1297,31 +1356,34 @@ const AiDataPage = () => {
                                 </div>
 
 
-                                <button
-                                    onClick={handleResetAll}
-                                    style={{
-                                        height: '30px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
-                                        background: '#fff', fontSize: '11.5px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', whiteSpace: 'nowrap'
-                                    }}
-                                    title={checkedIds.length > 0 ? "선택한 테스트 데이터 초기화" : "전체 테스트 데이터 초기화"}
-                                >
-                                    <RotateCcw size={12} />
-                                    {checkedIds.length > 0 ? `선택 초기화 (${checkedIds.length})` : '초기화'}
-                                </button>
-
-                                <button
-                                    onClick={handleExportSAV}
-                                    style={{
-                                        height: '30px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
-                                        background: '#fff', fontSize: '11.5px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', whiteSpace: 'nowrap'
-                                    }}
-                                >
-                                    <Download size={12} />
-                                    {checkedIds.length > 0 ? `선택 내보내기 (${checkedIds.length})` : '내보내기'}
-                                </button>
                                 {checkedIds.length > 0 && (
-                                    <>
-                                        <div style={{ width: '1px', height: '16px', backgroundColor: '#e2e8f0', margin: '0 4px' }} />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <button
+                                            onClick={handleResetAll}
+                                            style={{
+                                                height: '30px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
+                                                background: '#fff', fontSize: '11.5px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', whiteSpace: 'nowrap'
+                                            }}
+                                            title="선택한 응답자 ID 초기화"
+                                        >
+                                            <RotateCcw size={12} />
+                                            선택 초기화 ({checkedIds.length})
+                                        </button>
+
+                                        <button
+                                            onClick={handleExportSAV}
+                                            style={{
+                                                height: '30px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px',
+                                                background: '#fff', fontSize: '11.5px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', whiteSpace: 'nowrap'
+                                            }}
+                                            title="선택한 응답자 내보내기"
+                                        >
+                                            <Download size={12} />
+                                            선택 내보내기 ({checkedIds.length})
+                                        </button>
+
+                                        <div style={{ width: '1px', height: '16px', backgroundColor: '#e2e8f0', margin: '0 2px' }} />
+
                                         <button
                                             onClick={handleDeleteSelected}
                                             style={{
@@ -1335,7 +1397,7 @@ const AiDataPage = () => {
                                             <Trash2 size={12} />
                                             선택 삭제 ({checkedIds.length})
                                         </button>
-                                    </>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -1343,7 +1405,7 @@ const AiDataPage = () => {
                         {/* 가이드 메시지 */}
                         {!jobError && (
                             <div style={{ fontSize: '11.5px', color: '#64748b', background: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '10px', shrink: 0 }}>
-                                💡 행을 클릭하면 우측 리포트에서 상세 로그가 조회됩니다. 체크박스 선택 시 {"'선택 삭제'"} 버튼이 활성화됩니다.
+                                💡 행을 클릭하면 우측 리포트에서 상세 로그가 조회됩니다. 체크박스 선택 시 {"'선택 초기화', '선택 내보내기', '선택 삭제'"} 버튼이 활성화됩니다.
                             </div>
                         )}
 
@@ -1408,7 +1470,7 @@ const AiDataPage = () => {
                                     <Column
                                         field="finalQuestion"
                                         title="최종 감지 문항"
-                                        width="120px"
+                                        width="130px"
                                         cell={FinalQuestionCell}
                                         headerClassName="k-header-center"
                                     />
@@ -1483,7 +1545,7 @@ const AiDataPage = () => {
                                                 <span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>① 중단 사유 분류</span>
                                                 <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                                                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#dc2626' }}>
-                                                        {FAILURE_CLASS_MAP[selectedRespondent.errorCategory]?.label || selectedRespondent.errorCategory || "기타 중단"}
+                                                        {selectedRespondent.failureReason || FAILURE_CLASS_MAP[selectedRespondent.errorCategory]?.label || selectedRespondent.errorCategory || "기타 중단"}
                                                     </span>
                                                     {FAILURE_CLASS_MAP[selectedRespondent.errorCategory]?.advice && FAILURE_CLASS_MAP[selectedRespondent.errorCategory]?.advice !== "-" && (
                                                         <span style={{ fontSize: '11px', fontWeight: 600, color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: '4px' }}>
@@ -1518,29 +1580,14 @@ const AiDataPage = () => {
                                                         <ExternalLink size={11} />
                                                         실패 화면 링크 바로가기
                                                     </button>
-                                                    {/* <button
-                                                        onClick={() => {
-                                                            modal.showAlert("알림", "서비스 준비중입니다.");
-                                                        }}
-                                                        style={{
-                                                            height: '28px', padding: '0 12px', border: '1px solid #16a34a', borderRadius: '4px',
-                                                            background: '#fff', fontSize: '11.5px', fontWeight: 600, color: '#16a34a',
-                                                            cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                                            transition: 'all 0.15s'
-                                                        }}
-                                                        onMouseOver={(e) => { e.currentTarget.style.background = '#f0fdf4'; }}
-                                                        onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; }}
-                                                    >
-                                                        테스트 재시도
-                                                    </button> */}
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* 실시간 실행 로그 단말기 */}
+                                        {/* 실행 로그 단말기 */}
                                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                                             <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '8px', display: 'block', shrink: 0 }}>
-                                                ⌨️ 실시간 실행 로그 단말기
+                                                실행 로그 단말기
                                             </span>
                                             <div style={{
                                                 flex: 1, background: '#0f172a', borderRadius: '8px', padding: '12px 16px',
@@ -1548,11 +1595,11 @@ const AiDataPage = () => {
                                                 fontFamily: 'Consolas, Monaco, monospace', fontSize: '11.5px', border: '1px solid #1e293b'
                                             }}>
                                                 {selectedRespondent.logs.map((logLine, idx) => {
-                                                    let color = '#cbd5e1'; // 기본 연한 회색
-                                                    if (logLine.includes('[시스템]')) color = '#4ade80'; // 녹색
-                                                    if (logLine.includes('[브라우저]')) color = '#38bdf8'; // 청색
-                                                    if (logLine.includes('[오류]')) color = '#f87171'; // 적색
-                                                    if (logLine.includes('[경고]')) color = '#fb923c'; // 주황색
+                                                    let color = '#cbd5e1';
+                                                    if (logLine.includes('[시스템]')) color = '#4ade80';
+                                                    if (logLine.includes('[브라우저]')) color = '#38bdf8';
+                                                    if (logLine.includes('[오류]')) color = '#f87171';
+                                                    if (logLine.includes('[경고]')) color = '#fb923c';
 
                                                     return (
                                                         <div key={idx} style={{ color, lineHeight: '1.4', wordBreak: 'break-all' }}>
@@ -1591,48 +1638,26 @@ const AiDataPage = () => {
                                 )}
 
                                 {selectedRespondent.status === "running" && (
-                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
                                         <div style={{
-                                            background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px',
-                                            padding: '12px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px', shrink: 0
+                                            width: '56px',
+                                            height: '56px',
+                                            borderRadius: '50%',
+                                            background: '#eff6ff',
+                                            border: '1px solid #bfdbfe',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            marginBottom: '16px'
                                         }}>
-                                            <Loader2 size={18} className="ai-spin" color="#2563eb" style={{ shrink: 0 }} />
-                                            <div>
-                                                <div style={{ fontSize: '13px', fontWeight: 700, color: '#1d4ed8' }}>현재 설문 검증 진행 중</div>
-                                                <div style={{ fontSize: '11.5px', color: '#1e40af', marginTop: '2px' }}>봇이 브라우저를 실행해 실시간으로 문항을 기입하며 응답하고 있습니다.</div>
-                                            </div>
+                                            <Loader2 size={28} className="ai-spin" color="#2563eb" />
                                         </div>
-
-                                        {/* 실시간 실행 로그 단말기 */}
-                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '8px', display: 'block', shrink: 0 }}>
-                                                ⌨️ 실시간 실행 로그 단말기
-                                            </span>
-                                            <div style={{
-                                                flex: 1, background: '#0f172a', borderRadius: '8px', padding: '12px 16px',
-                                                overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px',
-                                                fontFamily: 'Consolas, Monaco, monospace', fontSize: '11.5px', border: '1px solid #1e293b'
-                                            }}>
-                                                {selectedRespondent.logs.length > 0 ? (
-                                                    selectedRespondent.logs.map((logLine, idx) => {
-                                                        let color = '#cbd5e1';
-                                                        if (logLine.includes('[시스템]')) color = '#4ade80';
-                                                        if (logLine.includes('[브라우저]')) color = '#38bdf8';
-                                                        if (logLine.includes('[오류]')) color = '#f87171';
-                                                        if (logLine.includes('[경고]')) color = '#fb923c';
-
-                                                        return (
-                                                            <div key={idx} style={{ color, lineHeight: '1.4', wordBreak: 'break-all' }}>
-                                                                {logLine}
-                                                            </div>
-                                                        );
-                                                    })
-                                                ) : (
-                                                    <div style={{ color: '#64748b', fontSize: '11.5px', fontStyle: 'italic' }}>
-                                                        실시간 로그를 대기 중입니다...
-                                                    </div>
-                                                )}
-                                            </div>
+                                        <div style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', marginBottom: '8px', textAlign: 'center' }}>
+                                            PID {selectedRespondent.id} · 수행 진행 중
+                                        </div>
+                                        <div style={{ fontSize: '12.5px', color: '#64748b', textAlign: 'center', lineHeight: '1.6' }}>
+                                            봇이 브라우저를 실행해 문항을 기입하며 응답하고 있습니다.<br />
+                                            검증이 완료되면 결과 리포트가 생성됩니다.
                                         </div>
                                     </div>
                                 )}
