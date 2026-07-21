@@ -286,6 +286,7 @@ const AiDataPage = () => {
                 {
                     title: actionLabel,
                     click: async () => {
+                        const startTime = Date.now();
                         setIsProcessingReset(true);
                         try {
                             const resetRes = await resetTestPids.mutateAsync({
@@ -356,6 +357,12 @@ const AiDataPage = () => {
                                         msg += `\n\n[실사 보호 거부 항목 (${skippedList.length}개)]:\n` +
                                             skippedList.map(s => `- PID ${s.pid}: ${s.reason}`).join('\n');
                                     }
+                                }
+
+                                // 사용자 인지를 위해 최소 800ms 동안 로딩바 표출 보장
+                                const elapsed = Date.now() - startTime;
+                                if (elapsed < 800) {
+                                    await new Promise(r => setTimeout(r, 800 - elapsed));
                                 }
 
                                 setIsProcessingReset(false);
