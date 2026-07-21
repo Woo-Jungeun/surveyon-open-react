@@ -373,7 +373,7 @@ const AiDataPage = () => {
                 try {
                     const parsed = JSON.parse(text);
                     if (parsed.success === "900" || parsed.success === 900) {
-                        const errMsg = parsed.message || "잘못된 요청입니다.";
+                        const errMsg = parsed.resultjson?.errorcontent || "데이터 내보내기 중 오류가 발생했습니다.";
                         modal.showAlert("알림", `${errMsg}`);
                         return;
                     }
@@ -700,7 +700,7 @@ const AiDataPage = () => {
                     }
                 }, checkAfterSec * 1000);
             } else if (runRes?.success === "900") {
-                modal.showAlert("알림", "잘못된 요청입니다.");
+                modal.showAlert("알림", runRes?.resultjson?.errorcontent || "작업 시작 중 오류가 발생했습니다.");
             }
 
         } catch (err) {
