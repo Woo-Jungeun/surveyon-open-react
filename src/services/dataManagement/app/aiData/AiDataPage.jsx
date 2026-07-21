@@ -1457,7 +1457,7 @@ const AiDataPage = () => {
                         {/* 가이드 메시지 */}
                         {!jobError && (
                             <div style={{ fontSize: '11.5px', color: '#64748b', background: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '10px', shrink: 0 }}>
-                                💡 행을 클릭하면 우측 리포트에서 상세 로그가 조회됩니다. 체크박스 선택 시 {"'선택 초기화', '선택 내보내기', '선택 삭제'"} 버튼이 활성화됩니다.
+                                💡 행을 클릭하면 우측 리포트에서 상세 로그가 조회됩니다. 체크박스 선택 시 {"'초기화', '내보내기', '삭제'"} 버튼이 활성화됩니다.
                             </div>
                         )}
 
