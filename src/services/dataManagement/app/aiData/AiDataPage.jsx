@@ -58,6 +58,7 @@ const AiDataPage = () => {
 
     // AI 데이터 작업 상태
     const auth = useSelector((store) => store.auth);
+    const isAiSolutionTeam = auth?.user?.userGroup === "AI솔루션팀";
     const [progressInfo, setProgressInfo] = useState(null);
     const [jobError, setJobError] = useState("");
     const { viewQaJobs, getQaTicket, runQaE2eJobs, resetTestPids, exportTestData, checkRunnerStatus } = AiDataPageApi();
@@ -817,6 +818,8 @@ const AiDataPage = () => {
 
     const selectedRespondent = respondents.find(r => r.id === selectedPid);
 
+
+
     return (
         <div className="ai-data-page" style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f1f5f9', overflow: 'hidden' }}>
             <DataHeader title="AI 데이터 생성" />
@@ -1441,7 +1444,7 @@ const AiDataPage = () => {
                 <div style={{ flex: 1, display: 'flex', gap: '12px', minHeight: 0 }}>
 
                     {/* [좌] 개별 응답자 생성 목록 */}
-                    <div className="st-panel" style={{ flex: 6, padding: '16px', display: 'flex', flexDirection: 'column', minHeight: 0, boxSizing: 'border-box', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+                    <div className="st-panel" style={{ flex: 7.2, padding: '16px', display: 'flex', flexDirection: 'column', minHeight: 0, boxSizing: 'border-box', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', shrink: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <span style={{ fontSize: '14.5px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap' }}>개별 응답자 생성 목록</span>
@@ -1656,7 +1659,7 @@ const AiDataPage = () => {
                     </div>
 
                     {/* [우] 중단 발견 리포트 */}
-                    <div className="st-panel" style={{ flex: 4, padding: '16px', display: 'flex', flexDirection: 'column', minHeight: 0, boxSizing: 'border-box', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+                    <div className="st-panel" style={{ flex: 2.8, padding: '16px', display: 'flex', flexDirection: 'column', minHeight: 0, boxSizing: 'border-box', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
 
                         {selectedRespondent ? (
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
@@ -1747,31 +1750,35 @@ const AiDataPage = () => {
                                             </div>
                                         </div>
 
-                                        {/* 실행 로그 단말기 */}
-                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '8px', display: 'block', shrink: 0 }}>
-                                                실행 로그 단말기
-                                            </span>
-                                            <div style={{
-                                                flex: 1, background: '#0f172a', borderRadius: '8px', padding: '12px 16px',
-                                                overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px',
-                                                fontFamily: 'Consolas, Monaco, monospace', fontSize: '11.5px', border: '1px solid #1e293b'
-                                            }}>
-                                                {selectedRespondent.logs.map((logLine, idx) => {
-                                                    let color = '#cbd5e1';
-                                                    if (logLine.includes('[시스템]')) color = '#4ade80';
-                                                    if (logLine.includes('[브라우저]')) color = '#38bdf8';
-                                                    if (logLine.includes('[오류]')) color = '#f87171';
-                                                    if (logLine.includes('[경고]')) color = '#fb923c';
+                                        {/* 실행 로그 단말기 (AI솔루션팀 권한일 때만 표출) */}
+                                        {isAiSolutionTeam && (
+                                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                                <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '8px', display: 'block', shrink: 0 }}>
+                                                    실행 로그 단말기
+                                                </span>
+                                                <div style={{
+                                                    flex: 1, background: '#0f172a', borderRadius: '8px', padding: '12px 16px',
+                                                    overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px',
+                                                    fontFamily: 'Consolas, Monaco, monospace', fontSize: '11.5px', border: '1px solid #1e293b'
+                                                }}>
+                                                    {selectedRespondent.logs.map((logLine, idx) => {
+                                                        let color = '#cbd5e1';
+                                                        if (logLine.includes('[시스템]')) color = '#4ade80';
+                                                        if (logLine.includes('[브라우저]')) color = '#38bdf8';
+                                                        if (logLine.includes('[오류]')) color = '#f87171';
+                                                        if (logLine.includes('[경고]')) color = '#fb923c';
 
-                                                    return (
-                                                        <div key={idx} style={{ color, lineHeight: '1.4', wordBreak: 'break-all' }}>
-                                                            {logLine}
-                                                        </div>
-                                                    );
-                                                })}
+                                                        return (
+                                                            <div key={idx} style={{ color, lineHeight: '1.4', wordBreak: 'break-all' }}>
+                                                                {logLine}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
+
+                                        {/* 권장 조치 가이드 제거됨 */}
                                     </>
                                 )}
 
