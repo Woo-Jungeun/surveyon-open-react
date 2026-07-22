@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useCallback, useMemo } from "react";
+import React, { Fragment, useState, useCallback, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
 import GridData from "@/components/common/grid/GridData.jsx";
@@ -52,8 +52,35 @@ const GridRenderer = (props) => {
         sort,
         onRowClick,
         gridSkip,
-        setGridSkip
+        setGridSkip,
+        syncProgress
     } = props;
+
+    // Number animation matching SurveyTestProgressModal.jsx
+    const [displayNum, setDisplayNum] = useState(0);
+
+    useEffect(() => {
+        if (!syncProgress) {
+            setDisplayNum(0);
+            return;
+        }
+        let startTimestamp = null;
+        const duration = 400;
+        const start = displayNum;
+        const end = syncProgress.percent || 0;
+        
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            setDisplayNum(Math.floor(progress * (end - start) + start));
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            } else {
+                setDisplayNum(end);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }, [syncProgress?.percent]);
 
     // 로컬 검색 필터링
     const filteredData = useMemo(() => {
@@ -69,7 +96,28 @@ const GridRenderer = (props) => {
     }, [dataState?.data, searchText]);
 
     return (
-        <div className="grid-wrapper" style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+        <div className="grid-wrapper" style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", position: "relative" }}>
+            {syncProgress && (
+                <div className="sync-progress-overlay">
+                    <div className="sync-progress-card">
+                        <div className="sync-status-header">
+                            <span className="sync-status-title">프로젝트 목록 동기화 중...</span>
+                            <div className="sync-percentage">
+                                <span className="sync-percentage-num">{displayNum}</span>
+                                <span className="sync-percentage-sign">%</span>
+                            </div>
+                        </div>
+                        
+                        <div className="sync-progress-container">
+                            <div className="sync-progress-bar" style={{ width: `${syncProgress.percent}%` }}></div>
+                        </div>
+                        
+                        <div className="sync-status-msg">
+                            {syncProgress.message || "동기화 작업을 진행하고 있습니다."}
+                        </div>
+                    </div>
+                </div>
+            )}
             <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
                 <div style={{ padding: '12px 16px', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexShrink: 0 }}>
                     <div style={{ position: 'relative', width: '460px' }}>
@@ -167,6 +215,20 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
     const [filter, setFilter] = useState(null);
     const [searchText, setSearchText] = useState("");
     const [gridSkip, setGridSkip] = useState(0);
+    const [syncProgress, setSyncProgress] = useState(null);
+
+    useEffect(() => {
+        window.__onProjectSyncProgress = (progressInfo) => {
+            if (progressInfo.status === "completed" || progressInfo.status === "failed") {
+                setSyncProgress(null);
+            } else {
+                setSyncProgress(progressInfo);
+            }
+        };
+        return () => {
+            window.__onProjectSyncProgress = null;
+        };
+    }, []);
 
     const { mainListData } = MainListApi();
 
@@ -291,6 +353,7 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
                             onRowClick={onRowClick}
                             gridSkip={gridSkip}
                             setGridSkip={setGridSkip}
+                            syncProgress={syncProgress}
                         />
                     )}
                 />
