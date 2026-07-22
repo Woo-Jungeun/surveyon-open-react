@@ -167,7 +167,7 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
             { field: "servername", title: "오픈\n서버정보", show: true, editable: false, width: "90px", allowHide: false },
             { field: "project_use_name", title: "오픈\n작업자", show: true, editable: false, width: "80px", allowHide: false },
             { field: "project_update_date", title: "업데이트\n일자", show: true, editable: false, width: "110px", allowHide: false },
-            { field: "project_status", title: "작업현황", show: true, editable: true, width: "70px", allowHide: false },
+            { field: "project_status", title: "작업현황", show: true, editable: true, width: "80px", allowHide: false },
             { field: "postgrecompletecount", title: "DB\n완료수", show: true, editable: true, width: "80px", allowHide: false },
             { field: "groupposition", title: "소속", show: true, editable: true, width: "100px", allowHide: false },
             { field: "usergroup", title: "권한정보", show: true, editable: true, width: "120px", allowHide: false },
