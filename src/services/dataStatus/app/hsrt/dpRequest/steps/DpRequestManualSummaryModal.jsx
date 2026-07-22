@@ -42,7 +42,7 @@ const DpRequestManualSummaryModal = ({
         { id: 'b3', label: 'Top2', values: '4,5' }
     ]);
     const [isMeanIncluded, setIsMeanIncluded] = useState(false);
-    const [openStats, setOpenStats] = useState({ mean: true, median: false, mode: false });
+    const [openStats, setOpenStats] = useState({ mean: true, sd: false, median: false, mode: false });
 
     const setDefaultBandsForScale = (sp) => {
         if (sp === 5) {
@@ -84,12 +84,14 @@ const DpRequestManualSummaryModal = ({
                     const statItem = summaryData.info[0];
                     setOpenStats({
                         mean: !!statItem.mean,
+                        sd: !!statItem.sd,
                         median: !!statItem.median,
                         mode: !!statItem.mode
                     });
                 } else {
                     setOpenStats({
                         mean: !!editingFolder.mean,
+                        sd: !!editingFolder.sd,
                         median: !!editingFolder.median,
                         mode: !!editingFolder.mode
                     });
@@ -158,7 +160,7 @@ const DpRequestManualSummaryModal = ({
             setScaleMin(1);
 
             if (currentTab === 'open-num') {
-                setOpenStats({ mean: true, median: false, mode: false });
+                setOpenStats({ mean: true, sd: false, median: false, mode: false });
                 return;
             }
 
@@ -276,14 +278,14 @@ const DpRequestManualSummaryModal = ({
             for (let i = 0; i < bands.length; i++) {
                 const band = bands[i];
                 if (getBandValueCount(band.values) === 0) {
-                    modal.showAlert('알림', `'${band.label}' 밴드에 지정된 값이 없습니다. 값을 기입하거나 삭제해 주세요.`);
+modal.showAlert('알림', `'${band.label}' 밴드에 지정된 값이 없습니다. 값을 기입하거나 삭제해 주세요.`);
                     return;
                 }
             }
         } else {
-            const hasAnyStats = openStats.mean || openStats.median || openStats.mode;
+            const hasAnyStats = openStats.mean || openStats.sd || openStats.median || openStats.mode;
             if (!hasAnyStats) {
-                modal.showAlert('알림', '최소 하나 이상의 통계 옵션(평균/중앙값/최빈값)을 선택해 주세요.');
+                modal.showAlert('알림', '최소 하나 이상의 통계 옵션(평균/표준편차/중앙값/최빈값)을 선택해 주세요.');
                 return;
             }
         }
@@ -578,6 +580,7 @@ const DpRequestManualSummaryModal = ({
                                 <div style={{ display: 'flex', gap: '24px', padding: '16px 20px', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#f8fafc' }}>
                                     {[
                                         { key: 'mean', label: '평균 (Mean)' },
+                                        { key: 'sd', label: '표준편차 (SD)' },
                                         { key: 'median', label: '중앙값 (Median)' },
                                         { key: 'mode', label: '최빈값 (Mode)' }
                                     ].map(stat => (

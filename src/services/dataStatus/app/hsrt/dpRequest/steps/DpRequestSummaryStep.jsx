@@ -54,7 +54,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [wizardTab, setWizardTab] = useState('scale'); // 'scale' | 'open-num'
     const [matrixSelection, setMatrixSelection] = useState({ top: [1, 2], mid: [], bot: [1, 2] });
     const [isMeanIncluded, setIsMeanIncluded] = useState(true);
-    const [openStats, setOpenStats] = useState({ mean: true, median: false, mode: false });
+    const [openStats, setOpenStats] = useState({ mean: true, sd: false, median: false, mode: false });
     const [isMergeByTitle, setIsMergeByTitle] = useState(false);
     const [wizardSelectedIds, setWizardSelectedIds] = useState(new Set());
     const [isSummarySidebarOpen, setIsSummarySidebarOpen] = useState(true);
@@ -160,6 +160,25 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         if (onUnsavedChange) onUnsavedChange(true);
     };
 
+    const isLabelCorrupted = (label, folderName) => {
+        if (!label) return false;
+        const lower = label.toLowerCase();
+        return label === folderName ||
+            label.includes('요약표') ||
+            label.includes('(평균)') ||
+            label.includes('(Top') ||
+            label.includes('(Bot') ||
+            label.includes('(Mid') ||
+            lower === 'mean' ||
+            lower === 'sd' ||
+            lower === 'median' ||
+            lower === 'mode' ||
+            label === '평균' ||
+            label === '표준편차' ||
+            label === '중앙값' ||
+            label === '최빈값';
+    };
+
     // 교차표 문구 일괄 편집 모달 열기
     const handleOpenBulkItemLabelModal = (folderId) => {
         const folder = folders.find(f => f.id === folderId);
@@ -171,13 +190,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
             let finalLabel = varInfo ? varInfo.label : showLabel;
             if (varInfo && folder && folder.name) {
-                const isCorrupted = varInfo.label === folder.name ||
-                    varInfo.label.includes('요약표') ||
-                    varInfo.label.includes('(평균)') ||
-                    varInfo.label.includes('(Top') ||
-                    varInfo.label.includes('(Bot') ||
-                    varInfo.label.includes('(Mid');
-                if (isCorrupted) {
+                if (isLabelCorrupted(varInfo.label, folder.name)) {
                     finalLabel = showLabel;
                 }
             }
@@ -435,8 +448,11 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 const uniqueFolders = [];
                 const formattedSummaries = [];
 
+                // Group stats tables to merge folders in UI
+                const statsGroupMap = {};
+
                 tablesList.forEach(table => {
-                    const firstItemId = table.vars && table.vars[0] && table.vars[0].name.replace(/_(mean|median|mode)$/, '');
+                    const firstItemId = table.vars && table.vars[0] && table.vars[0].name;
                     let folderType = 'frequency';
 
                     if (firstItemId) {
@@ -449,37 +465,64 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         }
                     }
 
-                    uniqueFolders.push({
-                        id: table.id,
-                        name: table.name,
-                        type: folderType,
-                        items: [...new Set((table.vars || []).map(v => v.name.replace(/_(mean|median|mode)$/, '')))],
-                        reverse: table.reverse === true || table.reverse === 'true',
-                        scale_points: table.scale ? Number(table.scale) : 5,
-                        scale_preset_id: table.scale_preset_id || null,
-                        mean: table.stats ? (table.stats.mean === true || table.stats.mean === 'true' || table.stats.mean === 1 || table.stats.mean === '1') : false,
-                        median: table.stats ? (table.stats.median === true || table.stats.median === 'true' || table.stats.median === 1 || table.stats.median === '1') : false,
-                        mode: table.stats ? (table.stats.mode === true || table.stats.mode === 'true' || table.stats.mode === 1 || table.stats.mode === '1') : false
-                    });
+                    if (folderType === 'statistics') {
+                        // Extract base folder ID by removing _mean, _sd, _median, _mode
+                        const baseFolderId = table.id.replace(/_(mean|sd|median|mode)$/, '');
+                        // Strip (평균(Mean)) suffix from folder name
+                        const cleanName = table.name.replace(/\s*\(?(평균\(Mean\)|표준편차\(SD\)|중앙값\(Median\)|최빈값\(Mode\))\)?\s*$/, '').trim();
 
-                    (table.vars || []).forEach((v, index) => {
-                        const infoList = [];
-                        let resolvedName = v.name;
+                        const hasMean = table.stats ? (table.stats.mean === true || table.stats.mean === 'true' || table.stats.mean === 1 || table.stats.mean === '1') : false;
+                        const hasSd = table.stats ? (table.stats.sd === true || table.stats.sd === 'true' || table.stats.sd === 1 || table.stats.sd === '1') : false;
+                        const hasMedian = table.stats ? (table.stats.median === true || table.stats.median === 'true' || table.stats.median === 1 || table.stats.median === '1') : false;
+                        const hasMode = table.stats ? (table.stats.mode === true || table.stats.mode === 'true' || table.stats.mode === 1 || table.stats.mode === '1') : false;
 
-                        // 통계 요약표(statistics)이고 변수명에 접미사(_mean, _median, _mode)가 없는 경우 복원
-                        if (folderType === 'statistics' && !v.name.endsWith('_mean') && !v.name.endsWith('_median') && !v.name.endsWith('_mode')) {
-                            const activeKeys = [];
-                            if (table.stats?.mean === true || table.stats?.mean === 'true' || table.stats?.mean === 1 || table.stats?.mean === '1') activeKeys.push('mean');
-                            if (table.stats?.median === true || table.stats?.median === 'true' || table.stats?.median === 1 || table.stats?.median === '1') activeKeys.push('median');
-                            if (table.stats?.mode === true || table.stats?.mode === 'true' || table.stats?.mode === 1 || table.stats?.mode === '1') activeKeys.push('mode');
-
-                            if (activeKeys.length === 0) activeKeys.push('mean');
-                            const statKey = activeKeys[index] || activeKeys[0];
-                            resolvedName = `${v.name}_${statKey}`;
+                        if (!statsGroupMap[baseFolderId]) {
+                            statsGroupMap[baseFolderId] = {
+                                id: baseFolderId,
+                                name: cleanName,
+                                type: 'statistics',
+                                items: [...new Set((table.vars || []).map(v => v.name))],
+                                reverse: table.reverse === true || table.reverse === 'true',
+                                scale_points: table.scale ? Number(table.scale) : 5,
+                                scale_preset_id: table.scale_preset_id || null,
+                                mean: hasMean,
+                                sd: hasSd,
+                                median: hasMedian,
+                                mode: hasMode,
+                                rawVars: table.vars || []
+                            };
+                        } else {
+                            const group = statsGroupMap[baseFolderId];
+                            group.mean = group.mean || hasMean;
+                            group.sd = group.sd || hasSd;
+                            group.median = group.median || hasMedian;
+                            group.mode = group.mode || hasMode;
+                            const mergedItems = [...group.items];
+                            (table.vars || []).forEach(v => {
+                                if (!mergedItems.includes(v.name)) {
+                                    mergedItems.push(v.name);
+                                    group.rawVars.push(v);
+                                }
+                            });
+                            group.items = mergedItems;
                         }
+                    } else {
+                        uniqueFolders.push({
+                            id: table.id,
+                            name: table.name,
+                            type: 'frequency',
+                            items: [...new Set((table.vars || []).map(v => v.name))],
+                            reverse: table.reverse === true || table.reverse === 'true',
+                            scale_points: table.scale ? Number(table.scale) : 5,
+                            scale_preset_id: table.scale_preset_id || null,
+                            mean: table.stats ? (table.stats.mean === true || table.stats.mean === 'true' || table.stats.mean === 1 || table.stats.mean === '1') : false,
+                            sd: table.stats ? (table.stats.sd === true || table.stats.sd === 'true' || table.stats.sd === 1 || table.stats.sd === '1') : false,
+                            median: table.stats ? (table.stats.median === true || table.stats.median === 'true' || table.stats.median === 1 || table.stats.median === '1') : false,
+                            mode: table.stats ? (table.stats.mode === true || table.stats.mode === 'true' || table.stats.mode === 1 || table.stats.mode === '1') : false
+                        });
 
-                        const baseName = resolvedName.replace(/_(mean|median|mode)$/, '');
-                        if (folderType === 'frequency') {
+                        (table.vars || []).forEach((v) => {
+                            const infoList = [];
                             if (table.bands && Array.isArray(table.bands)) {
                                 table.bands.forEach(b => {
                                     infoList.push({
@@ -501,23 +544,50 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     tag: 'mean'
                                 });
                             }
-                        } else {
-                            if (table.stats) {
-                                infoList.push({
-                                    type: 'statistics',
-                                    name: '평균 요약',
-                                    mean: table.stats.mean === true || table.stats.mean === 'true' || table.stats.mean === 1 || table.stats.mean === '1',
-                                    median: table.stats.median === true || table.stats.median === 'true' || table.stats.median === 1 || table.stats.median === '1',
-                                    mode: table.stats.mode === true || table.stats.mode === 'true' || table.stats.mode === 1 || table.stats.mode === '1',
-                                    tag: 'mean'
-                                });
-                            }
-                        }
+                            formattedSummaries.push({
+                                id: v.name,
 
+                                label: v.label || v.name,
+
+                                subId: v.name,
+
+                                info: infoList.map(item => ({ ...item, inEdit: false }))
+
+                            });
+                        });
+                    }
+                });
+
+                Object.values(statsGroupMap).forEach(group => {
+                    uniqueFolders.push({
+                        id: group.id,
+                        name: group.name,
+                        type: group.type,
+                        items: group.items,
+                        reverse: group.reverse,
+                        scale_points: group.scale_points,
+                        scale_preset_id: group.scale_preset_id,
+                        mean: group.mean,
+                        sd: group.sd,
+                        median: group.median,
+                        mode: group.mode
+                    });
+
+                    group.rawVars.forEach(v => {
+                        const infoList = [];
+                        infoList.push({
+                            type: 'statistics',
+                            name: '평균 요약',
+                            mean: group.mean,
+                            sd: group.sd,
+                            median: group.median,
+                            mode: group.mode,
+                            tag: 'mean'
+                        });
                         formattedSummaries.push({
-                            id: resolvedName,
-                            label: v.label || baseName,
-                            subId: resolvedName,
+                            id: v.name,
+                            label: v.label || v.name,
+                            subId: v.name,
                             info: infoList.map(item => ({ ...item, inEdit: false }))
                         });
                     });
@@ -582,107 +652,130 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             // bands 및 stats 수집
             const bands = [];
             let meanVal = false;
+            let sdVal = false;
             let medianVal = false;
             let modeVal = false;
 
-            const assocSummary = summaries.find(s => s.id === f.id) ||
-                summaries.find(s => f.items && f.items.includes(s.id)) ||
-                summaries.find(s => s.id === firstItemId);
-
-            if (assocSummary && Array.isArray(assocSummary.info)) {
-                assocSummary.info.forEach(item => {
-                    if (item.disabled) return;
-                    const isStatistics = item.type === 'statistics' || item.type === 'mean' || item.type === 'median' || item.type === 'mode';
-                    if (!isStatistics) {
-                        const tagLabel = item.tag || item.label || item.name || '';
-                        const cleanTag = tagLabel.replace(/\s*요약\s*$/, '').trim();
-                        if (cleanTag) {
-                            bands.push({
-                                kind: cleanTag,
-                                values: getBandValues(cleanTag, scalePoints)
-                            });
-                        }
-                    } else {
-                        const isMean = item.mean === true || item.mean === 'true' || item.mean === 1 || item.mean === '1' || item.tag === 'mean' || item.value_id === 'mean';
-                        const isMedian = item.median === true || item.median === 'true' || item.median === 1 || item.median === '1' || item.tag === 'median' || item.value_id === 'median';
-                        const isMode = item.mode === true || item.mode === 'true' || item.mode === 1 || item.mode === '1' || item.tag === 'mode' || item.value_id === 'mode';
-
-                        if (isMean) meanVal = true;
-                        if (isMedian) medianVal = true;
-                        if (isMode) modeVal = true;
-                    }
-                });
-            } else {
+            if (f.type === 'statistics') {
                 meanVal = f.mean === true;
+                sdVal = f.sd === true;
                 medianVal = f.median === true;
                 modeVal = f.mode === true;
+            } else {
+                const assocSummary = summaries.find(s => s.id === f.id) ||
+                    summaries.find(s => f.items && f.items.includes(s.id)) ||
+                    summaries.find(s => s.id === firstItemId);
+
+                if (assocSummary && Array.isArray(assocSummary.info)) {
+                    assocSummary.info.forEach(item => {
+                        if (item.disabled) return;
+                        const isStatistics = item.type === 'statistics' || item.type === 'mean' || item.type === 'sd' || item.type === 'median' || item.type === 'mode';
+                        if (!isStatistics) {
+                            const tagLabel = item.tag || item.label || item.name || '';
+                            const cleanTag = tagLabel.replace(/\s*요약\s*$/, '').trim();
+                            if (cleanTag) {
+                                bands.push({
+                                    kind: cleanTag,
+                                    values: getBandValues(cleanTag, scalePoints)
+                                });
+                            }
+                        } else {
+                            const isMean = item.mean === true || item.mean === 'true' || item.mean === 1 || item.mean === '1' || item.tag === 'mean' || item.value_id === 'mean';
+                            const isSd = item.sd === true || item.sd === 'true' || item.sd === 1 || item.sd === '1' || item.tag === 'sd' || item.value_id === 'sd';
+                            const isMedian = item.median === true || item.median === 'true' || item.median === 1 || item.median === '1' || item.tag === 'median' || item.value_id === 'median';
+                            const isMode = item.mode === true || item.mode === 'true' || item.mode === 1 || item.mode === '1' || item.tag === 'mode' || item.value_id === 'mode';
+
+                            if (isMean) meanVal = true;
+                            if (isSd) sdVal = true;
+                            if (isMedian) medianVal = true;
+                            if (isMode) modeVal = true;
+                        }
+                    });
+                } else {
+                    meanVal = f.mean === true;
+                    sdVal = f.sd === true;
+                    medianVal = f.median === true;
+                    modeVal = f.mode === true;
+                }
             }
 
             // vars 구성
-            let vars = [];
-            if (f.type === 'statistics') {
-                (f.items || []).forEach(itemId => {
-                    const hasMean = meanVal;
-                    const hasMedian = medianVal;
-                    const hasMode = modeVal;
+            const vars = (f.items || []).map(itemId => {
+                const varInfo = summaries.find(s => s.id === itemId);
+                const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
+                const showLabel = baseVar ? baseVar.label || baseVar.name : itemId;
 
-                    const meanLabel = summaries.find(s => s.id === itemId + '_mean' || s.id === itemId)?.label ?? 'mean';
-                    const medianLabel = summaries.find(s => s.id === itemId + '_median' || s.id === itemId)?.label ?? 'median';
-                    const modeLabel = summaries.find(s => s.id === itemId + '_mode' || s.id === itemId)?.label ?? 'mode';
-
-                    if (hasMean) vars.push({ name: itemId, label: meanLabel });
-                    if (hasMedian) vars.push({ name: itemId, label: medianLabel });
-                    if (hasMode) vars.push({ name: itemId, label: modeLabel });
-
-                    if (vars.length === 0) {
-                        vars.push({ name: itemId, label: meanLabel });
+                let finalLabel = varInfo ? varInfo.label : showLabel;
+                if (varInfo && f && f.name) {
+                    if (isLabelCorrupted(varInfo.label, f.name)) {
+                        finalLabel = showLabel;
                     }
+                }
+
+                return {
+                    name: itemId,
+                    label: finalLabel
+                };
+            });
+
+            if (f.type === 'statistics') {
+                const activeStats = [];
+                if (meanVal) activeStats.push({ key: 'mean', label: '평균(Mean)' });
+                if (sdVal) activeStats.push({ key: 'sd', label: '표준편차(SD)' });
+                if (medianVal) activeStats.push({ key: 'median', label: '중앙값(Median)' });
+                if (modeVal) activeStats.push({ key: 'mode', label: '최빈값(Mode)' });
+
+                if (activeStats.length === 0) {
+                    activeStats.push({ key: 'mean', label: '평균(Mean)' });
+                }
+
+                activeStats.forEach(stat => {
+                    const suffix = ` (${stat.label})`;
+                    payloadTables.push({
+                        id: `${f.id}_${stat.key}`,
+                        name: `${f.name}${suffix}`,
+                        scale: scalePoints,
+                        min: 1,
+                        reverse: f.reverse === true,
+                        vars: vars,
+                        bands: bands,
+                        stats: {
+                            mean: stat.key === 'mean',
+                            sd: stat.key === 'sd',
+                            median: stat.key === 'median',
+                            mode: stat.key === 'mode'
+                        }
+                    });
                 });
             } else {
-                vars = (f.items || []).map(itemId => {
-                    const varInfo = summaries.find(s => s.id === itemId);
-                    const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
-                    const showLabel = baseVar ? baseVar.label || baseVar.name : itemId;
-
-                    let finalLabel = varInfo ? varInfo.label : showLabel;
-                    if (varInfo && f && f.name) {
-                        const isCorrupted = varInfo.label === f.name ||
-                            varInfo.label.includes('요약표') ||
-                            varInfo.label.includes('(평균)') ||
-                            varInfo.label.includes('(Top') ||
-                            varInfo.label.includes('(Bot') ||
-                            varInfo.label.includes('(Mid');
-                        if (isCorrupted) {
-                            finalLabel = showLabel;
-                        }
+                payloadTables.push({
+                    id: f.id,
+                    name: f.name,
+                    scale: scalePoints,
+                    min: 1,
+                    reverse: f.reverse === true,
+                    vars: vars,
+                    bands: bands,
+                    stats: {
+                        mean: meanVal,
+                        sd: sdVal,
+                        median: medianVal,
+                        mode: modeVal
                     }
-
-                    return {
-                        name: itemId,
-                        label: finalLabel
-                    };
                 });
             }
-
-            payloadTables.push({
-                id: f.id,
-                name: f.name,
-                scale: scalePoints,
-                min: 1,
-                reverse: f.reverse === true,
-                vars: vars,
-                bands: bands,
-                stats: {
-                    mean: meanVal,
-                    sd: false,
-                    median: medianVal,
-                    mode: modeVal
-                }
-            });
         });
 
         const rawDeleteIds = overrideDeleteIds || deletedSummaryIds;
-        const cleanDeleteIds = Array.isArray(rawDeleteIds) ? rawDeleteIds.filter(id => id && String(id).trim() !== "") : [];
+        const baseDeleteIds = Array.isArray(rawDeleteIds) ? rawDeleteIds.filter(id => id && String(id).trim() !== "") : [];
+        const cleanDeleteIds = [];
+        baseDeleteIds.forEach(id => {
+            cleanDeleteIds.push(id);
+            cleanDeleteIds.push(`${id}_mean`);
+            cleanDeleteIds.push(`${id}_sd`);
+            cleanDeleteIds.push(`${id}_median`);
+            cleanDeleteIds.push(`${id}_mode`);
+        });
 
         const payload = {
             pageid: pageId,
@@ -1013,22 +1106,24 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 const subItems = [];
                 const tags = [];
 
-                if (openStats.mean || openStats.median || openStats.mode) {
+                if (openStats.mean || openStats.sd || openStats.median || openStats.mode) {
                     subItems.push({
                         type: 'statistics',
-                        name: `${group.parentLabel} - 통계 요약표`,
+                        name: `${group.parentLabel} 요약표`,
                         mean: !!openStats.mean,
+                        sd: !!openStats.sd,
                         median: !!openStats.median,
                         mode: !!openStats.mode
                     });
                     if (openStats.mean) tags.push('평균');
+                    if (openStats.sd) tags.push('표준편차');
                     if (openStats.median) tags.push('중앙값');
                     if (openStats.mode) tags.push('최빈값');
                 }
 
                 proposals.push({
                     id: `prop_open_${group.parentId}`,
-                    title: `${group.parentLabel} - 통계 요약표`,
+                    title: `${group.parentLabel} 요약표`,
                     groupLabel: group.parentLabel,
                     groupId: group.parentId,
                     subItems,
@@ -1139,8 +1234,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 const subItems = [];
                 subItems.push({
                     type: 'statistics',
-                    name: targetFolder.name || `${varLabel} - 통계 요약표`,
+                    name: targetFolder.name || `${varLabel} 요약표`,
                     mean: !!openStats.mean,
+                    sd: !!openStats.sd,
                     median: !!openStats.median,
                     mode: !!openStats.mode
                 });
@@ -1150,6 +1246,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         return {
                             ...f,
                             mean: !!openStats.mean,
+                            sd: !!openStats.sd,
                             median: !!openStats.median,
                             mode: !!openStats.mode
                         };
@@ -1318,14 +1415,15 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         } else {
             // 오픈형 생성
             const folderName = activeTabSelectedIds.length > 1
-                ? `${varLabel} 외 ${activeTabSelectedIds.length - 1}개 - 통계 요약표`
-                : `${varLabel} - 통계 요약표`;
+                ? `${varLabel} 외 ${activeTabSelectedIds.length - 1}개 - 요약표`
+                : `${varLabel} 요약표`;
 
             const subItems = [];
             subItems.push({
                 type: 'statistics',
-                name: `${folderName} - 통계 요약표`,
+                name: `${folderName}`,
                 mean: !!openStats.mean,
+                sd: !!openStats.sd,
                 median: !!openStats.median,
                 mode: !!openStats.mode
             });
@@ -1337,6 +1435,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 type: 'statistics',
                 items: [...activeTabSelectedIds],
                 mean: !!openStats.mean,
+                sd: !!openStats.sd,
                 median: !!openStats.median,
                 mode: !!openStats.mode
             };
@@ -1932,6 +2031,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                                     if (isStatistics) {
                                         if (folder.mean) badgeList.push('평균');
+                                        if (folder.sd) badgeList.push('표준편차');
                                         if (folder.median) badgeList.push('중앙값');
                                         if (folder.mode) badgeList.push('최빈값');
                                     } else {
@@ -1949,10 +2049,12 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                     item.value_id === 'mode';
                                                 if (isStatisticsItem) {
                                                     const hasMean = item.mean === true || item.mean === 'true' || item.mean === 1 || item.mean === '1' || item.tag === 'mean' || item.value_id === 'mean';
+                                                    const hasSd = item.sd === true || item.sd === 'true' || item.sd === 1 || item.sd === '1' || item.tag === 'sd' || item.value_id === 'sd';
                                                     const hasMedian = item.median === true || item.median === 'true' || item.median === 1 || item.median === '1' || item.tag === 'median' || item.value_id === 'median';
                                                     const hasMode = item.mode === true || item.mode === 'true' || item.mode === 1 || item.mode === '1' || item.tag === 'mode' || item.value_id === 'mode';
 
                                                     if (hasMean) badgeList.push('평균');
+                                                    if (hasSd) badgeList.push('표준편차');
                                                     if (hasMedian) badgeList.push('중앙값');
                                                     if (hasMode) badgeList.push('최빈값');
                                                 } else {
@@ -2093,7 +2195,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                                     else if (lower.includes('bot')) { bg = '#fff1f2'; fg = '#f43f5e'; }
                                                                     else if (lower.includes('mid')) { bg = '#fffbeb'; fg = '#d97706'; }
                                                                     else if (lower === '평균') { bg = '#ecfdf5'; fg = '#10b981'; }
-                                                                    else if (lower === '중앙값') { bg = '#faf5ff'; fg = '#7c3aed'; }
+                                                                    else if (lower === '표준편차') { bg = '#faf5ff'; fg = '#7c3aed'; }
+                                                                    else if (lower === '중앙값') { bg = '#f0fdf4'; fg = '#15803d'; }
                                                                     else if (lower === '최빈값') { bg = '#fffbeb'; fg = '#d97706'; }
 
                                                                     return (
@@ -2338,8 +2441,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                                 <span
                                                                     onClick={() => {
                                                                         const nextMean = !folder.mean;
-                                                                        if (!nextMean && !folder.median && !folder.mode) {
-                                                                            modal.showAlert('알림', '최소 하나 이상의 통계 옵션(평균/중앙값/최빈값)을 선택해 주세요.');
+                                                                        if (!nextMean && !folder.sd && !folder.median && !folder.mode) {
+                                                                            modal.showAlert('알림', '최소 하나 이상의 통계 옵션(평균/표준편차/중앙값/최빈값)을 선택해 주세요.');
                                                                             return;
                                                                         }
                                                                         setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mean: nextMean } : f));
@@ -2364,9 +2467,36 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                                                                 <span
                                                                     onClick={() => {
+                                                                        const nextSd = !folder.sd;
+                                                                        if (!folder.mean && !nextSd && !folder.median && !folder.mode) {
+                                                                            modal.showAlert('알림', '최소 하나 이상의 통계 옵션(평균/표준편차/중앙값/최빈값)을 선택해 주세요.');
+                                                                            return;
+                                                                        }
+                                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, sd: nextSd } : f));
+                                                                        if (onUnsavedChange) onUnsavedChange(true);
+                                                                    }}
+                                                                    style={{
+                                                                        fontSize: '10.5px',
+                                                                        fontWeight: 600,
+                                                                        padding: '3px 8px',
+                                                                        borderRadius: '12px',
+                                                                        color: folder.sd ? '#7c3aed' : '#94a3b8',
+                                                                        background: folder.sd ? '#faf5ff' : '#f8fafc',
+                                                                        border: folder.sd ? '1px solid #e9d5ff' : '1px dashed #cbd5e1',
+                                                                        userSelect: 'none',
+                                                                        cursor: 'pointer',
+                                                                        opacity: folder.sd ? 1 : 0.5,
+                                                                        transition: 'all 0.15s ease-in-out'
+                                                                    }}
+                                                                >
+                                                                    표준편차
+                                                                </span>
+
+                                                                <span
+                                                                    onClick={() => {
                                                                         const nextMedian = !folder.median;
-                                                                        if (!folder.mean && !nextMedian && !folder.mode) {
-                                                                            modal.showAlert('알림', '최소 하나 이상의 통계 옵션(평균/중앙값/최빈값)을 선택해 주세요.');
+                                                                        if (!folder.mean && !folder.sd && !nextMedian && !folder.mode) {
+                                                                            modal.showAlert('알림', '최소 하나 이상의 통계 옵션(평균/표준편차/중앙값/최빈값)을 선택해 주세요.');
                                                                             return;
                                                                         }
                                                                         setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, median: nextMedian } : f));
@@ -2377,9 +2507,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                                         fontWeight: 600,
                                                                         padding: '3px 8px',
                                                                         borderRadius: '12px',
-                                                                        color: folder.median ? '#7c3aed' : '#94a3b8',
-                                                                        background: folder.median ? '#faf5ff' : '#f8fafc',
-                                                                        border: folder.median ? '1px solid #e9d5ff' : '1px dashed #cbd5e1',
+                                                                        color: folder.median ? '#15803d' : '#94a3b8',
+                                                                        background: folder.median ? '#f0fdf4' : '#f8fafc',
+                                                                        border: folder.median ? '1px solid #bbf7d0' : '1px dashed #cbd5e1',
                                                                         userSelect: 'none',
                                                                         cursor: 'pointer',
                                                                         opacity: folder.median ? 1 : 0.5,
@@ -2392,8 +2522,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                                 <span
                                                                     onClick={() => {
                                                                         const nextMode = !folder.mode;
-                                                                        if (!folder.mean && !folder.median && !nextMode) {
-                                                                            modal.showAlert('알림', '최소 하나 이상의 통계 옵션(평균/중앙값/최빈값)을 선택해 주세요.');
+                                                                        if (!folder.mean && !folder.sd && !folder.median && !nextMode) {
+                                                                            modal.showAlert('알림', '최소 하나 이상의 통계 옵션(평균/표준편차/중앙값/최빈값)을 선택해 주세요.');
                                                                             return;
                                                                         }
                                                                         setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mode: nextMode } : f));
@@ -2453,191 +2583,87 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
-                                                                {folder.type === 'statistics' ? (
-                                                                    (() => {
-                                                                        const hasMean = folder.mean === true;
-                                                                        const hasMedian = folder.median === true;
-                                                                        const hasMode = folder.mode === true;
-
-                                                                        const activeStats = [];
-                                                                        const itemId = folder.items && folder.items[0];
-
-                                                                        if (itemId) {
-                                                                            if (hasMean) {
-                                                                                const meanLabel = summaries.find(s => s.id === itemId + '_mean')?.label ?? 'mean';
-                                                                                activeStats.push({ key: 'mean', label: meanLabel, virtualId: itemId + '_mean' });
-                                                                            }
-                                                                            if (hasMedian) {
-                                                                                const medianLabel = summaries.find(s => s.id === itemId + '_median')?.label ?? 'median';
-                                                                                activeStats.push({ key: 'median', label: medianLabel, virtualId: itemId + '_median' });
-                                                                            }
-                                                                            if (hasMode) {
-                                                                                const modeLabel = summaries.find(s => s.id === itemId + '_mode')?.label ?? 'mode';
-                                                                                activeStats.push({ key: 'mode', label: modeLabel, virtualId: itemId + '_mode' });
+                                                                {folder.items.map((itemId, idx) => {
+                                                                    const varInfo = summaries.find(s => s.id === itemId);
+                                                                    const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
+                                                                    const showLabel = baseVar ? baseVar.label || baseVar.name : '';
+                                                                    const labelValue = (() => {
+                                                                        let val = varInfo ? varInfo.label : showLabel;
+                                                                        if (varInfo && folder && folder.name) {
+                                                                            if (isLabelCorrupted(varInfo.label, folder.name)) {
+                                                                                val = showLabel;
                                                                             }
                                                                         }
-
-                                                                        if (activeStats.length === 0 && itemId) {
-                                                                            const meanLabel = summaries.find(s => s.id === itemId + '_mean')?.label ?? 'mean';
-                                                                            activeStats.push({ key: 'mean', label: meanLabel, virtualId: itemId + '_mean' });
-                                                                        }
-
-                                                                        return activeStats.map((stat) => (
-                                                                            <tr key={stat.key} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
-                                                                                <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                                                                                    <span style={{
-                                                                                        display: 'inline-block',
-                                                                                        padding: '3px 8px',
-                                                                                        background: '#f1f5f9',
-                                                                                        color: '#475569',
+                                                                        return val;
+                                                                    })();
+                                                                    return (
+                                                                        <tr key={itemId} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
+                                                                            <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
+                                                                                <span style={{
+                                                                                    display: 'inline-block',
+                                                                                    padding: '3px 8px',
+                                                                                    background: '#f1f5f9',
+                                                                                    color: '#475569',
+                                                                                    borderRadius: '6px',
+                                                                                    fontWeight: 600,
+                                                                                    fontFamily: 'monospace',
+                                                                                    fontSize: '11px',
+                                                                                    border: '1px solid #e2e8f0'
+                                                                                }}>
+                                                                                    {itemId}
+                                                                                </span>
+                                                                            </td>
+                                                                            <td style={{ padding: '8px 14px' }}>
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={labelValue}
+                                                                                    onChange={(e) => {
+                                                                                        setSummaries(prev => {
+                                                                                            const exists = prev.some(s => s.id === itemId);
+                                                                                            if (exists) {
+                                                                                                return prev.map(s => s.id === itemId ? { ...s, label: e.target.value } : s);
+                                                                                            } else {
+                                                                                                return [
+                                                                                                    ...prev,
+                                                                                                    {
+                                                                                                        id: itemId,
+                                                                                                        label: e.target.value,
+                                                                                                        subId: itemId,
+                                                                                                        type: baseVar?.type || 'frequency',
+                                                                                                        info: baseVar?.info || baseVar?.categories || []
+                                                                                                    }
+                                                                                                ];
+                                                                                            }
+                                                                                        });
+                                                                                        if (onUnsavedChange) onUnsavedChange(true);
+                                                                                    }}
+                                                                                    onPaste={(e) => handlePasteLabels(e, idx, folder.items)}
+                                                                                    onFocus={(e) => {
+                                                                                        e.currentTarget.style.borderColor = '#3b82f6';
+                                                                                        e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.08)';
+                                                                                        e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                                    }}
+                                                                                    onBlur={(e) => {
+                                                                                        e.currentTarget.style.borderColor = '#e2e8f0';
+                                                                                        e.currentTarget.style.boxShadow = 'none';
+                                                                                        e.currentTarget.style.backgroundColor = '#fdfdfd';
+                                                                                    }}
+                                                                                    style={{
+                                                                                        width: '100%',
+                                                                                        padding: '6px 12px',
+                                                                                        border: '1px solid #e2e8f0',
                                                                                         borderRadius: '6px',
-                                                                                        fontWeight: 600,
-                                                                                        fontFamily: 'monospace',
-                                                                                        fontSize: '11px',
-                                                                                        border: '1px solid #e2e8f0'
-                                                                                    }}>
-                                                                                        {stat.key}
-                                                                                    </span>
-                                                                                </td>
-                                                                                <td style={{ padding: '8px 14px' }}>
-                                                                                    <input
-                                                                                        type="text"
-                                                                                        value={stat.label}
-                                                                                        onChange={(e) => {
-                                                                                            setSummaries(prev => {
-                                                                                                const exists = prev.some(s => s.id === stat.virtualId);
-                                                                                                if (exists) {
-                                                                                                    return prev.map(s => s.id === stat.virtualId ? { ...s, label: e.target.value } : s);
-                                                                                                } else {
-                                                                                                    return [
-                                                                                                        ...prev,
-                                                                                                        {
-                                                                                                            id: stat.virtualId,
-                                                                                                            label: e.target.value,
-                                                                                                            subId: stat.virtualId,
-                                                                                                            type: 'statistics',
-                                                                                                            info: []
-                                                                                                        }
-                                                                                                    ];
-                                                                                                }
-                                                                                            });
-                                                                                            if (onUnsavedChange) onUnsavedChange(true);
-                                                                                        }}
-                                                                                        onFocus={(e) => {
-                                                                                            e.currentTarget.style.borderColor = '#3b82f6';
-                                                                                            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.08)';
-                                                                                            e.currentTarget.style.backgroundColor = '#ffffff';
-                                                                                        }}
-                                                                                        onBlur={(e) => {
-                                                                                            e.currentTarget.style.borderColor = '#e2e8f0';
-                                                                                            e.currentTarget.style.boxShadow = 'none';
-                                                                                            e.currentTarget.style.backgroundColor = '#ffffff';
-                                                                                        }}
-                                                                                        style={{
-                                                                                            width: '100%',
-                                                                                            padding: '6px 12px',
-                                                                                            border: '1px solid #e2e8f0',
-                                                                                            borderRadius: '6px',
-                                                                                            outline: 'none',
-                                                                                            color: '#1e293b',
-                                                                                            fontSize: '11.5px',
-                                                                                            background: '#ffffff',
-                                                                                            transition: 'all 0.15s ease-in-out'
-                                                                                        }}
-                                                                                    />
-                                                                                </td>
-                                                                            </tr>
-                                                                        ));
-                                                                    })()
-                                                                ) : (
-                                                                    folder.items.map((itemId, idx) => {
-                                                                        const varInfo = summaries.find(s => s.id === itemId);
-                                                                        const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
-                                                                        const showLabel = baseVar ? baseVar.label || baseVar.name : '';
-                                                                        const labelValue = (() => {
-                                                                            let val = varInfo ? varInfo.label : showLabel;
-                                                                            if (varInfo && folder && folder.name) {
-                                                                                const isCorrupted = varInfo.label === folder.name ||
-                                                                                    varInfo.label.includes('요약표') ||
-                                                                                    varInfo.label.includes('(평균)') ||
-                                                                                    varInfo.label.includes('(Top') ||
-                                                                                    varInfo.label.includes('(Bot') ||
-                                                                                    varInfo.label.includes('(Mid');
-                                                                                if (isCorrupted) {
-                                                                                    val = showLabel;
-                                                                                }
-                                                                            }
-                                                                            return val;
-                                                                        })();
-                                                                        return (
-                                                                            <tr key={itemId} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}>
-                                                                                <td style={{ padding: '10px 14px', verticalAlign: 'middle' }}>
-                                                                                    <span style={{
-                                                                                        display: 'inline-block',
-                                                                                        padding: '3px 8px',
-                                                                                        background: '#f1f5f9',
-                                                                                        color: '#475569',
-                                                                                        borderRadius: '6px',
-                                                                                        fontWeight: 600,
-                                                                                        fontFamily: 'monospace',
-                                                                                        fontSize: '11px',
-                                                                                        border: '1px solid #e2e8f0'
-                                                                                    }}>
-                                                                                        {itemId}
-                                                                                    </span>
-                                                                                </td>
-                                                                                <td style={{ padding: '8px 14px' }}>
-                                                                                    <input
-                                                                                        type="text"
-                                                                                        value={labelValue}
-                                                                                        onChange={(e) => {
-                                                                                            setSummaries(prev => {
-                                                                                                const exists = prev.some(s => s.id === itemId);
-                                                                                                if (exists) {
-                                                                                                    return prev.map(s => s.id === itemId ? { ...s, label: e.target.value } : s);
-                                                                                                } else {
-                                                                                                    return [
-                                                                                                        ...prev,
-                                                                                                        {
-                                                                                                            id: itemId,
-                                                                                                            label: e.target.value,
-                                                                                                            subId: itemId,
-                                                                                                            type: baseVar?.type || 'frequency',
-                                                                                                            info: baseVar?.info || baseVar?.categories || []
-                                                                                                        }
-                                                                                                    ];
-                                                                                                }
-                                                                                            });
-                                                                                            if (onUnsavedChange) onUnsavedChange(true);
-                                                                                        }}
-                                                                                        onPaste={(e) => handlePasteLabels(e, idx, folder.items)}
-                                                                                        onFocus={(e) => {
-                                                                                            e.currentTarget.style.borderColor = '#3b82f6';
-                                                                                            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.08)';
-                                                                                            e.currentTarget.style.backgroundColor = '#ffffff';
-                                                                                        }}
-                                                                                        onBlur={(e) => {
-                                                                                            e.currentTarget.style.borderColor = '#e2e8f0';
-                                                                                            e.currentTarget.style.boxShadow = 'none';
-                                                                                            e.currentTarget.style.backgroundColor = '#fdfdfd';
-                                                                                        }}
-                                                                                        style={{
-                                                                                            width: '100%',
-                                                                                            padding: '6px 12px',
-                                                                                            border: '1px solid #e2e8f0',
-                                                                                            borderRadius: '6px',
-                                                                                            outline: 'none',
-                                                                                            color: '#1e293b',
-                                                                                            fontSize: '11.5px',
-                                                                                            background: '#fdfdfd',
-                                                                                            transition: 'all 0.15s ease-in-out'
-                                                                                        }}
-                                                                                    />
-                                                                                </td>
-                                                                            </tr>
-                                                                        );
-                                                                    })
-                                                                )}
+                                                                                        outline: 'none',
+                                                                                        color: '#1e293b',
+                                                                                        fontSize: '11.5px',
+                                                                                        background: '#fdfdfd',
+                                                                                        transition: 'all 0.15s ease-in-out'
+                                                                                    }}
+                                                                                />
+                                                                            </td>
+                                                                        </tr>
+                                                                    );
+                                                                })}
                                                             </tbody>
                                                         </table>
                                                     </div>
@@ -2970,6 +2996,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         <div style={{ display: 'flex', gap: '24px', padding: '14px 18px', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#f8fafc' }}>
                                             {[
                                                 { key: 'mean', label: '평균 (Mean)' },
+                                                { key: 'sd', label: '표준편차 (SD)' },
                                                 { key: 'median', label: '중앙값 (Median)' },
                                                 { key: 'mode', label: '최빈값 (Mode)' }
                                             ].map(stat => (
