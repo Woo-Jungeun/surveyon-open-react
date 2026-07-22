@@ -20,15 +20,6 @@ export function MainListApi() {
             const user = params.user || "";
 
             if (params.gb === "list") {
-                // 즉시 0% 상태로 팝업을 띄워서 API 응답 전 딜레이(텀) 동안 "조회된 데이터가 없습니다" 메시지가 뜨는 것을 방지
-                if (window.__onProjectSyncProgress) {
-                    window.__onProjectSyncProgress({
-                        percent: 0,
-                        message: "동기화 작업을 요청하고 있습니다...",
-                        status: "starting"
-                    });
-                }
-
                 // 1. Start sync job
                 const startRes = await api.post({
                     gb: "list_start",
