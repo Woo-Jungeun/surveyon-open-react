@@ -50,7 +50,9 @@ const GridRenderer = (props) => {
         columns,
         setSort,
         sort,
-        onRowClick
+        onRowClick,
+        gridSkip,
+        setGridSkip
     } = props;
 
     // 로컬 검색 필터링
@@ -76,7 +78,10 @@ const GridRenderer = (props) => {
                             type="text"
                             placeholder="프로젝트명, 번호로 검색하세요."
                             value={searchText}
-                            onChange={(e) => setSearchText(e.target.value)}
+                            onChange={(e) => {
+                                setSearchText(e.target.value);
+                                setGridSkip(0);
+                            }}
                             style={{
                                 width: '100%',
                                 height: '32px',
@@ -112,9 +117,17 @@ const GridRenderer = (props) => {
                             idGetter,
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: false,
-                            sortChange: ({ sort }) => setSort(sort ?? []),
+                            sortChange: ({ sort }) => {
+                                setSort(sort ?? []);
+                                setGridSkip(0);
+                            },
                             sort,
                             onRowClick,
+                            scrollable: "virtual",
+                            rowHeight: 40,
+                            pageSize: 50,
+                            skip: gridSkip,
+                            onPageChange: (e) => setGridSkip(e.page.skip),
                         }}
                     >
                         {columns.filter(c => c.show !== false).map((c) => {
@@ -153,6 +166,7 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
     const [searchText, setSearchText] = useState("");
+    const [gridSkip, setGridSkip] = useState(0);
 
     const { mainListData } = MainListApi();
 
@@ -275,6 +289,8 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
                             setSort={setSort}
                             sort={sort}
                             onRowClick={onRowClick}
+                            gridSkip={gridSkip}
+                            setGridSkip={setGridSkip}
                         />
                     )}
                 />
