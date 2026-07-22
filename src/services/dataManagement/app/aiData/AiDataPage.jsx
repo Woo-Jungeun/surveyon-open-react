@@ -2,7 +2,7 @@ import { useState, useContext, cloneElement, useMemo, useEffect, useRef } from '
 import axios from 'axios';
 import {
     Search, Download, ExternalLink, Play, AlertTriangle,
-    CheckCircle2, X, RefreshCw, Clock, Loader2, Trash2, Info, RotateCcw
+    CheckCircle2, X, RefreshCw, Clock, Loader2, Trash2, Info
 } from 'lucide-react';
 import DataHeader from '@/services/dataStatus/components/DataHeader';
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -396,7 +396,7 @@ const AiDataPage = () => {
     };
 
     const handleDeleteSelected = () => executeResetOrDelete("delete");
-    const handleResetAll = () => executeResetOrDelete("reset");
+    // const handleResetAll = () => executeResetOrDelete("reset");
 
 
     // SAV 파일 직접 내보내기 및 다운로드
@@ -1500,6 +1500,7 @@ const AiDataPage = () => {
 
                                 {validCheckedIds.length > 0 && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        {/* 선택 초기화 기능 임시 비활성화 (주석 처리)
                                         <button
                                             onClick={handleResetAll}
                                             style={{
@@ -1511,6 +1512,7 @@ const AiDataPage = () => {
                                             <RotateCcw size={12} />
                                             선택 초기화 ({validCheckedIds.length})
                                         </button>
+                                        */}
 
                                         <button
                                             onClick={handleExportSAV}
@@ -1547,7 +1549,7 @@ const AiDataPage = () => {
                         {/* 가이드 메시지 (조회된 응답자 데이터가 있을 때만 표시) */}
                         {!jobError && respondents.length > 0 && (
                             <div style={{ fontSize: '11.5px', color: '#64748b', background: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '10px', shrink: 0 }}>
-                                💡 행을 클릭하면 우측 리포트에서 상세 로그가 조회됩니다. 체크박스 선택 시 {"'초기화', '내보내기', '삭제'"} 버튼이 활성화됩니다.
+                                💡 행을 클릭하면 우측 리포트에서 상세 로그가 조회됩니다. 체크박스 선택 시 {"'내보내기', '삭제'"} 버튼이 활성화됩니다.
                             </div>
                         )}
 
