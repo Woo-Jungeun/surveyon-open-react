@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useCallback } from "react";
+import React, { Fragment, useState, useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
 import GridData from "@/components/common/grid/GridData.jsx";
@@ -11,14 +11,136 @@ import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import GridDataCount from "@/components/common/grid/GridDataCount";
 import { process } from "@progress/kendo-data-query";
 import DataHeader from "@/services/dataStatus/components/DataHeader";
+import { Search } from 'lucide-react';
 
 
 /**
  * 프로젝트 목록
  *
  * @author jewoo
- * @since 2025-09-12<br />
+ * @since 2025-09-12
  */
+
+// 날짜 커스텀 셀
+const DateTimeCell = (props) => {
+    const val = props.dataItem[props.field] || "";
+    const parts = val.split(" ");
+    if (parts.length >= 2) {
+        return (
+            <td colSpan={props.colSpan} className={props.className} style={{ ...props.style, textAlign: 'center', lineHeight: '1.3' }}>
+                <div style={{ fontSize: '12px' }}>{parts[0]}</div>
+                <div style={{ fontSize: '11px', color: '#666' }}>{parts.slice(1).join(" ")}</div>
+            </td>
+        );
+    }
+    return <td colSpan={props.colSpan} className={props.className} style={{ ...props.style, textAlign: 'center', fontSize: '12px' }}>{val}</td>;
+};
+
+// grid rendering 
+const GridRenderer = (props) => {
+    const {
+        selectedState,
+        setSelectedState,
+        idGetter,
+        dataState,
+        dataItemKey,
+        selectedField,
+        searchText,
+        setSearchText,
+        columns,
+        setSort,
+        sort,
+        onRowClick
+    } = props;
+
+    // 로컬 검색 필터링
+    const filteredData = useMemo(() => {
+        const list = dataState?.data || [];
+        if (!searchText.trim()) return list;
+        const query = searchText.toLowerCase().trim();
+        return list.filter(item => {
+            const projectPof = (item.projectpof || '').toLowerCase();
+            const projectNum = (item.projectnum || '').toLowerCase();
+            const projectName = (item.projectname || '').toLowerCase();
+            return projectPof.includes(query) || projectNum.includes(query) || projectName.includes(query);
+        });
+    }, [dataState?.data, searchText]);
+
+    return (
+        <div className="grid-wrapper" style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+            <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                <div style={{ padding: '12px 16px', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexShrink: 0 }}>
+                    <div style={{ position: 'relative', width: '460px' }}>
+                        <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 1 }} />
+                        <input
+                            type="text"
+                            placeholder="프로젝트명, 번호로 검색하세요."
+                            value={searchText}
+                            onChange={(e) => setSearchText(e.target.value)}
+                            style={{
+                                width: '100%',
+                                height: '32px',
+                                padding: '6px 12px 6px 32px',
+                                border: '1px solid #cbd5e1',
+                                borderRadius: '6px',
+                                fontSize: '13px',
+                                outline: 'none',
+                                boxSizing: 'border-box',
+                                transition: 'all 0.15s ease-in-out'
+                            }}
+                            onFocus={(e) => {
+                                e.target.style.borderColor = '#7C3AED';
+                                e.target.style.boxShadow = '0 0 0 3px rgba(124, 58, 237, 0.12)';
+                            }}
+                            onBlur={(e) => {
+                                e.target.style.borderColor = '#cbd5e1';
+                                e.target.style.boxShadow = 'none';
+                            }}
+                        />
+                    </div>
+                </div>
+                <div className="cmn_grid singlehead" style={{ flex: 1, height: "100%", overflow: "hidden" }}>
+                    <KendoGrid
+                        parentProps={{
+                            height: "100%",
+                            style: { border: "none" },
+                            data: filteredData,
+                            dataItemKey: dataItemKey,
+                            selectedState,
+                            setSelectedState,
+                            selectedField,
+                            idGetter,
+                            sortable: { mode: "multiple", allowUnsort: true },
+                            filterable: false,
+                            sortChange: ({ sort }) => setSort(sort ?? []),
+                            sort,
+                            onRowClick,
+                        }}
+                    >
+                        {columns.filter(c => c.show !== false).map((c) => {
+                            return (
+                                <Column
+                                    key={c.field}
+                                    field={c.field}
+                                    title={c.title}
+                                    width={c.width}
+                                    editable={c.editable}
+                                    headerClassName="k-header-center"
+                                    cell={
+                                        c.field === 'project_update_date' || c.field === 'register_date'
+                                            ? DateTimeCell
+                                            : undefined
+                                    }
+                                />
+                            );
+                        })}
+                    </KendoGrid>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const MainList = ({ showHeader = true, onProjectSelect }) => {
     const auth = useSelector((store) => store.auth);
     const dispatch = useDispatch();
@@ -30,6 +152,7 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
     // 정렬/필터를 controlled로
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
+    const [searchText, setSearchText] = useState("");
 
     const { mainListData } = MainListApi();
 
@@ -40,13 +163,13 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
             { field: "projectnum", title: "웹프로젝트\n번호", show: true, editable: false, width: "130px", allowHide: false },
             { field: "projectname", title: "프로젝트명", show: true, editable: false, allowHide: false },
             { field: "register_userid", title: "등록자명", show: true, editable: false, width: "80px", allowHide: false },
-            { field: "register_date", title: "등록일", show: true, editable: false, width: "90px", allowHide: false },
+            { field: "register_date", title: "등록일", show: true, editable: false, width: "110px", allowHide: false },
             { field: "servername", title: "오픈\n서버정보", show: true, editable: false, width: "90px", allowHide: false },
             { field: "project_use_name", title: "오픈\n작업자", show: true, editable: false, width: "80px", allowHide: false },
-            { field: "project_update_date", title: "업데이트\n일자", show: true, editable: false, width: "90px", allowHide: false },
+            { field: "project_update_date", title: "업데이트\n일자", show: true, editable: false, width: "110px", allowHide: false },
             { field: "project_status", title: "작업현황", show: true, editable: true, width: "70px", allowHide: false },
             { field: "postgrecompletecount", title: "DB\n완료수", show: true, editable: true, width: "80px", allowHide: false },
-            { field: "groupposition", title: "소속", show: true, editable: true, width: "90px", allowHide: false },
+            { field: "groupposition", title: "소속", show: true, editable: true, width: "100px", allowHide: false },
             { field: "usergroup", title: "권한정보", show: true, editable: true, width: "120px", allowHide: false },
         ]);
 
@@ -74,7 +197,7 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
             sessionStorage.setItem("merge_pn", merge_pn || "");
             sessionStorage.setItem("merge_pn_text", merge_pn_text || "");
             sessionStorage.setItem("usergroup", usergroup || "");
-            
+
             // 프로젝트 변경 시 pageId, silsaPageId, pagetitle 세션 초기화
             sessionStorage.removeItem("pageId");
             sessionStorage.removeItem("silsaPageId");
@@ -114,81 +237,25 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
         />
     );
 
-    // 날짜 커스텀 셀
-    const DateTimeCell = (props) => {
-        const val = props.dataItem[props.field] || "";
-        const parts = val.split(" ");
-        if (parts.length >= 2) {
-            return (
-                <td colSpan={props.colSpan} className={props.className} style={{ ...props.style, textAlign: 'center', lineHeight: '1.3' }}>
-                    <div style={{ fontSize: '12px' }}>{parts[0]}</div>
-                    <div style={{ fontSize: '11px', color: '#666' }}>{parts.slice(1).join(" ")}</div>
-                </td>
-            );
-        }
-        return <td colSpan={props.colSpan} className={props.className} style={{ ...props.style, textAlign: 'center', fontSize: '12px' }}>{val}</td>;
-    };
-
-    //grid rendering 
-    const GridRenderer = (props) => {
-        const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField } = props;
-
-        // 필터링된 데이터 개수 계산
-        // const processedData = process(dataState?.data || [], { filter });
-        // const filteredCount = processedData.total;
-
-        return (
-            <div className="grid-wrapper" style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-                <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                    <div className="cmn_grid singlehead" style={{ flex: 1, height: "100%", overflow: "hidden" }}>
-                        <KendoGrid
-                            parentProps={{
-                                height: "100%",
-                                style: { border: "none" },
-                                data: dataState?.data,
-                                dataItemKey: dataItemKey,
-                                selectedState,
-                                setSelectedState,
-                                selectedField,
-                                idGetter,
-                                sortable: { mode: "multiple", allowUnsort: true },
-                                filterable: true,
-                                sortChange: ({ sort }) => setSort(sort ?? []),
-                                filterChange: ({ filter }) => setFilter(filter ?? undefined),
-                                sort,
-                                filter,
-                                onRowClick,
-                            }}
-                        >
-                            {columns.filter(c => c.show !== false).map((c) => {
-                                return (
-                                    <Column
-                                        key={c.field}
-                                        field={c.field}
-                                        title={c.title}
-                                        width={c.width}
-                                        editable={c.editable}
-                                        columnMenu={columnMenu}
-                                        headerClassName="k-header-center"
-                                        cell={
-                                            c.field === 'project_update_date' || c.field === 'register_date'
-                                                ? DateTimeCell
-                                                : undefined
-                                        }
-                                    />
-                                );
-                            })}
-                        </KendoGrid>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <Fragment>
             {showHeader && <DataHeader title="프로젝트 목록" />}
-            <div className="project-list-content">
+            <div
+                className={showHeader ? "project-list-content" : ""}
+                style={!showHeader ? {
+                    flex: 1,
+                    margin: 0,
+                    padding: 0,
+                    background: 'transparent',
+                    border: 'none',
+                    boxShadow: 'none',
+                    borderRadius: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
+                    boxSizing: 'border-box'
+                } : undefined}
+            >
                 <GridData
                     dataItemKey={DATA_ITEM_KEY}
                     rowNumber={"no"}
@@ -199,7 +266,17 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
                         user: auth?.user?.userId || "",
                         gb: "list"
                     }}
-                    renderItem={(props) => <GridRenderer {...props} />}
+                    renderItem={(props) => (
+                        <GridRenderer
+                            {...props}
+                            searchText={searchText}
+                            setSearchText={setSearchText}
+                            columns={columns}
+                            setSort={setSort}
+                            sort={sort}
+                            onRowClick={onRowClick}
+                        />
+                    )}
                 />
             </div>
         </Fragment>

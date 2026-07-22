@@ -489,3 +489,14 @@ body:has(.ps-modal-overlay) .tooltip-title {
 body:has(.ps-modal-overlay) .tooltip-title::before {
     background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='%237C3AED' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%237C3AED' opacity='0.12'/><path fill='%237C3AED' d='M12 7a1.25 1.25 0 1 1 0 2.5A1.25 1.25 0 0 1 12 7zm.75 4v6h-1.5v-6h1.5z'/></svg>") no-repeat center !important;
 }
+
+/* Modal Grid Font Size Override (Keep 12px as original) */
+.ps-modal-container .k-grid td,
+.ps-modal-container .k-grid .k-table-td {
+    font-size: 12px !important;
+}
+
+.ps-modal-container .k-grid th,
+.ps-modal-container .k-grid .k-table-th {
+    font-size: 12px !important;
+}
