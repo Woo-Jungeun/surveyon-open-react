@@ -2014,7 +2014,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             flexDirection: 'column',
                             gap: '8px',
                             marginTop: '4px',
-                            flex: 1,
+                            flex: '1 0 auto',
                             minHeight: '300px'
                         }}>
                             {filteredFolders.length > 0 ? (
