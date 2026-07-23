@@ -219,7 +219,7 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
 
     useEffect(() => {
         window.__onProjectSyncProgress = (progressInfo) => {
-            if (progressInfo.status === "completed" || progressInfo.status === "failed") {
+            if (!progressInfo || progressInfo.status === "completed" || progressInfo.status === "failed") {
                 setSyncProgress(null);
             } else {
                 setSyncProgress(progressInfo);
