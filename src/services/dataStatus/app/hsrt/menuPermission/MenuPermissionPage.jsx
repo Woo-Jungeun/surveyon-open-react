@@ -543,6 +543,7 @@ const MenuPermissionPage = () => {
                                 dataItemKey="value"
                                 onChange={(e) => {
                                     const roleVal = e.value?.value || "";
+                                    const prevRole = selectedRole;
                                     setSelectedRole(roleVal);
                                     if (roleVal === "client") {
                                         setSelectedUser({
@@ -550,7 +551,7 @@ const MenuPermissionPage = () => {
                                             worker_name: "H-SRT고객",
                                             position: "H-SRT고객"
                                         });
-                                    } else {
+                                    } else if (prevRole === "client") {
                                         setSelectedUser(null);
                                     }
                                 }}
