@@ -45,8 +45,16 @@ const TitleEditCell = (props) => {
 };
 
 const ActionCell = (props) => {
-    const { dataItem, editingRowId, onEdit, onSave, onCancel, className, style } = props;
+    const { dataItem, editingRowId, onEdit, onSave, onCancel, className, style, onCopy, onDelete } = props;
     const isEditing = editingRowId === dataItem.pageid;
+    const role = dataItem.my_role || "admin"; // 기본값 admin (구버전 대응)
+
+    // 권한 정의: admin, editor, viewer
+    // admin : 관리자 (관리, 읽기, 쓰기)
+    // editor : 연구원 (읽기, 쓰기)
+    // viewer : 연구원 (읽기) - 편집 및 삭제 불가
+    const canEdit = role === "admin" || role === "editor";
+    const canDelete = role === "admin"; // 삭제는 관리자만 할 수 있도록 설정 (또는 필요에 따라 canEdit로 대체 가능)
 
     if (isEditing) {
         return (
@@ -60,11 +68,16 @@ const ActionCell = (props) => {
     }
     return (
         <td className={className} style={{ ...style, padding: '4px 8px' }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                <button onClick={() => onEdit(dataItem)} className="pl-action-btn" style={{ padding: '4px 8px', fontSize: '12px' }} title="수정">수정</button>
-                <button onClick={() => props.onDelete(dataItem)} className="pl-action-btn" style={{ padding: '4px', color: '#ef4444' }} title="삭제">
-                    <Trash2 size={14} />
-                </button>
+            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
+                <button onClick={() => onCopy(dataItem)} className="pl-action-btn" style={{ padding: '4px 8px', fontSize: '12px' }} title="복사">복사</button>
+                {canEdit && (
+                    <button onClick={() => onEdit(dataItem)} className="pl-action-btn" style={{ padding: '4px 8px', fontSize: '12px' }} title="수정">수정</button>
+                )}
+                {canEdit && canDelete && (
+                    <button onClick={() => onDelete(dataItem)} className="pl-action-btn" style={{ padding: '4px', color: '#ef4444' }} title="삭제">
+                        <Trash2 size={14} />
+                    </button>
+                )}
             </div>
         </td>
     );
@@ -72,7 +85,7 @@ const ActionCell = (props) => {
 
 const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
     const auth = useSelector((store) => store.auth);
-    const { pageSet, pageList: defaultPageList, pageDelete } = VariablePageApi();
+    const { pageSet, pageList: defaultPageList, pageDelete, pageGet, pageCopy } = VariablePageApi();
     const pageList = pageListApi || defaultPageList;
     const modal = useContext(modalContext);
 
@@ -89,6 +102,11 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
             };
         });
     });
+
+    const isProjectViewer = useMemo(() => {
+        if (!localData || localData.length === 0) return false;
+        return localData.some(item => item.my_role === "viewer");
+    }, [localData]);
 
     useEffect(() => {
         if (isOpen) {
@@ -258,9 +276,41 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
         });
     }, [auth, pageDelete, modal, editingRowId]);
 
+    const handleCopyRow = useCallback(async (dataItem) => {
+        try {
+            // 서버 복사 API 요청 실행 (/pages/copy)
+            const copyRes = await pageCopy.mutateAsync({
+                pageid: dataItem.pageid || dataItem.id,
+                user: auth?.user?.userId
+            });
+
+            if (copyRes?.success === "777") {
+                // 복사 성공 시 목록 갱신
+                const refreshRes = await pageList.mutateAsync({ user: auth?.user?.userId, pn: dataItem.merge_pn });
+                if (refreshRes?.success === "777" && refreshRes.resultjson) {
+                    setLocalData(refreshRes.resultjson.map(item => {
+                        const mPn = item.merge_pn || item.pn || sessionStorage.getItem("merge_pn") || "";
+                        return {
+                            ...item,
+                            merge_pn: mPn,
+                            originalTitle: item.title,
+                            pageid: item.page_id || item.pageid || item.id || `temp_${Math.random()}`
+                        };
+                    }));
+                }
+                modal.showAlert("알림", "복사되었습니다.");
+            } else {
+                modal.showErrorAlert("오류", copyRes?.message || "복사에 실패했습니다.");
+            }
+        } catch (error) {
+            console.error("복사 중 오류:", error);
+            modal.showErrorAlert("오류", "복사 중 오류가 발생했습니다.");
+        }
+    }, [auth, pageCopy, pageList, modal]);
+
     const ActionCellWrapper = useCallback((props) => (
-        <ActionCell {...props} editingRowId={editingRowId} onEdit={handleEditRow} onSave={handleSaveRow} onCancel={handleCancelRow} onDelete={handleDeleteRow} />
-    ), [editingRowId, handleEditRow, handleSaveRow, handleCancelRow, handleDeleteRow]);
+        <ActionCell {...props} editingRowId={editingRowId} onEdit={handleEditRow} onSave={handleSaveRow} onCancel={handleCancelRow} onDelete={handleDeleteRow} onCopy={handleCopyRow} />
+    ), [editingRowId, handleEditRow, handleSaveRow, handleCancelRow, handleDeleteRow, handleCopyRow]);
 
     const columns = useMemo(() => [
         // { field: "id", title: "대시보드 ID", width: "300px" },
@@ -284,12 +334,27 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
             }
         },
         {
+            field: "my_role",
+            title: "권한",
+            width: "200px",
+            cell: (props) => {
+                const role = props.dataItem[props.field];
+                let displayVal = "-";
+                if (role === "admin") displayVal = "관리자 (관리, 읽기,쓰기)";
+                else if (role === "editor") displayVal = "연구원(읽기, 쓰기)";
+                else if (role === "viewer") displayVal = "연구원(읽기)";
+                else displayVal = "관리자 (관리, 읽기,쓰기)"; // 기본값 (기존 구버전 대응)
+                return <td className={props.className} style={props.style}>{displayVal}</td>;
+            }
+        },
+        {
             title: "편집",
-            width: "120px",
+            width: "160px",
             headerClassName: "k-header-center",
-            cell: ActionCellWrapper
+            cell: ActionCellWrapper,
+            show: !isProjectViewer
         }
-    ], [editingRowId, handleTitleChange, ActionCellWrapper]);
+    ], [editingRowId, handleTitleChange, ActionCellWrapper, isProjectViewer]);
 
     const onRowClick = useCallback((e) => {
         if (!editingRowId) {
@@ -317,11 +382,13 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
                             <Layout size={20} className="pl-header-icon" />
                             <span style={{ fontSize: "20px" }}>대시보드 목록</span>
                         </div>
-                        <div className="pl-header-actions">
-                            <button onClick={handleAddRow} className="pl-action-btn primary" title="대시보드 추가">
-                                <Plus size={14} /> 추가
-                            </button>
-                        </div>
+                        {!isProjectViewer && (
+                            <div className="pl-header-actions">
+                                <button onClick={handleAddRow} className="pl-action-btn primary" title="대시보드 추가">
+                                    <Plus size={14} /> 추가
+                                </button>
+                            </div>
+                        )}
                     </div>
                     <button className="pl-close-btn" onClick={onClose}>
                         <X size={20} />
@@ -333,7 +400,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
                             <KendoGrid
                                 parentProps={parentProps}
                             >
-                                {columns.map((c, idx) => (
+                                {columns.filter(c => c.show !== false).map((c, idx) => (
                                     <Column
                                         key={c.field || `col_${idx}`}
                                         field={c.field}

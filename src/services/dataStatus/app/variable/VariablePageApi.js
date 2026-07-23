@@ -56,10 +56,38 @@ export function VariablePageApi() {
         }
     );
 
+    /** 대시보드 상세 조회 */
+    const pageGet = useMutation(
+        async (data) => await api.post(data, "/pages/get", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => {
+                loadingSpinner.show();
+            },
+            onSettled: () => {
+                loadingSpinner.hide();
+            }
+        }
+    );
+
+    /** 대시보드 복사 */
+    const pageCopy = useMutation(
+        async (data) => await api.post(data, "/pages/copy", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => {
+                loadingSpinner.show();
+            },
+            onSettled: () => {
+                loadingSpinner.hide();
+            }
+        }
+    );
+
     return {
         getOriginalVariables,
         pageList,
         pageSet,
-        pageDelete
+        pageDelete,
+        pageGet,
+        pageCopy
     };
 }
