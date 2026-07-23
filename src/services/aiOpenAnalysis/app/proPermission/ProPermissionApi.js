@@ -37,9 +37,34 @@ export function ProPermissionApi() {
         }
     );
 
+    const pagesMembersList = useMutation(
+        async (data) => await api.post(data?.params, "/pages/members/list", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: (vars) => {
+                // loadingSpinner.show();
+            },
+            onSettled: (data, error, vars) => {
+                // loadingSpinner.hide();
+            },
+        }
+    );
+
+    const pagesMembersDelete = useMutation(
+        async (data) => await api.post(data?.params, "/pages/members/delete", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: (vars) => {
+                // loadingSpinner.show();
+            },
+            onSettled: (data, error, vars) => {
+                // loadingSpinner.hide();
+            },
+        }
+    );
 
     return {
         proPermissionData,
-        pagesMembersSet
+        pagesMembersSet,
+        pagesMembersList,
+        pagesMembersDelete
     };
 }

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect, useContext } from "react";
 import ReactDOM from 'react-dom';
-import { X, Layout, Plus, Edit2, Check, X as XIcon, Trash2 } from 'lucide-react';
+import { X, Layout, Plus, Trash2 } from 'lucide-react';
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { useSelector } from "react-redux";
@@ -19,7 +19,7 @@ const TitleEditCell = (props) => {
         if (isEditing) {
             setInputValue(dataItem[field] || dataItem.name || '');
         }
-    }, [isEditing]);
+    }, [isEditing, dataItem, field]);
 
     const handleChange = (e) => {
         const val = e.target.value;
@@ -48,6 +48,14 @@ const ActionCell = (props) => {
     const { dataItem, editingRowId, onEdit, onSave, onCancel, className, style, onCopy, onDelete } = props;
     const isEditing = editingRowId === dataItem.pageid;
     const role = dataItem.my_role || "admin"; // 기본값 admin (구버전 대응)
+
+    if (role === "viewer") {
+        return (
+            <td className={className} style={{ ...style, textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
+                -
+            </td>
+        );
+    }
 
     // 권한 정의: admin, editor, viewer
     // admin : 관리자 (관리, 읽기, 쓰기)
@@ -85,7 +93,7 @@ const ActionCell = (props) => {
 
 const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
     const auth = useSelector((store) => store.auth);
-    const { pageSet, pageList: defaultPageList, pageDelete, pageGet, pageCopy } = VariablePageApi();
+    const { pageSet, pageList: defaultPageList, pageDelete, pageCopy } = VariablePageApi();
     const pageList = pageListApi || defaultPageList;
     const modal = useContext(modalContext);
 
@@ -102,11 +110,6 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
             };
         });
     });
-
-    const isProjectViewer = useMemo(() => {
-        if (!localData || localData.length === 0) return false;
-        return localData.some(item => item.my_role === "viewer");
-    }, [localData]);
 
     useEffect(() => {
         if (isOpen) {
@@ -167,11 +170,11 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
 
             const result = await pageSet.mutateAsync(payload);
 
-            if (result?.success === "777") {
+            if (result?.success == "777") {
                 // 저장 성공 시 목록 재조회
                 const refreshRes = await pageList.mutateAsync({ user: auth?.user?.userId, pn: dataItem.merge_pn });
 
-                if (refreshRes?.success === "777" && refreshRes.resultjson) {
+                if (refreshRes?.success == "777" && refreshRes.resultjson) {
                     setLocalData(refreshRes.resultjson.map(item => {
                         const mPn = item.merge_pn || item.pn || sessionStorage.getItem("merge_pn") || "";
                         return {
@@ -206,7 +209,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
             console.error(error);
             modal.showErrorAlert("오류", "저장 중 오류가 발생했습니다.");
         }
-    }, [auth, pageSet, modal]);
+    }, [auth, pageSet, pageList, modal]);
 
     const handleCancelRow = useCallback((dataItem) => {
         if (dataItem.isNew) {
@@ -245,7 +248,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
                             };
                             const result = await pageDelete.mutateAsync(payload);
 
-                            if (result?.success === "777") {
+                            if (result?.success == "777") {
                                 // 삭제 성공 시 화면에서 해당 줄 제거
                                 setLocalData(prevData => prevData.filter(item =>
                                     (item.pageid !== dataItem.pageid && item.id !== dataItem.id)
@@ -284,10 +287,10 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
                 user: auth?.user?.userId
             });
 
-            if (copyRes?.success === "777") {
+            if (copyRes?.success == "777") {
                 // 복사 성공 시 목록 갱신
                 const refreshRes = await pageList.mutateAsync({ user: auth?.user?.userId, pn: dataItem.merge_pn });
-                if (refreshRes?.success === "777" && refreshRes.resultjson) {
+                if (refreshRes?.success == "777" && refreshRes.resultjson) {
                     setLocalData(refreshRes.resultjson.map(item => {
                         const mPn = item.merge_pn || item.pn || sessionStorage.getItem("merge_pn") || "";
                         return {
@@ -351,10 +354,9 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
             title: "편집",
             width: "160px",
             headerClassName: "k-header-center",
-            cell: ActionCellWrapper,
-            show: !isProjectViewer
+            cell: ActionCellWrapper
         }
-    ], [editingRowId, handleTitleChange, ActionCellWrapper, isProjectViewer]);
+    ], [editingRowId, handleTitleChange, ActionCellWrapper]);
 
     const onRowClick = useCallback((e) => {
         if (!editingRowId) {
@@ -382,13 +384,11 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
                             <Layout size={20} className="pl-header-icon" />
                             <span style={{ fontSize: "20px" }}>대시보드 목록</span>
                         </div>
-                        {!isProjectViewer && (
-                            <div className="pl-header-actions">
-                                <button onClick={handleAddRow} className="pl-action-btn primary" title="대시보드 추가">
-                                    <Plus size={14} /> 추가
-                                </button>
-                            </div>
-                        )}
+                        <div className="pl-header-actions">
+                            <button onClick={handleAddRow} className="pl-action-btn primary" title="대시보드 추가">
+                                <Plus size={14} /> 추가
+                            </button>
+                        </div>
                     </div>
                     <button className="pl-close-btn" onClick={onClose}>
                         <X size={20} />
@@ -400,7 +400,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
                             <KendoGrid
                                 parentProps={parentProps}
                             >
-                                {columns.filter(c => c.show !== false).map((c, idx) => (
+                                {columns.map((c, idx) => (
                                     <Column
                                         key={c.field || `col_${idx}`}
                                         field={c.field}

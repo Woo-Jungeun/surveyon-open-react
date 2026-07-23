@@ -1,245 +1,249 @@
 .menu-permission-container {
     display: flex;
-    flex: 1;
-    overflow: hidden;
+    gap: 20px;
+    padding: 20px;
+    height: calc(100vh - 100px);
+    box-sizing: border-box;
     background-color: #f8fafc;
-    gap: 24px;
-    padding: 24px;
 }
 
-/* 좌측 사용자 목록 영역 */
-.user-list-panel {
-    width: 320px;
+/* Left panel style */
+.mp-form-panel {
+    flex: 1;
     background-color: #fff;
     border-radius: 12px;
     border: 1px solid #e2e8f0;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    flex-shrink: 0;
+    max-width: 400px;
 }
 
-.user-list-header {
-    padding: 20px 20px 16px;
-    border-bottom: 1px solid #e2e8f0;
+.mp-form-header {
+    margin-bottom: 24px;
 }
 
-.user-list-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 16px;
+.mp-form-title {
+    font-size: 18px;
     font-weight: 700;
     color: #1e293b;
+    margin: 0;
+}
+
+.mp-form-desc {
+    font-size: 13px;
+    color: #64748b;
+    margin: 4px 0 0 0;
+}
+
+.mp-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.mp-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mp-form-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.mp-required {
+    color: #ef4444;
+}
+
+.mp-btn-submit {
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    background-color: #3b82f6 !important;
+    color: #fff !important;
+}
+
+.mp-btn-submit:hover {
+    background-color: #2563eb !important;
+}
+
+.mp-btn-submit:disabled {
+    background-color: #93c5fd !important;
+    color: #fff !important;
+    cursor: default !important;
+}
+
+/* Right panel style */
+.mp-grid-panel {
+    flex: 2;
+    background-color: #fff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.mp-grid-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 16px;
 }
 
-.perm-search-box {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.perm-search-box svg {
-    position: absolute;
-    left: 12px;
-    color: #94a3b8;
-}
-
-.perm-search-box input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 10px 12px 10px 36px !important;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 13px;
-    background-color: #f8fafc;
-    outline: none;
-    transition: all 0.2s;
-}
-
-.perm-search-box input:focus {
-    border-color: #3b82f6;
-    background-color: #fff;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-}
-
-.user-list-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 12px;
-}
-
-.perm-user-card {
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    border: 1px solid #f1f5f9;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    background-color: #fff;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.perm-user-card:hover {
-    border-color: #cbd5e1;
-    background-color: #f8fafc;
-}
-
-.perm-user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    font-weight: 600;
-    color: #fff;
-    margin-right: 12px;
-}
-
-/* 아바타 색상 */
-.avatar-bg-0 {
-    background-color: #3b82f6;
-}
-
-.avatar-bg-1 {
-    background-color: #10b981;
-}
-
-.avatar-bg-2 {
-    background-color: #f59e0b;
-}
-
-.avatar-bg-3 {
-    background-color: #6366f1;
-}
-
-.perm-user-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.perm-user-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: #0f172a;
-    margin-bottom: 2px;
-}
-
-.perm-user-email {
-    font-size: 12px;
-    color: #64748b;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.role-badge {
-    font-size: 11px;
-    font-weight: 500;
-    padding: 4px 10px;
-    border-radius: 12px;
-    margin-left: 8px;
-    white-space: nowrap;
-}
-
-/* 뱃지 색상 */
-.role-badge.researcher {
-    color: #3b82f6;
-    background-color: #eff6ff;
-    border: 1px solid #bfdbfe;
-}
-
-.role-badge.creator {
-    color: #10b981;
-    background-color: #ecfdf5;
-    border: 1px solid #a7f3d0;
-}
-
-.role-badge.client {
-    color: #f59e0b;
-    background-color: #fffbeb;
-    border: 1px solid #fde68a;
-}
-
-.role-badge.default {
-    color: #64748b;
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
-}
-
-/* 우측 뼈대 영역 */
-.permission-setting-panel {
-    flex: 1;
-    background-color: #fff;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
-}
-
-.permission-header {
-    padding: 24px;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.permission-title {
+.mp-search-box {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 16px;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 20px;
-}
-
-.role-tabs {
-    display: flex;
-    gap: 12px;
-}
-
-.role-tab {
-    flex: 1;
-    padding: 10px 0;
-    text-align: center;
+    border: 1px solid #cbd5e1;
     border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    border: 1px solid #e2e8f0;
-    color: #64748b;
+    padding: 6px 12px;
+    width: 240px;
     background-color: #fff;
+}
+
+.mp-search-box input {
+    border: none !important;
+    outline: none !important;
+    font-size: 13px !important;
+    width: 100% !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.mp-grid-wrap {
+    flex: 1;
+    overflow: hidden;
+}
+
+.mp-del-btn {
+    padding: 4px 8px;
+    background-color: #fff;
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
     transition: all 0.2s;
 }
 
-.role-tab.active {
-    background-color: #4f46e5;
-    color: #fff;
-    border-color: #4f46e5;
+.mp-del-btn:hover {
+    background-color: #fef2f2;
 }
 
-.permission-content {
-    flex: 1;
-    padding: 24px;
-    overflow-y: auto;
-    background-color: #f8fafc;
+/* ==========================================================================
+   H-SRT Blue Theme Overrides for Orange components
+   ========================================================================== */
+
+/* Grid data count number orange -> blue */
+.menu-permission-page .grid-data-count__number,
+.mp-grid-panel .grid-data-count__number {
+    color: #3b82f6 !important;
 }
 
-/* 준비중 컨텐츠 임시 영역 */
-.placeholder-content {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    font-size: 15px;
-    border: 2px dashed #cbd5e1;
-    border-radius: 8px;
-    background-color: #fff;
+/* Kendo dropdown focus states scoped to form panel */
+.mp-form-panel .k-dropdownlist:focus,
+.mp-form-panel .k-dropdownlist.k-focus,
+.mp-form-panel .k-dropdownlist:focus-within,
+.mp-form-panel .k-picker:focus,
+.mp-form-panel .k-picker.k-focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.18) !important;
+}
+
+/* Scoped Dropdown list popup container styles using custom class */
+.mp-dropdown-popup .k-popup,
+.mp-dropdown-popup.k-popup {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+.mp-dropdown-popup.k-animation-container,
+.mp-dropdown-popup.k-animation-container-shown {
+    border: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Dropdown filter search box default border */
+.mp-dropdown-popup .k-list-filter .k-input,
+.mp-dropdown-popup .k-list-filter .k-searchbox {
+    border: 1px solid #cbd5e1 !important;
+    background-color: #fff !important;
+    box-shadow: none !important;
+    border-radius: 6px !important;
+}
+
+/* Remove vertical lines and inner borders inside dropdown searchbox */
+.mp-dropdown-popup .k-input-inner,
+.mp-dropdown-popup .k-input-prefix,
+.mp-dropdown-popup .k-input-suffix,
+.mp-dropdown-popup .k-input-separator {
+    border: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Dropdown filter search box active/focus border */
+.mp-dropdown-popup .k-list-filter .k-input:focus-within,
+.mp-dropdown-popup .k-list-filter .k-searchbox:focus-within {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.18) !important;
+}
+
+/* Selection and hover styles in dropdown lists */
+.mp-dropdown-popup .k-list .k-selected,
+.mp-dropdown-popup .k-list-item.k-selected {
+    background-color: #eff6ff !important;
+    color: #3b82f6 !important;
+}
+
+.mp-dropdown-popup .k-list-item:hover {
+    background-color: #dbeafe !important;
+    color: #3b82f6 !important;
+}
+
+/* Disabled/Read-only input fields on dashboard permission page */
+.mp-form-panel .mp-input-disabled:disabled,
+.mp-form-panel input:disabled,
+.mp-form-panel input[disabled],
+.mp-form-panel .mp-input-disabled {
+    background-color: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #475569 !important;
+    padding: 8px 12px !important;
+    border-radius: 6px !important;
+    width: 100% !important;
+    height: 38px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    cursor: default !important;
+    box-sizing: border-box !important;
+    outline: none !important;
+}
+
+/* Stylize disabled Kendo DropdownList to match the read-only input background style */
+.mp-form-panel .k-dropdownlist.k-disabled,
+.mp-form-panel .k-picker.k-disabled,
+.mp-form-panel .k-dropdownlist.k-disabled .k-input-inner,
+.mp-form-panel .k-dropdownlist.k-disabled .k-input-button,
+.mp-form-panel .k-picker.k-disabled .k-input-inner,
+.mp-form-panel .k-picker.k-disabled .k-input-button {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+    cursor: default !important;
 }

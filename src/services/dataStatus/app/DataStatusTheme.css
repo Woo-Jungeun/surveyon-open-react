@@ -51,11 +51,7 @@
     color: var(--ds-text-main);
 }
 
-/* Grid Header */
-[data-theme="data-dashboard"] .k-grid-header {
-    background-color: var(--ds-primary-light);
-    border-bottom: 2px solid var(--ds-primary-border);
-}
+
 
 [data-theme="data-dashboard"] .k-grid-header .k-header {
     background-color: transparent;

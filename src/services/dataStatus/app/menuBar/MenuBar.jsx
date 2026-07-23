@@ -292,7 +292,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
       const pageRes = await pageList.mutateAsync({ user: user, pn: mergePn });
 
-      if (pageRes?.success === "777") {
+      if (pageRes?.success == "777") {
         const pages = pageRes.resultjson || [];
         if (pages.length === 1) {
           // 한 개일 때 바로 선택 (자동 저장)
@@ -335,7 +335,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       const mergePn = sessionStorage.getItem("merge_pn");
       if (user && mergePn) {
         pageList.mutateAsync({ user: user, pn: mergePn }).then(res => {
-          if (res?.success === "777") {
+          if (res?.success == "777") {
             setPageListData(res.resultjson);
             setIsPageListPopupOpen(true);
           }
@@ -370,7 +370,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     computedMenuGroups.push({
       label: "시스템 관리",
       items: [
-        { label: "메뉴 권한 설정", path: "/data_status/hsrt/menu_permission", icon: ShieldCheck },
+        { label: "대시보드 권한 설정", path: "/data_status/hsrt/menu_permission", icon: ShieldCheck },
       ]
     });
   }
