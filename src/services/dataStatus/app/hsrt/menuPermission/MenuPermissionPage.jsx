@@ -25,20 +25,16 @@ const getPermissionsArrayForRole = (role) => {
         return [
             "page.view.data",
             "page.view.variables_map",
-            "page.analysis.frequency",
             "page.analysis.cross",
-            "page.analysis.additional",
-            "page.analysis.quota"
+            "page.analysis.additional"
         ];
     }
     if (role === 'editor') {
         return [
             "page.view.data",
             "page.view.variables_map",
-            "page.analysis.frequency",
             "page.analysis.cross",
             "page.analysis.additional",
-            "page.analysis.quota",
             "page.setting.page",
             "page.setting.recoding",
             "page.setting.dp_request",
@@ -50,10 +46,8 @@ const getPermissionsArrayForRole = (role) => {
         return [
             "page.view.data",
             "page.view.variables_map",
-            "page.analysis.frequency",
             "page.analysis.cross",
             "page.analysis.additional",
-            "page.analysis.quota",
             "page.setting.page",
             "page.setting.recoding",
             "page.setting.dp_request",
@@ -69,10 +63,8 @@ const getPermissionsArrayForRole = (role) => {
 const getPermissionsText = (permissionsList) => {
     if (!permissionsList || !permissionsList.length) return "없음";
     const permissionMapping = {
-        "page.analysis.frequency": "빈도분석",
         "page.analysis.cross": "교차분석",
         "page.analysis.additional": "추가분석",
-        "page.analysis.quota": "쿼터현황/관리",
         "page.setting.page": "페이지 설정",
         "page.setting.recoding": "스터브 생성",
         "page.setting.dp_request": "DP 의뢰서 정의",
@@ -454,6 +446,16 @@ const MenuPermissionPage = () => {
             }
         });
 
+        // 3.5. 등록일(regDate) 내림차순(최신순) 정렬 (등록일 없는 경우 가장 뒤로)
+        mergedList.sort((a, b) => {
+            const dateA = a.regDate || "";
+            const dateB = b.regDate || "";
+            if (dateA === "-" && dateB === "-") return 0;
+            if (dateA === "-") return 1;
+            if (dateB === "-") return -1;
+            return dateB.localeCompare(dateA);
+        });
+
         // 4. 번호 매기기 및 상태 매핑
         return mergedList.map((item, idx) => ({
             ...item,
@@ -477,7 +479,14 @@ const MenuPermissionPage = () => {
                 (u.expiredDate && u.expiredDate.toLowerCase().includes(query))
             );
         }
-        return process(items, { sort, filter });
+        const sorted = process(items, { sort, filter });
+        if (sorted && sorted.data) {
+            sorted.data = sorted.data.map((item, idx) => ({
+                ...item,
+                no: idx + 1
+            }));
+        }
+        return sorted;
     }, [numberedData, searchQuery, sort, filter]);
 
     if (!pageId) {
@@ -684,6 +693,7 @@ const MenuPermissionPage = () => {
                                 data: processedData.data,
                                 total: processedData.total,
                                 dataItemKey: "user_id",
+                                reorderable: true,
                                 sortable: { mode: "multiple", allowUnsort: true },
                                 filterable: true,
                                 sortChange: ({ sort }) => setSort(sort ?? []),

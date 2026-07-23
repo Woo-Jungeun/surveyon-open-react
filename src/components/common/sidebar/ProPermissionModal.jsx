@@ -339,6 +339,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                                     data: processedData.data,
                                     total: processedData.total,
                                     dataItemKey: "no",
+                                    reorderable: true,
                                     sortable: { mode: "multiple", allowUnsort: true },
                                     filterable: true,
                                     sortChange: ({ sort }) => setSort(sort ?? []),

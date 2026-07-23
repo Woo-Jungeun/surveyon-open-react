@@ -1,7 +1,5 @@
 import { useMutation } from "react-query";
 import api from "@/common/queries/Api.js";
-import { useContext } from "react";
-import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
 /**
  * 권한 관리 > API
@@ -11,54 +9,38 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
  */
 export function ProPermissionApi() {
 
-    const loadingSpinner = useContext(loadingSpinnerContext);
-
     const proPermissionData = useMutation(
-        async (data) => await api.post(data?.params, "/pro_permission_api.aspx", "EX_API_BASE_URL"),
-        {
-            onMutate: (vars) => {
-                // loadingSpinner.show();
-            },
-            onSettled: (data, error, vars) => {
-                // loadingSpinner.hide();
-            },
-        }
+        async (data) => await api.post(data?.params, "/pro_permission_api.aspx", "EX_API_BASE_URL")
     );
 
     const pagesMembersSet = useMutation(
-        async (data) => await api.post(data?.params, "/pages/members/set", "API_BASE_URL_DATASTATUS"),
-        {
-            onMutate: (vars) => {
-                // loadingSpinner.show();
-            },
-            onSettled: (data, error, vars) => {
-                // loadingSpinner.hide();
-            },
+        async (data) => {
+            const groupcode = sessionStorage.getItem("groupcode");
+            const myRole = groupcode === "999999991" ? "client" : (sessionStorage.getItem("myRole") || "");
+            const payload = {
+                ...data?.params,
+                my_role: data?.params?.my_role || myRole,
+                groupcode: data?.params?.groupcode || groupcode || ""
+            };
+            return await api.post(payload, "/pages/members/set", "API_BASE_URL_DATASTATUS");
         }
     );
 
     const pagesMembersList = useMutation(
-        async (data) => await api.post(data?.params, "/pages/members/list", "API_BASE_URL_DATASTATUS"),
-        {
-            onMutate: (vars) => {
-                // loadingSpinner.show();
-            },
-            onSettled: (data, error, vars) => {
-                // loadingSpinner.hide();
-            },
+        async (data) => {
+            const groupcode = sessionStorage.getItem("groupcode");
+            const myRole = groupcode === "999999991" ? "client" : (sessionStorage.getItem("myRole") || "");
+            const payload = {
+                ...data?.params,
+                role: data?.params?.role || myRole,
+                groupcode: data?.params?.groupcode || groupcode || ""
+            };
+            return await api.post(payload, "/pages/members/list", "API_BASE_URL_DATASTATUS");
         }
     );
 
     const pagesMembersDelete = useMutation(
-        async (data) => await api.post(data?.params, "/pages/members/delete", "API_BASE_URL_DATASTATUS"),
-        {
-            onMutate: (vars) => {
-                // loadingSpinner.show();
-            },
-            onSettled: (data, error, vars) => {
-                // loadingSpinner.hide();
-            },
-        }
+        async (data) => await api.post(data?.params, "/pages/members/delete", "API_BASE_URL_DATASTATUS")
     );
 
     return {

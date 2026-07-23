@@ -9,17 +9,21 @@ export function VariablePageApi() {
 
     /** 문항관리 목록 조회 */
     const getOriginalVariables = useMutation(
-        async (data) => await api.post(data, "/datasets/variables", "API_BASE_URL_DATASTATUS"),
-        {
-            onMutate: (vars) => {
-                // loadingSpinner.show();
-            }
-        }
+        async (data) => await api.post(data, "/datasets/variables", "API_BASE_URL_DATASTATUS")
     );
 
     /** 대시보드 목록 조회 */
     const pageList = useMutation(
-        async (data) => await api.post(data, "/pages/list", "API_BASE_URL_DATASTATUS"),
+        async (data) => {
+            const groupcode = sessionStorage.getItem("groupcode");
+            const role = groupcode === "999999991" ? "client" : "";
+            const payload = {
+                ...data,
+                role: data?.role || role,
+                groupcode: data?.groupcode || groupcode || ""
+            };
+            return await api.post(payload, "/pages/list", "API_BASE_URL_DATASTATUS");
+        },
         {
             onMutate: () => {
                 loadingSpinner.show();

@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useContext, useEffect, useState } from "react";
 import Sidebar from "@/components/common/sidebar/Sidebar";
 import {
@@ -226,9 +228,10 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
     if (!userId || !pageId) return;
 
-    // Save pageId and pagetitle to session storage
+    // Save pageId, pagetitle, and myRole to session storage
     sessionStorage.setItem("pageId", pageId);
     sessionStorage.setItem("pagetitle", pageTitle);
+    sessionStorage.setItem("myRole", selectedPage.my_role || "");
     window.dispatchEvent(new Event("pageSelected"));
 
     setPageState({
@@ -266,6 +269,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     // Reset page info on project change
     sessionStorage.setItem("pageId", "");
     sessionStorage.setItem("pagetitle", "");
+    sessionStorage.setItem("myRole", "");
     setPageState({
       title: "대시보드(수정가능)",
       merge_pn: "-"
@@ -325,6 +329,30 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     window.addEventListener("pageSelected", handlePageUpdate);
     return () => window.removeEventListener("pageSelected", handlePageUpdate);
   }, []);
+
+  // 대시보드 권한 정보 실시간 갱신 및 sessionStorage 세팅
+  useEffect(() => {
+    const fetchMyRole = async () => {
+      const user = auth?.user?.userId;
+      const mergePn = sessionStorage.getItem("merge_pn");
+      const currentPageId = sessionStorage.getItem("pageId");
+      if (user && mergePn && currentPageId) {
+        try {
+          const pageRes = await pageList.mutateAsync({ user: user, pn: mergePn });
+          if (pageRes?.success === "777") {
+            const pages = pageRes.resultjson || [];
+            const currentPage = pages.find(p => (p.page_id || p.pageid || p.id) === currentPageId);
+            if (currentPage) {
+              sessionStorage.setItem("myRole", currentPage.my_role || "");
+            }
+          }
+        } catch (e) {
+          console.warn("fetchMyRole error", e);
+        }
+      }
+    };
+    fetchMyRole();
+  }, [auth?.user?.userId, pageState.title]);
 
   // 사이드바에 전달할 대시보드 정보
   const sidebarPageInfo = {
