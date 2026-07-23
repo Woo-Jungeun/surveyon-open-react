@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useMemo } from "react";
+import { useState, useContext, useEffect, useMemo } from "react";
 import ReactDOM from "react-dom";
 import { X, Trash2, ShieldCheck, UserPlus, Info } from "lucide-react";
 import { Input } from "@progress/kendo-react-inputs";
@@ -12,19 +12,17 @@ import { ProPermissionApi } from "@/services/aiOpenAnalysis/app/proPermission/Pr
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import GridDataCount from "@/components/common/grid/GridDataCount";
 import moment from "moment";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import "./ProPermissionModal.css";
 
 const ProPermissionModal = ({ open, onClose }) => {
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
-    const navigate = useNavigate();
     const location = useLocation();
-    const { proPermissionData, pagesMembersSet } = ProPermissionApi();
+    const { proPermissionData } = ProPermissionApi();
 
     const projectnum = sessionStorage.getItem("projectnum");
     const projectname = sessionStorage.getItem("projectname");
-    const projectpof = sessionStorage.getItem("projectpof");
 
     const [loading, setLoading] = useState(false);
     const [gridData, setGridData] = useState([]);
@@ -51,7 +49,9 @@ const ProPermissionModal = ({ open, onClose }) => {
                 params: { gb: "worker_list", projectnum, user: auth?.user?.userId || "" }
             });
             if (res?.success === "777") setGridData(res?.resultjson || []);
-        } catch { }
+        } catch (err) {
+            console.error("fetchData error", err);
+        }
     };
 
     const fetchUserList = async (searchText = "") => {
@@ -67,7 +67,8 @@ const ProPermissionModal = ({ open, onClose }) => {
             } else {
                 setUserOptions([]);
             }
-        } catch {
+        } catch (err) {
+            console.error("fetchUserList error", err);
             setUserOptions([]);
         }
     };
@@ -90,7 +91,7 @@ const ProPermissionModal = ({ open, onClose }) => {
             if (!formData.worker_name.trim()) errs.push("고객 이름을 입력해 주세요.");
             if (!formData.worker_id.trim()) errs.push("고객 이메일을 입력해 주세요.");
             if (!formData.worker_password.trim()) errs.push("고객 비밀번호를 입력해 주세요.");
-        } else if (formData.permission_gubun !== "H-SRT고객") {
+        } else {
             if (!formData.worker_name.trim()) errs.push("작업자 이름을 입력해 주세요.");
         }
         if (errs.length) { modal.showErrorAlert("알림", errs.join("\n"), { themeClass: "purple-theme" }); return; }
@@ -98,32 +99,17 @@ const ProPermissionModal = ({ open, onClose }) => {
         try {
             setLoading(true);
             let worker_position = "";
-            let worker_name_override = formData.worker_name;
-            let page_id = "";
-            let page_title = "";
             if (formData.permission_gubun === "고객(읽기)") worker_position = "고객";
             else if (formData.permission_gubun === "일반(읽기)") worker_position = "일반";
-            else if (formData.permission_gubun === "H-SRT고객") {
-                worker_position = "H-SRT고객";
-                worker_name_override = "H-SRT고객";
-                page_id = sessionStorage.getItem("pageId") || "";
-                page_title = sessionStorage.getItem("pagetitle") || "";
-            }
 
             const reqParams = {
                 gb: "worker_enter", projectname, projectnum, ...formData,
-                worker_name: worker_name_override,
                 worker_position: formData.worker_position || worker_position || "",
                 worker_expired: formData.worker_expired
                     ? moment(formData.worker_expired).set({ hour: 23, minute: 59, second: 59 }).format("YYYY-MM-DD HH:mm:ss")
                     : "",
                 user: auth?.user?.userId || "",
             };
-
-            if (formData.permission_gubun === "H-SRT고객") {
-                reqParams.page_id = page_id;
-                reqParams.page_title = page_title;
-            }
 
             const res = await proPermissionData.mutateAsync({
                 params: reqParams,
@@ -135,46 +121,6 @@ const ProPermissionModal = ({ open, onClose }) => {
                         {
                             title: "확인",
                             click: async () => {
-                                const pageId = sessionStorage.getItem("pageId");
-                                if (pageId) {
-                                    let targetUserId = formData.worker_id;
-
-                                    // [TODO: 차후 API 적용 시 아래 주석 해제하여 사용]
-
-                                    // H-SRT고객의 경우 서버에서 생성해서 내려준 workerid를 사용
-                                    if (formData.permission_gubun === "H-SRT고객" && res.resultjson && res.resultjson.length > 0) {
-                                        targetUserId = res.resultjson[0].workerid;
-                                    }
-
-
-                                    // (임시 조치) API 미운영 상태이므로 일단 리스트를 다시 조회해서 가장 마지막 항목의 worker_id를 가져옴
-                                    // if (formData.permission_gubun === "H-SRT고객") {
-                                    //     try {
-                                    //         const listRes = await proPermissionData.mutateAsync({
-                                    //             params: { gb: "worker_list", projectnum, user: auth?.user?.userId || "" }
-                                    //         });
-                                    //         if (listRes?.success === "777" && listRes.resultjson && listRes.resultjson.length > 0) {
-                                    //             const listData = listRes.resultjson;
-                                    //             targetUserId = listData[listData.length - 1].worker_id || listData[listData.length - 1].id;
-                                    //         }
-                                    //     } catch (e) {
-                                    //         console.error("임시 목록 조회 실패: ", e);
-                                    //     }
-                                    // }
-
-                                    try {
-                                        await pagesMembersSet.mutateAsync({
-                                            params: {
-                                                pageid: pageId,
-                                                user_id: targetUserId,
-                                                role: "admin",
-                                                user: auth?.user?.userId || ""
-                                            }
-                                        });
-                                    } catch (e) {
-                                        console.error("pagesMembersSet API 호출 실패: ", e);
-                                    }
-                                }
                                 await fetchData();
                                 setFormData(initForm());
                             }
@@ -186,8 +132,12 @@ const ProPermissionModal = ({ open, onClose }) => {
             } else {
                 modal.showErrorAlert("에러", res?.message || "등록 중 오류가 발생했습니다.", { themeClass: "purple-theme" });
             }
-        } catch { modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다.", { themeClass: "purple-theme" }); }
-        finally { setLoading(false); }
+        } catch (err) { 
+            console.error("handleSubmit error", err);
+            modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다.", { themeClass: "purple-theme" }); 
+        } finally { 
+            setLoading(false); 
+        }
     };
 
     const handleDeleteProject = () => {
@@ -216,7 +166,10 @@ const ProPermissionModal = ({ open, onClose }) => {
                                     }]
                                 });
                             } else { modal.showErrorAlert("에러", res?.message || "삭제 중 오류가 발생했습니다.", { themeClass: "purple-theme" }); }
-                        } catch { modal.showErrorAlert("오류", "삭제 요청 중 네트워크 오류가 발생했습니다.", { themeClass: "purple-theme" }); }
+                        } catch (err) { 
+                            console.error("handleDeleteProject error", err);
+                            modal.showErrorAlert("오류", "삭제 요청 중 네트워크 오류가 발생했습니다.", { themeClass: "purple-theme" }); 
+                        }
                     }
                 }
             ]
@@ -237,16 +190,24 @@ const ProPermissionModal = ({ open, onClose }) => {
                             });
                             if (res?.success === "777") { modal.showAlert("알림", "사용자가 삭제되었습니다.", { themeClass: "purple-theme" }); await fetchData(); }
                             else { modal.showErrorAlert("에러", res?.message || "삭제 중 오류가 발생했습니다.", { themeClass: "purple-theme" }); }
-                        } catch { modal.showErrorAlert("오류", "삭제 요청 중 네트워크 오류가 발생했습니다.", { themeClass: "purple-theme" }); }
+                        } catch (err) { 
+                            console.error("handleDeleteWorker error", err);
+                            modal.showErrorAlert("오류", "삭제 요청 중 네트워크 오류가 발생했습니다.", { themeClass: "purple-theme" }); 
+                        }
                     }
                 }
             ]
         });
     };
 
-    const numberedData = useMemo(() => gridData.map((item, idx) => ({ ...item, no: idx + 1 })), [gridData]);
+    const numberedData = useMemo(() => {
+        const filtered = gridData.filter(
+            (item) => item.permission_gubun !== "H-SRT고객" && item.worker_name !== "H-SRT고객"
+        );
+        return filtered.map((item, idx) => ({ ...item, no: idx + 1 }));
+    }, [gridData]);
+
     const processedData = useMemo(() => process(numberedData, { sort, filter }), [numberedData, sort, filter]);
-    const hasHsrtCustomer = useMemo(() => gridData.some(item => item.permission_gubun === "H-SRT고객"), [gridData]);
 
     if (!open) return null;
 
@@ -302,11 +263,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                                 <label className="pp-form-label">작업 권한 <span className="pp-required">*</span></label>
                                 <DropDownList
                                     className={!formData.permission_gubun ? "pp-dropdown-placeholder" : ""}
-                                    data={
-                                        location.pathname.startsWith("/data_status")
-                                            ? ["오픈팀(관리,읽기,쓰기)", "제작자(관리,읽기,쓰기)", "연구원(읽기,쓰기)", "H-SRT고객"]
-                                            : ["오픈팀(관리,읽기,쓰기)", "제작자(관리,읽기,쓰기)", "연구원(읽기,쓰기)"]
-                                    }
+                                    data={["오픈팀(관리,읽기,쓰기)", "제작자(관리,읽기,쓰기)", "연구원(읽기,쓰기)"]}
                                     value={formData.permission_gubun}
                                     onChange={(e) => handleChange("permission_gubun", e.value)}
                                     disabled={loading}
@@ -318,7 +275,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                                     <label className="pp-form-label">고객명 <span className="pp-required">*</span></label>
                                     <Input className="k-input k-input-solid" value={formData.worker_name || ""} onChange={(e) => handleChange("worker_name", e.value)} disabled={loading} placeholder="고객명을 입력해 주세요" />
                                 </div>
-                            ) : formData.permission_gubun === "H-SRT고객" ? null : (
+                            ) : (
                                 <div className="pp-form-field">
                                     <label className="pp-form-label">작업자 선택 <span className="pp-required">*</span></label>
                                     <DropDownList
@@ -395,7 +352,6 @@ const ProPermissionModal = ({ open, onClose }) => {
                                 <Column field="worker_name" title="이름" width="100px" />
                                 <Column field="permission_gubun" title="권한" width="160px" />
                                 <Column field="worker_id" title="ID" />
-                                {hasHsrtCustomer && <Column field="page_title" title="페이지 명" width="200px" />}
                                 <Column
                                     field="register_date"
                                     title="등록일"
