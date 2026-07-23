@@ -3,12 +3,14 @@ import DataHeader from "@/services/dataStatus/components/DataHeader";
 import { Search, UserPlus, Info } from "lucide-react";
 import { useSelector } from "react-redux";
 import { DropDownList } from "@progress/kendo-react-dropdowns";
+import { DatePicker } from "@progress/kendo-react-dateinputs";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { process } from "@progress/kendo-data-query";
 import { modalContext } from "@/components/common/Modal.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import GridDataCount from "@/components/common/grid/GridDataCount";
 import { ProPermissionApi } from "@/services/aiOpenAnalysis/app/proPermission/ProPermissionApi.js";
+import moment from "moment";
 import './MenuPermissionPage.css';
 
 const ROLE_OPTIONS = [
@@ -96,6 +98,7 @@ const MenuPermissionPage = () => {
     const [pageMembers, setPageMembers] = useState([]); // Page members
     const [selectedUser, setSelectedUser] = useState(null);
     const [selectedRole, setSelectedRole] = useState("");
+    const [expiredDate, setExpiredDate] = useState(() => moment().add(100, "years").toDate());
 
     const [searchQuery, setSearchQuery] = useState("");
     const [loading, setLoading] = useState(false);
@@ -202,6 +205,7 @@ const MenuPermissionPage = () => {
     useEffect(() => {
         setSelectedUser(null);
         setSelectedRole("");
+        setExpiredDate(moment().add(100, "years").toDate());
         fetchProjectWorkers();
         fetchPageMembers();
         fetchUserSearch(""); // Initial load
@@ -227,8 +231,12 @@ const MenuPermissionPage = () => {
     const isEditMode = useMemo(() => {
         if (!selectedUser) return false;
         const userId = selectedUser.worker_id || selectedUser.user_id;
-        return pageMembers.some(m => m.user_id === userId);
-    }, [selectedUser, pageMembers]);
+
+        const inPageMembers = pageMembers.some(m => m.user_id === userId);
+        const inProjectWorkers = userList.some(w => w.worker_id === userId && w.permission_gubun === "H-SRT고객" && w.page_id === pageId);
+
+        return inPageMembers || inProjectWorkers;
+    }, [selectedUser, pageMembers, userList, pageId]);
 
     // Handle dropdown user selection
     const handleDropdownChange = (e) => {
@@ -261,10 +269,50 @@ const MenuPermissionPage = () => {
             return;
         }
 
-        const userId = selectedUser.worker_id || selectedUser.user_id;
-
         try {
             setLoading(true);
+            let userId = selectedUser.worker_id || selectedUser.user_id;
+
+            // 만약 H-SRT고객(client)이면 프로젝트 작업자 등록 API(worker_enter)만 호출
+            if (selectedRole === 'client') {
+                const projectnum = sessionStorage.getItem("projectnum");
+                const projectname = sessionStorage.getItem("projectname");
+
+                const enterRes = await proPermissionData.mutateAsync({
+                    params: {
+                        gb: "worker_enter",
+                        projectname,
+                        projectnum,
+                        pof: sessionStorage.getItem("projectpof") || "",
+                        permission_gubun: "H-SRT고객",
+                        worker_name: "H-SRT고객",
+                        worker_id: userId === "H-SRT고객" ? "" : userId,
+                        worker_password: "",
+                        worker_position: "H-SRT고객",
+                        worker_expired: expiredDate
+                            ? moment(expiredDate).set({ hour: 23, minute: 59, second: 59 }).format("YYYY-MM-DD HH:mm:ss")
+                            : "",
+                        user: authUserId || "",
+                        page_id: pageId,
+                        page_title: pageTitle
+                    }
+                });
+
+                if (enterRes?.success == "777") {
+                    modal.showAlert("알림", "H-SRT고객의 대시보드 권한이 설정되었습니다.");
+                    setSelectedUser(null);
+                    setSelectedRole("");
+                    setExpiredDate(moment().add(100, "years").toDate());
+                    await fetchPageMembers();
+                    await fetchProjectWorkers(); // 프로젝트 작업자 목록도 함께 갱신
+                } else {
+                    modal.showErrorAlert("에러", enterRes?.message || "H-SRT고객 등록에 실패했습니다.");
+                }
+                setLoading(false);
+                return;
+            }
+
+            // 대시보드 권한 설정 API 호출 (H-SRT고객이 아닐 때만 실행)
             const res = await pagesMembersSet.mutateAsync({
                 params: {
                     pageid: pageId,
@@ -274,15 +322,19 @@ const MenuPermissionPage = () => {
                     permissions: getPermissionsArrayForRole(selectedRole)
                 }
             });
+
             if (res?.success == "777") {
                 modal.showAlert("알림", `${getWorkerName(userId)}님의 대시보드 권한이 설정되었습니다.`);
                 setSelectedUser(null);
                 setSelectedRole("");
+                setExpiredDate(moment().add(100, "years").toDate());
                 await fetchPageMembers();
+                await fetchProjectWorkers(); // 프로젝트 작업자 목록도 함께 갱신
             } else {
                 modal.showErrorAlert("에러", res?.message || "권한 설정에 실패했습니다.");
             }
         } catch (err) {
+            console.error("handleSave error", err);
             modal.showErrorAlert("오류", "권한 설정 중 네트워크 오류가 발생했습니다.");
         } finally {
             setLoading(false);
@@ -293,6 +345,9 @@ const MenuPermissionPage = () => {
     const handleDeleteMember = (userId) => {
         if (!pageId) return;
 
+        const member = pageMembers.find(m => m.user_id === userId);
+        const isClient = member?.role === 'client' || userList.some(w => w.worker_id === userId && w.permission_gubun === "H-SRT고객" && w.page_id === pageId);
+
         modal.showConfirm("알림", "선택한 사용자의 대시보드 권한을 삭제하시겠습니까?", {
             btns: [
                 { title: "취소" },
@@ -301,20 +356,46 @@ const MenuPermissionPage = () => {
                     click: async () => {
                         try {
                             setLoading(true);
-                            const res = await pagesMembersDelete.mutateAsync({
-                                params: {
-                                    pageid: pageId,
-                                    user_id: userId,
-                                    user: auth?.user?.userId || ""
-                                }
-                            });
+                            let res = { success: "777" };
+
+                            // 1. 대시보드 권한 목록에 존재할 때만 삭제 API 호출
+                            if (member) {
+                                res = await pagesMembersDelete.mutateAsync({
+                                    params: {
+                                        pageid: pageId,
+                                        user_id: userId,
+                                        user: auth?.user?.userId || ""
+                                    }
+                                });
+                            }
+
                             if (res?.success == "777") {
+                                // 2. H-SRT고객인 경우 프로젝트 작업자 목록에서도 함께 삭제
+                                if (isClient) {
+                                    const worker = userList.find(w => w.worker_id === userId);
+                                    const workerDbId = worker?.id || userId;
+                                    try {
+                                        await proPermissionData.mutateAsync({
+                                            params: {
+                                                gb: "worker_del",
+                                                user: auth?.user?.userId || "",
+                                                projectnum: sessionStorage.getItem("projectnum"),
+                                                id: workerDbId
+                                            }
+                                        });
+                                    } catch (err) {
+                                        console.error("worker_del API error", err);
+                                    }
+                                }
+
                                 modal.showAlert("알림", "대시보드 권한이 삭제되었습니다.");
                                 if (selectedUser && (selectedUser.worker_id === userId || selectedUser.user_id === userId)) {
                                     setSelectedUser(null);
                                     setSelectedRole("");
+                                    setExpiredDate(moment().add(100, "years").toDate());
                                 }
                                 await fetchPageMembers();
+                                await fetchProjectWorkers();
                             } else {
                                 modal.showErrorAlert("에러", res?.message || "삭제 중 오류가 발생했습니다.");
                             }
@@ -331,15 +412,57 @@ const MenuPermissionPage = () => {
 
     // Process data for Kendo Grid
     const numberedData = useMemo(() => {
-        return pageMembers.map((item, idx) => ({
+        const formatDate = (dateStr) => {
+            if (!dateStr) return "-";
+            const m = moment(dateStr);
+            return m.isValid() ? m.format("YYYY-MM-DD HH:mm:ss") : dateStr;
+        };
+
+        // 1. 일반 대시보드 멤버 정보 로드
+        const standardMembers = pageMembers.map(item => {
+            const matchingWorker = userList.find(w => w.worker_id === item.user_id);
+            const expired = matchingWorker?.worker_expired || "";
+            const regDate = item.created_at || matchingWorker?.register_date || "";
+
+            return {
+                ...item,
+                worker_name: getWorkerName(item.user_id),
+                role: item.role,
+                permissions: item.permissions,
+                regDate: formatDate(regDate),
+                expiredDate: item.role === 'client' ? formatDate(expired) : "-"
+            };
+        });
+
+        // 2. 프로젝트 전체 작업자 중 H-SRT고객이면서 현재 대시보드 page_id와 맵핑된 행 필터링
+        const dashboardClients = userList
+            .filter(w => w.permission_gubun === "H-SRT고객" && w.page_id === pageId)
+            .map(w => ({
+                user_id: w.worker_id,
+                role: "client",
+                permissions: getPermissionsArrayForRole("client"),
+                worker_name: "H-SRT고객",
+                regDate: formatDate(w.register_date),
+                expiredDate: formatDate(w.worker_expired)
+            }));
+
+        // 3. 중복을 방지하며 두 리스트 병합
+        const mergedList = [...standardMembers];
+        dashboardClients.forEach(client => {
+            if (!mergedList.some(m => m.user_id === client.user_id)) {
+                mergedList.push(client);
+            }
+        });
+
+        // 4. 번호 매기기 및 상태 매핑
+        return mergedList.map((item, idx) => ({
             ...item,
             no: idx + 1,
             selected: selectedUser?.user_id === item.user_id || selectedUser?.worker_id === item.user_id,
-            worker_name: getWorkerName(item.user_id),
             roleText: item.role === "admin" ? "관리자 (관리, 읽기,쓰기)" : item.role === "editor" ? "연구원(읽기, 쓰기)" : item.role === "client" ? "H-SRT고객" : "연구원(읽기)",
             allowedMenusText: getPermissionsText(item.permissions)
         }));
-    }, [pageMembers, userList, selectedUser]);
+    }, [pageMembers, userList, selectedUser, pageId]);
 
     const processedData = useMemo(() => {
         let items = numberedData;
@@ -349,7 +472,9 @@ const MenuPermissionPage = () => {
                 (u.worker_name && u.worker_name.toLowerCase().includes(query)) ||
                 (u.user_id && u.user_id.toLowerCase().includes(query)) ||
                 (u.roleText && u.roleText.toLowerCase().includes(query)) ||
-                (u.allowedMenusText && u.allowedMenusText.toLowerCase().includes(query))
+                (u.allowedMenusText && u.allowedMenusText.toLowerCase().includes(query)) ||
+                (u.regDate && u.regDate.toLowerCase().includes(query)) ||
+                (u.expiredDate && u.expiredDate.toLowerCase().includes(query))
             );
         }
         return process(items, { sort, filter });
@@ -392,21 +517,21 @@ const MenuPermissionPage = () => {
                     <div className="mp-form">
                         <div className="mp-form-field">
                             <label className="mp-form-label">프로젝트명</label>
-                            <input 
-                                type="text" 
-                                className="mp-input-disabled" 
-                                value={projectName} 
-                                disabled 
+                            <input
+                                type="text"
+                                className="mp-input-disabled"
+                                value={projectName}
+                                disabled
                             />
                         </div>
 
                         <div className="mp-form-field">
                             <label className="mp-form-label">대시보드명</label>
-                            <input 
-                                type="text" 
-                                className="mp-input-disabled" 
-                                value={pageTitle} 
-                                disabled 
+                            <input
+                                type="text"
+                                className="mp-input-disabled"
+                                value={pageTitle}
+                                disabled
                             />
                         </div>
 
@@ -417,9 +542,16 @@ const MenuPermissionPage = () => {
                                 textField="text"
                                 dataItemKey="value"
                                 onChange={(e) => {
-                                    setSelectedRole(e.value?.value || "");
-                                    if (!isEditMode) {
-                                        setSelectedUser(null); // Reset user in register mode to enforce order
+                                    const roleVal = e.value?.value || "";
+                                    setSelectedRole(roleVal);
+                                    if (roleVal === "client") {
+                                        setSelectedUser({
+                                            worker_id: "H-SRT고객",
+                                            worker_name: "H-SRT고객",
+                                            position: "H-SRT고객"
+                                        });
+                                    } else {
+                                        setSelectedUser(null);
                                     }
                                 }}
                                 value={ROLE_OPTIONS.find(r => r.value === selectedRole) || null}
@@ -428,62 +560,78 @@ const MenuPermissionPage = () => {
                             />
                         </div>
 
-                        <div className="mp-form-field">
-                            <label className="mp-form-label">작업자 선택 <span className="mp-required">*</span></label>
-                            <DropDownList
-                                data={userOptions}
-                                textField="text"
-                                dataItemKey="value"
-                                filterable
-                                onFilterChange={(e) => fetchUserSearch(e.filter?.value || "")}
-                                onChange={handleDropdownChange}
-                                value={selectedUser ? {
-                                    text: `${selectedUser.worker_name || getWorkerName(selectedUser.worker_id || selectedUser.user_id)}(${selectedUser.position || getWorkerPosition(selectedUser.worker_id || selectedUser.user_id) || selectedUser.worker_id || selectedUser.user_id})`,
-                                    value: selectedUser.worker_id || selectedUser.user_id
-                                } : null}
-                                disabled={!selectedRole}
-                                popupSettings={{ className: "mp-dropdown-popup" }}
-                                placeholder="작업자를 선택해 주세요"
-                            />
-                        </div>
+                        {selectedRole === "client" ? (
+                            <div className="mp-form-field">
+                                <label className="mp-form-label">만료 일자 <span className="mp-required">*</span></label>
+                                <DatePicker
+                                    value={expiredDate}
+                                    format={"yyyy-MM-dd"}
+                                    min={new Date()}
+                                    max={new Date(2200, 11, 31)}
+                                    disabled={loading}
+                                    editable={false}
+                                    onChange={(e) => setExpiredDate(e.value)}
+                                />
+                            </div>
+                        ) : (
+                            <div className="mp-form-field">
+                                <label className="mp-form-label">작업자 선택 <span className="mp-required">*</span></label>
+                                <DropDownList
+                                    data={userOptions}
+                                    textField="text"
+                                    dataItemKey="value"
+                                    filterable
+                                    onFilterChange={(e) => fetchUserSearch(e.filter?.value || "")}
+                                    onChange={handleDropdownChange}
+                                    value={selectedUser && selectedUser.worker_id !== "H-SRT고객" ? {
+                                        text: `${selectedUser.worker_name || getWorkerName(selectedUser.worker_id || selectedUser.user_id)}(${selectedUser.position || getWorkerPosition(selectedUser.worker_id || selectedUser.user_id) || selectedUser.worker_id || selectedUser.user_id})`,
+                                        value: selectedUser.worker_id || selectedUser.user_id
+                                    } : null}
+                                    disabled={!selectedRole}
+                                    popupSettings={{ className: "mp-dropdown-popup" }}
+                                    placeholder="작업자를 선택해 주세요"
+                                />
+                            </div>
+                        )}
 
                         {isEditMode ? (
                             <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                                <button 
-                                    type="button" 
-                                    className="mp-btn-submit" 
-                                    onClick={handleSave} 
+                                <button
+                                    type="button"
+                                    className="mp-btn-submit"
+                                    onClick={handleSave}
                                     disabled={loading || !selectedUser || !selectedRole}
                                     style={{ flex: 2, margin: 0 }}
                                 >
                                     {loading ? "수정 중..." : "대시보드 권한 수정"}
                                 </button>
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     onClick={() => {
                                         setSelectedUser(null);
                                         setSelectedRole("");
+                                        setExpiredDate(moment().add(100, "years").toDate());
                                     }}
-                                    style={{ 
-                                        flex: 1, 
-                                        padding: '10px', 
-                                        borderRadius: '8px', 
-                                        border: '1px solid #cbd5e1', 
-                                        background: '#fff', 
-                                        color: '#64748b', 
-                                        fontSize: '14px', 
-                                        fontWeight: 600, 
-                                        cursor: 'pointer' 
+                                    style={{
+                                        flex: 1,
+                                        padding: '10px',
+                                        borderRadius: '8px',
+                                        border: '1px solid #cbd5e1',
+                                        background: '#fff',
+                                        color: '#64748b',
+                                        fontSize: '14px',
+                                        fontWeight: 600,
+                                        cursor: 'pointer'
                                     }}
                                 >
                                     취소
                                 </button>
                             </div>
                         ) : (
-                            <button 
-                                type="button" 
-                                className="mp-btn-submit" 
-                                onClick={handleSave} 
+                            <button
+                                type="button"
+                                className="mp-btn-submit"
+                                onClick={handleSave}
                                 disabled={loading || !selectedUser || !selectedRole}
                                 style={{ marginTop: '10px' }}
                             >
@@ -498,16 +646,16 @@ const MenuPermissionPage = () => {
                     <div className="mp-grid-header">
                         <GridDataCount total={processedData.total} />
                         <div style={{ position: "relative", width: "200px" }}>
-                            <Search 
-                                size={14} 
-                                style={{ 
-                                    position: "absolute", 
-                                    left: "10px", 
-                                    top: "50%", 
-                                    transform: "translateY(-50%)", 
+                            <Search
+                                size={14}
+                                style={{
+                                    position: "absolute",
+                                    left: "10px",
+                                    top: "50%",
+                                    transform: "translateY(-50%)",
                                     color: "#94a3b8",
                                     pointerEvents: "none"
-                                }} 
+                                }}
                             />
                             <input
                                 type="text"
@@ -534,7 +682,7 @@ const MenuPermissionPage = () => {
                             parentProps={{
                                 data: processedData.data,
                                 total: processedData.total,
-                                dataItemKey: "no",
+                                dataItemKey: "user_id",
                                 sortable: { mode: "multiple", allowUnsort: true },
                                 filterable: true,
                                 sortChange: ({ sort }) => setSort(sort ?? []),
@@ -549,15 +697,28 @@ const MenuPermissionPage = () => {
                                         position: getWorkerPosition(member.user_id)
                                     });
                                     setSelectedRole(member.role);
+
+                                    if (member.role === 'client') {
+                                        const worker = userList.find(w => w.worker_id === member.user_id);
+                                        if (worker && worker.worker_expired) {
+                                            setExpiredDate(moment(worker.worker_expired).toDate());
+                                        } else {
+                                            setExpiredDate(moment().add(100, "years").toDate());
+                                        }
+                                    } else {
+                                        setExpiredDate(moment().add(100, "years").toDate());
+                                    }
                                 },
                                 style: { height: "100%" }
                             }}
                         >
                             <Column field="no" title="No" width="60px" filterable={false} />
-                            <Column field="worker_name" title="이름" width="120px" />
-                            <Column field="user_id" title="ID" width="130px" />
-                            <Column field="roleText" title="권한 구분" width="180px" />
-                            <Column field="allowedMenusText" title="허용 메뉴" />
+                            <Column field="worker_name" title="이름" width="100px" />
+                            <Column field="user_id" title="ID" />
+                            <Column field="roleText" title="권한 구분" />
+                            {/* <Column field="allowedMenusText" title="허용 메뉴" /> */}
+                            <Column field="regDate" title="등록일" width="160px" />
+                            <Column field="expiredDate" title="만료일" width="160px" />
                             <Column
                                 title="삭제"
                                 width="80px"
@@ -565,9 +726,9 @@ const MenuPermissionPage = () => {
                                 cell={(props) => {
                                     return (
                                         <td style={{ textAlign: "center" }}>
-                                            <button 
+                                            <button
                                                 type="button"
-                                                className="mp-del-btn" 
+                                                className="mp-del-btn"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     handleDeleteMember(props.dataItem.user_id);
