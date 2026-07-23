@@ -123,8 +123,8 @@ export function MainListApi() {
                                     return;
                                 }
 
-                                // 1초(폴링 2회차 시작 시점) 경과 시 원래 로딩바를 숨기고 프로그래스바 전환
-                                if (!showProgressBar && pollCount >= 2) {
+                                // 1초 경과 및 실질적인 동기화 진행률이 0%를 초과하여 시작되었을 때에만 프로그래스바로 전환
+                                if (!showProgressBar && pollCount >= 2 && curPercent > 0) {
                                     showProgressBar = true;
                                     safeHideSpinner(); // 원래 로딩바 숨김
                                 }
