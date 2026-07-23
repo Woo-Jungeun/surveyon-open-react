@@ -360,8 +360,6 @@ const MenuPermissionPage = () => {
             <div className="menu-permission-page">
                 <DataHeader
                     title="대시보드 권한 설정"
-                    saveButtonLabel="권한 설정 저장"
-                    onSave={null}
                 />
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, color: '#64748b', gap: '12px', padding: '40px' }}>
                     <Info size={32} color="#3b82f6" />
@@ -376,8 +374,6 @@ const MenuPermissionPage = () => {
             {/* 상단 헤더 영역 */}
             <DataHeader
                 title="대시보드 권한 설정"
-                saveButtonLabel="권한 설정 저장"
-                onSave={handleSave}
             />
 
             {/* 메인 2-Column Split Layout */}
