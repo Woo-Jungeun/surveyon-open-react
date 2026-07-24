@@ -272,40 +272,70 @@ const MenuPermissionPage = () => {
             setLoading(true);
             let userId = selectedUser.worker_id || selectedUser.user_id;
 
-            // 만약 H-SRT고객(client)이면 프로젝트 작업자 등록 API(worker_enter)만 호출
+            // 만약 H-SRT고객(client)이면 프로젝트 작업자 등록/수정 API만 호출
             if (selectedRole === 'client') {
                 const projectnum = sessionStorage.getItem("projectnum");
                 const projectname = sessionStorage.getItem("projectname");
+                
+                // 해당 사용자 아이디의 기존 H-SRT고객 정보가 이미 등록되어 있는지 확인
+                const existingWorker = userList.find(w => w.worker_id === userId && w.permission_gubun === "H-SRT고객" && w.page_id === pageId);
+                const workerDbId = selectedUser.id || existingWorker?.id;
 
-                const enterRes = await proPermissionData.mutateAsync({
-                    params: {
-                        gb: "worker_enter",
-                        projectname,
-                        projectnum,
-                        pof: sessionStorage.getItem("projectpof") || "",
-                        permission_gubun: "H-SRT고객",
-                        worker_name: "H-SRT고객",
-                        worker_id: userId === "H-SRT고객" ? "" : userId,
-                        worker_password: "",
-                        worker_position: "H-SRT고객",
-                        worker_expired: expiredDate
-                            ? moment(expiredDate).set({ hour: 23, minute: 59, second: 59 }).format("YYYY-MM-DD HH:mm:ss")
-                            : "",
-                        user: authUserId || "",
-                        page_id: pageId,
-                        page_title: pageTitle
+                if (workerDbId) {
+                    // 1. 기존 고객의 만료일 등 수정 (worker_update)
+                    const updateRes = await proPermissionData.mutateAsync({
+                        params: {
+                            gb: "worker_update",
+                            user: authUserId || "",
+                            worker_id: workerDbId,
+                            worker_expired: expiredDate
+                                ? moment(expiredDate).format("YYYY-MM-DD")
+                                : ""
+                        }
+                    });
+
+                    if (updateRes?.success == "777") {
+                        modal.showAlert("알림", "H-SRT고객의 대시보드 권한 정보가 수정되었습니다.");
+                        setSelectedUser(null);
+                        setSelectedRole("");
+                        setExpiredDate(moment().add(100, "years").toDate());
+                        await fetchPageMembers();
+                        await fetchProjectWorkers();
+                    } else {
+                        modal.showErrorAlert("에러", updateRes?.message || "H-SRT고객 권한 수정에 실패했습니다.");
                     }
-                });
-
-                if (enterRes?.success == "777") {
-                    modal.showAlert("알림", "H-SRT고객의 대시보드 권한이 설정되었습니다.");
-                    setSelectedUser(null);
-                    setSelectedRole("");
-                    setExpiredDate(moment().add(100, "years").toDate());
-                    await fetchPageMembers();
-                    await fetchProjectWorkers(); // 프로젝트 작업자 목록도 함께 갱신
                 } else {
-                    modal.showErrorAlert("에러", enterRes?.message || "H-SRT고객 등록에 실패했습니다.");
+                    // 2. 신규 고객 등록 (worker_enter)
+                    const enterRes = await proPermissionData.mutateAsync({
+                        params: {
+                            gb: "worker_enter",
+                            projectname,
+                            projectnum,
+                            pof: sessionStorage.getItem("projectpof") || "",
+                            permission_gubun: "H-SRT고객",
+                            worker_name: "H-SRT고객",
+                            worker_id: userId === "H-SRT고객" ? "" : userId,
+                            worker_password: "",
+                            worker_position: "H-SRT고객",
+                            worker_expired: expiredDate
+                                ? moment(expiredDate).set({ hour: 23, minute: 59, second: 59 }).format("YYYY-MM-DD HH:mm:ss")
+                                : "",
+                            user: authUserId || "",
+                            page_id: pageId,
+                            page_title: pageTitle
+                        }
+                    });
+
+                    if (enterRes?.success == "777") {
+                        modal.showAlert("알림", "H-SRT고객의 대시보드 권한이 설정되었습니다.");
+                        setSelectedUser(null);
+                        setSelectedRole("");
+                        setExpiredDate(moment().add(100, "years").toDate());
+                        await fetchPageMembers();
+                        await fetchProjectWorkers();
+                    } else {
+                        modal.showErrorAlert("에러", enterRes?.message || "H-SRT고객 등록에 실패했습니다.");
+                    }
                 }
                 setLoading(false);
                 return;
@@ -437,6 +467,7 @@ const MenuPermissionPage = () => {
         const dashboardClients = userList
             .filter(w => w.permission_gubun === "H-SRT고객" && w.page_id === pageId)
             .map(w => ({
+                id: w.id,
                 user_id: w.worker_id,
                 role: "client",
                 permissions: getPermissionsArrayForRole("client"),
@@ -710,6 +741,7 @@ const MenuPermissionPage = () => {
                                 onRowClick: (e) => {
                                     const member = e.dataItem;
                                     setSelectedUser({
+                                        id: member.id,
                                         worker_id: member.user_id,
                                         worker_name: member.worker_name,
                                         position: getWorkerPosition(member.user_id)
