@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useContext } from 'react';
+import { useState, useEffect, useMemo, useContext, cloneElement } from 'react';
 import DataHeader from "@/services/dataStatus/components/DataHeader";
 import { Search, UserPlus, Info } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -527,6 +527,15 @@ const MenuPermissionPage = () => {
         return sorted;
     }, [numberedData, searchQuery, sort, filter]);
 
+    const rowRender = (trElement, props) => {
+        const isSelected = props.dataItem.selected;
+        const trProps = {
+            ...trElement.props,
+            className: `${trElement.props.className || ""} ${isSelected ? "k-selected" : ""}`.trim()
+        };
+        return cloneElement(trElement, trProps, trElement.props.children);
+    };
+
     if (!pageId) {
         return (
             <div className="menu-permission-page">
@@ -728,10 +737,12 @@ const MenuPermissionPage = () => {
                     <div className="mp-grid-wrap">
                         <KendoGrid
                             parentProps={{
+                                height: "100%",
                                 data: processedData.data,
                                 total: processedData.total,
                                 dataItemKey: "user_id",
                                 reorderable: true,
+                                rowRender: rowRender,
                                 sortable: { mode: "multiple", allowUnsort: true },
                                 filterable: true,
                                 sortChange: ({ sort }) => setSort(sort ?? []),
@@ -758,8 +769,7 @@ const MenuPermissionPage = () => {
                                     } else {
                                         setExpiredDate(moment().add(100, "years").toDate());
                                     }
-                                },
-                                style: { height: "100%" }
+                                }
                             }}
                         >
                             <Column field="no" title="No" width="60px" filterable={false} />

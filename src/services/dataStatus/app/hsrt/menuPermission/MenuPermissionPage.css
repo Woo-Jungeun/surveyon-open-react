@@ -335,3 +335,12 @@
     background-color: #eff6ff !important;
     color: #3b82f6 !important;
 }
+
+/* Highlight selected row in the grid (keep color consistent when mouse leaves) */
+.mp-grid-wrap .k-grid tr.k-selected,
+.mp-grid-wrap .k-grid tr.k-selected > td,
+.mp-grid-wrap .k-grid tr.k-selected:hover,
+.mp-grid-wrap .k-grid tr.k-selected:hover > td {
+    background-color: #e3f2fd !important; /* Premium soft sky-blue tint (matches DP의뢰서) */
+    border-bottom-color: #cbd5e1 !important;
+}
