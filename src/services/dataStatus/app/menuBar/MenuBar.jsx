@@ -13,7 +13,7 @@ import ProjectSelectionModal from "./ProjectSelectionModal";
 import PageListPopup from "../variable/PageListPopup"; // Import PageListPopup
 import { VariablePageApi } from "../variable/VariablePageApi"; // Import API for page list
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import "./MenuBar.css";
 
@@ -225,30 +225,21 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     const userId = auth?.user?.userId;
     const pageId = selectedPage.page_id || selectedPage.pageid || selectedPage.id;
     const pageTitle = selectedPage.title || selectedPage.name || "제목 없음";
+    const myRole = selectedPage.my_role || "";
 
     if (!userId || !pageId) return;
 
     // Save pageId, pagetitle, and myRole to session storage
     sessionStorage.setItem("pageId", pageId);
     sessionStorage.setItem("pagetitle", pageTitle);
-    sessionStorage.setItem("myRole", selectedPage.my_role || "");
+    sessionStorage.setItem("myRole", myRole);
     window.dispatchEvent(new Event("pageSelected"));
 
     setPageState({
       title: pageTitle,
-      merge_pn: sessionStorage.getItem("merge_pn") || "-"
+      merge_pn: sessionStorage.getItem("merge_pn") || "-",
+      myRole: myRole
     });
-
-    // try {
-    //   loadingSpinner.show();
-    //   // 대시보드 메타데이터 조회 API 호출
-    //   //const metadataResult = await getPageMetadata.mutateAsync({ user: userId, pageid: pageId });
-    //   loadingSpinner.hide();
-    // } catch (error) {
-    //   console.error("API Error:", error);
-    //   loadingSpinner.hide();
-    //   modal.showErrorAlert("오류", "메타데이터 조회 중 오류가 발생했습니다.");
-    // }
   };
 
   const handleProjectSelect = async (project) => {
@@ -272,7 +263,8 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     sessionStorage.setItem("myRole", "");
     setPageState({
       title: "대시보드(수정가능)",
-      merge_pn: "-"
+      merge_pn: "-",
+      myRole: ""
     });
 
     setIsProjectModalOpen(false); // 프로젝트 팝업 닫기
@@ -315,7 +307,8 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   // 대시보드 정보 state 추가
   const [pageState, setPageState] = useState({
     title: sessionStorage.getItem("pagetitle") || "대시보드(수정가능)",
-    merge_pn: sessionStorage.getItem("merge_pn") || "-"
+    merge_pn: sessionStorage.getItem("merge_pn") || "-",
+    myRole: sessionStorage.getItem("myRole") || ""
   });
 
   // pageSelected 이벤트 발생(다른 곳에서 삭제, 변경 등) 시 즉각 갱신
@@ -323,7 +316,8 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     const handlePageUpdate = () => {
       setPageState({
         title: sessionStorage.getItem("pagetitle") || "대시보드(수정가능)",
-        merge_pn: sessionStorage.getItem("merge_pn") || "-"
+        merge_pn: sessionStorage.getItem("merge_pn") || "-",
+        myRole: sessionStorage.getItem("myRole") || ""
       });
     };
     window.addEventListener("pageSelected", handlePageUpdate);
@@ -343,7 +337,12 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
             const pages = pageRes.resultjson || [];
             const currentPage = pages.find(p => (p.page_id || p.pageid || p.id) === currentPageId);
             if (currentPage) {
-              sessionStorage.setItem("myRole", currentPage.my_role || "");
+              const prevRole = sessionStorage.getItem("myRole") || "";
+              const nextRole = currentPage.my_role || "";
+              if (prevRole !== nextRole) {
+                sessionStorage.setItem("myRole", nextRole);
+                window.dispatchEvent(new Event("pageSelected"));
+              }
             }
           }
         } catch (e) {
@@ -353,6 +352,26 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     };
     fetchMyRole();
   }, [auth?.user?.userId, pageState.title]);
+
+  const location = useLocation();
+
+  // 권한별 접근 페이지 제어 (페이지 진입/갱신 시 강제 리다이렉트)
+  useEffect(() => {
+    const myRole = pageState.myRole || sessionStorage.getItem("myRole") || "";
+    const path = location.pathname;
+
+    if (myRole === "viewer") {
+      // viewer: 교차분석(cross_analysis) 이외의 페이지는 접근 차단 후 교차분석으로 이동
+      if (!path.includes("cross_analysis")) {
+        navigate("/data_status/hsrt/cross_analysis", { replace: true });
+      }
+    } else if (myRole === "editor") {
+      // editor: 대시보드 권한 설정(menu_permission) 페이지 접근 차단 후 문항추가로 이동
+      if (path.includes("menu_permission")) {
+        navigate("/data_status/hsrt/add_question", { replace: true });
+      }
+    }
+  }, [pageState.myRole, location.pathname]);
 
   // 사이드바에 전달할 대시보드 정보
   const sidebarPageInfo = {
@@ -392,9 +411,24 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         return { ...group, items: filteredItems };
       }).filter(group => group.items.length > 0);
     }
+  } else {
+    // 일반 사용자의 대시보드 권한(myRole)별 메뉴 필터링
+    const myRole = pageState.myRole || "";
+    if (myRole === "viewer") {
+      // viewer는 교차분석만 표출 (데이터 설정 그룹 내 문항추가, DP의뢰서, 추가분석 숨김)
+      computedMenuGroups = computedMenuGroups.map(group => {
+        const filteredItems = group.items.filter(item => 
+          item.label === "교차분석"
+        );
+        return { ...group, items: filteredItems };
+      }).filter(group => group.items.length > 0);
+    }
   }
 
-  if (isAiSolutionTeam) {
+  // 해당 대시보드의 관리자(admin)이거나, 대시보드 미선택 상태이면서 AI솔루션팀인 경우에만 대시보드 권한 설정 메뉴 추가
+  const currentMyRole = pageState.myRole || "";
+  const showAdminMenu = currentMyRole === "admin" || (currentMyRole === "" && isAiSolutionTeam);
+  if (showAdminMenu) {
     computedMenuGroups.push({
       label: "시스템 관리",
       items: [

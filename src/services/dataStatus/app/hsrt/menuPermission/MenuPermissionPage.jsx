@@ -21,7 +21,14 @@ const ROLE_OPTIONS = [
 ];
 
 const getPermissionsArrayForRole = (role) => {
-    if (role === 'viewer' || role === 'client') {
+    if (role === 'viewer') {
+        return [
+            "page.view.data",
+            "page.view.variables_map",
+            "page.analysis.cross"
+        ];
+    }
+    if (role === 'client') {
         return [
             "page.view.data",
             "page.view.variables_map",
