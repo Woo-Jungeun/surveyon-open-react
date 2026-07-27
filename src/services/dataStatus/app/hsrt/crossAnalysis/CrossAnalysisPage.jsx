@@ -1157,11 +1157,11 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                     </div>
                                 ) : (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', textAlign: 'left' }}>
-                                        {/* 인구통계 격차 분석 */}
+                                        {/* 응답자특성 분석 */}
                                         {aiSummaryData.mode_a_demographic_analysis && aiSummaryData.mode_a_demographic_analysis.length > 0 && (
                                             <div>
                                                 <div style={{ fontSize: '14px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
-                                                    인구통계 격차 분석
+                                                    응답자특성 분석
                                                 </div>
                                                 <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                     {aiSummaryData.mode_a_demographic_analysis.map((item, idx) => (
@@ -1178,11 +1178,11 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                             </div>
                                         )}
 
-                                        {/* 배너별 주요 결과 */}
+                                        {/* 배너별 주요분석 */}
                                         {aiSummaryData.mode_b_parallel_summary && aiSummaryData.mode_b_parallel_summary.key_insights_by_banner && aiSummaryData.mode_b_parallel_summary.key_insights_by_banner.length > 0 && (
                                             <div>
                                                 <div style={{ fontSize: '14px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
-                                                    배너별 주요 결과
+                                                    배너별 주요분석
                                                 </div>
                                                 <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                     {aiSummaryData.mode_b_parallel_summary.key_insights_by_banner.map((item, idx) => (
