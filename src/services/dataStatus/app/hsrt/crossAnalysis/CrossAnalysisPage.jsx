@@ -1733,6 +1733,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const filterAnchorRef = useRef(null);
     const filterPopupRef = useRef(null);
+    const [isDisplaySettingsOpen, setIsDisplaySettingsOpen] = useState(false);
+    const displaySettingsRef = useRef(null);
     const [filterSearchQuery, setFilterSearchQuery] = useState('');
 
     const filteredGroupedFilters = useMemo(() => {
@@ -1792,6 +1794,26 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [isFilterOpen, draftComputedFilterIds]);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (isDisplaySettingsOpen &&
+                displaySettingsRef.current &&
+                !displaySettingsRef.current.contains(event.target)) {
+                // If they clicked inside a Kendo popup or dropdown, do not close!
+                const target = event.target;
+                const isKendoClick = target.closest && (target.closest('.k-animation-container') || target.closest('.k-popup') || target.closest('.k-list-container'));
+                if (!isKendoClick) {
+                    setIsDisplaySettingsOpen(false);
+                }
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isDisplaySettingsOpen]);
 
     const handleTogglePopup = () => {
         if (!isFilterOpen) {
@@ -2871,382 +2893,427 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     </div>
                     */}
 
-                    {/* 가중치 설정 DropDownList Group */}
-                    <div style={{
-                        display: 'flex', alignItems: 'center', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', height: '32px', overflow: 'hidden'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', padding: '0 12px', height: '100%', background: '#f8fafc' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>가중치 설정</span>
-                        </div>
-                        <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
-                        <div style={{ height: '100%', display: 'flex', alignItems: 'center', position: 'relative' }}>
-                            <DropDownList
-                                data={weightOptions}
-                                textField="text"
-                                dataItemKey="value"
-                                value={weightOptions.find(o => o.value === selectedWeight) || weightOptions[0]}
-                                onChange={async (e) => {
-                                    const nextVal = (typeof e.value === 'object' && e.value !== null) ? e.value.value : e.value;
-                                    setSelectedWeight(nextVal);
+                    {/* 표시 설정 Button and Popover Popup */}
+                    <div style={{ position: 'relative' }} ref={displaySettingsRef}>
+                        <button
+                            onClick={() => setIsDisplaySettingsOpen(!isDisplaySettingsOpen)}
+                        style={{
+                            color: '#334155',
+                            border: '1px solid #cbd5e1',
+                            background: '#ffffff',
+                            height: '32px',
+                            padding: '0 16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            borderRadius: '6px',
+                            fontSize: '13px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            userSelect: 'none',
+                            outline: 'none'
+                        }}
+                        className="dp-btn"
+                        >
+                            <Settings size={14} color="#64748b" />
+                            <span>표시 설정</span>
+                            <span style={{
+                                background: '#eff6ff',
+                                color: '#2563eb',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                marginLeft: '4px'
+                            }}>
+                                {showN && showPct ? 'N, %' : showN ? 'N' : '%'}
+                            </span>
+                            <ChevronDown size={14} color="#64748b" style={{ marginLeft: '2px' }} />
+                        </button>
 
-                                    const pageId = sessionStorage.getItem('pageId');
-                                    const user = auth?.user?.userId;
-                                    if (pageId && user) {
-                                        const newUi = {
-                                            ...uiSettings,
-                                            format_show_n: showN,
-                                            format_n_round: decimalN === '' ? 0 : decimalN,
-                                            format_show_percent: showPct,
-                                            format_percent_round: decimalPct === '' ? 0 : decimalPct,
-                                            show_t_test: sigType === 't-test',
-                                            sig_type: sigType,
-                                            sig_diff_fin_mode: sigType === 't-test' ? 't_test' : sigType,
-                                            sig_exclude_under_n: sigExcludeUnderN,
-                                            sig_exclude_etc: sigExcludeEtc,
-                                            sig_level: sigLevel,
-                                            sig_diff_min: sigDiffMin,
-                                            sig_diff_max: sigDiffMax,
-                                            percent_symbol: uiSettings?.percent_symbol ?? false,
-                                            percent_as_column: uiSettings?.percent_as_column ?? uiSettings?.format_percent_as_column ?? false,
-                                            stub_group_layout: uiSettings?.stub_group_layout ?? 'merge',
-                                            base_prefix: uiSettings?.base_prefix ?? "(",
-                                            base_postfix: uiSettings?.base_postfix ?? ")",
-                                            weight_variable: nextVal === '없음' ? null : nextVal
-                                        };
-                                        setUiSettings(newUi);
+                        {isDisplaySettingsOpen && (
+                            <div style={{
+                                position: 'absolute',
+                                top: 'calc(100% + 6px)',
+                                right: 0,
+                                width: '300px',
+                                background: '#ffffff',
+                                borderRadius: '12px',
+                                border: '1px solid #e2e8f0',
+                                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                                padding: '16px',
+                                zIndex: 1000,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '14px',
+                                textAlign: 'left'
+                            }}>
+                                <div style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b', paddingBottom: '2px' }}>
+                                    표시 설정
+                                </div>
 
-                                        isSavingDirectlyRef.current = true;
-                                        try {
-                                            await savePageSettings.mutateAsync({
-                                                pageid: pageId,
-                                                user: user,
-                                                ui_settings: newUi
-                                            });
+                                {/* 가중치 설정 */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>가중치 설정</span>
+                                    <div style={{ position: 'relative', width: '180px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+                                        <DropDownList
+                                            data={weightOptions}
+                                            textField="text"
+                                            dataItemKey="value"
+                                            value={weightOptions.find(o => o.value === selectedWeight) || weightOptions[0]}
+                                            onChange={async (e) => {
+                                                const nextVal = (typeof e.value === 'object' && e.value !== null) ? e.value.value : e.value;
+                                                setSelectedWeight(nextVal);
 
-                                            await fetchCrossAnalysisData('normal', null, 1, filterExpression, null, nextVal);
-                                        } catch (err) {
-                                            console.error("Failed to save or fetch on weight change", err);
-                                        } finally {
-                                            setTimeout(() => {
-                                                isSavingDirectlyRef.current = false;
-                                            }, 600);
-                                        }
-                                    }
-                                }}
-                                style={{ width: '130px', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
-                                className="custom-xinfo-dropdown"
-                                popupSettings={{ className: "custom-xinfo-dropdown" }}
-                            />
-                            <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
-                        </div>
-                    </div>
+                                                const pageId = sessionStorage.getItem('pageId');
+                                                const user = auth?.user?.userId;
+                                                if (pageId && user) {
+                                                    const newUi = {
+                                                        ...uiSettings,
+                                                        format_show_n: showN,
+                                                        format_n_round: decimalN === '' ? 0 : decimalN,
+                                                        format_show_percent: showPct,
+                                                        format_percent_round: decimalPct === '' ? 0 : decimalPct,
+                                                        show_t_test: sigType === 't-test',
+                                                        sig_type: sigType,
+                                                        sig_diff_fin_mode: sigType === 't-test' ? 't_test' : sigType,
+                                                        sig_exclude_under_n: sigExcludeUnderN,
+                                                        sig_exclude_etc: sigExcludeEtc,
+                                                        sig_level: sigLevel,
+                                                        sig_diff_min: sigDiffMin,
+                                                        sig_diff_max: sigDiffMax,
+                                                        percent_symbol: uiSettings?.percent_symbol ?? false,
+                                                        percent_as_column: uiSettings?.percent_as_column ?? uiSettings?.format_percent_as_column ?? false,
+                                                        stub_group_layout: uiSettings?.stub_group_layout ?? 'merge',
+                                                        base_prefix: uiSettings?.base_prefix ?? "(",
+                                                        base_postfix: uiSettings?.base_postfix ?? ")",
+                                                        weight_variable: nextVal === '없음' ? null : nextVal
+                                                    };
+                                                    setUiSettings(newUi);
 
-                    {/* 차이검증 분석 기준 DropDownList Group */}
-                    <div ref={sigAnchorRef} style={{
-                        display: 'flex', alignItems: 'center', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', height: '32px', overflow: 'hidden'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', padding: '0 12px', height: '100%', background: '#f8fafc' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>차이검증</span>
-                        </div>
-                        <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
-                        <div style={{ height: '100%', display: 'flex', alignItems: 'center', position: 'relative' }}>
-                            <DropDownList
-                                data={SIG_TYPE_OPTIONS}
-                                textField="text"
-                                dataItemKey="value"
-                                value={SIG_TYPE_OPTIONS.find(o => o.value === sigType) || SIG_TYPE_OPTIONS[0]}
-                                onOpen={() => setIsSigPopupOpen(false)}
-                                onChange={async (e) => {
-                                    const nextVal = (typeof e.value === 'object' && e.value !== null) ? e.value.value : e.value;
-                                    const prevVal = sigType;
-                                    setSigType(nextVal);
+                                                    isSavingDirectlyRef.current = true;
+                                                    try {
+                                                        await savePageSettings.mutateAsync({
+                                                            pageid: pageId,
+                                                            user: user,
+                                                            ui_settings: newUi
+                                                        });
 
-                                    if (nextVal !== 'none') {
-                                        setIsSigPopupOpen(true);
-                                    } else {
-                                        setIsSigPopupOpen(false);
-                                    }
+                                                        await fetchCrossAnalysisData('normal', null, 1, filterExpression, null, nextVal);
+                                                    } catch (err) {
+                                                        console.error("Failed to save or fetch on weight change", err);
+                                                    } finally {
+                                                        setTimeout(() => {
+                                                            isSavingDirectlyRef.current = false;
+                                                        }, 600);
+                                                    }
+                                                }
+                                            }}
+                                            style={{ width: '100%', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
+                                            className="custom-xinfo-dropdown"
+                                            popupSettings={{ className: "custom-xinfo-dropdown" }}
+                                        />
+                                        <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
+                                    </div>
+                                </div>
 
-                                    // 분석 기준이 미적용('none')이 아니고 실제 바뀌었을 때만 강조 애니메이션 발동
-                                    if (nextVal !== 'none' && nextVal !== prevVal) {
-                                        setAnimateSettingsTrigger(prev => prev + 1);
-                                    }
+                                {/* 차이검증 */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>차이검증</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div ref={sigAnchorRef} style={{ position: 'relative', width: '140px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+                                            <DropDownList
+                                                data={SIG_TYPE_OPTIONS}
+                                                textField="text"
+                                                dataItemKey="value"
+                                                value={SIG_TYPE_OPTIONS.find(o => o.value === sigType) || SIG_TYPE_OPTIONS[0]}
+                                                onOpen={() => setIsSigPopupOpen(false)}
+                                                onChange={async (e) => {
+                                                    const nextVal = (typeof e.value === 'object' && e.value !== null) ? e.value.value : e.value;
+                                                    const prevVal = sigType;
+                                                    setSigType(nextVal);
 
-                                    // nextVal에 따른 기획 정의 초기값 설정
-                                    let nextExcludeN = sigExcludeUnderN;
-                                    let nextExcludeEtc = sigExcludeEtc;
-                                    let nextLevel = sigLevel;
-                                    let nextDiffMin = sigDiffMin;
-                                    let nextDiffMax = sigDiffMax;
+                                                    if (nextVal !== 'none') {
+                                                        setIsSigPopupOpen(true);
+                                                    } else {
+                                                        setIsSigPopupOpen(false);
+                                                    }
 
-                                    if (nextVal === 't_test') {
-                                        nextExcludeN = 20;
-                                        nextExcludeEtc = true;
-                                        nextLevel = 95;
-                                    } else if (nextVal === 'deviation') {
-                                        nextExcludeN = 30;
-                                        nextExcludeEtc = false;
-                                        nextDiffMin = 5;
-                                        nextDiffMax = 100;
-                                    } else if (nextVal === 'none') {
-                                        nextExcludeN = 3;
-                                        nextExcludeEtc = true;
-                                        nextLevel = 95;
-                                        nextDiffMin = 10;
-                                        nextDiffMax = 60;
-                                    }
+                                                    if (nextVal !== 'none' && nextVal !== prevVal) {
+                                                        setAnimateSettingsTrigger(prev => prev + 1);
+                                                    }
 
-                                    // 상태 즉시 업데이트
-                                    setSigExcludeUnderN(nextExcludeN);
-                                    setSigExcludeEtc(nextExcludeEtc);
-                                    setSigLevel(nextLevel);
-                                    setSigDiffMin(nextDiffMin);
-                                    setSigDiffMax(nextDiffMax);
+                                                    let nextExcludeN = sigExcludeUnderN;
+                                                    let nextExcludeEtc = sigExcludeEtc;
+                                                    let nextLevel = sigLevel;
+                                                    let nextDiffMin = sigDiffMin;
+                                                    let nextDiffMax = sigDiffMax;
 
-                                    setLocalSigExcludeUnderN(nextExcludeN);
-                                    setLocalSigExcludeEtc(nextExcludeEtc);
-                                    setLocalSigLevel(nextLevel);
-                                    setLocalSigDiffMin(nextDiffMin);
-                                    setLocalSigDiffMax(nextDiffMax);
+                                                    if (nextVal === 't_test') {
+                                                        nextExcludeN = 20;
+                                                        nextExcludeEtc = true;
+                                                        nextLevel = 95;
+                                                    } else if (nextVal === 'deviation') {
+                                                        nextExcludeN = 30;
+                                                        nextExcludeEtc = false;
+                                                        nextDiffMin = 5;
+                                                        nextDiffMax = 100;
+                                                    } else if (nextVal === 'none') {
+                                                        nextExcludeN = 3;
+                                                        nextExcludeEtc = true;
+                                                        nextLevel = 95;
+                                                        nextDiffMin = 10;
+                                                        nextDiffMax = 60;
+                                                    }
 
-                                    const pageId = sessionStorage.getItem('pageId');
-                                    const user = auth?.user?.userId;
-                                    if (pageId && user) {
-                                        const newUi = {
-                                            ...uiSettings,
-                                            format_show_n: showN,
-                                            format_n_round: decimalN === '' ? 0 : decimalN,
-                                            format_show_percent: showPct,
-                                            format_percent_round: decimalPct === '' ? 0 : decimalPct,
-                                            show_t_test: nextVal === 't_test',
-                                            sig_type: nextVal === 't_test' ? 't-test' : nextVal,
-                                            sig_diff_fin_mode: nextVal,
-                                            sig_exclude_under_n: nextExcludeN,
-                                            sig_exclude_etc: nextExcludeEtc,
-                                            sig_level: nextLevel,
-                                            sig_diff_min: nextDiffMin,
-                                            sig_diff_max: nextDiffMax,
-                                            percent_symbol: uiSettings?.percent_symbol ?? false,
-                                            percent_as_column: uiSettings?.percent_as_column ?? uiSettings?.format_percent_as_column ?? false,
-                                            stub_group_layout: uiSettings?.stub_group_layout ?? 'merge',
-                                            base_prefix: uiSettings?.base_prefix ?? "(",
-                                            base_postfix: uiSettings?.base_postfix ?? ")",
-                                        };
-                                        setUiSettings(newUi);
+                                                    setSigExcludeUnderN(nextExcludeN);
+                                                    setSigExcludeEtc(nextExcludeEtc);
+                                                    setSigLevel(nextLevel);
+                                                    setSigDiffMin(nextDiffMin);
+                                                    setSigDiffMax(nextDiffMax);
 
-                                        isSavingDirectlyRef.current = true;
+                                                    setLocalSigExcludeUnderN(nextExcludeN);
+                                                    setLocalSigExcludeEtc(nextExcludeEtc);
+                                                    setLocalSigLevel(nextLevel);
+                                                    setLocalSigDiffMin(nextDiffMin);
+                                                    setLocalSigDiffMax(nextDiffMax);
 
-                                        try {
-                                            // 1. set API (설정 저장)를 먼저 동기 호출하여 저장 완료를 보장
-                                            await savePageSettings.mutateAsync({
-                                                pageid: pageId,
-                                                user: user,
-                                                ui_settings: newUi
-                                            });
+                                                    const pageId = sessionStorage.getItem('pageId');
+                                                    const user = auth?.user?.userId;
+                                                    if (pageId && user) {
+                                                        const newUi = {
+                                                            ...uiSettings,
+                                                            format_show_n: showN,
+                                                            format_n_round: decimalN === '' ? 0 : decimalN,
+                                                            format_show_percent: showPct,
+                                                            format_percent_round: decimalPct === '' ? 0 : decimalPct,
+                                                            show_t_test: nextVal === 't_test',
+                                                            sig_type: nextVal === 't_test' ? 't-test' : nextVal,
+                                                            sig_diff_fin_mode: nextVal,
+                                                            sig_exclude_under_n: nextExcludeN,
+                                                            sig_exclude_etc: nextExcludeEtc,
+                                                            sig_level: nextLevel,
+                                                            sig_diff_min: nextDiffMin,
+                                                            sig_diff_max: nextDiffMax,
+                                                            percent_symbol: uiSettings?.percent_symbol ?? false,
+                                                            percent_as_column: uiSettings?.percent_as_column ?? uiSettings?.format_percent_as_column ?? false,
+                                                            stub_group_layout: uiSettings?.stub_group_layout ?? 'merge',
+                                                            base_prefix: uiSettings?.base_prefix ?? "(",
+                                                            base_postfix: uiSettings?.base_postfix ?? ")",
+                                                        };
+                                                        setUiSettings(newUi);
 
-                                            // 2. 저장 완료 후 styled API (데이터 조회) 호출
-                                            await fetchCrossAnalysisData('normal', null, 1, filterExpression, {
-                                                sigType: nextVal === 't_test' ? 't-test' : nextVal,
-                                                excludeN: nextExcludeN,
-                                                excludeEtc: nextExcludeEtc,
-                                                level: nextLevel,
-                                                diffMin: nextDiffMin,
-                                                diffMax: nextDiffMax
-                                            });
-                                        } catch (err) {
-                                            console.error("Failed to save or fetch on sigType change", err);
-                                        } finally {
-                                            setTimeout(() => {
-                                                isSavingDirectlyRef.current = false;
-                                            }, 600);
-                                        }
-                                    }
-                                }}
-                                style={{ width: '160px', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
-                                className="custom-xinfo-dropdown"
-                                popupSettings={{ className: "custom-xinfo-dropdown" }}
-                            />
-                            <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
-                        </div>
-                        {/* 톱니바퀴 아이콘 상세 설정 버튼 (미적용 'none'이 아닐 때만 노출) */}
-                        {sigType !== 'none' && (
-                            <>
-                                <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
-                                <button
-                                    key={animateSettingsTrigger}
-                                    onClick={() => {
-                                        setAnimateSettingsTrigger(prev => prev + 1);
-                                        if (isSigPopupOpen) {
-                                            // 상세설정 팝업이 닫힐 때 설정을 반영하여 즉시 갱신
-                                            fetchCrossAnalysisData('normal', null, currentPage, filterExpression);
-                                        }
-                                        setIsSigPopupOpen(!isSigPopupOpen);
-                                    }}
-                                    className={`dp-sig-settings-btn ${animateSettingsTrigger > 0 ? 'animate-sig-highlight' : ''}`}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        width: '32px',
-                                        height: '100%',
-                                        border: 'none',
-                                        background: isSigPopupOpen ? '#eff6ff' : '#ffffff',
-                                        color: isSigPopupOpen ? '#2563eb' : '#64748b',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s',
-                                    }}
-                                    title="차이검증 세부 설정"
-                                >
-                                    <Settings size={16} />
-                                </button>
-                            </>
+                                                        isSavingDirectlyRef.current = true;
+
+                                                        try {
+                                                            await savePageSettings.mutateAsync({
+                                                                pageid: pageId,
+                                                                user: user,
+                                                                ui_settings: newUi
+                                                            });
+
+                                                            await fetchCrossAnalysisData('normal', null, 1, filterExpression, {
+                                                                sigType: nextVal === 't_test' ? 't-test' : nextVal,
+                                                                excludeN: nextExcludeN,
+                                                                excludeEtc: nextExcludeEtc,
+                                                                level: nextLevel,
+                                                                diffMin: nextDiffMin,
+                                                                diffMax: nextDiffMax
+                                                            });
+                                                        } catch (err) {
+                                                            console.error("Failed to save or fetch on sigType change", err);
+                                                        } finally {
+                                                            setTimeout(() => {
+                                                                isSavingDirectlyRef.current = false;
+                                                            }, 600);
+                                                        }
+                                                    }
+                                                }}
+                                                style={{ width: '100%', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
+                                                className="custom-xinfo-dropdown"
+                                                popupSettings={{ className: "custom-xinfo-dropdown" }}
+                                            />
+                                            <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
+                                        </div>
+                                        {sigType !== 'none' && (
+                                            <button
+                                                key={animateSettingsTrigger}
+                                                onClick={() => {
+                                                    setAnimateSettingsTrigger(prev => prev + 1);
+                                                    if (isSigPopupOpen) {
+                                                        fetchCrossAnalysisData('normal', null, currentPage, filterExpression);
+                                                    }
+                                                    setIsSigPopupOpen(!isSigPopupOpen);
+                                                }}
+                                                className={`dp-sig-settings-btn ${animateSettingsTrigger > 0 ? 'animate-sig-highlight' : ''}`}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    width: '32px',
+                                                    height: '32px',
+                                                    border: '1px solid #cbd5e1',
+                                                    borderRadius: '6px',
+                                                    background: isSigPopupOpen ? '#eff6ff' : '#ffffff',
+                                                    color: isSigPopupOpen ? '#2563eb' : '#64748b',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s',
+                                                }}
+                                                title="차이검증 세부 설정"
+                                            >
+                                                <Settings size={16} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
+
+                                <div style={{ fontSize: '13px', fontWeight: 600, color: '#475569', paddingBottom: '2px' }}>
+                                    표시 값 / 소수점
+                                </div>
+
+                                {/* N 설정 */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div
+                                        onClick={() => {
+                                            if (showN && !showPct) {
+                                                modal.showAlert("알림", "최소 1개 이상의 지표(N 또는 %)를 선택해야 합니다.");
+                                                return;
+                                            }
+                                            setShowN(!showN);
+                                        }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+                                    >
+                                        <div style={{
+                                            width: '18px', height: '18px', borderRadius: '4px',
+                                            background: showN ? '#2563eb' : '#fff',
+                                            border: `1.5px solid ${showN ? '#2563eb' : '#cbd5e1'}`,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            flexShrink: 0
+                                        }}>
+                                            {showN && (
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <span style={{ fontSize: '13px', fontWeight: 500, color: '#334155' }}>N</span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            width: '60px', height: '28px', border: '1px solid #cbd5e1', borderRadius: '6px',
+                                            background: showN ? '#ffffff' : '#f8fafc'
+                                        }}>
+                                            <input
+                                                type="text"
+                                                disabled={!showN}
+                                                value={localDecimalN}
+                                                onChange={(e) => {
+                                                    let val = e.target.value.replace(/[^0-9]/g, '');
+                                                    if (val !== '') {
+                                                        let num = parseInt(val);
+                                                        if (num > 13) num = 13;
+                                                        setLocalDecimalN(num);
+                                                    } else {
+                                                        setLocalDecimalN('');
+                                                    }
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'ArrowUp') {
+                                                        e.preventDefault();
+                                                        setLocalDecimalN(prev => Math.min(13, (prev === '' ? 0 : prev) + 1));
+                                                    } else if (e.key === 'ArrowDown') {
+                                                        e.preventDefault();
+                                                        setLocalDecimalN(prev => Math.max(0, (prev === '' ? 0 : prev) - 1));
+                                                    }
+                                                }}
+                                                onBlur={() => {
+                                                    if (localDecimalN === '') setLocalDecimalN(0);
+                                                }}
+                                                style={{
+                                                    width: '100%', height: '100%', border: 'none', background: 'transparent',
+                                                    textAlign: 'center', fontSize: '13px', fontWeight: 500, color: showN ? '#1e293b' : '#94a3b8',
+                                                    outline: 'none', padding: 0
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* % 설정 */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div
+                                        onClick={() => {
+                                            if (showPct && !showN) {
+                                                modal.showAlert("알림", "최소 1개 이상의 지표(N 또는 %)를 선택해야 합니다.");
+                                                return;
+                                            }
+                                            setShowPct(!showPct);
+                                        }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+                                    >
+                                        <div style={{
+                                            width: '18px', height: '18px', borderRadius: '4px',
+                                            background: showPct ? '#2563eb' : '#fff',
+                                            border: `1.5px solid ${showPct ? '#2563eb' : '#cbd5e1'}`,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            flexShrink: 0
+                                        }}>
+                                            {showPct && (
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <span style={{ fontSize: '13px', fontWeight: 500, color: '#334155' }}>%</span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            width: '60px', height: '28px', border: '1px solid #cbd5e1', borderRadius: '6px',
+                                            background: showPct ? '#ffffff' : '#f8fafc'
+                                        }}>
+                                            <input
+                                                type="text"
+                                                disabled={!showPct}
+                                                value={localDecimalPct}
+                                                onChange={(e) => {
+                                                    let val = e.target.value.replace(/[^0-9]/g, '');
+                                                    if (val !== '') {
+                                                        let num = parseInt(val);
+                                                        if (num > 13) num = 13;
+                                                        setLocalDecimalPct(num);
+                                                    } else {
+                                                        setLocalDecimalPct('');
+                                                    }
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'ArrowUp') {
+                                                        e.preventDefault();
+                                                        setLocalDecimalPct(prev => Math.min(13, (prev === '' ? 1 : prev) + 1));
+                                                    } else if (e.key === 'ArrowDown') {
+                                                        e.preventDefault();
+                                                        setLocalDecimalPct(prev => Math.max(0, (prev === '' ? 1 : prev) - 1));
+                                                    }
+                                                }}
+                                                onBlur={() => {
+                                                    if (localDecimalPct === '') setLocalDecimalPct(1);
+                                                }}
+                                                style={{
+                                                    width: '100%', height: '100%', border: 'none', background: 'transparent',
+                                                    textAlign: 'center', fontSize: '13px', fontWeight: 500, color: showPct ? '#1e293b' : '#94a3b8',
+                                                    outline: 'none', padding: 0
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         )}
-                    </div>
-
-                    {/* N Control Group */}
-                    <div style={{
-                        display: 'flex', alignItems: 'center', borderRadius: '20px', border: '1px solid #cbd5e1', background: '#f8fafc', height: '32px', overflow: 'hidden'
-                    }}>
-                        <div
-                            onClick={() => {
-                                if (showN && !showPct) {
-                                    modal.showAlert("알림", "최소 1개 이상의 지표(N 또는 %)를 선택해야 합니다.");
-                                    return;
-                                }
-                                setShowN(!showN);
-                            }}
-                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', height: '100%', cursor: 'pointer', background: '#eef2ff' }}
-                        >
-                            <div style={{
-                                width: '16px', height: '16px', borderRadius: '4px',
-                                background: showN ? '#3b82f6' : '#fff',
-                                border: `1.5px solid ${showN ? '#3b82f6' : '#3b82f6'}`,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                flexShrink: 0
-                            }}>
-                                {showN && (
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                )}
-                            </div>
-                            <span style={{ fontSize: '14px', fontWeight: 800, color: '#3730a3', userSelect: 'none' }}>N</span>
-                        </div>
-                        <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', height: '100%', background: showN ? '#ffffff' : '#f8fafc' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 700, color: showN ? '#1e293b' : '#94a3b8' }}>소수점</span>
-                            <div style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                width: '38px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
-                                background: showN ? '#ffffff' : '#f1f5f9'
-                            }}>
-                                <input
-                                    type="text"
-                                    disabled={!showN}
-                                    value={localDecimalN}
-                                    onChange={(e) => {
-                                        let val = e.target.value.replace(/[^0-9]/g, '');
-                                        if (val !== '') {
-                                            let num = parseInt(val);
-                                            if (num > 13) num = 13;
-                                            setLocalDecimalN(num);
-                                        } else {
-                                            setLocalDecimalN('');
-                                        }
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'ArrowUp') {
-                                            e.preventDefault();
-                                            setLocalDecimalN(prev => Math.min(13, (prev === '' ? 0 : prev) + 1));
-                                        } else if (e.key === 'ArrowDown') {
-                                            e.preventDefault();
-                                            setLocalDecimalN(prev => Math.max(0, (prev === '' ? 0 : prev) - 1));
-                                        }
-                                    }}
-                                    onBlur={() => {
-                                        if (localDecimalN === '') setLocalDecimalN(0);
-                                    }}
-                                    style={{
-                                        width: '100%', height: '100%', border: 'none', background: 'transparent',
-                                        textAlign: 'center', fontSize: '13px', fontWeight: 800, color: showN ? '#1e3a8a' : '#94a3b8',
-                                        outline: 'none', padding: 0
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* % Control Group */}
-                    <div style={{
-                        display: 'flex', alignItems: 'center', borderRadius: '20px', border: '1px solid #cbd5e1', background: '#f8fafc', height: '32px', overflow: 'hidden'
-                    }}>
-                        <div
-                            onClick={() => {
-                                if (showPct && !showN) {
-                                    modal.showAlert("알림", "최소 1개 이상의 지표(N 또는 %)를 선택해야 합니다.");
-                                    return;
-                                }
-                                setShowPct(!showPct);
-                            }}
-                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', height: '100%', cursor: 'pointer', background: '#eef2ff' }}
-                        >
-                            <div style={{
-                                width: '16px', height: '16px', borderRadius: '4px',
-                                background: showPct ? '#3b82f6' : '#fff',
-                                border: `1.5px solid ${showPct ? '#3b82f6' : '#3b82f6'}`,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                flexShrink: 0
-                            }}>
-                                {showPct && (
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                )}
-                            </div>
-                            <span style={{ fontSize: '14px', fontWeight: 800, color: '#3730a3', userSelect: 'none' }}>%</span>
-                        </div>
-                        <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', height: '100%', background: showPct ? '#ffffff' : '#f8fafc' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 700, color: showPct ? '#1e293b' : '#94a3b8' }}>소수점</span>
-                            <div style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                width: '38px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
-                                background: showPct ? '#ffffff' : '#f1f5f9'
-                            }}>
-                                <input
-                                    type="text"
-                                    disabled={!showPct}
-                                    value={localDecimalPct}
-                                    onChange={(e) => {
-                                        let val = e.target.value.replace(/[^0-9]/g, '');
-                                        if (val !== '') {
-                                            let num = parseInt(val);
-                                            if (num > 13) num = 13;
-                                            setLocalDecimalPct(num);
-                                        } else {
-                                            setLocalDecimalPct('');
-                                        }
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'ArrowUp') {
-                                            e.preventDefault();
-                                            setLocalDecimalPct(prev => Math.min(13, (prev === '' ? 1 : prev) + 1));
-                                        } else if (e.key === 'ArrowDown') {
-                                            e.preventDefault();
-                                            setLocalDecimalPct(prev => Math.max(0, (prev === '' ? 1 : prev) - 1));
-                                        }
-                                    }}
-                                    onBlur={() => {
-                                        if (localDecimalPct === '') setLocalDecimalPct(1);
-                                    }}
-                                    style={{
-                                        width: '100%', height: '100%', border: 'none', background: 'transparent',
-                                        textAlign: 'center', fontSize: '13px', fontWeight: 800, color: showPct ? '#1e3a8a' : '#94a3b8',
-                                        outline: 'none', padding: 0
-                                    }}
-                                />
-                            </div>
-                        </div>
                     </div>
 
 
