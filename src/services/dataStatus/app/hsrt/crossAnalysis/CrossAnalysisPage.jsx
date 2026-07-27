@@ -2658,7 +2658,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             model: selectedModel,
             variables: variablesPayload,
             variableIds: filteredBanners.map(b => b.id),
-            variable_ids: filteredBanners.map(b => b.id),
+            // variable_ids: filteredBanners.map(b => b.id),
             triggerBatch: triggerBatch
         };
 
@@ -2737,7 +2737,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 model: selectedModel,
                 variables: variablesPayload,
                 variableIds: filteredBanners.map(b => b.id),
-                variable_ids: filteredBanners.map(b => b.id),
+                // variable_ids: filteredBanners.map(b => b.id),
                 triggerBatch: false
             };
 
