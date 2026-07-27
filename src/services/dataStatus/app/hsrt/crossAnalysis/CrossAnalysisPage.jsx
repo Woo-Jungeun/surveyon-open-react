@@ -3592,7 +3592,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     disabled={true}
                                     style={{
                                         color: '#3b82f6',
-                                        border: '1px solid #bfdbfe',
+                                        border: '1px solid #93c5fd',
                                         background: '#eff6ff',
                                         height: '32px',
                                         padding: '0 16px',
@@ -3650,9 +3650,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     await fetchAiSummaryStatus(true);
                                 }}
                                 style={{
-                                    color: '#ffffff',
-                                    border: '1px solid #3b82f6',
-                                    background: '#3b82f6',
+                                    color: '#3b82f6',
+                                    border: '1px solid #93c5fd',
+                                    background: '#eff6ff',
                                     height: '32px',
                                     padding: '0 16px',
                                     display: 'flex',
@@ -3663,15 +3663,15 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     fontSize: '13px',
                                     fontWeight: 600,
                                     cursor: 'pointer',
-                                    transition: 'background 0.2s',
+                                    transition: 'all 0.2s',
                                     userSelect: 'none',
                                     outline: 'none'
                                 }}
                                 className="dp-btn"
-                                onMouseOver={(e) => e.currentTarget.style.background = '#2563eb'}
-                                onMouseOut={(e) => e.currentTarget.style.background = '#3b82f6'}
+                                onMouseOver={(e) => e.currentTarget.style.background = '#dbeafe'}
+                                onMouseOut={(e) => e.currentTarget.style.background = '#eff6ff'}
                             >
-                                <Sparkles size={14} color="#ffffff" />
+                                <Sparkles size={14} color="#3b82f6" />
                                 <span>전체 AI 요약</span>
                             </button>
                         )}
