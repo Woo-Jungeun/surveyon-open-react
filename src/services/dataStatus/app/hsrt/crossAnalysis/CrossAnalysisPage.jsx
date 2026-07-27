@@ -1160,7 +1160,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                         {/* 인구통계 격차 분석 */}
                                         {aiSummaryData.mode_a_demographic_analysis && aiSummaryData.mode_a_demographic_analysis.length > 0 && (
                                             <div>
-                                                <div style={{ fontSize: '13px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
+                                                <div style={{ fontSize: '14px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
                                                     인구통계 격차 분석
                                                 </div>
                                                 <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1181,7 +1181,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                         {/* 배너별 주요 결과 */}
                                         {aiSummaryData.mode_b_parallel_summary && aiSummaryData.mode_b_parallel_summary.key_insights_by_banner && aiSummaryData.mode_b_parallel_summary.key_insights_by_banner.length > 0 && (
                                             <div>
-                                                <div style={{ fontSize: '13px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
+                                                <div style={{ fontSize: '14px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
                                                     배너별 주요 결과
                                                 </div>
                                                 <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1201,7 +1201,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                         {/* 전략적 핵심 요약 */}
                                         {aiSummaryData.mode_b_parallel_summary && (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                <div style={{ fontSize: '13px', fontWeight: 700, color: '#2563eb' }}>
+                                                <div style={{ fontSize: '14px', fontWeight: 700, color: '#2563eb' }}>
                                                     전략적 핵심 요약
                                                 </div>
                                                 {aiSummaryData.mode_b_parallel_summary.result_data && (
@@ -1209,7 +1209,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                         borderLeft: '3px solid #2563eb',
                                                         paddingLeft: '12px',
                                                         color: '#1e293b',
-                                                        fontSize: '13px',
+                                                        fontSize: '14px',
                                                         lineHeight: '1.6',
                                                         fontWeight: 500,
                                                         margin: '4px 0',
