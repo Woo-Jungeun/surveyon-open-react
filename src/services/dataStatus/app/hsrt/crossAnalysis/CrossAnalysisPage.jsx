@@ -485,7 +485,7 @@ const ConditionHeaderCell = (props) => {
     );
 };
 
-const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimalN, decimalPct, uiSettings, projectNum, overviewPayload, userId, styleCss, evaluateChartData, selectedXInfo, filterExpression, defaultBannerId }) => {
+const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimalN, decimalPct, uiSettings, projectNum, overviewPayload, userId, styleCss, evaluateChartData, selectedXInfo, filterExpression, defaultBannerId, models, selectedModel, setSelectedModel }) => {
     const [isAiSummaryOpen, setIsAiSummaryOpen] = useState(false);
     const [isGridOpen, setIsGridOpen] = useState(true);
     const [isChartOpen, setIsChartOpen] = useState(false);
@@ -494,13 +494,13 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     const [selectedChartGroups, setSelectedChartGroups] = useState([]);
     const [showPercentSymbol, setShowPercentSymbol] = useState(false);
 
-    const [aiSummaryData, setAiSummaryData] = useState("");
+    const [aiSummaryData, setAiSummaryData] = useState(null);
     const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
-    const { getAiSummary, evaluateVariable } = DpRequestPageApi();
+    const { getCrosstabAiSummary } = DpRequestPageApi();
 
     useEffect(() => {
-        setAiSummaryData("");
-    }, [banner?.id, selectedXInfo, filterExpression, uiSettings?.weight_variable]);
+        setAiSummaryData(null);
+    }, [banner?.id, selectedXInfo, filterExpression, uiSettings?.weight_variable, selectedModel]);
 
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
     const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
@@ -560,7 +560,6 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                 aiSummaryFetchingRef.current = true;
                 setIsAiSummaryLoading(true);
 
-                const stub = [banner.id];
                 let bannerVarList = [];
                 if (selectedXInfo && selectedXInfo !== '__none__') {
                     bannerVarList = [selectedXInfo];
@@ -579,63 +578,25 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                     bannerVarList = [defaultBannerId];
                 }
 
-                if (!stub.length || !bannerVarList.length) {
+                if (!bannerVarList.length) {
                     setAiSummaryData("요약할 데이터의 기준변수(Banner)를 지정해주세요.");
                     return;
                 }
 
-                const evalPayload = {
-                    pageid: pageId,
-                    user: userId,
-                    table: {
-                        id: banner.id,
-                        stub,
-                        banner: bannerVarList
-                    },
-                    weight_col: uiSettings?.weight_variable || null,
-                    filter_expression: filterExpression || ""
+                const payload = {
+                    pageId: pageId,
+                    variableId: banner.id,
+                    banner: bannerVarList,
+                    filterExpression: filterExpression || "",
+                    weightCol: uiSettings?.weight_variable || "",
+                    model: selectedModel,
+                    user: userId
                 };
 
-                const evalRes = await evaluateVariable.mutateAsync(evalPayload);
-                if (!evalRes || evalRes.success !== "777" || !evalRes.resultjson) {
-                    setAiSummaryData("요약할 데이터의 로우 데이터를 가져오지 못했습니다.");
-                    return;
-                }
+                const res = await getCrosstabAiSummary.mutateAsync(payload);
 
-                const tablesItem = {
-                    id: banner.id,
-                    table_id: banner.id,
-                    label: banner.label,
-                    title: banner.label,
-                    type: banner.raw?.type || 'single'
-                };
-
-                const resultsItem = {
-                    table_id: banner.id,
-                    result: evalRes.resultjson
-                };
-
-                const reqData = {
-                    project_num: projectNum,
-                    user: userId,
-                    page_id: pageId,
-                    table_id: banner.id,
-                    model: "llm-gpt-oss-120b",
-                    temperature: 0.2,
-                    result_json: {
-                        success: "777",
-                        message: "OK",
-                        resultjson: {
-                            tables: [tablesItem],
-                            results: [resultsItem]
-                        }
-                    }
-                };
-
-                const res = await getAiSummary.mutateAsync(reqData);
-
-                if (String(res?.success) === "777" && res?.resultjson?.[banner.id]?.[0]?.result_data) {
-                    setAiSummaryData(res.resultjson[banner.id][0].result_data);
+                if (String(res?.success) === "777" && res?.resultjson?.result_data) {
+                    setAiSummaryData(res.resultjson.result_data);
                 } else {
                     setAiSummaryData("요약 데이터를 불러오지 못했습니다.");
                 }
@@ -650,7 +611,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
         fetchAiSummaryData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isAiSummaryOpen, banner?.id, projectNum, userId, selectedXInfo, filterExpression, defaultBannerId]);
+    }, [isAiSummaryOpen, banner?.id, projectNum, userId, selectedXInfo, filterExpression, defaultBannerId, selectedModel]);
 
     const getChartTypeName = (mode) => {
         const typeMap = {
@@ -1111,9 +1072,32 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
                 {/* 2. AI Summary */}
                 <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isAiSummaryOpen ? '12px' : '8px 12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                    <div onClick={() => setIsAiSummaryOpen(!isAiSummaryOpen)} style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#1e3a8a', marginBottom: isAiSummaryOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Sparkles size={16} /> AI 데이터 요약</div>
-                        {isAiSummaryOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#1e3a8a', marginBottom: isAiSummaryOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div onClick={() => setIsAiSummaryOpen(!isAiSummaryOpen)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', flex: 1, userSelect: 'none' }}>
+                            <Sparkles size={16} /> AI 데이터 요약
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            {isAiSummaryOpen && (
+                                <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>분석 LLM모델:</span>
+                                    <DropDownList
+                                        data={models}
+                                        textField="text"
+                                        dataItemKey="value"
+                                        value={models.find(m => m.value === selectedModel) || models[0] || null}
+                                        onChange={(e) => {
+                                            setSelectedModel(e.value.value);
+                                            setAiSummaryData(null);
+                                        }}
+                                        style={{ width: '200px', height: '26px', fontSize: '12px', borderRadius: '4px' }}
+                                        popupSettings={{ className: "mp-dropdown-popup" }}
+                                    />
+                                </div>
+                            )}
+                            <div onClick={() => setIsAiSummaryOpen(!isAiSummaryOpen)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                                {isAiSummaryOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
+                            </div>
+                        </div>
                     </div>
                     {isAiSummaryOpen && (
                         <div style={{ display: 'flex', alignItems: 'flex-start', minHeight: '60px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#334155', padding: '16px' }}>
@@ -1123,9 +1107,77 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                     AI 분석 결과를 가져오는 중입니다...
                                 </div>
                             ) : aiSummaryData ? (
-                                <div style={{ fontSize: '13px', lineHeight: '1.6', whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
-                                    {aiSummaryData}
-                                </div>
+                                typeof aiSummaryData === 'string' ? (
+                                    <div style={{ fontSize: '13px', lineHeight: '1.6', whiteSpace: 'pre-wrap', wordBreak: 'keep-all', width: '100%' }}>
+                                        {aiSummaryData}
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', textAlign: 'left' }}>
+                                        {/* 인구통계 격차 분석 */}
+                                        {aiSummaryData.mode_a_demographic_analysis && aiSummaryData.mode_a_demographic_analysis.length > 0 && (
+                                            <div>
+                                                <div style={{ fontSize: '13px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
+                                                    인구통계 격차 분석
+                                                </div>
+                                                <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    {aiSummaryData.mode_a_demographic_analysis.map((item, idx) => (
+                                                        <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', fontSize: '13px', lineHeight: '1.6' }}>
+                                                            <span style={{ color: '#2563eb', marginRight: '4px', fontSize: '16px', lineHeight: 1 }}>•</span>
+                                                            <div style={{ wordBreak: 'keep-all' }}>
+                                                                <span style={{ fontWeight: 700, color: '#1e293b' }}>[{item.variable_name}]</span>
+                                                                <span style={{ color: '#2563eb', fontWeight: 600, marginLeft: '6px', marginRight: '6px' }}>({item.max_min_gap})</span>
+                                                                <span style={{ color: '#334155' }}>{item.finding}</span>
+                                                            </div>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+
+                                        {/* 배너별 주요 결과 */}
+                                        {aiSummaryData.mode_b_parallel_summary && aiSummaryData.mode_b_parallel_summary.key_insights_by_banner && aiSummaryData.mode_b_parallel_summary.key_insights_by_banner.length > 0 && (
+                                            <div>
+                                                <div style={{ fontSize: '13px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
+                                                    배너별 주요 결과
+                                                </div>
+                                                <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    {aiSummaryData.mode_b_parallel_summary.key_insights_by_banner.map((item, idx) => (
+                                                        <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', fontSize: '13px', lineHeight: '1.6' }}>
+                                                            <span style={{ color: '#2563eb', marginRight: '4px', fontSize: '16px', lineHeight: 1 }}>•</span>
+                                                            <div style={{ wordBreak: 'keep-all' }}>
+                                                                <span style={{ fontWeight: 700, color: '#1e293b' }}>[{item.banner_name}]</span>
+                                                                <span style={{ color: '#334155', marginLeft: '6px' }}>{item.insight}</span>
+                                                            </div>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+
+                                        {/* 전략적 핵심 요약 */}
+                                        {aiSummaryData.mode_b_parallel_summary && (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                <div style={{ fontSize: '13px', fontWeight: 700, color: '#2563eb' }}>
+                                                    전략적 핵심 요약
+                                                </div>
+                                                {aiSummaryData.mode_b_parallel_summary.result_data && (
+                                                    <div style={{
+                                                        borderLeft: '3px solid #2563eb',
+                                                        paddingLeft: '12px',
+                                                        color: '#1e293b',
+                                                        fontSize: '13px',
+                                                        lineHeight: '1.6',
+                                                        fontWeight: 500,
+                                                        margin: '4px 0',
+                                                        wordBreak: 'keep-all'
+                                                    }}>
+                                                        {aiSummaryData.mode_b_parallel_summary.result_data}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )
                             ) : (
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', color: '#64748b' }}>
                                     <span style={{ fontSize: '13px' }}>AI 분석 요약 결과를 가져올 수 없습니다.</span>
@@ -1476,7 +1528,40 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
 const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getOverviewContext, getOverview, getOverviewStyled, savePageSettings, exportOverviewXlsx, createSnapshot, getAiSummary, evaluateChartData, deleteBaseVariable, getRecodedPlain } = DpRequestPageApi();
+    const { getOverviewContext, getOverviewStyled, savePageSettings, exportOverviewXlsx, createSnapshot, evaluateChartData, deleteBaseVariable, getAiModels } = DpRequestPageApi();
+    const [models, setModels] = useState([
+        { text: "openai/gpt-4o", value: "openai/gpt-4o" }
+    ]);
+    const [selectedModel, setSelectedModel] = useState("openai/gpt-4o");
+    const modelsFetchedRef = useRef(false);
+
+    useEffect(() => {
+        const fetchModels = async () => {
+            if (modelsFetchedRef.current) return;
+            try {
+                modelsFetchedRef.current = true;
+                const res = await getAiModels.mutateAsync({ user: auth?.user?.userId || '' });
+                if (String(res?.success) === '777' && Array.isArray(res?.resultjson)) {
+                    const mapped = res.resultjson.map(m => ({ text: m.label, value: m.value }));
+                    if (mapped.length > 0) {
+                        setModels(mapped);
+                        const hasGpt4o = mapped.some(m => m.value === "openai/gpt-4o");
+                        if (hasGpt4o) {
+                            setSelectedModel("openai/gpt-4o");
+                        } else {
+                            setSelectedModel(mapped[0].value);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("AI 모델 조회 오류:", e);
+                modelsFetchedRef.current = false;
+            }
+        };
+        fetchModels();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [auth?.user?.userId]);
+
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -2803,7 +2888,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 onChange={async (e) => {
                                     const nextVal = (typeof e.value === 'object' && e.value !== null) ? e.value.value : e.value;
                                     setSelectedWeight(nextVal);
-                                    
+
                                     const pageId = sessionStorage.getItem('pageId');
                                     const user = auth?.user?.userId;
                                     if (pageId && user) {
@@ -2875,7 +2960,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     const nextVal = (typeof e.value === 'object' && e.value !== null) ? e.value.value : e.value;
                                     const prevVal = sigType;
                                     setSigType(nextVal);
-                                    
+
                                     if (nextVal !== 'none') {
                                         setIsSigPopupOpen(true);
                                     } else {
@@ -3653,6 +3738,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 selectedXInfo={selectedXInfo}
                                 filterExpression={filterExpression}
                                 defaultBannerId={defaultBannerId}
+                                models={models}
+                                selectedModel={selectedModel}
+                                setSelectedModel={setSelectedModel}
                             />
                         ))}
                     </div>

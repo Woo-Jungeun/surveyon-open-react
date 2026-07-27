@@ -267,6 +267,11 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/AiSummary", "API_BASE_URL_OPENAI")
     );
 
+    /** 교차분석 - AI 데이터 요약 조회 */
+    const getCrosstabAiSummary = useMutation(
+        async (data) => await api.post(data, "/analysis/evaluate/crosstab-ai-summary", "API_BASE_URL_DATASTATUS")
+    );
+
     /** AI 조건식 자동생성 API */
     const autoGenerateLogic = useMutation(
         async (data) => await api.post(data, "/variables/ai/auto-generate-logic", "API_BASE_URL_DATASTATUS"),
@@ -330,6 +335,7 @@ export function DpRequestPageApi() {
         createSnapshot,
         savePageSettings,
         getAiSummary,
+        getCrosstabAiSummary,
         reapplyPreset,
         getRecodedPlain,
         getWeightPidList,
