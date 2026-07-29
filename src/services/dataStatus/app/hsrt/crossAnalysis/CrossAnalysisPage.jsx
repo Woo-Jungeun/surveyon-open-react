@@ -486,11 +486,8 @@ const ConditionHeaderCell = (props) => {
 };
 
 const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimalN, decimalPct, uiSettings, projectNum, overviewPayload, userId, styleCss, evaluateChartData, selectedXInfo, filterExpression, defaultBannerId, selectedModel, globalAiSummaryOpen, globalAiResult, globalAiRunning }) => {
-    const [isAiSummaryOpen, setIsAiSummaryOpen] = useState(false);
-
-    useEffect(() => {
-        setIsAiSummaryOpen(globalAiSummaryOpen);
-    }, [globalAiSummaryOpen]);
+    const [localAiSummaryOpen, setLocalAiSummaryOpen] = useState(false);
+    const isAiSummaryOpen = globalAiSummaryOpen || localAiSummaryOpen;
 
     const [isGridOpen, setIsGridOpen] = useState(true);
     const [isChartOpen, setIsChartOpen] = useState(false);
@@ -1082,11 +1079,11 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                 {/* 2. AI Summary */}
                 <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isAiSummaryOpen ? '12px' : '8px 12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                     <div style={{ fontSize: '14px', fontWeight: 700, color: '#1e3a8a', marginBottom: isAiSummaryOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div onClick={() => setIsAiSummaryOpen(!isAiSummaryOpen)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', flex: 1, userSelect: 'none' }}>
+                        <div onClick={() => setLocalAiSummaryOpen(!isAiSummaryOpen)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', flex: 1, userSelect: 'none' }}>
                             <Sparkles size={16} /> AI 데이터 요약
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                            <div onClick={() => setIsAiSummaryOpen(!isAiSummaryOpen)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                            <div onClick={() => setLocalAiSummaryOpen(!isAiSummaryOpen)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                                 {isAiSummaryOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
                             </div>
                         </div>
