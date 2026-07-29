@@ -212,6 +212,27 @@ const MenuPermissionPage = () => {
         return pageMembers.some(m => m.user_id === userId);
     }, [selectedUser, pageMembers]);
 
+    // H-SRT 고객 수정 모드 여부
+    const isClientEditMode = useMemo(() => {
+        return isEditMode && (selectedRole === 'client' || selectedRole === 'custom_srt');
+    }, [isEditMode, selectedRole]);
+
+    // 수정 모드와 등록 모드에 따라 역할 권한 드롭다운 목록 필터링
+    const filteredRoleOptions = useMemo(() => {
+        if (isEditMode) {
+            const isSelectedClient = selectedRole === 'client' || selectedRole === 'custom_srt';
+            if (isSelectedClient) {
+                // H-SRT 고객 수정 시: H-SRT 고객 옵션만 노출 (어차피 disabled 될 예정)
+                return ROLE_OPTIONS.filter(opt => opt.value === 'client');
+            } else {
+                // 일반 작업자 수정 시: H-SRT 고객 옵션 제거
+                return ROLE_OPTIONS.filter(opt => opt.value !== 'client');
+            }
+        }
+        // 신규 등록 시: 전체 노출
+        return ROLE_OPTIONS;
+    }, [isEditMode, selectedRole]);
+
     // Handle dropdown user selection
     const handleDropdownChange = (e) => {
         const val = e.value;
@@ -254,7 +275,7 @@ const MenuPermissionPage = () => {
                         pageid: pageId,
                         role: "custom_srt",
                         user: authUserId || "",
-                        user_id: userId,
+                        user_id: userId === "H-SRT고객" ? "" : userId,
                         expiration: moment(expiredDate).format("YYYY-MM-DD") + " 23:59:59"
                     }
                 });
@@ -477,7 +498,7 @@ const MenuPermissionPage = () => {
                         <div className="mp-form-field">
                             <label className="mp-form-label">작업자 권한 선택 <span className="mp-required">*</span></label>
                             <DropDownList
-                                data={ROLE_OPTIONS}
+                                data={filteredRoleOptions}
                                 textField="text"
                                 dataItemKey="value"
                                 onChange={(e) => {
@@ -497,6 +518,7 @@ const MenuPermissionPage = () => {
                                 value={ROLE_OPTIONS.find(r => r.value === selectedRole) || null}
                                 popupSettings={{ className: "mp-dropdown-popup" }}
                                 placeholder="권한을 선택해 주세요"
+                                disabled={isClientEditMode}
                             />
                         </div>
 
@@ -527,7 +549,7 @@ const MenuPermissionPage = () => {
                                         text: `${selectedUser.worker_name || getWorkerName(selectedUser.worker_id || selectedUser.user_id)}(${selectedUser.position || getWorkerPosition(selectedUser.worker_id || selectedUser.user_id) || selectedUser.worker_id || selectedUser.user_id})`,
                                         value: selectedUser.worker_id || selectedUser.user_id
                                     } : null}
-                                    disabled={!selectedRole}
+                                    disabled={!selectedRole || isEditMode}
                                     popupSettings={{ className: "mp-dropdown-popup" }}
                                     placeholder="작업자를 선택해 주세요"
                                 />
