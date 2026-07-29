@@ -1600,16 +1600,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const sigPopupRef = useRef(null);
     const isSavingDirectlyRef = useRef(false);
 
-    // 팝업이 열릴 때 또는 메인 상태가 바뀔 때 로컬 상태 동기화
-    useEffect(() => {
-        if (isSigPopupOpen) {
-            setLocalSigExcludeUnderN(sigExcludeUnderN);
-            setLocalSigExcludeEtc(sigExcludeEtc);
-            setLocalSigLevel(sigLevel);
-            setLocalSigDiffMin(sigDiffMin);
-            setLocalSigDiffMax(sigDiffMax);
-        }
-    }, [isSigPopupOpen, sigExcludeUnderN, sigExcludeEtc, sigLevel, sigDiffMin, sigDiffMax]);
+
 
     // 디바운스 타이머
 
@@ -1685,8 +1676,17 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             setLocalShowPct(showPct);
             setLocalDecimalN(decimalN);
             setLocalDecimalPct(decimalPct);
+
+            setLocalSigExcludeUnderN(sigExcludeUnderN);
+            setLocalSigExcludeEtc(sigExcludeEtc);
+            setLocalSigLevel(sigLevel);
+            setLocalSigDiffMin(sigDiffMin);
+            setLocalSigDiffMax(sigDiffMax);
         }
-    }, [isDisplaySettingsOpen, selectedWeight, sigType, showN, showPct, decimalN, decimalPct]);
+    }, [
+        isDisplaySettingsOpen, selectedWeight, sigType, showN, showPct, decimalN, decimalPct,
+        sigExcludeUnderN, sigExcludeEtc, sigLevel, sigDiffMin, sigDiffMax
+    ]);
 
     const [filterSearchQuery, setFilterSearchQuery] = useState('');
 
@@ -3136,8 +3136,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 {/* 차이검증 */}
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                                     <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>차이검증</span>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <div ref={sigAnchorRef} style={{ position: 'relative', width: '140px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+                                    <div ref={sigAnchorRef} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{ position: 'relative', width: '140px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
                                             <DropDownList
                                                 data={SIG_TYPE_OPTIONS}
                                                 textField="text"
@@ -3414,11 +3414,23 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             setDecimalN(targetDecimalN);
                                             setDecimalPct(targetDecimalPct);
 
+                                            setSigExcludeUnderN(localSigExcludeUnderN);
+                                            setSigExcludeEtc(localSigExcludeEtc);
+                                            setSigLevel(localSigLevel);
+                                            setSigDiffMin(localSigDiffMin);
+                                            setSigDiffMax(localSigDiffMax);
+
                                             // Update refs immediately
                                             showNRef.current = targetShowN;
                                             decimalNRef.current = targetDecimalN;
                                             showPctRef.current = targetShowPct;
                                             decimalPctRef.current = targetDecimalPct;
+                                            sigTypeRef.current = targetSigType;
+                                            sigExcludeUnderNRef.current = localSigExcludeUnderN;
+                                            sigExcludeEtcRef.current = localSigExcludeEtc;
+                                            sigLevelRef.current = localSigLevel;
+                                            sigDiffMinRef.current = localSigDiffMin;
+                                            sigDiffMaxRef.current = localSigDiffMax;
 
                                             const pageId = sessionStorage.getItem('pageId');
                                             const user = auth?.user?.userId;
@@ -3497,6 +3509,263 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         적용
                                     </button>
                                 </div>
+
+                                {isSigPopupOpen && localSigType !== 'none' && (
+                                    <div
+                                        ref={sigPopupRef}
+                                        style={{
+                                            position: 'absolute',
+                                            top: '48px',
+                                            left: 'calc(100% + 12px)',
+                                            width: '240px',
+                                            background: '#fff',
+                                            border: '1px solid #cbd5e1',
+                                            borderRadius: '12px',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            padding: '16px',
+                                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                                            fontFamily: 'inherit',
+                                            zIndex: 2500
+                                        }}
+                                    >
+                                        {/* 공통 필터링 설정 */}
+                                        <div style={{ marginBottom: '14px' }}>
+                                            <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
+                                                공통 필터링 설정
+                                            </div>
+
+                                            {/* N수 미만 제외 */}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                                <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>N수 미만 제외</span>
+                                                <div className="sig-input-container">
+                                                    <input
+                                                        type="text"
+                                                        value={localSigExcludeUnderN}
+                                                        onChange={(e) => {
+                                                            let val = e.target.value.replace(/[^0-9]/g, '');
+                                                            setLocalSigExcludeUnderN(val !== '' ? parseInt(val) : '');
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'ArrowUp') {
+                                                                e.preventDefault();
+                                                                setLocalSigExcludeUnderN(prev => (prev === '' ? 3 : Number(prev)) + 1);
+                                                            } else if (e.key === 'ArrowDown') {
+                                                                e.preventDefault();
+                                                                setLocalSigExcludeUnderN(prev => Math.max(0, (prev === '' ? 3 : Number(prev)) - 1));
+                                                            }
+                                                        }}
+                                                        onBlur={() => {
+                                                            if (localSigExcludeUnderN === '') setLocalSigExcludeUnderN(3);
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* 기타/모름/무응답 제외 */}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>기타/모름/무응답 제외</span>
+                                                <div
+                                                    onClick={() => setLocalSigExcludeEtc(!localSigExcludeEtc)}
+                                                    style={{
+                                                        position: 'relative',
+                                                        width: '40px', height: '22px',
+                                                        borderRadius: '11px',
+                                                        background: localSigExcludeEtc ? '#3b82f6' : '#cbd5e1',
+                                                        cursor: 'pointer',
+                                                        transition: 'background-color 0.2s ease',
+                                                        userSelect: 'none'
+                                                    }}
+                                                >
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: '2px',
+                                                        left: localSigExcludeEtc ? '20px' : '2px',
+                                                        width: '18px', height: '18px',
+                                                        borderRadius: '50%',
+                                                        background: '#ffffff',
+                                                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                                                        transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                                                    }} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* 구분선 */}
+                                        <div style={{ height: '1px', background: '#e2e8f0', margin: '6px 0 14px 0' }} />
+
+                                        {/* t-test 설정 */}
+                                        {localSigType === 't-test' && (
+                                            <div>
+                                                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
+                                                    차이검증 (T-TEST) 설정
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>신뢰도 (%)</span>
+                                                    <div className="sig-input-container">
+                                                        <input
+                                                            type="text"
+                                                            value={localSigLevel}
+                                                            onChange={(e) => {
+                                                                let val = e.target.value.replace(/[^0-9]/g, '');
+                                                                if (val !== '') {
+                                                                    let num = parseInt(val);
+                                                                    if (num > 100) num = 100;
+                                                                    setLocalSigLevel(num);
+                                                                } else {
+                                                                    setLocalSigLevel('');
+                                                                }
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'ArrowUp') {
+                                                                    e.preventDefault();
+                                                                    setLocalSigLevel(prev => Math.min(100, (prev === '' ? 95 : Number(prev)) + 1));
+                                                                } else if (e.key === 'ArrowDown') {
+                                                                    e.preventDefault();
+                                                                    setLocalSigLevel(prev => Math.max(0, (prev === '' ? 95 : Number(prev)) - 1));
+                                                                }
+                                                            }}
+                                                            onBlur={() => {
+                                                                if (localSigLevel === '') setLocalSigLevel(95);
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* 편차 설정 */}
+                                        {localSigType === 'deviation' && (
+                                            <div>
+                                                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
+                                                    전체값 대비 차이검증 설정
+                                                </div>
+
+                                                {/* 최소 차이 */}
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>최소 차이 (%)</span>
+                                                    <div className="sig-input-container">
+                                                        <input
+                                                            type="text"
+                                                            value={localSigDiffMin}
+                                                            onChange={(e) => {
+                                                                let val = e.target.value.replace(/[^0-9]/g, '');
+                                                                if (val !== '') {
+                                                                    let num = parseInt(val);
+                                                                    if (num > 100) num = 100;
+                                                                    setLocalSigDiffMin(num);
+                                                                } else {
+                                                                    setLocalSigDiffMin('');
+                                                                }
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'ArrowUp') {
+                                                                    e.preventDefault();
+                                                                    setLocalSigDiffMin(prev => Math.min(100, (prev === '' ? 10 : Number(prev)) + 1));
+                                                                } else if (e.key === 'ArrowDown') {
+                                                                    e.preventDefault();
+                                                                    setLocalSigDiffMin(prev => Math.max(0, (prev === '' ? 10 : Number(prev)) - 1));
+                                                                }
+                                                            }}
+                                                            onBlur={() => {
+                                                                if (localSigDiffMin === '') setLocalSigDiffMin(10);
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* 최대 차이 */}
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>최대 차이 (%)</span>
+                                                    <div className="sig-input-container">
+                                                        <input
+                                                            type="text"
+                                                            value={localSigDiffMax}
+                                                            onChange={(e) => {
+                                                                let val = e.target.value.replace(/[^0-9]/g, '');
+                                                                if (val !== '') {
+                                                                    let num = parseInt(val);
+                                                                    if (num > 100) num = 100;
+                                                                    setLocalSigDiffMax(num);
+                                                                } else {
+                                                                    setLocalSigDiffMax('');
+                                                                }
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'ArrowUp') {
+                                                                    e.preventDefault();
+                                                                    setLocalSigDiffMax(prev => Math.min(100, (prev === '' ? 60 : Number(prev)) + 1));
+                                                                } else if (e.key === 'ArrowDown') {
+                                                                    e.preventDefault();
+                                                                    setLocalSigDiffMax(prev => Math.max(0, (prev === '' ? 60 : Number(prev)) - 1));
+                                                                }
+                                                            }}
+                                                            onBlur={() => {
+                                                                if (localSigDiffMax === '') setLocalSigDiffMax(60);
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* 적용 버튼 추가 */}
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
+                                            <button
+                                                onClick={() => setIsSigPopupOpen(false)}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    background: '#f1f5f9',
+                                                    color: '#475569',
+                                                    border: '1px solid #cbd5e1',
+                                                    borderRadius: '6px',
+                                                    padding: '6px 16px',
+                                                    fontSize: '12px',
+                                                    fontWeight: 700,
+                                                    cursor: 'pointer',
+                                                    transition: 'background-color 0.2s, color 0.2s',
+                                                }}
+                                                onMouseOver={(e) => {
+                                                    e.currentTarget.style.background = '#e2e8f0';
+                                                    e.currentTarget.style.color = '#1e293b';
+                                                }}
+                                                onMouseOut={(e) => {
+                                                    e.currentTarget.style.background = '#f1f5f9';
+                                                    e.currentTarget.style.color = '#475569';
+                                                }}
+                                            >
+                                                취소
+                                            </button>
+                                            <button
+                                                onClick={() => setIsSigPopupOpen(false)}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    background: '#3b82f6',
+                                                    color: '#ffffff',
+                                                    border: 'none',
+                                                    borderRadius: '6px',
+                                                    padding: '6px 16px',
+                                                    fontSize: '12px',
+                                                    fontWeight: 700,
+                                                    cursor: 'pointer',
+                                                    transition: 'background-color 0.2s',
+                                                }}
+                                                onMouseOver={(e) => {
+                                                    e.currentTarget.style.background = '#2563eb';
+                                                }}
+                                                onMouseOut={(e) => {
+                                                    e.currentTarget.style.background = '#3b82f6';
+                                                }}
+                                            >
+                                                확인
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -4119,265 +4388,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 </div>
             </div>
 
-            {/* 차이검증 세부 설정 팝업 (Popup) */}
-            <Popup
-                anchor={sigAnchorRef.current}
-                show={isSigPopupOpen && sigType !== 'none'}
-                anchorAlign={{ horizontal: 'right', vertical: 'bottom' }}
-                popupAlign={{ horizontal: 'right', vertical: 'top' }}
-                popupClass="custom-filter-popup"
-                style={{ width: '240px', marginTop: '6px', zIndex: 2500 }}
-            >
-                <div
-                    ref={sigPopupRef}
-                    style={{
-                        background: '#fff',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        padding: '16px',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                        fontFamily: 'inherit'
-                    }}
-                >
-                    {/* 공통 필터링 설정 */}
-                    <div style={{ marginBottom: '14px' }}>
-                        <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
-                            공통 필터링 설정
-                        </div>
 
-                        {/* N수 미만 제외 */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>N수 미만 제외</span>
-                            <div className="sig-input-container">
-                                <input
-                                    type="text"
-                                    value={localSigExcludeUnderN}
-                                    onChange={(e) => {
-                                        let val = e.target.value.replace(/[^0-9]/g, '');
-                                        setLocalSigExcludeUnderN(val !== '' ? parseInt(val) : '');
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'ArrowUp') {
-                                            e.preventDefault();
-                                            setLocalSigExcludeUnderN(prev => (prev === '' ? 3 : Number(prev)) + 1);
-                                        } else if (e.key === 'ArrowDown') {
-                                            e.preventDefault();
-                                            setLocalSigExcludeUnderN(prev => Math.max(0, (prev === '' ? 3 : Number(prev)) - 1));
-                                        }
-                                    }}
-                                    onBlur={() => {
-                                        if (localSigExcludeUnderN === '') setLocalSigExcludeUnderN(3);
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        {/* 기타/모름/무응답 제외 */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>기타/모름/무응답 제외</span>
-                            <div
-                                onClick={() => setLocalSigExcludeEtc(!localSigExcludeEtc)}
-                                style={{
-                                    position: 'relative',
-                                    width: '40px', height: '22px',
-                                    borderRadius: '11px',
-                                    background: localSigExcludeEtc ? '#3b82f6' : '#cbd5e1',
-                                    cursor: 'pointer',
-                                    transition: 'background-color 0.2s ease',
-                                    userSelect: 'none'
-                                }}
-                            >
-                                <div style={{
-                                    position: 'absolute',
-                                    top: '2px',
-                                    left: localSigExcludeEtc ? '20px' : '2px',
-                                    width: '18px', height: '18px',
-                                    borderRadius: '50%',
-                                    background: '#ffffff',
-                                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                                    transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-                                }} />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 구분선 */}
-                    <div style={{ height: '1px', background: '#e2e8f0', margin: '6px 0 14px 0' }} />
-
-                    {/* t-test 설정 */}
-                    {sigType === 't-test' && (
-                        <div>
-                            <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
-                                차이검증 (T-TEST) 설정
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>신뢰도 (%)</span>
-                                <div className="sig-input-container">
-                                    <input
-                                        type="text"
-                                        value={localSigLevel}
-                                        onChange={(e) => {
-                                            let val = e.target.value.replace(/[^0-9]/g, '');
-                                            if (val !== '') {
-                                                let num = parseInt(val);
-                                                if (num > 100) num = 100;
-                                                setLocalSigLevel(num);
-                                            } else {
-                                                setLocalSigLevel('');
-                                            }
-                                        }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'ArrowUp') {
-                                                e.preventDefault();
-                                                setLocalSigLevel(prev => Math.min(100, (prev === '' ? 95 : Number(prev)) + 1));
-                                            } else if (e.key === 'ArrowDown') {
-                                                e.preventDefault();
-                                                setLocalSigLevel(prev => Math.max(0, (prev === '' ? 95 : Number(prev)) - 1));
-                                            }
-                                        }}
-                                        onBlur={() => {
-                                            if (localSigLevel === '') setLocalSigLevel(95);
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* 편차 설정 */}
-                    {sigType === 'deviation' && (
-                        <div>
-                            <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
-                                전체값 대비 차이검증 설정
-                            </div>
-
-                            {/* 최소 차이 */}
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                                <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>최소 차이 (%)</span>
-                                <div className="sig-input-container">
-                                    <input
-                                        type="text"
-                                        value={localSigDiffMin}
-                                        onChange={(e) => {
-                                            let val = e.target.value.replace(/[^0-9]/g, '');
-                                            if (val !== '') {
-                                                let num = parseInt(val);
-                                                if (num > 100) num = 100;
-                                                setLocalSigDiffMin(num);
-                                            } else {
-                                                setLocalSigDiffMin('');
-                                            }
-                                        }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'ArrowUp') {
-                                                e.preventDefault();
-                                                setLocalSigDiffMin(prev => Math.min(100, (prev === '' ? 10 : Number(prev)) + 1));
-                                            } else if (e.key === 'ArrowDown') {
-                                                e.preventDefault();
-                                                setLocalSigDiffMin(prev => Math.max(0, (prev === '' ? 10 : Number(prev)) - 1));
-                                            }
-                                        }}
-                                        onBlur={() => {
-                                            if (localSigDiffMin === '') setLocalSigDiffMin(10);
-                                        }}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* 최대 차이 */}
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>최대 차이 (%)</span>
-                                <div className="sig-input-container">
-                                    <input
-                                        type="text"
-                                        value={localSigDiffMax}
-                                        onChange={(e) => {
-                                            let val = e.target.value.replace(/[^0-9]/g, '');
-                                            if (val !== '') {
-                                                let num = parseInt(val);
-                                                if (num > 100) num = 100;
-                                                setLocalSigDiffMax(num);
-                                            } else {
-                                                setLocalSigDiffMax('');
-                                            }
-                                        }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'ArrowUp') {
-                                                e.preventDefault();
-                                                setLocalSigDiffMax(prev => Math.min(100, (prev === '' ? 60 : Number(prev)) + 1));
-                                            } else if (e.key === 'ArrowDown') {
-                                                e.preventDefault();
-                                                setLocalSigDiffMax(prev => Math.max(0, (prev === '' ? 60 : Number(prev)) - 1));
-                                            }
-                                        }}
-                                        onBlur={() => {
-                                            if (localSigDiffMax === '') setLocalSigDiffMax(60);
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* 적용 버튼 추가 */}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
-                        <button
-                            onClick={() => setIsSigPopupOpen(false)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                background: '#f1f5f9',
-                                color: '#475569',
-                                border: '1px solid #cbd5e1',
-                                borderRadius: '6px',
-                                padding: '6px 16px',
-                                fontSize: '12px',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                                transition: 'background-color 0.2s, color 0.2s',
-                            }}
-                            onMouseOver={(e) => {
-                                e.currentTarget.style.background = '#e2e8f0';
-                                e.currentTarget.style.color = '#1e293b';
-                            }}
-                            onMouseOut={(e) => {
-                                e.currentTarget.style.background = '#f1f5f9';
-                                e.currentTarget.style.color = '#475569';
-                            }}
-                        >
-                            취소
-                        </button>
-                        <button
-                            onClick={() => setIsSigPopupOpen(false)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                background: '#3b82f6',
-                                color: '#ffffff',
-                                border: 'none',
-                                borderRadius: '6px',
-                                padding: '6px 16px',
-                                fontSize: '12px',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                                transition: 'background-color 0.2s',
-                            }}
-                            onMouseOver={(e) => {
-                                e.currentTarget.style.background = '#2563eb';
-                            }}
-                            onMouseOut={(e) => {
-                                e.currentTarget.style.background = '#3b82f6';
-                            }}
-                        >
-                            확인
-                        </button>
-                    </div>
-                </div>
-            </Popup>
 
             {/* 데이터 필터 모달 (Popup) */}
             <Popup
