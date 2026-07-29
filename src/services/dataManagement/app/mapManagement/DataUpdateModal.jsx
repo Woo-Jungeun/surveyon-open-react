@@ -85,7 +85,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                         try {
                             const res = await updateDataFromSav.mutateAsync(formData);
 
-                            if (res?.success === "777") {
+                            if (String(res?.success) === '777') {
                                 // 1. 성공 시 팝업 닫기
                                 handleModalClose();
                                 // 2. 알림 메시지 띄우기 (확인 버튼 누를 때까지 대기)
@@ -94,7 +94,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                                 if (refreshData) refreshData();
                                 // 4. 데이터 맵 새로고침
                                 await syncMap.mutateAsync({ user: userId, pn });
-                            } else if (res?.success === "907") {
+                            } else if (String(res?.success) === '907') {
                                 let duplicatePids = [
                                     "중복PID값1",
                                     "중복PID값2",
@@ -106,7 +106,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                                 const pidsText = duplicatePids.length > 0 ? ` (중복된 PID: ${duplicatePids.join(", ")})` : "";
 
                                 modal.showErrorAlert("에러", (res?.message || "SAV 파일 내에 중복된 고유 식별자(PID)가 존재하여 업데이트가 중단되었습니다.") + "\n" + pidsText, { zIndex: 99999 });
-                            } else if (res?.success === "909") {
+                            } else if (String(res?.success) === '909') {
                                 let errorDetails = res?.message || "SAV 파일과 프로젝트 맵(Map) 구조가 일치하지 않아 데이터 오염 방지를 위해 업데이트가 거부되었습니다.";
                                 if (res?.resultjson) {
                                     const { missingInDb, missingInSav } = res.resultjson;
@@ -162,7 +162,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                         try {
                             const res = await uploadSpss.mutateAsync(formData);
 
-                            if (res?.success === "777") {
+                            if (String(res?.success) === '777') {
                                 handleModalClose();
                                 await modal.showAlert("알림", "파일 교체(업로드)가 완료되었습니다.", { zIndex: 99999 });
                                 if (refreshData) refreshData();

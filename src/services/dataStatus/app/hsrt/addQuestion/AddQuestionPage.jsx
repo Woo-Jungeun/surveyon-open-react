@@ -700,7 +700,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                         if (!pageId || !user) return;
                         try {
                             const result = await deleteBaseVariable.mutateAsync({ pageid: pageId, user, variables: [bannerId] });
-                            if (result?.success === "777") {
+                            if (String(result?.success) === '777') {
                                 modal.showAlert('알림', '삭제되었습니다.');
                                 await fetchVariablesData(selectedBanner === bannerId ? 'delete' : 'normal');
                             } else if (result?.message?.includes("사용 중이라 삭제할 수 없습니다")) {
@@ -722,7 +722,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         try {
             loadingSpinner.show();
             const res = await getNextBaseVariableId.mutateAsync({ pageid: pageId, user });
-            if (res?.success === '777' && res.resultjson?.next_id) {
+            if (String(res?.success) === '777' && res.resultjson?.next_id) {
                 const tempId = getUniqueNextId(res.resultjson.next_id, banners);
                 const newBanner = { id: tempId, label: '', type: 'single', recoded_type: 'computed', info: [{ label2: '', label: '', inEdit: true }], isDirty: true };
                 // 현재 active banner의 변경 사항을 임시로 캡처
@@ -787,7 +787,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
             // 1. Fetch base variables for candidates (Cartesian modal, duplicate check)
             const baseRes = await getBaseVariableList.mutateAsync({ pageid: pageId, user });
             let baseVars = [];
-            if (baseRes?.success === '777' && baseRes.resultjson) {
+            if (String(baseRes?.success) === '777' && baseRes.resultjson) {
                 const dataObj = baseRes.resultjson;
                 baseVars = Object.entries(dataObj)
                     .filter(([key]) => key !== 'count' && key !== 'first')
@@ -809,7 +809,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
 
             // 2. Fetch computed variables for the left sidebar list
             const compRes = await getComputedVariableList.mutateAsync({ pageid: pageId, user });
-            if (compRes?.success === '777' && compRes.resultjson) {
+            if (String(compRes?.success) === '777' && compRes.resultjson) {
                 const compDataObj = compRes.resultjson;
                 const compVars = Object.entries(compDataObj)
                     .filter(([key]) => key !== 'count' && key !== 'first')
@@ -1007,7 +1007,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         try {
             loadingSpinner.show();
             const result = await saveBaseVariableMerge.mutateAsync({ pageid: pageId, user, variables: payloadVariables });
-            if (result?.success === '777') {
+            if (String(result?.success) === '777') {
                 // 재계산 API 호출
                 await recomputeComputedVariables.mutateAsync({ pageid: pageId, user });
 
@@ -1041,7 +1041,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
             try {
                 loadingSpinner.show();
                 const res = await getNextBaseVariableId.mutateAsync({ pageid: pageId, user });
-                if (res?.success === '777' && res.resultjson?.next_id) {
+                if (String(res?.success) === '777' && res.resultjson?.next_id) {
                     const tempId = getUniqueNextId(res.resultjson.next_id, banners);
                     const newBanner = { id: tempId, label: '', type: 'single', recoded_type: 'computed', info: mappedRules, isDirty: true };
 

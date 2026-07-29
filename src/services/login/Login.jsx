@@ -75,7 +75,7 @@ const Login = () => {
             });
 
         // cs 로그인의 경우 응답에 success: '777'이 없이 올 수 있으므로 토큰이나 메시지 여부로 성공을 판별합니다.
-        const isSuccess = result?.success === "777" || result?.token || result?.loginkey || result?.message === "로그인 성공 (고객 인증)";
+        const isSuccess = String(result?.success) === '777' || result?.token || result?.loginkey || result?.message === "로그인 성공 (고객 인증)";
 
         if (isSuccess) {
             // 아이디 기억하기

@@ -125,7 +125,7 @@ const Sidebar = ({
                     click: async () => {
                         try {
                             const res = await logoutMutation.mutateAsync({ user: auth?.user?.userId, gb: "out" });
-                            if (res?.success === "777") {
+                            if (String(res?.success) === '777') {
                                 const isCustomer = sessionStorage.getItem("groupcode") === "999999991";
                                 await persistor.purge();
                                 removeCookie("TOKEN", { path: "/" });

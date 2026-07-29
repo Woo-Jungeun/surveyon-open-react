@@ -38,7 +38,7 @@ const BoardList = ({ type = 'notice' }) => {
                 res = await patchNotesList.mutateAsync(payload);
             }
 
-            if (res?.success === "777") {
+            if (String(res?.success) === '777') {
                 setApiData(processData(res?.resultjson || []));
             } else {
                 setApiData([]);

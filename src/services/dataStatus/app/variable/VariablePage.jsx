@@ -82,7 +82,7 @@ const VariablePage = () => {
                     try {
                         loadingSpinner.show();
                         const result = await getOriginalVariables.mutateAsync({ user: userId, pageid: pageId });
-                        if (result.success === "777") {
+                        if (String(result.success) === '777') {
                             if (result.resultjson) {
                                 const transformedData = Object.values(result.resultjson).map(item => {
                                     let typeLabel = item.type;

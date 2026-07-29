@@ -42,7 +42,7 @@ const InquiryList = () => {
         try {
             const res = await inquiryList.mutateAsync(params);
 
-            if (res?.success === "777") {
+            if (String(res?.success) === '777') {
                 const dataList = res.resultjson || [];
 
                 if (dataList.length > 0) {

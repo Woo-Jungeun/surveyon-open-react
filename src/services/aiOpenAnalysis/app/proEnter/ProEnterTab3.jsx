@@ -89,7 +89,7 @@ const ProEnterTab3 = (props) => {
             };
 
             const res = await proEnterSaveData.mutateAsync(payload);
-            if (res?.success === "777") {
+            if (String(res?.success) === '777') {
                 modal.showConfirm("알림", "프로젝트가 등록되었습니다.", {
                     themeClass: "purple-theme",
                     btns: [{
@@ -105,7 +105,7 @@ const ProEnterTab3 = (props) => {
                         }
                     }],   ////문항 목록 페이지로 이동
                 });
-            } else if (res?.success === "765") {
+            } else if (String(res?.success) === '765') {
                 // 중복
                 modal.showErrorAlert("알림", "이미 등록된 프로젝트 입니다.", { themeClass: "purple-theme" });
             } else {

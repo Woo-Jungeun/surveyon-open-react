@@ -357,7 +357,7 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
         setIsLoading(true);
         try {
             const result = await getRecodedVariables.mutateAsync({ user: auth.user.userId, pageid: pageId, variable_id: [id] });
-            if (result?.success === "777" && result.resultjson) {
+            if (String(result?.success) === '777' && result.resultjson) {
                 const varData = result.resultjson[id];
                 if (varData) {
                     setVarName(varData.id.replace('overview_', ''));
@@ -407,7 +407,7 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                                 pageid: pageId,
                                 variables: [varId]
                             });
-                            if (result?.success === "777") {
+                            if (String(result?.success) === '777') {
                                 modal.showAlert("성공", "삭제되었습니다.");
                                 if (onSaved) onSaved();
 
@@ -692,7 +692,7 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                             }
                             try {
                                 const result = await setRecodedVariable.mutateAsync(payload);
-                                if (result?.success === "777") {
+                                if (String(result?.success) === '777') {
                                     modal.showAlert("알림", "저장되었습니다.");
                                     setSelectedVarId(fullId); // 신규 저장 후 해당 변수 선택 상태로 변경
 

@@ -808,7 +808,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             try {
                 const payload = buildSavePayload(normalized, qnum);
                 const res = await optionSaveData.mutateAsync({ ...payload, skipSpinner: true });
-                if (res?.success == "777") {
+                if (String(res?.success) === '777') {
                     setErrorMarks(new Map());   //에러 초기화
                     // modal.showAlert("알림", "소분류 드롭다운 목록이 적용되었습니다."); // 성공 팝업 표출
                     onSaved?.();  // 미저장 플래그 해제 요청(부모)
@@ -825,13 +825,13 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     //     action: "start",
                     // };
                     // const analysisRes = await optionAnalysisStart.mutateAsync(analysisPayload);
-                    // if (analysisRes?.success === "777") {
+                    // if (String(analysisRes?.success) === '777') {
                     //     modal.showErrorAlert("에러", "오류가 발생했습니다.");
                     //     return false;
                     // }
 
                     return true;  //성공
-                } else if (res?.success == "762") {
+                } else if (String(res?.success) === '762') {
                     modal.showErrorAlert("에러", res?.message); //"보기 코드 중복, 빈값 발견"
                     return false;
                 } else {
@@ -1129,7 +1129,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                                         gb: "alldel"
                                                     };
                                                     const res = await optionSaveData.mutateAsync(payload);
-                                                    if (res?.success === "777") {
+                                                    if (String(res?.success) === '777') {
                                                         // 성공 시 재조회
                                                         handleSearch();
                                                         modal.showAlert("알림", "초기화 되었습니다.");

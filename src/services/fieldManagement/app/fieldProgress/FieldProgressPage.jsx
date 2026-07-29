@@ -1044,7 +1044,7 @@ const FieldProgressPage = () => {
 
         try {
             const result = await getPageList.mutateAsync({ user: userId, pn: mergePn });
-            if (result?.success === "777" && result.resultjson) {
+            if (String(result?.success) === '777' && result.resultjson) {
                 setPageListData(result.resultjson);
                 setIsPageListOpen(true);
             }
@@ -1226,7 +1226,7 @@ const FieldProgressPage = () => {
             const result = await exportSurveyProgressXlsx.mutateAsync(requestData);
             const payload = result?.resultjson || result || {};
 
-            if (result?.success === "777" && payload.content_base64) {
+            if (String(result?.success) === '777' && payload.content_base64) {
                 const binaryString = window.atob(payload.content_base64);
                 const len = binaryString.length;
                 const bytes = new Uint8Array(len);
@@ -1357,7 +1357,7 @@ const FieldProgressPage = () => {
                 user: userId
             };
             const result = await getOverviewList.mutateAsync(payload);
-            if (result?.success === "777" && result.resultjson) {
+            if (String(result?.success) === '777' && result.resultjson) {
                 const filteredTables = (result.resultjson.tables || []).filter(table => table.info && table.info.length > 0);
                 setDropdownFilterList(filteredTables);
             }
@@ -1379,7 +1379,7 @@ const FieldProgressPage = () => {
 
         try {
             const result = await getRecodedList.mutateAsync({ user: auth.user.userId, pageid: pageId });
-            if (result?.success === "777" && result.resultjson) {
+            if (String(result?.success) === '777' && result.resultjson) {
                 const overviewVars = Object.values(result.resultjson)
                     .filter(v => v.id.startsWith('overview_'))
                     .map(v => ({ ...v, label: v.label || v.id }));
@@ -1412,7 +1412,7 @@ const FieldProgressPage = () => {
                 limit: 10000
             };
             const result = await getOverviewList.mutateAsync(payload);
-            if (result?.success === "777" && result.resultjson) {
+            if (String(result?.success) === '777' && result.resultjson) {
                 const overviewList = result.resultjson.tables || [];
                 const bannerVars = overviewList.map(item => ({
                     id: item.table_id || item.id,
@@ -1445,7 +1445,7 @@ const FieldProgressPage = () => {
                 user: auth.user.userId,
                 pageid: pageId
             });
-            if (result?.success === "777" && result.resultjson) {
+            if (String(result?.success) === '777' && result.resultjson) {
                 const vars = Object.values(result.resultjson).map(item => ({
                     sysName: item.id,
                     label: item.label
@@ -1607,7 +1607,7 @@ const FieldProgressPage = () => {
                 payload.show_percent = showPct;
             }
             const result = await getSurveyProgressStyled.mutateAsync(payload);
-            if (result?.success === "777" && result.resultjson) {
+            if (String(result?.success) === '777' && result.resultjson) {
                 // 전역 스타일 주입
                 if (result.resultjson.style_css) {
                     const styleId = "survey-progress-global-style";
@@ -1763,7 +1763,7 @@ const FieldProgressPage = () => {
                 }
 
                 const aggResult = await getSurveyProgressChartData.mutateAsync(payload);
-                if (aggResult?.success === "777" && aggResult.resultjson) {
+                if (String(aggResult?.success) === '777' && aggResult.resultjson) {
                     const resultsArray = aggResult.resultjson.tables || [];
 
                     setQuestions(prevQuestions => prevQuestions.map(q => {
@@ -1846,7 +1846,7 @@ const FieldProgressPage = () => {
 
         try {
             const result = await getSurveyProgressStyled.mutateAsync(payload);
-            if (result?.success === "777" && result.resultjson && result.resultjson.tables) {
+            if (String(result?.success) === '777' && result.resultjson && result.resultjson.tables) {
                 const updatedTable = result.resultjson.tables[0];
                 if (updatedTable && updatedTable.html) {
                     setQuestions(prev => prev.map(q =>

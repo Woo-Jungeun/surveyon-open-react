@@ -64,7 +64,7 @@ const SurveyTestPage = () => {
         const res = pendingResponseRef.current;
         if (!res) return;
 
-        if (res.success === '777') {
+        if (String(res.success) === '777') {
             setResultJson(res.resultjson);
         } else {
             modal.showErrorAlert("알림", res.message || '분석 중 오류가 발생했습니다.');

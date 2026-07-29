@@ -27,9 +27,9 @@ const TokenUsage = () => {
             };
             const res = await tokenUsageListData.mutateAsync(payload);
 
-            if (res?.success === "777") {
+            if (String(res?.success) === '777') {
                 const innerResult = res.resultjson;
-                if (innerResult?.success === "777") {
+                if (String(innerResult?.success) === '777') {
                     setGridData(innerResult.resultjson || []);
                 } else {
                     modal.showErrorAlert("에러", innerResult?.message || "토큰 사용 내역을 불러오지 못했습니다.");

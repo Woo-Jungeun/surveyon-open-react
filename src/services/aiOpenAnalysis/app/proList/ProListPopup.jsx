@@ -53,7 +53,7 @@ const ProListPopup = (parentProps) => {
         gb: "filter_select_qnum",
         qnum: qnumVal,
       });
-      if (res?.success === "777" && res?.resultjson) {
+      if (String(res?.success) === '777' && res?.resultjson) {
         setGridData(res.resultjson);
         const newSelectedState = {};
         res.resultjson.forEach(item => {
@@ -165,7 +165,7 @@ const ProListPopup = (parentProps) => {
     loadingSpinner.show();
     try {
       const res = await editMutation.mutateAsync(payload);
-      if (res?.success === "777") {
+      if (String(res?.success) === '777') {
         modal.showConfirm("알림", "필터 선택이 완료되었습니다.", {
           btns: [
             {

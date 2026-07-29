@@ -190,7 +190,7 @@ const ProList = () => {
             };
             const res = await excelDownloadMutation.mutateAsync(payload);
 
-            if (res?.success === "720") {
+            if (String(res?.success) === '720') {
                 modal.showErrorAlert("알림", res.message || "분석된 보기가 없습니다.");
                 return;
             }
@@ -206,7 +206,7 @@ const ProList = () => {
                 try {
                     const text = await blob.text();
                     const json = JSON.parse(text);
-                    if (json.success === "720") {
+                    if (String(json.success) === '720') {
                         modal.showErrorAlert("알림", json.message || "분석된 보기가 없습니다.");
                     } else {
                         modal.showErrorAlert("에러", json.message || "보기 추출 요청이 거부되었습니다.");
@@ -235,7 +235,7 @@ const ProList = () => {
             };
             const res = await excelDownloadMutation.mutateAsync(payload);
 
-            if (res?.success === "720") {
+            if (String(res?.success) === '720') {
                 modal.showErrorAlert("알림", res.message || "분석된 보기가 없습니다.");
                 return;
             }
@@ -251,7 +251,7 @@ const ProList = () => {
                 try {
                     const text = await blob.text();
                     const json = JSON.parse(text);
-                    if (json.success === "720") {
+                    if (String(json.success) === '720') {
                         modal.showErrorAlert("알림", json.message || "분석된 보기가 없습니다.");
                     } else {
                         modal.showErrorAlert("에러", json.message || "보기 추출 요청이 거부되었습니다.");
@@ -325,7 +325,7 @@ const ProList = () => {
             };
 
             const res = await editMutation.mutateAsync(payload);
-            if (res?.success === "777") {
+            if (String(res?.success) === '777') {
                 modal.showConfirm("알림", "보기 등록이 완료되었습니다.", {
                     btns: [
                         {
@@ -360,7 +360,7 @@ const ProList = () => {
             };
             const res = await excelDownloadMutation.mutateAsync(payload);
 
-            if (res?.success === "720") {
+            if (String(res?.success) === '720') {
                 modal.showErrorAlert("알림", res.message || "추출할 응답 데이터가 없습니다.");
                 return;
             }
@@ -376,7 +376,7 @@ const ProList = () => {
                 try {
                     const text = await blob.text();
                     const json = JSON.parse(text);
-                    if (json.success === "720") {
+                    if (String(json.success) === '720') {
                         modal.showErrorAlert("알림", json.message || "추출할 응답 데이터가 없습니다.");
                     } else {
                         modal.showErrorAlert("에러", json.message || "응답 추출 요청이 거부되었습니다.");

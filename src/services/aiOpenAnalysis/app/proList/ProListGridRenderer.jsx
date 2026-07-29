@@ -533,7 +533,7 @@ const ProListGridRenderer = (props) => {
                 val: changesObj,
             };
             const res = await editMutation.mutateAsync(payload);
-            if (res?.success !== "777") throw new Error("merge 저장 실패");
+            if (String(res?.success) !== '777') throw new Error("merge 저장 실패");
             pendingFlushRef.current = true; // 0) 저장 직후 dirty-block 무시 모드 ON  ← 핵심
             setMergeSavedBaseline(new Map(
                 rows.map(r => [r.id, getMergeVal(r)])
@@ -586,7 +586,7 @@ const ProListGridRenderer = (props) => {
         };
         rememberScroll(); // 스크롤 위치 저장 
         const res = await editMutation.mutateAsync(payload);
-        if (res?.success !== "777") {
+        if (String(res?.success) !== '777') {
             modal.showErrorAlert("에러", "오류가 발생했습니다.");
         }
     };
@@ -684,7 +684,7 @@ const ProListGridRenderer = (props) => {
         };
         rememberScroll(); // 스크롤 위치 저장 
         const res = await editMutation.mutateAsync(payload);
-        if (res?.success !== "777") {
+        if (String(res?.success) !== '777') {
             modal.showErrorAlert("에러", "오류가 발생했습니다.");
         }
     };

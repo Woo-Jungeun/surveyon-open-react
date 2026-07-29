@@ -241,7 +241,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             };
 
                             const result = await saveSummaryDetail.mutateAsync(requestData);
-                            if (result?.success === "777") {
+                            if (String(result?.success) === '777') {
                                 modal.showAlert('알림', '요약표가 삭제되었습니다.');
                                 await fetchSummaryData();
                             }
@@ -267,7 +267,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             // TODO: 임시 하드코딩
             const result = await getSummaryDetail.mutateAsync({ pageid: pageId, user: userId });
             // const result = await getSummaryDetail.mutateAsync({ pageid: "446bd14c-d053-47c8-bf01-59384cb37746", user: "sbbok" });
-            if (result?.success === '777' && result.resultjson) {
+            if (String(result?.success) === '777' && result.resultjson) {
                 if (result.resultjson.summary_source_variables) {
                     const sourceVars = result.resultjson.summary_source_variables;
                     setBaseVariables(Array.isArray(sourceVars) ? sourceVars : Object.values(sourceVars));
@@ -347,7 +347,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 await fetchSummaryData();
                 if (onUnsavedChange) onUnsavedChange(true);
                 modal.showAlert('알림', `${result.resultjson.generated_folder_count || result.resultjson.summary_folders?.length || 0}개의 척도형 요약표가 자동 생성되었습니다.`);
-            } else if (result?.success === "777") {
+            } else if (String(result?.success) === '777') {
                 await fetchSummaryData();
                 modal.showAlert('알림', `척도형 요약표 자동 생성이 완료되었습니다.`);
             }
@@ -395,7 +395,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         try {
             loadingSpinner.show();
             const result = await saveSummaryDetail.mutateAsync(payload);
-            if (result?.success === "777" || result?.message) {
+            if (String(result?.success) === '777' || result?.message) {
                 if (onUnsavedChange) onUnsavedChange(false);
                 modal.showAlert('알림', successMessage);
                 await fetchSummaryData(); // 재조회 실행

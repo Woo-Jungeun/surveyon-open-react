@@ -37,7 +37,7 @@ const InfoSection = () => {
             try {
               // 로그아웃 api
               const res = await logoutMutation.mutateAsync({ user: auth?.user?.userId, gb: "out" });
-              if (res?.success === "777") {
+              if (String(res?.success) === '777') {
                 dispatch(logout());
                 await persistor.purge();
                 removeCookie("TOKEN", { path: "/" });

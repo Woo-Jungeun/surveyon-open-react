@@ -709,7 +709,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
             // 1) 옵션 정보 저장
             const payload = buildInfoPayload(type);
             const saveRes = await optionSaveData.mutateAsync(payload);
-            if (saveRes?.success !== "777") {
+            if (String(saveRes?.success) !== '777') {
                 modal.showErrorAlert("에러", "오류가 발생했습니다.", MODAL_SCOPE); //오류 팝업 표출
                 return false;
             }
@@ -722,7 +722,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
             const analysisPayload = buildAnalysisPayload(type);
             const analysisRes = await optionAnalysisStart.mutateAsync(analysisPayload);
 
-            const ok = analysisRes?.success === "777" || analysisRes?.ok === true;
+            const ok = String(analysisRes?.success) === '777' || analysisRes?.ok === true;
             const job = analysisRes?.job || analysisRes?.contents?.job || analysisRes?.data?.job;
 
             if (!ok) {
@@ -790,7 +790,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                             };
                             const res = await optionEditData.mutateAsync(payload);
 
-                            if (res.success === "777") {
+                            if (String(res.success) === '777') {
                                 modal.showAlert("알림", "문항이 삭제되었습니다.");
                                 navigate("/ai_open_analysis/pro_list"); // 문항 목록 페이지로 이동
                             } else {

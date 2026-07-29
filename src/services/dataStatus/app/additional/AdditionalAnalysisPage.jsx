@@ -244,7 +244,7 @@ const AdditionalAnalysisPage = () => {
 
         try {
             const result = await getPageList.mutateAsync({ user: userId, pn: mergePn });
-            if (result?.success === "777" && result.resultjson) {
+            if (String(result?.success) === '777' && result.resultjson) {
                 setPageListData(result.resultjson);
                 setIsPageListOpen(true);
             }
@@ -304,7 +304,7 @@ const AdditionalAnalysisPage = () => {
             // Fetch Render Context
             try {
                 const renderCtx = await getTableRenderContext.mutateAsync({ pageid: currentPid, user: auth.user.userId });
-                if (renderCtx?.success === "777" && renderCtx.resultjson) {
+                if (String(renderCtx?.success) === '777' && renderCtx.resultjson) {
                     localDisplayPolicy = renderCtx.resultjson.display_policy;
                     setDisplayPolicy(renderCtx.resultjson.display_policy);
                     setRenderSettings(renderCtx.resultjson.render_settings);
@@ -404,7 +404,7 @@ const AdditionalAnalysisPage = () => {
                     pageid: currentPid
                 });
 
-                if (result?.success === "777") {
+                if (String(result?.success) === '777') {
                     const data = Array.isArray(result.resultjson)
                         ? result.resultjson
                         : Object.values(result.resultjson || {});
@@ -455,7 +455,7 @@ const AdditionalAnalysisPage = () => {
                                 tableid: firstTable.id
                             });
 
-                            if (tableDataResult?.success === "777" && tableDataResult.resultjson) {
+                            if (String(tableDataResult?.success) === '777' && tableDataResult.resultjson) {
                                 const tData = tableDataResult.resultjson;
 
                                 // Apply config from API result
@@ -588,7 +588,7 @@ const AdditionalAnalysisPage = () => {
 
                                     const evalResult = await evaluateTable.mutateAsync(payload);
 
-                                    if (evalResult?.success === "777" && evalResult.resultjson) {
+                                    if (String(evalResult?.success) === '777' && evalResult.resultjson) {
                                         setStyleCss(evalResult.resultjson.style_css || '');
                                         setResultDataList(evalResult.resultjson.tables || []);
                                     }
@@ -805,7 +805,7 @@ const AdditionalAnalysisPage = () => {
                     tableid: item.id
                 });
 
-                if (result?.success === "777" && result.resultjson) {
+                if (String(result?.success) === '777' && result.resultjson) {
                     const data = result.resultjson;
                     isConfigLoadingRef.current = true;
 
@@ -943,7 +943,7 @@ const AdditionalAnalysisPage = () => {
 
                         const evalResult = await evaluateTable.mutateAsync(runPayload);
 
-                        if (evalResult?.success === "777" && evalResult.resultjson) {
+                        if (String(evalResult?.success) === '777' && evalResult.resultjson) {
                             setStyleCss(evalResult.resultjson.style_css || '');
                             setResultDataList(evalResult.resultjson.tables || []);
                         }
@@ -1412,7 +1412,7 @@ const AdditionalAnalysisPage = () => {
             };
 
             const result = await saveCrossTable.mutateAsync(payload);
-            if (result?.success === "777") {
+            if (String(result?.success) === '777') {
                 modal.showAlert('성공', '저장되었습니다.');
                 setIsConfigOpen(false); // Close config panel after save
 
@@ -1429,7 +1429,7 @@ const AdditionalAnalysisPage = () => {
                         tableid: selectedTableId
                     });
 
-                    if (refreshedData?.success === "777" && refreshedData.resultjson) {
+                    if (String(refreshedData?.success) === '777' && refreshedData.resultjson) {
                         setResultDataList(processResults(refreshedData.resultjson));
                     }
                 } catch (refreshError) {
@@ -1488,7 +1488,7 @@ const AdditionalAnalysisPage = () => {
 
             const saveResult = await saveCrossTable.mutateAsync(savePayload);
 
-            if (saveResult?.success === "777") {
+            if (String(saveResult?.success) === '777') {
                 // Update table list with new name and isNew status
                 setTables(tables.map(t =>
                     t.id === selectedTableId ? { ...t, name: tableName || "Untitled Table", isNew: false, isDirty: false } : t
@@ -1581,7 +1581,7 @@ const AdditionalAnalysisPage = () => {
 
                 const evalResult = await evaluateTable.mutateAsync(runPayload);
 
-                if (evalResult?.success === "777" && evalResult.resultjson) {
+                if (String(evalResult?.success) === '777' && evalResult.resultjson) {
                     setStyleCss(evalResult.resultjson.style_css || '');
                     setResultDataList(evalResult.resultjson.tables || []);
 
@@ -1720,7 +1720,7 @@ const AdditionalAnalysisPage = () => {
             loadingSpinner.show();
             const result = await evaluateTable.mutateAsync(payload);
 
-            if (result?.success === "777" && result.resultjson) {
+            if (String(result?.success) === '777' && result.resultjson) {
                 setStyleCss(result.resultjson.style_css || '');
                 setResultDataList(result.resultjson.tables || []);
             }
@@ -1780,7 +1780,7 @@ const AdditionalAnalysisPage = () => {
                             };
 
                             const result = await deleteCrossTable.mutateAsync(payload);
-                            if (result?.success === "777") {
+                            if (String(result?.success) === '777') {
                                 // Remove from local state
                                 setTables(prev => prev.filter(t => t.id !== tableId));
 

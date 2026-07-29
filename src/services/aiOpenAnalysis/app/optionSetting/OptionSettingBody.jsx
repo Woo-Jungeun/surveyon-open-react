@@ -234,7 +234,7 @@ const OptionSettingBody = () => {
           },
         });
 
-        if (res.success === "777" && !skipSpinner) {
+        if (String(res.success) === '777' && !skipSpinner) {
           loadingSpinner.hide();  // 로딩바 닫기 
         }
         resultjson = res?.resultjson;
@@ -589,7 +589,7 @@ const OptionSettingBody = () => {
                   },
                 });
 
-                if (res?.success === "777") {
+                if (String(res?.success) === '777') {
                   loadingSpinner.hide(); // 로딩바 닫기
                   modal.showAlert("알림", "엑셀 업로드가 완료되었습니다.");
                   // 탭1로 이동
@@ -598,7 +598,7 @@ const OptionSettingBody = () => {
                   tab1Ref.current?.reload?.();
                   // 보기불러오기 성공 후 Lv3 코드 다시 조회
                   fetchLv3Options();
-                } else if (res?.success === "761") {
+                } else if (String(res?.success) === '761') {
                   // 실행 오류 (761)
                   setErrorList(res.resultjson);
                   setErrorPopupShow(true);

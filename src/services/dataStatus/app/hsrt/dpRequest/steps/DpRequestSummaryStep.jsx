@@ -436,7 +436,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             }
 
             const result = await getSummaryDetail.mutateAsync({ pageid: pageId, user: userId });
-            if (result?.success === '777' && result.resultjson) {
+            if (String(result?.success) === '777' && result.resultjson) {
                 const sourceVars = result.resultjson.summary_source_variables || [];
                 const sourceVarsList = Array.isArray(sourceVars) ? sourceVars : Object.values(sourceVars);
                 setBaseVariables(sourceVarsList);
@@ -787,7 +787,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         try {
             loadingSpinner.show();
             const result = await saveSummaryDetail.mutateAsync(payload);
-            if (result?.success === "777") {
+            if (String(result?.success) === '777') {
                 if (onUnsavedChange) onUnsavedChange(false);
                 modal.showAlert('알림', successMessage);
                 await fetchSummaryData(); // 재조회 실행

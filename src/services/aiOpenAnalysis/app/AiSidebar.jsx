@@ -42,7 +42,7 @@ const AiSidebar = ({ onOpenProjectModal }) => {
             }
             try {
                 const res = await getTokenUsage.mutateAsync({ apigubun: "openai", user: auth?.user?.userId });
-                if (res?.success === "777") {
+                if (String(res?.success) === '777') {
                     const bal = res.resultjson?.balancecost;
                     setBalance(bal);
                     sessionStorage.setItem("openai_balance", bal);
@@ -63,7 +63,7 @@ const AiSidebar = ({ onOpenProjectModal }) => {
         const fetchChargeCost = async () => {
             try {
                 const res = await getChargeCost.mutateAsync({ apigubun: "openai", user: auth?.user?.userId });
-                if (res?.success === "777") {
+                if (String(res?.success) === '777') {
                     setChargeInput(res.resultjson?.chargecost || "");
                 }
             } catch (e) {
@@ -88,10 +88,10 @@ const AiSidebar = ({ onOpenProjectModal }) => {
                 apigubun: "openai",
                 user: auth?.user?.userId
             });
-            if (res?.success === "777") {
+            if (String(res?.success) === '777') {
                 modal.showAlert("알림", "충전 금액이 업데이트되었습니다.");
                 getTokenUsage.mutateAsync({ apigubun: "openai", user: auth?.user?.userId }).then((res) => {
-                    if (res?.success === "777") {
+                    if (String(res?.success) === '777') {
                         const bal = res.resultjson?.balancecost;
                         setBalance(bal);
                         sessionStorage.setItem("openai_balance", bal);

@@ -875,7 +875,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                 };
 
                 const res = await evaluateChartData.mutateAsync(payload);
-                if (res?.success === "777" && res.resultjson) {
+                if (String(res?.success) === "777" && res.resultjson) {
                     setRawChartData(res.resultjson);
                 } else {
                     setRawChartData(null);
@@ -2121,7 +2121,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 variables: [bannerId]
                             });
 
-                            if (result?.success === '777') {
+                            if (String(result?.success) === '777') {
                                 modal.showAlert('알림', '삭제되었습니다.');
                                 // 현재 보고 있는 아이템이 삭제되었다면 'delete' 모드로 패치하여 첫번째 아이템 강제 선택
                                 if (selectedBanner === bannerId) {
@@ -2445,7 +2445,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 setStyleCss(payload.style_css);
             }
 
-            if (tablesList.length > 0 || (overviewRes?.success === '777')) {
+            if (tablesList.length > 0 || (String(overviewRes?.success) === '777')) {
                 const formatted = tablesList.map((t, i) => {
                     // 스터브 설정값(색상, 선 등 info 정보)을 컨텍스트의 recodedVars에서 매핑
                     const stubVarId = t.table_id || t.id;
@@ -2962,7 +2962,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             const result = await exportOverviewXlsx.mutateAsync(requestData);
             const payload = result?.resultjson || result || {};
 
-            if (result?.success === "777" && payload.content_base64) {
+            if (String(result?.success) === "777" && payload.content_base64) {
                 const binaryString = window.atob(payload.content_base64);
                 const len = binaryString.length;
                 const bytes = new Uint8Array(len);
@@ -4767,7 +4767,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
                                         const result = await createSnapshot.mutateAsync(requestData);
 
-                                        if (result?.success === "777") {
+                                        if (String(result?.success) === "777") {
                                             setIsSnapshotModalOpen(false);
                                             setToast({
                                                 show: true,

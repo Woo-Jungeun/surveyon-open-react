@@ -1119,7 +1119,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     reset_to_default: true
                 };
                 const result = await saveRecodedOverview.mutateAsync(requestData);
-                if (result?.success === "777") {
+                if (String(result?.success) === '777') {
                     if (onUnsavedChange) onUnsavedChange(false);
                     await fetchOverview();
                     if (typeof onRefresh === 'function') onRefresh();
@@ -1612,7 +1612,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     title: '재적용', click: async () => {
                         try {
                             const res = await reapplyPreset.mutateAsync({ pageid: pageId, user, recoded_var_ids: [varId] });
-                            if (res?.success === '777' || res?.success === 777) {
+                            if (String(res?.success) === '777' || String(res?.success) === '777') {
                                 // 성공 후 그리드 데이터 재조회 및 상단 컨텍스트 갱신
                                 await fetchOverview();
                                 if (typeof onRefresh === 'function') onRefresh();
@@ -1857,7 +1857,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         loadingSpinner.show();
         try {
             const result = await saveRecodedOverview.mutateAsync(requestData);
-            if (result?.success === "777") {
+            if (String(result?.success) === '777') {
                 if (onUnsavedChange) onUnsavedChange(false);
 
                 // 가이드라인 13번: 임시 스터브 ID 교체
@@ -1904,7 +1904,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                         user: user,
                         recoded_var_ids: idsToReapply
                     });
-                    if (reapplyResult?.success === "777") {
+                    if (String(reapplyResult?.success) === '777') {
                         setModifiedPresetIds(new Set());
                     } else {
                         console.error('Failed to reapply presets:', reapplyResult);

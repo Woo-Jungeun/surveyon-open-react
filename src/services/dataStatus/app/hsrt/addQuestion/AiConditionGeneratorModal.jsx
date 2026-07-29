@@ -20,7 +20,7 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
             const fetchModels = async () => {
                 try {
                     const res = await getAiModels.mutateAsync({ user: user || '' });
-                    if (res?.success === '777' && Array.isArray(res?.resultjson)) {
+                    if (String(res?.success) === '777' && Array.isArray(res?.resultjson)) {
                         const mapped = res.resultjson.map(m => ({ text: m.label, value: m.value }));
                         setModels(mapped);
                         if (mapped.length > 0) {
@@ -59,7 +59,7 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
             });
 
             const rules = res?.resultjson?.rules || res?.rules;
-            if (res?.success === '777' && Array.isArray(rules)) {
+            if (String(res?.success) === '777' && Array.isArray(rules)) {
                 setGeneratedRules(rules);
             } else {
                 modal.showAlert('오류', res?.message || '조건식 생성에 실패했습니다.');

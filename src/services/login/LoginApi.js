@@ -36,7 +36,7 @@ export function LoginApi() {
                     }
                     return out;
                 };
-                if (res?.success === "777") {
+                if (String(res?.success) === '777') {
                     const from = location.state?.from || "/";
                     const originalState = location.state?.originalState;
 
@@ -88,7 +88,7 @@ export function LoginApi() {
         {
             onSuccess: (res, v) => {
                 // 성공 확인 (success: '777' 이거나 token 값이 존재할 경우)
-                if (res?.success === "777" || res?.token || res?.loginkey) {
+                if (String(res?.success) === '777' || res?.token || res?.loginkey) {
                     const originalState = location.state?.originalState;
 
                     // 응답에서 주요 값 추출

@@ -27,7 +27,7 @@ const BoardSection = () => {
     const fetchNotices = async () => {
         try {
             const res = await top5Notices.mutateAsync();
-            if (res?.success === "777") {
+            if (String(res?.success) === '777') {
                 setNoticeData(processData(res?.resultjson || []));
             } else {
                 setNoticeData([]);
@@ -43,7 +43,7 @@ const BoardSection = () => {
     const fetchPatchNotes = async () => {
         try {
             const res = await top5PatchNotes.mutateAsync();
-            if (res?.success === "777") {
+            if (String(res?.success) === '777') {
                 setPatchNotesData(processData(res?.resultjson || []));
             } else {
                 setPatchNotesData([]);

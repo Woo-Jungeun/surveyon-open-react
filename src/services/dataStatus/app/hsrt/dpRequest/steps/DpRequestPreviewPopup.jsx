@@ -25,7 +25,7 @@ const DpRequestPreviewPopup = () => {
 
                         const res = await evaluateVariable.mutateAsync(payload);
 
-                        if (res && res.success === '777' && res.resultjson) {
+                        if (res && String(res.success) === '777' && res.resultjson) {
                             // API에서 내려주는 columns 배열 세팅 (예: [{ key: "total_auto", label: "?꿀겐", ... }])
                             const apiColumns = res.resultjson.columns || [];
                             setColumns(apiColumns);

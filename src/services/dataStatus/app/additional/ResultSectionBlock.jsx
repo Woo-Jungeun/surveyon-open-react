@@ -248,7 +248,7 @@ export const ResultSectionBlock = ({
                 };
 
                 const res = await evaluateChartData.mutateAsync(payload);
-                if (res?.success === "777" && res.resultjson) {
+                if (String(res?.success) === '777' && res.resultjson) {
                     setRawChartData(res.resultjson);
                     setAiResult(null);
                 } else {

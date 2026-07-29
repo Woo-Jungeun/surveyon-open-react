@@ -116,7 +116,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     if (!userId || !pn) return;
     try {
       const result = await getDataInfo.mutateAsync({ user: userId, pn });
-      if (result?.success === "777") {
+      if (String(result?.success) === '777') {
         setPageInfo(prev => ({
           ...prev,
           processedAt: formatDate(result.resultjson.parquetBakedAt)
@@ -150,7 +150,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       if (user && mergePn && (!currentPageId || currentPageId === "null" || currentPageId === "undefined")) {
         try {
           const pageRes = await pageList.mutateAsync({ user: user, pn: mergePn });
-          if (pageRes?.success === "777") {
+          if (String(pageRes?.success) === '777') {
             const pages = pageRes.resultjson || [];
             if (pages.length === 1) {
               handlePageSelect(pages[0]);
@@ -179,7 +179,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       loadingSpinner.show();
       const result = await syncMap.mutateAsync({ user: userId, pn, bakeTarget: "srt" });
 
-      if (result?.success === "777") {
+      if (String(result?.success) === '777') {
         modal.showAlert("알림", "데이터 새로고침이 성공적으로 완료되었습니다.");
         // 새로고침 후 시간 정보 다시 가져오기
         await fetchDataInfo(pn);
@@ -288,7 +288,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
       const pageRes = await pageList.mutateAsync({ user: user, pn: mergePn });
 
-      if (pageRes?.success == "777") {
+      if (String(pageRes?.success) === '777') {
         const pages = pageRes.resultjson || [];
         if (pages.length === 1) {
           // 한 개일 때 바로 선택 (자동 저장)
@@ -333,7 +333,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       if (user && mergePn && currentPageId) {
         try {
           const pageRes = await pageList.mutateAsync({ user: user, pn: mergePn });
-          if (pageRes?.success === "777") {
+          if (String(pageRes?.success) === '777') {
             const pages = pageRes.resultjson || [];
             const currentPage = pages.find(p => (p.page_id || p.pageid || p.id) === currentPageId);
             if (currentPage) {
@@ -382,7 +382,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       const mergePn = sessionStorage.getItem("merge_pn");
       if (user && mergePn) {
         pageList.mutateAsync({ user: user, pn: mergePn }).then(res => {
-          if (res?.success == "777") {
+          if (String(res?.success) === '777') {
             setPageListData(res.resultjson);
             setIsPageListPopupOpen(true);
           }

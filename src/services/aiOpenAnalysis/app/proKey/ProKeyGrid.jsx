@@ -88,7 +88,7 @@ const ProKeyGrid = ({ data = [], setData, fetchData }) => {
 
       const res = await proKeyData.mutateAsync(payload);
 
-      if (res?.success === "777") {
+      if (String(res?.success) === '777') {
         // modal.showConfirm("알림", "기본 사용 API KEY가 변경되었습니다.", {
         //   btns: [{ title: "확인" }],
         // });
@@ -139,12 +139,12 @@ const ProKeyGrid = ({ data = [], setData, fetchData }) => {
                 };
                 const res = await proKeyData.mutateAsync(payload);
 
-                if (res?.success === "777") {
+                if (String(res?.success) === '777') {
                   modal.showAlert("알림", "API KEY가 삭제되었습니다.");
                   await fetchData(); //그리드 재조회 
-                } else if (res?.success === "771") {
+                } else if (String(res?.success) === '771') {
                   modal.showErrorAlert("알림", "이미 삭제되었거나 존재하지 않습니다.");
-                } else if (res?.success === "772") {
+                } else if (String(res?.success) === '772') {
                   modal.showErrorAlert("알림", "삭제 권한이 없습니다.");
                 } else {
                   modal.showErrorAlert("알림", res?.message || "삭제 중 오류가 발생했습니다.");

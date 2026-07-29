@@ -1147,7 +1147,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             // 저장 API 호출
             try {
                 const res = await optionSaveData.mutateAsync(payload);
-                if (res?.success === "777") {
+                if (String(res?.success) === '777') {
                     // modal.showAlert("알림", "저장되었습니다."); // 성공 팝업 표출
                     onSaved?.();
                     onUnsavedChange?.(false);
@@ -1169,7 +1169,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         await handleSearch();                              // 재조회 대기 (in 조회 완료)
                     }
                     return true;
-                } else if (res?.success === "763") {
+                } else if (String(res?.success) === '763') {
                     modal.showAlert("에러", "응답자데이터와 보기코드가 매칭되지 않습니다. \n응답자 데이터분석시 참고해주세요."); //오류 팝업 표출
                     return false; // 실패 시 그리드 상태 변경 안 함
                 } else {
@@ -1247,7 +1247,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     lv3: row?.lv3
                 };
                 const res = await optionSaveData.mutateAsync(payload);
-                if (res?.success === "777") {
+                if (String(res?.success) === '777') {
                     modal.showConfirm("알림", "소분류 코드를 추가했습니다.", {
                         btns: [{
                             title: "확인", click: async () => {
@@ -1257,7 +1257,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         }],
                     });
                     return;
-                } else if (res?.success === "768") {
+                } else if (String(res?.success) === '768') {
                     modal.showErrorAlert("에러", res?.message);
                 } else {
                     modal.showErrorAlert("에러", "코드 추가에 실패했습니다.");

@@ -34,7 +34,7 @@ const InquiryDetail = () => {
         if (id) {
             inquiryDetail.mutate({ id: id, user: userId, is_admin: isAdmin }, {
                 onSuccess: (res) => {
-                    if (res?.success === "777") {
+                    if (String(res?.success) === '777') {
                         const data = res.resultjson || res.data || res;
                         const mappedData = {
                             id: data.id,
@@ -171,14 +171,14 @@ const InquiryDetail = () => {
 
                                             const response = await inquiryTransaction.mutateAsync(payload);
 
-                                            if (response?.success === "777") {
+                                            if (String(response?.success) === '777') {
                                                 modal.showAlert('알림', inquiryData.answer ? '답변이 수정되었습니다.' : '답변이 등록되었습니다.');
                                                 setIsAnswering(false);
 
                                                 // 데이터 새로고침
                                                 inquiryDetail.mutate({ id: id, user: userId, is_admin: isAdmin }, {
                                                     onSuccess: (res) => {
-                                                        if (res?.success === "777") {
+                                                        if (String(res?.success) === '777') {
                                                             const data = res.resultjson || res.data || res;
                                                             const mappedData = {
                                                                 id: data.id,
@@ -268,7 +268,7 @@ const InquiryDetail = () => {
 
                                                                     const response = await inquiryTransaction.mutateAsync(payload);
 
-                                                                    if (response?.success === "777") {
+                                                                    if (String(response?.success) === '777') {
                                                                         modal.showAlert('알림', '문의가 삭제되었습니다.', null, () => {
                                                                             navigate('/inquiry');
                                                                         });
@@ -336,13 +336,13 @@ const InquiryDetail = () => {
 
                                                                     const response = await inquiryTransaction.mutateAsync(payload);
 
-                                                                    if (response?.success === "777") {
+                                                                    if (String(response?.success) === '777') {
                                                                         modal.showAlert('알림', '답변이 삭제되었습니다.');
 
                                                                         // 데이터 새로고침
                                                                         inquiryDetail.mutate({ id: id, user: userId, is_admin: isAdmin }, {
                                                                             onSuccess: (res) => {
-                                                                                if (res?.success === "777") {
+                                                                                if (String(res?.success) === '777') {
                                                                                     const data = res.resultjson || res.data || res;
                                                                                     const mappedData = {
                                                                                         id: data.id,

@@ -53,7 +53,7 @@ const ProKey = () => {
         }
       };
       const res = await proKeyData.mutateAsync(payload);
-      if (res?.success === "777") {
+      if (String(res?.success) === '777') {
         setGridData(res?.resultjson || []);
       } else {
         modal.showErrorAlert("에러", "API KEY 목록을 불러오지 못했습니다.");
@@ -96,7 +96,7 @@ const ProKey = () => {
         }
       };
       const res = await proKeyData.mutateAsync(payload);
-      if (res?.success === "777") {
+      if (String(res?.success) === '777') {
         modal.showConfirm("알림", "API KEY가 등록되었습니다.", {
           btns: [{
             title: "확인",
@@ -112,7 +112,7 @@ const ProKey = () => {
             },
           }],
         });
-      } else if (res?.success === "770") {
+      } else if (String(res?.success) === '770') {
         // 이미 등록된 api key입니다..
         modal.showErrorAlert("에러", res?.message);
       } else {

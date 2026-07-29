@@ -38,7 +38,7 @@ export function MainListApi() {
                         user: user
                     }, "/project", "API_BASE_URL_OPENAI");
 
-                    if (startRes?.success !== "777") {
+                    if (String(startRes?.success) !== '777') {
                         throw new Error(startRes?.Message || "동기화 시작에 실패했습니다.");
                     }
 
@@ -54,7 +54,7 @@ export function MainListApi() {
                         user: user
                     }, "/project", "API_BASE_URL_OPENAI");
 
-                    if (firstProgressRes?.success !== "777") {
+                    if (String(firstProgressRes?.success) !== '777') {
                         throw new Error(firstProgressRes?.Message || "동기화 상태 조회에 실패했습니다.");
                     }
 
@@ -86,7 +86,7 @@ export function MainListApi() {
                                     user: user
                                 }, "/project", "API_BASE_URL_OPENAI");
 
-                                if (progressRes?.success !== "777") {
+                                if (String(progressRes?.success) !== '777') {
                                     clearInterval(interval);
                                     if (window.__onProjectSyncProgress) {
                                         window.__onProjectSyncProgress(null);

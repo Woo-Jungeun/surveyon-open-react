@@ -213,7 +213,7 @@ const ProRegisterTab2 = (props) => {
           },
         };
         const res = await proRegisterMutation.mutateAsync(payload);
-        if (res?.success === "777") {
+        if (String(res?.success) === '777') {
           modal.showConfirm("알림", "문항이 등록되었습니다.", {
             btns: [{
               title: "확인", click: () => {
@@ -225,7 +225,7 @@ const ProRegisterTab2 = (props) => {
               }
             }],
           });
-        } else if (res?.success === "768" || res?.success === "769") {
+        } else if (String(res?.success) === '768' || String(res?.success) === '769') {
           let dupJson = res?.resultjson || {};
 
           try {
@@ -237,7 +237,7 @@ const ProRegisterTab2 = (props) => {
             dupJson = {};
           }
 
-          const isIdDup = res?.success === "769";
+          const isIdDup = String(res?.success) === '769';
           const dupList = Object.entries(dupJson || {})
             .map(([k, v]) => {
               if (Array.isArray(v)) return `${k}: ${v.join(", ")}`;

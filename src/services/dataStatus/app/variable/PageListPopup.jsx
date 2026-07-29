@@ -170,11 +170,11 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
 
             const result = await pageSet.mutateAsync(payload);
 
-            if (result?.success == "777") {
+            if (String(result?.success) === '777') {
                 // 저장 성공 시 목록 재조회
                 const refreshRes = await pageList.mutateAsync({ user: auth?.user?.userId, pn: dataItem.merge_pn });
 
-                if (refreshRes?.success == "777" && refreshRes.resultjson) {
+                if (String(refreshRes?.success) === '777' && refreshRes.resultjson) {
                     setLocalData(refreshRes.resultjson.map(item => {
                         const mPn = item.merge_pn || item.pn || sessionStorage.getItem("merge_pn") || "";
                         return {
@@ -248,7 +248,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
                             };
                             const result = await pageDelete.mutateAsync(payload);
 
-                            if (result?.success == "777") {
+                            if (String(result?.success) === '777') {
                                 // 삭제 성공 시 화면에서 해당 줄 제거
                                 setLocalData(prevData => prevData.filter(item =>
                                     (item.pageid !== dataItem.pageid && item.id !== dataItem.id)
@@ -287,10 +287,10 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
                 user: auth?.user?.userId
             });
 
-            if (copyRes?.success == "777") {
+            if (String(copyRes?.success) === '777') {
                 // 복사 성공 시 목록 갱신
                 const refreshRes = await pageList.mutateAsync({ user: auth?.user?.userId, pn: dataItem.merge_pn });
-                if (refreshRes?.success == "777" && refreshRes.resultjson) {
+                if (String(refreshRes?.success) === '777' && refreshRes.resultjson) {
                     setLocalData(refreshRes.resultjson.map(item => {
                         const mPn = item.merge_pn || item.pn || sessionStorage.getItem("merge_pn") || "";
                         return {

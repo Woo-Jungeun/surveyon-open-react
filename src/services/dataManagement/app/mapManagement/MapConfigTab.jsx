@@ -40,7 +40,7 @@ const CustomReLabelHeaderCell = (props) => {
                         click: async () => {
                             try {
                                 const res = await generateRelabels.mutateAsync(payload);
-                                if (res?.success === '777' || res?.success === 777) {
+                                if (String(res?.success) === '777' || String(res?.success) === '777') {
                                     if (res?.resultjson && res.resultjson.processedCount !== undefined) {
                                         await modal.showAlert("완료", `${res?.message || 'AI 요약본이 매핑되었습니다.'}\n(처리된 문항 건수: ${res.resultjson.processedCount}건)`);
                                     } else {

@@ -101,7 +101,7 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
         try {
             const res = await getOrderDetail.mutateAsync({ pageid: pageId, user: user });
 
-            if (res && res.success === '777') {
+            if (res && String(res.success) === '777') {
                 const data = res.resultjson || {};
                 const ids = data.dp_request_order_ids || [];
                 const metaList = data.ordered_item_meta || [];
@@ -407,10 +407,10 @@ const DetailEditPreview = ({ item, onClose }) => {
 
             const saveResult = await saveRecodedSet.mutateAsync(savePayload);
 
-            if (saveResult?.success === "777") {
+            if (String(saveResult?.success) === '777') {
                 // Fetch full variables to include in evaluate payload
                 const varResult = await getOrderDetail.mutateAsync({ pageid: pageId, user: userId });
-                const fullVars = varResult?.success === "777" ? (varResult?.resultjson?.recoded_variables || {}) : {};
+                const fullVars = String(varResult?.success) === '777' ? (varResult?.resultjson?.recoded_variables || {}) : {};
 
                 // 2. Prepare Preview Evaluate payload
                 const evalVariables = {
@@ -432,7 +432,7 @@ const DetailEditPreview = ({ item, onClose }) => {
                 };
 
                 const evalRes = await evaluateVariable.mutateAsync(evalPayload);
-                if (evalRes?.success === "777" && evalRes?.resultjson) {
+                if (String(evalRes?.success) === '777' && evalRes?.resultjson) {
                     setResultColumns(evalRes.resultjson.columns || []);
                     setResultData(evalRes.resultjson.rows || evalRes.resultjson.data || []);
                     setIsResultOpen(true);
@@ -459,7 +459,7 @@ const DetailEditPreview = ({ item, onClose }) => {
 
             // Fetch full variables for evaluation
             const varResult = await getOrderDetail.mutateAsync({ pageid: pageId, user: userId });
-            const fullVars = varResult?.success === "777" ? (varResult?.resultjson?.recoded_variables || {}) : {};
+            const fullVars = String(varResult?.success) === '777' ? (varResult?.resultjson?.recoded_variables || {}) : {};
 
             const evalPayload = {
                 pageid: pageId,
@@ -475,7 +475,7 @@ const DetailEditPreview = ({ item, onClose }) => {
             };
 
             const evalRes = await evaluateVariable.mutateAsync(evalPayload);
-            if (evalRes?.success === "777" && evalRes?.resultjson) {
+            if (String(evalRes?.success) === '777' && evalRes?.resultjson) {
                 setResultColumns(evalRes.resultjson.columns || []);
                 setResultData(evalRes.resultjson.rows || evalRes.resultjson.data || []);
                 setIsResultOpen(true);

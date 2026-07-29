@@ -343,7 +343,7 @@ const OptionSettingExload = () => {
             const res = await excelListData.mutateAsync(payload);
             //console.log("res", res);
 
-            if (res?.success === "777") {
+            if (String(res?.success) === '777') {
 
                 // 부모창에 등록 성공 신호 보내기
                 if (window.opener) {
@@ -360,7 +360,7 @@ const OptionSettingExload = () => {
                         },
                     ],
                 });
-            } else if (res?.success === "768") {
+            } else if (String(res?.success) === '768') {
                 let dupList = [];
                 try {
                     dupList = typeof res?.resultjson === "string"

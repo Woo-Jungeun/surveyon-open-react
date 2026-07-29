@@ -67,7 +67,7 @@ const ProPermission = () => {
         }
       };
       const res = await proPermissionData.mutateAsync(payload);
-      if (res?.success === "777") {
+      if (String(res?.success) === '777') {
         setGridData(res?.resultjson || []);
       } else {
         modal.showErrorAlert("에러", "권한 관리 목록을 불러오지 못했습니다.");
@@ -88,7 +88,7 @@ const ProPermission = () => {
         },
       };
       const res = await proPermissionData.mutateAsync(payload);
-      if (res?.success === "777") {
+      if (String(res?.success) === '777') {
         const list = res.resultjson.map((u) => ({
           text: `${u.Name}(${u.Position})`,
           value: u.Id,
@@ -164,7 +164,7 @@ const ProPermission = () => {
       };
 
       const res = await proPermissionData.mutateAsync(payload);
-      if (res?.success === "777") {
+      if (String(res?.success) === '777') {
         modal.showConfirm("알림", "프로젝트 권한이 등록되었습니다.", {
           btns: [
             {
@@ -186,7 +186,7 @@ const ProPermission = () => {
             },
           ],
         });
-      } else if (res?.success === "773") {
+      } else if (String(res?.success) === '773') {
         // 773	이미 등록된 담당자입니다.
         modal.showErrorAlert("에러", res?.message);
       } else {
@@ -218,7 +218,7 @@ const ProPermission = () => {
                   },
                 };
                 const res = await proPermissionData.mutateAsync(payload);
-                if (res?.success === "777") {
+                if (String(res?.success) === '777') {
                   modal.showConfirm("알림", "프로젝트가 삭제되었습니다.", {
                     btns: [
                       {

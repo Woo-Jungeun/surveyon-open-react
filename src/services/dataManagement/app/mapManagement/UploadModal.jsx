@@ -86,7 +86,7 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
                         try {
                             const res = await uploadSpss.mutateAsync(formData);
 
-                            if (res?.success === "777") {
+                            if (String(res?.success) === '777') {
                                 // 1. 성공 시 팝업 닫기
                                 handleModalClose();
                                 // 2. 알림 메시지 띄우기 (확인 버튼 누를 때까지 대기)

@@ -51,7 +51,7 @@ const InquiryWrite = () => {
                 try {
                     const response = await inquiryDetail.mutateAsync({ id: parseInt(id), user: userId, is_admin: isAdmin });
 
-                    if (response?.success === "777") {
+                    if (String(response?.success) === '777') {
                         const data = response.resultjson || response.data || response;
                         setCategory(data.category || categories[0]);
                         setTitle(data.title || '');
@@ -146,7 +146,7 @@ const InquiryWrite = () => {
 
             const response = await inquiryTransaction.mutateAsync(payload);
 
-            if (response?.success === "777") {
+            if (String(response?.success) === '777') {
                 const result = response.resultjson || response.data || response;
                 modal.showAlert('알림', isEdit ? '문의가 수정되었습니다.' : '문의가 등록되었습니다.', null, () => {
                     const targetId = isEdit ? id : (result.id || result.result?.id);

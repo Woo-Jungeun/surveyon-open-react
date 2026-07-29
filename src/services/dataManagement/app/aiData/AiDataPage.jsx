@@ -89,7 +89,7 @@ const AiDataPage = () => {
 
         try {
             const res = await getQaTicket.mutateAsync({ pn: projectnum, user: userId });
-            if (res?.success === "777" && res?.resultjson) {
+            if (String(res?.success) === '777' && res?.resultjson) {
                 return res.resultjson.ticket;
             }
         } catch (err) {
@@ -110,7 +110,7 @@ const AiDataPage = () => {
                 reqData.pids = pids;
             }
             const res = await viewQaJobs.mutateAsync(reqData);
-            if (res?.success === "777" && res?.resultjson) {
+            if (String(res?.success) === '777' && res?.resultjson) {
                 const payload = res.resultjson;
                 if (payload.startUrl) {
                     setStartUrl(payload.startUrl);
@@ -186,7 +186,7 @@ const AiDataPage = () => {
                         }
                     }
                 }
-            } else if (res?.success === "900") {
+            } else if (String(res?.success) === '900') {
                 setJobError(res?.resultjson?.errorcontent || "해당 프로젝트의 작업이 없습니다.");
                 setRespondents([]);
                 setProgressInfo({
@@ -303,7 +303,7 @@ const AiDataPage = () => {
                                 pids: targetPids.map(String)
                             });
 
-                            if (resetRes?.success === "777") {
+                            if (String(resetRes?.success) === '777') {
                                 const resJson = resetRes?.resultjson || {};
                                 const deletedPids = resJson.deletedPids || [];
                                 const deletedCount = resJson.deleted ?? deletedPids.length ?? 0;
@@ -421,7 +421,7 @@ const AiDataPage = () => {
                 const text = await response.data.text();
                 try {
                     const parsed = JSON.parse(text);
-                    if (parsed.success === "900" || parsed.success === 900) {
+                    if (String(parsed.success) === '900' || String(parsed.success) === '900') {
                         const errMsg = parsed.resultjson?.errorcontent || "데이터 내보내기 중 오류가 발생했습니다.";
                         modal.showAlert("알림", `${errMsg}`);
                         return;
@@ -714,7 +714,7 @@ const AiDataPage = () => {
                 strategy: {}
             });
 
-            if (runRes?.success === "777") {
+            if (String(runRes?.success) === '777') {
                 // 러너 실행 시동 중 UI 표출
                 setIsRunnerStarting(true);
 
@@ -732,7 +732,7 @@ const AiDataPage = () => {
                         setIsRunnerStarting(false);
 
                         const payload = checkRes?.resultjson || checkRes?.data;
-                        if (checkRes?.success === "777" && payload?.claimed === true) {
+                        if (String(checkRes?.success) === '777' && payload?.claimed === true) {
                             // 정상 기동 및 수령됨
                             setRunnerNotResponding(false);
                             setRunnerGuide(null);
@@ -748,7 +748,7 @@ const AiDataPage = () => {
                         setRunnerNotResponding(true);
                     }
                 }, checkAfterSec * 1000);
-            } else if (runRes?.success === "900") {
+            } else if (String(runRes?.success) === '900') {
                 modal.showAlert("알림", runRes?.resultjson?.errorcontent || "작업 시작 중 오류가 발생했습니다.");
             }
 

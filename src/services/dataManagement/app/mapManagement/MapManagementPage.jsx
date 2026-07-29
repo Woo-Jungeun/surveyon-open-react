@@ -95,7 +95,7 @@ const MapManagementPage = () => {
             loadingSpinner.show();
             const result = await getMapVariables.mutateAsync({ user: userId, pn });
 
-            if (result?.success === "777" && result?.resultjson?.variables) {
+            if (String(result?.success) === '777' && result?.resultjson?.variables) {
                 const transformedData = result.resultjson.variables.map(item => {
                     const categoryStr = (item.labels || [])
                         .map(l => `${l.code}=${l.label}`)
@@ -136,7 +136,7 @@ const MapManagementPage = () => {
 
                 setVariables(finalData);
                 setOriginalVariables(JSON.parse(JSON.stringify(finalData)));
-            } else if (result?.success !== "777") {
+            } else if (String(result?.success) !== '777') {
                 const errorMsg = result?.errortext || result?.errorcontent || result?.message || "프로젝트 매핑 정보를 조회할 수 없습니다.";
                 modal.showErrorAlert("에러", errorMsg);
                 setVariables([]);
@@ -398,7 +398,7 @@ const MapManagementPage = () => {
                             deleted: deletedLabelIds
                         };
                         const saveResult = await updateMapLabels.mutateAsync(payload);
-                        if (!(saveResult?.success === '777' || saveResult?.success === true)) {
+                        if (!(String(saveResult?.success) === '777' || saveResult?.success === true)) {
                             allSuccess = false;
                             const errorMsg = saveResult?.errortext || saveResult?.errorcontent || saveResult?.message;
                             if (errorMsg) {
@@ -416,7 +416,7 @@ const MapManagementPage = () => {
                             labels: createdLabelPayloads
                         };
                         const createResult = await createMapLabels.mutateAsync(createPayload);
-                        if (!(createResult?.success === '777' || createResult?.success === true)) {
+                        if (!(String(createResult?.success) === '777' || createResult?.success === true)) {
                             allSuccess = false;
                             const errorMsg = createResult?.errortext || createResult?.errorcontent || createResult?.message;
                             if (errorMsg) {
@@ -491,7 +491,7 @@ const MapManagementPage = () => {
                     variables: newRows.map(v => toPayload(v, true)),
                 };
                 const createResult = await createMapVariables.mutateAsync(createPayload);
-                if (createResult?.success !== '777') {
+                if (String(createResult?.success) !== '777') {
                     createSuccess = false;
                     const errorMsg = createResult?.errortext || createResult?.errorcontent || createResult?.message;
                     if (errorMsg) {
@@ -510,7 +510,7 @@ const MapManagementPage = () => {
                     deleted: deletedIds,
                 };
                 const updateResult = await updateMapVariables.mutateAsync(updatePayload);
-                if (!(updateResult?.success === '777' || updateResult?.success === true)) {
+                if (!(String(updateResult?.success) === '777' || updateResult?.success === true)) {
                     updateSuccess = false;
                     const errorMsg = updateResult?.errortext || updateResult?.errorcontent || updateResult?.message;
                     if (errorMsg) {

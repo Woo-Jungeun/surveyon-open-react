@@ -88,7 +88,7 @@ const ProPermissionGrid = ({ data, setData, fetchData }) => {
 
                 const res = await proPermissionData.mutateAsync(payload);
 
-                if (res?.success === "777") {
+                if (String(res?.success) === '777') {
                   modal.showAlert("알림", "사용자가 삭제되었습니다.");
                   await fetchData(); //그리드 재조회 
                 } else {

@@ -868,7 +868,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         try {
             setIsCalculatingFreq(true);
             const res = await evaluateVariable.mutateAsync(payload);
-            if (res && res.success === '777' && res.resultjson) {
+            if (res && String(res.success) === '777' && res.resultjson) {
                 const apiColumns = res.resultjson.columns || [];
                 const apiRows = res.resultjson.rows || res.resultjson.data || [];
 
@@ -1319,7 +1319,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             };
 
                             const result = await saveBannerDetail.mutateAsync(requestData);
-                            if (result?.success === "777") {
+                            if (String(result?.success) === '777') {
                                 modal.showAlert('알림', '배너가 삭제되었습니다.');
                                 if (onUnsavedChange) onUnsavedChange(false);
                                 await fetchBannerData(false, true); // 삭제 시 무조건 첫 번째 배너 선택
@@ -1347,12 +1347,12 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             ]);
 
             let activeBannerIds = [];
-            if (bannerResult?.success === '777' && bannerResult.resultjson) {
+            if (String(bannerResult?.success) === '777' && bannerResult.resultjson) {
                 activeBannerIds = bannerResult.resultjson.banner_ids || [];
             }
 
             let loadedBaseVars = [];
-            if (tableResult?.success === '777' && tableResult.resultjson) {
+            if (String(tableResult?.success) === '777' && tableResult.resultjson) {
                 if (tableResult.resultjson.base_variables) {
                     const baseVars = tableResult.resultjson.base_variables;
                     loadedBaseVars = Array.isArray(baseVars) ? baseVars : Object.values(baseVars);
@@ -1439,7 +1439,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             // 1. Generate (미리보기 연산)
             const result = await generateBanner.mutateAsync({ pageid: pageId, formula, label: name, user: auth?.user?.userId });
 
-            if (result?.success === "777" && result?.resultjson?.variable) {
+            if (String(result?.success) === '777' && result?.resultjson?.variable) {
                 const generatedVar = result.resultjson.variable;
 
                 // 2. 받은 variable 객체를 그대로 사용하여 Save (실제 DB 저장)
@@ -1454,7 +1454,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                 const saveResult = await saveBannerDetail.mutateAsync(saveRequestData);
 
-                if (saveResult?.success === "777") {
+                if (String(saveResult?.success) === '777') {
                     // 3. 완료 후 재조회
                     await fetchBannerData(false);
                     setSelectedBanner(generatedVar.id);
@@ -1786,7 +1786,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             if (!pageId || !auth?.user?.userId) return;
             try {
                 const result = await getBaseVariableList.mutateAsync({ pageid: pageId, user: auth.user.userId });
-                if (result?.success === '777' && result.resultjson) setBaseVariables(Object.values(result.resultjson));
+                if (String(result?.success) === '777' && result.resultjson) setBaseVariables(Object.values(result.resultjson));
             } catch (error) { }
         };
         fetchBaseVariables();
@@ -1835,7 +1835,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         try {
             loadingSpinner.show();
             const result = await saveBannerDetail.mutateAsync(requestData);
-            if (result?.success === "777") {
+            if (String(result?.success) === '777') {
                 modal.showAlert('알림', '배너 정보가 저장되었습니다.');
                 if (onUnsavedChange) onUnsavedChange(false); // 저장 성공 시 더티 해제
                 await fetchBannerData();

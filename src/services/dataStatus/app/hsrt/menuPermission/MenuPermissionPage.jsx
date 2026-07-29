@@ -140,7 +140,7 @@ const MenuPermissionPage = () => {
                 }
             };
             const res = await proPermissionData.mutateAsync(payload);
-            if (res?.success == "777" && res?.resultjson) {
+            if (String(res?.success) === '777' && res?.resultjson) {
                 setUserList(res.resultjson);
             }
         } catch (e) {
@@ -161,7 +161,7 @@ const MenuPermissionPage = () => {
                 }
             };
             const res = await pagesMembersList.mutateAsync(payload);
-            if (res?.success == "777" && res?.resultjson) {
+            if (String(res?.success) === '777' && res?.resultjson) {
                 setPageMembers(res.resultjson);
             }
         } catch (e) {
@@ -184,7 +184,7 @@ const MenuPermissionPage = () => {
                 }
             };
             const res = await proPermissionData.mutateAsync(payload);
-            if (res?.success == "777" && res?.resultjson) {
+            if (String(res?.success) === '777' && res?.resultjson) {
                 const list = res.resultjson.map((u) => ({
                     text: `${u.Name}(${u.Position})`,
                     value: u.Id,
@@ -294,7 +294,7 @@ const MenuPermissionPage = () => {
                         }
                     });
 
-                    if (updateRes?.success == "777") {
+                    if (String(updateRes?.success) === '777') {
                         modal.showAlert("알림", "H-SRT고객의 대시보드 권한 정보가 수정되었습니다.");
                         setSelectedUser(null);
                         setSelectedRole("");
@@ -326,7 +326,7 @@ const MenuPermissionPage = () => {
                         }
                     });
 
-                    if (enterRes?.success == "777") {
+                    if (String(enterRes?.success) === '777') {
                         modal.showAlert("알림", "H-SRT고객의 대시보드 권한이 설정되었습니다.");
                         setSelectedUser(null);
                         setSelectedRole("");
@@ -352,7 +352,7 @@ const MenuPermissionPage = () => {
                 }
             });
 
-            if (res?.success == "777") {
+            if (String(res?.success) === '777') {
                 modal.showAlert("알림", `${getWorkerName(userId)}님의 대시보드 권한이 설정되었습니다.`);
                 setSelectedUser(null);
                 setSelectedRole("");
@@ -398,7 +398,7 @@ const MenuPermissionPage = () => {
                                 });
                             }
 
-                            if (res?.success == "777") {
+                            if (String(res?.success) === '777') {
                                 // 2. H-SRT고객인 경우 프로젝트 작업자 목록에서도 함께 삭제
                                 if (isClient) {
                                     const worker = userList.find(w => w.worker_id === userId);

@@ -204,8 +204,8 @@ function deleteCookie(name, { path = "/", domain } = {}) {
 
 apiAxios.interceptors.response.use(function (response) {
     const { status, data, headers, config } = response;
-    if (data?.success !== "777") {
-        if (data?.success === "710") {
+    if (String(data?.success) !== '777') {
+        if (String(data?.success) === '710') {
             deleteCookie("TOKEN")
             persistor.purge();
             // return { data: { status: data?.success, message: "로그인을 다시 해주세요." } };
@@ -254,8 +254,8 @@ apiAxios.interceptors.response.use(function (response) {
         } else {
             throw new Error("No response");
         }
-        if (data?.success !== "777") {
-            if (data?.success === "710") {
+        if (String(data?.success) !== '777') {
+            if (String(data?.success) === '710') {
                 deleteCookie("TOKEN")
                 persistor.purge();
                 //return { data: { status: data?.su ccess, message: "로그인을 다시 해주세요." } };
@@ -264,7 +264,7 @@ apiAxios.interceptors.response.use(function (response) {
                 return { data: { status: "오류", message: data?.message } };
             }
         }
-        // if (data.success === "404") {
+        // if (String(data.success) === '404') {
         //     // url Not Found 화면 이동(NS_ER_CT_01: url 찾을 수 없음)
         //     window.location.href = '/pageNotFound/PageNotFound'
         // }

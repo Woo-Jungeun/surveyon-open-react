@@ -93,7 +93,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         if (!userId || !pn) return;
         try {
             const result = await getDataInfo.mutateAsync({ user: userId, pn });
-            if (result?.success === "777") {
+            if (String(result?.success) === '777') {
                 setPageInfo(prev => ({
                     ...prev,
                     processedAt: formatDate(result.resultjson.mngParquetBakedAt)
@@ -112,7 +112,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
             if (user) {
                 pageList.mutateAsync({ user: user, pn: mergePn })
                     .then(pageRes => {
-                        if (pageRes?.success === "777") {
+                        if (String(pageRes?.success) === '777') {
                             const pages = pageRes.resultjson || [];
                             if (pages.length > 0) {
                                 const pageId = pages[0].id || pages[0].pageid;
@@ -139,7 +139,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         try {
             loadingSpinner.show();
             const result = await syncMap.mutateAsync({ user: userId, pn, bakeTarget: "mng" });
-            if (result?.success === "777") {
+            if (String(result?.success) === '777') {
                 modal.showAlert("알림", "데이터 새로고침이 성공적으로 완료되었습니다.");
                 await fetchDataInfo(pn);
                 window.dispatchEvent(new Event("pageSelected"));
@@ -185,7 +185,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
             try {
                 const user = auth?.user?.userId;
                 const pageRes = await pageList.mutateAsync({ user: user, pn: project.merge_pn });
-                if (pageRes?.success === "777") {
+                if (String(pageRes?.success) === '777') {
                      const pages = pageRes.resultjson || [];
                      if (pages.length > 0) {
                          const pageId = pages[0].id || pages[0].pageid;

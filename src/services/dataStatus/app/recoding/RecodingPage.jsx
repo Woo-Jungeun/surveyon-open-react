@@ -177,7 +177,7 @@ const RecodingPage = () => {
                     pageid: pageId
                 });
 
-                if (result?.success === "777" && result.resultjson) {
+                if (String(result?.success) === '777' && result.resultjson) {
                     const originalList = Object.values(result.resultjson);
                     const formattedVars = originalList.map(item => {
                         const rawType = (item.type || '').toLowerCase();
@@ -227,7 +227,7 @@ const RecodingPage = () => {
 
         try {
             const result = await getPageList.mutateAsync({ user: userId, pn: mergePn });
-            if (result?.success === "777" && result.resultjson) {
+            if (String(result?.success) === '777' && result.resultjson) {
                 setPageListData(result.resultjson);
                 setIsPageListOpen(true);
             }
@@ -273,7 +273,7 @@ const RecodingPage = () => {
             if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
             try {
                 const result = await getRecodedVariables.mutateAsync({ user: userId, pageid: pageId });
-                if (result?.success === "777" && result.resultjson) {
+                if (String(result?.success) === '777' && result.resultjson) {
                     const transformedData = Object.values(result.resultjson).map(item => {
                         const rawType = (item.type || '').toLowerCase();
                         let color = 'gray';
@@ -499,7 +499,7 @@ const RecodingPage = () => {
                 variables: variablesPayload
             };
             const result = await verifyRecodeLogic.mutateAsync(payload);
-            if (result?.success === "777") {
+            if (String(result?.success) === '777') {
 
                 const data = result.resultjson || {};
                 const stats = data.stats?.total_auto || {};
@@ -667,11 +667,11 @@ const RecodingPage = () => {
                 variables: variablesPayload
             });
 
-            if (result?.success === "777") {
+            if (String(result?.success) === '777') {
                 modal.showAlert("알림", "저장되었습니다.");
                 // 목록 새로고침
                 const getResult = await getRecodedVariables.mutateAsync({ user: userId, pageid: pageId });
-                if (getResult?.success === "777" && getResult.resultjson) {
+                if (String(getResult?.success) === '777' && getResult.resultjson) {
                     const transformedData = Object.values(getResult.resultjson).map(item => ({
                         id: item.id,
                         label: item.label,
@@ -745,12 +745,12 @@ const RecodingPage = () => {
                                 variables: [targetId]
                             });
 
-                            if (result?.success === "777") {
+                            if (String(result?.success) === '777') {
                                 modal.showAlert("알림", "삭제되었습니다.");
 
                                 // 목록 새로고침
                                 const getResult = await getRecodedVariables.mutateAsync({ user: userId, pageid: pageId });
-                                if (getResult?.success === "777" && getResult.resultjson) {
+                                if (String(getResult?.success) === '777' && getResult.resultjson) {
                                     const transformedData = Object.values(getResult.resultjson).map(item => {
                                         const rawType = (item.type || '').toLowerCase();
                                         let color = 'gray';
@@ -811,7 +811,7 @@ const RecodingPage = () => {
 
         try {
             const result = await autoRecode.mutateAsync({ user: userId, pageid: pageId });
-            if (result?.success === "777") {
+            if (String(result?.success) === '777') {
                 modal.showAlert("알림", "자동 리코딩이 완료되었습니다.");
                 fetchVariables(); //재조회
             } else {

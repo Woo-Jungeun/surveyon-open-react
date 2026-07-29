@@ -48,7 +48,7 @@ const ProPermissionModal = ({ open, onClose }) => {
             const res = await proPermissionData.mutateAsync({
                 params: { gb: "worker_list", projectnum, user: auth?.user?.userId || "" }
             });
-            if (res?.success === "777") setGridData(res?.resultjson || []);
+            if (String(res?.success) === '777') setGridData(res?.resultjson || []);
         } catch (err) {
             console.error("fetchData error", err);
         }
@@ -59,7 +59,7 @@ const ProPermissionModal = ({ open, onClose }) => {
             const res = await proPermissionData.mutateAsync({
                 params: { gb: "worker_search", user: auth?.user?.userId || "", worker_name: searchText }
             });
-            if (res?.success === "777") {
+            if (String(res?.success) === '777') {
                 const list = res.resultjson.map((u) => ({
                     text: `${u.Name}(${u.Position})`, value: u.Id, position: u.Position, name: u.Name,
                 }));
@@ -114,7 +114,7 @@ const ProPermissionModal = ({ open, onClose }) => {
             const res = await proPermissionData.mutateAsync({
                 params: reqParams,
             });
-            if (res?.success === "777") {
+            if (String(res?.success) === '777') {
                 modal.showConfirm("알림", "프로젝트 권한이 등록되었습니다.", {
                     themeClass: "purple-theme",
                     btns: [
@@ -127,7 +127,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                         }
                     ],
                 });
-            } else if (res?.success === "773") {
+            } else if (String(res?.success) === '773') {
                 modal.showErrorAlert("에러", res?.message, { themeClass: "purple-theme" });
             } else {
                 modal.showErrorAlert("에러", res?.message || "등록 중 오류가 발생했습니다.", { themeClass: "purple-theme" });
@@ -152,7 +152,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                             const res = await proPermissionData.mutateAsync({
                                 params: { gb: "project_del", projectnum, user: auth?.user?.userId || "" }
                             });
-                            if (res?.success === "777") {
+                            if (String(res?.success) === '777') {
                                 modal.showConfirm("알림", "프로젝트가 삭제되었습니다.", {
                                     themeClass: "purple-theme",
                                     btns: [{
@@ -188,7 +188,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                             const res = await proPermissionData.mutateAsync({
                                 params: { gb: "worker_del", user: auth?.user?.userId || "", projectnum, id }
                             });
-                            if (res?.success === "777") { modal.showAlert("알림", "사용자가 삭제되었습니다.", { themeClass: "purple-theme" }); await fetchData(); }
+                            if (String(res?.success) === '777') { modal.showAlert("알림", "사용자가 삭제되었습니다.", { themeClass: "purple-theme" }); await fetchData(); }
                             else { modal.showErrorAlert("에러", res?.message || "삭제 중 오류가 발생했습니다.", { themeClass: "purple-theme" }); }
                         } catch (err) { 
                             console.error("handleDeleteWorker error", err);

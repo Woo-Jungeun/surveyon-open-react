@@ -19,7 +19,7 @@ const OverviewVariablePopup = ({ isOpen, onClose, auth, pageId, onSaved }) => {
         if (!auth?.user?.userId || !pageId) return;
         try {
             const result = await getRecodedList.mutateAsync({ user: auth.user.userId, pageid: pageId });
-            if (result?.success === "777" && result.resultjson) {
+            if (String(result?.success) === '777' && result.resultjson) {
                 // Filter variables starting with overview_
                 const overviewVars = Object.values(result.resultjson)
                     .filter(v => v.id.startsWith('overview_'))
@@ -46,7 +46,7 @@ const OverviewVariablePopup = ({ isOpen, onClose, auth, pageId, onSaved }) => {
         setIsLoading(true);
         try {
             const result = await getRecodedVariables.mutateAsync({ user: auth.user.userId, pageid: pageId });
-            if (result?.success === "777" && result.resultjson) {
+            if (String(result?.success) === '777' && result.resultjson) {
                 const varData = result.resultjson[id];
                 if (varData) {
                     setVarName(varData.id.replace('overview_', ''));
@@ -121,7 +121,7 @@ const OverviewVariablePopup = ({ isOpen, onClose, auth, pageId, onSaved }) => {
 
         try {
             const result = await setRecodedVariable.mutateAsync(payload);
-            if (result?.success === "777") {
+            if (String(result?.success) === '777') {
                 alert("저장되었습니다.");
                 fetchList();
                 if (onSaved) onSaved();
@@ -144,7 +144,7 @@ const OverviewVariablePopup = ({ isOpen, onClose, auth, pageId, onSaved }) => {
                 pageid: pageId,
                 variables: [selectedVarId]
             });
-            if (result?.success === "777") {
+            if (String(result?.success) === '777') {
                 alert("삭제되었습니다.");
                 setSelectedVarId(null);
                 fetchList();
@@ -186,7 +186,7 @@ const OverviewVariablePopup = ({ isOpen, onClose, auth, pageId, onSaved }) => {
                 variables: variablesPayload
             };
             const result = await verifyRecodeLogic.mutateAsync(payload);
-            if (result?.success === "777") {
+            if (String(result?.success) === '777') {
                 const data = result.resultjson || {};
                 const rows = data.rows || [];
                 const newResults = {};

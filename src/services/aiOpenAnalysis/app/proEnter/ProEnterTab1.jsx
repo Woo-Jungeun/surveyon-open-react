@@ -85,15 +85,15 @@ const ProEnterTab1 = (props) => {
                 };
 
                 const res = await proEnterSaveData.mutateAsync(payload);
-                if (res?.success === "766") {
+                if (String(res?.success) === '766') {
                     modal.showErrorAlert("알림", "등록된 프로젝트가 없습니다.", { themeClass: "purple-theme" });
                     return;
                 }
-                if (res?.success === "767") {
+                if (String(res?.success) === '767') {
                     modal.showErrorAlert("알림", "맵 정보가 등록되지 않았습니다. (담당웹제작자에게 문의해주세요)", { themeClass: "purple-theme" });
                     return;
                 }
-                if (res?.success === "777") {
+                if (String(res?.success) === '777') {
                     modal.showConfirm("알림", "등록이 완료되었습니다.", {
                         themeClass: "purple-theme",
                         btns: [{

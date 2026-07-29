@@ -786,7 +786,7 @@ const QaPage = () => {
 
             const res = await validateDocument.mutateAsync(payload);
 
-            if (res?.success === '777' && res?.resultjson) {
+            if (String(res?.success) === '777' && res?.resultjson) {
                 const validationErrors = res.resultjson.ValidationErrors || res.resultjson.validationErrors || [];
                 const mappedErrors = validationErrors.map(err => {
                     let title = '확인';
@@ -990,7 +990,7 @@ const QaPage = () => {
                 items
             });
 
-            if (res?.success === '777') {
+            if (String(res?.success) === '777') {
                 setIsSaved(true);
                 setTimeout(() => {
                     setIsSaved(false);
@@ -1028,7 +1028,7 @@ const QaPage = () => {
                 user: user
             });
 
-            if (res?.success === '777' && res?.resultjson) {
+            if (String(res?.success) === '777' && res?.resultjson) {
                 const result = res.resultjson;
                 const variables = Array.isArray(result) ? result : (result.generatedVariables || []);
                 const cost = (!Array.isArray(result) && result.estimatedCostUsd !== undefined)
@@ -1178,7 +1178,7 @@ const QaPage = () => {
                 User: user
             });
 
-            if (res?.success === '777' && res?.resultjson?.generatedVariables) {
+            if (String(res?.success) === '777' && res?.resultjson?.generatedVariables) {
                 const parsedQs = mapApiResponseToQuestions(res.resultjson.generatedVariables);
                 if (parsedQs.length === 0) {
                     modal.showAlert('오류', '파싱된 문항 결과가 비어 있습니다.');
