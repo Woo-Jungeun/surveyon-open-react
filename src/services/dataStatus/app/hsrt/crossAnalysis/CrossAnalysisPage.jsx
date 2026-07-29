@@ -816,14 +816,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     useEffect(() => {
         const fetchChartData = async () => {
             if (!isChartOpen) return;
-            console.log("DEBUG: fetchChartData diagnostic details", {
-                bannerId: banner?.id,
-                raw: banner?.raw,
-                config: banner?.raw?.config,
-                bannerVarList,
-                selectedXInfo,
-                columns
-            });
+
             if (!banner?.id) return;
 
             const stub = [banner.id];
@@ -1637,8 +1630,6 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     // AI 데이터 요약 상태
     const [projectNum, setProjectNum] = useState("");
     const [overviewPayload, setOverviewPayload] = useState(null);
-    const [aiSummaryData, setAiSummaryData] = useState("");
-    const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
     const [globalAiSummaryOpen, setGlobalAiSummaryOpen] = useState(false);
 
     const [localDecimalN, setLocalDecimalN] = useState(0);
@@ -2215,11 +2206,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     recodedVariablesRef.current = recodedVars;
                     baseVariablesRef.current = baseVars;
 
-                    console.log("DEBUG: context fetched recodedVars", {
-                        recodedVars,
-                        keys: Object.keys(recodedVars || {}),
-                        allRecodedVars: Object.entries(recodedVars).map(([key, value]) => ({ key, id: value?.id, label: value?.label }))
-                    });
+
                     const dynamicXInfoOptions = Object.entries(recodedVars)
                         .filter(([key, value]) => {
                             const id = String(value?.id ?? key).trim().toLowerCase();
