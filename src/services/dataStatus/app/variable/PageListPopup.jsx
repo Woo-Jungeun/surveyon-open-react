@@ -346,6 +346,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
                 if (role === "admin") displayVal = "관리자 (관리, 읽기,쓰기)";
                 else if (role === "editor") displayVal = "연구원(읽기, 쓰기)";
                 else if (role === "viewer") displayVal = "연구원(읽기)";
+                else if (role === "custom_srt" || role === "client") displayVal = "H-SRT고객";
                 else displayVal = "관리자 (관리, 읽기,쓰기)"; // 기본값 (기존 구버전 대응)
                 return <td className={props.className} style={props.style}>{displayVal}</td>;
             }

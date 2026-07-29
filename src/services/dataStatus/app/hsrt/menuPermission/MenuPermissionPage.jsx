@@ -28,7 +28,7 @@ const getPermissionsArrayForRole = (role) => {
             "page.analysis.cross"
         ];
     }
-    if (role === 'client') {
+    if (role === 'custom_srt' || role === 'client') {
         return [
             "page.view.data",
             "page.view.variables_map",
@@ -92,7 +92,7 @@ const MenuPermissionPage = () => {
     const modal = useContext(modalContext);
     const { proPermissionData, pagesMembersSet, pagesMembersList, pagesMembersDelete } = ProPermissionApi();
 
-    const [userList, setUserList] = useState([]); // Project workers
+    const [userList] = useState([]); // Project workers
     const [userOptions, setUserOptions] = useState([]); // Search worker options for dropdown
     const [pageMembers, setPageMembers] = useState([]); // Page members
     const [selectedUser, setSelectedUser] = useState(null);
@@ -126,27 +126,7 @@ const MenuPermissionPage = () => {
         setPageTitle(sessionStorage.getItem("pagetitle") || "");
     }, [pageId]);
 
-    // Load workers of the project
-    const fetchProjectWorkers = async () => {
-        const projectnum = sessionStorage.getItem("projectnum");
-        const user = auth?.user?.userId;
-        if (!projectnum || !user) return;
-        try {
-            const payload = {
-                params: {
-                    gb: "worker_list",
-                    projectnum,
-                    user
-                }
-            };
-            const res = await proPermissionData.mutateAsync(payload);
-            if (String(res?.success) === '777' && res?.resultjson) {
-                setUserList(res.resultjson);
-            }
-        } catch (e) {
-            console.error("fetchProjectWorkers error", e);
-        }
-    };
+    // Load workers of the project is no longer required via pro_permission_api.aspx
 
     // Load members of the active dashboard page
     const fetchPageMembers = async () => {
@@ -205,7 +185,6 @@ const MenuPermissionPage = () => {
         setSelectedUser(null);
         setSelectedRole("");
         setExpiredDate(moment().add(100, "years").toDate());
-        fetchProjectWorkers();
         fetchPageMembers();
         fetchUserSearch(""); // Initial load
     }, [auth?.user?.userId, pageId]);
@@ -272,70 +251,25 @@ const MenuPermissionPage = () => {
             setLoading(true);
             let userId = selectedUser.worker_id || selectedUser.user_id;
 
-            // 만약 H-SRT고객(client)이면 프로젝트 작업자 등록/수정 API만 호출
+            // H-SRT고객(client)이면 pagesMembersSet API를 custom_srt 역할과 user 키로 호출
             if (selectedRole === 'client') {
-                const projectnum = sessionStorage.getItem("projectnum");
-                const projectname = sessionStorage.getItem("projectname");
-                
-                // 해당 사용자 아이디의 기존 H-SRT고객 정보가 이미 등록되어 있는지 확인
-                const existingWorker = userList.find(w => w.worker_id === userId && w.permission_gubun === "H-SRT고객" && w.page_id === pageId);
-                const workerDbId = selectedUser.id || existingWorker?.id;
-
-                if (workerDbId) {
-                    // 1. 기존 고객의 만료일 등 수정 (worker_update)
-                    const updateRes = await proPermissionData.mutateAsync({
-                        params: {
-                            gb: "worker_update",
-                            user: authUserId || "",
-                            worker_id: workerDbId,
-                            worker_expired: expiredDate
-                                ? moment(expiredDate).format("YYYY-MM-DD")
-                                : ""
-                        }
-                    });
-
-                    if (String(updateRes?.success) === '777') {
-                        modal.showAlert("알림", "H-SRT고객의 대시보드 권한 정보가 수정되었습니다.");
-                        setSelectedUser(null);
-                        setSelectedRole("");
-                        setExpiredDate(moment().add(100, "years").toDate());
-                        await fetchPageMembers();
-                        await fetchProjectWorkers();
-                    } else {
-                        modal.showErrorAlert("에러", updateRes?.message || "H-SRT고객 권한 수정에 실패했습니다.");
+                const res = await pagesMembersSet.mutateAsync({
+                    params: {
+                        pageid: pageId,
+                        role: "custom_srt",
+                        user: authUserId || "",
+                        user_id: userId
                     }
+                });
+
+                if (String(res?.success) === '777') {
+                    modal.showAlert("알림", "H-SRT고객의 대시보드 권한이 설정되었습니다.");
+                    setSelectedUser(null);
+                    setSelectedRole("");
+                    setExpiredDate(moment().add(100, "years").toDate());
+                    await fetchPageMembers();
                 } else {
-                    // 2. 신규 고객 등록 (worker_enter)
-                    const enterRes = await proPermissionData.mutateAsync({
-                        params: {
-                            gb: "worker_enter",
-                            projectname,
-                            projectnum,
-                            pof: sessionStorage.getItem("projectpof") || "",
-                            permission_gubun: "H-SRT고객",
-                            worker_name: "H-SRT고객",
-                            worker_id: userId === "H-SRT고객" ? "" : userId,
-                            worker_password: "",
-                            worker_position: "H-SRT고객",
-                            worker_expired: expiredDate
-                                ? moment(expiredDate).set({ hour: 23, minute: 59, second: 59 }).format("YYYY-MM-DD HH:mm:ss")
-                                : "",
-                            user: authUserId || "",
-                            page_id: pageId,
-                            page_title: pageTitle
-                        }
-                    });
-
-                    if (String(enterRes?.success) === '777') {
-                        modal.showAlert("알림", "H-SRT고객의 대시보드 권한이 설정되었습니다.");
-                        setSelectedUser(null);
-                        setSelectedRole("");
-                        setExpiredDate(moment().add(100, "years").toDate());
-                        await fetchPageMembers();
-                        await fetchProjectWorkers();
-                    } else {
-                        modal.showErrorAlert("에러", enterRes?.message || "H-SRT고객 등록에 실패했습니다.");
-                    }
+                    modal.showErrorAlert("에러", res?.message || "H-SRT고객 등록에 실패했습니다.");
                 }
                 setLoading(false);
                 return;
@@ -358,7 +292,6 @@ const MenuPermissionPage = () => {
                 setSelectedRole("");
                 setExpiredDate(moment().add(100, "years").toDate());
                 await fetchPageMembers();
-                await fetchProjectWorkers(); // 프로젝트 작업자 목록도 함께 갱신
             } else {
                 modal.showErrorAlert("에러", res?.message || "권한 설정에 실패했습니다.");
             }
@@ -375,8 +308,6 @@ const MenuPermissionPage = () => {
         if (!pageId) return;
 
         const member = pageMembers.find(m => m.user_id === userId);
-        const isClient = member?.role === 'client' || userList.some(w => w.worker_id === userId && w.permission_gubun === "H-SRT고객" && w.page_id === pageId);
-
         modal.showConfirm("알림", "선택한 사용자의 대시보드 권한을 삭제하시겠습니까?", {
             btns: [
                 { title: "취소" },
@@ -399,24 +330,6 @@ const MenuPermissionPage = () => {
                             }
 
                             if (String(res?.success) === '777') {
-                                // 2. H-SRT고객인 경우 프로젝트 작업자 목록에서도 함께 삭제
-                                if (isClient) {
-                                    const worker = userList.find(w => w.worker_id === userId);
-                                    const workerDbId = worker?.id || userId;
-                                    try {
-                                        await proPermissionData.mutateAsync({
-                                            params: {
-                                                gb: "worker_del",
-                                                user: auth?.user?.userId || "",
-                                                projectnum: sessionStorage.getItem("projectnum"),
-                                                id: workerDbId
-                                            }
-                                        });
-                                    } catch (err) {
-                                        console.error("worker_del API error", err);
-                                    }
-                                }
-
                                 modal.showAlert("알림", "대시보드 권한이 삭제되었습니다.");
                                 if (selectedUser && (selectedUser.worker_id === userId || selectedUser.user_id === userId)) {
                                     setSelectedUser(null);
@@ -424,7 +337,6 @@ const MenuPermissionPage = () => {
                                     setExpiredDate(moment().add(100, "years").toDate());
                                 }
                                 await fetchPageMembers();
-                                await fetchProjectWorkers();
                             } else {
                                 modal.showErrorAlert("에러", res?.message || "삭제 중 오류가 발생했습니다.");
                             }
@@ -455,11 +367,11 @@ const MenuPermissionPage = () => {
 
             return {
                 ...item,
-                worker_name: getWorkerName(item.user_id),
+                worker_name: item.user_name || getWorkerName(item.user_id),
                 role: item.role,
                 permissions: item.permissions,
                 regDate: formatDate(regDate),
-                expiredDate: item.role === 'client' ? formatDate(expired) : "-"
+                expiredDate: (item.role === 'custom_srt' || item.role === 'client') ? formatDate(expired) : "-"
             };
         });
 
@@ -484,22 +396,14 @@ const MenuPermissionPage = () => {
             }
         });
 
-        // 3.5. 등록일(regDate) 내림차순(최신순) 정렬 (등록일 없는 경우 가장 뒤로)
-        mergedList.sort((a, b) => {
-            const dateA = a.regDate || "";
-            const dateB = b.regDate || "";
-            if (dateA === "-" && dateB === "-") return 0;
-            if (dateA === "-") return 1;
-            if (dateB === "-") return -1;
-            return dateB.localeCompare(dateA);
-        });
+
 
         // 4. 번호 매기기 및 상태 매핑
         return mergedList.map((item, idx) => ({
             ...item,
             no: idx + 1,
             selected: selectedUser?.user_id === item.user_id || selectedUser?.worker_id === item.user_id,
-            roleText: item.role === "admin" ? "관리자 (관리, 읽기,쓰기)" : item.role === "editor" ? "연구원(읽기, 쓰기)" : item.role === "client" ? "H-SRT고객" : "연구원(읽기)",
+            roleText: item.role === "admin" ? "관리자 (관리, 읽기,쓰기)" : item.role === "editor" ? "연구원(읽기, 쓰기)" : (item.role === "custom_srt" || item.role === "client") ? "H-SRT고객" : "연구원(읽기)",
             allowedMenusText: getPermissionsText(item.permissions)
         }));
     }, [pageMembers, userList, selectedUser, pageId]);
@@ -757,9 +661,9 @@ const MenuPermissionPage = () => {
                                         worker_name: member.worker_name,
                                         position: getWorkerPosition(member.user_id)
                                     });
-                                    setSelectedRole(member.role);
+                                    setSelectedRole(member.role === 'custom_srt' ? 'client' : member.role);
 
-                                    if (member.role === 'client') {
+                                    if (member.role === 'custom_srt' || member.role === 'client') {
                                         const worker = userList.find(w => w.worker_id === member.user_id);
                                         if (worker && worker.worker_expired) {
                                             setExpiredDate(moment(worker.worker_expired).toDate());
