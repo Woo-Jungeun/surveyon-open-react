@@ -1643,35 +1643,19 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     const [localDecimalN, setLocalDecimalN] = useState(0);
     const [localDecimalPct, setLocalDecimalPct] = useState(1);
+    const [localWeight, setLocalWeight] = useState('없음');
+    const [localSigType, setLocalSigType] = useState('none');
+    const [localShowN, setLocalShowN] = useState(true);
+    const [localShowPct, setLocalShowPct] = useState(true);
+
     const [selectedWeight, setSelectedWeight] = useState('없음');
     const [weightOptions, setWeightOptions] = useState([{ text: '없음', value: '없음' }]);
-
-    useEffect(() => {
-        setLocalDecimalN(decimalN);
-    }, [decimalN]);
-
-    useEffect(() => {
-        setLocalDecimalPct(decimalPct);
-    }, [decimalPct]);
-
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            setDecimalN(localDecimalN);
-        }, 400);
-        return () => clearTimeout(timeoutId);
-    }, [localDecimalN]);
-
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            setDecimalPct(localDecimalPct);
-        }, 400);
-        return () => clearTimeout(timeoutId);
-    }, [localDecimalPct]);
 
     const contextFetchedRef = useRef(false);
     const recodedVariablesRef = useRef({});
     const baseVariablesRef = useRef({});
     const isFirstLoadRef = useRef(true);
+    const isInitialSetupRef = useRef(true);
 
     const pageId = sessionStorage.getItem('pageId');
     const userId = auth?.user?.userId;
@@ -1682,49 +1666,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         isFirstLoadRef.current = true;
     }, [pageId, userId]);
 
-    const isInitialSetupRef = useRef(true);
 
-    useEffect(() => {
-        if (isInitialSetupRef.current) return;
-        if (isSavingDirectlyRef.current) return;
-
-        const saveTimeout = setTimeout(() => {
-            const pageId = sessionStorage.getItem('pageId');
-            const user = auth?.user?.userId;
-
-            const newUi = {
-                ...uiSettings,
-                format_show_n: showN,
-                format_n_round: decimalN === '' ? 0 : decimalN,
-                format_show_percent: showPct,
-                format_percent_round: decimalPct === '' ? 0 : decimalPct,
-                show_t_test: sigType === 't-test',
-                sig_type: sigType,
-                sig_diff_fin_mode: sigType === 't-test' ? 't_test' : sigType,
-                sig_exclude_under_n: sigExcludeUnderN,
-                sig_exclude_etc: sigExcludeEtc,
-                sig_level: sigLevel,
-                sig_diff_min: sigDiffMin,
-                sig_diff_max: sigDiffMax,
-                percent_symbol: uiSettings?.percent_symbol ?? false,
-                percent_as_column: uiSettings?.percent_as_column ?? uiSettings?.format_percent_as_column ?? false,
-                stub_group_layout: uiSettings?.stub_group_layout ?? 'merge',
-                base_prefix: uiSettings?.base_prefix ?? "(",
-                base_postfix: uiSettings?.base_postfix ?? ")",
-                weight_variable: selectedWeight === '없음' ? null : selectedWeight,
-            };
-            setUiSettings(newUi);
-
-            savePageSettings.mutateAsync({
-                pageid: pageId,
-                user: user,
-                ui_settings: newUi
-            }).catch(e => console.error("Setting save error", e));
-        }, 500);
-
-        return () => clearTimeout(saveTimeout);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [showN, decimalN, showPct, decimalPct, sigType, sigExcludeUnderN, sigExcludeEtc, sigLevel, sigDiffMin, sigDiffMax, selectedWeight]);
     const [xInfoOptions, setXInfoOptions] = useState([]);
 
     const defaultBannerId = useMemo(() => {
@@ -1743,6 +1685,18 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const filterPopupRef = useRef(null);
     const [isDisplaySettingsOpen, setIsDisplaySettingsOpen] = useState(false);
     const displaySettingsRef = useRef(null);
+
+    useEffect(() => {
+        if (isDisplaySettingsOpen) {
+            setLocalWeight(selectedWeight);
+            setLocalSigType(sigType);
+            setLocalShowN(showN);
+            setLocalShowPct(showPct);
+            setLocalDecimalN(decimalN);
+            setLocalDecimalPct(decimalPct);
+        }
+    }, [isDisplaySettingsOpen, selectedWeight, sigType, showN, showPct, decimalN, decimalPct]);
+
     const [filterSearchQuery, setFilterSearchQuery] = useState('');
 
     const filteredGroupedFilters = useMemo(() => {
@@ -2554,7 +2508,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 fetchCrossAnalysisData('normal', null, 1, filterExpression);
             }
         }
-    }, [bannerSearch, selectedXInfo, filterExpression, auth?.user?.userId, showN, decimalN, showPct, decimalPct]);
+    }, [bannerSearch, selectedXInfo, filterExpression, auth?.user?.userId]);
 
     useEffect(() => {
         const handlePageUpdate = () => {
@@ -3179,54 +3133,10 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             data={weightOptions}
                                             textField="text"
                                             dataItemKey="value"
-                                            value={weightOptions.find(o => o.value === selectedWeight) || weightOptions[0]}
-                                            onChange={async (e) => {
+                                            value={weightOptions.find(o => o.value === localWeight) || weightOptions[0]}
+                                            onChange={(e) => {
                                                 const nextVal = (typeof e.value === 'object' && e.value !== null) ? e.value.value : e.value;
-                                                setSelectedWeight(nextVal);
-
-                                                const pageId = sessionStorage.getItem('pageId');
-                                                const user = auth?.user?.userId;
-                                                if (pageId && user) {
-                                                    const newUi = {
-                                                        ...uiSettings,
-                                                        format_show_n: showN,
-                                                        format_n_round: decimalN === '' ? 0 : decimalN,
-                                                        format_show_percent: showPct,
-                                                        format_percent_round: decimalPct === '' ? 0 : decimalPct,
-                                                        show_t_test: sigType === 't-test',
-                                                        sig_type: sigType,
-                                                        sig_diff_fin_mode: sigType === 't-test' ? 't_test' : sigType,
-                                                        sig_exclude_under_n: sigExcludeUnderN,
-                                                        sig_exclude_etc: sigExcludeEtc,
-                                                        sig_level: sigLevel,
-                                                        sig_diff_min: sigDiffMin,
-                                                        sig_diff_max: sigDiffMax,
-                                                        percent_symbol: uiSettings?.percent_symbol ?? false,
-                                                        percent_as_column: uiSettings?.percent_as_column ?? uiSettings?.format_percent_as_column ?? false,
-                                                        stub_group_layout: uiSettings?.stub_group_layout ?? 'merge',
-                                                        base_prefix: uiSettings?.base_prefix ?? "(",
-                                                        base_postfix: uiSettings?.base_postfix ?? ")",
-                                                        weight_variable: nextVal === '없음' ? null : nextVal
-                                                    };
-                                                    setUiSettings(newUi);
-
-                                                    isSavingDirectlyRef.current = true;
-                                                    try {
-                                                        await savePageSettings.mutateAsync({
-                                                            pageid: pageId,
-                                                            user: user,
-                                                            ui_settings: newUi
-                                                        });
-
-                                                        await fetchCrossAnalysisData('normal', null, 1, filterExpression, null, nextVal);
-                                                    } catch (err) {
-                                                        console.error("Failed to save or fetch on weight change", err);
-                                                    } finally {
-                                                        setTimeout(() => {
-                                                            isSavingDirectlyRef.current = false;
-                                                        }, 600);
-                                                    }
-                                                }
+                                                setLocalWeight(nextVal);
                                             }}
                                             style={{ width: '100%', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
                                             className="custom-xinfo-dropdown"
@@ -3245,12 +3155,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                 data={SIG_TYPE_OPTIONS}
                                                 textField="text"
                                                 dataItemKey="value"
-                                                value={SIG_TYPE_OPTIONS.find(o => o.value === sigType) || SIG_TYPE_OPTIONS[0]}
+                                                value={SIG_TYPE_OPTIONS.find(o => o.value === localSigType) || SIG_TYPE_OPTIONS[0]}
                                                 onOpen={() => setIsSigPopupOpen(false)}
-                                                onChange={async (e) => {
+                                                onChange={(e) => {
                                                     const nextVal = (typeof e.value === 'object' && e.value !== null) ? e.value.value : e.value;
-                                                    const prevVal = sigType;
-                                                    setSigType(nextVal);
+                                                    const prevVal = localSigType;
+                                                    setLocalSigType(nextVal);
 
                                                     if (nextVal !== 'none') {
                                                         setIsSigPopupOpen(true);
@@ -3262,11 +3172,11 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                         setAnimateSettingsTrigger(prev => prev + 1);
                                                     }
 
-                                                    let nextExcludeN = sigExcludeUnderN;
-                                                    let nextExcludeEtc = sigExcludeEtc;
-                                                    let nextLevel = sigLevel;
-                                                    let nextDiffMin = sigDiffMin;
-                                                    let nextDiffMax = sigDiffMax;
+                                                    let nextExcludeN = localSigExcludeUnderN;
+                                                    let nextExcludeEtc = localSigExcludeEtc;
+                                                    let nextLevel = localSigLevel;
+                                                    let nextDiffMin = localSigDiffMin;
+                                                    let nextDiffMax = localSigDiffMax;
 
                                                     if (nextVal === 't_test') {
                                                         nextExcludeN = 20;
@@ -3285,68 +3195,11 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                         nextDiffMax = 60;
                                                     }
 
-                                                    setSigExcludeUnderN(nextExcludeN);
-                                                    setSigExcludeEtc(nextExcludeEtc);
-                                                    setSigLevel(nextLevel);
-                                                    setSigDiffMin(nextDiffMin);
-                                                    setSigDiffMax(nextDiffMax);
-
                                                     setLocalSigExcludeUnderN(nextExcludeN);
                                                     setLocalSigExcludeEtc(nextExcludeEtc);
                                                     setLocalSigLevel(nextLevel);
                                                     setLocalSigDiffMin(nextDiffMin);
                                                     setLocalSigDiffMax(nextDiffMax);
-
-                                                    const pageId = sessionStorage.getItem('pageId');
-                                                    const user = auth?.user?.userId;
-                                                    if (pageId && user) {
-                                                        const newUi = {
-                                                            ...uiSettings,
-                                                            format_show_n: showN,
-                                                            format_n_round: decimalN === '' ? 0 : decimalN,
-                                                            format_show_percent: showPct,
-                                                            format_percent_round: decimalPct === '' ? 0 : decimalPct,
-                                                            show_t_test: nextVal === 't_test',
-                                                            sig_type: nextVal === 't_test' ? 't-test' : nextVal,
-                                                            sig_diff_fin_mode: nextVal,
-                                                            sig_exclude_under_n: nextExcludeN,
-                                                            sig_exclude_etc: nextExcludeEtc,
-                                                            sig_level: nextLevel,
-                                                            sig_diff_min: nextDiffMin,
-                                                            sig_diff_max: nextDiffMax,
-                                                            percent_symbol: uiSettings?.percent_symbol ?? false,
-                                                            percent_as_column: uiSettings?.percent_as_column ?? uiSettings?.format_percent_as_column ?? false,
-                                                            stub_group_layout: uiSettings?.stub_group_layout ?? 'merge',
-                                                            base_prefix: uiSettings?.base_prefix ?? "(",
-                                                            base_postfix: uiSettings?.base_postfix ?? ")",
-                                                        };
-                                                        setUiSettings(newUi);
-
-                                                        isSavingDirectlyRef.current = true;
-
-                                                        try {
-                                                            await savePageSettings.mutateAsync({
-                                                                pageid: pageId,
-                                                                user: user,
-                                                                ui_settings: newUi
-                                                            });
-
-                                                            await fetchCrossAnalysisData('normal', null, 1, filterExpression, {
-                                                                sigType: nextVal === 't_test' ? 't-test' : nextVal,
-                                                                excludeN: nextExcludeN,
-                                                                excludeEtc: nextExcludeEtc,
-                                                                level: nextLevel,
-                                                                diffMin: nextDiffMin,
-                                                                diffMax: nextDiffMax
-                                                            });
-                                                        } catch (err) {
-                                                            console.error("Failed to save or fetch on sigType change", err);
-                                                        } finally {
-                                                            setTimeout(() => {
-                                                                isSavingDirectlyRef.current = false;
-                                                            }, 600);
-                                                        }
-                                                    }
                                                 }}
                                                 style={{ width: '100%', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
                                                 className="custom-xinfo-dropdown"
@@ -3354,14 +3207,11 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             />
                                             <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
                                         </div>
-                                        {sigType !== 'none' && (
+                                        {localSigType !== 'none' && (
                                             <button
                                                 key={animateSettingsTrigger}
                                                 onClick={() => {
                                                     setAnimateSettingsTrigger(prev => prev + 1);
-                                                    if (isSigPopupOpen) {
-                                                        fetchCrossAnalysisData('normal', null, currentPage, filterExpression);
-                                                    }
                                                     setIsSigPopupOpen(!isSigPopupOpen);
                                                 }}
                                                 className={`dp-sig-settings-btn ${animateSettingsTrigger > 0 ? 'animate-sig-highlight' : ''}`}
@@ -3396,22 +3246,22 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                     <div
                                         onClick={() => {
-                                            if (showN && !showPct) {
+                                            if (localShowN && !localShowPct) {
                                                 modal.showAlert("알림", "최소 1개 이상의 지표(N 또는 %)를 선택해야 합니다.");
                                                 return;
                                             }
-                                            setShowN(!showN);
+                                            setLocalShowN(!localShowN);
                                         }}
                                         style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
                                     >
                                         <div style={{
                                             width: '18px', height: '18px', borderRadius: '4px',
-                                            background: showN ? '#2563eb' : '#fff',
-                                            border: `1.5px solid ${showN ? '#2563eb' : '#cbd5e1'}`,
+                                            background: localShowN ? '#2563eb' : '#fff',
+                                            border: `1.5px solid ${localShowN ? '#2563eb' : '#cbd5e1'}`,
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             flexShrink: 0
                                         }}>
-                                            {showN && (
+                                            {localShowN && (
                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
                                                     <polyline points="20 6 9 17 4 12"></polyline>
                                                 </svg>
@@ -3423,11 +3273,11 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         <div style={{
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             width: '60px', height: '28px', border: '1px solid #cbd5e1', borderRadius: '6px',
-                                            background: showN ? '#ffffff' : '#f8fafc'
+                                            background: localShowN ? '#ffffff' : '#f8fafc'
                                         }}>
                                             <input
                                                 type="text"
-                                                disabled={!showN}
+                                                disabled={!localShowN}
                                                 value={localDecimalN}
                                                 onChange={(e) => {
                                                     let val = e.target.value.replace(/[^0-9]/g, '');
@@ -3453,7 +3303,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                 }}
                                                 style={{
                                                     width: '100%', height: '100%', border: 'none', background: 'transparent',
-                                                    textAlign: 'center', fontSize: '13px', fontWeight: 500, color: showN ? '#1e293b' : '#94a3b8',
+                                                    textAlign: 'center', fontSize: '13px', fontWeight: 500, color: localShowN ? '#1e293b' : '#94a3b8',
                                                     outline: 'none', padding: 0
                                                 }}
                                             />
@@ -3465,22 +3315,22 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                     <div
                                         onClick={() => {
-                                            if (showPct && !showN) {
+                                            if (localShowPct && !localShowN) {
                                                 modal.showAlert("알림", "최소 1개 이상의 지표(N 또는 %)를 선택해야 합니다.");
                                                 return;
                                             }
-                                            setShowPct(!showPct);
+                                            setLocalShowPct(!localShowPct);
                                         }}
                                         style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
                                     >
                                         <div style={{
                                             width: '18px', height: '18px', borderRadius: '4px',
-                                            background: showPct ? '#2563eb' : '#fff',
-                                            border: `1.5px solid ${showPct ? '#2563eb' : '#cbd5e1'}`,
+                                            background: localShowPct ? '#2563eb' : '#fff',
+                                            border: `1.5px solid ${localShowPct ? '#2563eb' : '#cbd5e1'}`,
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             flexShrink: 0
                                         }}>
-                                            {showPct && (
+                                            {localShowPct && (
                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
                                                     <polyline points="20 6 9 17 4 12"></polyline>
                                                 </svg>
@@ -3492,11 +3342,11 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         <div style={{
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             width: '60px', height: '28px', border: '1px solid #cbd5e1', borderRadius: '6px',
-                                            background: showPct ? '#ffffff' : '#f8fafc'
+                                            background: localShowPct ? '#ffffff' : '#f8fafc'
                                         }}>
                                             <input
                                                 type="text"
-                                                disabled={!showPct}
+                                                disabled={!localShowPct}
                                                 value={localDecimalPct}
                                                 onChange={(e) => {
                                                     let val = e.target.value.replace(/[^0-9]/g, '');
@@ -3522,15 +3372,147 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                 }}
                                                 style={{
                                                     width: '100%', height: '100%', border: 'none', background: 'transparent',
-                                                    textAlign: 'center', fontSize: '13px', fontWeight: 500, color: showPct ? '#1e293b' : '#94a3b8',
+                                                    textAlign: 'center', fontSize: '13px', fontWeight: 500, color: localShowPct ? '#1e293b' : '#94a3b8',
                                                     outline: 'none', padding: 0
                                                 }}
                                             />
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* 하단 적용/취소 액션 버튼 영역 */}
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
+                                    <button
+                                        onClick={() => setIsDisplaySettingsOpen(false)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            background: '#f1f5f9',
+                                            color: '#475569',
+                                            border: '1px solid #cbd5e1',
+                                            borderRadius: '6px',
+                                            padding: '6px 14px',
+                                            fontSize: '12px',
+                                            fontWeight: 700,
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.background = '#e2e8f0';
+                                            e.currentTarget.style.color = '#1e293b';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.background = '#f1f5f9';
+                                            e.currentTarget.style.color = '#475569';
+                                        }}
+                                    >
+                                        취소
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            setIsDisplaySettingsOpen(false);
+
+                                            const targetWeight = localWeight;
+                                            const targetSigType = localSigType;
+                                            const targetShowN = localShowN;
+                                            const targetShowPct = localShowPct;
+                                            const targetDecimalN = localDecimalN === '' ? 0 : Number(localDecimalN);
+                                            const targetDecimalPct = localDecimalPct === '' ? 0 : Number(localDecimalPct);
+
+                                            setSelectedWeight(targetWeight);
+                                            setSigType(targetSigType);
+                                            setShowN(targetShowN);
+                                            setShowPct(targetShowPct);
+                                            setDecimalN(targetDecimalN);
+                                            setDecimalPct(targetDecimalPct);
+
+                                            // Update refs immediately
+                                            showNRef.current = targetShowN;
+                                            decimalNRef.current = targetDecimalN;
+                                            showPctRef.current = targetShowPct;
+                                            decimalPctRef.current = targetDecimalPct;
+
+                                            const pageId = sessionStorage.getItem('pageId');
+                                            const user = auth?.user?.userId;
+                                            if (pageId && user) {
+                                                const newUi = {
+                                                    ...uiSettings,
+                                                    format_show_n: targetShowN,
+                                                    format_n_round: targetDecimalN,
+                                                    format_show_percent: targetShowPct,
+                                                    format_percent_round: targetDecimalPct,
+                                                    show_t_test: targetSigType === 't-test' || targetSigType === 't_test',
+                                                    sig_type: targetSigType === 't_test' ? 't-test' : targetSigType,
+                                                    sig_diff_fin_mode: targetSigType,
+                                                    sig_exclude_under_n: localSigExcludeUnderN,
+                                                    sig_exclude_etc: localSigExcludeEtc,
+                                                    sig_level: localSigLevel,
+                                                    sig_diff_min: localSigDiffMin,
+                                                    sig_diff_max: localSigDiffMax,
+                                                    percent_symbol: uiSettings?.percent_symbol ?? false,
+                                                    percent_as_column: uiSettings?.percent_as_column ?? uiSettings?.format_percent_as_column ?? false,
+                                                    stub_group_layout: uiSettings?.stub_group_layout ?? 'merge',
+                                                    base_prefix: uiSettings?.base_prefix ?? "(",
+                                                    base_postfix: uiSettings?.base_postfix ?? ")",
+                                                    weight_variable: targetWeight === '없음' ? null : targetWeight
+                                                };
+                                                setUiSettings(newUi);
+
+                                                isSavingDirectlyRef.current = true;
+                                                try {
+                                                    loadingSpinner.show();
+                                                    await savePageSettings.mutateAsync({
+                                                        pageid: pageId,
+                                                        user: user,
+                                                        ui_settings: newUi
+                                                    });
+
+                                                    await fetchCrossAnalysisData('normal', null, currentPage, filterExpression, {
+                                                        sigType: targetSigType === 't_test' ? 't-test' : targetSigType,
+                                                        excludeN: localSigExcludeUnderN,
+                                                        excludeEtc: localSigExcludeEtc,
+                                                        level: localSigLevel,
+                                                        diffMin: localSigDiffMin,
+                                                        diffMax: localSigDiffMax
+                                                    }, targetWeight);
+                                                } catch (err) {
+                                                    console.error("Failed to apply settings", err);
+                                                } finally {
+                                                    loadingSpinner.hide();
+                                                    setTimeout(() => {
+                                                        isSavingDirectlyRef.current = false;
+                                                    }, 600);
+                                                }
+                                            }
+                                        }}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            background: '#2563eb',
+                                            color: '#ffffff',
+                                            border: 'none',
+                                            borderRadius: '6px',
+                                            padding: '6px 16px',
+                                            fontSize: '12px',
+                                            fontWeight: 700,
+                                            cursor: 'pointer',
+                                            transition: 'background-color 0.2s',
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.background = '#1d4ed8';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.background = '#2563eb';
+                                        }}
+                                    >
+                                        적용
+                                    </button>
+                                </div>
                             </div>
                         )}
+
                     </div>
 
                     {/* 세로 구분선 */}
@@ -4382,78 +4364,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             취소
                         </button>
                         <button
-                            onClick={async () => {
-                                setIsSigPopupOpen(false);
-                                const targetExcludeN = localSigExcludeUnderN === '' ? 3 : Number(localSigExcludeUnderN);
-                                const targetExcludeEtc = localSigExcludeEtc;
-                                const targetLevel = localSigLevel === '' ? 95 : Number(localSigLevel);
-                                const targetDiffMin = localSigDiffMin === '' ? 10 : Number(localSigDiffMin);
-                                const targetDiffMax = localSigDiffMax === '' ? 60 : Number(localSigDiffMax);
-
-                                // 1. 메인 상태 업데이트
-                                setSigExcludeUnderN(targetExcludeN);
-                                setSigExcludeEtc(targetExcludeEtc);
-                                setSigLevel(targetLevel);
-                                setSigDiffMin(targetDiffMin);
-                                setSigDiffMax(targetDiffMax);
-
-                                // 2. set API 즉시 전송을 위해 newUi 생성
-                                const pageId = sessionStorage.getItem('pageId');
-                                const user = auth?.user?.userId;
-                                if (pageId && user) {
-                                    const newUi = {
-                                        ...uiSettings,
-                                        format_show_n: showN,
-                                        format_n_round: decimalN === '' ? 0 : decimalN,
-                                        format_show_percent: showPct,
-                                        format_percent_round: decimalPct === '' ? 0 : decimalPct,
-                                        show_t_test: sigType === 't-test',
-                                        sig_type: sigType,
-                                        sig_diff_fin_mode: sigType === 't-test' ? 't_test' : sigType,
-                                        sig_exclude_under_n: targetExcludeN,
-                                        sig_exclude_etc: targetExcludeEtc,
-                                        sig_level: targetLevel,
-                                        sig_diff_min: targetDiffMin,
-                                        sig_diff_max: targetDiffMax,
-                                        percent_symbol: uiSettings?.percent_symbol ?? false,
-                                        percent_as_column: uiSettings?.percent_as_column ?? uiSettings?.format_percent_as_column ?? false,
-                                        stub_group_layout: uiSettings?.stub_group_layout ?? 'merge',
-                                        base_prefix: uiSettings?.base_prefix ?? "(",
-                                        base_postfix: uiSettings?.base_postfix ?? ")",
-                                    };
-                                    setUiSettings(newUi);
-
-                                    // 중복 디바운스 저장 방지 플래그 설정
-                                    isSavingDirectlyRef.current = true;
-
-                                    try {
-                                        loadingSpinner.show();
-                                        // 3. set API (설정 저장)를 먼저 동기 호출하여 저장 완료를 보장
-                                        await savePageSettings.mutateAsync({
-                                            pageid: pageId,
-                                            user: user,
-                                            ui_settings: newUi
-                                        });
-
-                                        // 4. 저장 완료 후 styled API (데이터 조회) 호출
-                                        await fetchCrossAnalysisData('normal', null, currentPage, filterExpression, {
-                                            excludeN: targetExcludeN,
-                                            excludeEtc: targetExcludeEtc,
-                                            level: targetLevel,
-                                            diffMin: targetDiffMin,
-                                            diffMax: targetDiffMax
-                                        });
-                                    } catch (e) {
-                                        console.error("Setting save or fetch error", e);
-                                    } finally {
-                                        loadingSpinner.hide();
-                                        // 디바운스 타이머가 지나간 뒤 플래그를 해제하도록 600ms 뒤 오프
-                                        setTimeout(() => {
-                                            isSavingDirectlyRef.current = false;
-                                        }, 600);
-                                    }
-                                }
-                            }}
+                            onClick={() => setIsSigPopupOpen(false)}
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -4475,7 +4386,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 e.currentTarget.style.background = '#3b82f6';
                             }}
                         >
-                            적용
+                            확인
                         </button>
                     </div>
                 </div>
