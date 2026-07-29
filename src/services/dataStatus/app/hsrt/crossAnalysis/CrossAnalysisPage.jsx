@@ -538,8 +538,8 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     }, [globalAiResult, aiSummaryData]);
 
     const displayAiSummaryLoading = useMemo(() => {
-        if (globalAiRunning && globalAiResult) {
-            if (globalAiResult.status === 'pending') return true;
+        if (globalAiRunning) {
+            if (!globalAiResult || globalAiResult.status === 'pending') return true;
             if (globalAiResult.status === 'completed') return false;
         }
         return isAiSummaryLoading;
@@ -639,7 +639,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     useEffect(() => {
         if (!isAiSummaryOpen || !projectNum || !banner?.id) return;
         if (displayAiSummaryData || aiSummaryFetchingRef.current) return;
-        if (globalAiRunning && globalAiResult?.status === 'pending') return;
+        if (globalAiRunning) return;
 
         fetchAiSummaryData(selectedModel);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -822,7 +822,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
             const stub = [banner.id];
 
             if (!stub.length || !bannerVarList.length) {
-                console.warn("fetchChartData diagnostic - early return due to empty stub or bannerVarList", { stub, bannerVarList });
+                // console.warn("fetchChartData diagnostic - early return due to empty stub or bannerVarList", { stub, bannerVarList });
                 setRawChartData(null);
                 return;
             }
@@ -2526,16 +2526,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [globalAiResults, setGlobalAiResults] = useState({});
     const pollingIntervalRef = useRef(null);
 
-    useEffect(() => {
-        const initStatus = async () => {
-            const pageId = sessionStorage.getItem('pageId');
-            if (pageId && filteredBanners.length > 0) {
-                await fetchAiSummaryStatus(false);
-            }
-        };
-        initStatus();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [filteredBanners.length]);
+
 
     const fetchAiSummaryStatus = async (triggerBatch = false) => {
         const pageId = sessionStorage.getItem('pageId');
@@ -2654,10 +2645,21 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             }
 
             const recodedVars = recodedVariablesRef.current || {};
-            const variablesPayload = Object.keys(recodedVars).map(key => ({
-                variableId: key,
-                banner: bannerVarList
-            }));
+            const variablesPayload = Object.keys(recodedVars).map(key => {
+                const item = recodedVars[key];
+                let bannerVal = bannerVarList;
+                if (item && item.banner) {
+                    if (Array.isArray(item.banner)) {
+                        bannerVal = item.banner;
+                    } else if (typeof item.banner === 'string' && item.banner.trim() !== '') {
+                        bannerVal = [item.banner];
+                    }
+                }
+                return {
+                    variableId: key,
+                    banner: bannerVal
+                };
+            });
 
             const payload = {
                 pageId: pageId,
