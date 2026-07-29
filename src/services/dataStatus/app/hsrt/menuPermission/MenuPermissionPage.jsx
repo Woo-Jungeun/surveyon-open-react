@@ -341,9 +341,12 @@ const MenuPermissionPage = () => {
                                 }
                                 await fetchPageMembers();
                             } else {
-                                const errorMsg = res?.message && String(res.message).toLowerCase().includes("created_by owner cannot be downgraded")
-                                    ? "대시보드 생성자(소유자)의 권한은 하향 조정할 수 없습니다."
-                                    : (res?.message || "삭제 중 오류가 발생했습니다.");
+                                let errorMsg = res?.message || "삭제 중 오류가 발생했습니다.";
+                                if (res?.message && String(res.message).toLowerCase().includes("created_by owner cannot be downgraded")) {
+                                    errorMsg = "대시보드 생성자(소유자)의 권한은 하향 조정할 수 없습니다.";
+                                } else if (res?.message && String(res.message).toLowerCase().includes("created_by owner cannot be deleted")) {
+                                    errorMsg = "대시보드 생성자(소유자)의 권한은 삭제할 수 없습니다.";
+                                }
                                 modal.showErrorAlert("에러", errorMsg);
                             }
                         } catch (err) {
