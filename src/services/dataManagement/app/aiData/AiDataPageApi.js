@@ -37,6 +37,11 @@ export function AiDataPageApi() {
         async (data) => await api.post(data, "/qa/runner/check", "API_BASE_URL_DATAMANAGEMENT")
     );
 
+    /** AI 데이터 생성 재개 */
+    const resumeQaJobs = useMutation(
+        async (data) => await api.post(data, "/qa/resume-pids", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
     return {
         viewQaJobs,
         getQaTicket,
@@ -44,6 +49,7 @@ export function AiDataPageApi() {
         listQaJobs,
         resetTestPids,
         exportTestData,
-        checkRunnerStatus
+        checkRunnerStatus,
+        resumeQaJobs
     };
 }
