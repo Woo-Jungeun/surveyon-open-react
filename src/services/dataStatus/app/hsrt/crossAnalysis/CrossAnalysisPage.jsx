@@ -2499,6 +2499,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     useEffect(() => {
         const handlePageUpdate = () => {
+            contextFetchedRef.current = false;
+            isInitialSetupRef.current = true;
+            isFirstLoadRef.current = true;
             if (currentPage !== 1) {
                 setCurrentPage(1);
             } else {
