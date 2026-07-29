@@ -266,7 +266,10 @@ const MenuPermissionPage = () => {
                     setExpiredDate(moment().add(100, "years").toDate());
                     await fetchPageMembers();
                 } else {
-                    modal.showErrorAlert("에러", res?.message || "H-SRT고객 등록에 실패했습니다.");
+                    const errorMsg = res?.message && String(res.message).toLowerCase().includes("created_by owner cannot be downgraded")
+                        ? "대시보드 생성자(소유자)의 권한은 하향 조정할 수 없습니다."
+                        : (res?.message || "H-SRT고객 등록에 실패했습니다.");
+                    modal.showErrorAlert("에러", errorMsg);
                 }
                 setLoading(false);
                 return;
@@ -290,7 +293,10 @@ const MenuPermissionPage = () => {
                 setExpiredDate(moment().add(100, "years").toDate());
                 await fetchPageMembers();
             } else {
-                modal.showErrorAlert("에러", res?.message || "권한 설정에 실패했습니다.");
+                const errorMsg = res?.message && String(res.message).toLowerCase().includes("created_by owner cannot be downgraded")
+                    ? "대시보드 생성자(소유자)의 권한은 하향 조정할 수 없습니다."
+                    : (res?.message || "권한 설정에 실패했습니다.");
+                modal.showErrorAlert("에러", errorMsg);
             }
         } catch (err) {
             console.error("handleSave error", err);
@@ -335,7 +341,10 @@ const MenuPermissionPage = () => {
                                 }
                                 await fetchPageMembers();
                             } else {
-                                modal.showErrorAlert("에러", res?.message || "삭제 중 오류가 발생했습니다.");
+                                const errorMsg = res?.message && String(res.message).toLowerCase().includes("created_by owner cannot be downgraded")
+                                    ? "대시보드 생성자(소유자)의 권한은 하향 조정할 수 없습니다."
+                                    : (res?.message || "삭제 중 오류가 발생했습니다.");
+                                modal.showErrorAlert("에러", errorMsg);
                             }
                         } catch (err) {
                             modal.showErrorAlert("오류", "삭제 요청 중 네트워크 오류가 발생했습니다.");
