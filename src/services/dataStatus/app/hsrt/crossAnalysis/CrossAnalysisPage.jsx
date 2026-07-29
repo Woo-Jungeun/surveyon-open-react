@@ -485,32 +485,12 @@ const ConditionHeaderCell = (props) => {
     );
 };
 
-const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimalN, decimalPct, uiSettings, projectNum, overviewPayload, userId, styleCss, evaluateChartData, selectedXInfo, filterExpression, defaultBannerId, models, selectedModel, globalAiSummaryOpen, globalAiResults }) => {
+const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimalN, decimalPct, uiSettings, projectNum, overviewPayload, userId, styleCss, evaluateChartData, selectedXInfo, filterExpression, defaultBannerId, selectedModel, globalAiSummaryOpen, globalAiResult, globalAiRunning }) => {
     const [isAiSummaryOpen, setIsAiSummaryOpen] = useState(false);
 
     useEffect(() => {
         setIsAiSummaryOpen(globalAiSummaryOpen);
-        if (globalAiSummaryOpen) {
-            if (globalAiResults && globalAiResults[banner.id]?.status === 'completed') {
-                setAiSummaryData(globalAiResults[banner.id].result_data);
-                setIsAiSummaryLoading(false);
-            } else {
-                setIsAiSummaryLoading(true);
-            }
-        }
-    }, [globalAiSummaryOpen, globalAiResults, banner.id]);
-
-    useEffect(() => {
-        if (isAiSummaryOpen && globalAiResults && globalAiResults[banner.id]) {
-            const entry = globalAiResults[banner.id];
-            if (entry.status === 'completed') {
-                setAiSummaryData(entry.result_data);
-                setIsAiSummaryLoading(false);
-            } else if (entry.status === 'pending') {
-                setIsAiSummaryLoading(true);
-            }
-        }
-    }, [globalAiResults, banner.id, isAiSummaryOpen]);
+    }, [globalAiSummaryOpen]);
 
     const [isGridOpen, setIsGridOpen] = useState(true);
     const [isChartOpen, setIsChartOpen] = useState(false);
@@ -523,18 +503,52 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     const columns = useMemo(() => resultData.columns || EMPTY_ARRAY, [resultData.columns]);
     const rows = useMemo(() => resultData.rows || EMPTY_ARRAY, [resultData.rows]);
 
+    const bannerVarList = useMemo(() => {
+        const rawBanner = banner.raw?.banner || banner.raw?.config?.banner;
+        const rawBanners = banner.raw?.banners || banner.raw?.config?.banners;
+        let list = [];
+        if (selectedXInfo && selectedXInfo !== '__none__') {
+            list = [selectedXInfo];
+        } else if (rawBanner && (Array.isArray(rawBanner) ? rawBanner.length > 0 : String(rawBanner).trim() !== '')) {
+            list = Array.isArray(rawBanner) ? rawBanner : [rawBanner];
+        } else if (rawBanners && (Array.isArray(rawBanners) ? rawBanners.length > 0 : String(rawBanners).trim() !== '')) {
+            list = Array.isArray(rawBanners) ? rawBanners : [rawBanners];
+        } else if (columns && columns.length > 0) {
+            const colWithDunder = columns.find(c => c.key && c.key.includes('__'));
+            if (colWithDunder) {
+                list = [colWithDunder.key.split('__')[0]];
+            }
+        }
+
+        if (!list.length && defaultBannerId) {
+            list = [defaultBannerId];
+        }
+        return list;
+    }, [banner.raw?.banner, banner.raw?.config?.banner, banner.raw?.banners, banner.raw?.config?.banners, selectedXInfo, columns, defaultBannerId]);
+
     const [aiSummaryData, setAiSummaryData] = useState(null);
     const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
+
+    // Derived states from globalAiResult
+    const displayAiSummaryData = useMemo(() => {
+        if (globalAiResult && globalAiResult.status === 'completed') {
+            return globalAiResult.result_data;
+        }
+        return aiSummaryData;
+    }, [globalAiResult, aiSummaryData]);
+
+    const displayAiSummaryLoading = useMemo(() => {
+        if (globalAiRunning && globalAiResult) {
+            if (globalAiResult.status === 'pending') return true;
+            if (globalAiResult.status === 'completed') return false;
+        }
+        return isAiSummaryLoading;
+    }, [globalAiRunning, globalAiResult, isAiSummaryLoading]);
+
     const { getCrosstabAiSummary } = DpRequestPageApi();
-    const [localModel, setLocalModel] = useState(selectedModel);
-
-    useEffect(() => {
-        setLocalModel(selectedModel);
-    }, [selectedModel]);
-
     useEffect(() => {
         setAiSummaryData(null);
-    }, [banner?.id, selectedXInfo, filterExpression, uiSettings?.weight_variable, localModel]);
+    }, [banner?.id, selectedXInfo, filterExpression, uiSettings?.weight_variable, selectedModel]);
 
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
     const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
@@ -582,7 +596,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
     const aiSummaryFetchingRef = useRef(false);
 
-    const fetchAiSummaryData = useCallback(async (targetModel = localModel) => {
+    const fetchAiSummaryData = useCallback(async (targetModel = selectedModel) => {
         const pageId = sessionStorage.getItem('pageId');
         if (!pageId || !userId) return;
 
@@ -590,24 +604,6 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
             aiSummaryFetchingRef.current = true;
             setIsAiSummaryLoading(true);
             setAiSummaryData(null);
-
-            let bannerVarList = [];
-            if (selectedXInfo && selectedXInfo !== '__none__') {
-                bannerVarList = [selectedXInfo];
-            } else if (banner.raw?.banner && (Array.isArray(banner.raw.banner) ? banner.raw.banner.length > 0 : String(banner.raw.banner).trim() !== '')) {
-                bannerVarList = Array.isArray(banner.raw.banner) ? banner.raw.banner : [banner.raw.banner];
-            } else if (banner.raw?.banners && (Array.isArray(banner.raw.banners) ? banner.raw.banners.length > 0 : String(banner.raw.banners).trim() !== '')) {
-                bannerVarList = Array.isArray(banner.raw.banners) ? banner.raw.banners : [banner.raw.banners];
-            } else if (columns && columns.length > 0) {
-                const colWithDunder = columns.find(c => c.key && c.key.includes('__'));
-                if (colWithDunder) {
-                    bannerVarList = [colWithDunder.key.split('__')[0]];
-                }
-            }
-
-            if (!bannerVarList.length && defaultBannerId) {
-                bannerVarList = [defaultBannerId];
-            }
 
             if (!bannerVarList.length) {
                 setAiSummaryData("요약할 데이터의 기준변수(Banner)를 지정해주세요.");
@@ -638,28 +634,16 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
             setIsAiSummaryLoading(false);
             aiSummaryFetchingRef.current = false;
         }
-    }, [banner?.id, banner?.raw?.banner, banner?.raw?.banners, userId, selectedXInfo, filterExpression, defaultBannerId, uiSettings?.weight_variable, columns, getCrosstabAiSummary, localModel]);
+    }, [banner?.id, bannerVarList, userId, filterExpression, uiSettings?.weight_variable, getCrosstabAiSummary, selectedModel]);
 
     useEffect(() => {
         if (!isAiSummaryOpen || !projectNum || !banner?.id) return;
-        if (aiSummaryData || aiSummaryFetchingRef.current) return; // 이미 데이터가 있거나 로딩중이면 중지 (무한루프 방지)
+        if (displayAiSummaryData || aiSummaryFetchingRef.current) return;
+        if (globalAiRunning && globalAiResult?.status === 'pending') return;
 
-        if (globalAiSummaryOpen) return;
-
-        if (globalAiResults && globalAiResults[banner.id]) {
-            const entry = globalAiResults[banner.id];
-            if (entry.status === 'completed') {
-                setAiSummaryData(entry.result_data);
-                return;
-            } else if (entry.status === 'pending') {
-                setIsAiSummaryLoading(true);
-                return;
-            }
-        }
-
-        fetchAiSummaryData(localModel);
+        fetchAiSummaryData(selectedModel);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isAiSummaryOpen, banner?.id, projectNum, globalAiSummaryOpen, globalAiResults, fetchAiSummaryData, localModel]);
+    }, [isAiSummaryOpen, banner?.id, projectNum, globalAiRunning, globalAiResult, displayAiSummaryData, fetchAiSummaryData, selectedModel]);
 
     const getChartTypeName = (mode) => {
         const typeMap = {
@@ -832,26 +816,17 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     useEffect(() => {
         const fetchChartData = async () => {
             if (!isChartOpen) return;
+            console.log("DEBUG: fetchChartData diagnostic details", {
+                bannerId: banner?.id,
+                raw: banner?.raw,
+                config: banner?.raw?.config,
+                bannerVarList,
+                selectedXInfo,
+                columns
+            });
             if (!banner?.id) return;
 
             const stub = [banner.id];
-            let bannerVarList = [];
-            if (selectedXInfo && selectedXInfo !== '__none__') {
-                bannerVarList = [selectedXInfo];
-            } else if (banner.raw?.banner && (Array.isArray(banner.raw.banner) ? banner.raw.banner.length > 0 : String(banner.raw.banner).trim() !== '')) {
-                bannerVarList = Array.isArray(banner.raw.banner) ? banner.raw.banner : [banner.raw.banner];
-            } else if (banner.raw?.banners && (Array.isArray(banner.raw.banners) ? banner.raw.banners.length > 0 : String(banner.raw.banners).trim() !== '')) {
-                bannerVarList = Array.isArray(banner.raw.banners) ? banner.raw.banners : [banner.raw.banners];
-            } else if (columns && columns.length > 0) {
-                const colWithDunder = columns.find(c => c.key && c.key.includes('__'));
-                if (colWithDunder) {
-                    bannerVarList = [colWithDunder.key.split('__')[0]];
-                }
-            }
-
-            if (!bannerVarList.length && defaultBannerId) {
-                bannerVarList = [defaultBannerId];
-            }
 
             if (!stub.length || !bannerVarList.length) {
                 console.warn("fetchChartData diagnostic - early return due to empty stub or bannerVarList", { stub, bannerVarList });
@@ -893,12 +868,10 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     }, [
         isChartOpen,
         banner?.id,
-        selectedXInfo,
-        columns,
+        bannerVarList,
         userId,
         uiSettings?.weight_variable,
-        filterExpression,
-        defaultBannerId
+        filterExpression
     ]);
 
     const availableChartGroups = useMemo(() => {
@@ -1120,24 +1093,6 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                             <Sparkles size={16} /> AI 데이터 요약
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                            {isAiSummaryOpen && (
-                                <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>분석 LLM모델:</span>
-                                    <DropDownList
-                                        data={models}
-                                        textField="text"
-                                        dataItemKey="value"
-                                        value={models.find(m => m.value === localModel) || models[0] || null}
-                                        onChange={(e) => {
-                                            const newModel = e.value.value;
-                                            setLocalModel(newModel);
-                                            fetchAiSummaryData(newModel);
-                                        }}
-                                        style={{ width: '200px', height: '26px', fontSize: '12px', borderRadius: '4px' }}
-                                        popupSettings={{ className: "mp-dropdown-popup" }}
-                                    />
-                                </div>
-                            )}
                             <div onClick={() => setIsAiSummaryOpen(!isAiSummaryOpen)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                                 {isAiSummaryOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
                             </div>
@@ -1145,26 +1100,26 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                     </div>
                     {isAiSummaryOpen && (
                         <div style={{ display: 'flex', alignItems: 'flex-start', minHeight: '60px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#334155', padding: '16px' }}>
-                            {isAiSummaryLoading ? (
+                            {displayAiSummaryLoading ? (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', width: '100%', justifyContent: 'center' }}>
                                     <Loader2 className="animate-spin" size={16} />
                                     AI 분석 결과를 가져오는 중입니다...
                                 </div>
-                            ) : aiSummaryData ? (
-                                typeof aiSummaryData === 'string' ? (
+                            ) : displayAiSummaryData ? (
+                                typeof displayAiSummaryData === 'string' ? (
                                     <div style={{ fontSize: '13px', lineHeight: '1.6', whiteSpace: 'pre-wrap', wordBreak: 'keep-all', width: '100%' }}>
-                                        {aiSummaryData}
+                                        {displayAiSummaryData}
                                     </div>
                                 ) : (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', textAlign: 'left' }}>
                                         {/* 응답자특성 분석 */}
-                                        {aiSummaryData.mode_a_demographic_analysis && aiSummaryData.mode_a_demographic_analysis.length > 0 && (
+                                        {displayAiSummaryData.mode_a_demographic_analysis && displayAiSummaryData.mode_a_demographic_analysis.length > 0 && (
                                             <div>
                                                 <div style={{ fontSize: '14px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
                                                     응답자특성 분석
                                                 </div>
                                                 <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                    {aiSummaryData.mode_a_demographic_analysis.map((item, idx) => (
+                                                    {displayAiSummaryData.mode_a_demographic_analysis.map((item, idx) => (
                                                         <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', fontSize: '13px', lineHeight: '1.6' }}>
                                                             <span style={{ color: '#2563eb', marginRight: '4px', fontSize: '16px', lineHeight: 1 }}>•</span>
                                                             <div style={{ wordBreak: 'keep-all' }}>
@@ -1179,13 +1134,13 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                         )}
 
                                         {/* 배너별 주요분석 */}
-                                        {aiSummaryData.mode_b_parallel_summary && aiSummaryData.mode_b_parallel_summary.key_insights_by_banner && aiSummaryData.mode_b_parallel_summary.key_insights_by_banner.length > 0 && (
+                                        {displayAiSummaryData.mode_b_parallel_summary && displayAiSummaryData.mode_b_parallel_summary.key_insights_by_banner && displayAiSummaryData.mode_b_parallel_summary.key_insights_by_banner.length > 0 && (
                                             <div>
                                                 <div style={{ fontSize: '14px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
                                                     배너별 주요분석
                                                 </div>
                                                 <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                    {aiSummaryData.mode_b_parallel_summary.key_insights_by_banner.map((item, idx) => (
+                                                    {displayAiSummaryData.mode_b_parallel_summary.key_insights_by_banner.map((item, idx) => (
                                                         <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', fontSize: '13px', lineHeight: '1.6' }}>
                                                             <span style={{ color: '#2563eb', marginRight: '4px', fontSize: '16px', lineHeight: 1 }}>•</span>
                                                             <div style={{ wordBreak: 'keep-all' }}>
@@ -1199,12 +1154,12 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                         )}
 
                                         {/* 전략적 핵심 요약 */}
-                                        {aiSummaryData.mode_b_parallel_summary && (
+                                        {displayAiSummaryData.mode_b_parallel_summary && (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                                 <div style={{ fontSize: '14px', fontWeight: 700, color: '#2563eb' }}>
                                                     전략적 핵심 요약
                                                 </div>
-                                                {aiSummaryData.mode_b_parallel_summary.result_data && (
+                                                {displayAiSummaryData.mode_b_parallel_summary.result_data && (
                                                     <div style={{
                                                         borderLeft: '3px solid #2563eb',
                                                         paddingLeft: '12px',
@@ -1215,7 +1170,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                         margin: '4px 0',
                                                         wordBreak: 'keep-all'
                                                     }}>
-                                                        {aiSummaryData.mode_b_parallel_summary.result_data}
+                                                        {displayAiSummaryData.mode_b_parallel_summary.result_data}
                                                     </div>
                                                 )}
                                             </div>
@@ -1529,38 +1484,46 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                     </div>
                     {isChartOpen && (
                         <div className="agg-chart-container" style={{ height: '350px', position: 'relative', marginTop: '10px' }} ref={chartContainerRef}>
-                            {isChartLoading && (
-                                <div style={{
-                                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    background: 'rgba(255, 255, 255, 0.7)', zIndex: 10
-                                }}>
-                                    <Loader2 className="animate-spin" size={24} color="#3b82f6" />
+                            {bannerVarList.length === 0 ? (
+                                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b', fontSize: '13px' }}>
+                                    기준변수(Banner)가 설정되지 않아 차트를 표시할 수 없습니다.
                                 </div>
-                            )}
-                            {(rawChartData ? apiChartData.length > 0 : (columns.length > 0 || rows.length > 0)) ? (
-                                <KendoChart
-                                    key={`${banner.id}-${chartMode}-${paletteId}-${rawChartData ? 'api' : 'local'}`}
-                                    data={rawChartData ? apiChartData : chartData}
-                                    seriesNames={rawChartData ? apiChartSeries : chartSeries}
-                                    initialType={chartMode}
-                                    labelLimit={12}
-                                    suffix={usePercentFields && showPercentSymbol ? "%" : ""}
-                                    isPercent={usePercentFields}
-                                    paletteId={paletteId}
-                                    allowedTypes={[chartMode]}
-                                    hideHeader={true}
-                                    externalShowLegend={showLegend}
-                                    showLabels={showChartValues}
-                                    decimals={usePercentFields ? decimalPct : decimalN}
-                                    allowAggregate={true}
-                                />
                             ) : (
-                                !isChartLoading && (
-                                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b', fontSize: '13px' }}>
-                                        표시할 차트 데이터가 없습니다.
-                                    </div>
-                                )
+                                <>
+                                    {isChartLoading && (
+                                        <div style={{
+                                            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            background: 'rgba(255, 255, 255, 0.7)', zIndex: 10
+                                        }}>
+                                            <Loader2 className="animate-spin" size={24} color="#3b82f6" />
+                                        </div>
+                                    )}
+                                    {(rawChartData ? apiChartData.length > 0 : (columns.length > 0 || rows.length > 0)) ? (
+                                        <KendoChart
+                                            key={`${banner.id}-${chartMode}-${paletteId}-${rawChartData ? 'api' : 'local'}`}
+                                            data={rawChartData ? apiChartData : chartData}
+                                            seriesNames={rawChartData ? apiChartSeries : chartSeries}
+                                            initialType={chartMode}
+                                            labelLimit={12}
+                                            suffix={usePercentFields && showPercentSymbol ? "%" : ""}
+                                            isPercent={usePercentFields}
+                                            paletteId={paletteId}
+                                            allowedTypes={[chartMode]}
+                                            hideHeader={true}
+                                            externalShowLegend={showLegend}
+                                            showLabels={showChartValues}
+                                            decimals={usePercentFields ? decimalPct : decimalN}
+                                            allowAggregate={true}
+                                        />
+                                    ) : (
+                                        !isChartLoading && (
+                                            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b', fontSize: '13px' }}>
+                                                표시할 차트 데이터가 없습니다.
+                                            </div>
+                                        )
+                                    )}
+                                </>
                             )}
                         </div>
                     )}
@@ -2298,6 +2261,11 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     recodedVariablesRef.current = recodedVars;
                     baseVariablesRef.current = baseVars;
 
+                    console.log("DEBUG: context fetched recodedVars", {
+                        recodedVars,
+                        keys: Object.keys(recodedVars || {}),
+                        allRecodedVars: Object.entries(recodedVars).map(([key, value]) => ({ key, id: value?.id, label: value?.label }))
+                    });
                     const dynamicXInfoOptions = Object.entries(recodedVars)
                         .filter(([key, value]) => {
                             const id = String(value?.id ?? key).trim().toLowerCase();
@@ -2614,6 +2582,17 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [globalAiResults, setGlobalAiResults] = useState({});
     const pollingIntervalRef = useRef(null);
 
+    useEffect(() => {
+        const initStatus = async () => {
+            const pageId = sessionStorage.getItem('pageId');
+            if (pageId && filteredBanners.length > 0) {
+                await fetchAiSummaryStatus(false);
+            }
+        };
+        initStatus();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filteredBanners.length]);
+
     const fetchAiSummaryStatus = async (triggerBatch = false) => {
         const pageId = sessionStorage.getItem('pageId');
         const user = auth?.user?.userId || "jewoo";
@@ -2625,13 +2604,15 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         } else {
             const allBanners = new Set();
             filteredBanners.forEach(b => {
-                if (b.raw?.banner) {
-                    if (Array.isArray(b.raw.banner)) b.raw.banner.forEach(x => allBanners.add(x));
-                    else allBanners.add(b.raw.banner);
+                const rawBanner = b.raw?.banner || b.raw?.config?.banner;
+                const rawBanners = b.raw?.banners || b.raw?.config?.banners;
+                if (rawBanner) {
+                    if (Array.isArray(rawBanner)) rawBanner.forEach(x => allBanners.add(x));
+                    else allBanners.add(rawBanner);
                 }
-                if (b.raw?.banners) {
-                    if (Array.isArray(b.raw.banners)) b.raw.banners.forEach(x => allBanners.add(x));
-                    else allBanners.add(b.raw.banners);
+                if (rawBanners) {
+                    if (Array.isArray(rawBanners)) rawBanners.forEach(x => allBanners.add(x));
+                    else allBanners.add(rawBanners);
                 }
             });
             if (allBanners.size > 0) {
@@ -2641,24 +2622,19 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             }
         }
 
-        const variablesPayload = filteredBanners.map(b => ({
-            variableId: b.id,
-            variable_id: b.id,
-            id: b.id,
-            banner: bannerVarList,
-            banners: bannerVarList
+        const recodedVars = recodedVariablesRef.current || {};
+        const variablesPayload = Object.keys(recodedVars).map(key => ({
+            variableId: key,
+            banner: bannerVarList
         }));
 
         const payload = {
             pageId: pageId,
-            user: user,
-            banner: bannerVarList,
             filterExpression: filterExpression || "",
             weightCol: selectedWeight === '없음' ? "" : selectedWeight,
             model: selectedModel,
             variables: variablesPayload,
-            variableIds: filteredBanners.map(b => b.id),
-            // variable_ids: filteredBanners.map(b => b.id),
+            user: user,
             triggerBatch: triggerBatch
         };
 
@@ -2704,13 +2680,15 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             } else {
                 const allBanners = new Set();
                 filteredBanners.forEach(b => {
-                    if (b.raw?.banner) {
-                        if (Array.isArray(b.raw.banner)) b.raw.banner.forEach(x => allBanners.add(x));
-                        else allBanners.add(b.raw.banner);
+                    const rawBanner = b.raw?.banner || b.raw?.config?.banner;
+                    const rawBanners = b.raw?.banners || b.raw?.config?.banners;
+                    if (rawBanner) {
+                        if (Array.isArray(rawBanner)) rawBanner.forEach(x => allBanners.add(x));
+                        else allBanners.add(rawBanner);
                     }
-                    if (b.raw?.banners) {
-                        if (Array.isArray(b.raw.banners)) b.raw.banners.forEach(x => allBanners.add(x));
-                        else allBanners.add(b.raw.banners);
+                    if (rawBanners) {
+                        if (Array.isArray(rawBanners)) rawBanners.forEach(x => allBanners.add(x));
+                        else allBanners.add(rawBanners);
                     }
                 });
                 if (allBanners.size > 0) {
@@ -2720,24 +2698,19 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 }
             }
 
-            const variablesPayload = filteredBanners.map(b => ({
-                variableId: b.id,
-                variable_id: b.id,
-                id: b.id,
-                banner: bannerVarList,
-                banners: bannerVarList
+            const recodedVars = recodedVariablesRef.current || {};
+            const variablesPayload = Object.keys(recodedVars).map(key => ({
+                variableId: key,
+                banner: bannerVarList
             }));
 
             const payload = {
                 pageId: pageId,
-                user: user,
-                banner: bannerVarList,
                 filterExpression: filterExpression || "",
                 weightCol: selectedWeight === '없음' ? "" : selectedWeight,
                 model: selectedModel,
                 variables: variablesPayload,
-                variableIds: filteredBanners.map(b => b.id),
-                // variable_ids: filteredBanners.map(b => b.id),
+                user: user,
                 triggerBatch: false
             };
 
@@ -4168,9 +4141,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 filterExpression={filterExpression}
                                 defaultBannerId={defaultBannerId}
                                 selectedModel={selectedModel}
-                                models={models}
                                 globalAiSummaryOpen={globalAiSummaryOpen}
-                                globalAiResults={globalAiResults}
+                                globalAiResult={globalAiResults[banner.id] || null}
+                                globalAiRunning={globalAiRunning}
                             />
                         ))}
                     </div>
