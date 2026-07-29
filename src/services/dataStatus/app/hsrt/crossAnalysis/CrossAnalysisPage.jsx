@@ -2567,10 +2567,21 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         }
 
         const recodedVars = recodedVariablesRef.current || {};
-        const variablesPayload = Object.keys(recodedVars).map(key => ({
-            variableId: key,
-            banner: bannerVarList
-        }));
+        const variablesPayload = Object.keys(recodedVars).map(key => {
+            const item = recodedVars[key];
+            let bannerVal = bannerVarList;
+            if (item && item.banner) {
+                if (Array.isArray(item.banner)) {
+                    bannerVal = item.banner;
+                } else if (typeof item.banner === 'string' && item.banner.trim() !== '') {
+                    bannerVal = [item.banner];
+                }
+            }
+            return {
+                variableId: key,
+                banner: bannerVal
+            };
+        });
 
         const payload = {
             pageId: pageId,
@@ -2708,7 +2719,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         try {
             const res = await cancelCrosstabAiSummary.mutateAsync(payload);
             if (String(res?.success) === '777' && res?.resultjson?.cancelled) {
-                console.log("Global AI Summary successfully cancelled on server.");
+                //console.log("Global AI Summary successfully cancelled on server.");
             }
         } catch (error) {
             console.error("Failed to cancel Global AI Summary on server:", error);
