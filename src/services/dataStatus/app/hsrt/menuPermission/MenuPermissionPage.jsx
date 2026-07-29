@@ -186,7 +186,6 @@ const MenuPermissionPage = () => {
         setSelectedRole("");
         setExpiredDate(moment().add(100, "years").toDate());
         fetchPageMembers();
-        fetchUserSearch(""); // Initial load
     }, [auth?.user?.userId, pageId]);
 
     // Lookup name from worker_list or userOptions
@@ -210,11 +209,8 @@ const MenuPermissionPage = () => {
         if (!selectedUser) return false;
         const userId = selectedUser.worker_id || selectedUser.user_id;
 
-        const inPageMembers = pageMembers.some(m => m.user_id === userId);
-        const inProjectWorkers = userList.some(w => w.worker_id === userId && w.permission_gubun === "H-SRT고객" && w.page_id === pageId);
-
-        return inPageMembers || inProjectWorkers;
-    }, [selectedUser, pageMembers, userList, pageId]);
+        return pageMembers.some(m => m.user_id === userId);
+    }, [selectedUser, pageMembers]);
 
     // Handle dropdown user selection
     const handleDropdownChange = (e) => {
@@ -258,7 +254,8 @@ const MenuPermissionPage = () => {
                         pageid: pageId,
                         role: "custom_srt",
                         user: authUserId || "",
-                        user_id: userId
+                        user_id: userId,
+                        expiration: moment(expiredDate).format("YYYY-MM-DD") + " 23:59:59"
                     }
                 });
 
@@ -359,54 +356,24 @@ const MenuPermissionPage = () => {
             return m.isValid() ? m.format("YYYY-MM-DD HH:mm:ss") : dateStr;
         };
 
-        // 1. 일반 대시보드 멤버 정보 로드
-        const standardMembers = pageMembers.map(item => {
-            const matchingWorker = userList.find(w => w.worker_id === item.user_id);
-            const expired = matchingWorker?.worker_expired || "";
-            const regDate = item.created_at || matchingWorker?.register_date || "";
+        return pageMembers.map((item, idx) => {
+            const expired = item.expiration || "";
+            const regDate = item.created_at || "";
 
             return {
                 ...item,
+                no: idx + 1,
                 worker_name: item.user_name || getWorkerName(item.user_id),
                 role: item.role,
                 permissions: item.permissions,
                 regDate: formatDate(regDate),
-                expiredDate: (item.role === 'custom_srt' || item.role === 'client') ? formatDate(expired) : "-"
+                expiredDate: (item.role === 'custom_srt' || item.role === 'client') ? formatDate(expired) : "-",
+                selected: selectedUser?.user_id === item.user_id || selectedUser?.worker_id === item.user_id,
+                roleText: item.role === "admin" ? "관리자 (관리, 읽기,쓰기)" : item.role === "editor" ? "연구원(읽기, 쓰기)" : (item.role === "custom_srt" || item.role === "client") ? "H-SRT고객" : "연구원(읽기)",
+                allowedMenusText: getPermissionsText(item.permissions)
             };
         });
-
-        // 2. 프로젝트 전체 작업자 중 H-SRT고객이면서 현재 대시보드 page_id와 맵핑된 행 필터링
-        const dashboardClients = userList
-            .filter(w => w.permission_gubun === "H-SRT고객" && w.page_id === pageId)
-            .map(w => ({
-                id: w.id,
-                user_id: w.worker_id,
-                role: "client",
-                permissions: getPermissionsArrayForRole("client"),
-                worker_name: "H-SRT고객",
-                regDate: formatDate(w.register_date),
-                expiredDate: formatDate(w.worker_expired)
-            }));
-
-        // 3. 중복을 방지하며 두 리스트 병합
-        const mergedList = [...standardMembers];
-        dashboardClients.forEach(client => {
-            if (!mergedList.some(m => m.user_id === client.user_id)) {
-                mergedList.push(client);
-            }
-        });
-
-
-
-        // 4. 번호 매기기 및 상태 매핑
-        return mergedList.map((item, idx) => ({
-            ...item,
-            no: idx + 1,
-            selected: selectedUser?.user_id === item.user_id || selectedUser?.worker_id === item.user_id,
-            roleText: item.role === "admin" ? "관리자 (관리, 읽기,쓰기)" : item.role === "editor" ? "연구원(읽기, 쓰기)" : (item.role === "custom_srt" || item.role === "client") ? "H-SRT고객" : "연구원(읽기)",
-            allowedMenusText: getPermissionsText(item.permissions)
-        }));
-    }, [pageMembers, userList, selectedUser, pageId]);
+    }, [pageMembers, selectedUser]);
 
     const processedData = useMemo(() => {
         let items = numberedData;
@@ -664,9 +631,8 @@ const MenuPermissionPage = () => {
                                     setSelectedRole(member.role === 'custom_srt' ? 'client' : member.role);
 
                                     if (member.role === 'custom_srt' || member.role === 'client') {
-                                        const worker = userList.find(w => w.worker_id === member.user_id);
-                                        if (worker && worker.worker_expired) {
-                                            setExpiredDate(moment(worker.worker_expired).toDate());
+                                        if (member.expiration) {
+                                            setExpiredDate(moment(member.expiration).toDate());
                                         } else {
                                             setExpiredDate(moment().add(100, "years").toDate());
                                         }
