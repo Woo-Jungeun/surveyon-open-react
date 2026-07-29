@@ -324,6 +324,15 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
             cell: (props) => <TitleEditCell {...props} editingRowId={editingRowId} onTitleChange={handleTitleChange} />
         },
         {
+            field: "created_by_name",
+            title: "생성자",
+            width: "120px",
+            cell: (props) => {
+                const val = props.dataItem[props.field] || "-";
+                return <td className={props.className} style={props.style}>{val}</td>;
+            }
+        },
+        {
             field: "created_at",
             title: "생성일",
             width: "170px",
