@@ -26,6 +26,7 @@ const MENU_ITEMS = [
     items: [
       { label: "문항추가", path: "/data_status/hsrt/add_question", icon: PlusCircle },
       { label: "DP의뢰서", path: "/data_status/hsrt/dp_request", icon: FileCog },
+      { label: "AI 요약보고서", path: "/data_status/hsrt/ai_report", icon: Sparkles },
     ]
   },
   {
@@ -401,8 +402,8 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     }
 
     if (myRole === "viewer") {
-      // viewer: 교차분석(cross_analysis) 이외의 페이지는 접근 차단 후 교차분석으로 이동
-      if (!path.includes("cross_analysis")) {
+      // viewer: 교차분석(cross_analysis) 및 AI 요약보고서(ai_report) 이외의 페이지는 접근 차단 후 교차분석으로 이동
+      if (!path.includes("cross_analysis") && !path.includes("ai_report")) {
         navigate("/data_status/hsrt/cross_analysis", { replace: true });
       }
     } else if (myRole === "editor") {
@@ -455,10 +456,10 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     // 일반 사용자의 대시보드 권한(myRole)별 메뉴 필터링
     const myRole = pageState.myRole || "";
     if (myRole === "viewer") {
-      // viewer는 교차분석만 표출 (데이터 설정 그룹 내 문항추가, DP의뢰서, 추가분석 숨김)
+      // viewer는 교차분석 및 AI 요약보고서만 표출 (데이터 설정 그룹 내 문항추가, DP의뢰서, 추가분석 숨김)
       computedMenuGroups = computedMenuGroups.map(group => {
         const filteredItems = group.items.filter(item => 
-          item.label === "교차분석"
+          item.label === "교차분석" || item.label === "AI 요약보고서"
         );
         return { ...group, items: filteredItems };
       }).filter(group => group.items.length > 0);

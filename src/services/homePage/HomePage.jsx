@@ -26,6 +26,7 @@ const HomePage = () => {
           "교차분석": "/data_status/hsrt/cross_analysis",
           "추가분석": "/data_status/hsrt/additional_analysis",
           "dp의뢰서": "/data_status/hsrt/dp_request",
+          "ai요약보고서": "/data_status/hsrt/ai_report",
           "문항추가": "/data_status/hsrt/add_question",
         };
         if (menuPathMap[firstMenuLabel]) {

@@ -240,11 +240,11 @@ const DpRequestPage = () => {
                             </button>
                             */}
                             <button
+                                className="data-header-btn"
                                 style={{
-                                    display: 'flex', alignItems: 'center', gap: '6px',
-                                    background: '#fff', border: '1px solid #ef4444', color: '#ef4444',
-                                    padding: '0 16px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
-                                    height: '36px'
+                                    borderColor: '#fca5a5',
+                                    color: '#ef4444',
+                                    background: '#fff'
                                 }}
                                 title="스터브, 설정, 요약표가 모두 초기화되어 대시보드가 처음 상태로 재구성됩니다."
                                 onClick={() => {
@@ -268,7 +268,7 @@ const DpRequestPage = () => {
                         </>
                     )}
                     <button
-                        className="dp-primary-btn"
+                        className="data-header-btn data-header-btn-primary"
                         onClick={async () => {
                             const currentRef = currentStep === 0 ? step1Ref : currentStep === 1 ? step2Ref : currentStep === 2 ? step3Ref : currentStep === 3 ? step4Ref : currentStep === 4 ? step5Ref : null;
                             if (currentRef?.current?.save) {
@@ -280,7 +280,6 @@ const DpRequestPage = () => {
                                 }
                             }
                         }}
-                        style={{ height: '36px' }}
                     >
                         <Save size={16} />
                         <span>저장</span>

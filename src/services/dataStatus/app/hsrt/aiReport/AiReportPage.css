@@ -1,0 +1,408 @@
+.ai-report-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 120px);
+    overflow: hidden;
+    background: #f8fafc;
+}
+
+/* Stepper styling (Matched exactly with DpRequestPage) */
+.ai-stepper-compact {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    transition: all 0.3s ease;
+}
+
+.ai-step-compact {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #94a3b8;
+    transition: all 0.2s ease;
+    padding: 4px 8px;
+    border-radius: 20px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.ai-step-compact.active {
+    color: #1e293b;
+    background: #f1f5f9;
+}
+
+.ai-step-compact.done {
+    color: #64748b;
+}
+
+.ai-step-num-compact {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+    font-weight: 700;
+}
+
+/* Active Step */
+.ai-step-compact.active .ai-step-num-compact {
+    background: #4B7CF3 !important;
+    color: #fff !important;
+    box-shadow: 0 0 0 4px rgba(75, 124, 243, 0.15);
+}
+
+.ai-step-compact.active .ai-step-text {
+    color: #1e293b;
+}
+
+/* Completed Step */
+.ai-step-compact.done .ai-step-num-compact {
+    background: #2563EB !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+.ai-step-line-compact {
+    width: 24px;
+    height: 2px;
+    background: #e2e8f0;
+    margin: 0 8px;
+    border-radius: 1px;
+}
+
+.ai-step-line-compact.done {
+    background: #2563EB;
+    opacity: 0.4;
+}
+
+/* Right-side dropdown and save */
+.ai-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+}
+
+.ai-model-select-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ai-model-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+.ai-dropdown-wrapper {
+    position: relative;
+    width: 170px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+}
+
+.ai-dropdown-wrapper .k-dropdownlist {
+    border: none !important;
+    background: none !important;
+    box-shadow: none !important;
+}
+
+/* Save Button */
+.ai-save-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #2563eb;
+    color: #ffffff;
+    border: none;
+    padding: 0 16px;
+    height: 32px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ai-save-btn:hover {
+    background: #1d4ed8;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+/* Step Layouts */
+.ai-step-content-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Card aesthetics */
+.ai-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.04);
+    margin-bottom: 20px;
+}
+
+.ai-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Grid for Step 1 */
+.ai-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.ai-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ai-form-field.full-width {
+    grid-column: span 2;
+}
+
+.ai-field-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #475569;
+}
+
+.ai-field-input {
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #334155;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.ai-field-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.ai-field-input:disabled {
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+.ai-field-textarea {
+    min-height: 100px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #334155;
+    outline: none;
+    resize: vertical;
+    transition: all 0.2s;
+}
+
+.ai-field-textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Step 2 Lists */
+.ai-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ai-list-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.ai-list-item:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+.ai-list-item.selected {
+    border-color: #2563eb;
+    background: #eff6ff;
+}
+
+.ai-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1.5px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    transition: all 0.15s;
+    background: #ffffff;
+}
+
+.ai-list-item.selected .ai-checkbox {
+    background: #2563eb;
+    border-color: #2563eb;
+}
+
+.ai-item-qnum {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2563eb;
+    margin-right: 10px;
+    min-width: 32px;
+}
+
+.ai-item-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #334155;
+}
+
+.ai-item-badge {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+/* Step 3 - Final Report */
+.ai-report-generation-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #ffffff;
+    text-align: center;
+}
+
+.ai-gen-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+    transition: all 0.2s;
+    margin-top: 16px;
+}
+
+.ai-gen-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+}
+
+.ai-gen-btn:active {
+    transform: translateY(0);
+}
+
+/* Report View styles */
+.ai-report-view-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ai-report-header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px rgba(15, 23, 42, 0.08);
+}
+
+.ai-report-title {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.ai-report-meta {
+    font-size: 13px;
+    color: #94a3b8;
+    display: flex;
+    gap: 16px;
+}
+
+.ai-report-section {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.ai-section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    border-left: 4px solid #2563eb;
+    padding-left: 10px;
+    margin-bottom: 16px;
+}
+
+.ai-bullet-list {
+    margin: 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ai-bullet-item {
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.6;
+}
+
+.ai-bullet-item strong {
+    color: #0f172a;
+}

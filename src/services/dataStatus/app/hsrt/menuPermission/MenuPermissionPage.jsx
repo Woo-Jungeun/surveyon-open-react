@@ -25,7 +25,8 @@ const getPermissionsArrayForRole = (role) => {
         return [
             "page.view.data",
             "page.view.variables_map",
-            "page.analysis.cross"
+            "page.analysis.cross",
+            "page.setting.ai_report"
         ];
     }
     if (role === 'custom_srt' || role === 'client') {
@@ -33,7 +34,8 @@ const getPermissionsArrayForRole = (role) => {
             "page.view.data",
             "page.view.variables_map",
             "page.analysis.cross",
-            "page.analysis.additional"
+            "page.analysis.additional",
+            "page.setting.add_question"
         ];
     }
     if (role === 'editor') {
@@ -46,6 +48,7 @@ const getPermissionsArrayForRole = (role) => {
             "page.setting.recoding",
             "page.setting.dp_request",
             "page.setting.add_question",
+            "page.setting.ai_report",
             "page.setting.weight"
         ];
     }
@@ -59,6 +62,7 @@ const getPermissionsArrayForRole = (role) => {
             "page.setting.recoding",
             "page.setting.dp_request",
             "page.setting.add_question",
+            "page.setting.ai_report",
             "page.setting.weight",
             "page.setting.members",
             "page.delete"
@@ -76,6 +80,7 @@ const getPermissionsText = (permissionsList) => {
         "page.setting.recoding": "스터브 생성",
         "page.setting.dp_request": "DP 의뢰서 정의",
         "page.setting.add_question": "문항 추가",
+        "page.setting.ai_report": "AI 요약보고서 정의",
         "page.setting.weight": "가중치 생성"
     };
     const translated = permissionsList
