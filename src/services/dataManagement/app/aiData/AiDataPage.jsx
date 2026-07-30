@@ -1,4 +1,4 @@
-import { useState, useContext, cloneElement, useMemo, useEffect, useRef } from 'react';
+﻿import { useState, useContext, cloneElement, useMemo, useEffect, useRef } from 'react';
 import axios from 'axios';
 import {
     Search, Download, ExternalLink, Play, AlertTriangle,
@@ -261,6 +261,24 @@ const AiDataPage = () => {
         }));
     }, [filteredRespondents, selectedPid]);
 
+    // 그리드에 표출되는 데이터를 콘솔에 출력
+    useEffect(() => {
+        if (gridData && gridData.length > 0) {
+            console.log("=== [그리드 표출 데이터 목록] ===");
+            console.table(gridData.map(item => ({
+                "응답자 ID (PID)": item.id,
+                "결과 상태": item.status,
+                "최종 감지 문항": item.finalQuestion,
+                "종료 메시지/중단 사유": item.message || item.failureReason || "-",
+                "수행 시간": item.duration,
+                "에러 구분": item.errorCategory || "-",
+                "상세 에러 내용": item.errorDetail || "-",
+                "마지막 URL": item.lastUrl || "-"
+            })));
+            console.log("전체 객체 데이터:", gridData);
+        }
+    }, [gridData]);
+
     // 공통 응답자 ID 삭제/초기화 실행 함수 (APIs/d/qa/reset-test-pid API 연동)
     const executeResetOrDelete = async (actionType = "reset") => {
         const projectnum = sessionStorage.getItem("projectnum");
@@ -472,9 +490,9 @@ const AiDataPage = () => {
 
         if (status === 'pending') {
             text = '대기';
-            bg = '#fffbeb';
-            color = '#d97706';
-            border = '1px solid #fde68a';
+            bg = '#f1f5f9';
+            color = '#475569';
+            border = '1px solid #cbd5e1';
         } else if (status === 'running') {
             text = '실행중';
             bg = '#f0f9ff';
@@ -492,9 +510,9 @@ const AiDataPage = () => {
             border = '1px solid #fecaca';
         } else if (status === 'paused') {
             text = '⏸ 재개대기';
-            bg = '#eff6ff';
-            color = '#2563eb';
-            border = '1px solid #bfdbfe';
+            bg = '#fffbeb';
+            color = '#d97706';
+            border = '1px solid #fde68a';
         }
 
         return (
@@ -512,15 +530,15 @@ const AiDataPage = () => {
     const FinalQuestionCell = (props) => {
         const { finalQuestion, status } = props.dataItem;
         const isHasQuestion = finalQuestion && finalQuestion !== "-";
-        
+
         let bg = '#fff1f1';
         let color = '#dc2626';
         let border = '1px solid #fecaca';
-        
+
         if (status === 'paused') {
-            bg = '#eff6ff';
-            color = '#2563eb';
-            border = '1px solid #bfdbfe';
+            bg = '#fffbeb';
+            color = '#d97706';
+            border = '1px solid #fde68a';
         }
 
         return (
@@ -692,7 +710,7 @@ const AiDataPage = () => {
             const confirmResult = await new Promise(resolve => {
                 modal.showConfirm(
                     "주의",
-                    `재개대기 중인 건이 ${pausedCount}건 존재합니다. 새로 시작할 경우 기존의 재개대기 이력(수동 통과한 데이터 포함)이 모두 삭제됩니다. 정말로 새로 시작하시겠습니까?`,
+                    `재개대기 상태인 건이 ${pausedCount}건 있습니다.\n새로 시작할 경우 기존의 재개대기 이력(수동 통과한 데이터 포함)이 모두 삭제됩니다.\n정말 새로 시작하시겠습니까?`,
                     {
                         btns: [
                             { title: "취소", click: () => resolve(false) },
@@ -891,6 +909,7 @@ const AiDataPage = () => {
 
             if (String(res?.success) === '777') {
                 modal.showAlert("알림", "선택한 응답자의 재개 명령을 전달했습니다. 잠시 후 러너가 작업을 이어받아 실행합니다.");
+                setFilterStatus("all");
                 // 상태 및 목록 갱신
                 await triggerFetchJob();
             } else {
@@ -1206,11 +1225,11 @@ const AiDataPage = () => {
                                 {progressInfo?.isFinished && (
                                     <span style={{
                                         fontSize: '10.5px', padding: '1px 6px', borderRadius: '4px', fontWeight: 700,
-                                        background: pausedCount > 0 ? '#eff6ff' : '#f0fdf4',
-                                        color: pausedCount > 0 ? '#2563eb' : '#15803d',
-                                        border: pausedCount > 0 ? '1px solid #bfdbfe' : '1px solid #bbf7d0'
+                                        background: pausedCount > 0 ? '#fffbeb' : '#f0fdf4',
+                                        color: pausedCount > 0 ? '#d97706' : '#15803d',
+                                        border: pausedCount > 0 ? '1px solid #fde68a' : '1px solid #bbf7d0'
                                     }}>
-                                        {pausedCount > 0 ? `완료 (단 ${pausedCount}건 재개대기)` : '완료됨'}
+                                        {pausedCount > 0 ? `완료 (${pausedCount}건 재개대기)` : '완료됨'}
                                     </span>
                                 )}
                             </span>
@@ -1220,7 +1239,10 @@ const AiDataPage = () => {
 
                             {/* 게이지 바로 우측에 배치되는 새로고침 버튼 */}
                             <button
-                                onClick={() => triggerFetchJob()}
+                                onClick={() => {
+                                    setFilterStatus("all");
+                                    triggerFetchJob();
+                                }}
                                 className={isJobRunning ? "refresh-btn-pulse" : ""}
                                 style={{
                                     height: '24px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '4px',
@@ -1268,9 +1290,9 @@ const AiDataPage = () => {
                                 <strong style={{ color: '#b91c1c' }}>{defectCount}</strong>
                             </div>
                             {/* 재개대기 */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#2563eb' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#fffbeb', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#d97706' }}>
                                 <span style={{ fontWeight: 600 }}>재개대기</span>
-                                <strong style={{ color: '#2563eb' }}>{pausedCount}</strong>
+                                <strong style={{ color: '#d97706' }}>{pausedCount}</strong>
                             </div>
                             {/* 평균소요 */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#fffbeb', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', color: '#b45309' }}>
@@ -1589,7 +1611,7 @@ const AiDataPage = () => {
                                         className={`ai-filter-chip ${filterStatus === "paused" ? "active" : ""}`}
                                         style={{
                                             border: '1px solid #cbd5e1', borderRadius: '99px', padding: '3px 12px', fontSize: '11.5px', fontWeight: 600,
-                                            cursor: 'pointer', background: filterStatus === "paused" ? '#eff6ff' : '#fff', color: '#2563eb'
+                                            cursor: 'pointer', background: filterStatus === "paused" ? '#fffbeb' : '#fff', color: '#d97706'
                                         }}
                                     >
                                         재개대기 {pausedCount}
@@ -1742,7 +1764,7 @@ const AiDataPage = () => {
                                     <Column
                                         field="status"
                                         title="결과 상태"
-                                        width="90px"
+                                        width="100px"
                                         cell={StatusCell}
                                         headerClassName="k-header-center"
                                     />
@@ -1809,6 +1831,14 @@ const AiDataPage = () => {
                                                 <Clock size={18} color="#64748b" />
                                                 <span style={{ fontSize: '14.5px', fontWeight: 800, color: '#64748b' }}>
                                                     수행 대기 리포트
+                                                </span>
+                                            </>
+                                        )}
+                                        {selectedRespondent.status === "paused" && (
+                                            <>
+                                                <AlertTriangle size={18} color="#d97706" />
+                                                <span style={{ fontSize: '14.5px', fontWeight: 800, color: '#d97706' }}>
+                                                    재개 대기 리포트
                                                 </span>
                                             </>
                                         )}
@@ -1973,20 +2003,20 @@ const AiDataPage = () => {
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px', shrink: 0 }}>
                                             {/* 재개 대기 안내 */}
-                                            <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '12px 14px' }}>
-                                                <span style={{ fontSize: '11px', fontWeight: 700, color: '#2563eb', display: 'block', marginBottom: '4px' }}>① 재개 대기 상태</span>
-                                                <span style={{ fontSize: '14px', fontWeight: 700, color: '#1e3a8a' }}>
+                                            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '12px 14px' }}>
+                                                <span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>① 재개 대기 상태</span>
+                                                <span style={{ fontSize: '14px', fontWeight: 700, color: '#b45309' }}>
                                                     멈춘 문항: {selectedRespondent.finalQuestion || "-"}
                                                 </span>
                                             </div>
 
                                             {/* 직접 통과 가이드 */}
-                                            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '12px 14px' }}>
-                                                <span style={{ fontSize: '11px', fontWeight: 700, color: '#b45309', display: 'block', marginBottom: '6px' }}>② 조치 방법</span>
-                                                <p style={{ fontSize: '12.5px', color: '#451a03', lineHeight: '1.5', margin: '0 0 12px 0' }}>
+                                            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px 14px' }}>
+                                                <span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '6px' }}>② 조치 방법</span>
+                                                <p style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.5', margin: '0 0 12px 0' }}>
                                                     아래 버튼을 눌러 실패 화면(설문 페이지)으로 이동한 뒤, 막힌 문항의 응답을 직접 입력하여 통과시켜 주세요. 통과 후 본 화면에서 [시뮬레이션 재개] 버튼을 누르시면 멈춘 위치부터 시뮬레이션을 이어갑니다.
                                                 </p>
-                                                
+
                                                 <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
                                                     <button
                                                         onClick={() => {
@@ -1997,8 +2027,8 @@ const AiDataPage = () => {
                                                             }
                                                         }}
                                                         style={{
-                                                            height: '28px', padding: '0 10px', border: '1px solid #d97706', borderRadius: '4px',
-                                                            background: '#fff', fontSize: '11.5px', fontWeight: 600, color: '#b45309',
+                                                            height: '28px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '4px',
+                                                            background: '#fff', fontSize: '11.5px', fontWeight: 600, color: '#475569',
                                                             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
                                                         }}
                                                     >
@@ -2007,8 +2037,8 @@ const AiDataPage = () => {
                                                     </button>
                                                 </div>
 
-                                                <div style={{ borderTop: '1px solid #fef3c7', paddingTop: '8px', fontSize: '11px', color: '#b45309', lineHeight: '1.4' }}>
-                                                    ⚠️ <strong>주의</strong>: 멈춘 문항을 수동으로 해결하지 않고 [재개]를 누르면 가드에 의해 즉시 중단(Fail) 처리됩니다.
+                                                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '8px', fontSize: '11px', color: '#dc2626', lineHeight: '1.4' }}>
+                                                    ⚠️ 멈춘 문항을 수동으로 해결하지 않고 [재개]를 누르면 가드에 의해 중단(Fail) 처리됩니다.
                                                 </div>
                                             </div>
 
@@ -2018,14 +2048,15 @@ const AiDataPage = () => {
                                                     onClick={() => handleResumePid(selectedRespondent.id)}
                                                     style={{
                                                         height: '36px', width: '100%', border: 'none', borderRadius: '6px',
-                                                        background: '#2563eb', color: '#fff', fontSize: '13px', fontWeight: 700,
+                                                        background: '#d97706', color: '#fff', fontSize: '13px', fontWeight: 700,
                                                         cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                                                        boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)'
+                                                        boxShadow: '0 2px 4px rgba(217, 119, 6, 0.2)',
+                                                        transition: 'all 0.15s ease'
                                                     }}
-                                                    onMouseOver={(e) => e.currentTarget.style.background = '#1d4ed8'}
-                                                    onMouseOut={(e) => e.currentTarget.style.background = '#2563eb'}
+                                                    onMouseOver={(e) => e.currentTarget.style.background = '#b45309'}
+                                                    onMouseOut={(e) => e.currentTarget.style.background = '#d97706'}
                                                 >
-                                                    <Play size={12} fill="#fff" />
+                                                    <Play size={12} fill="#fff" color="#fff" />
                                                     시뮬레이션 재개 실행
                                                 </button>
                                             </div>
