@@ -358,7 +358,47 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   // 권한별 접근 페이지 제어 (페이지 진입/갱신 시 강제 리다이렉트)
   useEffect(() => {
     const myRole = pageState.myRole || sessionStorage.getItem("myRole") || "";
+    const groupCode = sessionStorage.getItem("groupcode") || "";
+    const userName = auth?.user?.userName || "";
+    const userGroup = auth?.user?.userGroup || "";
     const path = location.pathname;
+
+    const isBlockedFromPermission =
+      userName === "H-SRT고객" ||
+      userGroup === "H-SRT고객" ||
+      groupCode === "999999991" ||
+      myRole === "custom_srt";
+
+    // H-SRT고객 등 권한 제한 사용자의 메뉴별 경로 접근 통제
+    if (isBlockedFromPermission && path.startsWith("/data_status/hsrt")) {
+      const showMenuStr = sessionStorage.getItem("showmenu");
+      let allowedPaths = [];
+      let defaultPath = "/data_status/hsrt/cross_analysis";
+
+      if (showMenuStr) {
+        const allowedMenus = showMenuStr.split(",").map(m => m.replace(/\s+/g, '').toLowerCase());
+        allowedPaths = allowedMenus.map(allowed => {
+          for (const group of MENU_ITEMS) {
+            const item = group.items.find(it => it.label.replace(/\s+/g, '').toLowerCase() === allowed);
+            if (item) return item.path;
+          }
+          return null;
+        }).filter(Boolean);
+      }
+
+      if (allowedPaths.length > 0) {
+        defaultPath = allowedPaths[0];
+      }
+
+      const isPathAllowed = allowedPaths.length === 0
+        ? path.toLowerCase() === defaultPath.toLowerCase()
+        : allowedPaths.some(p => path.toLowerCase() === p.toLowerCase());
+
+      if (!isPathAllowed) {
+        navigate(defaultPath, { replace: true });
+        return;
+      }
+    }
 
     if (myRole === "viewer") {
       // viewer: 교차분석(cross_analysis) 이외의 페이지는 접근 차단 후 교차분석으로 이동
@@ -371,7 +411,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         navigate("/data_status/hsrt/add_question", { replace: true });
       }
     }
-  }, [pageState.myRole, location.pathname]);
+  }, [pageState.myRole, location.pathname, auth?.user]);
 
   // 사이드바에 전달할 대시보드 정보
   const sidebarPageInfo = {
@@ -427,7 +467,16 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
   // 해당 대시보드의 관리자(admin)이거나, 대시보드 미선택 상태이면서 AI솔루션팀인 경우에만 대시보드 권한 설정 메뉴 추가
   const currentMyRole = pageState.myRole || "";
-  const showAdminMenu = currentMyRole === "admin" || (currentMyRole === "" && isAiSolutionTeam);
+  const groupCode = sessionStorage.getItem("groupcode") || "";
+  const userName = auth?.user?.userName || "";
+
+  const isBlockedFromPermission =
+    userName === "H-SRT고객" ||
+    userGroup === "H-SRT고객" ||
+    groupCode === "999999991" ||
+    currentMyRole === "custom_srt";
+
+  const showAdminMenu = !isBlockedFromPermission && (currentMyRole === "admin" || (currentMyRole === "" && isAiSolutionTeam));
   if (showAdminMenu) {
     computedMenuGroups.push({
       label: "시스템 관리",
