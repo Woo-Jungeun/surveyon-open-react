@@ -271,6 +271,8 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 base_prefix: settings.display.show_base_parenthesis ? "(" : "",
                 base_postfix: settings.display.show_base_parenthesis ? ")" : "",
                 percent_symbol: settings.display.percent_symbol,
+                percent_as_column: settings.render.format_percent_as_column,
+                stub_group_layout: settings.render.stub_group_layout,
             }
         };
     };
