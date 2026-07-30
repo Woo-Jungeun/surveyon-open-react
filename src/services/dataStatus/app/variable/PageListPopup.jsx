@@ -139,7 +139,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
             isNew: true,
             pageid: tempId
         };
-        setLocalData([...localData, newRow]);
+        setLocalData([newRow, ...localData]);
         setEditingRowId(tempId);
         draftTitleRef.current = "";
     };
