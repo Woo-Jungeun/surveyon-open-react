@@ -1,4 +1,4 @@
-﻿import { useState, useContext, cloneElement, useMemo, useEffect, useRef } from 'react';
+import { useState, useContext, cloneElement, useMemo, useEffect, useRef } from 'react';
 import axios from 'axios';
 import {
     Search, Download, ExternalLink, Play, AlertTriangle,
@@ -877,7 +877,27 @@ const AiDataPage = () => {
     };
 
     // AI 데이터 생성 재개
-    const handleResumePid = async (pid) => {
+    const handleResumePid = async (pids) => {
+        const targetPids = Array.isArray(pids) ? pids.map(String) : [String(pids)];
+        if (targetPids.length === 0) {
+            modal.showAlert("알림", "재개할 응답자 ID가 없습니다.");
+            return;
+        }
+
+        // 재개 대기가 아닌 항목이 포함되어 있는지 검증
+        const nonPausedPids = targetPids.filter(pid => {
+            const resp = respondents.find(r => String(r.id) === String(pid));
+            return resp && resp.status !== "paused";
+        });
+
+        if (nonPausedPids.length > 0) {
+            modal.showAlert(
+                "알림",
+                `선택한 대상 중 재개 대기 상태가 아닌 PID가 포함되어 있습니다.\n(해당 PID: ${nonPausedPids.join(", ")})\n\n재개 대가 상태인 항목만 선택하여 다시 시도해 주세요.`
+            );
+            return;
+        }
+
         const projectnum = sessionStorage.getItem("projectnum");
         const userId = auth?.user?.userId || sessionStorage.getItem("userId");
         if (!projectnum || !userId) {
@@ -904,12 +924,13 @@ const AiDataPage = () => {
             const res = await resumeQaJobs.mutateAsync({
                 pn: projectnum,
                 user: userId,
-                pids: [String(pid)]
+                pids: targetPids
             });
 
             if (String(res?.success) === '777') {
                 modal.showAlert("알림", "선택한 응답자의 재개 명령을 전달했습니다. 잠시 후 러너가 작업을 이어받아 실행합니다.");
                 setFilterStatus("all");
+                setCheckedIds([]);
                 // 상태 및 목록 갱신
                 await triggerFetchJob();
             } else {
@@ -1664,6 +1685,22 @@ const AiDataPage = () => {
                                             선택 내보내기 ({validCheckedIds.length})
                                         </button>
 
+                                        <button
+                                            onClick={() => handleResumePid(validCheckedIds)}
+                                            style={{
+                                                height: '30px', padding: '0 10px', border: '1px solid #fde68a', borderRadius: '6px',
+                                                background: '#fffbeb', fontSize: '11.5px', fontWeight: 600, color: '#d97706',
+                                                display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', whiteSpace: 'nowrap',
+                                                transition: 'all 0.15s'
+                                            }}
+                                            onMouseOver={(e) => { e.currentTarget.style.background = '#fef3c7'; }}
+                                            onMouseOut={(e) => { e.currentTarget.style.background = '#fffbeb'; }}
+                                            title="선택한 응답자 시뮬레이션 재개"
+                                        >
+                                            <Play size={12} fill="#d97706" color="#d97706" />
+                                            선택 재개 ({validCheckedIds.length})
+                                        </button>
+
                                         <div style={{ width: '1px', height: '16px', backgroundColor: '#e2e8f0', margin: '0 2px' }} />
 
                                         <button
@@ -2042,7 +2079,7 @@ const AiDataPage = () => {
                                                 </div>
                                             </div>
 
-                                            {/* 재개 액션 버튼 */}
+                                            {/* 재개 액션 버튼 주석 처리
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
                                                 <button
                                                     onClick={() => handleResumePid(selectedRespondent.id)}
@@ -2060,6 +2097,7 @@ const AiDataPage = () => {
                                                     시뮬레이션 재개 실행
                                                 </button>
                                             </div>
+                                            */}
                                         </div>
 
                                         {/* 실행 로그 단말기 */}
