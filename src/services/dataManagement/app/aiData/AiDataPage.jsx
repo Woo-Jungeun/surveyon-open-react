@@ -261,24 +261,6 @@ const AiDataPage = () => {
         }));
     }, [filteredRespondents, selectedPid]);
 
-    // 그리드에 표출되는 데이터를 콘솔에 출력
-    useEffect(() => {
-        if (gridData && gridData.length > 0) {
-            console.log("=== [그리드 표출 데이터 목록] ===");
-            console.table(gridData.map(item => ({
-                "응답자 ID (PID)": item.id,
-                "결과 상태": item.status,
-                "최종 감지 문항": item.finalQuestion,
-                "종료 메시지/중단 사유": item.message || item.failureReason || "-",
-                "수행 시간": item.duration,
-                "에러 구분": item.errorCategory || "-",
-                "상세 에러 내용": item.errorDetail || "-",
-                "마지막 URL": item.lastUrl || "-"
-            })));
-            console.log("전체 객체 데이터:", gridData);
-        }
-    }, [gridData]);
-
     // 공통 응답자 ID 삭제/초기화 실행 함수 (APIs/d/qa/reset-test-pid API 연동)
     const executeResetOrDelete = async (actionType = "reset") => {
         const projectnum = sessionStorage.getItem("projectnum");
