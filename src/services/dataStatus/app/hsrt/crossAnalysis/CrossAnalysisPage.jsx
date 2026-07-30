@@ -2092,7 +2092,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     });
                     setWeightOptions([{ text: '없음', value: '없음' }, ...loadedWeights]);
 
-                    const initialWeight = ctxPayload.weight_variable || '없음';
+                    const initialWeight = ctxPayload.ui_settings?.weight_variable || ctxPayload.display_policy?.weight_variable || ctxPayload.weight_variable || '없음';
                     setSelectedWeight(initialWeight);
                     selectedWeightRef.current = initialWeight;
                     initialWeightFromCtx = initialWeight;
@@ -2262,12 +2262,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
             // 2. 전체표 목록 (Overview) 가져오기
             let sigPolicy = {};
-            const currentSigType = overrideSigSettings && overrideSigSettings.sigType ? overrideSigSettings.sigType : (isInitialSetupRef.current ? (fetchedUi?.sig_type ?? (fetchedUi?.show_t_test ? 't-test' : 'none')) : sigTypeRef.current);
-            const currentExcludeN = overrideSigSettings ? overrideSigSettings.excludeN : (isInitialSetupRef.current ? (fetchedUi?.sig_exclude_under_n ?? sigExcludeUnderNRef.current) : sigExcludeUnderNRef.current);
-            const currentExcludeEtc = overrideSigSettings ? overrideSigSettings.excludeEtc : (isInitialSetupRef.current ? (fetchedUi?.sig_exclude_etc ?? sigExcludeEtcRef.current) : sigExcludeEtcRef.current);
-            const currentSigLevel = overrideSigSettings ? overrideSigSettings.level : (isInitialSetupRef.current ? (fetchedUi?.sig_level ?? sigLevelRef.current) : sigLevelRef.current);
-            const currentDiffMin = overrideSigSettings ? overrideSigSettings.diffMin : (isInitialSetupRef.current ? (fetchedUi?.sig_diff_min ?? sigDiffMinRef.current) : sigDiffMinRef.current);
-            const currentDiffMax = overrideSigSettings ? overrideSigSettings.diffMax : (isInitialSetupRef.current ? (fetchedUi?.sig_diff_max ?? sigDiffMaxRef.current) : sigDiffMaxRef.current);
+            const currentSigType = overrideSigSettings && overrideSigSettings.sigType ? overrideSigSettings.sigType : sigTypeRef.current;
+            const currentExcludeN = overrideSigSettings ? overrideSigSettings.excludeN : sigExcludeUnderNRef.current;
+            const currentExcludeEtc = overrideSigSettings ? overrideSigSettings.excludeEtc : sigExcludeEtcRef.current;
+            const currentSigLevel = overrideSigSettings ? overrideSigSettings.level : sigLevelRef.current;
+            const currentDiffMin = overrideSigSettings ? overrideSigSettings.diffMin : sigDiffMinRef.current;
+            const currentDiffMax = overrideSigSettings ? overrideSigSettings.diffMax : sigDiffMaxRef.current;
 
             if (currentSigType === 'none') {
                 sigPolicy = {
