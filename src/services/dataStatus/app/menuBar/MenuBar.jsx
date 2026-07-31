@@ -26,7 +26,6 @@ const MENU_ITEMS = [
     items: [
       { label: "문항추가", path: "/data_status/hsrt/add_question", icon: PlusCircle },
       { label: "DP의뢰서", path: "/data_status/hsrt/dp_request", icon: FileCog },
-      { label: "AI 요약보고서", path: "/data_status/hsrt/ai_report", icon: Sparkles },
     ]
   },
   {
@@ -34,6 +33,12 @@ const MENU_ITEMS = [
     items: [
       { label: "교차분석", path: "/data_status/hsrt/cross_analysis", icon: Table },
       { label: "추가분석", path: "/data_status/hsrt/additional_analysis", icon: BarChart3 },
+    ]
+  },
+  {
+    label: "AI 분석",
+    items: [
+      { label: "AI 요약보고서", path: "/data_status/hsrt/ai_report", icon: Sparkles },
     ]
   }
 ];
