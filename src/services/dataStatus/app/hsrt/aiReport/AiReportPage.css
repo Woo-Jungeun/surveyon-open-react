@@ -3,7 +3,7 @@
     flex-direction: column;
     height: calc(100vh - 120px);
     overflow: hidden;
-    background: #f8fafc;
+    background: #f1f5f9;
 }
 
 /* Stepper styling (Matched exactly with DpRequestPage) */
@@ -201,7 +201,7 @@
 }
 
 .ai-upload-btn:hover {
-    background: #f8fafc;
+    background: #f1f5f9;
     border-color: #94a3b8;
 }
 
@@ -290,7 +290,7 @@
 }
 
 .ai-info-reset-btn:hover {
-    background: #f8fafc;
+    background: #f1f5f9;
     border-color: #cbd5e1;
 }
 
@@ -468,7 +468,7 @@
 
 .ai-table-header {
     display: flex;
-    background: #f8fafc;
+    background: #f1f5f9;
     border-bottom: 1px solid #e2e8f0;
     padding: 8px 12px;
     align-items: center;
@@ -515,7 +515,7 @@
 }
 
 .ai-table-row:hover {
-    background: #f8fafc;
+    background: #f1f5f9;
 }
 
 .ai-table-row.selected {
@@ -741,7 +741,7 @@
     color: #334155;
     outline: none;
     box-sizing: border-box;
-    background: #f8fafc;
+    background: #f1f5f9;
 }
 
 .ai-guideline-input:focus {
@@ -970,7 +970,7 @@
 }
 
 .ai-detail-tab.active {
-    background: #f8fafc;
+    background: #f1f5f9;
     border-color: #cbd5e1;
     color: #1e293b;
 }
@@ -1043,7 +1043,7 @@
 }
 
 .ai-icon-btn:hover {
-    background: #f8fafc;
+    background: #f1f5f9;
 }
 
 .ai-xlsx-btn {
@@ -1084,7 +1084,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #f8fafc;
+    background: #f1f5f9;
     padding: 12px 16px;
     border-bottom: 1px solid #e2e8f0;
     cursor: pointer;
@@ -1174,7 +1174,7 @@
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    background: #f8fafc;
+    background: #f1f5f9;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
     padding: 12px;
@@ -1212,7 +1212,7 @@
     border-radius: 8px;
     font-size: 12px;
     color: #64748b;
-    background: #f8fafc;
+    background: #f1f5f9;
 }
 
 /* Form fields customization */

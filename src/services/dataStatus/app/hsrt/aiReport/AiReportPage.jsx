@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { 
-    Save, Sparkles, Check, RotateCcw, Loader2, 
-    Paperclip, X, Search, Plus, 
-    Play, ArrowRight, ChevronDown, ChevronUp, 
-    Filter, RefreshCw 
+import {
+    Save, Sparkles, Check, RotateCcw, Loader2,
+    Paperclip, X, Search, Plus,
+    Play, ArrowRight, ChevronDown, ChevronUp,
+    Filter, RefreshCw
 } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import DataHeader from "@/services/dataStatus/components/DataHeader";
@@ -18,7 +18,8 @@ const AiReportPage = () => {
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
-    const { getAiModels } = DpRequestPageApi();
+    const { getAiModels, getAiSummaryData, uploadQuestionnaire, getUploadProgress } = DpRequestPageApi();
+    const fileInputRef = useRef(null);
 
     const [currentStep, setCurrentStep] = useState(0);
     const [selectedModel, setSelectedModel] = useState("");
@@ -59,16 +60,12 @@ const AiReportPage = () => {
     ];
 
     // Step 1: Survey Overview State
-    const [fileAttached, setFileAttached] = useState(true);
-    const [fileName, setFileName] = useState("설문온_월핏_공기청정기_기획안_최종.docx");
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [analysisProgress, setAnalysisProgress] = useState(0);
-    
+
     const [overviewData, setOverviewData] = useState({
-        projectname: sessionStorage.getItem("projectname") || "신규 월핏 공기청정기 평가 조사",
-        method: "대면 심층 인터뷰 및 실물 시연 (3회 세션)",
-        objectives: "소비자 의견을 수렴하여 향후 가전 신제품(월핏 공기청정기) 개발에 필요한 디자인·기능·가격·브랜드 인사이트를 확보하고, 제품 컨셉·스펙·가격·구매 의향을 정량·정성적으로 평가한다.",
-        target: "공기청정기 구매 경험이 있거나 향후 1년 내 구매 의향이 있는 20세 이상 성인(남녀 구분 없음) 한국 거주자"
+        projectname: sessionStorage.getItem("projectname") || "",
+        method: "",
+        objectives: "",
+        target: ""
     });
 
     // Step 2: Survey Variables Checklist State
@@ -91,8 +88,16 @@ const AiReportPage = () => {
     ]);
 
     // Right side Category settings
+    const [fileAttached, setFileAttached] = useState(false);
+    const [fileName, setFileName] = useState("");
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [pollingIntervalId, setPollingIntervalId] = useState(null);
+    const [pollingInfo, setPollingInfo] = useState(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [analysisProgress, setAnalysisProgress] = useState(0);
+
     const [categoryMode, setCategoryMode] = useState("ai"); // 'ai' or 'group'
-    const [categories] = useState([
+    const [categories, setCategories] = useState([
         { id: 1, title: '스크리닝·고객 특성', desc: '응답 표본의 인구통계·이용 경험 분포를 정의하는 기준 문항군.', count: 5, color: '#3b82f6' },
         { id: 2, title: '통신사 유지 인식', desc: '통신사 유지 이유의 우선순위가 전환 저항의 핵심 동인이다.', count: 4, color: '#a855f7' },
         { id: 3, title: '단말기·요금제 현황', desc: '현재 단말기·요금제 구성이 기기변경 니즈의 배경이 된다.', count: 4, color: '#6366f1' },
@@ -101,6 +106,35 @@ const AiReportPage = () => {
         { id: 6, title: 'TDS 구매 확신도', desc: '실납부 금액·혜택 요약의 명확성이 구매 확신을 좌우한다.', count: 7, color: '#f43f5e' },
         { id: 7, title: 'TDS 이탈·저해 요인', desc: '여정별 만족도 저하 지점이 이탈·채널 전환의 원인이다.', count: 10, color: '#14b8a6' },
     ]);
+
+    // Fallback Mock data definitions
+    const defaultL1 = {
+        "q100_stub": {
+            "fact_summary": "연령 및 라이프스테이지별로 응답 세션의 편차가 존재하며, 특히 공기청정기 미사용자와 교체/추가 구매자 간의 세션 분포 격차가 뚜렷함. 제품 선호도 및 CMF 비교 데이터는 특정 세션과 사용자 특성에 따라 분산되어 나타남",
+            "segment_insights": "세그먼트 간 응답 차이가 뚜렷하게 관찰되며, 일부 기능에 대한 선호 편차가 나타남",
+            "respondent_characteristics": "연령(세대)(G1) 41.7% (30대) vs 16.7% (20대) / 25.0p.p 격차 30대 집단에서 2세션 응답률이 가장 높게 나타나며, 20대 집단은 3세션 응답률이 100%로 집중됨"
+        }
+    };
+
+    const defaultL2 = [
+        {
+            "category_name": "스크리닝·고객 특성",
+            "insights": {
+                "core_finding": "30대 기혼 가구의 휴대용 공기청정기 구매 비중이 가장 높으며, 주요 구매 채널은 온라인 쇼핑몰로 집계됨",
+                "hypothesis_result": "연령대별 구매 채널 분포 가설(30대 온라인 집중)이 95% 신뢰수준에서 통계적으로 유의미하게 지지됨",
+                "so_what": "30대 기혼 타겟을 대상으로 모바일 혜택 강조 및 온라인 특가 패키지 프로모션을 우선적으로 집중 전개할 필요가 있음"
+            }
+        }
+    ];
+
+    const defaultL3 = {
+        "executive_summary": "본 조사는 신규 출시 예정인 월핏 공기청정기의 제품 만족도 및 속성 평가를 목표로 수행되었습니다. 분석 결과 30대 핵심 실사용자 층에서 공기청정 성능과 소음 항목에 대한 높은 선호도가 관측되었습니다. 다만 가격 저항선이 다소 보수적으로 형성되어 있어 렌탈 및 장기 할부 모델 위주의 상품 구성이 필요할 것으로 판단됩니다.",
+        "strategic_recommendations": [
+            "1. 공기 청정 필터 성능 중심의 디지털 콘텐츠 캠페인 구성",
+            "2. 초기 구매 장벽 완화를 위한 렌탈 전용 라인업 기획",
+            "3. 오프라인 시연 존 확대를 통한 고객 실제 체감 경험 강화"
+        ]
+    };
 
     // Step 3: Final Analysis state
     const [aiGuideline, setAiGuideline] = useState("백분율은 소수점 첫째 자리까지 표기하고, 집단 간 차이가 큰 항목을 우선 서술");
@@ -111,8 +145,125 @@ const AiReportPage = () => {
     });
     const [activeSubTab, setActiveSubTab] = useState("l1"); // 'l1', 'l2', 'l3'
     const [l1SearchQuery, setL1SearchQuery] = useState("");
-    const [isL1CardExpanded, setIsL1CardExpanded] = useState(true);
+    const [expandedL1Cards, setExpandedL1Cards] = useState({ q100_stub: true });
 
+    const [insightData, setInsightData] = useState({
+        l1: defaultL1,
+        l2: defaultL2,
+        l3: defaultL3
+    });
+
+    // Cleanup polling interval on unmount
+    useEffect(() => {
+        return () => {
+            if (pollingIntervalId) {
+                clearInterval(pollingIntervalId);
+            }
+        };
+    }, [pollingIntervalId]);
+
+    const loadSummaryData = async () => {
+        const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        const userId = auth?.user?.userId || "jewoo";
+        try {
+            const res = await getAiSummaryData.mutateAsync({ pageId, user: userId });
+            if (String(res?.success) === '777' && res?.resultjson) {
+                const item = res.resultjson;
+
+                let parsedVariablesData = {};
+                let parsedAnalysisFrame = {};
+                let parsedInsightData = {};
+
+                const variablesDataRaw = item.variablesData || item.VariablesData;
+                const analysisFrameRaw = item.analysisFrame || item.AnalysisFrame;
+                const insightDataRaw = item.insightData || item.InsightData;
+                const statusVal = item.status || item.Status;
+
+                try {
+                    if (variablesDataRaw) {
+                        parsedVariablesData = typeof variablesDataRaw === 'string' ? JSON.parse(variablesDataRaw) : variablesDataRaw;
+                    }
+                } catch (e) { console.error("Error parsing variablesData:", e); }
+
+                try {
+                    if (analysisFrameRaw) {
+                        parsedAnalysisFrame = typeof analysisFrameRaw === 'string' ? JSON.parse(analysisFrameRaw) : analysisFrameRaw;
+                    }
+                } catch (e) { console.error("Error parsing analysisFrame:", e); }
+
+                try {
+                    if (insightDataRaw) {
+                        parsedInsightData = typeof insightDataRaw === 'string' ? JSON.parse(insightDataRaw) : insightDataRaw;
+                    }
+                } catch (e) { console.error("Error parsing insightData:", e); }
+
+                // 1. Step 1: Overview
+                if (parsedVariablesData.project_info) {
+                    const pi = parsedVariablesData.project_info;
+                    setOverviewData({
+                        projectname: pi.projectName || pi.projectname || sessionStorage.getItem("projectname") || "조사명 없음",
+                        method: pi.method || "",
+                        objectives: pi.research_purpose || pi.objectives || "",
+                        target: pi.target_population || pi.target || ""
+                    });
+                }
+
+                // 2. Step 1: Questions
+                let finalQuestionsLength = 47;
+                if (parsedVariablesData.variables) {
+                    const variablesList = Array.isArray(parsedVariablesData.variables)
+                        ? parsedVariablesData.variables
+                        : Object.values(parsedVariablesData.variables);
+                    if (variablesList.length > 0) {
+                        const mappedQuestions = variablesList.map((v, vIdx) => ({
+                            id: v.VarId || v.Qnum || `var_${vIdx}`,
+                            qnum: v.Qnum || '',
+                            label: v.Qtext || v.Label || '',
+                            group: v.SectionName || '기타',
+                            type: v.Qtype || v.Type || 'SQ',
+                            subtype: v.Qsubtype || 'single',
+                            viewCount: v.Options?.length || 0,
+                            checked: true
+                        }));
+                        setQuestions(mappedQuestions);
+                        finalQuestionsLength = mappedQuestions.length;
+                    }
+                }
+
+                // 3. Step 2: Categories
+                let finalCategoriesLength = 7;
+                if (parsedAnalysisFrame.categories) {
+                    const mappedCategories = (parsedAnalysisFrame.categories || []).map((cat, idx) => ({
+                        id: idx + 1,
+                        title: cat.category_name || '',
+                        desc: cat.hypothesis || '가설 검증 및 문항 분석',
+                        count: cat.qnums?.length || 0,
+                        color: ['#3b82f6', '#a855f7', '#6366f1', '#f97316', '#10b981', '#f43f5e', '#14b8a6'][idx % 7]
+                    }));
+                    setCategories(mappedCategories);
+                    finalCategoriesLength = mappedCategories.length;
+                }
+
+                // 4. Step 3: InsightData L1 / L2 / L3
+                setInsightData({
+                    l1: parsedInsightData.l1 || defaultL1,
+                    l2: parsedInsightData.l2 || defaultL2,
+                    l3: parsedInsightData.l3 || defaultL3
+                });
+
+                // Update pipeline status
+                if (statusVal === 'completed' || statusVal === 'COMPLETED') {
+                    setPipelineStatus({
+                        l1: { progress: 100, countText: `${finalQuestionsLength}개 문항`, isDone: true, isGenerating: false },
+                        l2: { progress: 100, countText: `${finalCategoriesLength}개 카테고리`, isDone: true, isGenerating: false },
+                        l3: { progress: 100, countText: "보고서 추출 가능", isDone: true, isGenerating: false }
+                    });
+                }
+            }
+        } catch (err) {
+            console.error("Failed to load existing AI summary data:", err);
+        }
+    };
     // Initial load checks
     useEffect(() => {
         const cachedOverview = localStorage.getItem("ai_report_overview_v2");
@@ -123,8 +274,12 @@ const AiReportPage = () => {
         if (cachedGuideline) {
             setAiGuideline(cachedGuideline);
         }
-    }, []);
 
+
+
+        loadSummaryData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [auth?.user?.userId]);
     // Toggle variable selection
     const handleToggleQuestion = (id) => {
         const updated = questions.map(q => q.id === id ? { ...q, checked: !q.checked } : q);
@@ -137,30 +292,174 @@ const AiReportPage = () => {
     };
 
     // Simulated Overview File analysis start
-    const handleStartAnalysisFile = () => {
-        if (!fileAttached) {
+    // Real survey document upload and poll progress
+    const handleFileChange = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+            setFileName(file.name);
+            setFileAttached(true);
+        }
+    };
+
+    const handleStartAnalysisFile = async () => {
+        if (!fileAttached || !selectedFile) {
             modal.showAlert("알림", "설문지 파일을 첨부해 주세요.");
             return;
         }
+
         setIsAnalyzing(true);
         setAnalysisProgress(0);
-        const interval = setInterval(() => {
-            setAnalysisProgress(prev => {
-                if (prev >= 100) {
-                    clearInterval(interval);
-                    setIsAnalyzing(false);
-                    modal.showAlert("알림", "워드 설문지 분석 완료! 프로젝트 정보가 아래와 같이 자동 업데이트되었습니다.");
-                    setOverviewData({
-                        projectname: "신규 월핏 공기청정기 평가 조사",
-                        method: "대면 심층 인터뷰 및 실물 시연 (3회 세션)",
-                        objectives: "소비자 의견을 수렴하여 향후 가전 신제품(월핏 공기청정기) 개발에 필요한 디자인·기능·가격·브랜드 인사이트를 확보하고, 제품 컨셉·스펙·가격·구매 의향을 정량·정성적으로 평가한다.",
-                        target: "공기청정기 구매 경험이 있거나 향후 1년 내 구매 의향이 있는 20세 이상 성인(남녀 구분 없음) 한국 거주자"
-                    });
-                    return 100;
+
+        // Start the progress display immediately
+        setPollingInfo({
+            status: "PROCESSING",
+            progress: 0,
+            elapsed_time_seconds: 0,
+            current_step_index: 0,
+            step_info: { description: "설문지 업로드 및 분석 준비 중..." }
+        });
+
+        const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        const pn = sessionStorage.getItem("pn") || sessionStorage.getItem("Pn") || "P001234";
+        const userId = auth?.user?.userId || "jewoo";
+
+        const formData = new FormData();
+        formData.append("pageId", pageId);
+        formData.append("Pn", pn);
+        formData.append("User", userId);
+        formData.append("ModelType", selectedModel || "llm-gpt-oss-120b");
+        formData.append("DocumentFile", selectedFile);
+
+        let secondsElapsed = 0;
+
+        // 1. Start polling immediately
+        const intervalId = setInterval(async () => {
+            secondsElapsed += 2;
+            try {
+                const progressRes = await getUploadProgress.mutateAsync({ pageId, user: userId });
+                if (String(progressRes?.success) === '777' && progressRes?.resultjson) {
+                    const currentProgress = progressRes.resultjson;
+
+                    if (currentProgress.elapsedSeconds !== undefined) {
+                        currentProgress.elapsed_time_seconds = currentProgress.elapsedSeconds;
+                    }
+                    if (currentProgress.elapsed_time_seconds === undefined || currentProgress.elapsed_time_seconds === null) {
+                        currentProgress.elapsed_time_seconds = secondsElapsed;
+                    }
+
+                    if (currentProgress.progressPercentage !== undefined) {
+                        currentProgress.progress = currentProgress.progressPercentage;
+                    }
+
+                    if (currentProgress.stepIndex !== undefined) {
+                        currentProgress.current_step_index = currentProgress.stepIndex;
+                    }
+
+                    if (currentProgress.stepDescription || currentProgress.stepName) {
+                        currentProgress.step_info = {
+                            description: currentProgress.stepDescription || currentProgress.stepName
+                        };
+                    }
+
+                    // Construct 4 steps dynamically
+                    if (!currentProgress.steps && currentProgress.stepIndex !== undefined) {
+                        const stepNamesList = [
+                            "1단계: 설문지 텍스트 파싱",
+                            "2단계: AI 구조 및 모집단 분석",
+                            "3단계: 3단 변수 병합 처리",
+                            "4단계: 분석 프레임 구성"
+                        ];
+                        currentProgress.steps = stepNamesList.map((label, sIdx) => {
+                            let stepStatus = "pending";
+                            if (currentProgress.stepIndex > sIdx) {
+                                stepStatus = "completed";
+                            } else if (currentProgress.stepIndex === sIdx) {
+                                stepStatus = (currentProgress.progressPercentage === 100 || currentProgress.status === "COMPLETED" || currentProgress.isCompleted === true) ? "completed" : "processing";
+                            }
+                            return {
+                                step: sIdx + 1,
+                                label: label,
+                                status: stepStatus
+                            };
+                        });
+                        currentProgress.total_steps = 4;
+                    }
+
+                    setPollingInfo(currentProgress);
+                    setAnalysisProgress(currentProgress.progress);
+
+                    if (currentProgress.progress === 100 || currentProgress.status === 'COMPLETED' || currentProgress.status === 'completed' || currentProgress.isCompleted === true) {
+                        clearInterval(intervalId);
+                        if (currentProgress.result) {
+                            handleAnalysisComplete(currentProgress.result);
+                        }
+                        await loadSummaryData();
+                        setIsAnalyzing(false);
+                    } else if (currentProgress.status === 'FAILED' || currentProgress.status === 'failed') {
+                        clearInterval(intervalId);
+                        setIsAnalyzing(false);
+                        modal.showAlert("오류", "설문 구조 분석에 실패하였습니다. 다시 시도해주세요.");
+                    }
                 }
-                return prev + 20;
+            } catch (pollErr) {
+                console.error("Failed to poll upload progress:", pollErr);
+            }
+        }, 2000);
+
+        setPollingIntervalId(intervalId);
+
+        // 2. Start file upload asynchronously in the background
+        uploadQuestionnaire.mutateAsync(formData)
+            .then((res) => {
+                if (String(res?.success) !== '777') {
+                    clearInterval(intervalId);
+                    setIsAnalyzing(false);
+                    modal.showAlert("오류", res?.message || "파일 업로드에 실패하였습니다.");
+                }
+            })
+            .catch((err) => {
+                clearInterval(intervalId);
+                setIsAnalyzing(false);
+                console.error("Failed to upload questionnaire:", err);
+                modal.showAlert("오류", "서버 통신 실패 또는 잘못된 파일 형식입니다.");
             });
-        }, 150);
+    };
+
+    // Callback when upload/analysis completes successfully
+    const handleAnalysisComplete = (result) => {
+        modal.showAlert("알림", "워드 설문지 분석 완료! 프로젝트 정보 및 문항 정보가 자동 업데이트되었습니다.");
+
+        const projectInfo = result?.project_info || result?.projectInfo || result?.ProjectInfo;
+        if (projectInfo) {
+            const pi = projectInfo;
+            setOverviewData({
+                projectname: pi.projectName || pi.projectname || "",
+                method: pi.method || "",
+                objectives: pi.research_purpose || pi.objectives || "",
+                target: pi.target_population || pi.target || ""
+            });
+        }
+
+        const variablesRaw = result?.variables || result?.Variables;
+        if (variablesRaw) {
+            const variablesList = Array.isArray(variablesRaw)
+                ? variablesRaw
+                : Object.values(variablesRaw);
+            if (variablesList.length > 0) {
+                const mappedQuestions = variablesList.map((v, vIdx) => ({
+                    id: v.VarId || v.Qnum || `var_${vIdx}`,
+                    qnum: v.Qnum || '',
+                    label: v.Qtext || v.Label || '',
+                    group: v.SectionName || '기타',
+                    type: v.Qtype || v.Type || 'SQ',
+                    subtype: v.Qsubtype || 'single',
+                    viewCount: v.Options?.length || 0,
+                    checked: true
+                }));
+                setQuestions(mappedQuestions);
+            }
+        }
     };
 
     // Simulated pipeline generation triggers
@@ -169,7 +468,7 @@ const AiReportPage = () => {
             ...prev,
             [level]: { ...prev[level], isGenerating: true, progress: 0 }
         }));
-        
+
         let prog = 0;
         const interval = setInterval(() => {
             prog += 20;
@@ -210,14 +509,18 @@ const AiReportPage = () => {
                         localStorage.removeItem("ai_report_overview_v2");
                         localStorage.removeItem("ai_report_guideline");
                         setOverviewData({
-                            projectname: "신규 월핏 공기청정기 평가 조사",
-                            method: "대면 심층 인터뷰 및 실물 시연 (3회 세션)",
-                            objectives: "소비자 의견을 수렴하여 향후 가전 신제품(월핏 공기청정기) 개발에 필요한 디자인·기능·가격·브랜드 인사이트를 확보하고, 제품 컨셉·스펙·가격·구매 의향을 정량·정성적으로 평가한다.",
-                            target: "공기청정기 구매 경험이 있거나 향후 1년 내 구매 의향이 있는 20세 이상 성인(남녀 구분 없음) 한국 거주자"
+                            projectname: sessionStorage.getItem("projectname") || "",
+                            method: "",
+                            objectives: "",
+                            target: ""
                         });
-                        setAiGuideline("백분율은 소수점 첫째 자리까지 표기하고, 집단 간 차이가 큰 항목을 우선 서술");
-                        setFileAttached(true);
-                        setFileName("설문온_월핏_공기청정기_기획안_최종.docx");
+                        setAiGuideline("");
+                        setFileAttached(false);
+                        setFileName("");
+                        setSelectedFile(null);
+                        setPollingInfo(null);
+                        if (pollingIntervalId) clearInterval(pollingIntervalId);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
                         modal.showAlert("알림", "초기화 완료되었습니다.");
                     }
                 }
@@ -236,57 +539,182 @@ const AiReportPage = () => {
                 return (
                     <div className="ai-step-content-container">
                         {/* STEP 1: 원본 워드 설문지 첨부 */}
-                        <div className="ai-card">
-                            <div className="ai-step-badge-tag">STEP 1</div>
-                            <span className="ai-step-badge-title">원본 워드 설문지 첨부</span>
-                            <span className="ai-step-badge-desc">.docx / 최대 20MB · 분석 후 자동 폐기</span>
-                            
-                            <div className="ai-upload-row">
-                                <button className="ai-upload-btn" onClick={() => {
-                                    setFileAttached(true);
-                                    setFileName("설문온_월핏_공기청정기_기획안_최종.docx");
-                                }}>
-                                    <Paperclip size={14} />
-                                    <span>설문지 첨부</span>
-                                </button>
-
-                                {fileAttached ? (
-                                    <div className="ai-attached-file-chip">
-                                        <span className="ai-file-type-badge">DOCX</span>
-                                        <span className="ai-attached-file-name">{fileName}</span>
-                                        <button className="ai-file-delete-btn" onClick={() => setFileAttached(false)}>
-                                            <X size={12} />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <span className="ai-no-file-text">첨부된 파일이 없습니다.</span>
-                                )}
+                        <div className="ai-card" style={{ padding: '20px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                                <div>
+                                    <div className="ai-step-badge-tag blue">STEP 1</div>
+                                    <span className="ai-step-badge-title">원본 워드 설문지 첨부</span>
+                                    <span className="ai-step-badge-desc">.docx / 최대 20MB · 분석 후 자동 폐기</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8', fontWeight: 500 }}>
+                                    <span style={{ fontSize: '12px' }}>💡 파일 첨부 후 병합을 실행하면 아래 프로젝트 정보가 자동 추출됩니다.</span>
+                                </div>
                             </div>
 
-                            <div className="ai-info-box-row">
-                                <div className="ai-info-icon-text">
-                                    <Sparkles size={14} className="ai-spark-yellow" />
-                                    <span>파일 첨부 후 분석을 실행하면 아래 프로젝트 정보가 자동 추출됩니다.</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, marginRight: '16px' }}>
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileChange}
+                                        accept=".docx,.doc"
+                                        style={{ display: 'none' }}
+                                    />
+                                    <button className="ai-upload-btn" onClick={() => fileInputRef.current?.click()} style={{ padding: '6px 12px', fontSize: '12.5px', height: '32px' }}>
+                                        <Paperclip size={13} />
+                                        <span>설문지 첨부</span>
+                                    </button>
+
+                                    {fileAttached ? (
+                                        <div className="ai-attached-file-chip" style={{ padding: '3px 8px', borderRadius: '4px', gap: '6px', height: '32px' }}>
+                                            <span className="ai-attached-file-name" style={{ fontSize: '12.5px' }}>{fileName}</span>
+                                            <button className="ai-file-delete-btn" onClick={() => {
+                                                setFileAttached(false);
+                                                setFileName("");
+                                                setSelectedFile(null);
+                                                setPollingInfo(null);
+                                                if (pollingIntervalId) clearInterval(pollingIntervalId);
+                                                if (fileInputRef.current) fileInputRef.current.value = "";
+                                            }}>
+                                                <X size={10} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <span className="ai-no-file-text" style={{ fontSize: '12.5px' }}>첨부된 파일이 없습니다. 설문지 파일을 첨부해 주세요.</span>
+                                    )}
                                 </div>
-                                <div className="ai-info-actions">
-                                    <button className="ai-info-reset-btn" onClick={() => setFileAttached(false)}>초기화</button>
-                                    <button className="ai-info-start-btn" onClick={handleStartAnalysisFile} disabled={isAnalyzing}>
+
+                                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                                    <button className="ai-info-reset-btn" onClick={handleReset} style={{ padding: '6px 12px', fontSize: '12.5px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>초기화</button>
+                                    <button className="ai-info-start-btn" onClick={handleStartAnalysisFile} disabled={isAnalyzing} style={{ padding: '6px 12px', fontSize: '12.5px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                                         {isAnalyzing ? (
                                             <>
-                                                <Loader2 className="animate-spin" size={14} />
+                                                <Loader2 className="animate-spin" size={13} />
                                                 <span>분석 중... ({analysisProgress}%)</span>
                                             </>
                                         ) : (
                                             <>
-                                                <Play size={12} fill="white" />
+                                                <Play size={10} fill="white" />
                                                 <span>분석 시작</span>
                                             </>
                                         )}
                                     </button>
                                 </div>
                             </div>
-                        </div>
 
+                            {/* 설문 구조 분석 · 3단 변수 병합 진행 상황 (STEP 1 내부 영역으로 통합) */}
+                            {isAnalyzing && pollingInfo && (
+                                <div style={{
+                                    marginTop: '16px',
+                                    border: '1px solid #e2e8f0',
+                                    background: '#f1f5f9',
+                                    padding: '16px',
+                                    borderRadius: '8px'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            {pollingInfo.status === 'completed' || pollingInfo.progress === 100 ? (
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '16px', height: '16px', borderRadius: '50%', background: '#10b981', color: '#fff' }}>
+                                                    <Check size={9} strokeWidth={3} />
+                                                </div>
+                                            ) : (
+                                                <Loader2 className="animate-spin" size={14} color="#2f5597" />
+                                            )}
+                                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>
+                                                설문 구조 분석 · 3단 변수 병합 진행 중
+                                            </span>
+                                        </div>
+                                        <div style={{ fontSize: '11px', fontWeight: 500, color: '#64748b' }}>
+                                            ⏱ {(() => {
+                                                const sec = pollingInfo.elapsed_time_seconds || 0;
+                                                const mm = String(Math.floor(sec / 60)).padStart(2, '0');
+                                                const ss = String(sec % 60).padStart(2, '0');
+                                                return `${mm}:${ss}`;
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', padding: '0 10px', position: 'relative' }}>
+                                        <div style={{ position: 'absolute', top: '13px', left: '40px', right: '40px', height: '2px', background: '#e2e8f0', zIndex: 1 }}></div>
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '13px',
+                                            left: '40px',
+                                            width: `${Math.min(100, Math.max(0, (pollingInfo.current_step_index / (pollingInfo.total_steps - 1)) * 100))}%`,
+                                            height: '2px',
+                                            background: '#4f46e5',
+                                            zIndex: 1,
+                                            transition: 'width 0.4s ease'
+                                        }}></div>
+
+                                        {(pollingInfo.steps || [
+                                            { step: 1, label: "1단계: 설문지 분석", status: "pending" },
+                                            { step: 2, label: "2단계: 조사개요 분석", status: "pending" },
+                                            { step: 3, label: "3단계: 3단 변수 병합 처리", status: "pending" },
+                                            { step: 4, label: "4단계: 분석 프레임 구성", status: "pending" }
+                                        ]).map((stepItem, sIdx) => {
+                                            const isStepCompleted = stepItem.status === 'completed';
+                                            const isStepProcessing = stepItem.status === 'processing';
+                                            const labelText = stepItem.label && stepItem.label.includes(':')
+                                                ? stepItem.label.split(':')[1].trim()
+                                                : (stepItem.label || '');
+
+                                            return (
+                                                <div key={sIdx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 2, width: '80px' }}>
+                                                    <div style={{
+                                                        width: '24px',
+                                                        height: '24px',
+                                                        borderRadius: '50%',
+                                                        background: isStepCompleted ? '#10b981' : (isStepProcessing ? '#3b82f6' : '#ffffff'),
+                                                        border: isStepCompleted ? 'none' : (isStepProcessing ? '2px solid #3b82f6' : '2px solid #cbd5e1'),
+                                                        color: isStepCompleted ? '#ffffff' : (isStepProcessing ? '#ffffff' : '#64748b'),
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: '11px',
+                                                        fontWeight: 600,
+                                                        boxShadow: isStepProcessing ? '0 0 0 2px rgba(59, 130, 246, 0.15)' : 'none',
+                                                        transition: 'all 0.3s ease'
+                                                    }}>
+                                                        {isStepCompleted ? <Check size={10} strokeWidth={3} /> : stepItem.step}
+                                                    </div>
+                                                    <span style={{
+                                                        fontSize: '10px',
+                                                        fontWeight: isStepProcessing ? 600 : 500,
+                                                        color: isStepProcessing ? '#1e2b4f' : (isStepCompleted ? '#475569' : '#94a3b8'),
+                                                        marginTop: '5px',
+                                                        textAlign: 'center',
+                                                        whiteSpace: 'nowrap'
+                                                    }}>
+                                                        {labelText}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <div style={{ background: '#ffffff', padding: '10px 14px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', fontSize: '11.5px' }}>
+                                            <span style={{ fontWeight: 500, color: '#475569' }}>
+                                                {pollingInfo.step_info?.description || '설문지 분석 중...'}
+                                            </span>
+                                            <span style={{ fontWeight: 600, color: '#2f5597' }}>
+                                                {pollingInfo.progress}%
+                                            </span>
+                                        </div>
+                                        <div style={{ height: '4px', background: '#e2e8f0', borderRadius: '2px', overflow: 'hidden' }}>
+                                            <div style={{
+                                                width: `${pollingInfo.progress}%`,
+                                                height: '100%',
+                                                background: 'linear-gradient(90deg, #3b82f6, #6366f1)',
+                                                borderRadius: '2px',
+                                                transition: 'width 0.4s ease'
+                                            }}></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                         {/* STEP 2: 프로젝트 정보 */}
                         <div className="ai-card" style={{ marginTop: '20px' }}>
                             <div className="ai-step-badge-tag blue">STEP 2</div>
@@ -300,6 +728,7 @@ const AiReportPage = () => {
                                         type="text"
                                         className="ai-field-input"
                                         value={overviewData.projectname}
+                                        placeholder="프로젝트명을 입력하거나 설문지 파일을 첨부해 주세요."
                                         onChange={(e) => setOverviewData({ ...overviewData, projectname: e.target.value })}
                                     />
                                 </div>
@@ -309,6 +738,7 @@ const AiReportPage = () => {
                                         type="text"
                                         className="ai-field-input"
                                         value={overviewData.method}
+                                        placeholder="조사 방법을 입력해 주세요. (예: 모바일 Web 조사)"
                                         onChange={(e) => setOverviewData({ ...overviewData, method: e.target.value })}
                                     />
                                 </div>
@@ -317,6 +747,7 @@ const AiReportPage = () => {
                                     <textarea
                                         className="ai-field-textarea"
                                         value={overviewData.objectives}
+                                        placeholder="조사 배경 및 목적을 입력해 주세요."
                                         onChange={(e) => setOverviewData({ ...overviewData, objectives: e.target.value })}
                                         style={{ minHeight: '80px' }}
                                     />
@@ -326,6 +757,7 @@ const AiReportPage = () => {
                                     <textarea
                                         className="ai-field-textarea"
                                         value={overviewData.target}
+                                        placeholder="조사 대상(모집단) 및 선정 조건 등을 입력해 주세요."
                                         onChange={(e) => setOverviewData({ ...overviewData, target: e.target.value })}
                                         style={{ minHeight: '80px' }}
                                     />
@@ -381,7 +813,7 @@ const AiReportPage = () => {
                             <div className="ai-question-table-wrap">
                                 <div className="ai-table-header">
                                     <div className="ai-th-col select-col">
-                                        <input 
+                                        <input
                                             type="checkbox"
                                             checked={questions.every(q => q.checked)}
                                             onChange={(e) => handleSelectAllQuestions(e.target.checked)}
@@ -398,14 +830,14 @@ const AiReportPage = () => {
                                     {questions
                                         .filter(q => searchQuery === "" || q.label.includes(searchQuery) || q.qnum.includes(searchQuery))
                                         .map((q) => (
-                                            <div 
-                                                key={q.id} 
+                                            <div
+                                                key={q.id}
                                                 className={`ai-table-row ${q.checked ? 'selected' : ''}`}
                                                 onClick={() => handleToggleQuestion(q.id)}
                                             >
                                                 <div className="ai-td select-col" onClick={(e) => e.stopPropagation()}>
-                                                    <input 
-                                                        type="checkbox" 
+                                                    <input
+                                                        type="checkbox"
                                                         checked={q.checked}
                                                         onChange={() => handleToggleQuestion(q.id)}
                                                     />
@@ -449,14 +881,14 @@ const AiReportPage = () => {
 
                             {/* Toggle tab buttons */}
                             <div className="ai-category-toggle-tabs">
-                                <button 
+                                <button
                                     className={`ai-toggle-tab ${categoryMode === 'ai' ? 'active' : ''}`}
                                     onClick={() => setCategoryMode('ai')}
                                 >
                                     <Sparkles size={13} />
                                     <span>AI 자동 분류</span>
                                 </button>
-                                <button 
+                                <button
                                     className={`ai-toggle-tab ${categoryMode === 'group' ? 'active' : ''}`}
                                     onClick={() => setCategoryMode('group')}
                                 >
@@ -492,7 +924,7 @@ const AiReportPage = () => {
                                 <span className="ai-panel-help-icon">?</span>
                                 <button className="ai-guideline-preset-btn">선택</button>
                             </div>
-                            <input 
+                            <input
                                 type="text"
                                 className="ai-guideline-input"
                                 value={aiGuideline}
@@ -504,7 +936,7 @@ const AiReportPage = () => {
                         {/* 분석 파이프라인 */}
                         <div className="ai-pipeline-section">
                             <h3 className="ai-section-main-title">분석 파이프라인 <span className="ai-panel-help-icon">?</span></h3>
-                            
+
                             <div className="ai-pipeline-grid">
                                 {/* Card 1 */}
                                 <div className="ai-pipeline-card">
@@ -525,7 +957,7 @@ const AiReportPage = () => {
                                         </div>
                                         <span className="ai-pipe-percent-label">{pipelineStatus.l1.progress}%</span>
                                     </div>
-                                    <button 
+                                    <button
                                         className="ai-pipe-action-btn l1-btn"
                                         onClick={() => triggerPipelineRegenerate('l1')}
                                         disabled={pipelineStatus.l1.isGenerating}
@@ -557,7 +989,7 @@ const AiReportPage = () => {
                                         </div>
                                         <span>100%</span>
                                     </div>
-                                    <button 
+                                    <button
                                         className="ai-pipe-action-btn l2-btn"
                                         onClick={() => triggerPipelineRegenerate('l2')}
                                         disabled={pipelineStatus.l2.isGenerating}
@@ -589,7 +1021,7 @@ const AiReportPage = () => {
                                         </div>
                                         <span>100%</span>
                                     </div>
-                                    <button 
+                                    <button
                                         className="ai-pipe-action-btn l3-btn"
                                         onClick={() => triggerPipelineRegenerate('l3')}
                                         disabled={pipelineStatus.l3.isGenerating}
@@ -605,21 +1037,21 @@ const AiReportPage = () => {
                             {/* Tabs row */}
                             <div className="ai-detail-tabs-row">
                                 <div className="ai-detail-tabs">
-                                    <button 
+                                    <button
                                         className={`ai-detail-tab ${activeSubTab === 'l1' ? 'active' : ''}`}
                                         onClick={() => setActiveSubTab('l1')}
                                     >
                                         <div className="tab-dot blue"></div>
                                         <span>L1 문항별 인사이트</span>
                                     </button>
-                                    <button 
+                                    <button
                                         className={`ai-detail-tab ${activeSubTab === 'l2' ? 'active' : ''}`}
                                         onClick={() => setActiveSubTab('l2')}
                                     >
                                         <div className="tab-dot green"></div>
                                         <span>L2 조사내용별 분석</span>
                                     </button>
-                                    <button 
+                                    <button
                                         className={`ai-detail-tab ${activeSubTab === 'l3' ? 'active' : ''}`}
                                         onClick={() => setActiveSubTab('l3')}
                                     >
@@ -629,13 +1061,13 @@ const AiReportPage = () => {
                                 </div>
 
                                 <div className="ai-detail-actions">
-                                    <span className="ai-detail-status-count">요약 완료 <strong>331 / 331 문항</strong></span>
-                                    
+                                    <span className="ai-detail-status-count">요약 완료 <strong>{Object.keys(insightData.l1 || {}).length} / {questions.length} 문항</strong></span>
+
                                     <div className="ai-detail-search-wrap">
                                         <Search size={13} className="ai-detail-search-icon" />
-                                        <input 
-                                            type="text" 
-                                            className="ai-detail-search-input" 
+                                        <input
+                                            type="text"
+                                            className="ai-detail-search-input"
                                             placeholder="문항 ID 또는 이름 검색"
                                             value={l1SearchQuery}
                                             onChange={(e) => setL1SearchQuery(e.target.value)}
@@ -652,55 +1084,186 @@ const AiReportPage = () => {
 
                             {/* Report content blocks */}
                             <div className="ai-report-blocks-wrap">
-                                {activeSubTab === 'l1' ? (
-                                    <div className="ai-block-card">
-                                        {/* Card Header Accordion style */}
-                                        <div className="ai-block-header" onClick={() => setIsL1CardExpanded(!isL1CardExpanded)}>
-                                            <div className="ai-block-header-left">
-                                                <span className="ai-block-q-id">q100_stub</span>
-                                                <h4 className="ai-block-q-title">PQ2. 참여 세션 구분</h4>
-                                                <span className="ai-block-done-badge">요약 완료</span>
+                                {activeSubTab === 'l1' && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        {Object.keys(insightData.l1 || {}).length === 0 ? (
+                                            <div className="ai-block-empty-state">
+                                                <span>조회된 L1 문항별 인사이트가 없습니다.</span>
                                             </div>
-                                            <div className="ai-block-header-right">
-                                                {isL1CardExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                            </div>
-                                        </div>
+                                        ) : (
+                                            Object.keys(insightData.l1 || {}).map((qKey) => {
+                                                const l1Val = insightData.l1[qKey];
+                                                const matchingQ = questions.find(q => q.id === qKey || q.qnum === qKey);
+                                                const qTitle = matchingQ ? `${matchingQ.qnum}. ${matchingQ.label}` : qKey;
 
-                                        {/* Card Body */}
-                                        {isL1CardExpanded && (
-                                            <div className="ai-block-body">
-                                                {/* Bullet 1: 정당 집계 요약 */}
-                                                <div className="ai-insight-bullet">
-                                                    <div className="ai-bullet-title-row">
-                                                        <span className="ai-bullet-num-badge">1</span>
-                                                        <span className="ai-bullet-title-text">정당 집계 요약</span>
-                                                        <span className="ai-panel-help-icon">?</span>
-                                                    </div>
-                                                    <p className="ai-bullet-body-content">
-                                                        연령 및 라이프스테이지별로 응답 세션의 편차가 존재하며, 특히 공기청정기 미사용자와 교체/추가 구매자 간의 세션 분포 격차가 뚜렷함. 제품 선호도 및 CMF 비교 데이터는 특정 세션과 사용자 특성에 따라 분산되어 나타남
-                                                    </p>
-                                                </div>
+                                                if (l1SearchQuery && !qKey.toLowerCase().includes(l1SearchQuery.toLowerCase()) && !qTitle.toLowerCase().includes(l1SearchQuery.toLowerCase())) {
+                                                    return null;
+                                                }
 
-                                                {/* Bullet 2: 응답자 특성 요약 */}
-                                                <div className="ai-insight-bullet" style={{ marginTop: '16px' }}>
-                                                    <div className="ai-bullet-title-row">
-                                                        <span className="ai-bullet-num-badge">2</span>
-                                                        <span className="ai-bullet-title-text">응답자 특성 요약</span>
-                                                        <span className="ai-panel-help-icon">?</span>
+                                                const isExpanded = !!expandedL1Cards[qKey];
+
+                                                return (
+                                                    <div className="ai-block-card" key={qKey}>
+                                                        <div className="ai-block-header" onClick={() => {
+                                                            setExpandedL1Cards(prev => ({ ...prev, [qKey]: !prev[qKey] }));
+                                                        }}>
+                                                            <div className="ai-block-header-left">
+                                                                <span className="ai-block-q-id">{qKey}</span>
+                                                                <h4 className="ai-block-q-title">{qTitle}</h4>
+                                                                <span className="ai-block-done-badge">요약 완료</span>
+                                                            </div>
+                                                            <div className="ai-block-header-right">
+                                                                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                                            </div>
+                                                        </div>
+
+                                                        {isExpanded && (
+                                                            <div className="ai-block-body">
+                                                                {l1Val.fact_summary && (
+                                                                    <div className="ai-insight-bullet">
+                                                                        <div className="ai-bullet-title-row">
+                                                                            <span className="ai-bullet-num-badge">1</span>
+                                                                            <span className="ai-bullet-title-text">정량 집계 요약</span>
+                                                                            <span className="ai-panel-help-icon">?</span>
+                                                                        </div>
+                                                                        <p className="ai-bullet-body-content">
+                                                                            {l1Val.fact_summary}
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+
+                                                                {l1Val.segment_insights && (
+                                                                    <div className="ai-insight-bullet" style={{ marginTop: '16px' }}>
+                                                                        <div className="ai-bullet-title-row">
+                                                                            <span className="ai-bullet-num-badge">2</span>
+                                                                            <span className="ai-bullet-title-text">세그먼트 특징 요약</span>
+                                                                            <span className="ai-panel-help-icon">?</span>
+                                                                        </div>
+                                                                        <p className="ai-bullet-body-content">
+                                                                            {l1Val.segment_insights}
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+
+                                                                {l1Val.respondent_characteristics && (
+                                                                    <div className="ai-insight-bullet" style={{ marginTop: '16px' }}>
+                                                                        <div className="ai-bullet-title-row">
+                                                                            <span className="ai-bullet-num-badge">{l1Val.segment_insights ? '3' : '2'}</span>
+                                                                            <span className="ai-bullet-title-text">응답자 특성 요약</span>
+                                                                            <span className="ai-panel-help-icon">?</span>
+                                                                        </div>
+                                                                        <div className="ai-insight-result-box">
+                                                                            <span className="ai-result-purple-chip">집단 분석 결과</span>
+                                                                            <p className="ai-result-text">
+                                                                                {l1Val.respondent_characteristics}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                    <div className="ai-insight-result-box">
-                                                        <span className="ai-result-purple-chip">연령(세대)(G1)</span>
-                                                        <p className="ai-result-text">
-                                                            <strong>41.7% (30대)</strong> vs 16.7% (20대) / 25.0p.p 격차 30대 집단에서 2세션 응답률이 가장 높게 나타나며, 20대 집단은 3세션 응답률이 100%로 집중됨
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                                );
+                                            })
                                         )}
                                     </div>
-                                ) : (
-                                    <div className="ai-block-empty-state">
-                                        <span>선택한 레벨({activeSubTab.toUpperCase()})의 리포트 조회가 활성화되었습니다.</span>
+                                )}
+
+                                {activeSubTab === 'l2' && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        {(!insightData.l2 || insightData.l2.length === 0) ? (
+                                            <div className="ai-block-empty-state">
+                                                <span>조회된 L2 조사내용별 분석결과가 없습니다.</span>
+                                            </div>
+                                        ) : (
+                                            insightData.l2.map((catItem, idx) => (
+                                                <div className="ai-block-card" key={idx}>
+                                                    <div className="ai-block-header">
+                                                        <div className="ai-block-header-left">
+                                                            <span className="ai-block-q-id" style={{ background: '#ecfdf5', color: '#059669', padding: '2px 8px' }}>L2 Category</span>
+                                                            <h4 className="ai-block-q-title">{catItem.category_name}</h4>
+                                                            <span className="ai-block-done-badge" style={{ background: '#ecfdf5', color: '#059669' }}>분석 완료</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="ai-block-body">
+                                                        {catItem.insights?.core_finding && (
+                                                            <div className="ai-insight-bullet">
+                                                                <div className="ai-bullet-title-row">
+                                                                    <span className="ai-bullet-num-badge" style={{ background: '#10b981' }}>1</span>
+                                                                    <span className="ai-bullet-title-text">핵심 발견 (Core Finding)</span>
+                                                                </div>
+                                                                <p className="ai-bullet-body-content">
+                                                                    {catItem.insights.core_finding}
+                                                                </p>
+                                                            </div>
+                                                        )}
+
+                                                        {catItem.insights?.hypothesis_result && (
+                                                            <div className="ai-insight-bullet" style={{ marginTop: '16px' }}>
+                                                                <div className="ai-bullet-title-row">
+                                                                    <span className="ai-bullet-num-badge" style={{ background: '#10b981' }}>2</span>
+                                                                    <span className="ai-bullet-title-text">가설 검증 결과 (Hypothesis Result)</span>
+                                                                </div>
+                                                                <p className="ai-bullet-body-content">
+                                                                    {catItem.insights.hypothesis_result}
+                                                                </p>
+                                                            </div>
+                                                        )}
+
+                                                        {catItem.insights?.so_what && (
+                                                            <div className="ai-insight-bullet" style={{ marginTop: '16px' }}>
+                                                                <div className="ai-bullet-title-row">
+                                                                    <span className="ai-bullet-num-badge" style={{ background: '#8b5cf6' }}>So What</span>
+                                                                    <span className="ai-bullet-title-text">전략적 시사점</span>
+                                                                </div>
+                                                                <div className="ai-insight-result-box" style={{ background: '#f5f3ff', borderLeftColor: '#8b5cf6', padding: '12px 16px' }}>
+                                                                    <p className="ai-result-text" style={{ color: '#4c1d95', margin: 0 }}>
+                                                                        {catItem.insights.so_what}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+
+                                {activeSubTab === 'l3' && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                        {/* Executive Summary Card */}
+                                        <div className="ai-card" style={{ padding: '24px', background: '#f1f5f9', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                                                <span style={{ fontSize: '20px' }}>📋</span>
+                                                <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', margin: 0 }}>Executive Summary (종합 의사결정 요약문)</h3>
+                                            </div>
+                                            <p style={{ fontSize: '13px', lineHeight: '1.7', color: '#334155', margin: 0, whiteSpace: 'pre-wrap' }}>
+                                                {insightData.l3?.executive_summary}
+                                            </p>
+                                        </div>
+
+                                        {/* Strategic Recommendations Card */}
+                                        <div className="ai-card" style={{ padding: '24px', background: '#f0fdf4', borderRadius: '12px', border: '1px solid #dcfce7', boxShadow: 'none' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                                                <span style={{ fontSize: '20px' }}>💡</span>
+                                                <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#14532d', margin: 0 }}>Strategic Recommendations (전략적 제안 및 실행 과제)</h3>
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                {Array.isArray(insightData.l3?.strategic_recommendations) ? (
+                                                    insightData.l3.strategic_recommendations.map((rec, rIdx) => (
+                                                        <div key={rIdx} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                                                            <span style={{ color: '#16a34a', fontWeight: 'bold' }}>✓</span>
+                                                            <p style={{ fontSize: '13px', lineHeight: '1.5', color: '#1b4332', margin: 0 }}>{rec}</p>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <p style={{ fontSize: '13px', lineHeight: '1.6', color: '#1b4332', margin: 0, whiteSpace: 'pre-wrap' }}>
+                                                        {insightData.l3?.strategic_recommendations}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -781,7 +1344,7 @@ const AiReportPage = () => {
             </DataHeader>
 
             {/* 단계별 내용 */}
-            <div style={{ flex: 1, overflow: 'auto', boxSizing: 'border-box' }}>
+            <div style={{ flex: 1, overflow: 'auto', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', background: '#f1f5f9' }}>
                 {renderContent()}
             </div>
         </div>
