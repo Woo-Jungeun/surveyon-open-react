@@ -282,6 +282,15 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/ai-summary/upload-progress", "API_BASE_URL_DATASTATUS")
     );
 
+    /** AI 요약보고서 - 분석 프레임 저장 */
+    const saveAiSummaryFrame = useMutation(
+        async (data) => await api.post(data, "/ai-summary/save-frame", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     /** 교차분석 - AI 데이터 요약 조회 */
     const getCrosstabAiSummary = useMutation(
         async (data) => await api.post(data, "/analysis/evaluate/crosstab-ai-summary", "API_BASE_URL_DATASTATUS")
@@ -363,6 +372,7 @@ export function DpRequestPageApi() {
         getAiSummaryData,
         uploadQuestionnaire,
         getUploadProgress,
+        saveAiSummaryFrame,
         getCrosstabAiSummary,
         getCrosstabAiSummaryAll,
         cancelCrosstabAiSummary,

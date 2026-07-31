@@ -8,17 +8,16 @@ import {
 } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import DataHeader from "@/services/dataStatus/components/DataHeader";
-import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+
 import { modalContext } from "@/components/common/Modal.jsx";
 import { DpRequestPageApi } from "@/services/dataStatus/app/hsrt/dpRequest/DpRequestPageApi";
 
 import './AiReportPage.css';
 
 const AiReportPage = () => {
-    const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
-    const { getAiModels, getAiSummaryData, uploadQuestionnaire, getUploadProgress } = DpRequestPageApi();
+    const { getAiModels, getAiSummaryData, uploadQuestionnaire, getUploadProgress, saveAiSummaryFrame } = DpRequestPageApi();
     const fileInputRef = useRef(null);
 
     const [currentStep, setCurrentStep] = useState(0);
@@ -198,15 +197,15 @@ const AiReportPage = () => {
                 } catch (e) { console.error("Error parsing insightData:", e); }
 
                 // 1. Step 1: Overview
-                if (parsedVariablesData.project_info) {
-                    const pi = parsedVariablesData.project_info;
-                    setOverviewData({
-                        projectname: pi.projectName || pi.projectname || sessionStorage.getItem("projectname") || "조사명 없음",
-                        method: pi.method || "",
-                        objectives: pi.research_purpose || pi.objectives || "",
-                        target: pi.target_population || pi.target || ""
-                    });
-                }
+                // 1. Step 1: Overview
+                const piFrame = parsedAnalysisFrame || {};
+                const piVar = parsedVariablesData.project_info || {};
+                setOverviewData({
+                    projectname: piFrame.projectName || piFrame.projectname || piVar.projectName || piVar.projectname || sessionStorage.getItem("projectname") || "",
+                    method: piFrame.method || piVar.method || "",
+                    objectives: piFrame.research_purpose || piFrame.objectives || piVar.research_purpose || piVar.objectives || "",
+                    target: piFrame.target_population || piFrame.target || piVar.target_population || piVar.target || ""
+                });
 
                 // 2. Step 1: Questions
                 let finalQuestionsLength = 47;
@@ -488,14 +487,37 @@ const AiReportPage = () => {
     };
 
     // Save Page Data
-    const handleSave = () => {
-        loadingSpinner.show();
-        setTimeout(() => {
-            localStorage.setItem("ai_report_overview_v2", JSON.stringify(overviewData));
-            localStorage.setItem("ai_report_guideline", aiGuideline);
-            loadingSpinner.hide();
-            modal.showAlert("알림", "AI 요약보고서 설정이 안전하게 저장되었습니다.");
-        }, 500);
+    const handleSave = async () => {
+        const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        const pn = sessionStorage.getItem("pn") || sessionStorage.getItem("Pn") || "P001234";
+        const userId = auth?.user?.userId || "jewoo";
+
+        const frameObj = {
+            projectName: overviewData.projectname,
+            research_purpose: overviewData.objectives,
+            target_population: overviewData.target,
+            method: overviewData.method
+        };
+
+        const payload = {
+            pageId,
+            user: userId,
+            pn,
+            analysisFrame: JSON.stringify(frameObj)
+        };
+
+        try {
+            const res = await saveAiSummaryFrame.mutateAsync(payload);
+            if (String(res?.success) === '777') {
+                modal.showAlert("알림", "저장되었습니다.");
+                await loadSummaryData();
+            } else {
+                modal.showAlert("오류", res?.message || "저장에 실패하였습니다.");
+            }
+        } catch (err) {
+            console.error("Failed to save analysis frame:", err);
+            modal.showAlert("오류", "서버 통신 실패로 저장하지 못했습니다.");
+        }
     };
 
     // Reset settings
