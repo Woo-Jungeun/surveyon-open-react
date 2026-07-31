@@ -10,14 +10,14 @@ import { DropDownList } from '@progress/kendo-react-dropdowns';
 import DataHeader from "@/services/dataStatus/components/DataHeader";
 
 import { modalContext } from "@/components/common/Modal.jsx";
-import { DpRequestPageApi } from "@/services/dataStatus/app/hsrt/dpRequest/DpRequestPageApi";
+import { AiReportPageApi } from "./AiReportPageApi";
 
 import './AiReportPage.css';
 
 const AiReportPage = () => {
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
-    const { getAiModels, getAiSummaryData, uploadQuestionnaire, getUploadProgress, saveAiSummaryFrame } = DpRequestPageApi();
+    const { getAiModels, getAiSummaryData, uploadQuestionnaire, getUploadProgress, saveAiSummaryFrame } = AiReportPageApi();
     const fileInputRef = useRef(null);
 
     const [currentStep, setCurrentStep] = useState(0);

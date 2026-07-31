@@ -267,29 +267,7 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/AiSummary", "API_BASE_URL_OPENAI")
     );
 
-    /** AI 요약보고서 - 기존 분석 정보 조회 */
-    const getAiSummaryData = useMutation(
-        async (data) => await api.post(data, "/ai-summary/get-summary", "API_BASE_URL_DATASTATUS")
-    );
 
-    /** AI 요약보고서 - 설문지 업로드 및 파싱 실행 */
-    const uploadQuestionnaire = useMutation(
-        async (data) => await api.form(data, "/ai-summary/upload-questionnaire", {}, "API_BASE_URL_DATASTATUS")
-    );
-
-    /** AI 요약보고서 - 설문지 분석 진행 상황 조회 */
-    const getUploadProgress = useMutation(
-        async (data) => await api.post(data, "/ai-summary/upload-progress", "API_BASE_URL_DATASTATUS")
-    );
-
-    /** AI 요약보고서 - 분석 프레임 저장 */
-    const saveAiSummaryFrame = useMutation(
-        async (data) => await api.post(data, "/ai-summary/save-frame", "API_BASE_URL_DATASTATUS"),
-        {
-            onMutate: () => { loadingSpinner.show(); },
-            onSettled: () => { loadingSpinner.hide(); }
-        }
-    );
 
     /** 교차분석 - AI 데이터 요약 조회 */
     const getCrosstabAiSummary = useMutation(
@@ -315,10 +293,7 @@ export function DpRequestPageApi() {
         }
     );
 
-    /** AI 모델 목록 조회 API */
-    const getAiModels = useMutation(
-        async (data) => await api.post(data, "/variables/ai/models", "API_BASE_URL_DATASTATUS")
-    );
+
 
     /** DP 의뢰서 - 설정 재적용 (source_based 부모 스터브만 가능) */
     const reapplyPreset = useMutation(
@@ -369,10 +344,6 @@ export function DpRequestPageApi() {
         createSnapshot,
         savePageSettings,
         getAiSummary,
-        getAiSummaryData,
-        uploadQuestionnaire,
-        getUploadProgress,
-        saveAiSummaryFrame,
         getCrosstabAiSummary,
         getCrosstabAiSummaryAll,
         cancelCrosstabAiSummary,
@@ -383,6 +354,5 @@ export function DpRequestPageApi() {
         deleteWeight,
         saveWeightSetPid,
         autoGenerateLogic,
-        getAiModels
     };
 }
