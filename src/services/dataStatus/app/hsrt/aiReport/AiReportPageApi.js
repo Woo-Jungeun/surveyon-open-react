@@ -35,11 +35,21 @@ export function AiReportPageApi() {
         }
     );
 
+    /** AI 요약보고서 - 카테고리 자동 분류 */
+    const getAutoCategories = useMutation(
+        async (data) => await api.post(data, "/ai-summary/auto-categories", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     return {
         getAiModels,
         getAiSummaryData,
         uploadQuestionnaire,
         getUploadProgress,
-        saveAiSummaryFrame
+        saveAiSummaryFrame,
+        getAutoCategories
     };
 }

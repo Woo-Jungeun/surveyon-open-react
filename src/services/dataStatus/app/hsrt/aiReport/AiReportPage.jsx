@@ -11,17 +11,41 @@ import DataHeader from "@/services/dataStatus/components/DataHeader";
 
 import { modalContext } from "@/components/common/Modal.jsx";
 import { AiReportPageApi } from "./AiReportPageApi";
+import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
 
 import './AiReportPage.css';
+
+const CATEGORY_COLORS = [
+    '#3b82f6', // Blue
+    '#a855f7', // Purple
+    '#6366f1', // Indigo
+    '#f97316', // Orange
+    '#10b981', // Emerald Green
+    '#f43f5e', // Rose Pink
+    '#06b6d4', // Cyan
+    '#f59e0b', // Amber/Gold
+    '#ec4899', // Pink
+    '#14b8a6', // Teal
+    '#84cc16', // Lime Green
+    '#8b5cf6', // Violet
+    '#0284c7', // Sky Blue
+    '#d946ef'  // Fuchsia
+];
 
 const AiReportPage = () => {
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
-    const { getAiModels, getAiSummaryData, uploadQuestionnaire, getUploadProgress, saveAiSummaryFrame } = AiReportPageApi();
+    const { getAiModels, getAiSummaryData, uploadQuestionnaire, getUploadProgress, saveAiSummaryFrame, getAutoCategories } = AiReportPageApi();
+    const { getOverviewContext } = DpRequestPageApi();
     const fileInputRef = useRef(null);
 
     const [currentStep, setCurrentStep] = useState(0);
     const [selectedModel, setSelectedModel] = useState("");
+
+    const [isAdding, setIsAdding] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState("");
+    const [newHypothesis, setNewHypothesis] = useState("");
+    const [newKpiQuestionId, setNewKpiQuestionId] = useState(null);
 
     // LLM Models list
     const [models, setModels] = useState([]);
@@ -70,21 +94,7 @@ const AiReportPage = () => {
     // Step 2: Survey Variables Checklist State
     const [searchQuery, setSearchQuery] = useState("");
     const [typeFilter, setTypeFilter] = useState("전체 유형");
-    const [questions, setQuestions] = useState([
-        { id: 'q50_stub', qnum: 'SQ1', label: '다음 중 귀하나 가족 중 광고/리서치 회사에 종사하는 분이 계십니까?', group: 'SQ. 스크리닝 및 기본 고객 특성', type: 'SQ', subtype: 'single', viewCount: 6, checked: true },
-        { id: 'q100_stub', qnum: 'SQ2', label: '귀하의 성별은 무엇입니까?', group: 'SQ. 스크리닝 및 기본 고객 특성', type: 'SQ', subtype: 'single', viewCount: 3, checked: true },
-        { id: 'q150_stub', qnum: 'SQ3', label: '귀하의 연령대는 어떻게 되십니까?', group: 'SQ. 스크리닝 및 기본 고객 특성', type: 'SQ', subtype: 'single', viewCount: 5, checked: true },
-        { id: 'q200_stub', qnum: 'SQ4', label: '최근 3개월 이내 휴대용 공기청정기를 직접 구매하거나 사용해 보신 적이 있습니까?', group: 'SQ. 스크리닝 및 기본 고객 특성', type: 'SQ', subtype: 'single', viewCount: 3, checked: true },
-        { id: 'q250_stub', qnum: 'SQ5', label: '귀하가 주로 사용하는 공기청정기의 제품 이용 형태는 무엇입니까?', group: 'SQ. 스크리닝 및 기본 고객 특성', type: 'SQ', subtype: 'single', viewCount: 4, checked: true },
-        { id: 'q300_stub', qnum: 'SQ6', label: '귀하가 현재 사용 중인 공기청정기 브랜드를 계속 유지하려는 이유는 무엇입니까?', group: 'SQ. 스크리닝 및 기본 고객 특성', type: 'SQ', subtype: 'rank', viewCount: 14, checked: true },
-        { id: 'q300_stub_(1)', qnum: 'SQ6', label: '귀하가 현재 사용 중인 공기청정기 브랜드를 계속 유지하려는 이유는 무엇입니까? (1순위)', group: 'SQ. 스크리닝 및 기본 고객 특성', type: 'SQ', subtype: 'rank', viewCount: 15, checked: true },
-        { id: 'q300_stub_(1+2)', qnum: 'SQ6', label: '귀하가 현재 사용 중인 공기청정기 브랜드를 계속 유지하려는 이유는 무엇입니까? (1+2순위)', group: 'SQ. 스크리닝 및 기본 고객 특성', type: 'SQ', subtype: 'rank', viewCount: 15, checked: true },
-        { id: 'q300_stub_(1+2+3)', qnum: 'SQ6', label: '귀하가 현재 사용 중인 공기청정기 브랜드를 계속 유지하려는 이유는 무엇입니까? (1+2+3순위)', group: 'SQ. 스크리닝 및 기본 고객 특성', type: 'SQ', subtype: 'rank', viewCount: 15, checked: true },
-        { id: 'q350_stub', qnum: 'SQ7', label: '귀하가 사용 중인 공기청정기의 주요 기능 중 가장 만족하는 기능은 무엇입니까?', group: 'SQ. 스크리닝 및 기본 고객 특성', type: 'SQ', subtype: 'single', viewCount: 103, checked: true },
-        { id: 'q400_stub', qnum: 'SQ8', label: '귀하가 사용 중인 공기청정기의 크기나 가용 면적은 어떻게 됩니까?', group: 'SQ. 스크리닝 및 기본 고객 특성', type: 'SQ', subtype: 'single', viewCount: 6, checked: true },
-        { id: 'q450_stub', qnum: 'SQ9', label: '귀하가 가입하신 공기청정기 렌탈/구매 상품의 요금제는 무엇입니까?', group: 'SQ. 스크리닝 및 기본 고객 특성', type: 'SQ', subtype: 'single', viewCount: 95, checked: true },
-        { id: 'q500_stub', qnum: 'SQ10', label: '귀하가 가입하신 공기청정기 상품의 렌탈 요금제 유형은 무엇입니까?', group: 'SQ. 스크리닝 및 기본 고객 특성', type: 'SQ', subtype: 'single', viewCount: 7, checked: true },
-    ]);
+    const [questions, setQuestions] = useState([]);
 
     // Right side Category settings
     const [fileAttached, setFileAttached] = useState(false);
@@ -95,52 +105,23 @@ const AiReportPage = () => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisProgress, setAnalysisProgress] = useState(0);
 
-    const [categoryMode, setCategoryMode] = useState("ai"); // 'ai' or 'group'
-    const [categories, setCategories] = useState([
-        { id: 1, title: '스크리닝·고객 특성', desc: '응답 표본의 인구통계·이용 경험 분포를 정의하는 기준 문항군.', count: 5, color: '#3b82f6' },
-        { id: 2, title: '통신사 유지 인식', desc: '통신사 유지 이유의 우선순위가 전환 저항의 핵심 동인이다.', count: 4, color: '#a855f7' },
-        { id: 3, title: '단말기·요금제 현황', desc: '현재 단말기·요금제 구성이 기기변경 니즈의 배경이 된다.', count: 4, color: '#6366f1' },
-        { id: 4, title: '기기변경 여정·채널', desc: '정보 탐색 채널의 순서와 구매 채널 선택이 전환에 직접 영향을 준다.', count: 9, color: '#f97316' },
-        { id: 5, title: 'TDS 전환 트리거', desc: '할인 쿠폰 안내·장단점 인식이 TDS 전환의 트리거로 작동한다.', count: 8, color: '#10b981' },
-        { id: 6, title: 'TDS 구매 확신도', desc: '실납부 금액·혜택 요약의 명확성이 구매 확신을 좌우한다.', count: 7, color: '#f43f5e' },
-        { id: 7, title: 'TDS 이탈·저해 요인', desc: '여정별 만족도 저하 지점이 이탈·채널 전환의 원인이다.', count: 10, color: '#14b8a6' },
-    ]);
+    const [categories, setCategories] = useState([]);
+    const [isAiCategorized, setIsAiCategorized] = useState(false);
+    const [selectedCategoryId, setSelectedCategoryId] = useState(null);
 
     // Fallback Mock data definitions
-    const defaultL1 = {
-        "q100_stub": {
-            "fact_summary": "연령 및 라이프스테이지별로 응답 세션의 편차가 존재하며, 특히 공기청정기 미사용자와 교체/추가 구매자 간의 세션 분포 격차가 뚜렷함. 제품 선호도 및 CMF 비교 데이터는 특정 세션과 사용자 특성에 따라 분산되어 나타남",
-            "segment_insights": "세그먼트 간 응답 차이가 뚜렷하게 관찰되며, 일부 기능에 대한 선호 편차가 나타남",
-            "respondent_characteristics": "연령(세대)(G1) 41.7% (30대) vs 16.7% (20대) / 25.0p.p 격차 30대 집단에서 2세션 응답률이 가장 높게 나타나며, 20대 집단은 3세션 응답률이 100%로 집중됨"
-        }
-    };
+    const defaultL1 = {};
 
-    const defaultL2 = [
-        {
-            "category_name": "스크리닝·고객 특성",
-            "insights": {
-                "core_finding": "30대 기혼 가구의 휴대용 공기청정기 구매 비중이 가장 높으며, 주요 구매 채널은 온라인 쇼핑몰로 집계됨",
-                "hypothesis_result": "연령대별 구매 채널 분포 가설(30대 온라인 집중)이 95% 신뢰수준에서 통계적으로 유의미하게 지지됨",
-                "so_what": "30대 기혼 타겟을 대상으로 모바일 혜택 강조 및 온라인 특가 패키지 프로모션을 우선적으로 집중 전개할 필요가 있음"
-            }
-        }
-    ];
+    const defaultL2 = [];
 
-    const defaultL3 = {
-        "executive_summary": "본 조사는 신규 출시 예정인 월핏 공기청정기의 제품 만족도 및 속성 평가를 목표로 수행되었습니다. 분석 결과 30대 핵심 실사용자 층에서 공기청정 성능과 소음 항목에 대한 높은 선호도가 관측되었습니다. 다만 가격 저항선이 다소 보수적으로 형성되어 있어 렌탈 및 장기 할부 모델 위주의 상품 구성이 필요할 것으로 판단됩니다.",
-        "strategic_recommendations": [
-            "1. 공기 청정 필터 성능 중심의 디지털 콘텐츠 캠페인 구성",
-            "2. 초기 구매 장벽 완화를 위한 렌탈 전용 라인업 기획",
-            "3. 오프라인 시연 존 확대를 통한 고객 실제 체감 경험 강화"
-        ]
-    };
+    const defaultL3 = {};
 
     // Step 3: Final Analysis state
     const [aiGuideline, setAiGuideline] = useState("백분율은 소수점 첫째 자리까지 표기하고, 집단 간 차이가 큰 항목을 우선 서술");
     const [pipelineStatus, setPipelineStatus] = useState({
-        l1: { progress: 100, countText: "331 / 331 문항", isDone: true, isGenerating: false },
-        l2: { progress: 100, countText: "9개 카테고리", isDone: true, isGenerating: false },
-        l3: { progress: 100, countText: "보고서 추출 가능", isDone: true, isGenerating: false }
+        l1: { progress: 0, countText: "0문항", isDone: false, isGenerating: false },
+        l2: { progress: 0, countText: "0개 카테고리", isDone: false, isGenerating: false },
+        l3: { progress: 0, countText: "분석 대기 중", isDone: false, isGenerating: false }
     });
     const [activeSubTab, setActiveSubTab] = useState("l1"); // 'l1', 'l2', 'l3'
     const [l1SearchQuery, setL1SearchQuery] = useState("");
@@ -168,6 +149,7 @@ const AiReportPage = () => {
             const res = await getAiSummaryData.mutateAsync({ pageId, user: userId });
             if (String(res?.success) === '777' && res?.resultjson) {
                 const item = res.resultjson;
+                setIsAiCategorized(false);
 
                 let parsedVariablesData = {};
                 let parsedAnalysisFrame = {};
@@ -207,26 +189,55 @@ const AiReportPage = () => {
                     target: piFrame.target_population || piFrame.target || piVar.target_population || piVar.target || ""
                 });
 
-                // 2. Step 1: Questions
-                let finalQuestionsLength = 47;
-                if (parsedVariablesData.variables) {
-                    const variablesList = Array.isArray(parsedVariablesData.variables)
-                        ? parsedVariablesData.variables
-                        : Object.values(parsedVariablesData.variables);
-                    if (variablesList.length > 0) {
-                        const mappedQuestions = variablesList.map((v, vIdx) => ({
-                            id: v.VarId || v.Qnum || `var_${vIdx}`,
-                            qnum: v.Qnum || '',
-                            label: v.Qtext || v.Label || '',
-                            group: v.SectionName || '기타',
-                            type: v.Qtype || v.Type || 'SQ',
-                            subtype: v.Qsubtype || 'single',
-                            viewCount: v.Options?.length || 0,
-                            checked: true
-                        }));
+                // 2. Step 1: Questions (Load recoded_variables from overview context)
+                let finalQuestionsLength = 0;
+                try {
+                    const contextRes = await getOverviewContext.mutateAsync({ pageid: pageId, user: userId });
+                    const ctxPayload = contextRes?.resultjson || contextRes || {};
+                    const recodedVars = ctxPayload.recoded_variables || {};
+
+                    const mappedQuestions = Object.entries(recodedVars)
+                        .filter(([key, v]) => {
+                            const varId = String(v?.id ?? key).toLowerCase();
+                            return !varId.startsWith("weight_") && varId !== "banner";
+                        })
+                        .map(([key, v]) => {
+                            const varId = v?.id || key;
+                            const labelStr = v?.label || '';
+                            let qnumVal = '';
+                            let labelVal = labelStr;
+
+                            const dotIndex = labelStr.indexOf('.');
+                            if (dotIndex !== -1 && dotIndex < 10) {
+                                const possibleQnum = labelStr.substring(0, dotIndex).trim();
+                                if (/^[A-Za-z0-9\-_]+$/.test(possibleQnum)) {
+                                    qnumVal = possibleQnum;
+                                    labelVal = labelStr.substring(dotIndex + 1).trim();
+                                }
+                            }
+
+                            const stubVar = parsedVariablesData.variables?.[varId] || {};
+                            const sectionName = v?.SectionName || v?.sectionName || stubVar.SectionName || '기타';
+                            const optionsList = Array.isArray(v?.info) ? v.info : (Array.isArray(v?.Options) ? v.Options : []);
+
+                            return {
+                                id: varId,
+                                qnum: qnumVal || varId,
+                                label: labelVal,
+                                group: sectionName,
+                                type: v?.type || v?.qtype || v?.recoded_type || 'single',
+                                subtype: v?.type || v?.qtype || v?.recoded_type || 'single',
+                                viewCount: optionsList.length,
+                                checked: false
+                            };
+                        });
+
+                    if (mappedQuestions.length > 0) {
                         setQuestions(mappedQuestions);
                         finalQuestionsLength = mappedQuestions.length;
                     }
+                } catch (e) {
+                    console.error("Error loading recoded variables:", e);
                 }
 
                 // 3. Step 2: Categories
@@ -236,9 +247,12 @@ const AiReportPage = () => {
                         id: idx + 1,
                         title: cat.category_name || '',
                         desc: cat.hypothesis || '가설 검증 및 문항 분석',
+                        qnums: Array.isArray(cat.qnums) ? cat.qnums : [],
                         count: cat.qnums?.length || 0,
-                        color: ['#3b82f6', '#a855f7', '#6366f1', '#f97316', '#10b981', '#f43f5e', '#14b8a6'][idx % 7]
+                        color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
+                        kpi_question_id: cat.kpi_question_id || null
                     }));
+                    setSelectedCategoryId(null);
                     setCategories(mappedCategories);
                     finalCategoriesLength = mappedCategories.length;
                 }
@@ -454,7 +468,7 @@ const AiReportPage = () => {
                     type: v.Qtype || v.Type || 'SQ',
                     subtype: v.Qsubtype || 'single',
                     viewCount: v.Options?.length || 0,
-                    checked: true
+                    checked: false
                 }));
                 setQuestions(mappedQuestions);
             }
@@ -520,6 +534,52 @@ const AiReportPage = () => {
         }
     };
 
+    const handleAiAutoCategorize = async () => {
+        setCategories([]); // 로딩 시작 시 기존 카테고리 데이터 비우기
+        const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        const userId = auth?.user?.userId || "jewoo";
+        const modelType = selectedModel || "llm-gpt-oss-120b";
+
+        const payload = {
+            pageId,
+            modelType,
+            user: userId
+        };
+
+        try {
+            const res = await getAutoCategories.mutateAsync(payload);
+            if (String(res?.success) === '777' && res?.resultjson?.categories) {
+                const mappedCategories = (res.resultjson.categories || []).map((cat, idx) => ({
+                    id: idx + 1,
+                    title: cat.category_name || '',
+                    desc: cat.hypothesis || '가설 검증 및 문항 분석',
+                    qnums: Array.isArray(cat.qnums) ? cat.qnums : [],
+                    count: cat.qnums?.length || 0,
+                    color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
+                    kpi_question_id: cat.kpi_question_id || null
+                }));
+                setSelectedCategoryId(null);
+                setCategories(mappedCategories);
+                setIsAiCategorized(true);
+            } else {
+                modal.showAlert("오류", res?.message || "AI 자동 분류에 실패하였습니다.");
+            }
+        } catch (err) {
+            console.error("Failed to run AI auto categorization:", err);
+            modal.showAlert("오류", "서버 통신 실패로 AI 자동 분류를 실행하지 못했습니다.");
+        }
+    };
+
+    const handleRestoreOriginalCategories = async () => {
+        try {
+            await loadSummaryData();
+            modal.showAlert("알림", "기존 카테고리로 원복되었습니다.");
+        } catch (e) {
+            console.error("Failed to restore original categories:", e);
+            modal.showAlert("오류", "카테고리 원복에 실패했습니다.");
+        }
+    };
+
     // Reset settings
     const handleReset = () => {
         modal.showConfirm("알림", "AI 요약보고서 설정을 초기화하시겠습니까?", {
@@ -551,7 +611,46 @@ const AiReportPage = () => {
     };
 
     const handleAddCategory = () => {
-        modal.showAlert("알림", "새 카테고리 추가 기능이 활성화되었습니다. (시뮬레이션)");
+        setSelectedCategoryId(null);
+        setIsAdding(true);
+        setNewCategoryName("");
+        setNewHypothesis("");
+        setNewKpiQuestionId(null);
+    };
+
+    const handleSaveNewCategory = () => {
+        if (!newCategoryName.trim()) {
+            modal.showAlert("알림", "카테고리명을 입력해주세요.");
+            return;
+        }
+        const selectedQuestions = questions.filter(q => q.checked);
+        const selectedQIds = selectedQuestions.map(q => q.id);
+
+        const newId = categories.length > 0 ? Math.max(...categories.map(c => c.id)) + 1 : 1;
+        const newCat = {
+            id: newId,
+            title: newCategoryName.trim(),
+            desc: newHypothesis.trim() || '가설 검증 및 문항 분석',
+            qnums: selectedQIds,
+            count: selectedQIds.length,
+            color: CATEGORY_COLORS[(newId - 1) % CATEGORY_COLORS.length],
+            kpi_question_id: newKpiQuestionId
+        };
+
+        setCategories([newCat, ...categories]);
+        setSelectedCategoryId(newId);
+        setIsAdding(false);
+        setNewCategoryName("");
+        setNewHypothesis("");
+        setNewKpiQuestionId(null);
+        modal.showAlert("알림", "새 카테고리가 등록되었습니다.");
+    };
+
+    const handleCancelNewCategory = () => {
+        setIsAdding(false);
+        setNewCategoryName("");
+        setNewHypothesis("");
+        setNewKpiQuestionId(null);
     };
 
     // Render Steps content
@@ -788,23 +887,25 @@ const AiReportPage = () => {
                         </div>
                     </div>
                 );
-            case 1: // 조사내용
+            case 1: { // 조사내용
+                const selectedCat = categories.find(c => c.id === selectedCategoryId);
+                const isQChecked = (q) => q.checked || !!(selectedCat && selectedCat.qnums?.some(qk => q.id === qk || q.qnum === qk));
+                const currentKpiId = isAdding ? newKpiQuestionId : (selectedCat ? selectedCat.kpi_question_id : null);
+
                 return (
                     <div className="ai-step-content-container ai-split-layout">
                         {/* Left: 문항 목록 */}
                         <div className="ai-card ai-left-column">
                             <div className="ai-card-title-row">
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span className="ai-panel-icon">📝</span>
                                     <span className="ai-panel-title">문항 목록</span>
-                                    <span className="ai-panel-help-icon">?</span>
+                                    <span className="ai-panel-help-icon" title="교차표 & 설문지를 분석하여 문항별 카테고리를 자동 부여">?</span>
                                 </div>
-                                <span className="ai-panel-total">전체 47문항</span>
+                                <span className="ai-panel-total">전체 {questions.length}문항</span>
                             </div>
 
                             <div className="ai-filter-search-row">
                                 <div className="ai-search-wrapper">
-                                    <Search size={14} className="ai-search-icon" />
                                     <input
                                         type="text"
                                         className="ai-search-input"
@@ -813,75 +914,105 @@ const AiReportPage = () => {
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                     />
                                 </div>
-                                <div className="ai-dropdown-small">
+                                <div className="ai-dropdown-small-wrapper">
                                     <DropDownList
-                                        data={["전체 유형", "Single", "Multi", "Rank", "Open"]}
+                                        data={["전체 유형", "single", "scale", "multi", "rank", "open(문자)", "open(숫자)"]}
+                                        valuePrimitive={true}
                                         value={typeFilter}
                                         onChange={(e) => setTypeFilter(e.value)}
-                                        style={{ height: '32px', fontSize: '12px' }}
+                                        style={{ width: '100%', height: '100%', fontSize: '12px' }}
                                     />
                                 </div>
                             </div>
 
-                            <div className="ai-group-chips-row">
-                                <span className="ai-chips-label">설문지 그룹</span>
-                                <div className="ai-chip active">SQ <span className="chip-count">13</span></div>
-                                <div className="ai-chip">P1 <span className="chip-count">9</span></div>
-                                <div className="ai-chip">P2 <span className="chip-count">17</span></div>
-                                <div className="ai-chip">P3 <span className="chip-count">8</span></div>
-                            </div>
-
                             {/* Questions checklist table */}
                             <div className="ai-question-table-wrap">
-                                <div className="ai-table-header">
-                                    <div className="ai-th-col select-col">
+                                <div className="ai-table-header" style={{ display: 'flex', alignItems: 'center' }}>
+                                    <div className="ai-th-col select-col" style={{ width: '32px', minWidth: '32px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <input
                                             type="checkbox"
-                                            checked={questions.every(q => q.checked)}
+                                            checked={questions.length > 0 && questions.every(q => isQChecked(q))}
                                             onChange={(e) => handleSelectAllQuestions(e.target.checked)}
+                                            style={{ cursor: 'pointer', margin: 0, width: '13px', height: '13px', flexShrink: 0, appearance: 'checkbox', WebkitAppearance: 'checkbox', opacity: 1, display: 'inline-block', position: 'relative' }}
                                         />
                                     </div>
-                                    <div className="ai-th-col group-header-col">
-                                        <ChevronDown size={14} style={{ marginRight: '6px' }} />
-                                        <span>SQ. 스크리닝 및 기본 고객 특성</span>
-                                        <span className="ai-group-badge">13문항</span>
-                                    </div>
+                                    <div className="ai-th-col id-col" style={{ width: '130px', minWidth: '130px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>ID</div>
+                                    <div className="ai-th-col label-col" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>문항명</div>
+                                    <div className="ai-th-col type-col" style={{ width: '70px', minWidth: '70px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>유형</div>
+                                    <div className="ai-th-col view-col" style={{ width: '50px', minWidth: '50px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '4px' }}>보기</div>
                                 </div>
 
-                                <div className="ai-table-body">
+                                <div className="ai-table-body" style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
                                     {questions
-                                        .filter(q => searchQuery === "" || q.label.includes(searchQuery) || q.qnum.includes(searchQuery))
-                                        .map((q) => (
-                                            <div
-                                                key={q.id}
-                                                className={`ai-table-row ${q.checked ? 'selected' : ''}`}
-                                                onClick={() => handleToggleQuestion(q.id)}
-                                            >
-                                                <div className="ai-td select-col" onClick={(e) => e.stopPropagation()}>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={q.checked}
-                                                        onChange={() => handleToggleQuestion(q.id)}
-                                                    />
+                                        .filter(q => {
+                                            const matchesSearch = searchQuery === "" || (q.label || "").toLowerCase().includes(searchQuery.toLowerCase()) || (q.qnum || "").toLowerCase().includes(searchQuery.toLowerCase());
+                                            const matchesType = typeFilter === "전체 유형" ||
+                                                (q.type || "").toLowerCase() === typeFilter.toLowerCase() ||
+                                                (q.subtype || "").toLowerCase() === typeFilter.toLowerCase();
+                                            return matchesSearch && matchesType;
+                                        })
+                                        .map((q) => {
+                                            const isKpi = currentKpiId === q.id;
+                                            const isHighlighted = selectedCat && selectedCat.qnums?.some(qk => q.id === qk || q.qnum === qk);
+                                            const highlightStyle = isKpi ? {
+                                                backgroundColor: '#fffbeb',
+                                                borderLeft: '4px solid #f59e0b',
+                                                paddingLeft: '8px'
+                                            } : (isHighlighted ? {
+                                                backgroundColor: `${selectedCat.color}12`, // Slightly darker for better visibility while remaining elegant
+                                                borderLeft: `4px solid ${selectedCat.color}`,
+                                                paddingLeft: '8px'
+                                            } : {});
+
+                                            return (
+                                                <div
+                                                    key={q.id}
+                                                    id={`q_row_${q.id}`}
+                                                    className={`ai-table-row ${isQChecked(q) ? 'selected' : ''}`}
+                                                    onClick={() => handleToggleQuestion(q.id)}
+                                                    style={highlightStyle}
+                                                >
+                                                    <div className="ai-td select-col" onClick={(e) => e.stopPropagation()} style={{ width: '32px', minWidth: '32px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isQChecked(q)}
+                                                            onChange={() => handleToggleQuestion(q.id)}
+                                                            style={{ cursor: 'pointer', margin: 0, width: '13px', height: '13px', flexShrink: 0, appearance: 'checkbox', WebkitAppearance: 'checkbox', opacity: 1, display: 'inline-block', position: 'relative' }}
+                                                        />
+                                                    </div>
+                                                    <div className="ai-td id-col" style={{ width: '130px', minWidth: '130px', flexShrink: 0, display: 'flex', alignItems: 'center', paddingRight: '8px', gap: '4px' }}>
+                                                        {isKpi && <span style={{ color: '#f59e0b', fontSize: '11px', fontWeight: 'bold' }} title="기준 KPI 문항">⭐</span>}
+                                                        <span className="ai-q-id-badge" style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '100%', display: 'inline-block' }} title={q.id}>{q.id}</span>
+                                                    </div>
+                                                    <div className="ai-td label-col">
+                                                        {q.qnum && <span className="ai-q-num-label">{q.qnum}.</span>}
+                                                        <span className="ai-q-text-label">{q.label}</span>
+                                                    </div>
+                                                    <div className="ai-td type-col" style={{ width: '70px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
+                                                        <span style={{
+                                                            fontSize: '11px',
+                                                            padding: '2px 6px',
+                                                            borderRadius: '4px',
+                                                            whiteSpace: 'nowrap',
+                                                            fontWeight: '800',
+                                                            textTransform: 'lowercase',
+                                                            ...((q.type || '').toLowerCase() === 'single' ? { background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' } :
+                                                                ((q.type || '').toLowerCase() === 'double' || (q.type || '').toLowerCase() === 'multi') ? { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' } :
+                                                                    (q.type || '').toLowerCase() === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
+                                                                        (q.type || '').toLowerCase() === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
+                                                                            ((q.type || '').toLowerCase() === 'open(문자)' || (q.type || '').toLowerCase() === 'open-text') ? { background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' } :
+                                                                                ((q.type || '').toLowerCase() === 'open(숫자)' || (q.type || '').toLowerCase() === 'open-num') ? { background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' } :
+                                                                                    { background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0' })
+                                                        }}>
+                                                            {(q.type || '').toLowerCase() === 'double' ? 'multi' : q.type}
+                                                        </span>
+                                                    </div>
+                                                    <div className="ai-td view-col" style={{ width: '50px', minWidth: '50px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '4px' }}>
+                                                        <span className="ai-view-link">보기 {q.viewCount}</span>
+                                                    </div>
                                                 </div>
-                                                <div className="ai-td id-col">
-                                                    <span className="ai-q-id-badge">{q.id}</span>
-                                                </div>
-                                                <div className="ai-td label-col">
-                                                    <span className="ai-q-num-label">{q.qnum}.</span>
-                                                    <span className="ai-q-text-label">{q.label}</span>
-                                                </div>
-                                                <div className="ai-td type-col">
-                                                    <span className="ai-type-badge-mini">{q.type}</span>
-                                                </div>
-                                                <div className="ai-td subtype-col">
-                                                    <span className="ai-subtype-text">{q.subtype}</span>
-                                                </div>
-                                                <div className="ai-td view-col">
-                                                    <span className="ai-view-link">보기 {q.viewCount}</span>
-                                                </div>
-                                            </div>
-                                        ))
+                                            );
+                                        })
                                     }
                                 </div>
                             </div>
@@ -889,52 +1020,329 @@ const AiReportPage = () => {
 
                         {/* Right: 생성된 카테고리 */}
                         <div className="ai-card ai-right-column">
-                            <div className="ai-card-title-row">
+                            <div className="ai-card-title-row" style={{ flexWrap: 'wrap', gap: '10px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <span className="ai-panel-icon">⚙</span>
                                     <span className="ai-panel-title">생성된 카테고리</span>
                                     <span className="ai-category-badge-count">{categories.length}</span>
                                 </div>
-                                <button className="ai-add-category-btn" onClick={handleAddCategory}>
-                                    <Plus size={14} />
-                                    <span>추가</span>
-                                </button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    {!isAdding && (
+                                        <>
+                                            <button className="ai-action-btn-compact blue" onClick={handleAiAutoCategorize}>
+                                                <Sparkles size={12} />
+                                                <span>AI 자동 분류</span>
+                                            </button>
+                                            {isAiCategorized && (
+                                                <button className="ai-action-btn-compact" onClick={handleRestoreOriginalCategories}>
+                                                    <RotateCcw size={12} />
+                                                    <span>기존 카테고리</span>
+                                                </button>
+                                            )}
+                                            <button className="ai-add-category-btn" onClick={handleAddCategory} style={{ height: '24px', padding: '0 8px' }}>
+                                                <Plus size={12} />
+                                                <span>추가</span>
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
                             </div>
 
-                            {/* Toggle tab buttons */}
-                            <div className="ai-category-toggle-tabs">
-                                <button
-                                    className={`ai-toggle-tab ${categoryMode === 'ai' ? 'active' : ''}`}
-                                    onClick={() => setCategoryMode('ai')}
-                                >
-                                    <Sparkles size={13} />
-                                    <span>AI 자동 분류</span>
-                                </button>
-                                <button
-                                    className={`ai-toggle-tab ${categoryMode === 'group' ? 'active' : ''}`}
-                                    onClick={() => setCategoryMode('group')}
-                                >
-                                    <span>⚡ 설문지 그룹화</span>
-                                </button>
-                            </div>
+
 
                             {/* Category Cards List */}
                             <div className="ai-category-cards-container">
-                                {categories.map((cat) => (
-                                    <div key={cat.id} className="ai-category-card" style={{ borderLeftColor: cat.color }}>
-                                        <div className="ai-cat-card-left">
-                                            <h4 className="ai-cat-card-title">{cat.title}</h4>
-                                            <p className="ai-cat-card-desc">{cat.desc}</p>
+                                {isAdding && (() => {
+                                    const nextCategoryId = categories.length > 0 ? Math.max(...categories.map(c => c.id)) + 1 : 1;
+                                    const activeColor = CATEGORY_COLORS[(nextCategoryId - 1) % CATEGORY_COLORS.length];
+                                    const selectedQuestions = questions.filter(q => q.checked);
+                                    return (
+                                        <div
+                                            className="ai-category-card active"
+                                            style={{
+                                                padding: '16px',
+                                                borderColor: activeColor,
+                                                backgroundColor: '#ffffff',
+                                                boxShadow: `0 10px 25px -5px ${activeColor}15, 0 8px 20px -6px rgba(0, 0, 0, 0.02)`,
+                                                flexDirection: 'column',
+                                                alignItems: 'stretch',
+                                                gap: '12px',
+                                                display: 'flex',
+                                                cursor: 'default',
+                                                transition: 'all 0.25s ease'
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', width: '100%' }}>
+                                                <span style={{
+                                                    width: '8px',
+                                                    height: '8px',
+                                                    borderRadius: '50%',
+                                                    backgroundColor: activeColor,
+                                                    flexShrink: 0,
+                                                    marginTop: '12px'
+                                                }} />
+                                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    <input
+                                                        type="text"
+                                                        value={newCategoryName}
+                                                        onChange={(e) => setNewCategoryName(e.target.value)}
+                                                        placeholder="카테고리명 입력"
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '8px 12px',
+                                                            fontSize: '13px',
+                                                            fontWeight: 600,
+                                                            color: '#1e293b',
+                                                            border: '1px solid #cbd5e1',
+                                                            borderRadius: '8px',
+                                                            backgroundColor: '#f8fafc',
+                                                            boxSizing: 'border-box',
+                                                            outline: 'none',
+                                                            transition: 'all 0.2s ease-in-out'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.target.style.borderColor = activeColor;
+                                                            e.target.style.backgroundColor = '#ffffff';
+                                                            e.target.style.boxShadow = `0 0 0 3px ${activeColor}15`;
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.target.style.borderColor = '#cbd5e1';
+                                                            e.target.style.backgroundColor = '#f8fafc';
+                                                            e.target.style.boxShadow = 'none';
+                                                        }}
+                                                    />
+                                                    <textarea
+                                                        value={newHypothesis}
+                                                        onChange={(e) => setNewHypothesis(e.target.value)}
+                                                        placeholder="가설 문구 입력"
+                                                        rows={2}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '8px 12px',
+                                                            fontSize: '12px',
+                                                            color: '#475569',
+                                                            border: '1px solid #cbd5e1',
+                                                            borderRadius: '8px',
+                                                            backgroundColor: '#f8fafc',
+                                                            resize: 'none',
+                                                            boxSizing: 'border-box',
+                                                            outline: 'none',
+                                                            lineHeight: '1.5',
+                                                            transition: 'all 0.2s ease-in-out'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.target.style.borderColor = activeColor;
+                                                            e.target.style.backgroundColor = '#ffffff';
+                                                            e.target.style.boxShadow = `0 0 0 3px ${activeColor}15`;
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.target.style.borderColor = '#cbd5e1';
+                                                            e.target.style.backgroundColor = '#f8fafc';
+                                                            e.target.style.boxShadow = 'none';
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* 선택된 문항 목록 표출 (Chips로 렌더링) */}
+                                            <div style={{
+                                                fontSize: '11px',
+                                                color: '#64748b',
+                                                background: '#f8fafc',
+                                                padding: '10px 12px',
+                                                borderRadius: '8px',
+                                                border: '1px solid #e2e8f0',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '8px',
+                                                lineHeight: '1.4'
+                                            }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: '#475569' }}>
+                                                    <span>연동될 문항 목록</span>
+                                                    <span style={{
+                                                        backgroundColor: '#eff6ff',
+                                                        color: '#2563eb',
+                                                        border: '1px solid #dbeafe',
+                                                        padding: '2px 8px',
+                                                        borderRadius: '20px',
+                                                        fontWeight: 700,
+                                                        fontSize: '11px',
+                                                        whiteSpace: 'nowrap'
+                                                    }}>
+                                                        {selectedQuestions.length}문항
+                                                    </span>
+                                                </div>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                                    {selectedQuestions.length > 0 ? (
+                                                        selectedQuestions.map(q => {
+                                                            const isKpi = newKpiQuestionId === q.id;
+                                                            return (
+                                                                <span key={q.id} style={{
+                                                                    backgroundColor: isKpi ? '#fffbeb' : '#ffffff',
+                                                                    color: isKpi ? '#d97706' : '#2563eb',
+                                                                    border: isKpi ? '1.5px solid #f59e0b' : '1px solid #dbeafe',
+                                                                    borderRadius: '6px',
+                                                                    padding: '2px 8px',
+                                                                    fontSize: '11px',
+                                                                    fontWeight: 600,
+                                                                    display: 'inline-flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '4px',
+                                                                    boxShadow: isKpi ? '0 1px 3px rgba(245, 158, 11, 0.2)' : 'none',
+                                                                    transition: 'all 0.15s ease'
+                                                                }}>
+                                                                    {isKpi && <span style={{ color: '#f59e0b', fontSize: '11px' }}>⭐</span>}
+                                                                    {q.id}
+                                                                </span>
+                                                            );
+                                                        })
+                                                    ) : (
+                                                        <span style={{ color: '#94a3b8', fontSize: '11px' }}>좌측 문항 목록에서 체크박스를 선택해주세요.</span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* 기준 KPI 문항 지정 드롭다운 */}
+                                            <div style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '6px',
+                                                fontSize: '11px',
+                                                marginTop: '4px'
+                                            }}>
+                                                <div style={{ fontWeight: 700, color: '#475569' }}>
+                                                    <span>기준 KPI 문항 지정</span>
+                                                </div>
+                                                <DropDownList
+                                                    data={selectedQuestions.length === 0
+                                                        ? [{ text: "연동될 문항을 먼저 선택해 주세요.", value: "" }]
+                                                        : [
+                                                            { text: "-- KPI 문항 선택 (선택 사항) --", value: "" },
+                                                            ...selectedQuestions.map(q => ({
+                                                                text: `${q.id} ${q.qnum ? `(${q.qnum})` : ''} - ${q.label.length > 30 ? q.label.substring(0, 30) + '...' : q.label}`,
+                                                                value: q.id
+                                                            }))
+                                                        ]
+                                                    }
+                                                    textField="text"
+                                                    valueField="value"
+                                                    valuePrimitive={true}
+                                                    value={newKpiQuestionId || ''}
+                                                    onChange={(e) => setNewKpiQuestionId(e.value || null)}
+                                                    disabled={selectedQuestions.length === 0}
+                                                    style={{
+                                                        width: '100%',
+                                                        fontSize: '11px'
+                                                    }}
+                                                />
+                                            </div>
+
+                                            {/* 취소/저장 버튼 행 */}
+                                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
+                                                <button
+                                                    onClick={handleCancelNewCategory}
+                                                    style={{
+                                                        height: '28px',
+                                                        padding: '0 12px',
+                                                        fontSize: '12px',
+                                                        fontWeight: 600,
+                                                        backgroundColor: '#ffffff',
+                                                        color: '#475569',
+                                                        border: '1px solid #cbd5e1',
+                                                        borderRadius: '6px',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.15s ease'
+                                                    }}
+                                                    onMouseOver={(e) => { e.target.style.backgroundColor = '#f8fafc'; }}
+                                                    onMouseOut={(e) => { e.target.style.backgroundColor = '#ffffff'; }}
+                                                >
+                                                    취소
+                                                </button>
+                                                <button
+                                                    onClick={handleSaveNewCategory}
+                                                    style={{
+                                                        height: '28px',
+                                                        padding: '0 12px',
+                                                        fontSize: '12px',
+                                                        fontWeight: 600,
+                                                        backgroundColor: '#2563eb',
+                                                        color: '#ffffff',
+                                                        border: 'none',
+                                                        borderRadius: '6px',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.15s ease'
+                                                    }}
+                                                    onMouseOver={(e) => { e.target.style.backgroundColor = '#1d4ed8'; }}
+                                                    onMouseOut={(e) => { e.target.style.backgroundColor = '#2563eb'; }}
+                                                >
+                                                    저장
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div className="ai-cat-card-right">
-                                            <span className="ai-cat-card-count">{cat.count}문항</span>
+                                    );
+                                })()}
+                                {categories.map((cat) => {
+                                    const isSelected = selectedCategoryId === cat.id;
+                                    return (
+                                        <div
+                                            key={cat.id}
+                                            className={`ai-category-card ${isSelected ? 'active' : ''}`}
+                                            onClick={() => {
+                                                const isCurrentlySelected = selectedCategoryId === cat.id;
+                                                if (isCurrentlySelected) {
+                                                    setSelectedCategoryId(null);
+                                                } else {
+                                                    setSelectedCategoryId(cat.id);
+                                                    const firstMatched = questions.find(q => cat.qnums?.some(qk => q.id === qk || q.qnum === qk));
+                                                    if (firstMatched) {
+                                                        setTimeout(() => {
+                                                            const element = document.getElementById(`q_row_${firstMatched.id}`);
+                                                            if (element) {
+                                                                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                            }
+                                                        }, 80);
+                                                    }
+                                                }
+                                            }}
+                                            style={{
+                                                paddingLeft: '16px',
+                                                cursor: 'pointer',
+                                                borderColor: isSelected ? cat.color : '#cbd5e1',
+                                                backgroundColor: isSelected ? `${cat.color}08` : '#ffffff',
+                                                boxShadow: isSelected ? `0 4px 12px ${cat.color}12` : 'none'
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flex: 1 }}>
+                                                {/* Left: Clean Bullet Dot vertically aligned with first line of title */}
+                                                <span style={{
+                                                    width: '8px',
+                                                    height: '8px',
+                                                    borderRadius: '50%',
+                                                    backgroundColor: cat.color,
+                                                    flexShrink: 0,
+                                                    marginTop: '6px'
+                                                }} />
+                                                {/* Right: Text box containing title and description perfectly aligned on the left */}
+                                                <div className="ai-cat-card-left" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                    <h4 className="ai-cat-card-title" style={{ display: 'block' }}>{cat.title}</h4>
+                                                    <p className="ai-cat-card-desc">{cat.desc}</p>
+                                                </div>
+                                            </div>
+                                            <div className="ai-cat-card-right" style={{ marginLeft: '12px' }}>
+                                                <span className="ai-cat-card-count" style={{
+                                                    backgroundColor: isSelected ? cat.color : '#eff6ff',
+                                                    color: isSelected ? '#ffffff' : '#4B7CF3',
+                                                    border: isSelected ? `1px solid ${cat.color}` : '1px solid #dbeafe'
+                                                }}>{cat.count}문항</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
                 );
+            }
             case 2: // 최종분석
                 return (
                     <div className="ai-step-content-container" style={{ gap: '20px' }}>
@@ -1298,7 +1706,7 @@ const AiReportPage = () => {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }} className="ai-report-container">
+        <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 40px)' }} className="ai-report-container">
             <DataHeader title="AI 요약보고서">
                 {/* 3단계 스텝퍼 */}
                 <div className="ai-stepper-compact">
@@ -1366,7 +1774,7 @@ const AiReportPage = () => {
             </DataHeader>
 
             {/* 단계별 내용 */}
-            <div style={{ flex: 1, overflow: 'auto', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', background: '#f1f5f9' }}>
+            <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', background: '#f1f5f9' }}>
                 {renderContent()}
             </div>
         </div>
