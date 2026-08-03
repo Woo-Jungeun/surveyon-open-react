@@ -510,7 +510,13 @@ const AiReportPage = () => {
             projectName: overviewData.projectname,
             research_purpose: overviewData.objectives,
             target_population: overviewData.target,
-            method: overviewData.method
+            method: overviewData.method,
+            categories: categories.map(cat => ({
+                category_name: cat.title,
+                qnums: cat.qnums,
+                kpi: cat.kpi_question_id || (cat.qnums && cat.qnums[0]) || "",
+                hypothesis: cat.desc
+            }))
         };
 
         const payload = {
@@ -618,7 +624,7 @@ const AiReportPage = () => {
         setNewKpiQuestionId(null);
     };
 
-    const handleSaveNewCategory = () => {
+    const handleSaveNewCategory = async () => {
         if (!newCategoryName.trim()) {
             modal.showAlert("알림", "카테고리명을 입력해주세요.");
             return;
@@ -637,13 +643,50 @@ const AiReportPage = () => {
             kpi_question_id: newKpiQuestionId
         };
 
-        setCategories([newCat, ...categories]);
-        setSelectedCategoryId(newId);
-        setIsAdding(false);
-        setNewCategoryName("");
-        setNewHypothesis("");
-        setNewKpiQuestionId(null);
-        modal.showAlert("알림", "새 카테고리가 등록되었습니다.");
+        const updatedCategories = [newCat, ...categories];
+
+        const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        const pn = sessionStorage.getItem("pn") || sessionStorage.getItem("Pn") || "P001234";
+        const userId = auth?.user?.userId || "jewoo";
+
+        const frameObj = {
+            projectName: overviewData.projectname,
+            research_purpose: overviewData.objectives,
+            target_population: overviewData.target,
+            method: overviewData.method,
+            categories: updatedCategories.map(cat => ({
+                category_name: cat.title,
+                qnums: cat.qnums,
+                kpi: cat.kpi_question_id || (cat.qnums && cat.qnums[0]) || "",
+                hypothesis: cat.desc
+            }))
+        };
+
+        const payload = {
+            pageId,
+            user: userId,
+            pn,
+            analysisFrame: JSON.stringify(frameObj)
+        };
+
+        try {
+            const res = await saveAiSummaryFrame.mutateAsync(payload);
+            if (String(res?.success) === '777') {
+                setCategories(updatedCategories);
+                setSelectedCategoryId(newId);
+                setIsAdding(false);
+                setNewCategoryName("");
+                setNewHypothesis("");
+                setNewKpiQuestionId(null);
+                modal.showAlert("알림", "새 카테고리가 등록 및 저장되었습니다.");
+                await loadSummaryData();
+            } else {
+                modal.showAlert("오류", res?.message || "카테고리 저장에 실패하였습니다.");
+            }
+        } catch (err) {
+            console.error("Failed to save analysis frame on adding category:", err);
+            modal.showAlert("오류", "서버 통신 실패로 카테고리를 저장하지 못했습니다.");
+        }
     };
 
     const handleCancelNewCategory = () => {
@@ -1090,8 +1133,7 @@ const AiReportPage = () => {
                                                         style={{
                                                             width: '100%',
                                                             padding: '8px 12px',
-                                                            fontSize: '13px',
-                                                            fontWeight: 600,
+                                                            fontSize: '12px',
                                                             color: '#1e293b',
                                                             border: '1px solid #cbd5e1',
                                                             borderRadius: '8px',
