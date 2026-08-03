@@ -1233,7 +1233,7 @@
 }
 
 .ai-field-label {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     color: #334155;
 }
@@ -1247,7 +1247,7 @@
     border: 1px solid #cbd5e1;
     border-radius: 6px;
     padding: 0 10px;
-    font-size: 12px;
+    font-size: 13px;
     color: #334155;
     outline: none;
     box-sizing: border-box;
@@ -1263,7 +1263,7 @@
     border: 1px solid #cbd5e1;
     border-radius: 6px;
     padding: 8px 10px;
-    font-size: 12px;
+    font-size: 13px;
     color: #334155;
     outline: none;
     resize: vertical;
