@@ -4,7 +4,7 @@ import {
     Save, Sparkles, Check, RotateCcw, Loader2,
     Paperclip, X, Search, Plus,
     Play, ArrowRight, ChevronDown, ChevronUp,
-    Filter, RefreshCw
+    Filter, RefreshCw, Trash2
 } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import DataHeader from "@/services/dataStatus/components/DataHeader";
@@ -696,6 +696,64 @@ const AiReportPage = () => {
         setNewKpiQuestionId(null);
     };
 
+    const handleDeleteCategory = (catId, e) => {
+        if (e) {
+            e.stopPropagation();
+        }
+        modal.showConfirm("알림", "선택한 테고리를 정말 삭제하시겠습니까?", {
+            btns: [
+                { title: "취소", click: () => { console.log("Delete cancelled"); } },
+                {
+                    title: "삭제",
+                    click: async () => {
+                        const updatedCategories = categories.filter(c => c.id !== catId);
+
+                        const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+                        const pn = sessionStorage.getItem("pn") || sessionStorage.getItem("Pn") || "P001234";
+                        const userId = auth?.user?.userId || "jewoo";
+
+                        const frameObj = {
+                            projectName: overviewData.projectname,
+                            research_purpose: overviewData.objectives,
+                            target_population: overviewData.target,
+                            method: overviewData.method,
+                            categories: updatedCategories.map(cat => ({
+                                category_name: cat.title,
+                                qnums: cat.qnums,
+                                kpi: cat.kpi_question_id || (cat.qnums && cat.qnums[0]) || "",
+                                hypothesis: cat.desc
+                            }))
+                        };
+
+                        const payload = {
+                            pageId,
+                            user: userId,
+                            pn,
+                            analysisFrame: JSON.stringify(frameObj)
+                        };
+
+                        try {
+                            const res = await saveAiSummaryFrame.mutateAsync(payload);
+                            if (String(res?.success) === '777') {
+                                setCategories(updatedCategories);
+                                if (selectedCategoryId === catId) {
+                                    setSelectedCategoryId(null);
+                                }
+                                modal.showAlert("알림", "카테고리가 삭제 및 저장되었습니다.");
+                                await loadSummaryData();
+                            } else {
+                                modal.showAlert("오류", res?.message || "카테고리 삭제에 실패하였습니다.");
+                            }
+                        } catch (err) {
+                            console.error("Failed to delete category:", err);
+                            modal.showAlert("오류", "서버 통신 실패로 삭제하지 못했습니다.");
+                        }
+                    }
+                }
+            ]
+        });
+    };
+
     // Render Steps content
     const renderContent = () => {
         switch (currentStep) {
@@ -1365,12 +1423,32 @@ const AiReportPage = () => {
                                                     <p className="ai-cat-card-desc">{cat.desc}</p>
                                                 </div>
                                             </div>
-                                            <div className="ai-cat-card-right" style={{ marginLeft: '12px' }}>
+                                            <div className="ai-cat-card-right" style={{ marginLeft: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                 <span className="ai-cat-card-count" style={{
                                                     backgroundColor: isSelected ? cat.color : '#eff6ff',
                                                     color: isSelected ? '#ffffff' : '#4B7CF3',
                                                     border: isSelected ? `1px solid ${cat.color}` : '1px solid #dbeafe'
                                                 }}>{cat.count}문항</span>
+                                                <button
+                                                    onClick={(e) => handleDeleteCategory(cat.id, e)}
+                                                    style={{
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        padding: '4px',
+                                                        cursor: 'pointer',
+                                                        color: '#94a3b8',
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        borderRadius: '4px',
+                                                        transition: 'all 0.15s ease'
+                                                    }}
+                                                    onMouseOver={(e) => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.backgroundColor = '#fef2f2'; }}
+                                                    onMouseOut={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.backgroundColor = 'transparent'; }}
+                                                    title="카테고리 삭제"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
                                             </div>
                                         </div>
                                     );
