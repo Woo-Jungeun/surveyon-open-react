@@ -647,12 +647,13 @@
     background: #4B7CF3;
     color: #ffffff;
     border: none;
-    border-radius: 4px;
-    height: 24px;
-    padding: 0 10px;
-    font-size: 11px;
+    border-radius: 6px;
+    height: 28px;
+    padding: 0 12px;
+    font-size: 12px;
     font-weight: 700;
     cursor: pointer;
+    box-sizing: border-box;
 }
 
 .ai-category-toggle-tabs {
@@ -1342,10 +1343,10 @@
     background: #ffffff;
     border: 1px solid #2563eb;
     color: #2563eb;
-    border-radius: 4px;
-    height: 24px;
-    padding: 0 10px;
-    font-size: 11px;
+    border-radius: 6px;
+    height: 28px;
+    padding: 0 12px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.15s ease;

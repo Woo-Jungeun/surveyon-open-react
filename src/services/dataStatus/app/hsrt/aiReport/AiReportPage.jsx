@@ -541,39 +541,50 @@ const AiReportPage = () => {
     };
 
     const handleAiAutoCategorize = async () => {
-        setCategories([]); // 로딩 시작 시 기존 카테고리 데이터 비우기
-        const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-        const userId = auth?.user?.userId || "jewoo";
-        const modelType = selectedModel || "llm-gpt-oss-120b";
+        modal.showConfirm("알림", "AI 자동 분류를 실행하시겠습니까?\n기존 카테고리 목록은 모두 삭제되고 \n 새로운 추천 분류 정보로 덮어씌워집니다.", {
+            btns: [
+                { title: "취소", click: () => { console.log("AI auto categorization cancelled"); } },
+                {
+                    title: "실행",
+                    click: async () => {
+                        setCategories([]); // 로딩 시작 시 기존 카테고리 데이터 비우기
+                        const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+                        const userId = auth?.user?.userId || "jewoo";
+                        const modelType = selectedModel || "llm-gpt-oss-120b";
 
-        const payload = {
-            pageId,
-            modelType,
-            user: userId
-        };
+                        const payload = {
+                            pageId,
+                            modelType,
+                            user: userId
+                        };
 
-        try {
-            const res = await getAutoCategories.mutateAsync(payload);
-            if (String(res?.success) === '777' && res?.resultjson?.categories) {
-                const mappedCategories = (res.resultjson.categories || []).map((cat, idx) => ({
-                    id: idx + 1,
-                    title: cat.category_name || '',
-                    desc: cat.hypothesis || '가설 검증 및 문항 분석',
-                    qnums: Array.isArray(cat.qnums) ? cat.qnums : [],
-                    count: cat.qnums?.length || 0,
-                    color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
-                    kpi_question_id: cat.kpi_question_id || null
-                }));
-                setSelectedCategoryId(null);
-                setCategories(mappedCategories);
-                setIsAiCategorized(true);
-            } else {
-                modal.showAlert("오류", res?.message || "AI 자동 분류에 실패하였습니다.");
-            }
-        } catch (err) {
-            console.error("Failed to run AI auto categorization:", err);
-            modal.showAlert("오류", "서버 통신 실패로 AI 자동 분류를 실행하지 못했습니다.");
-        }
+                        try {
+                            const res = await getAutoCategories.mutateAsync(payload);
+                            if (String(res?.success) === '777' && res?.resultjson?.categories) {
+                                const mappedCategories = (res.resultjson.categories || []).map((cat, idx) => ({
+                                    id: idx + 1,
+                                    title: cat.category_name || '',
+                                    desc: cat.hypothesis || '가설 검증 및 문항 분석',
+                                    qnums: Array.isArray(cat.qnums) ? cat.qnums : [],
+                                    count: cat.qnums?.length || 0,
+                                    color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
+                                    kpi_question_id: cat.kpi_question_id || null
+                                }));
+                                setSelectedCategoryId(null);
+                                setCategories(mappedCategories);
+                                setIsAiCategorized(true);
+                                modal.showAlert("알림", "AI 자동 분류가 완료되었습니다.");
+                            } else {
+                                modal.showAlert("오류", res?.message || "AI 자동 분류에 실패하였습니다.");
+                            }
+                        } catch (err) {
+                            console.error("Failed to run AI auto categorization:", err);
+                            modal.showAlert("오류", "서버 통신 실패로 AI 자동 분류를 실행하지 못했습니다.");
+                        }
+                    }
+                }
+            ]
+        });
     };
 
     const handleRestoreOriginalCategories = async () => {
@@ -1140,7 +1151,7 @@ const AiReportPage = () => {
                                                     <span>기존 카테고리</span>
                                                 </button>
                                             )}
-                                            <button className="ai-add-category-btn" onClick={handleAddCategory} style={{ height: '24px', padding: '0 8px' }}>
+                                            <button className="ai-add-category-btn" onClick={handleAddCategory}>
                                                 <Plus size={12} />
                                                 <span>추가</span>
                                             </button>
@@ -1881,10 +1892,12 @@ const AiReportPage = () => {
                         </div>
                     </div>
 
-                    <button className="data-header-btn data-header-btn-primary" onClick={handleSave}>
-                        <Save size={16} />
-                        <span>저장</span>
-                    </button>
+                    {currentStep !== 1 && (
+                        <button className="data-header-btn data-header-btn-primary" onClick={handleSave}>
+                            <Save size={16} />
+                            <span>저장</span>
+                        </button>
+                    )}
                 </div>
             </DataHeader>
 
