@@ -1101,9 +1101,9 @@ const AiReportPage = () => {
                                                             transition: 'all 0.2s ease-in-out'
                                                         }}
                                                         onFocus={(e) => {
-                                                            e.target.style.borderColor = activeColor;
+                                                            e.target.style.borderColor = '#2563eb';
                                                             e.target.style.backgroundColor = '#ffffff';
-                                                            e.target.style.boxShadow = `0 0 0 3px ${activeColor}15`;
+                                                            e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.15)';
                                                         }}
                                                         onBlur={(e) => {
                                                             e.target.style.borderColor = '#cbd5e1';
@@ -1131,9 +1131,9 @@ const AiReportPage = () => {
                                                             transition: 'all 0.2s ease-in-out'
                                                         }}
                                                         onFocus={(e) => {
-                                                            e.target.style.borderColor = activeColor;
+                                                            e.target.style.borderColor = '#2563eb';
                                                             e.target.style.backgroundColor = '#ffffff';
-                                                            e.target.style.boxShadow = `0 0 0 3px ${activeColor}15`;
+                                                            e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.15)';
                                                         }}
                                                         onBlur={(e) => {
                                                             e.target.style.borderColor = '#cbd5e1';
@@ -1144,19 +1144,11 @@ const AiReportPage = () => {
                                                 </div>
                                             </div>
 
-                                            {/* 선택된 문항 목록 표출 (Chips로 렌더링) */}
-                                            <div style={{
-                                                fontSize: '11px',
-                                                color: '#64748b',
-                                                background: '#f8fafc',
-                                                padding: '10px 12px',
-                                                borderRadius: '8px',
-                                                border: '1px solid #e2e8f0',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                gap: '8px',
-                                                lineHeight: '1.4'
-                                            }}>
+                                            {/* Divider */}
+                                            <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '4px 0' }} />
+
+                                            {/* 1. 연동될 문항 목록 */}
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: '#475569' }}>
                                                     <span>연동될 문항 목록</span>
                                                     <span style={{
@@ -1197,45 +1189,48 @@ const AiReportPage = () => {
                                                             );
                                                         })
                                                     ) : (
-                                                        <span style={{ color: '#94a3b8', fontSize: '11px' }}>좌측 문항 목록에서 체크박스를 선택해주세요.</span>
+                                                        <span style={{ color: '#94a3b8', fontSize: '12px' }}>좌측 문항 목록에서 체크박스를 선택해주세요.</span>
                                                     )}
                                                 </div>
                                             </div>
 
-                                            {/* 기준 KPI 문항 지정 드롭다운 */}
-                                            <div style={{
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                gap: '6px',
-                                                fontSize: '11px',
-                                                marginTop: '4px'
-                                            }}>
-                                                <div style={{ fontWeight: 700, color: '#475569' }}>
-                                                    <span>기준 KPI 문항 지정</span>
-                                                </div>
-                                                <DropDownList
-                                                    data={selectedQuestions.length === 0
-                                                        ? [{ text: "연동될 문항을 먼저 선택해 주세요.", value: "" }]
-                                                        : [
-                                                            { text: "-- KPI 문항 선택 (선택 사항) --", value: "" },
-                                                            ...selectedQuestions.map(q => ({
-                                                                text: `${q.id} ${q.qnum ? `(${q.qnum})` : ''} - ${q.label.length > 30 ? q.label.substring(0, 30) + '...' : q.label}`,
-                                                                value: q.id
-                                                            }))
-                                                        ]
-                                                    }
-                                                    textField="text"
-                                                    valueField="value"
-                                                    valuePrimitive={true}
-                                                    value={newKpiQuestionId || ''}
-                                                    onChange={(e) => setNewKpiQuestionId(e.value || null)}
-                                                    disabled={selectedQuestions.length === 0}
-                                                    style={{
-                                                        width: '100%',
-                                                        fontSize: '11px'
-                                                    }}
-                                                />
-                                            </div>
+                                            {/* 2. 기준 KPI 문항 지정 (선택된 문항이 있을 때만 표시) */}
+                                            {selectedQuestions.length > 0 && (
+                                                <>
+                                                    {/* Divider */}
+                                                    <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '4px 0' }} />
+
+                                                    <div style={{
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        gap: '8px',
+                                                        fontSize: '12px'
+                                                    }}>
+                                                        <div style={{ fontWeight: 700, color: '#475569' }}>
+                                                            <span>기준 KPI 문항 지정</span>
+                                                        </div>
+                                                        <DropDownList
+                                                            data={[
+                                                                { text: "-- KPI 문항 선택 (선택 사항) --", value: "" },
+                                                                ...selectedQuestions.map(q => ({
+                                                                    text: `${q.id} ${q.qnum ? `(${q.qnum})` : ''} - ${q.label.length > 30 ? q.label.substring(0, 30) + '...' : q.label}`,
+                                                                    value: q.id
+                                                                }))
+                                                            ]}
+                                                            textField="text"
+                                                            valueField="value"
+                                                            valuePrimitive={true}
+                                                            value={newKpiQuestionId || ''}
+                                                            onChange={(e) => setNewKpiQuestionId(e.value || null)}
+                                                            className="ai-kendo-dropdown-compact"
+                                                            style={{
+                                                                width: '100%',
+                                                                fontSize: '12px'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </>
+                                            )}
 
                                             {/* 취소/저장 버튼 행 */}
                                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>

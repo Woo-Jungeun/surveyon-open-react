@@ -1373,3 +1373,35 @@
 .ai-action-btn-compact svg {
     color: currentColor;
 }
+/* KPI 드롭다운 전용 초컴팩트 스타일 */
+.ai-kendo-dropdown-compact.k-dropdownlist,
+.ai-kendo-dropdown-compact.k-picker {
+    height: 28px !important;
+    font-size: 12px !important;
+    border-color: #4b7cf3 !important;
+    border-radius: 6px !important;
+}
+
+.ai-kendo-dropdown-compact.k-dropdownlist:hover,
+.ai-kendo-dropdown-compact.k-picker:hover {
+    border-color: #2563eb !important;
+}
+
+.ai-kendo-dropdown-compact.k-dropdownlist.k-focus,
+.ai-kendo-dropdown-compact.k-picker.k-focus,
+.ai-kendo-dropdown-compact.k-dropdownlist:focus,
+.ai-kendo-dropdown-compact.k-picker:focus {
+    border-color: #1d4ed8 !important;
+    box-shadow: 0 0 0 3px rgba(75, 124, 243, 0.15) !important;
+}
+
+.ai-kendo-dropdown-compact .k-input-inner {
+    padding: 2px 8px !important;
+    font-size: 12px !important;
+    line-height: 24px !important;
+    height: 26px !important;
+}
+
+.ai-kendo-dropdown-compact .k-input-value-text {
+    font-size: 12px !important;
+}
