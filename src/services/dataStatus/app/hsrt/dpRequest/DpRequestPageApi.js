@@ -293,6 +293,11 @@ export function DpRequestPageApi() {
         }
     );
 
+    /** AI 모델 목록 조회 API */
+    const getAiModels = useMutation(
+        async (data) => await api.post(data, "/variables/ai/models", "API_BASE_URL_DATASTATUS")
+    );
+
 
 
     /** DP 의뢰서 - 설정 재적용 (source_based 부모 스터브만 가능) */
@@ -354,5 +359,6 @@ export function DpRequestPageApi() {
         deleteWeight,
         saveWeightSetPid,
         autoGenerateLogic,
+        getAiModels,
     };
 }

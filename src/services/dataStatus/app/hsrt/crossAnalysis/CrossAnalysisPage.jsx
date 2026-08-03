@@ -1526,10 +1526,8 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
     const { getOverviewContext, getOverviewStyled, savePageSettings, exportOverviewXlsx, createSnapshot, evaluateChartData, deleteBaseVariable, getAiModels, getCrosstabAiSummaryAll, cancelCrosstabAiSummary } = DpRequestPageApi();
-    const [models, setModels] = useState([
-        { text: "openai/gpt-4o", value: "openai/gpt-4o" }
-    ]);
-    const [selectedModel, setSelectedModel] = useState("openai/gpt-4o");
+    const [models, setModels] = useState([]);
+    const [selectedModel, setSelectedModel] = useState("");
     const modelsFetchedRef = useRef(false);
 
     useEffect(() => {
