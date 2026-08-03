@@ -1724,7 +1724,23 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         if (selectedComputedFilterIds.includes(CROSS_FILTER_ALL_ID)) return "";
         const activeOptions = computedFilterOptions.filter(o => selectedComputedFilterIds.includes(o.id));
         if (activeOptions.length === 0) return "";
-        return activeOptions.map(o => `(${o.logic})`).join(" or ");
+        
+        // Group logic expressions by variableId
+        const groups = {};
+        activeOptions.forEach(o => {
+            const varId = o.variableId || 'default';
+            if (!groups[varId]) {
+                groups[varId] = [];
+            }
+            groups[varId].push(o.logic);
+        });
+
+        const groupExpressions = Object.values(groups).map(logics => {
+            const joined = logics.join(" or ");
+            return `(${joined})`;
+        });
+
+        return groupExpressions.join(" and ");
     }, [selectedComputedFilterIds, computedFilterOptions]);
 
     useEffect(() => {
