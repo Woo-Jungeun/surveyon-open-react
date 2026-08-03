@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Copy, Maximize, Settings, Download, BarChart2, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Bot, Loader2, CheckCircle2, GripVertical, ChevronLeft, ChevronRight, Maximize2, ChevronDown, ChevronsUpDown, ChevronUp, X, Cloud, Check, LayoutList, BarChartHorizontal, Percent, Sparkles } from 'lucide-react';
+import { Copy, Maximize, Settings, Download, BarChart2, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Bot, Loader2, GripVertical, ChevronLeft, ChevronRight, Maximize2, ChevronDown, ChevronsUpDown, ChevronUp, X, Cloud, Check, LayoutList, BarChartHorizontal, Percent, Sparkles } from 'lucide-react';
 import KendoChart from '../../components/KendoChart';
 import { saveAs } from '@progress/kendo-file-saver';
 import { CHART_THEME_OPTIONS } from '../../constants/chartThemes';
@@ -198,7 +198,7 @@ export const ResultSectionBlock = ({
 
     const [rawChartData, setRawChartData] = useState(null);
     const [isChartLoading, setIsChartLoading] = useState(false);
-    const { evaluateChartData, getAiSummary } = DpRequestPageApi();
+    const { evaluateChartData, getCrosstabAiSummary } = DpRequestPageApi();
     const auth = useSelector((store) => store.auth);
     const userId = auth?.user?.userId;
 
@@ -604,38 +604,28 @@ export const ResultSectionBlock = ({
 
         try {
             setIsAiLoading(true);
-            const pageId = sessionStorage.getItem('pageId');
-            const projectNum = sessionStorage.getItem('merge_pn');
-            const tableId = resultData?.table_id || 'T1';
+            const pageId = sessionStorage.getItem('pageId') || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
 
             const payload = {
-                project_num: projectNum || "",
-                user: userId || "",
-                page_id: pageId || "",
+                pageId: pageId,
+                variableId: stub?.[0] || "",
+                banner: xInfo || [],
+                filterExpression: filterExpression || "",
+                weightCol: weightCol === "없음" ? "" : (weightCol || ""),
                 model: "llm-gpt-oss-120b",
-                temperature: 0.2,
-                resultjson: {
-                    table_id: tableId,
-                    table_title: tableName || "", // inputtext= 테이블명 값을 request로 여기에 넣어줘.
-                    labels: rawChartData.labels || [],
-                    series: rawChartData.series || []
-                }
+                user: userId || ""
             };
 
-            const res = await getAiSummary.mutateAsync(payload);
+            const res = await getCrosstabAiSummary.mutateAsync(payload);
 
-            if (String(res?.success) === "777" && res?.resultjson?.[tableId]?.[0]?.result_data) {
-                const summary = res.resultjson[tableId][0].result_data;
-                const lines = typeof summary === 'string'
-                    ? summary.split('\n').map(l => l.trim()).filter(Boolean)
-                    : (Array.isArray(summary) ? summary : [summary]);
-                setAiResult(lines);
+            if (String(res?.success) === "777" && res?.resultjson?.result_data) {
+                setAiResult(res.resultjson.result_data);
             } else {
-                setAiResult(["요약 데이터를 불러오지 못했습니다."]);
+                setAiResult("요약 데이터를 불러오지 못했습니다.");
             }
         } catch (err) {
             console.error("AI Analysis execution error:", err);
-            setAiResult(["요약 데이터를 불러오는 중 오류가 발생했습니다."]);
+            setAiResult("요약 데이터를 불러오는 중 오류가 발생했습니다.");
         } finally {
             setIsAiLoading(false);
         }
@@ -1839,16 +1829,77 @@ export const ResultSectionBlock = ({
                                                     </div>
                                                 )}
                                                 {aiResult && (
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', lineHeight: '1.6', color: '#334155', width: '100%' }}>
-                                                            {aiResult.map((text, idx) => (
-                                                                <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', width: '100%' }}>
-                                                                    <CheckCircle2 size={16} color="#10b981" style={{ marginTop: '2px', flexShrink: 0 }} />
-                                                                    <p style={{ margin: 0, wordBreak: 'keep-all', flex: 1 }}>{text}</p>
-                                                                </div>
-                                                            ))}
+                                                    typeof aiResult === 'string' ? (
+                                                        <div style={{ fontSize: '13px', lineHeight: '1.6', whiteSpace: 'pre-wrap', wordBreak: 'keep-all', width: '100%', color: '#334155' }}>
+                                                            {aiResult}
                                                         </div>
-                                                    </div>
+                                                    ) : (
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', textAlign: 'left' }}>
+                                                            {/* 응답자특성 분석 */}
+                                                            {aiResult.mode_a_demographic_analysis && aiResult.mode_a_demographic_analysis.length > 0 && (
+                                                                <div>
+                                                                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
+                                                                        응답자특성 분석
+                                                                    </div>
+                                                                    <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                                        {aiResult.mode_a_demographic_analysis.map((item, idx) => (
+                                                                            <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', fontSize: '13px', lineHeight: '1.6' }}>
+                                                                                <span style={{ color: '#2563eb', marginRight: '6px', fontSize: '16px', lineHeight: 1 }}>•</span>
+                                                                                <div style={{ wordBreak: 'keep-all' }}>
+                                                                                    <span style={{ fontWeight: 700, color: '#1e293b' }}>[{item.variable_name}]</span>
+                                                                                    {item.max_min_gap && <span style={{ color: '#2563eb', fontWeight: 600, marginLeft: '6px', marginRight: '6px' }}>({item.max_min_gap})</span>}
+                                                                                    <span style={{ color: '#334155' }}>{item.finding}</span>
+                                                                                </div>
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+
+                                                            {/* 배너별 주요분석 */}
+                                                            {aiResult.mode_b_parallel_summary && aiResult.mode_b_parallel_summary.key_insights_by_banner && aiResult.mode_b_parallel_summary.key_insights_by_banner.length > 0 && (
+                                                                <div>
+                                                                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
+                                                                        배너별 주요분석
+                                                                    </div>
+                                                                    <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                                        {aiResult.mode_b_parallel_summary.key_insights_by_banner.map((item, idx) => (
+                                                                            <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', fontSize: '13px', lineHeight: '1.6' }}>
+                                                                                <span style={{ color: '#2563eb', marginRight: '6px', fontSize: '16px', lineHeight: 1 }}>•</span>
+                                                                                <div style={{ wordBreak: 'keep-all' }}>
+                                                                                    <span style={{ fontWeight: 700, color: '#1e293b' }}>[{item.banner_name}]</span>
+                                                                                    <span style={{ color: '#334155', marginLeft: '6px' }}>{item.insight}</span>
+                                                                                </div>
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+
+                                                            {/* 전략적 핵심 요약 */}
+                                                            {aiResult.mode_b_parallel_summary && (
+                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#2563eb' }}>
+                                                                        전략적 핵심 요약
+                                                                    </div>
+                                                                    {aiResult.mode_b_parallel_summary.result_data && (
+                                                                        <div style={{
+                                                                            borderLeft: '3px solid #2563eb',
+                                                                            paddingLeft: '12px',
+                                                                            color: '#1e293b',
+                                                                            fontSize: '13px',
+                                                                            lineHeight: '1.6',
+                                                                            fontWeight: 500,
+                                                                            margin: '4px 0',
+                                                                            wordBreak: 'keep-all'
+                                                                        }}>
+                                                                            {aiResult.mode_b_parallel_summary.result_data}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )
                                                 )}
                                             </div>
                                         </div>
