@@ -91,6 +91,14 @@ const AiReportPage = () => {
         target: ""
     });
 
+    const [stepCompletion, setStepCompletion] = useState({
+        step1: false,
+        step2: false,
+        step3_L1: false,
+        step3_L2: false,
+        step3_L3: false
+    });
+
     // Step 2: Survey Variables Checklist State
     const [searchQuery, setSearchQuery] = useState("");
     const [typeFilter, setTypeFilter] = useState("전체 유형");
@@ -264,14 +272,25 @@ const AiReportPage = () => {
                     l3: parsedInsightData.l3 || defaultL3
                 });
 
+                // Update step completeness flags
+                setStepCompletion({
+                    step1: item.step1_yn === true || item.step1_yn === 'Y',
+                    step2: item.step2_yn === true || item.step2_yn === 'Y',
+                    step3_L1: item.step3_L1_yn === true || item.step3_L1_yn === 'Y',
+                    step3_L2: item.step3_L2_yn === true || item.step3_L2_yn === 'Y',
+                    step3_L3: item.step3_L3_yn === true || item.step3_L3_yn === 'Y'
+                });
+
                 // Update pipeline status
-                if (statusVal === 'completed' || statusVal === 'COMPLETED') {
-                    setPipelineStatus({
-                        l1: { progress: 100, countText: `${finalQuestionsLength}개 문항`, isDone: true, isGenerating: false },
-                        l2: { progress: 100, countText: `${finalCategoriesLength}개 카테고리`, isDone: true, isGenerating: false },
-                        l3: { progress: 100, countText: "보고서 추출 가능", isDone: true, isGenerating: false }
-                    });
-                }
+                const l1Done = item.step3_L1_yn === true || item.step3_L1_yn === 'Y' || statusVal === 'completed' || statusVal === 'COMPLETED';
+                const l2Done = item.step3_L2_yn === true || item.step3_L2_yn === 'Y' || statusVal === 'completed' || statusVal === 'COMPLETED';
+                const l3Done = item.step3_L3_yn === true || item.step3_L3_yn === 'Y' || statusVal === 'completed' || statusVal === 'COMPLETED';
+
+                setPipelineStatus({
+                    l1: { progress: l1Done ? 100 : 0, countText: `${finalQuestionsLength}개 문항`, isDone: l1Done, isGenerating: false },
+                    l2: { progress: l2Done ? 100 : 0, countText: `${finalCategoriesLength}개 카테고리`, isDone: l2Done, isGenerating: false },
+                    l3: { progress: l3Done ? 100 : 0, countText: l3Done ? "보고서 추출 가능" : "분석 대기 중", isDone: l3Done, isGenerating: false }
+                });
             }
         } catch (err) {
             console.error("Failed to load existing AI summary data:", err);
@@ -1838,7 +1857,9 @@ const AiReportPage = () => {
                 <div className="ai-stepper-compact">
                     {steps.map((step, idx) => {
                         const isActive = idx === currentStep;
-                        const isCompleted = idx < currentStep || (step.key === 'analysis' && pipelineStatus.l3.isDone);
+                        const isCompleted = idx === 0 ? stepCompletion.step1 :
+                                            idx === 1 ? stepCompletion.step2 :
+                                            ((stepCompletion.step3_L1 && stepCompletion.step3_L2 && stepCompletion.step3_L3) || pipelineStatus.l3.isDone);
 
                         return (
                             <React.Fragment key={idx}>
