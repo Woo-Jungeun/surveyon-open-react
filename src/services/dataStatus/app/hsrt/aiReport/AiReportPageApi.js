@@ -44,12 +44,19 @@ export function AiReportPageApi() {
         }
     );
 
+    /** AI 요약보고서 - L1 생성상태 및 결과로드 */
+    const getL1Status = useMutation(
+        async (data) => await api.post(data, "/ai-summary/load-l1-status", "API_BASE_URL_DATASTATUS")
+    );
+
+
     return {
         getAiModels,
         getAiSummaryData,
         uploadQuestionnaire,
         getUploadProgress,
         saveAiSummaryFrame,
-        getAutoCategories
+        getAutoCategories,
+        getL1Status
     };
 }

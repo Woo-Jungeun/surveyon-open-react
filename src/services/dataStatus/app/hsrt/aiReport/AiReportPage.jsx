@@ -35,7 +35,7 @@ const CATEGORY_COLORS = [
 const AiReportPage = () => {
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
-    const { getAiModels, getAiSummaryData, uploadQuestionnaire, getUploadProgress, saveAiSummaryFrame, getAutoCategories } = AiReportPageApi();
+    const { getAiModels, getAiSummaryData, uploadQuestionnaire, getUploadProgress, saveAiSummaryFrame, getAutoCategories, getL1Status } = AiReportPageApi();
     const { getOverviewContext } = DpRequestPageApi();
     const fileInputRef = useRef(null);
 
@@ -116,6 +116,7 @@ const AiReportPage = () => {
     const [categories, setCategories] = useState([]);
     const [isAiCategorized, setIsAiCategorized] = useState(false);
     const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+    const [missingVariables, setMissingVariables] = useState([]);
 
     // Fallback Mock data definitions
     const defaultL1 = {};
@@ -133,7 +134,7 @@ const AiReportPage = () => {
     });
     const [activeSubTab, setActiveSubTab] = useState("l1"); // 'l1', 'l2', 'l3'
     const [l1SearchQuery, setL1SearchQuery] = useState("");
-    const [expandedL1Cards, setExpandedL1Cards] = useState({ q100_stub: true });
+    const [expandedL1Cards, setExpandedL1Cards] = useState({});
 
     const [insightData, setInsightData] = useState({
         l1: defaultL1,
@@ -266,8 +267,22 @@ const AiReportPage = () => {
                 }
 
                 // 4. Step 3: InsightData L1 / L2 / L3
+                let finalL1Insights = parsedInsightData.l1 || defaultL1;
+                try {
+                    const l1StatusRes = await getL1Status.mutateAsync({ pageId, user: userId });
+                    if (String(l1StatusRes?.success) === '777' && l1StatusRes?.resultjson) {
+                        const l1Payload = l1StatusRes.resultjson;
+                        setMissingVariables(l1Payload.missingVariables || []);
+                        if (l1Payload.l1Insights) {
+                            finalL1Insights = l1Payload.l1Insights;
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to load L1 status:", e);
+                }
+
                 setInsightData({
-                    l1: parsedInsightData.l1 || defaultL1,
+                    l1: finalL1Insights,
                     l2: parsedInsightData.l2 || defaultL2,
                     l3: parsedInsightData.l3 || defaultL3
                 });
@@ -515,6 +530,7 @@ const AiReportPage = () => {
                     [level]: { ...prev[level], isGenerating: false, isDone: true, progress: 100 }
                 }));
                 modal.showAlert("알림", `${level.toUpperCase()} 분석 재생성이 성공적으로 완료되었습니다.`);
+                loadSummaryData();
             }
         }, 200);
     };
@@ -852,6 +868,7 @@ const AiReportPage = () => {
                         setL1SearchQuery={setL1SearchQuery}
                         expandedL1Cards={expandedL1Cards}
                         setExpandedL1Cards={setExpandedL1Cards}
+                        missingVariables={missingVariables}
                     />
                 );
             default:

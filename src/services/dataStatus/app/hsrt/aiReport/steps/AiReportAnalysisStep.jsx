@@ -1,6 +1,18 @@
 
 import { Sparkles, Check, ArrowRight, Search, Filter, RefreshCw, ChevronUp, ChevronDown } from 'lucide-react';
 
+const renderInsightText = (val) => {
+    if (!val) return '';
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val)) {
+        return val.map(item => renderInsightText(item)).join('\n');
+    }
+    if (typeof val === 'object') {
+        return val.description || val.headline || val.text || JSON.stringify(val);
+    }
+    return String(val);
+};
+
 const AiReportAnalysisStep = ({
     aiGuideline,
     setAiGuideline,
@@ -13,10 +25,11 @@ const AiReportAnalysisStep = ({
     l1SearchQuery,
     setL1SearchQuery,
     expandedL1Cards,
-    setExpandedL1Cards
+    setExpandedL1Cards,
+    missingVariables = []
 }) => {
     return (
-        <div className="ai-step-content-container" style={{ gap: '20px' }}>
+        <div className="ai-step-content-container" style={{ gap: '20px', height: '100%', overflowY: 'hidden', paddingBottom: '0px' }}>
             {/* AI 요약 생성 지침 (한 줄로 표출) */}
             <div className="ai-card" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
@@ -37,7 +50,7 @@ const AiReportAnalysisStep = ({
             </div>
 
             {/* 분석 파이프라인 */}
-            <div className="ai-pipeline-section">
+            <div className="ai-pipeline-section" style={{ flexShrink: 0 }}>
                 <h3 className="ai-section-main-title">분석 파이프라인 <span className="ai-panel-help-icon" title="L1이 완료되어야 L2를 생성할 수 있고, L1, L2 결과를 기반으로 L3를 생성합니다. 선행 단계를 재생성하면 하위 단계 결과는 초기화됩니다.">?</span></h3>
 
                 <div className="ai-pipeline-grid">
@@ -65,7 +78,10 @@ const AiReportAnalysisStep = ({
                             onClick={() => triggerPipelineRegenerate('l1')}
                             disabled={pipelineStatus.l1.isGenerating}
                         >
-                            {pipelineStatus.l1.isGenerating ? "분석 중..." : "문항별 인사이트 재생성"}
+                            {pipelineStatus.l1.isGenerating 
+                                ? "분석 중..." 
+                                : (missingVariables.length > 0 ? "L1 미요약 문항 일괄 생성" : "문항별 인사이트 재생성")
+                            }
                         </button>
                     </div>
 
@@ -136,29 +152,112 @@ const AiReportAnalysisStep = ({
             </div>
 
             {/* Report list detail section */}
-            <div className="ai-report-detail-card">
+            <div className="ai-report-detail-card" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', paddingBottom: '24px' }}>
                 {/* Tabs row */}
-                <div className="ai-detail-tabs-row">
-                    <div className="ai-detail-tabs">
+                <div className="ai-detail-tabs-row" style={{ flexShrink: 0 }}>
+                    <div className="ai-detail-tabs" style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        backgroundColor: '#f1f5f9',
+                        padding: '4px',
+                        borderRadius: '8px',
+                        border: '1px solid #e2e8f0',
+                        gap: '4px'
+                    }}>
                         <button
                             className={`ai-detail-tab ${activeSubTab === 'l1' ? 'active' : ''}`}
                             onClick={() => setActiveSubTab('l1')}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                height: '32px',
+                                padding: '0 18px',
+                                border: 'none',
+                                backgroundColor: activeSubTab === 'l1' ? '#ffffff' : 'transparent',
+                                color: activeSubTab === 'l1' ? '#1e293b' : '#64748b',
+                                fontSize: '12px',
+                                fontWeight: activeSubTab === 'l1' ? 700 : 600,
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                boxShadow: activeSubTab === 'l1' ? '0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04)' : 'none',
+                                transition: 'all 0.2s ease',
+                                outline: 'none'
+                            }}
                         >
-                            <div className="tab-dot blue"></div>
+                            <div className="tab-dot" style={{
+                                width: '6px',
+                                height: '6px',
+                                borderRadius: '50%',
+                                backgroundColor: '#3b82f6',
+                                transform: activeSubTab === 'l1' ? 'scale(1.2)' : 'scale(1)',
+                                opacity: activeSubTab === 'l1' ? 1 : 0.5,
+                                transition: 'all 0.2s ease'
+                            }}></div>
                             <span>L1 문항별 인사이트</span>
                         </button>
                         <button
                             className={`ai-detail-tab ${activeSubTab === 'l2' ? 'active' : ''}`}
                             onClick={() => setActiveSubTab('l2')}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                height: '32px',
+                                padding: '0 18px',
+                                border: 'none',
+                                backgroundColor: activeSubTab === 'l2' ? '#ffffff' : 'transparent',
+                                color: activeSubTab === 'l2' ? '#1e293b' : '#64748b',
+                                fontSize: '12px',
+                                fontWeight: activeSubTab === 'l2' ? 700 : 600,
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                boxShadow: activeSubTab === 'l2' ? '0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04)' : 'none',
+                                transition: 'all 0.2s ease',
+                                outline: 'none'
+                            }}
                         >
-                            <div className="tab-dot green"></div>
+                            <div className="tab-dot" style={{
+                                width: '6px',
+                                height: '6px',
+                                borderRadius: '50%',
+                                backgroundColor: '#8b5cf6',
+                                transform: activeSubTab === 'l2' ? 'scale(1.2)' : 'scale(1)',
+                                opacity: activeSubTab === 'l2' ? 1 : 0.5,
+                                transition: 'all 0.2s ease'
+                            }}></div>
                             <span>L2 조사내용별 분석</span>
                         </button>
                         <button
                             className={`ai-detail-tab ${activeSubTab === 'l3' ? 'active' : ''}`}
                             onClick={() => setActiveSubTab('l3')}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                height: '32px',
+                                padding: '0 18px',
+                                border: 'none',
+                                backgroundColor: activeSubTab === 'l3' ? '#ffffff' : 'transparent',
+                                color: activeSubTab === 'l3' ? '#1e293b' : '#64748b',
+                                fontSize: '12px',
+                                fontWeight: activeSubTab === 'l3' ? 700 : 600,
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                boxShadow: activeSubTab === 'l3' ? '0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04)' : 'none',
+                                transition: 'all 0.2s ease',
+                                outline: 'none'
+                            }}
                         >
-                            <div className="tab-dot green"></div>
+                            <div className="tab-dot" style={{
+                                width: '6px',
+                                height: '6px',
+                                borderRadius: '50%',
+                                backgroundColor: '#10b981',
+                                transform: activeSubTab === 'l3' ? 'scale(1.2)' : 'scale(1)',
+                                opacity: activeSubTab === 'l3' ? 1 : 0.5,
+                                transition: 'all 0.2s ease'
+                            }}></div>
                             <span>L3 종합 요약 보고서</span>
                         </button>
                     </div>
@@ -186,10 +285,10 @@ const AiReportAnalysisStep = ({
                 </div>
 
                 {/* Report content blocks */}
-                <div className="ai-report-blocks-wrap">
+                <div className="ai-report-blocks-wrap" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingRight: '8px' }}>
                     {activeSubTab === 'l1' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            {Object.keys(insightData.l1 || {}).length === 0 ? (
+                            {(!pipelineStatus.l1.isDone || Object.keys(insightData.l1 || {}).length === 0) ? (
                                 <div className="ai-block-empty-state">
                                     <span>조회된 L1 문항별 인사이트가 없습니다.</span>
                                 </div>
@@ -230,7 +329,7 @@ const AiReportAnalysisStep = ({
                                                                 <span className="ai-panel-help-icon">?</span>
                                                             </div>
                                                             <p className="ai-bullet-body-content">
-                                                                {l1Val.fact_summary}
+                                                                {renderInsightText(l1Val.fact_summary)}
                                                             </p>
                                                         </div>
                                                     )}
@@ -243,7 +342,7 @@ const AiReportAnalysisStep = ({
                                                                 <span className="ai-panel-help-icon">?</span>
                                                             </div>
                                                             <p className="ai-bullet-body-content">
-                                                                {l1Val.segment_insights}
+                                                                {renderInsightText(l1Val.segment_insights)}
                                                             </p>
                                                         </div>
                                                     )}
@@ -258,7 +357,7 @@ const AiReportAnalysisStep = ({
                                                             <div className="ai-insight-result-box">
                                                                 <span className="ai-result-purple-chip">집단 분석 결과</span>
                                                                 <p className="ai-result-text">
-                                                                    {l1Val.respondent_characteristics}
+                                                                    {renderInsightText(l1Val.respondent_characteristics)}
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -274,7 +373,7 @@ const AiReportAnalysisStep = ({
 
                     {activeSubTab === 'l2' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            {(!insightData.l2 || insightData.l2.length === 0) ? (
+                            {(!pipelineStatus.l2.isDone || !insightData.l2 || insightData.l2.length === 0) ? (
                                 <div className="ai-block-empty-state">
                                     <span>조회된 L2 조사내용별 분석결과가 없습니다.</span>
                                 </div>
@@ -296,7 +395,7 @@ const AiReportAnalysisStep = ({
                                                         <span className="ai-bullet-title-text">핵심 발견 (Core Finding)</span>
                                                     </div>
                                                     <p className="ai-bullet-body-content">
-                                                        {catItem.insights.core_finding}
+                                                        {renderInsightText(catItem.insights.core_finding)}
                                                     </p>
                                                 </div>
                                             )}
@@ -308,7 +407,7 @@ const AiReportAnalysisStep = ({
                                                         <span className="ai-bullet-title-text">가설 검증 결과 (Hypothesis Result)</span>
                                                     </div>
                                                     <p className="ai-bullet-body-content">
-                                                        {catItem.insights.hypothesis_result}
+                                                        {renderInsightText(catItem.insights.hypothesis_result)}
                                                     </p>
                                                 </div>
                                             )}
@@ -321,7 +420,7 @@ const AiReportAnalysisStep = ({
                                                     </div>
                                                     <div className="ai-insight-result-box" style={{ background: '#f5f3ff', borderLeftColor: '#8b5cf6', padding: '12px 16px' }}>
                                                         <p className="ai-result-text" style={{ color: '#4c1d95', margin: 0 }}>
-                                                            {catItem.insights.so_what}
+                                                            {renderInsightText(catItem.insights.so_what)}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -334,40 +433,46 @@ const AiReportAnalysisStep = ({
                     )}
 
                     {activeSubTab === 'l3' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            {/* Executive Summary Card */}
-                            <div className="ai-card" style={{ padding: '24px', background: '#f1f5f9', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                    <span style={{ fontSize: '20px' }}>📋</span>
-                                    <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', margin: 0 }}>Executive Summary (종합 의사결정 요약문)</h3>
-                                </div>
-                                <p style={{ fontSize: '13px', lineHeight: '1.7', color: '#334155', margin: 0, whiteSpace: 'pre-wrap' }}>
-                                    {insightData.l3?.executive_summary}
-                                </p>
+                        (!pipelineStatus.l3.isDone || !insightData.l3 || Object.keys(insightData.l3 || {}).length === 0) ? (
+                            <div className="ai-block-empty-state">
+                                <span>조회된 L3 종합 요약 보고서 결과가 없습니다.</span>
                             </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                {/* Executive Summary Card */}
+                                <div className="ai-card" style={{ padding: '24px', background: '#f1f5f9', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                                        <span style={{ fontSize: '20px' }}>📋</span>
+                                        <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', margin: 0 }}>Executive Summary (종합 의사결정 요약문)</h3>
+                                    </div>
+                                    <p style={{ fontSize: '13px', lineHeight: '1.7', color: '#334155', margin: 0, whiteSpace: 'pre-wrap' }}>
+                                        {renderInsightText(insightData.l3?.executive_summary)}
+                                    </p>
+                                </div>
 
-                            {/* Strategic Recommendations Card */}
-                            <div className="ai-card" style={{ padding: '24px', background: '#f0fdf4', borderRadius: '12px', border: '1px solid #dcfce7', boxShadow: 'none' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                    <span style={{ fontSize: '20px' }}>💡</span>
-                                    <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#14532d', margin: 0 }}>Strategic Recommendations (전략적 제안 및 실행 과제)</h3>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    {Array.isArray(insightData.l3?.strategic_recommendations) ? (
-                                        insightData.l3.strategic_recommendations.map((rec, rIdx) => (
-                                            <div key={rIdx} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                                                <span style={{ color: '#16a34a', fontWeight: 'bold' }}>✓</span>
-                                                <p style={{ fontSize: '13px', lineHeight: '1.5', color: '#1b4332', margin: 0 }}>{rec}</p>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p style={{ fontSize: '13px', lineHeight: '1.6', color: '#1b4332', margin: 0, whiteSpace: 'pre-wrap' }}>
-                                            {insightData.l3?.strategic_recommendations}
-                                        </p>
-                                    )}
+                                {/* Strategic Recommendations Card */}
+                                <div className="ai-card" style={{ padding: '24px', background: '#f0fdf4', borderRadius: '12px', border: '1px solid #dcfce7', boxShadow: 'none' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                                        <span style={{ fontSize: '20px' }}>💡</span>
+                                        <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#14532d', margin: 0 }}>Strategic Recommendations (전략적 제안 및 실행 과제)</h3>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        {Array.isArray(insightData.l3?.strategic_recommendations) ? (
+                                            insightData.l3.strategic_recommendations.map((rec, rIdx) => (
+                                                <div key={rIdx} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                                                    <span style={{ color: '#16a34a', fontWeight: 'bold' }}>✓</span>
+                                                    <p style={{ fontSize: '13px', lineHeight: '1.5', color: '#1b4332', margin: 0 }}>{renderInsightText(rec)}</p>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p style={{ fontSize: '13px', lineHeight: '1.6', color: '#1b4332', margin: 0, whiteSpace: 'pre-wrap' }}>
+                                                {renderInsightText(insightData.l3?.strategic_recommendations)}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )
                     )}
                 </div>
             </div>
