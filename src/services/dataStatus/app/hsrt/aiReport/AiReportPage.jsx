@@ -169,7 +169,6 @@ const AiReportPage = () => {
                 const variablesDataRaw = item.variablesData || item.VariablesData;
                 const analysisFrameRaw = item.analysisFrame || item.AnalysisFrame;
                 const insightDataRaw = item.insightData || item.InsightData;
-                const statusVal = item.status || item.Status;
 
                 try {
                     if (variablesDataRaw) {
@@ -291,13 +290,13 @@ const AiReportPage = () => {
                 });
 
                 // Update pipeline status
-                const l1Done = item.step3_L1_yn === true || item.step3_L1_yn === 'Y' || statusVal === 'completed' || statusVal === 'COMPLETED';
-                const l2Done = item.step3_L2_yn === true || item.step3_L2_yn === 'Y' || statusVal === 'completed' || statusVal === 'COMPLETED';
-                const l3Done = item.step3_L3_yn === true || item.step3_L3_yn === 'Y' || statusVal === 'completed' || statusVal === 'COMPLETED';
+                const l1Done = item.step3_L1_yn === true || item.step3_L1_yn === 'Y';
+                const l2Done = item.step3_L2_yn === true || item.step3_L2_yn === 'Y';
+                const l3Done = item.step3_L3_yn === true || item.step3_L3_yn === 'Y';
 
                 setPipelineStatus({
-                    l1: { progress: l1Done ? 100 : 0, countText: `${finalQuestionsLength}개 문항`, isDone: l1Done, isGenerating: false },
-                    l2: { progress: l2Done ? 100 : 0, countText: `${finalCategoriesLength}개 카테고리`, isDone: l2Done, isGenerating: false },
+                    l1: { progress: l1Done ? 100 : 0, countText: l1Done ? `${finalQuestionsLength}개 문항` : "분석 대기 중", isDone: l1Done, isGenerating: false },
+                    l2: { progress: l2Done ? 100 : 0, countText: l2Done ? `${finalCategoriesLength}개 카테고리` : "분석 대기 중", isDone: l2Done, isGenerating: false },
                     l3: { progress: l3Done ? 100 : 0, countText: l3Done ? "보고서 추출 가능" : "분석 대기 중", isDone: l3Done, isGenerating: false }
                 });
             }

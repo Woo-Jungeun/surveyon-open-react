@@ -810,7 +810,7 @@
 .ai-pipeline-section {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
 }
 
 .ai-section-main-title {
@@ -835,7 +835,7 @@
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    padding: 16px;
+    padding: 10px 14px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
@@ -843,15 +843,15 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
 }
 
 .ai-pipe-level-badge {
     font-size: 10px;
     font-weight: 800;
     color: #ffffff;
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -880,12 +880,12 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
 }
 
 .ai-pipe-done-icon {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background: #eff6ff;
     border: 1px solid #bfdbfe;
@@ -915,25 +915,33 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
 }
 
 .ai-pipe-progress-bar {
     flex: 1;
-    height: 6px;
+    height: 4px;
     background: #e2e8f0;
-    border-radius: 3px;
+    border-radius: 2px;
     overflow: hidden;
 }
 
 .ai-pipe-progress-fill {
     height: 100%;
-    border-radius: 3px;
+    border-radius: 2px;
     transition: width 0.3s ease;
 }
 
 .ai-pipe-progress-fill.l1 {
     background: #3b82f6;
+}
+
+.ai-pipe-progress-fill.l2 {
+    background: #a855f7;
+}
+
+.ai-pipe-progress-fill.l3 {
+    background: #10b981;
 }
 
 .ai-pipe-percent-label {
@@ -942,9 +950,17 @@
     color: #3b82f6;
 }
 
+.ai-pipe-percent-label.l2 {
+    color: #a855f7;
+}
+
+.ai-pipe-percent-label.l3 {
+    color: #10b981;
+}
+
 .ai-pipe-action-btn {
     width: 100%;
-    height: 32px;
+    height: 28px;
     border: none;
     border-radius: 6px;
     font-size: 12px;

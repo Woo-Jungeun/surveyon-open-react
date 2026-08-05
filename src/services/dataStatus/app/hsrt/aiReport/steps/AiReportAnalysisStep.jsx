@@ -45,7 +45,7 @@ const AiReportAnalysisStep = ({
     };
 
     return (
-        <div className="ai-step-content-container" style={{ gap: '20px', height: '100%', overflowY: 'hidden', paddingBottom: '0px' }}>
+        <div className="ai-step-content-container" style={{ gap: '12px', height: '100%', overflowY: 'hidden', boxSizing: 'border-box' }}>
             {/* AI 요약 생성 지침 (한 줄로 표출) */}
             <div className="ai-card" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
@@ -72,16 +72,20 @@ const AiReportAnalysisStep = ({
                 <div className="ai-pipeline-grid">
                     {/* Card 1 */}
                     <div className="ai-pipeline-card">
-                        <div className="ai-pipe-header">
-                            <div className="ai-pipe-level-badge level1">L1</div>
-                            <span className="ai-pipe-title">문항별 인사이트 분석</span>
-                            <span className="ai-panel-help-icon" title="교차표 캐시를 로드하고, 아직 요약되지 않은 문항을 일괄 생성합니다.">?</span>
-                        </div>
-                        <div className="ai-pipe-status-row">
-                            <div className="ai-pipe-done-icon">
-                                <Check size={12} strokeWidth={3} />
+                        <div className="ai-pipe-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <div className="ai-pipe-level-badge level1">L1</div>
+                                <span className="ai-pipe-title">문항별 인사이트 분석</span>
+                                <span className="ai-panel-help-icon" title="교차표 캐시를 로드하고, 아직 요약되지 않은 문항을 일괄 생성합니다.">?</span>
                             </div>
-                            <span className="ai-pipe-status-text">생성 완료 · {pipelineStatus.l1.countText}</span>
+                            <div className="ai-pipe-status-row" style={{ margin: 0 }}>
+                                <div className={`ai-pipe-done-icon ${pipelineStatus.l1.isDone ? 'green' : ''}`}>
+                                    <Check size={12} strokeWidth={3} />
+                                </div>
+                                <span className={`ai-pipe-status-text ${pipelineStatus.l1.isDone ? 'font-green' : ''}`}>
+                                    {pipelineStatus.l1.isDone ? `생성 완료 · ${pipelineStatus.l1.countText}` : '분석 대기 중'}
+                                </span>
+                            </div>
                         </div>
                         <div className="ai-pipe-progress-container">
                             <div className="ai-pipe-progress-bar">
@@ -107,22 +111,26 @@ const AiReportAnalysisStep = ({
 
                     {/* Card 2 */}
                     <div className="ai-pipeline-card">
-                        <div className="ai-pipe-header">
-                            <div className="ai-pipe-level-badge level2">L2</div>
-                            <span className="ai-pipe-title">조사내용별 분석</span>
-                            <span className="ai-panel-help-icon" title="L1 문항 요약을 조사내용(카테고리)별로 결합해 가설 검증 핵심 사실전략 제안을 작성합니다.">?</span>
-                        </div>
-                        <div className="ai-pipe-status-row">
-                            <div className="ai-pipe-done-icon">
-                                <Check size={12} strokeWidth={3} />
+                        <div className="ai-pipe-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <div className="ai-pipe-level-badge level2">L2</div>
+                                <span className="ai-pipe-title">조사내용별 분석</span>
+                                <span className="ai-panel-help-icon" title="L1 문항 요약을 조사내용(카테고리)별로 결합해 가설 검증 핵심 사실전략 제안을 작성합니다.">?</span>
                             </div>
-                            <span className="ai-pipe-status-text">생성 완료 · {pipelineStatus.l2.countText}</span>
+                            <div className="ai-pipe-status-row" style={{ margin: 0 }}>
+                                <div className={`ai-pipe-done-icon ${pipelineStatus.l2.isDone ? 'green' : ''}`}>
+                                    <Check size={12} strokeWidth={3} />
+                                </div>
+                                <span className={`ai-pipe-status-text ${pipelineStatus.l2.isDone ? 'font-green' : ''}`}>
+                                    {pipelineStatus.l2.isDone ? `생성 완료 · ${pipelineStatus.l2.countText}` : '분석 대기 중'}
+                                </span>
+                            </div>
                         </div>
-                        <div className="ai-pipe-progress-container" style={{ visibility: 'hidden' }}>
+                        <div className="ai-pipe-progress-container">
                             <div className="ai-pipe-progress-bar">
-                                <div className="ai-pipe-progress-fill" style={{ width: '100%' }}></div>
+                                <div className="ai-pipe-progress-fill l2" style={{ width: `${pipelineStatus.l2.progress}%` }}></div>
                             </div>
-                            <span>100%</span>
+                            <span className="ai-pipe-percent-label l2">{pipelineStatus.l2.progress}%</span>
                         </div>
                         <button
                             className="ai-pipe-action-btn l2-btn"
@@ -139,22 +147,26 @@ const AiReportAnalysisStep = ({
 
                     {/* Card 3 */}
                     <div className="ai-pipeline-card">
-                        <div className="ai-pipe-header">
-                            <div className="ai-pipe-level-badge level3">L3</div>
-                            <span className="ai-pipe-title">종합 요약 보고서</span>
-                            <span className="ai-panel-help-icon" title="L1, L2 결과를 종합해 Executive Summary와 전략적 액션 아이템을 생성합니다.">?</span>
-                        </div>
-                        <div className="ai-pipe-status-row">
-                            <div className="ai-pipe-done-icon green">
-                                <Check size={12} strokeWidth={3} />
+                        <div className="ai-pipe-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <div className="ai-pipe-level-badge level3">L3</div>
+                                <span className="ai-pipe-title">종합 요약 보고서</span>
+                                <span className="ai-panel-help-icon" title="L1, L2 결과를 종합해 Executive Summary와 전략적 액션 아이템을 생성합니다.">?</span>
                             </div>
-                            <span className="ai-pipe-status-text font-green">생성 완료 · {pipelineStatus.l3.countText}</span>
+                            <div className="ai-pipe-status-row" style={{ margin: 0 }}>
+                                <div className={`ai-pipe-done-icon ${pipelineStatus.l3.isDone ? 'green' : ''}`}>
+                                    <Check size={12} strokeWidth={3} />
+                                </div>
+                                <span className={`ai-pipe-status-text ${pipelineStatus.l3.isDone ? 'font-green' : ''}`}>
+                                    {pipelineStatus.l3.isDone ? `생성 완료 · ${pipelineStatus.l3.countText}` : '분석 대기 중'}
+                                </span>
+                            </div>
                         </div>
-                        <div className="ai-pipe-progress-container" style={{ visibility: 'hidden' }}>
+                        <div className="ai-pipe-progress-container">
                             <div className="ai-pipe-progress-bar">
-                                <div className="ai-pipe-progress-fill" style={{ width: '100%' }}></div>
+                                <div className="ai-pipe-progress-fill l3" style={{ width: `${pipelineStatus.l3.progress}%` }}></div>
                             </div>
-                            <span>100%</span>
+                            <span className="ai-pipe-percent-label l3">{pipelineStatus.l3.progress}%</span>
                         </div>
                         <button
                             className="ai-pipe-action-btn l3-btn"
