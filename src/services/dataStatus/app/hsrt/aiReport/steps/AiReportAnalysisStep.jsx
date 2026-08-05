@@ -1,5 +1,5 @@
 
-import { Sparkles, Check, ArrowRight, Search, Filter, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet } from 'lucide-react';
+import { Sparkles, Check, ArrowRight, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet, ChevronsUpDown, ChevronsDownUp } from 'lucide-react';
 
 const renderInsightText = (val) => {
     if (!val) return '';
@@ -29,6 +29,21 @@ const AiReportAnalysisStep = ({
     missingVariables = [],
     onExportL1Excel
 }) => {
+    const keys = Object.keys(insightData.l1 || {});
+    const allExpanded = keys.length > 0 && keys.every(key => !!expandedL1Cards[key]);
+
+    const handleToggleAll = () => {
+        if (allExpanded) {
+            setExpandedL1Cards({});
+        } else {
+            const newExpanded = {};
+            keys.forEach(key => {
+                newExpanded[key] = true;
+            });
+            setExpandedL1Cards(newExpanded);
+        }
+    };
+
     return (
         <div className="ai-step-content-container" style={{ gap: '20px', height: '100%', overflowY: 'hidden', paddingBottom: '0px' }}>
             {/* AI 요약 생성 지침 (한 줄로 표출) */}
@@ -79,8 +94,8 @@ const AiReportAnalysisStep = ({
                             onClick={() => triggerPipelineRegenerate('l1')}
                             disabled={pipelineStatus.l1.isGenerating}
                         >
-                            {pipelineStatus.l1.isGenerating 
-                                ? "분석 중..." 
+                            {pipelineStatus.l1.isGenerating
+                                ? "분석 중..."
                                 : (missingVariables.length > 0 ? "L1 미요약 문항 일괄 생성" : "문항별 인사이트 재생성")
                             }
                         </button>
@@ -267,18 +282,23 @@ const AiReportAnalysisStep = ({
                         <span className="ai-detail-status-count">요약 완료 <strong>{Object.keys(insightData.l1 || {}).length} / {questions.length} 문항</strong></span>
 
                         <div className="ai-detail-search-wrap">
-                            <Search size={13} className="ai-detail-search-icon" />
                             <input
                                 type="text"
                                 className="ai-detail-search-input"
-                                placeholder="문항 ID 또는 이름 검색"
+                                placeholder="문항 ID 또는 텍스트 검색"
                                 value={l1SearchQuery}
                                 onChange={(e) => setL1SearchQuery(e.target.value)}
                             />
                         </div>
 
-                        <button className="ai-icon-btn"><Filter size={13} /></button>
-                        <button className="ai-xlsx-btn" onClick={onExportL1Excel}>
+                        <button 
+                            className="ai-icon-btn" 
+                            title="전체 펼치기/접기"
+                            onClick={handleToggleAll}
+                        >
+                            {allExpanded ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
+                        </button>
+                        <button className="ai-xlsx-btn" onClick={onExportL1Excel} title="엑셀 다운로드">
                             <FileSpreadsheet size={13} />
                             <span>XLSX</span>
                         </button>
