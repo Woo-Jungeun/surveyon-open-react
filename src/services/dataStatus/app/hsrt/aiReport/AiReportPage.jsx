@@ -1153,7 +1153,6 @@ const AiReportPage = () => {
                         <div className="ai-card ai-right-column">
                             <div className="ai-card-title-row" style={{ flexWrap: 'wrap', gap: '10px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span className="ai-panel-icon">⚙</span>
                                     <span className="ai-panel-title">생성된 카테고리</span>
                                     <span className="ai-category-badge-count">{categories.length}</span>
                                 </div>
@@ -1491,13 +1490,12 @@ const AiReportPage = () => {
             case 2: // 최종분석
                 return (
                     <div className="ai-step-content-container" style={{ gap: '20px' }}>
-                        {/* AI 요약 생성 지침 */}
-                        <div className="ai-card">
-                            <div className="ai-guideline-header">
-                                <Sparkles size={16} className="ai-spark-yellow" />
-                                <span className="ai-guideline-title">AI 요약 생성 지침</span>
-                                <span className="ai-panel-help-icon">?</span>
-                                <button className="ai-guideline-preset-btn">선택</button>
+                        {/* AI 요약 생성 지침 (한 줄로 표출) */}
+                        <div className="ai-card" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                                <span className="ai-guideline-title" style={{ whiteSpace: 'nowrap' }}>AI 요약 생성 지침</span>
+                                <span className="ai-guideline-badge">L2·L3 전용</span>
+                                <span className="ai-panel-help-icon" title="이 지침은 L2(카테고리별 요약) 및 L3(종합 AI 요약 보고서) 분석 단계에서 요약을 생성할 때 반영되며, L1 단계에는 적용되지 않습니다.">?</span>
                             </div>
                             <input
                                 type="text"
@@ -1505,7 +1503,9 @@ const AiReportPage = () => {
                                 value={aiGuideline}
                                 onChange={(e) => setAiGuideline(e.target.value)}
                                 placeholder="예: 백분율은 소수점 첫째 자리까지 표기하고, 집단 간 차이가 큰 항목을 우선 서술"
+                                style={{ flex: 1, height: '32px', margin: 0 }}
                             />
+                            <button className="ai-guideline-preset-btn" style={{ flexShrink: 0, margin: 0, height: '32px', padding: '0 12px', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>선택</button>
                         </div>
 
                         {/* 분석 파이프라인 */}
@@ -1858,8 +1858,8 @@ const AiReportPage = () => {
                     {steps.map((step, idx) => {
                         const isActive = idx === currentStep;
                         const isCompleted = idx === 0 ? stepCompletion.step1 :
-                                            idx === 1 ? stepCompletion.step2 :
-                                            ((stepCompletion.step3_L1 && stepCompletion.step3_L2 && stepCompletion.step3_L3) || pipelineStatus.l3.isDone);
+                            idx === 1 ? stepCompletion.step2 :
+                                ((stepCompletion.step3_L1 && stepCompletion.step3_L2 && stepCompletion.step3_L3) || pipelineStatus.l3.isDone);
 
                         return (
                             <React.Fragment key={idx}>

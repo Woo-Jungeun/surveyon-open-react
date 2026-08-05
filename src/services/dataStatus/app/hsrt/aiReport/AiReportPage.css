@@ -761,6 +761,20 @@
     color: #1e293b;
 }
 
+.ai-guideline-badge {
+    background-color: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    display: inline-flex;
+    align-items: center;
+    user-select: none;
+}
+
 .ai-guideline-preset-btn {
     background: #ffffff;
     border: 1px solid #cbd5e1;
