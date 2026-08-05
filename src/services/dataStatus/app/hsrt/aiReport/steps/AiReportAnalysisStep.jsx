@@ -27,7 +27,8 @@ const AiReportAnalysisStep = ({
     expandedL1Cards,
     setExpandedL1Cards,
     missingVariables = [],
-    onExportL1Excel
+    onExportL1Excel,
+    categories = []
 }) => {
     const keys = Object.keys(insightData.l1 || {});
     const allExpanded = keys.length > 0 && keys.every(key => !!expandedL1Cards[key]);
@@ -49,7 +50,6 @@ const AiReportAnalysisStep = ({
             {/* AI 요약 생성 지침 (한 줄로 표출) */}
             <div className="ai-card" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                    <Sparkles size={16} className="ai-spark-yellow" />
                     <span className="ai-guideline-title" style={{ whiteSpace: 'nowrap' }}>AI 요약 생성 지침</span>
                     <span className="ai-guideline-badge">L2·L3 전용</span>
                     <span className="ai-panel-help-icon" title="여기에 입력한 지침은 L2, L3 단계의 분석 프롬프트에 최우선으로 반영되어 리포트가 생성됩니다.">?</span>
@@ -67,11 +67,21 @@ const AiReportAnalysisStep = ({
 
             {/* 분석 파이프라인 */}
             <div className="ai-pipeline-section" style={{ flexShrink: 0 }}>
-                <h3 className="ai-section-main-title">분석 파이프라인 <span className="ai-panel-help-icon" title="L1이 완료되어야 L2를 생성할 수 있고, L1, L2 결과를 기반으로 L3를 생성합니다. 선행 단계를 재생성하면 하위 단계 결과는 초기화됩니다.">?</span></h3>
+                <h3 className="ai-section-main-title">
+                    분석 파이프라인
+                    <span className="ai-panel-help-icon" title="L1이 완료되어야 L2를 생성할 수 있고, L1, L2 결과를 기반으로 L3를 생성합니다. 선행 단계를 재생성하면 하위 단계 결과는 초기화됩니다.">?</span>
+                    <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 'normal', marginLeft: '10px' }}>
+                        (각 단계를 클릭하면 하단에 상세 결과가 표시됩니다)
+                    </span>
+                </h3>
 
                 <div className="ai-pipeline-grid">
                     {/* Card 1 */}
-                    <div className="ai-pipeline-card">
+                    <div
+                        className={`ai-pipeline-card l1 ${activeSubTab === 'l1' ? 'active' : ''}`}
+                        onClick={() => setActiveSubTab('l1')}
+                        title="클릭하여 L1 문항별 인사이트 결과 보기"
+                    >
                         <div className="ai-pipe-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <div className="ai-pipe-level-badge level1">L1</div>
@@ -95,7 +105,10 @@ const AiReportAnalysisStep = ({
                         </div>
                         <button
                             className="ai-pipe-action-btn l1-btn"
-                            onClick={() => triggerPipelineRegenerate('l1')}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                triggerPipelineRegenerate('l1');
+                            }}
                             disabled={pipelineStatus.l1.isGenerating}
                         >
                             {pipelineStatus.l1.isGenerating
@@ -105,12 +118,16 @@ const AiReportAnalysisStep = ({
                         </button>
                     </div>
 
-                    <div className="ai-pipeline-arrow">
-                        <ArrowRight size={20} color="#94a3b8" />
+                    <div className="ai-pipeline-arrow-in">
+                        <ArrowRight size={16} />
                     </div>
 
                     {/* Card 2 */}
-                    <div className="ai-pipeline-card">
+                    <div
+                        className={`ai-pipeline-card l2 ${activeSubTab === 'l2' ? 'active' : ''}`}
+                        onClick={() => setActiveSubTab('l2')}
+                        title="클릭하여 L2 조사내용별 분석 결과 보기"
+                    >
                         <div className="ai-pipe-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <div className="ai-pipe-level-badge level2">L2</div>
@@ -134,19 +151,26 @@ const AiReportAnalysisStep = ({
                         </div>
                         <button
                             className="ai-pipe-action-btn l2-btn"
-                            onClick={() => triggerPipelineRegenerate('l2')}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                triggerPipelineRegenerate('l2');
+                            }}
                             disabled={pipelineStatus.l2.isGenerating}
                         >
                             {pipelineStatus.l2.isGenerating ? "분석 중..." : "조사내용별 재생성"}
                         </button>
                     </div>
 
-                    <div className="ai-pipeline-arrow">
-                        <ArrowRight size={20} color="#94a3b8" />
+                    <div className="ai-pipeline-arrow-in">
+                        <ArrowRight size={16} />
                     </div>
 
                     {/* Card 3 */}
-                    <div className="ai-pipeline-card">
+                    <div
+                        className={`ai-pipeline-card l3 ${activeSubTab === 'l3' ? 'active' : ''}`}
+                        onClick={() => setActiveSubTab('l3')}
+                        title="클릭하여 L3 종합 요약 보고서 보기"
+                    >
                         <div className="ai-pipe-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <div className="ai-pipe-level-badge level3">L3</div>
@@ -170,7 +194,10 @@ const AiReportAnalysisStep = ({
                         </div>
                         <button
                             className="ai-pipe-action-btn l3-btn"
-                            onClick={() => triggerPipelineRegenerate('l3')}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                triggerPipelineRegenerate('l3');
+                            }}
                             disabled={pipelineStatus.l3.isGenerating}
                         >
                             {pipelineStatus.l3.isGenerating ? "분석 중..." : "종합 보고서 재생성"}
@@ -183,138 +210,42 @@ const AiReportAnalysisStep = ({
             <div className="ai-report-detail-card" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', paddingBottom: '24px' }}>
                 {/* Tabs row */}
                 <div className="ai-detail-tabs-row" style={{ flexShrink: 0 }}>
-                    <div className="ai-detail-tabs" style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        backgroundColor: '#f1f5f9',
-                        padding: '4px',
-                        borderRadius: '8px',
-                        border: '1px solid #e2e8f0',
-                        gap: '4px'
-                    }}>
-                        <button
-                            className={`ai-detail-tab ${activeSubTab === 'l1' ? 'active' : ''}`}
-                            onClick={() => setActiveSubTab('l1')}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                height: '32px',
-                                padding: '0 18px',
-                                border: 'none',
-                                backgroundColor: activeSubTab === 'l1' ? '#ffffff' : 'transparent',
-                                color: activeSubTab === 'l1' ? '#1e293b' : '#64748b',
-                                fontSize: '12px',
-                                fontWeight: activeSubTab === 'l1' ? 700 : 600,
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                boxShadow: activeSubTab === 'l1' ? '0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04)' : 'none',
-                                transition: 'all 0.2s ease',
-                                outline: 'none'
-                            }}
-                        >
-                            <div className="tab-dot" style={{
-                                width: '6px',
-                                height: '6px',
-                                borderRadius: '50%',
-                                backgroundColor: '#3b82f6',
-                                transform: activeSubTab === 'l1' ? 'scale(1.2)' : 'scale(1)',
-                                opacity: activeSubTab === 'l1' ? 1 : 0.5,
-                                transition: 'all 0.2s ease'
-                            }}></div>
-                            <span>L1 문항별 인사이트</span>
-                        </button>
-                        <button
-                            className={`ai-detail-tab ${activeSubTab === 'l2' ? 'active' : ''}`}
-                            onClick={() => setActiveSubTab('l2')}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                height: '32px',
-                                padding: '0 18px',
-                                border: 'none',
-                                backgroundColor: activeSubTab === 'l2' ? '#ffffff' : 'transparent',
-                                color: activeSubTab === 'l2' ? '#1e293b' : '#64748b',
-                                fontSize: '12px',
-                                fontWeight: activeSubTab === 'l2' ? 700 : 600,
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                boxShadow: activeSubTab === 'l2' ? '0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04)' : 'none',
-                                transition: 'all 0.2s ease',
-                                outline: 'none'
-                            }}
-                        >
-                            <div className="tab-dot" style={{
-                                width: '6px',
-                                height: '6px',
-                                borderRadius: '50%',
-                                backgroundColor: '#8b5cf6',
-                                transform: activeSubTab === 'l2' ? 'scale(1.2)' : 'scale(1)',
-                                opacity: activeSubTab === 'l2' ? 1 : 0.5,
-                                transition: 'all 0.2s ease'
-                            }}></div>
-                            <span>L2 조사내용별 분석</span>
-                        </button>
-                        <button
-                            className={`ai-detail-tab ${activeSubTab === 'l3' ? 'active' : ''}`}
-                            onClick={() => setActiveSubTab('l3')}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                height: '32px',
-                                padding: '0 18px',
-                                border: 'none',
-                                backgroundColor: activeSubTab === 'l3' ? '#ffffff' : 'transparent',
-                                color: activeSubTab === 'l3' ? '#1e293b' : '#64748b',
-                                fontSize: '12px',
-                                fontWeight: activeSubTab === 'l3' ? 700 : 600,
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                boxShadow: activeSubTab === 'l3' ? '0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04)' : 'none',
-                                transition: 'all 0.2s ease',
-                                outline: 'none'
-                            }}
-                        >
-                            <div className="tab-dot" style={{
-                                width: '6px',
-                                height: '6px',
-                                borderRadius: '50%',
-                                backgroundColor: '#10b981',
-                                transform: activeSubTab === 'l3' ? 'scale(1.2)' : 'scale(1)',
-                                opacity: activeSubTab === 'l3' ? 1 : 0.5,
-                                transition: 'all 0.2s ease'
-                            }}></div>
-                            <span>L3 종합 요약 보고서</span>
-                        </button>
-                    </div>
+                    <div className="ai-detail-actions" style={{ width: '100%', justifyContent: 'space-between' }}>
+                        {activeSubTab === 'l1' ? (
+                            <span className="ai-detail-status-count">요약 완료 <strong>{Object.keys(insightData.l1 || {}).length} / {questions.length} 문항</strong></span>
+                        ) : activeSubTab === 'l2' ? (
+                            <span className="ai-detail-status-count">분석 완료 <strong>{insightData.l2?.length || 0} / {categories.length} 카테고리</strong></span>
+                        ) : (
+                            <span className="ai-detail-status-count"><strong>최종 종합 보고서</strong></span>
+                        )}
 
-                    <div className="ai-detail-actions">
-                        <span className="ai-detail-status-count">요약 완료 <strong>{Object.keys(insightData.l1 || {}).length} / {questions.length} 문항</strong></span>
-
-                        <div className="ai-detail-search-wrap">
-                            <input
-                                type="text"
-                                className="ai-detail-search-input"
-                                placeholder="문항 ID 또는 텍스트 검색"
-                                value={l1SearchQuery}
-                                onChange={(e) => setL1SearchQuery(e.target.value)}
-                            />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {activeSubTab === 'l1' && (
+                                <>
+                                    <div className="ai-detail-search-wrap">
+                                        <input
+                                            type="text"
+                                            className="ai-detail-search-input"
+                                            placeholder="문항 ID 또는 텍스트 검색"
+                                            value={l1SearchQuery}
+                                            onChange={(e) => setL1SearchQuery(e.target.value)}
+                                        />
+                                    </div>
+                                    <button
+                                        className="ai-icon-btn"
+                                        title="전체 펼치기/접기"
+                                        onClick={handleToggleAll}
+                                    >
+                                        {allExpanded ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
+                                    </button>
+                                    <button className="ai-xlsx-btn" onClick={onExportL1Excel} title="엑셀 다운로드">
+                                        <FileSpreadsheet size={13} />
+                                        <span>엑셀 다운로드</span>
+                                    </button>
+                                </>
+                            )}
+                            <button className="ai-icon-btn"><RefreshCw size={13} /></button>
                         </div>
-
-                        <button 
-                            className="ai-icon-btn" 
-                            title="전체 펼치기/접기"
-                            onClick={handleToggleAll}
-                        >
-                            {allExpanded ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
-                        </button>
-                        <button className="ai-xlsx-btn" onClick={onExportL1Excel} title="엑셀 다운로드">
-                            <FileSpreadsheet size={13} />
-                            <span>XLSX</span>
-                        </button>
-                        <button className="ai-icon-btn"><RefreshCw size={13} /></button>
                     </div>
                 </div>
 

@@ -1063,6 +1063,7 @@ const AiReportPage = () => {
                         setExpandedL1Cards={setExpandedL1Cards}
                         missingVariables={missingVariables}
                         onExportL1Excel={handleExportL1Excel}
+                        categories={categories}
                     />
                 );
             default:
