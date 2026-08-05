@@ -36,8 +36,9 @@ const AiReportPage = () => {
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
     const { getAiModels, getAiSummaryData, uploadQuestionnaire, getUploadProgress, saveAiSummaryFrame, getAutoCategories, getL1Status } = AiReportPageApi();
-    const { getOverviewContext } = DpRequestPageApi();
+    const { getOverviewContext, getCrosstabAiSummaryAll } = DpRequestPageApi();
     const fileInputRef = useRef(null);
+    const recodedVariablesRef = useRef({});
 
     const [currentStep, setCurrentStep] = useState(0);
     const [selectedModel, setSelectedModel] = useState("");
@@ -117,6 +118,7 @@ const AiReportPage = () => {
     const [isAiCategorized, setIsAiCategorized] = useState(false);
     const [selectedCategoryId, setSelectedCategoryId] = useState(null);
     const [missingVariables, setMissingVariables] = useState([]);
+    const [bannerVars, setBannerVars] = useState([]);
 
     // Fallback Mock data definitions
     const defaultL1 = {};
@@ -190,6 +192,11 @@ const AiReportPage = () => {
                 // 1. Step 1: Overview
                 // 1. Step 1: Overview
                 const piFrame = parsedAnalysisFrame || {};
+                if (Array.isArray(piFrame.banner)) {
+                    setBannerVars(piFrame.banner);
+                } else if (typeof piFrame.banner === 'string' && piFrame.banner.trim() !== '') {
+                    setBannerVars([piFrame.banner]);
+                }
                 const piVar = parsedVariablesData.project_info || {};
                 setOverviewData({
                     projectname: piFrame.projectName || piFrame.projectname || piVar.projectName || piVar.projectname || sessionStorage.getItem("projectname") || "",
@@ -204,6 +211,7 @@ const AiReportPage = () => {
                     const contextRes = await getOverviewContext.mutateAsync({ pageid: pageId, user: userId });
                     const ctxPayload = contextRes?.resultjson || contextRes || {};
                     const recodedVars = ctxPayload.recoded_variables || {};
+                    recodedVariablesRef.current = recodedVars;
 
                     const mappedQuestions = Object.entries(recodedVars)
                         .filter(([key, v]) => {
@@ -267,22 +275,8 @@ const AiReportPage = () => {
                 }
 
                 // 4. Step 3: InsightData L1 / L2 / L3
-                let finalL1Insights = parsedInsightData.l1 || defaultL1;
-                try {
-                    const l1StatusRes = await getL1Status.mutateAsync({ pageId, user: userId });
-                    if (String(l1StatusRes?.success) === '777' && l1StatusRes?.resultjson) {
-                        const l1Payload = l1StatusRes.resultjson;
-                        setMissingVariables(l1Payload.missingVariables || []);
-                        if (l1Payload.l1Insights) {
-                            finalL1Insights = l1Payload.l1Insights;
-                        }
-                    }
-                } catch (e) {
-                    console.error("Failed to load L1 status:", e);
-                }
-
                 setInsightData({
-                    l1: finalL1Insights,
+                    l1: parsedInsightData.l1 || defaultL1,
                     l2: parsedInsightData.l2 || defaultL2,
                     l3: parsedInsightData.l3 || defaultL3
                 });
@@ -311,6 +305,26 @@ const AiReportPage = () => {
             console.error("Failed to load existing AI summary data:", err);
         }
     };
+    const fetchL1StatusData = async () => {
+        const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        const userId = auth?.user?.userId || "jewoo";
+        try {
+            const l1StatusRes = await getL1Status.mutateAsync({ pageId, user: userId });
+            if (String(l1StatusRes?.success) === '777' && l1StatusRes?.resultjson) {
+                const l1Payload = l1StatusRes.resultjson;
+                setMissingVariables(l1Payload.missingVariables || []);
+                if (l1Payload.l1Insights) {
+                    setInsightData(prev => ({
+                        ...prev,
+                        l1: l1Payload.l1Insights
+                    }));
+                }
+            }
+        } catch (e) {
+            console.error("Failed to load L1 status:", e);
+        }
+    };
+
     // Initial load checks
     useEffect(() => {
         const cachedOverview = localStorage.getItem("ai_report_overview_v2");
@@ -327,6 +341,14 @@ const AiReportPage = () => {
         loadSummaryData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [auth?.user?.userId]);
+
+    // Load L1 status when entering Step 3 (최종분석)
+    useEffect(() => {
+        if (currentStep === 2) {
+            fetchL1StatusData();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentStep]);
     // Toggle variable selection
     const handleToggleQuestion = (id) => {
         const updated = questions.map(q => q.id === id ? { ...q, checked: !q.checked } : q);
@@ -510,29 +532,149 @@ const AiReportPage = () => {
     };
 
     // Simulated pipeline generation triggers
-    const triggerPipelineRegenerate = (level) => {
+    const triggerPipelineRegenerate = async (level) => {
         setPipelineStatus(prev => ({
             ...prev,
             [level]: { ...prev[level], isGenerating: true, progress: 0 }
         }));
 
-        let prog = 0;
-        const interval = setInterval(() => {
-            prog += 20;
-            setPipelineStatus(prev => ({
-                ...prev,
-                [level]: { ...prev[level], progress: prog }
-            }));
-            if (prog >= 100) {
-                clearInterval(interval);
+        if (level === 'l1') {
+            const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+            const userId = auth?.user?.userId || "jewoo";
+
+            // Load recoded_variables if empty
+            let recodedVars = recodedVariablesRef.current || {};
+            if (Object.keys(recodedVars).length === 0) {
+                try {
+                    const contextRes = await getOverviewContext.mutateAsync({ pageid: pageId, user: userId });
+                    const ctxPayload = contextRes?.resultjson || contextRes || {};
+                    recodedVars = ctxPayload.recoded_variables || {};
+                    recodedVariablesRef.current = recodedVars;
+                } catch (e) {
+                    console.error("Failed to load context in regenerate:", e);
+                }
+            }
+
+            const bannerVarList = bannerVars.length > 0 ? bannerVars : ["banner_001"];
+            const variablesPayload = Object.keys(recodedVars).map(key => {
+                const item = recodedVars[key];
+                let bannerVal = bannerVarList;
+                if (item && item.banner) {
+                    if (Array.isArray(item.banner)) {
+                        bannerVal = item.banner;
+                    } else if (typeof item.banner === 'string' && item.banner.trim() !== '') {
+                        bannerVal = [item.banner];
+                    }
+                }
+                return {
+                    variableId: key,
+                    banner: bannerVal
+                };
+            });
+
+            const payload = {
+                pageId: pageId,
+                filterExpression: "",
+                weightCol: "",
+                model: selectedModel || "llm-gpt-oss-120b",
+                variables: variablesPayload,
+                user: userId,
+                triggerBatch: true
+            };
+
+            try {
+                const res = await getCrosstabAiSummaryAll.mutateAsync(payload);
+                if (String(res?.success) === '777' && res?.resultjson) {
+                    const data = res.resultjson;
+                    const initialProg = data.progress ?? 0;
+                    setPipelineStatus(prev => ({
+                        ...prev,
+                        l1: {
+                            ...prev.l1,
+                            progress: initialProg,
+                            isGenerating: data.running ?? false
+                        }
+                    }));
+
+                    const pollInterval = setInterval(async () => {
+                        try {
+                            const pollPayload = { ...payload, triggerBatch: false };
+                            const pollRes = await getCrosstabAiSummaryAll.mutateAsync(pollPayload);
+                            if (String(pollRes?.success) === '777' && pollRes?.resultjson) {
+                                const pollData = pollRes.resultjson;
+                                const prog = pollData.progress ?? 0;
+                                const isRunning = pollData.running ?? false;
+
+                                setPipelineStatus(prev => ({
+                                    ...prev,
+                                    l1: {
+                                        ...prev.l1,
+                                        progress: prog,
+                                        isGenerating: isRunning
+                                    }
+                                }));
+
+                                if (!isRunning || prog >= 100) {
+                                    clearInterval(pollInterval);
+                                    setPipelineStatus(prev => ({
+                                        ...prev,
+                                        l1: { ...prev.l1, isGenerating: false, isDone: true, progress: 100 }
+                                    }));
+                                    modal.showAlert("알림", "문항별 인사이트 재생성이 완료되었습니다.");
+                                    await loadSummaryData();
+                                    await fetchL1StatusData();
+                                }
+                            } else {
+                                clearInterval(pollInterval);
+                                setPipelineStatus(prev => ({
+                                    ...prev,
+                                    l1: { ...prev.l1, isGenerating: false }
+                                }));
+                            }
+                        } catch (pollErr) {
+                            console.error("L1 summary polling error:", pollErr);
+                            clearInterval(pollInterval);
+                            setPipelineStatus(prev => ({
+                                ...prev,
+                                l1: { ...prev.l1, isGenerating: false }
+                            }));
+                        }
+                    }, 2000);
+                } else {
+                    setPipelineStatus(prev => ({
+                        ...prev,
+                        l1: { ...prev.l1, isGenerating: false }
+                    }));
+                    modal.showAlert("오류", res?.message || "문항별 인사이트 재생성 작업 시작에 실패하였습니다.");
+                }
+            } catch (err) {
+                console.error("Failed to trigger L1 recreate:", err);
                 setPipelineStatus(prev => ({
                     ...prev,
-                    [level]: { ...prev[level], isGenerating: false, isDone: true, progress: 100 }
+                    l1: { ...prev.l1, isGenerating: false }
                 }));
-                modal.showAlert("알림", `${level.toUpperCase()} 분석 재생성이 성공적으로 완료되었습니다.`);
-                loadSummaryData();
+                modal.showAlert("오류", "서버 통신 실패로 인사이트 재생성을 실행하지 못했습니다.");
             }
-        }, 200);
+        } else {
+            // Simulated triggers for l2 and l3
+            let prog = 0;
+            const interval = setInterval(() => {
+                prog += 20;
+                setPipelineStatus(prev => ({
+                    ...prev,
+                    [level]: { ...prev[level], progress: prog }
+                }));
+                if (prog >= 100) {
+                    clearInterval(interval);
+                    setPipelineStatus(prev => ({
+                        ...prev,
+                        [level]: { ...prev[level], isGenerating: false, isDone: true, progress: 100 }
+                    }));
+                    modal.showAlert("알림", `${level.toUpperCase()} 분석 재생성이 성공적으로 완료되었습니다.`);
+                    loadSummaryData();
+                }
+            }, 200);
+        }
     };
 
     // Save Page Data
