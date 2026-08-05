@@ -1,5 +1,5 @@
 
-import { Sparkles, Check, ArrowRight, Search, Filter, RefreshCw, ChevronUp, ChevronDown } from 'lucide-react';
+import { Sparkles, Check, ArrowRight, Search, Filter, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet } from 'lucide-react';
 
 const renderInsightText = (val) => {
     if (!val) return '';
@@ -26,7 +26,8 @@ const AiReportAnalysisStep = ({
     setL1SearchQuery,
     expandedL1Cards,
     setExpandedL1Cards,
-    missingVariables = []
+    missingVariables = [],
+    onExportL1Excel
 }) => {
     return (
         <div className="ai-step-content-container" style={{ gap: '20px', height: '100%', overflowY: 'hidden', paddingBottom: '0px' }}>
@@ -277,7 +278,8 @@ const AiReportAnalysisStep = ({
                         </div>
 
                         <button className="ai-icon-btn"><Filter size={13} /></button>
-                        <button className="ai-xlsx-btn">
+                        <button className="ai-xlsx-btn" onClick={onExportL1Excel}>
+                            <FileSpreadsheet size={13} />
                             <span>XLSX</span>
                         </button>
                         <button className="ai-icon-btn"><RefreshCw size={13} /></button>

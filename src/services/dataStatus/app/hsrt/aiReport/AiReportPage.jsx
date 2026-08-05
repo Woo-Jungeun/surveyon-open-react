@@ -35,7 +35,7 @@ const CATEGORY_COLORS = [
 const AiReportPage = () => {
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
-    const { getAiModels, getAiSummaryData, uploadQuestionnaire, getUploadProgress, saveAiSummaryFrame, getAutoCategories, getL1Status } = AiReportPageApi();
+    const { getAiModels, getAiSummaryData, uploadQuestionnaire, getUploadProgress, saveAiSummaryFrame, getAutoCategories, getL1Status, exportL1Excel } = AiReportPageApi();
     const { getOverviewContext, getCrosstabAiSummaryAll } = DpRequestPageApi();
     const fileInputRef = useRef(null);
     const recodedVariablesRef = useRef({});
@@ -349,6 +349,58 @@ const AiReportPage = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentStep]);
+    const handleExportL1Excel = async () => {
+        const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        const userId = auth?.user?.userId || "jewoo";
+
+        const l1InsightsPayload = {};
+        if (insightData.l1) {
+            Object.keys(insightData.l1).forEach(key => {
+                const item = insightData.l1[key];
+                if (item) {
+                    l1InsightsPayload[key] = {
+                        fact_summary: typeof item.fact_summary === 'object' ? (item.fact_summary.description || item.fact_summary.headline || '') : String(item.fact_summary || ''),
+                        respondent_characteristics: typeof item.respondent_characteristics === 'object' ? (item.respondent_characteristics.description || item.respondent_characteristics.headline || '') : String(item.respondent_characteristics || '')
+                    };
+                }
+            });
+        }
+
+        const payload = {
+            pageId: pageId,
+            user: userId,
+            l1Insights: l1InsightsPayload
+        };
+
+        try {
+            const res = await exportL1Excel.mutateAsync(payload);
+            const payloadRes = res?.resultjson || res || {};
+
+            if (String(res?.success) === "777" && payloadRes.content_base64) {
+                const binaryString = window.atob(payloadRes.content_base64);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                const blob = new Blob([bytes], { type: payloadRes.content_type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', payloadRes.filename || `ai_summary_l1_${pageId}.xlsx`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } else {
+                modal.showAlert('오류', res?.message || '엑셀 데이터 생성에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('L1 Excel Export Error:', error);
+            modal.showAlert('오류', '엑셀 다운로드 중 문제가 발생했습니다.');
+        }
+    };
+
     // Toggle variable selection
     const handleToggleQuestion = (id) => {
         const updated = questions.map(q => q.id === id ? { ...q, checked: !q.checked } : q);
@@ -1011,6 +1063,7 @@ const AiReportPage = () => {
                         expandedL1Cards={expandedL1Cards}
                         setExpandedL1Cards={setExpandedL1Cards}
                         missingVariables={missingVariables}
+                        onExportL1Excel={handleExportL1Excel}
                     />
                 );
             default:

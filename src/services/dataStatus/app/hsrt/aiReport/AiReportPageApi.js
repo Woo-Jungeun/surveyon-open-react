@@ -49,6 +49,10 @@ export function AiReportPageApi() {
         async (data) => await api.post(data, "/ai-summary/load-l1-status", "API_BASE_URL_DATASTATUS")
     );
 
+    /** AI 요약보고서 - L1 엑셀 다운로드 */
+    const exportL1Excel = useMutation(
+        async (data) => await api.post(data, "/ai-summary/export-excel", "API_BASE_URL_DATASTATUS")
+    );
 
     return {
         getAiModels,
@@ -57,6 +61,7 @@ export function AiReportPageApi() {
         getUploadProgress,
         saveAiSummaryFrame,
         getAutoCategories,
-        getL1Status
+        getL1Status,
+        exportL1Excel
     };
 }
