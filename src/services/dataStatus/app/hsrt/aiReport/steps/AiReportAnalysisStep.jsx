@@ -23,7 +23,7 @@ const AiReportAnalysisStep = ({
                     <Sparkles size={16} className="ai-spark-yellow" />
                     <span className="ai-guideline-title" style={{ whiteSpace: 'nowrap' }}>AI 요약 생성 지침</span>
                     <span className="ai-guideline-badge">L2·L3 전용</span>
-                    <span className="ai-panel-help-icon" title="이 지침은 L2(카테고리별 요약) 및 L3(종합 AI 요약 보고서) 분석 단계에서 요약을 생성할 때 반영되며, L1 단계에는 적용되지 않습니다.">?</span>
+                    <span className="ai-panel-help-icon" title="여기에 입력한 지침은 L2, L3 단계의 분석 프롬프트에 최우선으로 반영되어 리포트가 생성됩니다.">?</span>
                 </div>
                 <input
                     type="text"
@@ -38,7 +38,7 @@ const AiReportAnalysisStep = ({
 
             {/* 분석 파이프라인 */}
             <div className="ai-pipeline-section">
-                <h3 className="ai-section-main-title">분석 파이프라인 <span className="ai-panel-help-icon">?</span></h3>
+                <h3 className="ai-section-main-title">분석 파이프라인 <span className="ai-panel-help-icon" title="L1이 완료되어야 L2를 생성할 수 있고, L1, L2 결과를 기반으로 L3를 생성합니다. 선행 단계를 재생성하면 하위 단계 결과는 초기화됩니다.">?</span></h3>
 
                 <div className="ai-pipeline-grid">
                     {/* Card 1 */}
@@ -46,7 +46,7 @@ const AiReportAnalysisStep = ({
                         <div className="ai-pipe-header">
                             <div className="ai-pipe-level-badge level1">L1</div>
                             <span className="ai-pipe-title">문항별 인사이트 분석</span>
-                            <span className="ai-panel-help-icon">?</span>
+                            <span className="ai-panel-help-icon" title="교차표 캐시를 로드하고, 아직 요약되지 않은 문항을 일괄 생성합니다.">?</span>
                         </div>
                         <div className="ai-pipe-status-row">
                             <div className="ai-pipe-done-icon">
@@ -78,7 +78,7 @@ const AiReportAnalysisStep = ({
                         <div className="ai-pipe-header">
                             <div className="ai-pipe-level-badge level2">L2</div>
                             <span className="ai-pipe-title">조사내용별 분석</span>
-                            <span className="ai-panel-help-icon">?</span>
+                            <span className="ai-panel-help-icon" title="L1 문항 요약을 조사내용(카테고리)별로 결합해 가설 검증 핵심 사실전략 제안을 작성합니다.">?</span>
                         </div>
                         <div className="ai-pipe-status-row">
                             <div className="ai-pipe-done-icon">
@@ -110,7 +110,7 @@ const AiReportAnalysisStep = ({
                         <div className="ai-pipe-header">
                             <div className="ai-pipe-level-badge level3">L3</div>
                             <span className="ai-pipe-title">종합 요약 보고서</span>
-                            <span className="ai-panel-help-icon">?</span>
+                            <span className="ai-panel-help-icon" title="L1, L2 결과를 종합해 Executive Summary와 전략적 액션 아이템을 생성합니다.">?</span>
                         </div>
                         <div className="ai-pipe-status-row">
                             <div className="ai-pipe-done-icon green">
