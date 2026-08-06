@@ -4234,7 +4234,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     );
                 })()}
             </div>
-            <div className="dp-request-container" style={{ flex: 1, minHeight: 0, padding: '16px', gap: '12px' }} onClick={() => updateBannerInfo(banners.find(b => b.id === selectedBanner)?.info.map(it => ({ ...it, inEdit: false })) || [])}>
+            <div className="dp-request-container" style={{ flex: 1, minHeight: 0, padding: '16px', gap: '12px', backgroundColor: '#f1f5f9' }} onClick={() => updateBannerInfo(banners.find(b => b.id === selectedBanner)?.info.map(it => ({ ...it, inEdit: false })) || [])}>
 
 
                 {/* 2. 메인 레이아웃 */}
@@ -4382,7 +4382,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         </div>
                     </div>
 
-                    <div id="dp-content-scroll-area" className="dp-content custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '10px', backgroundColor: '#f1f5f9' }}>
+                    <div id="dp-content-scroll-area" className="dp-content custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '10px', backgroundColor: '#f8fafc' }}>
                         {filteredBanners.length === 0 && (
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '350px' }}>
                                 <Table2 size={32} color="#94a3b8" style={{ marginBottom: '16px', strokeWidth: 1.5 }} />
