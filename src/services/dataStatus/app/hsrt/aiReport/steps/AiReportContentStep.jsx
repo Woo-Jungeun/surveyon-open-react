@@ -1,5 +1,5 @@
 
-import { Sparkles, RotateCcw, Plus, Trash2 } from 'lucide-react';
+import { Sparkles, RotateCcw, Plus, Trash2, Info } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 
 const CATEGORY_COLORS = [
@@ -18,6 +18,15 @@ const CATEGORY_COLORS = [
     '#0284c7', // Sky Blue
     '#d946ef'  // Fuchsia
 ];
+
+const formatOptionsTooltip = (options) => {
+    if (!options || options.length === 0) return '등록된 보기가 없습니다.';
+    return options.map(opt => {
+        const val = opt.value !== undefined ? opt.value : (opt.Value !== undefined ? opt.Value : (opt.code !== undefined ? opt.code : ''));
+        const txt = opt.label || opt.Label || opt.text || opt.Text || '';
+        return `${val}: ${txt}`;
+    }).join('\n');
+};
 
 const AiReportContentStep = ({
     categories,
@@ -66,7 +75,7 @@ const AiReportContentStep = ({
                         <input
                             type="text"
                             className="ai-search-input"
-                            placeholder="문항 번호 또는 텍스트 검색"
+                            placeholder="문항 ID 또는 텍스트 검색"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -96,7 +105,12 @@ const AiReportContentStep = ({
                         <div className="ai-th-col id-col" style={{ width: '130px', minWidth: '130px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>ID</div>
                         <div className="ai-th-col label-col" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>문항명</div>
                         <div className="ai-th-col type-col" style={{ width: '70px', minWidth: '70px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>유형</div>
-                        <div className="ai-th-col view-col" style={{ width: '50px', minWidth: '50px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '4px' }}>보기</div>
+                        <div className="ai-th-col view-col" style={{ width: '65px', minWidth: '65px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '4px', gap: '4px' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>보기</span>
+                            <span title="각 문항의 보기 개수에 마우스를 올리면 보기 목록을 볼 수 있습니다." style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+                                <Info size={14} style={{ color: '#94a3b8', flexShrink: 0 }} />
+                            </span>
+                        </div>
                     </div>
 
                     <div className="ai-table-body" style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
@@ -164,8 +178,8 @@ const AiReportContentStep = ({
                                                 {(q.type || '').toLowerCase() === 'double' ? 'multi' : q.type}
                                             </span>
                                         </div>
-                                        <div className="ai-td view-col" style={{ width: '50px', minWidth: '50px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '4px' }}>
-                                            <span className="ai-view-link">보기 {q.viewCount}</span>
+                                        <div className="ai-td view-col" style={{ width: '65px', minWidth: '65px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '4px' }}>
+                                            <span className="ai-view-link" title={formatOptionsTooltip(q.options)} onClick={(e) => e.stopPropagation()}>{q.viewCount}개</span>
                                         </div>
                                     </div>
                                 );

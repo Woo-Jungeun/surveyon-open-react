@@ -244,6 +244,7 @@ const AiReportPage = () => {
                                 type: v?.type || v?.qtype || v?.recoded_type || 'single',
                                 subtype: v?.type || v?.qtype || v?.recoded_type || 'single',
                                 viewCount: optionsList.length,
+                                options: optionsList,
                                 checked: false
                             };
                         });
@@ -575,6 +576,7 @@ const AiReportPage = () => {
                     type: v.Qtype || v.Type || 'SQ',
                     subtype: v.Qsubtype || 'single',
                     viewCount: v.Options?.length || 0,
+                    options: v.Options || [],
                     checked: false
                 }));
                 setQuestions(mappedQuestions);
