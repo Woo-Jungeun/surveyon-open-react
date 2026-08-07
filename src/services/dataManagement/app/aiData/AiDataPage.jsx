@@ -2,7 +2,8 @@ import { useState, useContext, cloneElement, useMemo, useEffect, useRef } from '
 import axios from 'axios';
 import {
     Search, Download, ExternalLink, Play, AlertTriangle,
-    CheckCircle2, X, RefreshCw, Clock, Loader2, Trash2, Info
+    CheckCircle2, X, RefreshCw, Clock, Loader2, Trash2, Info,
+    Square
 } from 'lucide-react';
 import DataHeader from '@/services/dataStatus/components/DataHeader';
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -19,7 +20,8 @@ const FAILURE_CLASS_MAP = {
     BotUnsupported: { label: "봇 미지원", advice: "수동 검증" },
     SurveyClosed: { label: "설문 마감", advice: "설문 상태 확인" },
     WrongServerOrUrl: { label: "서버/URL 오류", advice: "진입 URL 확인" },
-    ValidationUnresolved: { label: "검증 실패", advice: "케이스 확인" }
+    ValidationUnresolved: { label: "검증 실패", advice: "케이스 확인" },
+    Stopped: { label: "사용자 중단", advice: "-" }
 };
 
 const AiDataPage = () => {
@@ -29,7 +31,7 @@ const AiDataPage = () => {
     const [startUrl, setStartUrl] = useState("");
     const initialStartUrlRef = useRef("");
     const [autoPid, setAutoPid] = useState(true);
-    const [testCount, setTestCount] = useState(10);
+    const [testCount, setTestCount] = useState(5);
     const [manualPidList, setManualPidList] = useState("");
 
 
@@ -61,7 +63,7 @@ const AiDataPage = () => {
     const isAiSolutionTeam = auth?.user?.userGroup === "AI솔루션팀";
     const [progressInfo, setProgressInfo] = useState(null);
     const [jobError, setJobError] = useState("");
-    const { viewQaJobs, getQaTicket, runQaE2eJobs, resetTestPids, exportTestData, checkRunnerStatus, resumeQaJobs } = AiDataPageApi();
+    const { viewQaJobs, getQaTicket, runQaE2eJobs, resetTestPids, exportTestData, checkRunnerStatus, resumeQaJobs, stopQaJob } = AiDataPageApi();
 
     // 티켓 관리 (시뮬레이션 실행 시작 시에만 발급)
 
@@ -556,7 +558,13 @@ const AiDataPage = () => {
         } else if (status === 'paused') {
             text = `재개 대기 — 멈춘 문항: ${finalQuestion || "-"}`;
         } else {
-            text = failureReason || errorCategory || "-";
+            const baseText = failureReason || errorCategory || "-";
+            if (errorCategory === 'Stopped') {
+                const suffix = message ? (message.startsWith(' ') ? message : ` ${message}`) : ' [사용자 강제중단]';
+                text = `${baseText}${suffix}`;
+            } else {
+                text = baseText;
+            }
         }
         return (
             <td
@@ -926,6 +934,52 @@ const AiDataPage = () => {
         }
     };
 
+    // AI 데이터 생성 E2E 테스트 강제 중단
+    const handleStopJob = () => {
+        const projectnum = sessionStorage.getItem("projectnum");
+        const userId = auth?.user?.userId || sessionStorage.getItem("userId");
+        if (!projectnum || !userId) {
+            modal.showAlert("알림", "프로젝트 정보 또는 사용자 정보가 올바르지 않습니다.");
+            return;
+        }
+
+        modal.showConfirm(
+            "경고",
+            "진행 중인 AI 데이터 생성(E2E 테스트) 작업을 강제로 중단하시겠습니까?",
+            {
+                btns: [
+                    { title: "취소", click: () => {} },
+                    {
+                        title: "중단",
+                        click: async () => {
+                            try {
+                                const res = await stopQaJob.mutateAsync({
+                                    pn: String(projectnum),
+                                    user: String(userId)
+                                });
+
+                                if (String(res?.success) === "777") {
+                                    const stopped = res.resultjson?.Stopped;
+                                    const msg = res.message || (stopped ? "중단 처리했습니다(진행 중 응답자도 곧 정지됩니다)." : "중단할 진행 중 작업이 없습니다.");
+                                    modal.showAlert("알림", msg, null, async () => {
+                                        await triggerFetchJob();
+                                    });
+                                } else if (String(res?.success) === "900") {
+                                    modal.showAlert("오류", res.resultjson?.errorcontent || res.message || "잘못된 요청입니다.");
+                                } else {
+                                    modal.showAlert("오류", res?.message || "작업 중단 요청이 실패했습니다.");
+                                }
+                            } catch (err) {
+                                console.error("handleStopJob error:", err);
+                                modal.showAlert("오류", "작업 중단 중 서버 통신 에러가 발생했습니다.");
+                            }
+                        }
+                    }
+                ]
+            }
+        );
+    };
+
     const selectedRespondent = respondents.find(r => r.id === selectedPid);
 
 
@@ -1189,6 +1243,28 @@ const AiDataPage = () => {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                        {/* 생성 중단 버튼 */}
+                        <button
+                            onClick={handleStopJob}
+                            disabled={!isJobRunning}
+                            style={{
+                                height: '32px', padding: '0 16px', border: 'none', borderRadius: '6px',
+                                background: !isJobRunning ? '#cbd5e1' : '#dc2626',
+                                color: !isJobRunning ? '#94a3b8' : '#fff',
+                                fontSize: '12px', fontWeight: 500,
+                                cursor: !isJobRunning ? 'not-allowed' : 'pointer',
+                                display: 'flex', alignItems: 'center', gap: '6px',
+                                boxShadow: !isJobRunning ? 'none' : '0 2px 6px rgba(220, 38, 38, 0.2)',
+                                opacity: 1,
+                                boxSizing: 'border-box'
+                            }}
+                            onMouseOver={(e) => { if (isJobRunning) e.currentTarget.style.background = '#b91c1c'; }}
+                            onMouseOut={(e) => { if (isJobRunning) e.currentTarget.style.background = '#dc2626'; }}
+                        >
+                            <Square size={11} fill={!isJobRunning ? '#94a3b8' : '#fff'} />
+                            <span style={{ whiteSpace: 'nowrap' }}>생성 중단</span>
+                        </button>
+
                         {/* 시뮬레이션 시작 버튼 */}
                         <button
                             onClick={handleStartClick}
