@@ -1244,26 +1244,27 @@ const AiDataPage = () => {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
                         {/* 생성 중단 버튼 */}
-                        <button
-                            onClick={handleStopJob}
-                            disabled={!isJobRunning}
-                            style={{
-                                height: '32px', padding: '0 16px', border: 'none', borderRadius: '6px',
-                                background: !isJobRunning ? '#cbd5e1' : '#dc2626',
-                                color: !isJobRunning ? '#94a3b8' : '#fff',
-                                fontSize: '12px', fontWeight: 500,
-                                cursor: !isJobRunning ? 'not-allowed' : 'pointer',
-                                display: 'flex', alignItems: 'center', gap: '6px',
-                                boxShadow: !isJobRunning ? 'none' : '0 2px 6px rgba(220, 38, 38, 0.2)',
-                                opacity: 1,
-                                boxSizing: 'border-box'
-                            }}
-                            onMouseOver={(e) => { if (isJobRunning) e.currentTarget.style.background = '#b91c1c'; }}
-                            onMouseOut={(e) => { if (isJobRunning) e.currentTarget.style.background = '#dc2626'; }}
-                        >
-                            <Square size={11} fill={!isJobRunning ? '#94a3b8' : '#fff'} />
-                            <span style={{ whiteSpace: 'nowrap' }}>생성 중단</span>
-                        </button>
+                        {(isSimulating || progressInfo?.isFinished === false) && (
+                            <button
+                                onClick={handleStopJob}
+                                style={{
+                                    height: '32px', padding: '0 16px', border: 'none', borderRadius: '6px',
+                                    background: '#dc2626',
+                                    color: '#fff',
+                                    fontSize: '12px', fontWeight: 500,
+                                    cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', gap: '6px',
+                                    boxShadow: '0 2px 6px rgba(220, 38, 38, 0.2)',
+                                    opacity: 1,
+                                    boxSizing: 'border-box'
+                                }}
+                                onMouseOver={(e) => { e.currentTarget.style.background = '#b91c1c'; }}
+                                onMouseOut={(e) => { e.currentTarget.style.background = '#dc2626'; }}
+                            >
+                                <Square size={11} fill="#fff" />
+                                <span style={{ whiteSpace: 'nowrap' }}>생성 중단</span>
+                            </button>
+                        )}
 
                         {/* 시뮬레이션 시작 버튼 */}
                         <button
