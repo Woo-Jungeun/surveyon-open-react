@@ -1,5 +1,5 @@
 
-import { Sparkles, Check, ArrowRight, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet, ChevronsUpDown, ChevronsDownUp } from 'lucide-react';
+import { Check, ArrowRight, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet, ChevronsUpDown, ChevronsDownUp } from 'lucide-react';
 
 const renderInsightText = (val) => {
     if (!val) return '';
@@ -21,15 +21,35 @@ const AiReportAnalysisStep = ({
     activeSubTab,
     setActiveSubTab,
     insightData,
+    setInsightData,
     questions,
     l1SearchQuery,
     setL1SearchQuery,
     expandedL1Cards,
     setExpandedL1Cards,
     missingVariables = [],
-    onExportL1Excel,
-    categories = []
+    onExportL1Excel
 }) => {
+    const handleTextareaChange = (idx, field, value) => {
+        if (!setInsightData) return;
+        setInsightData(prev => {
+            const newL2 = [...(prev.l2 || [])];
+            if (newL2[idx]) {
+                newL2[idx] = {
+                    ...newL2[idx],
+                    insights: {
+                        ...newL2[idx].insights,
+                        [field]: value
+                    }
+                };
+            }
+            return {
+                ...prev,
+                l2: newL2
+            };
+        });
+    };
+
     const keys = Object.keys(insightData.l1 || {});
     const allExpanded = keys.length > 0 && keys.every(key => !!expandedL1Cards[key]);
 
@@ -214,7 +234,7 @@ const AiReportAnalysisStep = ({
                         {activeSubTab === 'l1' ? (
                             <span className="ai-detail-status-count">요약 완료 <strong>{Object.keys(insightData.l1 || {}).length} / {questions.length} 문항</strong></span>
                         ) : activeSubTab === 'l2' ? (
-                            <span className="ai-detail-status-count">분석 완료 <strong>{insightData.l2?.length || 0} / {categories.length} 카테고리</strong></span>
+                            <span className="ai-detail-status-count">조사내용 <strong>{insightData.l2?.length || 0}개</strong> 카테고리 분석 완료</span>
                         ) : (
                             <span className="ai-detail-status-count"><strong>최종 종합 보고서</strong></span>
                         )}
@@ -244,7 +264,28 @@ const AiReportAnalysisStep = ({
                                     </button>
                                 </>
                             )}
-                            <button className="ai-icon-btn"><RefreshCw size={13} /></button>
+                            {activeSubTab === 'l2' && (
+                                <>
+                                    <button
+                                        className="ai-xlsx-btn"
+                                        onClick={() => alert("준비 중인 기능입니다.")}
+                                        title="엑셀 다운로드"
+                                    >
+                                        <FileSpreadsheet size={13} style={{ color: '#16a34a' }} />
+                                        <span>XLSX</span>
+                                    </button>
+                                    <button
+                                        className="ai-icon-btn"
+                                        onClick={() => triggerPipelineRegenerate('l2')}
+                                        title="조사내용별 분석 재생성"
+                                    >
+                                        <RefreshCw size={13} />
+                                    </button>
+                                </>
+                            )}
+                            {activeSubTab === 'l3' && (
+                                <button className="ai-icon-btn"><RefreshCw size={13} /></button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -337,59 +378,143 @@ const AiReportAnalysisStep = ({
                     )}
 
                     {activeSubTab === 'l2' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
                             {(!pipelineStatus.l2.isDone || !insightData.l2 || insightData.l2.length === 0) ? (
-                                <div className="ai-block-empty-state">
+                                <div className="ai-block-empty-state" style={{ gridColumn: 'span 2' }}>
                                     <span>조회된 L2 조사내용별 분석결과가 없습니다.</span>
                                 </div>
                             ) : (
                                 insightData.l2.map((catItem, idx) => (
-                                    <div className="ai-block-card" key={idx}>
-                                        <div className="ai-block-header">
-                                            <div className="ai-block-header-left">
-                                                <span className="ai-block-q-id" style={{ background: '#ecfdf5', color: '#059669', padding: '2px 8px' }}>L2 Category</span>
-                                                <h4 className="ai-block-q-title">{catItem.category_name}</h4>
-                                                <span className="ai-block-done-badge" style={{ background: '#ecfdf5', color: '#059669' }}>분석 완료</span>
-                                            </div>
+                                    <div className="ai-card" key={idx} style={{ padding: '20px', border: '1px solid #cbd5e1' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                            <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b', margin: 0 }}>{catItem.category_name}</h4>
+                                            <button
+                                                className="ai-card-btn-regenerate"
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    background: '#f3e8ff',
+                                                    color: '#7c3aed',
+                                                    border: 'none',
+                                                    borderRadius: '12px',
+                                                    padding: '4px 10px',
+                                                    fontSize: '11px',
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer',
+                                                    transition: 'background 0.2s'
+                                                }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    triggerPipelineRegenerate('l2');
+                                                }}
+                                            >
+                                                <RefreshCw size={11} style={{ marginRight: '4px' }} />
+                                                <span>재생성</span>
+                                            </button>
                                         </div>
-                                        <div className="ai-block-body">
-                                            {catItem.insights?.core_finding && (
-                                                <div className="ai-insight-bullet">
-                                                    <div className="ai-bullet-title-row">
-                                                        <span className="ai-bullet-num-badge" style={{ background: '#10b981' }}>1</span>
-                                                        <span className="ai-bullet-title-text">핵심 발견 (Core Finding)</span>
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                            <div>
+                                                <div className="ai-textarea-label" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#8b5cf6', fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>
+                                                    <span>가설 검증 의견</span>
+                                                    <span className="ai-panel-help-icon">?</span>
+                                                </div>
+                                                <textarea
+                                                    className="ai-card-textarea"
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '110px',
+                                                        padding: '10px 12px',
+                                                        fontSize: '12px',
+                                                        color: '#334155',
+                                                        lineHeight: '1.5',
+                                                        border: '1px solid #cbd5e1',
+                                                        borderRadius: '6px',
+                                                        resize: 'vertical',
+                                                        fontFamily: 'inherit',
+                                                        boxSizing: 'border-box'
+                                                    }}
+                                                    value={catItem.insights?.hypothesis_result || ''}
+                                                    onChange={(e) => handleTextareaChange(idx, 'hypothesis_result', e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <div className="ai-textarea-label" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#8b5cf6', fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>
+                                                    <span>카테고리 핵심 사실 요약</span>
+                                                    <span className="ai-panel-help-icon">?</span>
+                                                </div>
+                                                <textarea
+                                                    className="ai-card-textarea"
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '110px',
+                                                        padding: '10px 12px',
+                                                        fontSize: '12px',
+                                                        color: '#334155',
+                                                        lineHeight: '1.5',
+                                                        border: '1px solid #cbd5e1',
+                                                        borderRadius: '6px',
+                                                        resize: 'vertical',
+                                                        fontFamily: 'inherit',
+                                                        boxSizing: 'border-box'
+                                                    }}
+                                                    value={catItem.insights?.core_finding || ''}
+                                                    onChange={(e) => handleTextareaChange(idx, 'core_finding', e.target.value)}
+                                                />
+                                            </div>
+
+                                            {catItem.insights?.respondent_characteristics_summary !== undefined && (
+                                                <div>
+                                                    <div className="ai-textarea-label" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#8b5cf6', fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>
+                                                        <span>응답자 특성 요약</span>
+                                                        <span className="ai-panel-help-icon">?</span>
                                                     </div>
-                                                    <p className="ai-bullet-body-content">
-                                                        {renderInsightText(catItem.insights.core_finding)}
-                                                    </p>
+                                                    <textarea
+                                                        className="ai-card-textarea"
+                                                        style={{
+                                                            width: '100%',
+                                                            height: '110px',
+                                                            padding: '10px 12px',
+                                                            fontSize: '12px',
+                                                            color: '#334155',
+                                                            lineHeight: '1.5',
+                                                            border: '1px solid #cbd5e1',
+                                                            borderRadius: '6px',
+                                                            resize: 'vertical',
+                                                            fontFamily: 'inherit',
+                                                            boxSizing: 'border-box'
+                                                        }}
+                                                        value={catItem.insights?.respondent_characteristics_summary || ''}
+                                                        onChange={(e) => handleTextareaChange(idx, 'respondent_characteristics_summary', e.target.value)}
+                                                    />
                                                 </div>
                                             )}
 
-                                            {catItem.insights?.hypothesis_result && (
-                                                <div className="ai-insight-bullet" style={{ marginTop: '16px' }}>
-                                                    <div className="ai-bullet-title-row">
-                                                        <span className="ai-bullet-num-badge" style={{ background: '#10b981' }}>2</span>
-                                                        <span className="ai-bullet-title-text">가설 검증 결과 (Hypothesis Result)</span>
-                                                    </div>
-                                                    <p className="ai-bullet-body-content">
-                                                        {renderInsightText(catItem.insights.hypothesis_result)}
-                                                    </p>
+                                            <div>
+                                                <div className="ai-textarea-label" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#8b5cf6', fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>
+                                                    <span>전략적 제안 (So what)</span>
+                                                    <span className="ai-panel-help-icon">?</span>
                                                 </div>
-                                            )}
-
-                                            {catItem.insights?.so_what && (
-                                                <div className="ai-insight-bullet" style={{ marginTop: '16px' }}>
-                                                    <div className="ai-bullet-title-row">
-                                                        <span className="ai-bullet-num-badge" style={{ background: '#8b5cf6' }}>So What</span>
-                                                        <span className="ai-bullet-title-text">전략적 시사점</span>
-                                                    </div>
-                                                    <div className="ai-insight-result-box" style={{ background: '#f5f3ff', borderLeftColor: '#8b5cf6', padding: '12px 16px' }}>
-                                                        <p className="ai-result-text" style={{ color: '#4c1d95', margin: 0 }}>
-                                                            {renderInsightText(catItem.insights.so_what)}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            )}
+                                                <textarea
+                                                    className="ai-card-textarea"
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '110px',
+                                                        padding: '10px 12px',
+                                                        fontSize: '12px',
+                                                        color: '#334155',
+                                                        lineHeight: '1.5',
+                                                        border: '1px solid #cbd5e1',
+                                                        borderRadius: '6px',
+                                                        resize: 'vertical',
+                                                        fontFamily: 'inherit',
+                                                        boxSizing: 'border-box'
+                                                    }}
+                                                    value={catItem.insights?.so_what || ''}
+                                                    onChange={(e) => handleTextareaChange(idx, 'so_what', e.target.value)}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 ))

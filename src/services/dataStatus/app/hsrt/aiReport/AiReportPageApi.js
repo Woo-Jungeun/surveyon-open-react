@@ -54,6 +54,15 @@ export function AiReportPageApi() {
         async (data) => await api.post(data, "/ai-summary/export-excel", "API_BASE_URL_DATASTATUS")
     );
 
+    /** AI 요약보고서 - L2 조사내용별 분석 생성 */
+    const generateL2 = useMutation(
+        async (data) => await api.post(data, "/ai-summary/generate-l2", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     return {
         getAiModels,
         getAiSummaryData,
@@ -62,6 +71,7 @@ export function AiReportPageApi() {
         saveAiSummaryFrame,
         getAutoCategories,
         getL1Status,
-        exportL1Excel
+        exportL1Excel,
+        generateL2
     };
 }
