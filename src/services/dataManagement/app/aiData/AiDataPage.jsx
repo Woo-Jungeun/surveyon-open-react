@@ -244,6 +244,9 @@ const AiDataPage = () => {
         progressInfo?.isFinished === false ||
         respondents.some(r => r.status === "running" || r.status === "pending");
 
+    // 시작 버튼 비활성화 조건 (플리커링 차단을 위해 러너 기동 중 상태 추가)
+    const isStartButtonDisabled = isSimulating || isRunnerStarting || progressInfo?.isFinished === false;
+
     // 검색 & 필터 적용된 리스트
     const filteredRespondents = respondents.filter(r => {
         const matchesStatus =
@@ -1244,7 +1247,7 @@ const AiDataPage = () => {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
                         {/* 생성 중단 버튼 */}
-                        {(isSimulating || progressInfo?.isFinished === false) && (
+                        {isStartButtonDisabled && (
                             <button
                                 onClick={handleStopJob}
                                 style={{
@@ -1269,22 +1272,22 @@ const AiDataPage = () => {
                         {/* 시뮬레이션 시작 버튼 */}
                         <button
                             onClick={handleStartClick}
-                            disabled={isSimulating || progressInfo?.isFinished === false}
+                            disabled={isStartButtonDisabled}
                             style={{
                                 height: '32px', padding: '0 16px', border: 'none', borderRadius: '6px',
-                                background: (isSimulating || progressInfo?.isFinished === false) ? '#cbd5e1' : '#16a34a',
-                                color: (isSimulating || progressInfo?.isFinished === false) ? '#94a3b8' : '#fff',
+                                background: isStartButtonDisabled ? '#cbd5e1' : '#16a34a',
+                                color: isStartButtonDisabled ? '#94a3b8' : '#fff',
                                 fontSize: '12px', fontWeight: 500,
-                                cursor: (isSimulating || progressInfo?.isFinished === false) ? 'not-allowed' : 'pointer',
+                                cursor: isStartButtonDisabled ? 'not-allowed' : 'pointer',
                                 display: 'flex', alignItems: 'center', gap: '6px',
-                                boxShadow: (isSimulating || progressInfo?.isFinished === false) ? 'none' : '0 2px 6px rgba(22, 163, 74, 0.2)',
+                                boxShadow: isStartButtonDisabled ? 'none' : '0 2px 6px rgba(22, 163, 74, 0.2)',
                                 opacity: 1,
                                 boxSizing: 'border-box'
                             }}
-                            onMouseOver={(e) => { if (!isSimulating && progressInfo?.isFinished !== false) e.currentTarget.style.background = '#15803d'; }}
-                            onMouseOut={(e) => { if (!isSimulating && progressInfo?.isFinished !== false) e.currentTarget.style.background = '#16a34a'; }}
+                            onMouseOver={(e) => { if (!isStartButtonDisabled) e.currentTarget.style.background = '#15803d'; }}
+                            onMouseOut={(e) => { if (!isStartButtonDisabled) e.currentTarget.style.background = '#16a34a'; }}
                         >
-                            <Play size={11} fill={isSimulating || progressInfo?.isFinished === false ? '#94a3b8' : '#fff'} />
+                            <Play size={11} fill={isStartButtonDisabled ? '#94a3b8' : '#fff'} />
                             <span style={{ whiteSpace: 'nowrap' }}>AI 데이터 생성 시작</span>
                         </button>
                     </div>
