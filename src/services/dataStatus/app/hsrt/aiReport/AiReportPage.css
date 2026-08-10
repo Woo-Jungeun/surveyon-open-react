@@ -335,6 +335,7 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
+    min-width: 0 !important;
 }
 
 .ai-right-column {
@@ -342,6 +343,7 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
+    min-width: 0 !important;
 }
 
 /* Title bar inside Panel */
@@ -696,6 +698,9 @@
     min-height: 0;
     overflow-y: auto;
     padding: 8px 4px 8px 2px;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
 }
 
 .ai-category-card {
@@ -708,6 +713,8 @@
     padding: 14px 18px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01);
     transition: all 0.2s ease;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
 }
 
 .ai-category-card:hover {
@@ -720,6 +727,8 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0 !important;
+    flex: 1 !important;
 }
 
 .ai-cat-card-title {
@@ -727,6 +736,7 @@
     font-weight: 800;
     color: #1e293b;
     margin: 0;
+    word-break: break-all !important;
 }
 
 .ai-cat-card-desc {
@@ -734,6 +744,7 @@
     color: #64748b;
     margin: 0;
     line-height: 1.4;
+    word-break: break-all !important;
 }
 
 .ai-cat-card-count {
@@ -1469,6 +1480,10 @@
     font-size: 12px !important;
     border-color: #4b7cf3 !important;
     border-radius: 6px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: fixed !important;
+    overflow: hidden !important;
 }
 
 .ai-kendo-dropdown-compact.k-dropdownlist:hover,
@@ -1489,8 +1504,16 @@
     font-size: 12px !important;
     line-height: 24px !important;
     height: 26px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
 }
 
 .ai-kendo-dropdown-compact .k-input-value-text {
     font-size: 12px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
+    display: inline-block !important;
 }

@@ -44,6 +44,7 @@ const AiReportPage = () => {
     const [selectedModel, setSelectedModel] = useState("");
 
     const [isAdding, setIsAdding] = useState(false);
+    const [editingCategoryId, setEditingCategoryId] = useState(null);
     const [newCategoryName, setNewCategoryName] = useState("");
     const [newHypothesis, setNewHypothesis] = useState("");
     const [newKpiQuestionId, setNewKpiQuestionId] = useState(null);
@@ -267,7 +268,7 @@ const AiReportPage = () => {
                         qnums: Array.isArray(cat.qnums) ? cat.qnums : [],
                         count: cat.qnums?.length || 0,
                         color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
-                        kpi_question_id: cat.kpi_question_id || null
+                        kpi_question_id: cat.kpi || cat.kpi_question_id || null
                     }));
                     setSelectedCategoryId(null);
                     setCategories(mappedCategories);
@@ -856,7 +857,7 @@ const AiReportPage = () => {
                                     qnums: Array.isArray(cat.qnums) ? cat.qnums : [],
                                     count: cat.qnums?.length || 0,
                                     color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
-                                    kpi_question_id: cat.kpi_question_id || null
+                                    kpi_question_id: cat.kpi || cat.kpi_question_id || null
                                 }));
                                 setSelectedCategoryId(null);
                                 setCategories(mappedCategories);
@@ -917,10 +918,120 @@ const AiReportPage = () => {
 
     const handleAddCategory = () => {
         setSelectedCategoryId(null);
+        setEditingCategoryId(null);
         setIsAdding(true);
         setNewCategoryName("");
         setNewHypothesis("");
         setNewKpiQuestionId(null);
+        setQuestions(prev => prev.map(q => ({ ...q, checked: false })));
+    };
+
+    const handleStartEditCategory = (catId) => {
+        setIsAdding(false);
+        const cat = categories.find(c => c.id === catId);
+        if (cat) {
+            setEditingCategoryId(catId);
+            setNewCategoryName(cat.title);
+            setNewHypothesis(cat.desc);
+            setNewKpiQuestionId(cat.kpi_question_id);
+            setSelectedCategoryId(null);
+            
+            // Initialize questions checklist
+            setQuestions(prev => prev.map(q => ({
+                ...q,
+                checked: cat.qnums?.some(qk => q.id === qk || q.qnum === qk) || false
+            })));
+
+            // Scroll to the first matched question in the left grid
+            const firstMatched = questions.find(q => cat.qnums?.some(qk => q.id === qk || q.qnum === qk));
+            if (firstMatched) {
+                setTimeout(() => {
+                    const element = document.getElementById(`q_row_${firstMatched.id}`);
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 80);
+            }
+        }
+    };
+
+    const handleCancelEditCategory = () => {
+        setEditingCategoryId(null);
+        setNewCategoryName("");
+        setNewHypothesis("");
+        setNewKpiQuestionId(null);
+        setQuestions(prev => prev.map(q => ({ ...q, checked: false })));
+    };
+
+    const handleSaveEditCategory = async () => {
+        if (!newCategoryName.trim()) {
+            modal.showAlert("알림", "카테고리명을 입력해주세요.");
+            return;
+        }
+        const selectedQuestions = questions.filter(q => q.checked);
+        const selectedQIds = selectedQuestions.map(q => q.id);
+
+        const finalKpiQuestionId = (newKpiQuestionId && selectedQIds.includes(newKpiQuestionId))
+            ? newKpiQuestionId
+            : (selectedQIds[0] || null);
+
+        const updatedCategories = categories.map(cat => {
+            if (cat.id === editingCategoryId) {
+                return {
+                    ...cat,
+                    title: newCategoryName.trim(),
+                    desc: newHypothesis.trim() || '가설 검증 및 문항 분석',
+                    qnums: selectedQIds,
+                    count: selectedQIds.length,
+                    kpi_question_id: finalKpiQuestionId
+                };
+            }
+            return cat;
+        });
+
+        const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        const pn = sessionStorage.getItem("pn") || sessionStorage.getItem("Pn") || "P001234";
+        const userId = auth?.user?.userId || "jewoo";
+
+        const frameObj = {
+            projectName: overviewData.projectname,
+            research_purpose: overviewData.objectives,
+            target_population: overviewData.target,
+            method: overviewData.method,
+            categories: updatedCategories.map(cat => ({
+                category_name: cat.title,
+                qnums: cat.qnums,
+                kpi: cat.kpi_question_id || (cat.qnums && cat.qnums[0]) || "",
+                hypothesis: cat.desc
+            }))
+        };
+
+        const payload = {
+            pageId,
+            user: userId,
+            pn,
+            analysisFrame: JSON.stringify(frameObj)
+        };
+
+        try {
+            const res = await saveAiSummaryFrame.mutateAsync(payload);
+            if (String(res?.success) === '777') {
+                setCategories(updatedCategories);
+                setSelectedCategoryId(editingCategoryId);
+                setEditingCategoryId(null);
+                setNewCategoryName("");
+                setNewHypothesis("");
+                setNewKpiQuestionId(null);
+                setQuestions(prev => prev.map(q => ({ ...q, checked: false })));
+                modal.showAlert("알림", "카테고리가 수정 및 저장되었습니다.");
+                await loadSummaryData();
+            } else {
+                modal.showAlert("오류", res?.message || "카테고리 저장에 실패하였습니다.");
+            }
+        } catch (err) {
+            console.error("Failed to save analysis frame on editing category:", err);
+            modal.showAlert("오류", "서버 통신 실패로 카테고리를 저장하지 못했습니다.");
+        }
     };
 
     const handleSaveNewCategory = async () => {
@@ -931,6 +1042,10 @@ const AiReportPage = () => {
         const selectedQuestions = questions.filter(q => q.checked);
         const selectedQIds = selectedQuestions.map(q => q.id);
 
+        const finalKpiQuestionId = (newKpiQuestionId && selectedQIds.includes(newKpiQuestionId))
+            ? newKpiQuestionId
+            : (selectedQIds[0] || null);
+
         const newId = categories.length > 0 ? Math.max(...categories.map(c => c.id)) + 1 : 1;
         const newCat = {
             id: newId,
@@ -939,7 +1054,7 @@ const AiReportPage = () => {
             qnums: selectedQIds,
             count: selectedQIds.length,
             color: CATEGORY_COLORS[(newId - 1) % CATEGORY_COLORS.length],
-            kpi_question_id: newKpiQuestionId
+            kpi_question_id: finalKpiQuestionId
         };
 
         const updatedCategories = [newCat, ...categories];
@@ -1038,6 +1153,12 @@ const AiReportPage = () => {
                                 if (selectedCategoryId === catId) {
                                     setSelectedCategoryId(null);
                                 }
+                                if (editingCategoryId === catId) {
+                                    setEditingCategoryId(null);
+                                    setNewCategoryName("");
+                                    setNewHypothesis("");
+                                    setNewKpiQuestionId(null);
+                                }
                                 modal.showAlert("알림", "카테고리가 삭제 및 저장되었습니다.");
                                 await loadSummaryData();
                             } else {
@@ -1087,6 +1208,7 @@ const AiReportPage = () => {
                         newKpiQuestionId={newKpiQuestionId}
                         setNewKpiQuestionId={setNewKpiQuestionId}
                         isAdding={isAdding}
+                        editingCategoryId={editingCategoryId}
                         newCategoryName={newCategoryName}
                         setNewCategoryName={setNewCategoryName}
                         newHypothesis={newHypothesis}
@@ -1104,6 +1226,9 @@ const AiReportPage = () => {
                         handleCancelNewCategory={handleCancelNewCategory}
                         handleSaveNewCategory={handleSaveNewCategory}
                         handleDeleteCategory={handleDeleteCategory}
+                        handleStartEditCategory={handleStartEditCategory}
+                        handleCancelEditCategory={handleCancelEditCategory}
+                        handleSaveEditCategory={handleSaveEditCategory}
                     />
                 );
             case 2: // 최종분석

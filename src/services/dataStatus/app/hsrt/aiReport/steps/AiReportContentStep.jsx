@@ -1,4 +1,4 @@
-
+import React from 'react';
 import { Sparkles, RotateCcw, Plus, Trash2, Info } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 
@@ -28,14 +28,20 @@ const formatOptionsTooltip = (options) => {
     }).join('\n');
 };
 
+const defaultItemRender = (li, itemProps) => {
+    const itemChildren = li.props.children;
+    const text = itemProps.dataItem ? itemProps.dataItem.text : '';
+    return React.cloneElement(li, { title: text }, itemChildren);
+};
+
 const AiReportContentStep = ({
     categories,
     selectedCategoryId,
-    setSelectedCategoryId,
     questions,
     newKpiQuestionId,
     setNewKpiQuestionId,
     isAdding,
+    editingCategoryId,
     newCategoryName,
     setNewCategoryName,
     newHypothesis,
@@ -52,11 +58,35 @@ const AiReportContentStep = ({
     handleAddCategory,
     handleCancelNewCategory,
     handleSaveNewCategory,
-    handleDeleteCategory
+    handleDeleteCategory,
+    handleStartEditCategory,
+    handleCancelEditCategory,
+    handleSaveEditCategory
 }) => {
     const selectedCat = categories.find(c => c.id === selectedCategoryId);
-    const isQChecked = (q) => q.checked || !!(selectedCat && selectedCat.qnums?.some(qk => q.id === qk || q.qnum === qk));
-    const currentKpiId = isAdding ? newKpiQuestionId : (selectedCat ? selectedCat.kpi_question_id : null);
+    const editingCat = categories.find(c => c.id === editingCategoryId);
+
+    React.useEffect(() => {
+        if (isAdding || editingCategoryId !== null) {
+            const selectedQIds = questions.filter(q => q.checked).map(q => q.id);
+            if (selectedQIds.length > 0) {
+                if (!newKpiQuestionId || !selectedQIds.includes(newKpiQuestionId)) {
+                    setNewKpiQuestionId(selectedQIds[0]);
+                }
+            } else {
+                if (newKpiQuestionId !== null) {
+                    setNewKpiQuestionId(null);
+                }
+            }
+        }
+    }, [questions, newKpiQuestionId, setNewKpiQuestionId, isAdding, editingCategoryId]);
+
+    const isQChecked = (q) => {
+        if (isAdding || editingCategoryId !== null) {
+            return q.checked;
+        }
+        return q.checked || !!(selectedCat && selectedCat.qnums?.some(qk => q.id === qk || q.qnum === qk));
+    };
 
     return (
         <div className="ai-step-content-container ai-split-layout">
@@ -123,17 +153,21 @@ const AiReportContentStep = ({
                                 return matchesSearch && matchesType;
                             })
                             .map((q) => {
-                                const isKpi = currentKpiId === q.id;
-                                const isHighlighted = selectedCat && selectedCat.qnums?.some(qk => q.id === qk || q.qnum === qk);
-                                const highlightStyle = isKpi ? {
-                                    backgroundColor: '#fffbeb',
-                                    borderLeft: '4px solid #f59e0b',
+                                const nextCategoryId = categories.length > 0 ? Math.max(...categories.map(c => c.id)) + 1 : 1;
+                                const addColor = CATEGORY_COLORS[(nextCategoryId - 1) % CATEGORY_COLORS.length];
+                                const highlightColor = (isAdding || editingCategoryId !== null)
+                                    ? (isAdding ? addColor : (editingCat?.color || ''))
+                                    : (selectedCat?.color || '');
+
+                                const isHighlighted = (isAdding || editingCategoryId !== null)
+                                    ? q.checked
+                                    : !!(selectedCat && selectedCat.qnums?.some(qk => q.id === qk || q.qnum === qk));
+
+                                const highlightStyle = isHighlighted ? {
+                                    backgroundColor: `${highlightColor}12`,
+                                    borderLeft: `4px solid ${highlightColor}`,
                                     paddingLeft: '8px'
-                                } : (isHighlighted ? {
-                                    backgroundColor: `${selectedCat.color}12`,
-                                    borderLeft: `4px solid ${selectedCat.color}`,
-                                    paddingLeft: '8px'
-                                } : {});
+                                } : {};
 
                                 return (
                                     <div
@@ -151,8 +185,7 @@ const AiReportContentStep = ({
                                                 style={{ cursor: 'pointer', margin: 0, width: '13px', height: '13px', flexShrink: 0, appearance: 'checkbox', WebkitAppearance: 'checkbox', opacity: 1, display: 'inline-block', position: 'relative' }}
                                             />
                                         </div>
-                                        <div className="ai-td id-col" style={{ width: '130px', minWidth: '130px', flexShrink: 0, display: 'flex', alignItems: 'center', paddingRight: '8px', gap: '4px' }}>
-                                            {isKpi && <span style={{ color: '#f59e0b', fontSize: '11px', fontWeight: 'bold' }} title="기준 KPI 문항">⭐</span>}
+                                        <div className="ai-td id-col" style={{ width: '130px', minWidth: '130px', flexShrink: 0, display: 'flex', alignItems: 'center', paddingRight: '8px' }}>
                                             <span className="ai-q-id-badge" style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '100%', display: 'inline-block' }} title={q.id}>{q.id}</span>
                                         </div>
                                         <div className="ai-td label-col">
@@ -197,7 +230,7 @@ const AiReportContentStep = ({
                         <span className="ai-category-badge-count">{categories.length}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        {!isAdding && (
+                        {!isAdding && editingCategoryId === null && (
                             <>
                                 <button className="ai-action-btn-compact blue" onClick={handleAiAutoCategorize}>
                                     <Sparkles size={12} />
@@ -237,7 +270,10 @@ const AiReportContentStep = ({
                                     gap: '12px',
                                     display: 'flex',
                                     cursor: 'default',
-                                    transition: 'all 0.25s ease'
+                                    transition: 'all 0.25s ease',
+                                    minWidth: 0,
+                                    width: '100%',
+                                    boxSizing: 'border-box'
                                 }}
                             >
                                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', width: '100%' }}>
@@ -336,21 +372,38 @@ const AiReportContentStep = ({
                                             selectedQuestions.map(q => {
                                                 const isKpi = newKpiQuestionId === q.id;
                                                 return (
-                                                    <span key={q.id} style={{
-                                                        backgroundColor: isKpi ? '#fffbeb' : '#ffffff',
-                                                        color: isKpi ? '#d97706' : '#2563eb',
-                                                        border: isKpi ? '1.5px solid #f59e0b' : '1px solid #dbeafe',
-                                                        borderRadius: '6px',
-                                                        padding: '2px 8px',
-                                                        fontSize: '11px',
-                                                        fontWeight: 600,
-                                                        display: 'inline-flex',
-                                                        alignItems: 'center',
-                                                        gap: '4px',
-                                                        boxShadow: isKpi ? '0 1px 3px rgba(245, 158, 11, 0.2)' : 'none',
-                                                        transition: 'all 0.15s ease'
-                                                    }}>
-                                                        {isKpi && <span style={{ color: '#f59e0b', fontSize: '11px' }}>⭐</span>}
+                                                    <span
+                                                        key={q.id}
+                                                        onClick={() => setNewKpiQuestionId(q.id)}
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            color: '#2563eb',
+                                                            border: isKpi ? '1.5px solid #2563eb' : '1px solid #dbeafe',
+                                                            borderRadius: '6px',
+                                                            padding: '2px 8px',
+                                                            fontSize: '11px',
+                                                            fontWeight: 600,
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px',
+                                                            cursor: 'pointer',
+                                                            userSelect: 'none'
+                                                        }}
+                                                        title="클릭하여 기준 KPI 문항으로 지정"
+                                                    >
+                                                        {isKpi && (
+                                                            <span style={{
+                                                                marginRight: '6px',
+                                                                padding: '1px 5px',
+                                                                fontSize: '9px',
+                                                                fontWeight: 800,
+                                                                backgroundColor: '#2563eb',
+                                                                color: '#ffffff',
+                                                                borderRadius: '4px',
+                                                                lineHeight: 1,
+                                                                display: 'inline-block'
+                                                            }}>KPI</span>
+                                                        )}
                                                         {q.id}
                                                     </span>
                                                 );
@@ -376,25 +429,29 @@ const AiReportContentStep = ({
                                             <div style={{ fontWeight: 700, color: '#475569' }}>
                                                 <span>기준 KPI 문항 지정</span>
                                             </div>
-                                            <DropDownList
-                                                data={[
-                                                    { text: "-- KPI 문항 선택 (선택 사항) --", value: "" },
-                                                    ...selectedQuestions.map(q => ({
-                                                        text: `${q.id} ${q.qnum ? `(${q.qnum})` : ''} - ${q.label.length > 30 ? q.label.substring(0, 30) + '...' : q.label}`,
-                                                        value: q.id
-                                                    }))
-                                                ]}
-                                                textField="text"
-                                                valueField="value"
-                                                valuePrimitive={true}
-                                                value={newKpiQuestionId || ''}
-                                                onChange={(e) => setNewKpiQuestionId(e.value || null)}
-                                                className="ai-kendo-dropdown-compact"
-                                                style={{
-                                                    width: '100%',
-                                                    fontSize: '12px'
-                                                }}
-                                            />
+                                            {(() => {
+                                                const addDropdownData = selectedQuestions.map(q => ({
+                                                    text: `${q.id} ${q.qnum ? `(${q.qnum})` : ''} - ${q.label}`,
+                                                    value: q.id
+                                                }));
+                                                const selectedVal = addDropdownData.find(item => item.value === newKpiQuestionId) || addDropdownData[0];
+                                                return (
+                                                    <DropDownList
+                                                        data={addDropdownData}
+                                                        textField="text"
+                                                        dataItemKey="value"
+                                                        value={selectedVal}
+                                                        onChange={(e) => setNewKpiQuestionId(e.value ? e.value.value : null)}
+                                                        className="ai-kendo-dropdown-compact"
+                                                        title={selectedVal ? selectedVal.text : ""}
+                                                        itemRender={defaultItemRender}
+                                                        style={{
+                                                            width: '100%',
+                                                            fontSize: '12px'
+                                                        }}
+                                                    />
+                                                );
+                                            })()}
                                         </div>
                                     </>
                                 )}
@@ -445,27 +502,260 @@ const AiReportContentStep = ({
                     })()}
                     {categories.map((cat) => {
                         const isSelected = selectedCategoryId === cat.id;
+                        const isEditingThis = editingCategoryId === cat.id;
+
+                        if (isEditingThis) {
+                            const selectedQuestions = questions.filter(q => q.checked);
+                            return (
+                                <div
+                                    key={cat.id}
+                                    className="ai-category-card active"
+                                    style={{
+                                        padding: '16px',
+                                        borderColor: cat.color,
+                                        backgroundColor: '#ffffff',
+                                        boxShadow: `0 10px 25px -5px ${cat.color}12, 0 8px 20px -6px rgba(0, 0, 0, 0.02)`,
+                                        flexDirection: 'column',
+                                        alignItems: 'stretch',
+                                        gap: '12px',
+                                        display: 'flex',
+                                        cursor: 'default',
+                                        transition: 'all 0.25s ease',
+                                        minWidth: 0,
+                                        width: '100%',
+                                        boxSizing: 'border-box'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', width: '100%' }}>
+                                        <span style={{
+                                            width: '8px',
+                                            height: '8px',
+                                            borderRadius: '50%',
+                                            backgroundColor: cat.color,
+                                            flexShrink: 0,
+                                            marginTop: '12px'
+                                        }} />
+                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <input
+                                                type="text"
+                                                value={newCategoryName}
+                                                onChange={(e) => setNewCategoryName(e.target.value)}
+                                                placeholder="카테고리명 입력"
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '8px 12px',
+                                                    fontSize: '12px',
+                                                    color: '#1e293b',
+                                                    border: '1px solid #cbd5e1',
+                                                    borderRadius: '8px',
+                                                    backgroundColor: '#f8fafc',
+                                                    boxSizing: 'border-box',
+                                                    outline: 'none',
+                                                    transition: 'all 0.2s ease-in-out'
+                                                }}
+                                                onFocus={(e) => {
+                                                    e.target.style.borderColor = '#2563eb';
+                                                    e.target.style.backgroundColor = '#ffffff';
+                                                    e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.15)';
+                                                }}
+                                                onBlur={(e) => {
+                                                    e.target.style.borderColor = '#cbd5e1';
+                                                    e.target.style.backgroundColor = '#f8fafc';
+                                                    e.target.style.boxShadow = 'none';
+                                                }}
+                                            />
+                                            <textarea
+                                                value={newHypothesis}
+                                                onChange={(e) => setNewHypothesis(e.target.value)}
+                                                placeholder="가설 문구 입력"
+                                                rows={2}
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '8px 12px',
+                                                    fontSize: '12px',
+                                                    color: '#475569',
+                                                    border: '1px solid #cbd5e1',
+                                                    borderRadius: '8px',
+                                                    backgroundColor: '#f8fafc',
+                                                    resize: 'none',
+                                                    boxSizing: 'border-box',
+                                                    outline: 'none',
+                                                    lineHeight: '1.5',
+                                                    transition: 'all 0.2s ease-in-out'
+                                                }}
+                                                onFocus={(e) => {
+                                                    e.target.style.borderColor = '#2563eb';
+                                                    e.target.style.backgroundColor = '#ffffff';
+                                                    e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.15)';
+                                                }}
+                                                onBlur={(e) => {
+                                                    e.target.style.borderColor = '#cbd5e1';
+                                                    e.target.style.backgroundColor = '#f8fafc';
+                                                    e.target.style.boxShadow = 'none';
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Divider */}
+                                    <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '4px 0' }} />
+
+                                    {/* 1. 연동될 문항 목록 */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: '#475569' }}>
+                                            <span>연동될 문항 목록</span>
+                                            <span style={{
+                                                backgroundColor: '#eff6ff',
+                                                color: '#2563eb',
+                                                border: '1px solid #dbeafe',
+                                                padding: '2px 8px',
+                                                borderRadius: '20px',
+                                                fontWeight: 700,
+                                                fontSize: '11px',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                {selectedQuestions.length}문항
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                            {selectedQuestions.length > 0 ? (
+                                                selectedQuestions.map(q => {
+                                                    const isKpi = newKpiQuestionId === q.id;
+                                                    return (
+                                                        <span
+                                                            key={q.id}
+                                                            onClick={() => setNewKpiQuestionId(q.id)}
+                                                            style={{
+                                                                backgroundColor: '#ffffff',
+                                                                color: '#2563eb',
+                                                                border: isKpi ? '1.8px solid #2563eb' : '1px solid #dbeafe',
+                                                                borderRadius: '6px',
+                                                                padding: '2px 8px',
+                                                                fontSize: '11px',
+                                                                fontWeight: 600,
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                gap: '4px',
+                                                                cursor: 'pointer',
+                                                                userSelect: 'none'
+                                                            }}
+                                                            title="클릭하여 기준 KPI 문항으로 지정"
+                                                        >
+                                                            {isKpi && (
+                                                                <span style={{
+                                                                    marginRight: '2px',
+                                                                    padding: '1px 5px',
+                                                                    fontSize: '10px',
+                                                                    fontWeight: 400,
+                                                                    backgroundColor: '#2563eb',
+                                                                    color: '#ffffff',
+                                                                    borderRadius: '4px',
+                                                                    lineHeight: 1,
+                                                                    display: 'inline-block'
+                                                                }}>KPI</span>
+                                                            )}
+                                                            {q.id}
+                                                        </span>
+                                                    );
+                                                })
+                                            ) : (
+                                                <span style={{ color: '#94a3b8', fontSize: '12px' }}>좌측 문항 목록에서 체크박스를 선택해주세요.</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* 2. 기준 KPI 문항 지정 (선택된 문항이 있을 때만 표시) */}
+                                    {selectedQuestions.length > 0 && (
+                                        <>
+                                            {/* Divider */}
+                                            <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '4px 0' }} />
+
+                                            <div style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '8px',
+                                                fontSize: '12px'
+                                            }}>
+                                                <div style={{ fontWeight: 700, color: '#475569' }}>
+                                                    <span>기준 KPI 문항 지정</span>
+                                                </div>
+                                                {(() => {
+                                                    const editDropdownData = selectedQuestions.map(q => ({
+                                                        text: `${q.id} ${q.qnum ? `(${q.qnum})` : ''} - ${q.label}`,
+                                                        value: q.id
+                                                    }));
+                                                    const selectedVal = editDropdownData.find(item => item.value === newKpiQuestionId) || editDropdownData[0];
+                                                    return (
+                                                        <DropDownList
+                                                            data={editDropdownData}
+                                                            textField="text"
+                                                            dataItemKey="value"
+                                                            value={selectedVal}
+                                                            onChange={(e) => setNewKpiQuestionId(e.value ? e.value.value : null)}
+                                                            className="ai-kendo-dropdown-compact"
+                                                            title={selectedVal ? selectedVal.text : ""}
+                                                            itemRender={defaultItemRender}
+                                                            style={{
+                                                                width: '100%',
+                                                                fontSize: '12px'
+                                                            }}
+                                                        />
+                                                    );
+                                                })()}
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {/* 취소/저장 버튼 행 */}
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
+                                        <button
+                                            onClick={handleCancelEditCategory}
+                                            style={{
+                                                height: '28px',
+                                                padding: '0 12px',
+                                                fontSize: '12px',
+                                                fontWeight: 600,
+                                                backgroundColor: '#ffffff',
+                                                color: '#475569',
+                                                border: '1px solid #cbd5e1',
+                                                borderRadius: '6px',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.15s ease'
+                                            }}
+                                            onMouseOver={(e) => { e.target.style.backgroundColor = '#f8fafc'; }}
+                                            onMouseOut={(e) => { e.target.style.backgroundColor = '#ffffff'; }}
+                                        >
+                                            취소
+                                        </button>
+                                        <button
+                                            onClick={handleSaveEditCategory}
+                                            style={{
+                                                height: '28px',
+                                                padding: '0 12px',
+                                                fontSize: '12px',
+                                                fontWeight: 600,
+                                                backgroundColor: '#2563eb',
+                                                color: '#ffffff',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.15s ease'
+                                            }}
+                                            onMouseOver={(e) => { e.target.style.backgroundColor = '#1d4ed8'; }}
+                                            onMouseOut={(e) => { e.target.style.backgroundColor = '#2563eb'; }}
+                                        >
+                                            저장
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        }
+
                         return (
                             <div
                                 key={cat.id}
                                 className={`ai-category-card ${isSelected ? 'active' : ''}`}
-                                onClick={() => {
-                                    const isCurrentlySelected = selectedCategoryId === cat.id;
-                                    if (isCurrentlySelected) {
-                                        setSelectedCategoryId(null);
-                                    } else {
-                                        setSelectedCategoryId(cat.id);
-                                        const firstMatched = questions.find(q => cat.qnums?.some(qk => q.id === qk || q.qnum === qk));
-                                        if (firstMatched) {
-                                            setTimeout(() => {
-                                                const element = document.getElementById(`q_row_${firstMatched.id}`);
-                                                if (element) {
-                                                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                }
-                                            }, 80);
-                                        }
-                                    }
-                                }}
+                                onClick={() => handleStartEditCategory(cat.id)}
                                 style={{
                                     paddingLeft: '16px',
                                     cursor: 'pointer',
