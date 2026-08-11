@@ -130,6 +130,7 @@ const AiReportAnalysisStep = ({
                                 triggerPipelineRegenerate('l1');
                             }}
                             disabled={pipelineStatus.l1.isGenerating}
+                            title="재생성 시 하위 단계(L2-L3) 결과가 초기화됩니다."
                         >
                             {pipelineStatus.l1.isGenerating
                                 ? "분석 중..."
@@ -176,6 +177,7 @@ const AiReportAnalysisStep = ({
                                 triggerPipelineRegenerate('l2');
                             }}
                             disabled={pipelineStatus.l2.isGenerating}
+                            title="재생성 시 하위 단계(L3) 결과가 초기화됩니다."
                         >
                             {pipelineStatus.l2.isGenerating ? "분석 중..." : "조사내용별 재생성"}
                         </button>
