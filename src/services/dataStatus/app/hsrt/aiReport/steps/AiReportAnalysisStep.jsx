@@ -1123,8 +1123,183 @@ const AiReportAnalysisStep = ({
                                             paddingRight: '4px'
                                         }}
                                     >
-                                        {l2Categories.map((catItem, idx) => {
-                                            if (activeCategoryIndex !== -1 && idx !== activeCategoryIndex) return null;
+                                        {activeCategoryIndex === -1 ? (
+                                            /* 전체보기 탭일 때는 3열 격자 요약 카드로 렌더링 */
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', paddingBottom: '20px' }}>
+                                                {l2Categories.map((catItem, idx) => {
+                                                    const insights = catItem?.insights || {};
+                                                    const hypothesisResult = insights.hypothesis_result || {};
+
+                                                    return (
+                                                        <div
+                                                            key={idx}
+                                                            className="ai-card"
+                                                            onClick={() => setActiveCategoryIndex(idx)}
+                                                            style={{
+                                                                padding: '20px',
+                                                                border: '1px solid #e2e8f0',
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                gap: '12px',
+                                                                cursor: 'pointer',
+                                                                transition: 'all 0.2s ease',
+                                                                height: '100%',
+                                                                boxSizing: 'border-box'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.borderColor = '#2563eb';
+                                                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.08)';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.borderColor = '#e2e8f0';
+                                                                e.currentTarget.style.boxShadow = 'none';
+                                                            }}
+                                                        >
+                                                            {/* Top Row: SLIDE Badge & Status Badge */}
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                <span style={{
+                                                                    backgroundColor: '#eff6ff',
+                                                                    color: '#2563eb',
+                                                                    border: '1px solid #bfdbfe',
+                                                                    fontSize: '10px',
+                                                                    fontWeight: 700,
+                                                                    padding: '2px 8px',
+                                                                    borderRadius: '4px',
+                                                                    textTransform: 'uppercase'
+                                                                }}>
+                                                                    SLIDE {idx + 1}
+                                                                </span>
+                                                                {(() => {
+                                                                    let status = 'NO_DATA';
+                                                                    if (typeof hypothesisResult === 'string') {
+                                                                        if (
+                                                                            hypothesisResult.includes('부분 채택') ||
+                                                                            hypothesisResult.includes('부분 기각') ||
+                                                                            hypothesisResult.includes('[부분 채택]') ||
+                                                                            hypothesisResult.includes('[부분 기각]')
+                                                                        ) {
+                                                                            status = 'PARTIALLY_ACCEPTED';
+                                                                        } else if (
+                                                                            hypothesisResult.includes('가설 채택') ||
+                                                                            hypothesisResult.includes('가설 지지') ||
+                                                                            hypothesisResult.includes('가설 수용') ||
+                                                                            hypothesisResult.includes('[채택]') ||
+                                                                            hypothesisResult.includes('[가설 지지]') ||
+                                                                            hypothesisResult.includes('[가설 수용]')
+                                                                        ) {
+                                                                            status = 'ACCEPTED';
+                                                                        } else if (
+                                                                            hypothesisResult.includes('가설 기각') ||
+                                                                            hypothesisResult.includes('[기각]') ||
+                                                                            hypothesisResult.includes('[가설 기각]')
+                                                                        ) {
+                                                                            status = 'REJECTED';
+                                                                        }
+                                                                    } else {
+                                                                        status = hypothesisResult?.status || 'NO_DATA';
+                                                                    }
+                                                                    let label = '데이터 미비';
+                                                                    let bg = '#f9fafb';
+                                                                    let color = '#4b5563';
+                                                                    let border = '1px solid #e5e7eb';
+
+                                                                    if (status === 'ACCEPTED') {
+                                                                        label = '채택';
+                                                                        bg = '#f0fdf4';
+                                                                        color = '#16a34a';
+                                                                        border = '1px solid #bbf7d0';
+                                                                    } else if (status === 'REJECTED') {
+                                                                        label = '기각';
+                                                                        bg = '#fef2f2';
+                                                                        color = '#dc2626';
+                                                                        border = '1px solid #fecaca';
+                                                                    } else if (status === 'PARTIALLY_ACCEPTED') {
+                                                                        label = '부분 채택';
+                                                                        bg = '#fffbeb';
+                                                                        color = '#d97706';
+                                                                        border = '1px solid #fde68a';
+                                                                    }
+
+                                                                    return (
+                                                                        <span style={{
+                                                                            fontSize: '11px',
+                                                                            fontWeight: 700,
+                                                                            backgroundColor: bg,
+                                                                            color: color,
+                                                                            border: border,
+                                                                            padding: '2px 8px',
+                                                                            borderRadius: '4px'
+                                                                        }}>
+                                                                            {label}
+                                                                        </span>
+                                                                    );
+                                                                })()}
+                                                            </div>
+
+                                                            {/* Title: Category Name */}
+                                                            <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b', margin: '4px 0 0 0' }}>
+                                                                {catItem.category_name}
+                                                            </h4>
+
+                                                            {/* Subtitle/Text: Hypothesis Result Headline */}
+                                                            <p style={{
+                                                                fontSize: '11.5px',
+                                                                color: '#64748b',
+                                                                lineHeight: '1.5',
+                                                                margin: 0,
+                                                                display: '-webkit-box',
+                                                                WebkitLineClamp: 3,
+                                                                WebkitBoxOrient: 'vertical',
+                                                                overflow: 'hidden',
+                                                                textOverflow: 'ellipsis',
+                                                                flex: 1
+                                                            }}>
+                                                                {(() => {
+                                                                    let text = '';
+                                                                    if (typeof hypothesisResult === 'string') {
+                                                                        text = hypothesisResult;
+                                                                    } else if (hypothesisResult) {
+                                                                        if (hypothesisResult.headline) {
+                                                                            text = hypothesisResult.headline;
+                                                                        } else if (Array.isArray(hypothesisResult.details)) {
+                                                                            text = hypothesisResult.details.filter(Boolean).join(' ');
+                                                                        } else if (typeof hypothesisResult.details === 'string') {
+                                                                            text = hypothesisResult.details;
+                                                                        }
+                                                                    }
+                                                                    if (!text || text.trim() === '') {
+                                                                        return '가설 요약이 없습니다.';
+                                                                    }
+                                                                    return text.length > 120 ? text.substring(0, 120).trim() + '...' : text;
+                                                                })()}
+                                                            </p>
+
+                                                            {/* Bottom Row: First KPI Impact or fallback spacer */}
+                                                            {(() => {
+                                                                const firstKpi = Array.isArray(hypothesisResult?.kpi_impacts) && hypothesisResult.kpi_impacts[0];
+                                                                if (!firstKpi) return <div style={{ height: '24px' }} />;
+                                                                const isUp = firstKpi.trend === 'UP';
+                                                                const isDown = firstKpi.trend === 'DOWN';
+                                                                return (
+                                                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', borderTop: '1px solid #f1f5f9', paddingTop: '10px', marginTop: '4px' }}>
+                                                                        <span style={{ fontSize: '16px', fontWeight: 800, color: '#1e293b' }}>
+                                                                            {firstKpi.value}{firstKpi.unit || '%'}
+                                                                        </span>
+                                                                        {isUp && <span style={{ color: '#059669', fontWeight: 800, fontSize: '12px' }}>↑</span>}
+                                                                        {isDown && <span style={{ color: '#dc2626', fontWeight: 800, fontSize: '12px' }}>↓</span>}
+                                                                        <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
+                                                                            {firstKpi.label}
+                                                                        </span>
+                                                                    </div>
+                                                                );
+                                                            })()}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            l2Categories.map((catItem, idx) => {
+                                                if (idx !== activeCategoryIndex) return null;
                                             const insights = catItem?.insights || {};
                                             const hypothesisResult = insights.hypothesis_result || {};
                                             const coreFindingsList = insights.core_finding || [];
@@ -1631,7 +1806,8 @@ const AiReportAnalysisStep = ({
                                                     </div>
                                                 </div>
                                             );
-                                        })}
+                                            })
+                                        )}
                                     </div>
                                 </>
                             )}
