@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Check, ArrowRight, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet, ChevronsUpDown, ChevronsDownUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search } from 'lucide-react';
 import { DpRequestPageApi } from '../../dpRequest/DpRequestPageApi';
 
@@ -36,6 +36,17 @@ const AiReportAnalysisStep = ({
 }) => {
     // L2 state and variables
     const [activeCategoryIndex, setActiveCategoryIndex] = useState(-1);
+    const activeTabRef = useRef(null);
+
+    useEffect(() => {
+        if (activeTabRef.current) {
+            activeTabRef.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest',
+                inline: 'nearest'
+            });
+        }
+    }, [activeCategoryIndex]);
     const [selectedEvidence, setSelectedEvidence] = useState(null);
     const [evidenceCrosstabData, setEvidenceCrosstabData] = useState(null);
     const [isEvidenceLoading, setIsEvidenceLoading] = useState(false);
@@ -760,48 +771,50 @@ const AiReportAnalysisStep = ({
             {/* Report list detail section */}
             <div className="ai-report-detail-card" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', paddingBottom: '24px' }}>
                 {/* Tabs row */}
-                <div className="ai-detail-tabs-row" style={{ flexShrink: 0 }}>
-                    <div className="ai-detail-actions" style={{ width: '100%', justifyContent: 'space-between' }}>
-                        {activeSubTab === 'l1' ? (
-                            <span className="ai-detail-status-count">요약 완료 <strong>{Object.keys(insightData.l1 || {}).length} / {questions.length} 문항</strong></span>
-                        ) : activeSubTab === 'l2' ? (
-                            <span className="ai-detail-status-count">조사내용 <strong>{insightData.l2?.length || 0}개</strong> 카테고리 분석 완료</span>
-                        ) : (
-                            <span className="ai-detail-status-count"><strong>최종 종합 보고서</strong></span>
-                        )}
+                {activeSubTab !== 'l2' && (
+                    <div className="ai-detail-tabs-row" style={{ flexShrink: 0 }}>
+                        <div className="ai-detail-actions" style={{ width: '100%', justifyContent: 'space-between' }}>
+                            {activeSubTab === 'l1' ? (
+                                <span className="ai-detail-status-count">요약 완료 <strong>{Object.keys(insightData.l1 || {}).length} / {questions.length} 문항</strong></span>
+                            ) : activeSubTab === 'l2' ? (
+                                <span className="ai-detail-status-count">조사내용 <strong>{insightData.l2?.length || 0}개</strong> 카테고리 분석 완료</span>
+                            ) : (
+                                <span className="ai-detail-status-count"><strong>최종 종합 보고서</strong></span>
+                            )}
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {activeSubTab === 'l1' && (
-                                <>
-                                    <div className="ai-detail-search-wrap">
-                                        <input
-                                            type="text"
-                                            className="ai-detail-search-input"
-                                            placeholder="문항 ID 또는 텍스트 검색"
-                                            value={l1SearchQuery}
-                                            onChange={(e) => setL1SearchQuery(e.target.value)}
-                                        />
-                                    </div>
-                                    <button
-                                        className="ai-icon-btn"
-                                        title="전체 펼치기/접기"
-                                        onClick={handleToggleAll}
-                                    >
-                                        {allExpanded ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
-                                    </button>
-                                    <button className="ai-xlsx-btn" onClick={onExportL1Excel} title="엑셀 다운로드">
-                                        <FileSpreadsheet size={13} />
-                                        <span>엑셀 다운로드</span>
-                                    </button>
-                                </>
-                            )}
-                            {activeSubTab === 'l2' && null}
-                            {activeSubTab === 'l3' && (
-                                <button className="ai-icon-btn"><RefreshCw size={13} /></button>
-                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                {activeSubTab === 'l1' && (
+                                    <>
+                                        <div className="ai-detail-search-wrap">
+                                            <input
+                                                type="text"
+                                                className="ai-detail-search-input"
+                                                placeholder="문항 ID 또는 텍스트 검색"
+                                                value={l1SearchQuery}
+                                                onChange={(e) => setL1SearchQuery(e.target.value)}
+                                            />
+                                        </div>
+                                        <button
+                                            className="ai-icon-btn"
+                                            title="전체 펼치기/접기"
+                                            onClick={handleToggleAll}
+                                        >
+                                            {allExpanded ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
+                                        </button>
+                                        <button className="ai-xlsx-btn" onClick={onExportL1Excel} title="엑셀 다운로드">
+                                            <FileSpreadsheet size={13} />
+                                            <span>엑셀 다운로드</span>
+                                        </button>
+                                    </>
+                                )}
+                                {activeSubTab === 'l2' && null}
+                                {activeSubTab === 'l3' && (
+                                    <button className="ai-icon-btn"><RefreshCw size={13} /></button>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* Report content blocks */}
                 <div className="ai-report-blocks-wrap" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingRight: '8px' }}>
@@ -905,57 +918,45 @@ const AiReportAnalysisStep = ({
                                             display: 'flex', 
                                             alignItems: 'center', 
                                             gap: '12px', 
-                                            background: '#0f172a', 
+                                            background: '#ffffff', 
+                                            border: '1px solid #e2e8f0',
                                             padding: '8px 16px', 
                                             borderRadius: '8px', 
-                                            color: '#ffffff',
-                                            flexShrink: 0
+                                            color: '#0f172a',
+                                            flexShrink: 0,
+                                            boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
                                         }}
                                     >
+                                        {/* Left Controls (Page Indicator, <<, <) */}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8' }}>
-                                                {activeCategoryIndex === -1 ? '전체 / ' + l2Categories.length : (activeCategoryIndex + 1) + ' / ' + l2Categories.length}
+                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', marginRight: '4px' }}>
+                                                {activeCategoryIndex === -1 ? '전체' : (activeCategoryIndex + 1) + ' / ' + l2Categories.length}
                                             </span>
                                             <div style={{ display: 'flex', gap: '2px' }}>
                                                 <button 
-                                                    style={{ background: 'transparent', border: 'none', color: activeCategoryIndex === -1 || activeCategoryIndex === 0 ? '#475569' : '#38bdf8', cursor: activeCategoryIndex === -1 || activeCategoryIndex === 0 ? 'default' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }} 
-                                                    disabled={activeCategoryIndex === -1 || activeCategoryIndex === 0}
-                                                    onClick={() => activeCategoryIndex !== -1 && setActiveCategoryIndex(0)}
+                                                    style={{ background: 'transparent', border: 'none', color: activeCategoryIndex === -1 ? '#cbd5e1' : '#2563eb', cursor: activeCategoryIndex === -1 ? 'default' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }} 
+                                                    disabled={activeCategoryIndex === -1}
+                                                    onClick={() => setActiveCategoryIndex(-1)}
                                                     title="처음으로"
                                                 >
                                                     <ChevronsLeft size={16} />
                                                 </button>
                                                 <button 
-                                                    style={{ background: 'transparent', border: 'none', color: activeCategoryIndex === -1 || activeCategoryIndex === 0 ? '#475569' : '#38bdf8', cursor: activeCategoryIndex === -1 || activeCategoryIndex === 0 ? 'default' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }} 
-                                                    disabled={activeCategoryIndex === -1 || activeCategoryIndex === 0}
-                                                    onClick={() => activeCategoryIndex !== -1 && setActiveCategoryIndex(prev => Math.max(0, prev - 1))}
+                                                    style={{ background: 'transparent', border: 'none', color: activeCategoryIndex === -1 ? '#cbd5e1' : '#2563eb', cursor: activeCategoryIndex === -1 ? 'default' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }} 
+                                                    disabled={activeCategoryIndex === -1}
+                                                    onClick={() => setActiveCategoryIndex(prev => prev === 0 ? -1 : prev - 1)}
                                                     title="이전"
                                                 >
                                                     <ChevronLeft size={16} />
                                                 </button>
-                                                <button 
-                                                    style={{ background: 'transparent', border: 'none', color: activeCategoryIndex === -1 || activeCategoryIndex === l2Categories.length - 1 ? '#475569' : '#38bdf8', cursor: activeCategoryIndex === -1 || activeCategoryIndex === l2Categories.length - 1 ? 'default' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }} 
-                                                    disabled={activeCategoryIndex === -1 || activeCategoryIndex === l2Categories.length - 1}
-                                                    onClick={() => activeCategoryIndex !== -1 && setActiveCategoryIndex(prev => Math.min(l2Categories.length - 1, prev + 1))}
-                                                    title="다음"
-                                                >
-                                                    <ChevronRight size={16} />
-                                                </button>
-                                                <button 
-                                                    style={{ background: 'transparent', border: 'none', color: activeCategoryIndex === -1 || activeCategoryIndex === l2Categories.length - 1 ? '#475569' : '#38bdf8', cursor: activeCategoryIndex === -1 || activeCategoryIndex === l2Categories.length - 1 ? 'default' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }} 
-                                                    disabled={activeCategoryIndex === -1 || activeCategoryIndex === l2Categories.length - 1}
-                                                    onClick={() => activeCategoryIndex !== -1 && setActiveCategoryIndex(l2Categories.length - 1)}
-                                                    title="끝으로"
-                                                >
-                                                    <ChevronsRight size={16} />
-                                                </button>
                                             </div>
                                         </div>
 
-                                        <div style={{ height: '16px', width: '1px', backgroundColor: '#334155', flexShrink: 0 }} />
+                                        <div style={{ height: '16px', width: '1px', backgroundColor: '#e2e8f0', flexShrink: 0 }} />
 
-                                        {/* Horizontal Category Tabs */}
+                                        {/* Horizontal Category Tabs (Middle) */}
                                         <div 
+                                            className="ai-l2-tabs-scroll"
                                             style={{ 
                                                 display: 'flex', 
                                                 gap: '8px', 
@@ -967,10 +968,11 @@ const AiReportAnalysisStep = ({
                                         >
                                             {/* 전체보기 Tab */}
                                             <button
+                                                ref={activeCategoryIndex === -1 ? activeTabRef : null}
                                                 onClick={() => setActiveCategoryIndex(-1)}
                                                 style={{
-                                                    background: activeCategoryIndex === -1 ? '#2563eb' : '#1e293b',
-                                                    color: activeCategoryIndex === -1 ? '#ffffff' : '#94a3b8',
+                                                    background: activeCategoryIndex === -1 ? '#2563eb' : '#f1f5f9',
+                                                    color: activeCategoryIndex === -1 ? '#ffffff' : '#475569',
                                                     border: 'none',
                                                     borderRadius: '6px',
                                                     padding: '6px 12px',
@@ -989,10 +991,11 @@ const AiReportAnalysisStep = ({
                                                 return (
                                                     <button
                                                         key={idx}
+                                                        ref={isActive ? activeTabRef : null}
                                                         onClick={() => setActiveCategoryIndex(idx)}
                                                         style={{
-                                                            background: isActive ? '#2563eb' : '#1e293b',
-                                                            color: isActive ? '#ffffff' : '#94a3b8',
+                                                            background: isActive ? '#2563eb' : '#f1f5f9',
+                                                            color: isActive ? '#ffffff' : '#475569',
                                                             border: 'none',
                                                             borderRadius: '6px',
                                                             padding: '6px 12px',
@@ -1008,8 +1011,30 @@ const AiReportAnalysisStep = ({
                                                 );
                                             })}
                                         </div>
-                                    </div>
 
+                                        <div style={{ height: '16px', width: '1px', backgroundColor: '#e2e8f0', flexShrink: 0 }} />
+
+                                        {/* Right Controls (>, >>) */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
+                                            <button 
+                                                style={{ background: 'transparent', border: 'none', color: activeCategoryIndex === l2Categories.length - 1 ? '#cbd5e1' : '#2563eb', cursor: activeCategoryIndex === l2Categories.length - 1 ? 'default' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }} 
+                                                disabled={activeCategoryIndex === l2Categories.length - 1}
+                                                onClick={() => setActiveCategoryIndex(prev => prev === -1 ? 0 : prev + 1)}
+                                                title="다음"
+                                            >
+                                                <ChevronRight size={16} />
+                                            </button>
+                                            <button 
+                                                style={{ background: 'transparent', border: 'none', color: activeCategoryIndex === l2Categories.length - 1 ? '#cbd5e1' : '#2563eb', cursor: activeCategoryIndex === l2Categories.length - 1 ? 'default' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }} 
+                                                disabled={activeCategoryIndex === l2Categories.length - 1}
+                                                onClick={() => setActiveCategoryIndex(l2Categories.length - 1)}
+                                                title="끝으로"
+                                            >
+                                                <ChevronsRight size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
                                     {/* L2 Category Main Contents - 2 Columns grid or stacked list */}
                                     <div 
                                         style={{ 

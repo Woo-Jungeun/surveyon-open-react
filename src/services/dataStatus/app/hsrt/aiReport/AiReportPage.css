@@ -1517,3 +1517,8 @@
     max-width: 100% !important;
     display: inline-block !important;
 }
+
+/* Hide scrollbar for L2 horizontal categories bar */
+.ai-l2-tabs-scroll::-webkit-scrollbar {
+    display: none !important;
+}
