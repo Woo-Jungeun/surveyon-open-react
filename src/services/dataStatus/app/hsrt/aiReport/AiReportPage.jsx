@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { Save, Check, RotateCcw } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
@@ -154,7 +154,7 @@ const AiReportPage = () => {
         };
     }, [pollingIntervalId]);
 
-    const loadSummaryData = async () => {
+    const loadSummaryData = useCallback(async () => {
         const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
         const userId = auth?.user?.userId || "jewoo";
         try {
@@ -305,8 +305,9 @@ const AiReportPage = () => {
         } catch (err) {
             console.error("Failed to load existing AI summary data:", err);
         }
-    };
-    const fetchL1StatusData = async () => {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [auth?.user?.userId]);
+    const fetchL1StatusData = useCallback(async () => {
         const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
         const userId = auth?.user?.userId || "jewoo";
         try {
@@ -324,7 +325,8 @@ const AiReportPage = () => {
         } catch (e) {
             console.error("Failed to load L1 status:", e);
         }
-    };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [auth?.user?.userId]);
 
     // Initial load checks
     useEffect(() => {
@@ -341,7 +343,7 @@ const AiReportPage = () => {
 
         loadSummaryData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [auth?.user?.userId]);
+    }, [auth?.user?.userId, loadSummaryData]);
 
     // Load L1 status when entering Step 3 (최종분석)
     useEffect(() => {
@@ -349,7 +351,26 @@ const AiReportPage = () => {
             fetchL1StatusData();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentStep]);
+    }, [currentStep, fetchL1StatusData]);
+
+    // Listen to dashboard/page selection changes
+    useEffect(() => {
+        const handlePageSelected = () => {
+            setCurrentStep(0);
+            setFileAttached(false);
+            setFileName("");
+            setSelectedFile(null);
+            setIsAnalyzing(false);
+            setAnalysisProgress(0);
+            setPollingIntervalId(prev => {
+                if (prev) clearInterval(prev);
+                return null;
+            });
+            loadSummaryData();
+        };
+        window.addEventListener("pageSelected", handlePageSelected);
+        return () => window.removeEventListener("pageSelected", handlePageSelected);
+    }, [loadSummaryData]);
     const handleExportL1Excel = async () => {
         const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
         const userId = auth?.user?.userId || "jewoo";
