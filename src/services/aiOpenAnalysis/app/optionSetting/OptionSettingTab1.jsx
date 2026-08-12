@@ -1,4 +1,4 @@
-﻿import React, { memo, Fragment, useEffect, useState, useRef, useCallback, useMemo, useContext, forwardRef, useImperativeHandle, useLayoutEffect } from "react";
+import React, { memo, Fragment, useEffect, useState, useRef, useCallback, useMemo, useContext, forwardRef, useImperativeHandle, useLayoutEffect } from "react";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import GridDataCount from "@/components/common/grid/GridDataCount";
@@ -1485,6 +1485,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                         onMouseDown={(e) => e.stopPropagation()}
                                                     >
                                                         <DropDownList
+                                                            className="ai-stage-dropdown"
                                                             data={SENTIMENT_OPTIONS}
                                                             value={row.sentiment}
                                                             onChange={handleChange}

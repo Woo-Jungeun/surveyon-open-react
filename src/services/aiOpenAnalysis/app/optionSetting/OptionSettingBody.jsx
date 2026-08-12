@@ -738,6 +738,7 @@ const OptionSettingBody = () => {
                 <div style={{ display: "inline-flex", alignItems: "center", marginLeft: "8px" }}>
                   <DropDownList
                     key={`lvcode-${tabDivision}`}
+                    className="ai-stage-dropdown"
                     style={{ width: 140 }}
                     data={LVCODE_OPTION}
                     dataItemKey="value"
