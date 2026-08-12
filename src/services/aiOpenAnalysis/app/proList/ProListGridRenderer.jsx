@@ -809,7 +809,7 @@ const ProListGridRenderer = (props) => {
                 <Column
                     key={c.field}
                     field={c.field}
-                    width={c.width ?? '120px'}
+                    width={c.width ?? '90px'}
                     sortable={false}
                     filterable={false}
                     columnMenu={undefined}

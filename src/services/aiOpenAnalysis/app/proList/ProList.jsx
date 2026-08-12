@@ -141,8 +141,8 @@ const ProList = () => {
         { field: "exclude", title: "분석보기", group: "ADMIN", show: true, order: 2, width: "90px" },
 
         // ----- EDIT  → "문항통합"으로 합치기 -----
-        withSubgroup("문항통합저장", 1)({ field: "qnum_text", title: "", group: "EDIT", show: true, allowHide: false, order: 1, width: "70px", wrap: true }),
-        withSubgroup("문항통합저장", 2)({ field: "merge_qnum", title: "", group: "EDIT", show: true, allowHide: false, order: 1, width: "70px", wrap: true }),
+        withSubgroup("문항통합저장", 1)({ field: "qnum_text", title: "", group: "EDIT", show: true, allowHide: false, order: 1, width: "85px", wrap: true }),
+        withSubgroup("문항통합저장", 2)({ field: "merge_qnum", title: "", group: "EDIT", show: true, allowHide: false, order: 1, width: "85px", wrap: true }),
 
         { field: "project_lock", title: "수정", group: "EDIT", show: true, allowHide: false, order: 2 },
     ]);
