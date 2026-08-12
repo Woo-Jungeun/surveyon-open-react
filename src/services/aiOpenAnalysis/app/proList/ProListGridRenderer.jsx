@@ -317,9 +317,10 @@ const MergeInputCell = (cellProps) => {
                 placeholder="입력"
                 rows={1}
                 style={{
-                    resize: 'none', minHeight: '30px', height: 'auto', width: 'calc(100% - 20px)', margin: '0 auto',
+                    resize: 'none', minHeight: '30px', height: 'auto', width: 'calc(100% - 8px)', margin: '0 auto',
                     display: 'block', overflow: 'hidden', whiteSpace: 'pre-wrap', lineHeight: '1.5',
-                    fontSize: '12px', textAlign: 'center', boxSizing: 'border-box'
+                    fontSize: '12px', textAlign: 'center', boxSizing: 'border-box',
+                    padding: '4px 2px'
                 }}
                 onInput={(e) => {
                     const now = ctx.norm(e.currentTarget.value);
