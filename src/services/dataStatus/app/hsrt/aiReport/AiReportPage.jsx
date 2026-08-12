@@ -1250,6 +1250,8 @@ const AiReportPage = () => {
                         missingVariables={missingVariables}
                         onExportL1Excel={handleExportL1Excel}
                         categories={categories}
+                        bannerVars={bannerVars}
+                        userId={auth?.user?.userId || "jewoo"}
                     />
                 );
             default:
