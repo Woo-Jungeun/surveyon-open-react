@@ -129,7 +129,7 @@ const AiReportPage = () => {
     const defaultL3 = {};
 
     // Step 3: Final Analysis state
-    const [aiGuideline, setAiGuideline] = useState("백분율은 소수점 첫째 자리까지 표기하고, 집단 간 차이가 큰 항목을 우선 서술");
+    const [aiGuideline, setAiGuideline] = useState("");
     const [pipelineStatus, setPipelineStatus] = useState({
         l1: { progress: 0, countText: "0문항", isDone: false, isGenerating: false },
         l2: { progress: 0, countText: "0개 카테고리", isDone: false, isGenerating: false },
