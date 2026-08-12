@@ -30,6 +30,7 @@ const AiReportAnalysisStep = ({
     setExpandedL1Cards,
     missingVariables = [],
     onExportL1Excel,
+    onExportL3File,
     categories,
     bannerVars,
     userId
@@ -883,12 +884,11 @@ const AiReportAnalysisStep = ({
                                         </button>
                                     </>
                                 )}
-                                {activeSubTab === 'l2' && null}
                                 {activeSubTab === 'l3' && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <button
                                             className="ai-xlsx-btn"
-                                            onClick={() => alert('최종 종합 보고서 Excel 다운로드 기능은 연동 준비 중입니다.')}
+                                            onClick={() => onExportL3File('xlsx')}
                                             title="Excel"
                                         >
                                             <FileSpreadsheet size={13} />
@@ -896,7 +896,7 @@ const AiReportAnalysisStep = ({
                                         </button>
                                         <button
                                             className="ai-ppt-btn"
-                                            onClick={() => alert('최종 종합 보고서 PPT 다운로드 기능은 연동 준비 중입니다.')}
+                                            onClick={() => onExportL3File('pptx')}
                                             title="PPT"
                                         >
                                             <Presentation size={13} />
@@ -904,26 +904,7 @@ const AiReportAnalysisStep = ({
                                         </button>
                                         <button
                                             className="ai-docx-btn"
-                                            onClick={() => {
-                                                try {
-                                                    const summary = insightData.l3?.executive_summary ? renderInsightText(insightData.l3.executive_summary) : '';
-                                                    const recs = Array.isArray(insightData.l3?.strategic_recommendations)
-                                                        ? insightData.l3.strategic_recommendations.map(r => `- ${renderInsightText(r)}`).join('\n')
-                                                        : (insightData.l3?.strategic_recommendations ? renderInsightText(insightData.l3.strategic_recommendations) : '');
-                                                    const text = `[종합 의사결정 요약문 (Executive Summary)]\n\n${summary}\n\n[최종 전략적 액션 아이템 (Strategic Action Items)]\n\n${recs}`;
-                                                    const blob = new Blob([text], { type: 'application/msword;charset=utf-8' });
-                                                    const url = URL.createObjectURL(blob);
-                                                    const link = document.createElement('a');
-                                                    link.href = url;
-                                                    link.download = '최종_종합_보고서.doc';
-                                                    document.body.appendChild(link);
-                                                    link.click();
-                                                    document.body.removeChild(link);
-                                                    URL.revokeObjectURL(url);
-                                                } catch (e) {
-                                                    console.error(e);
-                                                }
-                                            }}
+                                            onClick={() => onExportL3File('docx')}
                                             title="DOCX"
                                         >
                                             <FileText size={13} />

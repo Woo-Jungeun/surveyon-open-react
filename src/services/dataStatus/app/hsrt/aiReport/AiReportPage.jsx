@@ -35,7 +35,7 @@ const CATEGORY_COLORS = [
 const AiReportPage = () => {
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
-    const { getAiModels, getAiSummaryData, uploadQuestionnaire, getUploadProgress, saveAiSummaryFrame, getAutoCategories, getL1Status, exportL1Excel, generateL2, generateL3 } = AiReportPageApi();
+    const { getAiModels, getAiSummaryData, uploadQuestionnaire, getUploadProgress, saveAiSummaryFrame, getAutoCategories, getL1Status, exportL1Excel, generateL2, generateL3, exportL3File } = AiReportPageApi();
     const { getOverviewContext, getCrosstabAiSummaryAll } = DpRequestPageApi();
     const fileInputRef = useRef(null);
     const recodedVariablesRef = useRef({});
@@ -398,7 +398,67 @@ const AiReportPage = () => {
             }
         } catch (error) {
             console.error('L1 Excel Export Error:', error);
-            modal.showAlert('오류', '엑셀 다운로드 중 문제가 발생했습니다.');
+        }
+    };
+    const handleExportL3File = async (format) => {
+        const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        const userId = auth?.user?.userId || "jewoo";
+
+        // Map format parameter to match backend expectation ('excel', 'ppt', 'docx')
+        let apiFormat = format;
+        if (format === 'xlsx') apiFormat = 'excel';
+        else if (format === 'pptx') apiFormat = 'ppt';
+        else if (format === 'docx') apiFormat = 'docx';
+
+        const payload = {
+            pageId: pageId,
+            format: apiFormat,
+            user: userId
+        };
+
+        try {
+            const res = await exportL3File.mutateAsync(payload);
+            const payloadRes = res?.resultjson || res || {};
+
+            if (String(res?.success) === "777" && payloadRes.content_base64) {
+                const binaryString = window.atob(payloadRes.content_base64);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                // Determine content type and extension
+                const resFormat = String(payloadRes.format || format).toLowerCase();
+                let contentType = 'application/octet-stream';
+                let fileExt = format;
+
+                if (resFormat === 'xlsx' || resFormat === 'excel') {
+                    contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                    fileExt = 'xlsx';
+                } else if (resFormat === 'pptx' || resFormat === 'ppt') {
+                    contentType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+                    fileExt = 'pptx';
+                } else if (resFormat === 'docx' || resFormat === 'word') {
+                    contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+                    fileExt = 'docx';
+                }
+
+                const blob = new Blob([bytes], { type: payloadRes.content_type || contentType });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', payloadRes.filename || `AI_요약보고서_${pageId}.${fileExt}`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } else {
+                modal.showAlert('오류', res?.message || '파일 생성에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('L3 File Export Error:', error);
+            modal.showAlert('오류', '파일 다운로드 중 문제가 발생했습니다.');
         }
     };
 
@@ -1283,6 +1343,7 @@ const AiReportPage = () => {
                         setExpandedL1Cards={setExpandedL1Cards}
                         missingVariables={missingVariables}
                         onExportL1Excel={handleExportL1Excel}
+                        onExportL3File={handleExportL3File}
                         categories={categories}
                         bannerVars={bannerVars}
                         userId={auth?.user?.userId || "jewoo"}

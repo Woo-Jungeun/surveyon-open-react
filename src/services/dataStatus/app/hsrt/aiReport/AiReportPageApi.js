@@ -72,6 +72,15 @@ export function AiReportPageApi() {
         }
     );
 
+    /** AI 요약보고서 - L3 보고서 파일 내보내기 (Excel, PPT, Word) */
+    const exportL3File = useMutation(
+        async (data) => await api.post(data, "/ai-summary/export", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     return {
         getAiModels,
         getAiSummaryData,
@@ -82,6 +91,7 @@ export function AiReportPageApi() {
         getL1Status,
         exportL1Excel,
         generateL2,
-        generateL3
+        generateL3,
+        exportL3File
     };
 }
