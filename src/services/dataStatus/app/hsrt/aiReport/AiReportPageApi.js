@@ -63,6 +63,15 @@ export function AiReportPageApi() {
         }
     );
 
+    /** AI 요약보고서 - L3 종합보고서 생성 */
+    const generateL3 = useMutation(
+        async (data) => await api.post(data, "/ai-summary/generate-l3", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     return {
         getAiModels,
         getAiSummaryData,
@@ -72,6 +81,7 @@ export function AiReportPageApi() {
         getAutoCategories,
         getL1Status,
         exportL1Excel,
-        generateL2
+        generateL2,
+        generateL3
     };
 }

@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Check, ArrowRight, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet, ChevronsUpDown, ChevronsDownUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search } from 'lucide-react';
+import { Check, ArrowRight, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet, ChevronsUpDown, ChevronsDownUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Presentation, FileText } from 'lucide-react';
 import { DpRequestPageApi } from '../../dpRequest/DpRequestPageApi';
 
 const renderInsightText = (val) => {
@@ -877,15 +877,59 @@ const AiReportAnalysisStep = ({
                                         >
                                             {allExpanded ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
                                         </button>
-                                        <button className="ai-xlsx-btn" onClick={onExportL1Excel} title="엑셀 다운로드">
+                                        <button className="ai-xlsx-btn" onClick={onExportL1Excel} title="Excel">
                                             <FileSpreadsheet size={13} />
-                                            <span>엑셀 다운로드</span>
+                                            <span>Excel</span>
                                         </button>
                                     </>
                                 )}
                                 {activeSubTab === 'l2' && null}
                                 {activeSubTab === 'l3' && (
-                                    <button className="ai-icon-btn"><RefreshCw size={13} /></button>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <button
+                                            className="ai-xlsx-btn"
+                                            onClick={() => alert('최종 종합 보고서 Excel 다운로드 기능은 연동 준비 중입니다.')}
+                                            title="Excel"
+                                        >
+                                            <FileSpreadsheet size={13} />
+                                            <span>Excel</span>
+                                        </button>
+                                        <button
+                                            className="ai-ppt-btn"
+                                            onClick={() => alert('최종 종합 보고서 PPT 다운로드 기능은 연동 준비 중입니다.')}
+                                            title="PPT"
+                                        >
+                                            <Presentation size={13} />
+                                            <span>PPT</span>
+                                        </button>
+                                        <button
+                                            className="ai-docx-btn"
+                                            onClick={() => {
+                                                try {
+                                                    const summary = insightData.l3?.executive_summary ? renderInsightText(insightData.l3.executive_summary) : '';
+                                                    const recs = Array.isArray(insightData.l3?.strategic_recommendations)
+                                                        ? insightData.l3.strategic_recommendations.map(r => `- ${renderInsightText(r)}`).join('\n')
+                                                        : (insightData.l3?.strategic_recommendations ? renderInsightText(insightData.l3.strategic_recommendations) : '');
+                                                    const text = `[종합 의사결정 요약문 (Executive Summary)]\n\n${summary}\n\n[최종 전략적 액션 아이템 (Strategic Action Items)]\n\n${recs}`;
+                                                    const blob = new Blob([text], { type: 'application/msword;charset=utf-8' });
+                                                    const url = URL.createObjectURL(blob);
+                                                    const link = document.createElement('a');
+                                                    link.href = url;
+                                                    link.download = '최종_종합_보고서.doc';
+                                                    document.body.appendChild(link);
+                                                    link.click();
+                                                    document.body.removeChild(link);
+                                                    URL.revokeObjectURL(url);
+                                                } catch (e) {
+                                                    console.error(e);
+                                                }
+                                            }}
+                                            title="DOCX"
+                                        >
+                                            <FileText size={13} />
+                                            <span>DOCX</span>
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -1815,7 +1859,7 @@ const AiReportAnalysisStep = ({
                     )}
 
                     {activeSubTab === 'l3' && (
-                        (!pipelineStatus.l3.isDone || !insightData.l3 || Object.keys(insightData.l3 || {}).length === 0) ? (
+                        (!insightData.l3 || !(insightData.l3.executive_summary || insightData.l3.strategic_recommendations)) ? (
                             <div className="ai-block-empty-state">
                                 <span>조회된 L3 종합 요약 보고서 결과가 없습니다.</span>
                             </div>
@@ -1823,9 +1867,10 @@ const AiReportAnalysisStep = ({
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                 {/* Executive Summary Card */}
                                 <div className="ai-card" style={{ padding: '24px', background: '#f1f5f9', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                        <span style={{ fontSize: '20px' }}>📋</span>
-                                        <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', margin: 0 }}>Executive Summary (종합 의사결정 요약문)</h3>
+                                    <div style={{ marginBottom: '16px' }}>
+                                        <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', margin: 0 }}>
+                                            종합 의사결정 요약문 <span style={{ fontSize: '11px', fontWeight: 400, color: '#64748b', marginLeft: '4px' }}>Executive Summary</span>
+                                        </h3>
                                     </div>
                                     <p style={{ fontSize: '13px', lineHeight: '1.7', color: '#334155', margin: 0, whiteSpace: 'pre-wrap' }}>
                                         {renderInsightText(insightData.l3?.executive_summary)}
@@ -1834,9 +1879,10 @@ const AiReportAnalysisStep = ({
 
                                 {/* Strategic Recommendations Card */}
                                 <div className="ai-card" style={{ padding: '24px', background: '#f0fdf4', borderRadius: '12px', border: '1px solid #dcfce7', boxShadow: 'none' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                        <span style={{ fontSize: '20px' }}>💡</span>
-                                        <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#14532d', margin: 0 }}>Strategic Recommendations (전략적 제안 및 실행 과제)</h3>
+                                    <div style={{ marginBottom: '16px' }}>
+                                        <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#14532d', margin: 0 }}>
+                                            최종 전략적 액션 아이템 <span style={{ fontSize: '11px', fontWeight: 400, color: '#16a34a', marginLeft: '4px' }}>Strategic Action Items</span>
+                                        </h3>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                         {Array.isArray(insightData.l3?.strategic_recommendations) ? (

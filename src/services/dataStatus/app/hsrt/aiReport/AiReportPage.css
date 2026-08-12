@@ -1209,6 +1209,48 @@
     background: #ecfdf5;
 }
 
+.ai-ppt-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid #ea580c;
+    background: #ffffff;
+    color: #ea580c;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ai-ppt-btn:hover {
+    background: #fff7ed;
+}
+
+.ai-docx-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid #2563eb;
+    background: #ffffff;
+    color: #2563eb;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ai-docx-btn:hover {
+    background: #eff6ff;
+}
+
 /* Accordion blocks styling */
 .ai-report-blocks-wrap {
     display: flex;

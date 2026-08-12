@@ -35,7 +35,7 @@ const CATEGORY_COLORS = [
 const AiReportPage = () => {
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
-    const { getAiModels, getAiSummaryData, uploadQuestionnaire, getUploadProgress, saveAiSummaryFrame, getAutoCategories, getL1Status, exportL1Excel, generateL2 } = AiReportPageApi();
+    const { getAiModels, getAiSummaryData, uploadQuestionnaire, getUploadProgress, saveAiSummaryFrame, getAutoCategories, getL1Status, exportL1Excel, generateL2, generateL3 } = AiReportPageApi();
     const { getOverviewContext, getCrosstabAiSummaryAll } = DpRequestPageApi();
     const fileInputRef = useRef(null);
     const recodedVariablesRef = useRef({});
@@ -750,7 +750,6 @@ const AiReportPage = () => {
                         }
                     }));
                     modal.showAlert("알림", "조사내용별 분석(L2) 생성이 성공적으로 완료되었습니다.");
-                    await loadSummaryData();
                 } else {
                     setPipelineStatus(prev => ({
                         ...prev,
@@ -767,25 +766,60 @@ const AiReportPage = () => {
                 }));
                 modal.showAlert("오류", "서버 통신 실패로 L2 분석을 완료하지 못했습니다.");
             }
-        } else {
-            // Simulated triggers for l3
+        } else if (level === 'l3') {
+            const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+            const payload = {
+                pageId: pageId,
+                modelType: selectedModel || "llm-gpt-oss-120b",
+                userInstructions: aiGuideline || ""
+            };
+
             let prog = 0;
-            const interval = setInterval(() => {
-                prog += 20;
+            const progressInterval = setInterval(() => {
+                prog = Math.min(prog + 15, 95);
                 setPipelineStatus(prev => ({
                     ...prev,
-                    [level]: { ...prev[level], progress: prog }
+                    l3: { ...prev.l3, progress: prog }
                 }));
-                if (prog >= 100) {
-                    clearInterval(interval);
+            }, 300);
+
+            try {
+                const res = await generateL3.mutateAsync(payload);
+                clearInterval(progressInterval);
+
+                if (String(res?.success) === '777') {
+                    setInsightData(prev => ({
+                        ...prev,
+                        l3: res.resultjson || {}
+                    }));
+
                     setPipelineStatus(prev => ({
                         ...prev,
-                        [level]: { ...prev[level], isGenerating: false, isDone: true, progress: 100 }
+                        l3: {
+                            ...prev.l3,
+                            isGenerating: false,
+                            isDone: true,
+                            progress: 100,
+                            countText: "보고서 추출 가능"
+                        }
                     }));
-                    modal.showAlert("알림", `${level.toUpperCase()} 분석 재생성이 성공적으로 완료되었습니다.`);
-                    loadSummaryData();
+                    modal.showAlert("알림", "종합 AI 요약 보고서(L3) 생성이 성공적으로 완료되었습니다.");
+                } else {
+                    setPipelineStatus(prev => ({
+                        ...prev,
+                        l3: { ...prev.l3, isGenerating: false, progress: 0 }
+                    }));
+                    modal.showAlert("오류", res?.message || "종합 AI 요약 보고서(L3) 생성에 실패했습니다.");
                 }
-            }, 200);
+            } catch (err) {
+                console.error("Failed to generate L3:", err);
+                clearInterval(progressInterval);
+                setPipelineStatus(prev => ({
+                    ...prev,
+                    l3: { ...prev.l3, isGenerating: false, progress: 0 }
+                }));
+                modal.showAlert("오류", "서버 통신 실패로 L3 분석을 완료하지 못했습니다.");
+            }
         }
     };
 
