@@ -107,6 +107,15 @@ export function MapManagementPageApi() {
         }
     );
 
+    /** 맵 새로고침 (큐마스터 연동) */
+    const updateMap = useMutation(
+        async (data) => await api.post(data, "/update-map", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
     return {
         getMapVariables,
         srtTransfer,
@@ -118,6 +127,7 @@ export function MapManagementPageApi() {
         uploadSpss,
         updateDataFromSav,
         generateRelabels,
-        syncMap
+        syncMap,
+        updateMap
     };
 }

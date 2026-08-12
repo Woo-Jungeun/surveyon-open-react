@@ -15,7 +15,7 @@ import DownloadModal from './DownloadModal';
 import UploadModal from './UploadModal';
 import DataUpdateModal from './DataUpdateModal';
 import RelabelModal from './RelabelModal';
-import { Download, Upload, Tags } from 'lucide-react';
+import { Download, Upload, Tags, RefreshCw } from 'lucide-react';
 
 import '../../../../assets/css/grid_vertical_borders.css';
 import './MapManagementPage.css';
@@ -24,7 +24,7 @@ import './MapManagementPage.css';
 // 메인 컴포넌트
 // ─────────────────────────────────────────────
 const MapManagementPage = () => {
-    const { getMapVariables, srtTransfer, createMapVariables, updateMapVariables, updateMapLabels, createMapLabels, syncMap } = MapManagementPageApi();
+    const { getMapVariables, srtTransfer, createMapVariables, updateMapVariables, updateMapLabels, createMapLabels, syncMap, updateMap } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
     const modal = React.useContext(modalContext);
     const loadingSpinner = React.useContext(loadingSpinnerContext);
@@ -551,6 +551,79 @@ const MapManagementPage = () => {
         });
     };
 
+    const handleUpdateMap = () => {
+        modal.showConfirm("알림", "큐마의 최신맵으로 대체됩니다.\n주의사항 : 설문온 맵작성에서 설정한 옵션들은 모두 초기화됩니다.", {
+            btns: [
+                { title: "취소", click: () => { } },
+                { title: "확인", click: () => executeUpdateMap() },
+            ]
+        });
+    };
+
+    const executeUpdateMap = async () => {
+        const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum');
+        const userId = auth?.user?.userId || '';
+
+        if (!pn) {
+            modal.showErrorAlert("알림", "프로젝트 정보를 찾을 수 없습니다.");
+            return;
+        }
+
+        let myConnectionId = null;
+        let connection = null;
+        if (window.signalR) {
+            try {
+                const baseUrl = window.API_CONFIG?.API_BASE_URL_DATAMANAGEMENT || "";
+                let hubUrl = baseUrl.replace(/\/+$/, '') + "/hubs/task-progress";
+                if (!hubUrl.startsWith('http')) {
+                    hubUrl = window.location.origin + hubUrl;
+                }
+
+                connection = new window.signalR.HubConnectionBuilder()
+                    .withUrl(hubUrl)
+                    .withAutomaticReconnect()
+                    .configureLogging(window.signalR.LogLevel.None)
+                    .build();
+
+                await connection.start();
+                myConnectionId = connection.connectionId;
+            } catch (e) {
+                console.error("SignalR Connection Error in Map Refresh:", e);
+            }
+        }
+
+        try {
+            const payload = {
+                pn,
+                user: userId,
+                bakeTarget: "both"
+            };
+            if (myConnectionId) {
+                payload.connectionId = myConnectionId;
+            }
+
+            const res = await updateMap.mutateAsync(payload);
+
+            if (String(res?.success) === '777') {
+                modal.showAlert("알림", "맵 새로고침이 완료되었습니다.");
+                loadData();
+            } else {
+                modal.showErrorAlert("에러", res?.message || "맵 새로고침 중 오류가 발생했습니다.");
+            }
+        } catch (error) {
+            console.error("Map refresh error:", error);
+            modal.showErrorAlert("에러", "맵 새로고침 요청 중 오류가 발생했습니다.");
+        } finally {
+            if (connection) {
+                try {
+                    connection.stop();
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        }
+    };
+
     const handleTabChange = async (targetTab) => {
         if (targetTab === activeTab) return;
 
@@ -649,6 +722,24 @@ const MapManagementPage = () => {
                                 <Tags size={16} />
                                 Re_Label
                             </button> */}
+                            <button
+                                className="data-header-btn"
+                                onClick={handleUpdateMap}
+                                title="큐마의 최신맵으로 대체됩니다."
+                                style={{
+                                    height: '32px',
+                                    padding: '0 12px',
+                                    border: '1px solid #16a34a',
+                                    background: '#fff',
+                                    color: '#16a34a',
+                                    marginRight: '8px'
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                            >
+                                <RefreshCw size={16} />
+                                맵 새로고침
+                            </button>
                             <button
                                 className="data-header-btn"
                                 onClick={() => setDataUpdateModalOpen(true)}
