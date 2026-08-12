@@ -445,6 +445,57 @@ const AiReportAnalysisStep = ({
         );
     };
 
+    const renderStubChips = (stubs, item, evidenceKey, catIdx, sectionTitle, sectionLabel) => {
+        if (!stubs) return null;
+        const stubList = typeof stubs === 'string'
+            ? stubs.split(',').map(s => s.trim().toUpperCase()).filter(Boolean)
+            : Array.isArray(stubs) ? stubs.map(s => String(s).trim().toUpperCase()).filter(Boolean) : [];
+
+        if (stubList.length === 0) return null;
+
+        return (
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
+                {stubList.map((stub, sIdx) => {
+                    const stubLower = stub.toLowerCase();
+                    const isSelected = selectedEvidence?.evidenceKey === evidenceKey && selectedEvidence?.evidence_target?.stub_id?.toLowerCase() === stubLower;
+                    return (
+                        <button
+                            key={sIdx}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedEvidence({
+                                    ...item,
+                                    evidenceKey,
+                                    catIdx,
+                                    sectionTitle,
+                                    sectionLabel,
+                                    evidence_target: {
+                                        ...item.evidence_target,
+                                        stub_id: stubLower
+                                    }
+                                });
+                            }}
+                            style={{
+                                background: isSelected ? '#4f46e5' : '#ffffff',
+                                color: isSelected ? '#ffffff' : '#475569',
+                                border: isSelected ? '1px solid #4f46e5' : '1px solid #cbd5e1',
+                                borderRadius: '4px',
+                                padding: '1px 6px',
+                                fontSize: '10px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease'
+                            }}
+                            title={`클릭하여 ${stub} 문항 분석 보기`}
+                        >
+                            {stub}
+                        </button>
+                    );
+                })}
+            </div>
+        );
+    };
+
     return (
         <div className="ai-step-content-container" style={{ gap: '8px', height: '100%', overflowY: 'hidden', boxSizing: 'border-box' }}>
             {/* AI 요약 생성 지침 (한 줄로 표출) */}
@@ -1095,10 +1146,10 @@ const AiReportAnalysisStep = ({
                                                     )}
 
                                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-                                                        {/* Left Column */}
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                                            {/* 가설 검증 결론 Card */}
-                                                            <div className="ai-card" style={{ padding: '20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                        {/* Left Column wrapper using display: contents to participate in parent grid */}
+                                                        <div style={{ display: 'contents' }}>
+                                                            {/* 가설 검증 결론 Card (order: 1) */}
+                                                            <div className="ai-card" style={{ padding: '20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px', order: 1 }}>
                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
 
@@ -1176,7 +1227,8 @@ const AiReportAnalysisStep = ({
                                                                 {/* 사전 가설 Box */}
                                                                 {(() => {
                                                                     const matchedCat = categories?.find(c => c.title === catItem?.category_name);
-                                                                    const hypothesisText = matchedCat?.desc || (catItem.category_name === '프로모션 인식 및 개인화 오퍼링 평가' ? '가상자산에 대한 전반적인 인지도가 높을수록 스테이블코인의 개념과 필요성에 대해 더 긍정적으로 인식할 것이다.' : '가설 검증 및 문항 분석');
+                                                                    const hypothesisText = matchedCat?.desc;
+                                                                    if (!hypothesisText || hypothesisText.trim() === '' || hypothesisText === '가설 검증 및 문항 분석') return null;
                                                                     return (
                                                                         <div
                                                                             style={{
@@ -1221,6 +1273,8 @@ const AiReportAnalysisStep = ({
                                                                                 <li key={dtIdx}>{dt}</li>
                                                                             ))}
                                                                         </ul>
+                                                                    ) : typeof hypothesisResult?.details === 'string' ? (
+                                                                        renderBulletText(hypothesisResult.details)
                                                                     ) : typeof hypothesisResult === 'string' ? (
                                                                         renderBulletText(hypothesisResult)
                                                                     ) : (
@@ -1252,8 +1306,9 @@ const AiReportAnalysisStep = ({
                                                                                         <span style={{ fontSize: '20px', fontWeight: 800, color: '#1e293b' }}>
                                                                                             {kpi.value}{kpi.unit || '%'}
                                                                                         </span>
-                                                                                        {isUp && <span style={{ color: '#16a34a', fontWeight: 'bold', fontSize: '13px' }}>▲</span>}
-                                                                                        {isDown && <span style={{ color: '#dc2626', fontWeight: 'bold', fontSize: '13px' }}>▼</span>}
+                                                                                        {isUp && <span style={{ color: '#059669', fontWeight: 800, fontSize: '14px', marginLeft: '4px' }}>↑</span>}
+                                                                                        {isDown && <span style={{ color: '#dc2626', fontWeight: 800, fontSize: '14px', marginLeft: '4px' }}>↓</span>}
+                                                                                        {!isUp && !isDown && <span style={{ color: '#64748b', fontWeight: 800, fontSize: '14px', marginLeft: '4px' }}>-</span>}
                                                                                     </div>
                                                                                 </div>
                                                                             );
@@ -1262,8 +1317,8 @@ const AiReportAnalysisStep = ({
                                                                 )}
                                                             </div>
 
-                                                            {/* 핵심 정량 분석 Card */}
-                                                            <div className="ai-card" style={{ padding: '20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                            {/* 핵심 정량 분석 Card (order: 3) */}
+                                                            <div className="ai-card" style={{ padding: '20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px', order: 3 }}>
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
 
                                                                     <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b', margin: 0 }}>
@@ -1306,34 +1361,43 @@ const AiReportAnalysisStep = ({
                                                                                         {fIdx + 1}
                                                                                     </span>
                                                                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                                                                                             <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>
                                                                                                 {find.headline}
                                                                                             </span>
-                                                                                            {find.evidence_target && (
-                                                                                                <button
-                                                                                                    onClick={() => setSelectedEvidence({ ...find, evidenceKey, catIdx: idx, sectionTitle: '핵심 정량 분석', sectionLabel: '핵심 분석 근거' })}
-                                                                                                    style={{
-                                                                                                        background: isSelected ? '#2563eb' : '#ffffff',
-                                                                                                        color: isSelected ? '#ffffff' : '#64748b',
-                                                                                                        border: '1px solid #cbd5e1',
-                                                                                                        borderRadius: '4px',
-                                                                                                        padding: '1px 6px',
-                                                                                                        fontSize: '10.5px',
-                                                                                                        cursor: 'pointer',
-                                                                                                        display: 'flex',
-                                                                                                        alignItems: 'center',
-                                                                                                        gap: '2px'
-                                                                                                    }}
-                                                                                                >
-                                                                                                    <Search size={10} />
-                                                                                                    <span>증거</span>
-                                                                                                </button>
-                                                                                            )}
+                                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                                                                                {find.evidence_target && (
+                                                                                                    <button
+                                                                                                        onClick={() => setSelectedEvidence({ ...find, evidenceKey, catIdx: idx, sectionTitle: '핵심 정량 분석', sectionLabel: '핵심 분석 근거' })}
+                                                                                                        style={{
+                                                                                                            background: isSelected ? '#2563eb' : '#ffffff',
+                                                                                                            color: isSelected ? '#ffffff' : '#64748b',
+                                                                                                            border: '1px solid #cbd5e1',
+                                                                                                            borderRadius: '4px',
+                                                                                                            padding: '1px 6px',
+                                                                                                            fontSize: '10.5px',
+                                                                                                            cursor: 'pointer',
+                                                                                                            display: 'flex',
+                                                                                                            alignItems: 'center',
+                                                                                                            gap: '2px'
+                                                                                                        }}
+                                                                                                    >
+                                                                                                        <Search size={10} />
+                                                                                                        <span>증거</span>
+                                                                                                    </button>
+                                                                                                )}
+                                                                                                {renderStubChips(find.stubs, find, evidenceKey, idx, '핵심 정량 분석', '핵심 분석 근거')}
+                                                                                            </div>
                                                                                         </div>
                                                                                         <span style={{ fontSize: '11.5px', color: '#475569', lineHeight: '1.4' }}>
                                                                                             {find.description}
                                                                                         </span>
+                                                                                        {find.evidence_metric && (
+                                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10.5px', color: '#7c3aed', fontWeight: 600, marginTop: '2px' }}>
+                                                                                                <span>📊 교차표 판단 수치:</span>
+                                                                                                <span>{find.evidence_metric}</span>
+                                                                                            </div>
+                                                                                        )}
                                                                                     </div>
                                                                                 </div>
                                                                             );
@@ -1345,16 +1409,17 @@ const AiReportAnalysisStep = ({
                                                                     )}
                                                                 </div>
 
+                                                                <div style={{ flex: 1 }} />
                                                                 <div style={{ borderTop: '1px dashed #e2e8f0', paddingTop: '8px', fontSize: '11px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                                     <span>위 항목의 <strong>증거</strong> 버튼을 눌러 근거 문항을 확인하세요</span>
                                                                 </div>
                                                             </div>
                                                         </div>
 
-                                                        {/* Right Column */}
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                                            {/* 전략적 시사점 & 액션 플랜 Card */}
-                                                            <div className="ai-card" style={{ padding: '20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                        {/* Right Column wrapper using display: contents to participate in parent grid */}
+                                                        <div style={{ display: 'contents' }}>
+                                                            {/* 전략적 시사점 & 액션 플랜 Card (order: 2) */}
+                                                            <div className="ai-card" style={{ padding: '20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px', order: 2 }}>
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
 
                                                                     <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b', margin: 0 }}>
@@ -1384,23 +1449,23 @@ const AiReportAnalysisStep = ({
                                                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                                                         {(() => {
                                                                                             const zone = plan.matrix_zone || 'QUICK_WIN';
-                                                                                            let label = '즉시실행';
+                                                                                            let label = 'Quick Win (즉시 실행)';
                                                                                             let bg = '#fef2f2';
                                                                                             let color = '#b91c1c';
                                                                                             let border = '1px solid #fecaca';
 
                                                                                             if (zone === 'LONG_TERM') {
-                                                                                                label = '장기과제';
+                                                                                                label = '장기 과제 (Long-term)';
                                                                                                 bg = '#faf5ff';
                                                                                                 color = '#6b21a8';
                                                                                                 border = '1px solid #e9d5ff';
                                                                                             } else if (zone === 'EASY_WIN') {
-                                                                                                label = '단기전략과제';
+                                                                                                label = '단기 전략 과제';
                                                                                                 bg = '#eff6ff';
                                                                                                 color = '#1e3a8a';
                                                                                                 border = '1px solid #bfdbfe';
                                                                                             } else if (zone === 'LOW_PRIORITY') {
-                                                                                                label = '낮은우선순위';
+                                                                                                label = '낮은 우선순위 과제';
                                                                                                 bg = '#f3f4f6';
                                                                                                 color = '#374151';
                                                                                                 border = '1px solid #e5e7eb';
@@ -1420,26 +1485,29 @@ const AiReportAnalysisStep = ({
                                                                                                 </span>
                                                                                             );
                                                                                         })()}
-                                                                                        {plan.evidence_target && (
-                                                                                            <button
-                                                                                                onClick={() => setSelectedEvidence({ ...plan, evidenceKey, catIdx: idx, sectionTitle: '전략적 시사점 & 액션 플랜', sectionLabel: '전략 과제 근거' })}
-                                                                                                style={{
-                                                                                                    background: isSelected ? '#2563eb' : '#ffffff',
-                                                                                                    color: isSelected ? '#ffffff' : '#64748b',
-                                                                                                    border: '1px solid #cbd5e1',
-                                                                                                    borderRadius: '4px',
-                                                                                                    padding: '1px 6px',
-                                                                                                    fontSize: '10.5px',
-                                                                                                    cursor: 'pointer',
-                                                                                                    display: 'flex',
-                                                                                                    alignItems: 'center',
-                                                                                                    gap: '2px'
-                                                                                                }}
-                                                                                            >
-                                                                                                <Search size={10} />
-                                                                                                <span>증거</span>
-                                                                                            </button>
-                                                                                        )}
+                                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                                                                            {plan.evidence_target && (
+                                                                                                <button
+                                                                                                    onClick={() => setSelectedEvidence({ ...plan, evidenceKey, catIdx: idx, sectionTitle: '전략적 시사점 & 액션 플랜', sectionLabel: '전략 과제 근거' })}
+                                                                                                    style={{
+                                                                                                        background: isSelected ? '#2563eb' : '#ffffff',
+                                                                                                        color: isSelected ? '#ffffff' : '#64748b',
+                                                                                                        border: '1px solid #cbd5e1',
+                                                                                                        borderRadius: '4px',
+                                                                                                        padding: '1px 6px',
+                                                                                                        fontSize: '10.5px',
+                                                                                                        cursor: 'pointer',
+                                                                                                        display: 'flex',
+                                                                                                        alignItems: 'center',
+                                                                                                        gap: '2px'
+                                                                                                    }}
+                                                                                                >
+                                                                                                    <Search size={10} />
+                                                                                                    <span>증거</span>
+                                                                                                </button>
+                                                                                            )}
+                                                                                            {renderStubChips(plan.stubs, plan, evidenceKey, idx, '전략적 시사점 & 액션 플랜', '전략 과제 근거')}
+                                                                                        </div>
                                                                                     </div>
                                                                                     <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>
                                                                                         {plan.headline}
@@ -1447,6 +1515,12 @@ const AiReportAnalysisStep = ({
                                                                                     <span style={{ fontSize: '11.5px', color: '#475569', lineHeight: '1.4' }}>
                                                                                         {plan.description}
                                                                                     </span>
+                                                                                    {plan.evidence_metric && (
+                                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10.5px', color: '#2563eb', fontWeight: 600, marginTop: '2px' }}>
+                                                                                            <span>📊 교차표 판단 수치:</span>
+                                                                                            <span>{plan.evidence_metric}</span>
+                                                                                        </div>
+                                                                                    )}
                                                                                 </div>
                                                                             );
                                                                         })
@@ -1458,8 +1532,8 @@ const AiReportAnalysisStep = ({
                                                                 </div>
                                                             </div>
 
-                                                            {/* 타겟 세그먼트 프로필 Card */}
-                                                            <div className="ai-card" style={{ padding: '20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                            {/* 타겟 세그먼트 프로필 Card (order: 4) */}
+                                                            <div className="ai-card" style={{ padding: '20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px', order: 4 }}>
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
 
                                                                     <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b', margin: 0 }}>
@@ -1490,26 +1564,29 @@ const AiReportAnalysisStep = ({
                                                                                         <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>
                                                                                             {prof.headline}
                                                                                         </span>
-                                                                                        {prof.evidence_target && (
-                                                                                            <button
-                                                                                                onClick={() => setSelectedEvidence({ ...prof, evidenceKey, catIdx: idx, sectionTitle: '타겟 세그먼트 프로필', sectionLabel: '세그먼트 특징 근거' })}
-                                                                                                style={{
-                                                                                                    background: isSelected ? '#2563eb' : '#ffffff',
-                                                                                                    color: isSelected ? '#ffffff' : '#64748b',
-                                                                                                    border: '1px solid #cbd5e1',
-                                                                                                    borderRadius: '4px',
-                                                                                                    padding: '1px 6px',
-                                                                                                    fontSize: '10.5px',
-                                                                                                    cursor: 'pointer',
-                                                                                                    display: 'flex',
-                                                                                                    alignItems: 'center',
-                                                                                                    gap: '2px'
-                                                                                                }}
-                                                                                            >
-                                                                                                <Search size={10} />
-                                                                                                <span>증거</span>
-                                                                                            </button>
-                                                                                        )}
+                                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                                                                            {prof.evidence_target && (
+                                                                                                <button
+                                                                                                    onClick={() => setSelectedEvidence({ ...prof, evidenceKey, catIdx: idx, sectionTitle: '타겟 세그먼트 프로필', sectionLabel: '세그먼트 특징 근거' })}
+                                                                                                    style={{
+                                                                                                        background: isSelected ? '#2563eb' : '#ffffff',
+                                                                                                        color: isSelected ? '#ffffff' : '#64748b',
+                                                                                                        border: '1px solid #cbd5e1',
+                                                                                                        borderRadius: '4px',
+                                                                                                        padding: '1px 6px',
+                                                                                                        fontSize: '10.5px',
+                                                                                                        cursor: 'pointer',
+                                                                                                        display: 'flex',
+                                                                                                        alignItems: 'center',
+                                                                                                        gap: '2px'
+                                                                                                    }}
+                                                                                                >
+                                                                                                    <Search size={10} />
+                                                                                                    <span>증거</span>
+                                                                                                </button>
+                                                                                            )}
+                                                                                            {renderStubChips(prof.stubs, prof, evidenceKey, idx, '타겟 세그먼트 프로필', '세그먼트 특징 근거')}
+                                                                                        </div>
                                                                                     </div>
                                                                                     {(prof.group_a || prof.group_b) && (
                                                                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
@@ -1528,6 +1605,12 @@ const AiReportAnalysisStep = ({
                                                                                     <span style={{ fontSize: '11.5px', color: '#475569', lineHeight: '1.4' }}>
                                                                                         {prof.description}
                                                                                     </span>
+                                                                                    {prof.evidence_metric && (
+                                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10.5px', color: '#475569', fontWeight: 600, marginTop: '2px' }}>
+                                                                                            <span>📊 교차표 판단 수치:</span>
+                                                                                            <span>{prof.evidence_metric}</span>
+                                                                                        </div>
+                                                                                    )}
                                                                                 </div>
                                                                             );
                                                                         })
@@ -1538,6 +1621,7 @@ const AiReportAnalysisStep = ({
                                                                     )}
                                                                 </div>
 
+                                                                <div style={{ flex: 1 }} />
                                                                 <div style={{ borderTop: '1px dashed #e2e8f0', paddingTop: '8px', fontSize: '11px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                                     <span>위 항목의 <strong>증거</strong> 버튼을 눌러 근거 문항을 확인하세요</span>
                                                                 </div>
