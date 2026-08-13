@@ -895,6 +895,20 @@ const AiDataPage = () => {
             return;
         }
 
+        const confirmResult = await new Promise(resolve => {
+            modal.showConfirm(
+                "확인",
+                "문항 이동을 완료하셨습니까?",
+                {
+                    btns: [
+                        { title: "취소", click: () => resolve(false) },
+                        { title: "확인", click: () => resolve(true) }
+                    ]
+                }
+            );
+        });
+        if (!confirmResult) return;
+
         try {
             setIsSimulating(true);
 
