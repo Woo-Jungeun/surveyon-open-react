@@ -1847,7 +1847,7 @@ const AiReportAnalysisStep = ({
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                 {/* Executive Summary Card */}
-                                <div className="ai-card" style={{ padding: '24px', background: '#f1f5f9', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none' }}>
+                                <div className="ai-card" style={{ padding: '24px', background: '#f1f5f9', borderRadius: '12px', border: '1.5px solid #cbd5e1', boxShadow: 'none' }}>
                                     <div style={{ marginBottom: '16px' }}>
                                         <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b', margin: 0 }}>
                                             종합 의사결정 요약문 <span style={{ fontSize: '11px', fontWeight: 400, color: '#64748b', marginLeft: '4px' }}>Executive Summary</span>
@@ -1859,7 +1859,7 @@ const AiReportAnalysisStep = ({
                                 </div>
 
                                 {/* Strategic Recommendations Card */}
-                                <div className="ai-card" style={{ padding: '24px', background: '#f0fdf4', borderRadius: '12px', border: '1px solid #dcfce7', boxShadow: 'none' }}>
+                                <div className="ai-card" style={{ padding: '24px', background: '#f0fdf4', borderRadius: '12px', border: '1.5px solid #86efac', boxShadow: 'none' }}>
                                     <div style={{ marginBottom: '16px' }}>
                                         <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#14532d', margin: 0 }}>
                                             최종 전략적 액션 아이템 <span style={{ fontSize: '11px', fontWeight: 400, color: '#16a34a', marginLeft: '4px' }}>Strategic Action Items</span>
@@ -1869,7 +1869,20 @@ const AiReportAnalysisStep = ({
                                         {Array.isArray(insightData.l3?.strategic_recommendations) ? (
                                             insightData.l3.strategic_recommendations.map((rec, rIdx) => (
                                                 <div key={rIdx} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                                                    <span style={{ color: '#16a34a', fontWeight: 'bold' }}>✓</span>
+                                                    <div style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        width: '18px',
+                                                        height: '18px',
+                                                        borderRadius: '50%',
+                                                        background: '#d1fae5',
+                                                        color: '#16a34a',
+                                                        flexShrink: 0,
+                                                        marginTop: '2px'
+                                                    }}>
+                                                        <Check size={11} strokeWidth={3} />
+                                                    </div>
                                                     <p style={{ fontSize: '13px', lineHeight: '1.5', color: '#1b4332', margin: 0 }}>{renderInsightText(rec)}</p>
                                                 </div>
                                             ))
