@@ -932,11 +932,41 @@ const AiDataPage = () => {
             });
 
             if (String(res?.success) === '777') {
-                modal.showAlert("알림", "선택한 응답자의 재개 명령을 전달했습니다. 잠시 후 러너가 작업을 이어받아 실행합니다.");
-                setFilterStatus("all");
-                setCheckedIds([]);
-                // 상태 및 목록 갱신
-                await triggerFetchJob();
+                // 러너 실행 시동 중 UI 표출
+                setIsRunnerStarting(true);
+
+                const checkAfterSec = 15;
+
+                // 타이머 시작 (checkAfterSec초 후 확인 API 호출)
+                if (runnerCheckTimerRef.current) clearTimeout(runnerCheckTimerRef.current);
+                runnerCheckTimerRef.current = setTimeout(async () => {
+                    try {
+                        const checkRes = await checkRunnerStatus.mutateAsync({
+                            pn: projectnum,
+                            user: userId
+                        });
+
+                        setIsRunnerStarting(false);
+
+                        const payload = checkRes?.resultjson || checkRes?.data;
+                        if (String(checkRes?.success) === '777' && payload?.claimed === true) {
+                            // 정상 기동 및 수령됨
+                            setRunnerNotResponding(false);
+                            setRunnerGuide(null);
+                            setFilterStatus("all");
+                            setCheckedIds([]);
+                            await triggerFetchJob();
+                        } else {
+                            // 미기동 또는 수령 안 됨 → 가이드 셋팅 및 경고창
+                            setRunnerGuide(payload?.guide || null);
+                            setRunnerNotResponding(true);
+                        }
+                    } catch (e) {
+                        console.error("runnerCheck error:", e);
+                        setIsRunnerStarting(false);
+                        setRunnerNotResponding(true);
+                    }
+                }, checkAfterSec * 1000);
             } else {
                 modal.showAlert("알림", res?.resultjson?.errorcontent || res?.message || "재개 작업 지시에 실패했습니다.");
             }
