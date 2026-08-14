@@ -109,8 +109,8 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
     if (!show) return null;
 
     return (
-        <div className="advanced-filter-overlay-cbp theme-blue" onClick={onClose}>
-            <div className="advanced-filter-content-cbp" onClick={(e) => e.stopPropagation()} style={{ width: '840px', height: '680px', display: 'flex', flexDirection: 'column' }}>
+        <div className="advanced-filter-overlay-cbp theme-blue">
+            <div className="advanced-filter-content-cbp" style={{ width: '840px', height: '680px', display: 'flex', flexDirection: 'column' }}>
 
                 {/* 헤더 영역 (변수조합기 팝업과 일치) */}
                 <div className="filter-popup-header-cbp">
