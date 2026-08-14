@@ -1350,7 +1350,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                             <AddQuestionContext.Provider value={{ currentInfo, updateBannerInfo }}>
                                 <KendoGridV2
                                     data={currentInfo}
-                                    reorderable showNo deletable addable showNoRecordsAddBtn={false} editField="inEdit"
+                                    reorderable showNo deletable={currentInfo.length > 1} addable showNoRecordsAddBtn={false} editField="inEdit"
                                     onDataChange={updateBannerInfo}
                                     onRowClick={handleRowClick}
                                     newRowTemplate={{ label2: '', label: '', logic: '' }}
