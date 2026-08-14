@@ -487,26 +487,40 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
     };
 
     const handlePaste = (e) => {
-        e.preventDefault();
         const clipboardData = e.clipboardData.getData('Text');
-        const lines = clipboardData.split(/\r?\n/).map(l => l.trim());
-        if (lines.length > 0) {
-            const newData = [...data];
-            lines.forEach((lineVal, idx) => {
-                const targetIndex = dataIndex + idx;
-                if (targetIndex < newData.length) {
-                    if (field === 'label' && String(newData[targetIndex][field] ?? '').trim() === '전체') {
-                        return;
-                    }
-                    newData[targetIndex] = {
-                        ...newData[targetIndex],
-                        [field]: lineVal
-                    };
-                }
-            });
-            onUpdate(dataIndex, 1, field, lines[0], newData);
-            setIsEditing(false);
+        if (!clipboardData) return;
+
+        const hasNewline = /\r|\n/.test(clipboardData);
+        const hasTab = clipboardData.includes('\t');
+
+        // 단일 텍스트(줄바꿈이나 탭이 없는 일반 글자 붙여넣기)는 브라우저 기본 동작(커서 위치 삽입)에 맡김
+        if (!hasNewline && !hasTab) {
+            return;
         }
+
+        e.preventDefault();
+
+        let lines = clipboardData.split(/\r?\n/);
+        if (lines.length > 0 && lines[lines.length - 1] === '') {
+            lines.pop();
+        }
+        if (lines.length === 0) return;
+
+        const newData = [...data];
+        lines.forEach((lineVal, idx) => {
+            const targetIndex = dataIndex + idx;
+            if (targetIndex < newData.length) {
+                if (field === 'label' && String(newData[targetIndex][field] ?? '').trim() === '전체') {
+                    return;
+                }
+                newData[targetIndex] = {
+                    ...newData[targetIndex],
+                    [field]: lineVal.trim()
+                };
+            }
+        });
+        onUpdate(dataIndex, 1, field, lines[0].trim(), newData);
+        setIsEditing(false);
     };
 
     if (isEditing) {

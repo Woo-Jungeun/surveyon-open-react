@@ -63,8 +63,18 @@ const NumericEditCell = (props) => {
 
     const handlePaste = (e) => {
         if (currentWeightInfo && updateWeightInfo) {
-            e.preventDefault();
             const clipboardData = e.clipboardData.getData('Text');
+            if (!clipboardData) return;
+
+            const hasNewline = /\r|\n/.test(clipboardData);
+            const hasTab = clipboardData.includes('\t');
+
+            // 단일 텍스트(줄바꿈이나 탭이 없는 일반 글자 붙여넣기)는 브라우저 기본 동작(커서 위치 삽입)에 맡김
+            if (!hasNewline && !hasTab) {
+                return;
+            }
+
+            e.preventDefault();
             const lines = clipboardData.split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
             if (lines.length > 0) {
                 const startIdx = currentWeightInfo.findIndex(item => String(item.label) === String(dataItem.label));

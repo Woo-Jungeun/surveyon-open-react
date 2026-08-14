@@ -557,11 +557,24 @@ const RecodingPage = () => {
 
     // 엑셀 붙여넣기 처리
     const handlePaste = (e, dataItem, field) => {
-        e.preventDefault();
         const clipboardData = e.clipboardData.getData('text');
+        if (!clipboardData) return;
+
+        const hasNewline = /\r|\n/.test(clipboardData);
+        const hasTab = clipboardData.includes('\t');
+
+        // 단일 텍스트(줄바꿈이나 탭이 없는 일반 글자 붙여넣기)는 브라우저 기본 동작(커서 위치 삽입)에 맡김
+        if (!hasNewline && !hasTab) {
+            return;
+        }
+
+        e.preventDefault();
 
         // 엑셀 데이터 파싱 (행은 줄바꿈, 열은 탭으로 구분)
-        const rows = clipboardData.split(/\r\n|\n|\r/).filter(row => row.trim() !== '');
+        let rows = clipboardData.split(/\r?\n/);
+        if (rows.length > 0 && rows[rows.length - 1] === '') {
+            rows.pop();
+        }
         if (rows.length === 0) return;
 
         // 시작 위치 찾기

@@ -238,37 +238,51 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     // 엑셀 붙여넣기 시 순서대로 자동 채움
     const handlePasteLabels = (e, startIdx, items) => {
-        e.preventDefault();
         const clipboardData = e.clipboardData.getData('Text');
-        const lines = clipboardData.split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
-        if (lines.length > 0) {
-            setSummaries(prev => {
-                let next = [...prev];
-                items.forEach((itemId, idx) => {
-                    if (idx >= startIdx) {
-                        const offset = idx - startIdx;
-                        const textVal = lines[offset];
-                        if (textVal !== undefined && textVal !== '') {
-                            const existsIdx = next.findIndex(s => s.id === itemId);
-                            if (existsIdx !== -1) {
-                                next[existsIdx] = { ...next[existsIdx], label: textVal };
-                            } else {
-                                const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
-                                next.push({
-                                    id: itemId,
-                                    label: textVal,
-                                    subId: itemId,
-                                    type: baseVar?.type || 'frequency',
-                                    info: baseVar?.info || baseVar?.categories || []
-                                });
-                            }
+        if (!clipboardData) return;
+
+        const hasNewline = /\r|\n/.test(clipboardData);
+        const hasTab = clipboardData.includes('\t');
+
+        // 단일 텍스트(줄바꿈이나 탭이 없는 일반 글자 붙여넣기)는 브라우저 기본 동작(커서 위치 삽입)에 맡김
+        if (!hasNewline && !hasTab) {
+            return;
+        }
+
+        e.preventDefault();
+
+        let lines = clipboardData.split(/\r?\n/).map(l => l.trim());
+        if (lines.length > 0 && lines[lines.length - 1] === '') {
+            lines.pop();
+        }
+        if (lines.length === 0) return;
+
+        setSummaries(prev => {
+            let next = [...prev];
+            items.forEach((itemId, idx) => {
+                if (idx >= startIdx) {
+                    const offset = idx - startIdx;
+                    const textVal = lines[offset];
+                    if (textVal !== undefined && textVal !== '') {
+                        const existsIdx = next.findIndex(s => s.id === itemId);
+                        if (existsIdx !== -1) {
+                            next[existsIdx] = { ...next[existsIdx], label: textVal };
+                        } else {
+                            const baseVar = baseVariables.find(v => v.id === itemId || v.base_id === itemId);
+                            next.push({
+                                id: itemId,
+                                label: textVal,
+                                subId: itemId,
+                                type: baseVar?.type || 'frequency',
+                                info: baseVar?.info || baseVar?.categories || []
+                            });
                         }
                     }
-                });
-                return next;
+                }
             });
-            if (onUnsavedChange) onUnsavedChange(true);
-        }
+            return next;
+        });
+        if (onUnsavedChange) onUnsavedChange(true);
     };
 
     const scrollContainerRef = useRef(null);

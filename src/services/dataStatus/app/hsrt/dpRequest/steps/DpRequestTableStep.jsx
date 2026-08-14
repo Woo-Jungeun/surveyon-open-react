@@ -884,30 +884,44 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', pl
 
     const handlePaste = (e) => {
         const clipboardData = e.clipboardData.getData('Text');
-        const lines = clipboardData.split(/\r?\n/).map(l => l.trim());
-        if (lines.length > 1) {
-            e.preventDefault();
-            if (context && context.stubs) {
-                const { stubs, setStubs, onUnsavedChange } = context;
-                const startIdx = stubs.findIndex(item => item._row_id === dataItem._row_id);
-                if (startIdx !== -1) {
-                    const updated = stubs.map((item, idx) => {
-                        if (idx >= startIdx) {
-                            const offset = idx - startIdx;
-                            const lineVal = lines[offset];
-                            if (lineVal !== undefined) {
-                                return {
-                                    ...item,
-                                    [field]: lineVal
-                                };
-                            }
+        if (!clipboardData) return;
+
+        const hasNewline = /\r|\n/.test(clipboardData);
+        const hasTab = clipboardData.includes('\t');
+
+        // 단일 텍스트(줄바꿈이나 탭이 없는 일반 글자 붙여넣기)는 브라우저 기본 동작(커서 위치 삽입)에 맡김
+        if (!hasNewline && !hasTab) {
+            return;
+        }
+
+        e.preventDefault();
+
+        let lines = clipboardData.split(/\r?\n/);
+        if (lines.length > 0 && lines[lines.length - 1] === '') {
+            lines.pop();
+        }
+        if (lines.length === 0) return;
+
+        if (context && context.stubs) {
+            const { stubs, setStubs, onUnsavedChange } = context;
+            const startIdx = stubs.findIndex(item => item._row_id === dataItem._row_id);
+            if (startIdx !== -1) {
+                const updated = stubs.map((item, idx) => {
+                    if (idx >= startIdx) {
+                        const offset = idx - startIdx;
+                        const lineVal = lines[offset];
+                        if (lineVal !== undefined) {
+                            return {
+                                ...item,
+                                [field]: lineVal.trim()
+                            };
                         }
-                        return item;
-                    });
-                    setStubs(updated);
-                    if (onUnsavedChange) onUnsavedChange(true);
-                    setIsEditing(false);
-                }
+                    }
+                    return item;
+                });
+                setStubs(updated);
+                if (onUnsavedChange) onUnsavedChange(true);
+                setIsEditing(false);
             }
         }
     };

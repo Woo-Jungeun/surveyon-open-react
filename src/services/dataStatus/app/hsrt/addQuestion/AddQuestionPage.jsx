@@ -30,28 +30,58 @@ const PasteableEditCell = (props) => {
     }
 
     const handlePaste = (e) => {
-        e.preventDefault();
         const clipboardData = e.clipboardData.getData('Text');
-        const lines = clipboardData.split(/\r?\n/).map(l => l.trim());
-        if (lines.length > 0 && currentInfo && updateBannerInfo) {
-            const startIdx = currentInfo.findIndex(item => item === dataItem);
-            if (startIdx !== -1) {
-                const updated = currentInfo.map((item, idx) => {
-                    if (idx >= startIdx) {
-                        const offset = idx - startIdx;
-                        const lineVal = lines[offset];
-                        if (lineVal !== undefined) {
-                            return {
-                                ...item,
-                                [field]: lineVal
-                            };
-                        }
-                    }
-                    return item;
-                });
-                updateBannerInfo(updated);
-            }
+        if (!clipboardData) return;
+
+        const hasNewline = /\r|\n/.test(clipboardData);
+        const hasTab = clipboardData.includes('\t');
+
+        // 단일 텍스트(줄바꿈이나 탭이 없는 일반 글자 붙여넣기)는 브라우저 기본 동작(커서 위치 삽입)에 맡김
+        if (!hasNewline && !hasTab) {
+            return;
         }
+
+        // 엑셀 범위 복사(줄바꿈이나 탭이 있는 경우)만 그리드 덮어쓰기 및 자동 행 연장 수행
+        e.preventDefault();
+        if (!currentInfo || !updateBannerInfo) return;
+
+        let lines = clipboardData.split(/\r?\n/);
+        // 엑셀에서 범위 복사 시 마지막 개행으로 발생하는 빈 줄 제거
+        if (lines.length > 0 && lines[lines.length - 1] === '') {
+            lines.pop();
+        }
+        if (lines.length === 0) return;
+
+        const startIdx = currentInfo.findIndex(item => item === dataItem);
+        if (startIdx === -1) return;
+
+        let updated = [...currentInfo];
+
+        // 선택한 위치(startIdx)부터 기존 행 범위 내에서만 덮어쓰기 진행
+        lines.forEach((line, offset) => {
+            const targetIdx = startIdx + offset;
+            if (targetIdx >= updated.length) return;
+
+            const parts = line.split('\t');
+
+            if (parts.length > 1) {
+                // 엑셀 탭 구분 다중 열 복사 시 (할당값 \t 라벨 \t 조건식)
+                updated[targetIdx] = {
+                    ...updated[targetIdx],
+                    label2: parts[0]?.trim() ?? updated[targetIdx].label2,
+                    label: parts[1]?.trim() ?? updated[targetIdx].label,
+                    logic: parts[2]?.trim() ?? updated[targetIdx].logic,
+                };
+            } else {
+                // 단일 열 복사 시 (선택한 컬럼에 연속 덮어쓰기)
+                updated[targetIdx] = {
+                    ...updated[targetIdx],
+                    [field]: line.trim()
+                };
+            }
+        });
+
+        updateBannerInfo(updated);
     };
 
     return (
