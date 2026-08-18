@@ -1021,7 +1021,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                     {isGridOpen && (
                         <div style={{ flex: 1, minHeight: 0 }}>
                             <iframe
-                                srcDoc={`<!doctype html><html><head><meta charset="utf-8"/><style>${styleCss || ''}</style></head><body style="margin: 0; padding: 12px; background: transparent; overflow-x: auto; overflow-y: hidden; font-family: sans-serif;">${banner.html || ''}</body></html>`}
+                                srcDoc={`<!doctype html><html><head><meta charset="utf-8"/><style>${styleCss || ''}</style></head><body style="margin: 0; padding: 12px 12px 12px 0; background: transparent; overflow-x: auto; overflow-y: hidden; font-family: sans-serif;">${banner.html || ''}</body></html>`}
                                 style={{ width: '100%', height: '300px', border: 'none', overflow: 'hidden' }}
                                 title={`table-${banner.id}`}
                                 onLoad={(e) => {
