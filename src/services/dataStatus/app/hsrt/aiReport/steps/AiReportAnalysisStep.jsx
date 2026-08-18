@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Check, ArrowRight, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet, ChevronsUpDown, ChevronsDownUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Presentation, FileText } from 'lucide-react';
 import { DpRequestPageApi } from '../../dpRequest/DpRequestPageApi';
+import { AiReportPageApi } from '../AiReportPageApi';
 
 const renderInsightText = (val) => {
     if (!val) return '';
@@ -35,6 +36,8 @@ const AiReportAnalysisStep = ({
     bannerVars,
     userId
 }) => {
+    const { getOverviewContext } = DpRequestPageApi();
+    const { getOverviewProofStyled } = AiReportPageApi();
     // L2 state and variables
     const [activeCategoryIndex, setActiveCategoryIndex] = useState(-1);
     const activeTabRef = useRef(null);
@@ -54,6 +57,99 @@ const AiReportAnalysisStep = ({
     // eslint-disable-next-line no-unused-vars
     const [activeCrosstabTab, setActiveCrosstabTab] = useState('table');
     const [isPipelineExpanded, setIsPipelineExpanded] = useState(true);
+
+    const handleEvidenceClick = async (item, evidenceKey, catIdx, sectionTitle, sectionLabel) => {
+        const updatedEvidence = {
+            ...item,
+            evidenceKey,
+            catIdx,
+            sectionTitle,
+            sectionLabel
+        };
+        setSelectedEvidence(updatedEvidence);
+
+        const pageId = sessionStorage.getItem('pageId') || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        const user = userId || "jewoo";
+
+        let contextUiSettings = null;
+        try {
+            const contextRes = await getOverviewContext.mutateAsync({ pageid: pageId, user });
+            const ctxPayload = contextRes?.resultjson || contextRes || {};
+            if (ctxPayload.ui_settings && typeof ctxPayload.ui_settings === 'object') {
+                contextUiSettings = ctxPayload.ui_settings;
+            } else if (ctxPayload.effective_render_settings && typeof ctxPayload.effective_render_settings === 'object') {
+                contextUiSettings = ctxPayload.effective_render_settings;
+            }
+        } catch (ctxErr) {
+            console.error("Failed to load context for proof-styled:", ctxErr);
+        }
+
+        if (!contextUiSettings) {
+            contextUiSettings = {
+                font_family: "Pretendard",
+                font_size: 13,
+                format_show_n: true,
+                format_show_percent: true,
+                format_percent_as_column: true,
+                format_n_round: 0,
+                format_percent_round: 1,
+                format_percent_symbol: true,
+                format_base_prefix: "(",
+                format_base_postfix: ")",
+                sig_diff_fin_mode: "t_test",
+                sig_diff_test_mode: true,
+                sig_level: 95,
+                theme_primary: "#2F5597",
+                theme_primary_fg: "#FFFFFF",
+                theme_base_bg: "#F1F5F9",
+                theme_base_fg: "#0F172A",
+                stub_group_layout: "merge",
+                zero_display: "-",
+                empty_display: ""
+            };
+        }
+
+        const target = item?.evidence_target || {};
+        const stubId = target.stub_id || item?.stub_id || "";
+        
+        let stubsList = target.stubs || item?.stubs;
+        if (!stubsList) {
+            stubsList = stubId ? [stubId] : [];
+        } else if (typeof stubsList === 'string') {
+            stubsList = stubsList.split(',').map(s => s.trim()).filter(Boolean);
+        }
+
+        const bannerName = target.banner_name || item?.banner_name || "";
+        let bannerList = target.banner || item?.banner;
+        if (!bannerList) {
+            bannerList = bannerName ? [bannerName] : (bannerVars?.[0] ? [bannerVars[0]] : []);
+        } else if (typeof bannerList === 'string') {
+            bannerList = [bannerList];
+        }
+
+        const proofPayload = {
+            pageid: pageId,
+            user: user,
+            stub_id: stubId,
+            stubs: stubsList,
+            banner_name: bannerName,
+            banner: bannerList,
+            banner_mode: "override",
+            target_column: target.target_column || "",
+            compare_column: target.compare_column || "",
+            weight_col: target.weight_col || "",
+            filter_expression: target.filter_expression || "",
+            ui_settings: contextUiSettings,
+            include_stats: ["t-test"],
+            include_tests: ["t-test"]
+        };
+
+        try {
+            await getOverviewProofStyled.mutateAsync(proofPayload);
+        } catch (err) {
+            console.error("Failed to call /datasets/overview/proof-styled API:", err);
+        }
+    };
 
     const l2Categories = insightData.l2 || [];
 
@@ -114,68 +210,7 @@ const AiReportAnalysisStep = ({
         }
     }, [activeCategoryIndex, allEvidenceItems]);
 
-    useEffect(() => {
-        let isMounted = true;
-        const fetchEvidenceCrosstab = async () => {
-            if (!selectedEvidence || !selectedEvidence.evidence_target) {
-                setEvidenceCrosstabData(null);
-                return;
-            }
 
-            const target = selectedEvidence.evidence_target;
-            const stubId = target.stub_id;
-            if (!stubId) {
-                setEvidenceCrosstabData(null);
-                return;
-            }
-
-            const pageId = sessionStorage.getItem('pageId') || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-            const bannerVarId = bannerVars?.[0] || "banner_001";
-
-            try {
-                setIsEvidenceLoading(true);
-                const apiInstance = DpRequestPageApi();
-                const payload = {
-                    pageid: pageId,
-                    user: userId || "jewoo",
-                    table: {
-                        id: 'L2_Evidence',
-                        stub: [stubId],
-                        banner: [bannerVarId]
-                    },
-                    weight_col: null,
-                    filter_expression: "",
-                    display_policy: {
-                        show_n: false,
-                        show_percent: true
-                    }
-                };
-
-                const res = await apiInstance.evaluateChartData.mutateAsync(payload);
-                if (isMounted) {
-                    if (String(res?.success) === '777' && res.resultjson) {
-                        setEvidenceCrosstabData(res.resultjson);
-                    } else {
-                        setEvidenceCrosstabData(null);
-                    }
-                }
-            } catch (err) {
-                console.error("Failed to load L2 evidence crosstab:", err);
-                if (isMounted) {
-                    setEvidenceCrosstabData(null);
-                }
-            } finally {
-                if (isMounted) {
-                    setIsEvidenceLoading(false);
-                }
-            }
-        };
-
-        fetchEvidenceCrosstab();
-        return () => {
-            isMounted = false;
-        };
-    }, [selectedEvidence, bannerVars, userId]);
 
     // eslint-disable-next-line no-unused-vars
     const renderCrosstabTable = () => {
@@ -464,17 +499,19 @@ const AiReportAnalysisStep = ({
                             key={sIdx}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                setSelectedEvidence({
-                                    ...item,
+                                handleEvidenceClick(
+                                    {
+                                        ...item,
+                                        evidence_target: {
+                                            ...item?.evidence_target,
+                                            stub_id: stubLower
+                                        }
+                                    },
                                     evidenceKey,
                                     catIdx,
                                     sectionTitle,
-                                    sectionLabel,
-                                    evidence_target: {
-                                        ...item.evidence_target,
-                                        stub_id: stubLower
-                                    }
-                                });
+                                    sectionLabel
+                                );
                             }}
                             style={{
                                 background: isSelected ? '#4f46e5' : '#ffffff',
@@ -1566,26 +1603,24 @@ const AiReportAnalysisStep = ({
                                                                                                 {find.headline}
                                                                                             </span>
                                                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                                                                                                {find.evidence_target && (
-                                                                                                    <button
-                                                                                                        onClick={() => setSelectedEvidence({ ...find, evidenceKey, catIdx: idx, sectionTitle: '핵심 정량 분석', sectionLabel: '핵심 분석 근거' })}
-                                                                                                        style={{
-                                                                                                            background: isSelected ? '#2563eb' : '#ffffff',
-                                                                                                            color: isSelected ? '#ffffff' : '#64748b',
-                                                                                                            border: '1px solid #cbd5e1',
-                                                                                                            borderRadius: '4px',
-                                                                                                            padding: '1px 6px',
-                                                                                                            fontSize: '10.5px',
-                                                                                                            cursor: 'pointer',
-                                                                                                            display: 'flex',
-                                                                                                            alignItems: 'center',
-                                                                                                            gap: '2px'
-                                                                                                        }}
-                                                                                                    >
-                                                                                                        <Search size={10} />
-                                                                                                        <span>증거</span>
-                                                                                                    </button>
-                                                                                                )}
+                                                                                                <button
+                                                                                                    onClick={() => handleEvidenceClick(find, evidenceKey, idx, '핵심 정량 분석', '핵심 분석 근거')}
+                                                                                                    style={{
+                                                                                                        background: isSelected ? '#2563eb' : '#ffffff',
+                                                                                                        color: isSelected ? '#ffffff' : '#64748b',
+                                                                                                        border: '1px solid #cbd5e1',
+                                                                                                        borderRadius: '4px',
+                                                                                                        padding: '1px 6px',
+                                                                                                        fontSize: '10.5px',
+                                                                                                        cursor: 'pointer',
+                                                                                                        display: 'flex',
+                                                                                                        alignItems: 'center',
+                                                                                                        gap: '2px'
+                                                                                                    }}
+                                                                                                >
+                                                                                                    <Search size={10} />
+                                                                                                    <span>증거</span>
+                                                                                                </button>
                                                                                                 {renderStubChips(find.stubs, find, evidenceKey, idx, '핵심 정량 분석', '핵심 분석 근거')}
                                                                                             </div>
                                                                                         </div>
@@ -1686,26 +1721,24 @@ const AiReportAnalysisStep = ({
                                                                                             );
                                                                                         })()}
                                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                                                                                            {plan.evidence_target && (
-                                                                                                <button
-                                                                                                    onClick={() => setSelectedEvidence({ ...plan, evidenceKey, catIdx: idx, sectionTitle: '전략적 시사점 & 액션 플랜', sectionLabel: '전략 과제 근거' })}
-                                                                                                    style={{
-                                                                                                        background: isSelected ? '#2563eb' : '#ffffff',
-                                                                                                        color: isSelected ? '#ffffff' : '#64748b',
-                                                                                                        border: '1px solid #cbd5e1',
-                                                                                                        borderRadius: '4px',
-                                                                                                        padding: '1px 6px',
-                                                                                                        fontSize: '10.5px',
-                                                                                                        cursor: 'pointer',
-                                                                                                        display: 'flex',
-                                                                                                        alignItems: 'center',
-                                                                                                        gap: '2px'
-                                                                                                    }}
-                                                                                                >
-                                                                                                    <Search size={10} />
-                                                                                                    <span>증거</span>
-                                                                                                </button>
-                                                                                            )}
+                                                                                            <button
+                                                                                                onClick={() => handleEvidenceClick(plan, evidenceKey, idx, '전략적 시사점 & 액션 플랜', '전략 과제 근거')}
+                                                                                                style={{
+                                                                                                    background: isSelected ? '#2563eb' : '#ffffff',
+                                                                                                    color: isSelected ? '#ffffff' : '#64748b',
+                                                                                                    border: '1px solid #cbd5e1',
+                                                                                                    borderRadius: '4px',
+                                                                                                    padding: '1px 6px',
+                                                                                                    fontSize: '10.5px',
+                                                                                                    cursor: 'pointer',
+                                                                                                    display: 'flex',
+                                                                                                    alignItems: 'center',
+                                                                                                    gap: '2px'
+                                                                                                }}
+                                                                                            >
+                                                                                                <Search size={10} />
+                                                                                                <span>증거</span>
+                                                                                            </button>
                                                                                             {renderStubChips(plan.stubs, plan, evidenceKey, idx, '전략적 시사점 & 액션 플랜', '전략 과제 근거')}
                                                                                         </div>
                                                                                     </div>
@@ -1765,26 +1798,24 @@ const AiReportAnalysisStep = ({
                                                                                             {prof.headline}
                                                                                         </span>
                                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                                                                                            {prof.evidence_target && (
-                                                                                                <button
-                                                                                                    onClick={() => setSelectedEvidence({ ...prof, evidenceKey, catIdx: idx, sectionTitle: '타겟 세그먼트 프로필', sectionLabel: '세그먼트 특징 근거' })}
-                                                                                                    style={{
-                                                                                                        background: isSelected ? '#2563eb' : '#ffffff',
-                                                                                                        color: isSelected ? '#ffffff' : '#64748b',
-                                                                                                        border: '1px solid #cbd5e1',
-                                                                                                        borderRadius: '4px',
-                                                                                                        padding: '1px 6px',
-                                                                                                        fontSize: '10.5px',
-                                                                                                        cursor: 'pointer',
-                                                                                                        display: 'flex',
-                                                                                                        alignItems: 'center',
-                                                                                                        gap: '2px'
-                                                                                                    }}
-                                                                                                >
-                                                                                                    <Search size={10} />
-                                                                                                    <span>증거</span>
-                                                                                                </button>
-                                                                                            )}
+                                                                                            <button
+                                                                                                onClick={() => handleEvidenceClick(prof, evidenceKey, idx, '타겟 세그먼트 프로필', '세그먼트 특징 근거')}
+                                                                                                style={{
+                                                                                                    background: isSelected ? '#2563eb' : '#ffffff',
+                                                                                                    color: isSelected ? '#ffffff' : '#64748b',
+                                                                                                    border: '1px solid #cbd5e1',
+                                                                                                    borderRadius: '4px',
+                                                                                                    padding: '1px 6px',
+                                                                                                    fontSize: '10.5px',
+                                                                                                    cursor: 'pointer',
+                                                                                                    display: 'flex',
+                                                                                                    alignItems: 'center',
+                                                                                                    gap: '2px'
+                                                                                                }}
+                                                                                            >
+                                                                                                <Search size={10} />
+                                                                                                <span>증거</span>
+                                                                                            </button>
                                                                                             {renderStubChips(prof.stubs, prof, evidenceKey, idx, '타겟 세그먼트 프로필', '세그먼트 특징 근거')}
                                                                                         </div>
                                                                                     </div>

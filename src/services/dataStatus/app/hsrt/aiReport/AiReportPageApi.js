@@ -81,6 +81,14 @@ export function AiReportPageApi() {
         }
     );
 
+    /** 교차분석 - 증명 요약 교차표 조회 (proof-styled) */
+    const getOverviewProofStyled = useMutation(
+        async (data) => {
+            const { _config, ...restData } = data || {};
+            return await api.post(restData, "/datasets/overview/proof-styled", "API_BASE_URL_DATASTATUS", _config);
+        }
+    );
+
     return {
         getAiModels,
         getAiSummaryData,
@@ -92,6 +100,7 @@ export function AiReportPageApi() {
         exportL1Excel,
         generateL2,
         generateL3,
-        exportL3File
+        exportL3File,
+        getOverviewProofStyled
     };
 }
