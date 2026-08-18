@@ -900,7 +900,8 @@ export const ResultSectionBlock = ({
                                                         chartMode,
                                                         displayMode,
                                                         paletteId,
-                                                        tableName
+                                                        tableName,
+                                                        dataIndex
                                                     })}
                                                     className="action-btn"
                                                 >
@@ -1220,7 +1221,8 @@ export const ResultSectionBlock = ({
                                                         displayMode,
                                                         setDisplayMode, // Pass the setter
                                                         paletteId,
-                                                        tableName
+                                                        tableName,
+                                                        dataIndex
                                                     })}
                                                     className="action-btn"
                                                 >
@@ -1772,7 +1774,8 @@ export const ResultSectionBlock = ({
                                                         chartDataType,
                                                         showChartValues,
                                                         showPercentSymbol,
-                                                        setShowPercentSymbol
+                                                        setShowPercentSymbol,
+                                                        dataIndex
                                                     })}
                                                     className="action-btn"
                                                 >

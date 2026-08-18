@@ -193,6 +193,12 @@ const FullscreenModal = ({
     }
 
     useEffect(() => {
+        if (displayMode) {
+            setLocalDisplayMode(displayMode);
+        }
+    }, [displayMode]);
+
+    useEffect(() => {
         const handleClickOutside = (event) => {
             if (downloadMenuRef.current && !downloadMenuRef.current.contains(event.target)) {
                 setShowDownloadMenu(false);
@@ -1096,15 +1102,15 @@ const FullscreenModal = ({
                                                             <span className="cell-value-single" style={{ fontWeight: '600' }}>
                                                                 {row.prefix || ''}{formatN(v.count)}{row.postfix || ''}
                                                             </span>
-                                                        ) : displayMode === 'all' ? (
+                                                        ) : localDisplayMode === 'all' ? (
                                                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
                                                                 {!isHideN && <span className="cell-value">{formatN(v.count)}</span>}
                                                                 {!isHideP && <span className="cell-pct">{row.prefix || ''}{formatP(v.percent)}%{row.postfix || ''}</span>}
                                                             </div>
                                                         ) : (
                                                             <span className="cell-value-single">
-                                                                {displayMode === 'value' && !isHideN ? formatN(v.count) : null}
-                                                                {displayMode === 'percent' && !isHideP ? `${row.prefix || ''}${formatP(v.percent)}%${row.postfix || ''}` : null}
+                                                                {localDisplayMode === 'value' && !isHideN ? formatN(v.count) : null}
+                                                                {localDisplayMode === 'percent' && !isHideP ? `${row.prefix || ''}${formatP(v.percent)}%${row.postfix || ''}` : null}
                                                             </span>
                                                         )}
                                                     </div>

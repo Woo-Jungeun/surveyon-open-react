@@ -1742,6 +1742,7 @@ const AdditionalAnalysisPage = () => {
             show_percent: newMode === 'all' || newMode === 'percent'
         };
         setDisplayPolicy(nextPolicy);
+        setFullscreenModal(prev => prev.open ? { ...prev, displayMode: newMode } : prev);
         await handleRun(undefined, nextPolicy);
     };
 
@@ -2301,26 +2302,43 @@ const AdditionalAnalysisPage = () => {
             )}
 
             {/* Fullscreen Modal */}
-            <FullscreenModal
-                isOpen={fullscreenModal.open}
-                type={fullscreenModal.type}
-                onClose={() => setFullscreenModal({ ...fullscreenModal, open: false })}
-                resultData={fullscreenModal.dataItem}
-                statsOptions={fullscreenModal.statsOptions}
-                chartData={fullscreenModal.chartData}
-                seriesNames={fullscreenModal.seriesNames}
-                rawChartData={fullscreenModal.rawChartData}
-                chartMode={fullscreenModal.chartMode}
-                displayMode={fullscreenModal.displayMode}
-                setDisplayMode={onChangeDisplayMode}
-                paletteId={globalPaletteId}
-                setPaletteId={setGlobalPaletteId}
-                tableName={fullscreenModal.tableName}
-                displayPolicy={displayPolicy}
-                renderSettings={renderSettings}
-                chartDataType={fullscreenModal.chartDataType}
-                showChartValues={fullscreenModal.showChartValues}
-            />
+            {(() => {
+                const activeFullscreenDataItem = (fullscreenModal.open && fullscreenModal.dataIndex !== undefined && resultDataList[fullscreenModal.dataIndex])
+                    ? resultDataList[fullscreenModal.dataIndex]
+                    : fullscreenModal.dataItem;
+
+                const currentDisplayMode = (() => {
+                    const showN = displayPolicy?.show_n !== false;
+                    const showPercent = displayPolicy?.show_percent !== false;
+                    if (showN && showPercent) return 'all';
+                    if (showN) return 'value';
+                    if (showPercent) return 'percent';
+                    return 'all';
+                })();
+
+                return (
+                    <FullscreenModal
+                        isOpen={fullscreenModal.open}
+                        type={fullscreenModal.type}
+                        onClose={() => setFullscreenModal({ ...fullscreenModal, open: false })}
+                        resultData={activeFullscreenDataItem}
+                        statsOptions={fullscreenModal.statsOptions}
+                        chartData={fullscreenModal.chartData}
+                        seriesNames={fullscreenModal.seriesNames}
+                        rawChartData={fullscreenModal.rawChartData}
+                        chartMode={fullscreenModal.chartMode}
+                        displayMode={currentDisplayMode}
+                        setDisplayMode={onChangeDisplayMode}
+                        paletteId={globalPaletteId}
+                        setPaletteId={setGlobalPaletteId}
+                        tableName={fullscreenModal.tableName}
+                        displayPolicy={displayPolicy}
+                        renderSettings={renderSettings}
+                        chartDataType={fullscreenModal.chartDataType}
+                        showChartValues={fullscreenModal.showChartValues}
+                    />
+                );
+            })()}
 
             {/* Removed CreateTablePopup */}
 
