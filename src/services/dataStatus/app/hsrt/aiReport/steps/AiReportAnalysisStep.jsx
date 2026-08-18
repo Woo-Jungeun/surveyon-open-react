@@ -1398,7 +1398,7 @@ const AiReportAnalysisStep = ({
                                                                 const isUp = firstKpi.trend === 'UP';
                                                                 const isDown = firstKpi.trend === 'DOWN';
                                                                 return (
-                                                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', borderTop: '1px solid #f1f5f9', paddingTop: '10px', marginTop: '4px' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', borderTop: '1.5px solid #e2e8f0', paddingTop: '10px', marginTop: '4px' }}>
                                                                         <span style={{ fontSize: '15px', fontWeight: 800, color: '#1e293b' }}>
                                                                             {firstKpi.value}{firstKpi.unit || '%'}
                                                                         </span>
@@ -1427,7 +1427,7 @@ const AiReportAnalysisStep = ({
                                                     <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                                         {/* Category Section Title (Only in 전체보기 mode) */}
                                                         {activeCategoryIndex === -1 && (
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '8px', borderBottom: '1px solid #e2e8f0', marginTop: idx > 0 ? '28px' : '0' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '8px', borderBottom: '1.5px solid #cbd5e1', marginTop: idx > 0 ? '28px' : '0' }}>
                                                                 <span style={{ color: '#2563eb', fontSize: '11px', fontWeight: 800, backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '2px 8px', lineHeight: '1.2' }}>
                                                                     카테고리 {idx + 1}
                                                                 </span>
@@ -1441,8 +1441,8 @@ const AiReportAnalysisStep = ({
                                                             {/* Left Column wrapper using display: contents to participate in parent grid */}
                                                             <div style={{ display: 'contents' }}>
                                                                 {/* 가설 검증 결론 Card (order: 1) */}
-                                                                <div className="ai-card" style={{ padding: '20px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '16px', order: 1, boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
-                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgb(241, 245, 249)', paddingBottom: '12px' }}>
+                                                                <div className="ai-card" style={{ padding: '14px 18px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px', order: 1, boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
+                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid #e2e8f0', paddingBottom: '8px' }}>
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                             <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                                                 <CheckCircle2 size={16} color="#2563eb" />
@@ -1620,8 +1620,8 @@ const AiReportAnalysisStep = ({
                                                                 </div>
 
                                                                 {/* 핵심 정량 분석 Card (order: 3) */}
-                                                                <div className="ai-card" style={{ padding: '20px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '16px', order: 3, boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgb(241, 245, 249)', paddingBottom: '12px' }}>
+                                                                <div className="ai-card" style={{ padding: '14px 18px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px', order: 3, boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1.5px solid #e2e8f0', paddingBottom: '8px' }}>
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                             <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                                                 <BarChart2 size={16} color="#2563eb" />
@@ -1685,7 +1685,7 @@ const AiReportAnalysisStep = ({
                                                                                                         color: isSelected ? '#ffffff' : '#2563eb',
                                                                                                         border: `1px solid ${isSelected ? '#2563eb' : '#bfdbfe'}`,
                                                                                                         borderRadius: '14px',
-                                                                                                        padding: '3px 10px',
+                                                                                                        padding: '5px 12px',
                                                                                                         fontSize: '12px',
                                                                                                         fontWeight: 600,
                                                                                                         cursor: 'pointer',
@@ -1710,9 +1710,6 @@ const AiReportAnalysisStep = ({
                                                                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
                                                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                                                                                     {renderStubChips(find.stubs, find, evidenceKey, idx, '핵심 정량 분석', '핵심 분석 근거')}
-                                                                                                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>
-                                                                                                        핵심 분석 근거
-                                                                                                    </span>
                                                                                                 </div>
 
                                                                                                 {find.evidence_metric && (
@@ -1755,8 +1752,8 @@ const AiReportAnalysisStep = ({
                                                             {/* Right Column wrapper using display: contents to participate in parent grid */}
                                                             <div style={{ display: 'contents' }}>
                                                                 {/* 전략적 시사점 & 액션 플랜 Card (order: 2) */}
-                                                                <div className="ai-card" style={{ padding: '20px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '16px', order: 2, boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
+                                                                <div className="ai-card" style={{ padding: '14px 18px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px', order: 2, boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1.5px solid #e2e8f0', paddingBottom: '8px' }}>
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                             <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                                                 <Target size={16} color="#2563eb" />
@@ -1854,7 +1851,7 @@ const AiReportAnalysisStep = ({
                                                                                                         color: isSelected ? '#ffffff' : '#2563eb',
                                                                                                         border: `1px solid ${isSelected ? '#2563eb' : '#bfdbfe'}`,
                                                                                                         borderRadius: '14px',
-                                                                                                        padding: '3px 10px',
+                                                                                                        padding: '5px 12px',
                                                                                                         fontSize: '12px',
                                                                                                         fontWeight: 600,
                                                                                                         cursor: 'pointer',
@@ -1918,8 +1915,8 @@ const AiReportAnalysisStep = ({
                                                                 </div>
 
                                                                 {/* 타겟 세그먼트 프로필 Card (order: 4) */}
-                                                                <div className="ai-card" style={{ padding: '20px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '16px', order: 4, boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgb(241, 245, 249)', paddingBottom: '12px' }}>
+                                                                <div className="ai-card" style={{ padding: '14px 18px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px', order: 4, boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1.5px solid #e2e8f0', paddingBottom: '8px' }}>
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                             <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                                                 <Users size={16} color="#2563eb" />
@@ -1984,7 +1981,7 @@ const AiReportAnalysisStep = ({
                                                                                                         color: isSelected ? '#ffffff' : '#2563eb',
                                                                                                         border: `1px solid ${isSelected ? '#2563eb' : '#bfdbfe'}`,
                                                                                                         borderRadius: '14px',
-                                                                                                        padding: '3px 10px',
+                                                                                                        padding: '5px 12px',
                                                                                                         fontSize: '12px',
                                                                                                         fontWeight: 600,
                                                                                                         cursor: 'pointer',
@@ -2024,9 +2021,6 @@ const AiReportAnalysisStep = ({
                                                                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
                                                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                                                                                     {renderStubChips(prof.stubs)}
-                                                                                                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>
-                                                                                                        세그먼트 특징 근거
-                                                                                                    </span>
                                                                                                 </div>
 
                                                                                                 {prof.evidence_metric && (
