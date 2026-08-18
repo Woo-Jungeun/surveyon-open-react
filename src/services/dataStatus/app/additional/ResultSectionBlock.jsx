@@ -909,9 +909,21 @@ export const ResultSectionBlock = ({
                                                 </button>
                                             </div>
                                         </div>
-                                        <div className="table-wrapper">
+                                        <div className="table-wrapper" style={{ width: '100%', maxHeight: '480px', overflowX: 'auto', overflowY: 'auto', background: '#fff', marginTop: '10px', boxSizing: 'border-box' }}>
 
                                             <style>{`
+                  .table-wrapper {
+                      max-height: 480px !important;
+                      overflow-x: auto !important;
+                      overflow-y: auto !important;
+                      margin: 0 !important;
+                      padding: 0 !important;
+                  }
+                  .table-wrapper table {
+                      margin: 0 !important;
+                      border-collapse: separate !important;
+                      border-spacing: 0 !important;
+                  }
                   .table-wrapper .cross-table {
                       font-size: ${uiSettings.font_size ? uiSettings.font_size + 'px' : '12px'} !important;
                       border-top: ${topOuter} !important;

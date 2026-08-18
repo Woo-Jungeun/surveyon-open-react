@@ -861,7 +861,7 @@ const FullscreenModal = ({
                 {/* Modal Content */}
                 <div className={`fullscreen-modal-content ${type === 'chart' ? 'chart-view' : ''}`}>
                     {type === 'table' && resultData && (
-                        <div className="fullscreen-table-wrapper" style={{ width: '100%', overflowX: 'auto' }}>
+                        <div className="fullscreen-table-wrapper" style={{ width: '100%', maxHeight: '750px', overflowX: 'auto', overflowY: 'auto', margin: 0, padding: 0, boxSizing: 'border-box' }}>
 
               <style>{`
                   .fullscreen-table-wrapper .cross-table {

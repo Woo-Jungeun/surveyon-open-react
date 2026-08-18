@@ -1021,41 +1021,43 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                     {isGridOpen && (
                         <div style={{ flex: 1, minHeight: 0 }}>
                             <iframe
-                                srcDoc={`<!doctype html><html><head><meta charset="utf-8"/><style>${styleCss || ''}</style></head><body style="margin: 0; padding: 12px 12px 12px 0; background: transparent; overflow-x: auto; overflow-y: hidden; font-family: sans-serif;">${banner.html || ''}</body></html>`}
-                                style={{ width: '100%', height: '300px', border: 'none', overflow: 'hidden' }}
+                                srcDoc={`<!doctype html><html style="margin:0;padding:0;overflow:hidden;"><head><meta charset="utf-8"/><style>html,body{margin:0;padding:0;box-sizing:border-box;} ${styleCss || ''}</style></head><body style="margin: 0; padding: 0 12px 12px 0; background: transparent; overflow-x: auto; overflow-y: hidden; box-sizing: border-box; font-family: sans-serif;">${banner.html || ''}</body></html>`}
+                                style={{ width: '100%', height: 'auto', border: 'none', overflow: 'hidden' }}
                                 title={`table-${banner.id}`}
                                 onLoad={(e) => {
                                     try {
                                         const iframe = e.target;
                                         if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
                                             const doc = iframe.contentWindow.document;
-                                            if (doc.body) {
-                                                doc.body.style.overflowX = 'auto';
-                                                doc.body.style.overflowY = 'hidden';
-                                            }
                                             const updateHeight = () => {
                                                 const table = doc.querySelector('table');
-                                                let height = 0;
+                                                let rawHeight = 0;
                                                 if (table) {
-                                                    // body padding is 12px (top/bottom total 24px)
-                                                    height = table.getBoundingClientRect().height + 24;
-                                                    // check if horizontal scrollbar is present
-                                                    const isScrollable = doc.body.scrollWidth > doc.body.clientWidth || doc.documentElement.scrollWidth > doc.documentElement.clientWidth;
-                                                    if (isScrollable) {
-                                                        height += 16; // add scrollbar height buffer
+                                                    rawHeight = Math.max(table.getBoundingClientRect().height, table.offsetHeight);
+                                                }
+                                                if (!rawHeight && doc.body) {
+                                                    rawHeight = doc.body.scrollHeight;
+                                                }
+                                                const isHorizontalScrollable = doc.body && (doc.body.scrollWidth > doc.body.clientWidth || doc.documentElement.scrollWidth > doc.documentElement.clientWidth);
+                                                const scrollbarBuffer = isHorizontalScrollable ? 28 : 12;
+                                                const totalNeededHeight = Math.ceil(rawHeight + scrollbarBuffer);
+
+                                                if (totalNeededHeight > 700) {
+                                                    iframe.style.height = '700px';
+                                                    if (iframe.parentElement) iframe.parentElement.style.height = '700px';
+                                                    if (doc.documentElement) doc.documentElement.style.overflowY = 'auto';
+                                                    if (doc.body) {
+                                                        doc.body.style.overflowY = 'auto';
+                                                        doc.body.style.maxHeight = '700px';
                                                     }
                                                 } else {
-                                                    height = Math.max(
-                                                        doc.body.scrollHeight,
-                                                        doc.documentElement.scrollHeight,
-                                                        doc.body.offsetHeight,
-                                                        doc.documentElement.offsetHeight
-                                                    );
-                                                }
-                                                if (height > 0) {
-                                                    iframe.style.height = `${height}px`;
-                                                    if (iframe.parentElement) {
-                                                        iframe.parentElement.style.height = `${height}px`;
+                                                    const calcHeight = Math.max(totalNeededHeight, 100);
+                                                    iframe.style.height = `${calcHeight}px`;
+                                                    if (iframe.parentElement) iframe.parentElement.style.height = `${calcHeight}px`;
+                                                    if (doc.documentElement) doc.documentElement.style.overflowY = 'hidden';
+                                                    if (doc.body) {
+                                                        doc.body.style.overflowY = 'hidden';
+                                                        doc.body.style.maxHeight = 'none';
                                                     }
                                                 }
                                             };
