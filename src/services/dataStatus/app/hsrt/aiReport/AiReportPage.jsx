@@ -667,7 +667,7 @@ const AiReportPage = () => {
     };
 
     // Simulated pipeline generation triggers
-    const triggerPipelineRegenerate = async (level) => {
+    const executePipelineRegenerate = async (level) => {
         setPipelineStatus(prev => ({
             ...prev,
             [level]: { ...prev[level], isGenerating: true, progress: 0 }
@@ -902,6 +902,32 @@ const AiReportPage = () => {
                 modal.showAlert("오류", "서버 통신 실패로 L3 분석을 완료하지 못했습니다.");
             }
         }
+    };
+
+    const triggerPipelineRegenerate = (level) => {
+        const levelNames = {
+            l1: 'L1 문항별 인사이트',
+            l2: 'L2 조사내용별 분석',
+            l3: 'L3 종합 요약 보고서'
+        };
+        const targetName = levelNames[level] || 'AI 분석';
+        const warningText = level === 'l1'
+            ? '\n(재생성 시 하위 단계인 L2, L3 분석 결과가 초기화될 수 있습니다.)'
+            : level === 'l2'
+                ? '\n(재생성 시 하위 단계인 L3 분석 결과가 초기화될 수 있습니다.)'
+                : '';
+
+        modal.showConfirm("재생성 확인", `${targetName} 분석을 다시 실행하시겠습니까?${warningText}`, {
+            btns: [
+                { title: "취소", click: () => {} },
+                {
+                    title: "확인",
+                    click: () => {
+                        executePipelineRegenerate(level);
+                    }
+                }
+            ]
+        });
     };
 
     // Save Page Data

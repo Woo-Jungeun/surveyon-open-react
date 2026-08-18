@@ -671,54 +671,58 @@ const AiReportAnalysisStep = ({
                                 onClick={() => setActiveSubTab('l1')}
                                 title="클릭하여 L1 문항별 인사이트 결과 보기"
                             >
-                                <div className="ai-pipe-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <div className="ai-pipe-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                         <div className="ai-pipe-level-badge level1">L1</div>
                                         <span className="ai-pipe-title">문항별 인사이트 분석</span>
                                         <span className="ai-panel-help-icon" title="교차표 캐시를 로드하고, 아직 요약되지 않은 문항을 일괄 생성합니다.">?</span>
                                     </div>
-                                    <div className="ai-pipe-status-row" style={{ margin: 0 }}>
-                                        <div className={`ai-pipe-done-icon ${pipelineStatus.l1.isDone ? 'green' : ''}`}>
-                                            <Check size={12} strokeWidth={3} />
-                                        </div>
-                                        <span className={`ai-pipe-status-text ${pipelineStatus.l1.isDone ? 'font-green' : ''}`}>
-                                            {pipelineStatus.l1.isDone ? `생성 완료 · ${pipelineStatus.l1.countText}` : '분석 대기 중'}
+                                    <div className="ai-pipe-status-row">
+                                        <span className={`ai-pipe-status-dot ${pipelineStatus.l1.isDone ? 'done' : pipelineStatus.l1.isGenerating ? 'generating' : 'waiting'}`}></span>
+                                        <span className={`ai-pipe-status-text ${pipelineStatus.l1.isDone ? 'done' : pipelineStatus.l1.isGenerating ? 'generating' : 'waiting'}`}>
+                                            {pipelineStatus.l1.isDone ? (
+                                                <>
+                                                    생성 완료 <span className="ai-pipe-count-pill">{pipelineStatus.l1.countText}</span>
+                                                </>
+                                            ) : pipelineStatus.l1.isGenerating ? (
+                                                '분석 중...'
+                                            ) : (
+                                                '분석 대기 중'
+                                            )}
                                         </span>
                                     </div>
                                 </div>
-                                <div className="ai-pipe-progress-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                                <div className="ai-pipe-progress-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                     <div className="ai-pipe-progress-bar" style={{ flex: 1 }}>
                                         <div className="ai-pipe-progress-fill l1" style={{ width: `${pipelineStatus.l1.progress}%` }}></div>
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                                        <span className="ai-pipe-percent-label">{pipelineStatus.l1.progress}%</span>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                triggerPipelineRegenerate('l1');
-                                            }}
-                                            disabled={pipelineStatus.l1.isGenerating}
-                                            title="재생성 시 하위 단계(L2-L3) 결과가 초기화됩니다."
-                                            style={{
-                                                background: pipelineStatus.l1.isGenerating ? '#cbd5e1' : '#2563eb',
-                                                color: '#ffffff',
-                                                border: 'none',
-                                                borderRadius: '6px',
-                                                padding: '3px 10px',
-                                                fontSize: '11.5px',
-                                                fontWeight: 700,
-                                                cursor: pipelineStatus.l1.isGenerating ? 'not-allowed' : 'pointer',
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                gap: '4px',
-                                                transition: 'all 0.15s ease',
-                                                whiteSpace: 'nowrap'
-                                            }}
-                                        >
-                                            <RefreshCw size={11} className={pipelineStatus.l1.isGenerating ? 'animate-spin' : ''} />
-                                            <span>{pipelineStatus.l1.isGenerating ? '분석 중...' : '재생성'}</span>
-                                        </button>
-                                    </div>
+                                    <span className="ai-pipe-percent-label">{pipelineStatus.l1.progress}%</span>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            triggerPipelineRegenerate('l1');
+                                        }}
+                                        disabled={pipelineStatus.l1.isGenerating}
+                                        title="재생성 시 하위 단계(L2-L3) 결과가 초기화됩니다."
+                                        style={{
+                                            background: pipelineStatus.l1.isGenerating ? '#f1f5f9' : '#ffffff',
+                                            color: pipelineStatus.l1.isGenerating ? '#94a3b8' : '#2563eb',
+                                            border: '1px solid #bfdbfe',
+                                            borderRadius: '6px',
+                                            padding: '2px 8px',
+                                            fontSize: '11px',
+                                            fontWeight: 700,
+                                            cursor: pipelineStatus.l1.isGenerating ? 'not-allowed' : 'pointer',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            transition: 'all 0.15s ease',
+                                            whiteSpace: 'nowrap'
+                                        }}
+                                    >
+                                        <RefreshCw size={11} className={pipelineStatus.l1.isGenerating ? 'animate-spin' : ''} />
+                                        <span>{pipelineStatus.l1.isGenerating ? '분석 중...' : '재생성'}</span>
+                                    </button>
                                 </div>
                             </div>
 
@@ -732,54 +736,58 @@ const AiReportAnalysisStep = ({
                                 onClick={() => setActiveSubTab('l2')}
                                 title="클릭하여 L2 조사내용별 분석 결과 보기"
                             >
-                                <div className="ai-pipe-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <div className="ai-pipe-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                         <div className="ai-pipe-level-badge level2">L2</div>
                                         <span className="ai-pipe-title">조사내용별 분석</span>
                                         <span className="ai-panel-help-icon" title="L1 문항 요약을 조사내용(카테고리)별로 결합해 가설 검증 핵심 사실전략 제안을 작성합니다.">?</span>
                                     </div>
-                                    <div className="ai-pipe-status-row" style={{ margin: 0 }}>
-                                        <div className={`ai-pipe-done-icon ${pipelineStatus.l2.isDone ? 'green' : ''}`}>
-                                            <Check size={12} strokeWidth={3} />
-                                        </div>
-                                        <span className={`ai-pipe-status-text ${pipelineStatus.l2.isDone ? 'font-green' : ''}`}>
-                                            {pipelineStatus.l2.isDone ? `생성 완료 · ${pipelineStatus.l2.countText}` : '분석 대기 중'}
+                                    <div className="ai-pipe-status-row">
+                                        <span className={`ai-pipe-status-dot ${pipelineStatus.l2.isDone ? 'done' : pipelineStatus.l2.isGenerating ? 'generating' : 'waiting'}`}></span>
+                                        <span className={`ai-pipe-status-text ${pipelineStatus.l2.isDone ? 'done' : pipelineStatus.l2.isGenerating ? 'generating' : 'waiting'}`}>
+                                            {pipelineStatus.l2.isDone ? (
+                                                <>
+                                                    생성 완료 <span className="ai-pipe-count-pill">{pipelineStatus.l2.countText}</span>
+                                                </>
+                                            ) : pipelineStatus.l2.isGenerating ? (
+                                                '분석 중...'
+                                            ) : (
+                                                '분석 대기 중'
+                                            )}
                                         </span>
                                     </div>
                                 </div>
-                                <div className="ai-pipe-progress-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                                <div className="ai-pipe-progress-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                     <div className="ai-pipe-progress-bar" style={{ flex: 1 }}>
                                         <div className="ai-pipe-progress-fill l2" style={{ width: `${pipelineStatus.l2.progress}%` }}></div>
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                                        <span className="ai-pipe-percent-label l2">{pipelineStatus.l2.progress}%</span>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                triggerPipelineRegenerate('l2');
-                                            }}
-                                            disabled={pipelineStatus.l2.isGenerating}
-                                            title="재생성 시 하위 단계(L3) 결과가 초기화됩니다."
-                                            style={{
-                                                background: pipelineStatus.l2.isGenerating ? '#cbd5e1' : '#8b5cf6',
-                                                color: '#ffffff',
-                                                border: 'none',
-                                                borderRadius: '6px',
-                                                padding: '3px 10px',
-                                                fontSize: '11.5px',
-                                                fontWeight: 700,
-                                                cursor: pipelineStatus.l2.isGenerating ? 'not-allowed' : 'pointer',
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                gap: '4px',
-                                                transition: 'all 0.15s ease',
-                                                whiteSpace: 'nowrap'
-                                            }}
-                                        >
-                                            <RefreshCw size={11} className={pipelineStatus.l2.isGenerating ? 'animate-spin' : ''} />
-                                            <span>{pipelineStatus.l2.isGenerating ? '분석 중...' : '재생성'}</span>
-                                        </button>
-                                    </div>
+                                    <span className="ai-pipe-percent-label l2">{pipelineStatus.l2.progress}%</span>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            triggerPipelineRegenerate('l2');
+                                        }}
+                                        disabled={pipelineStatus.l2.isGenerating}
+                                        title="재생성 시 하위 단계(L3) 결과가 초기화됩니다."
+                                        style={{
+                                            background: pipelineStatus.l2.isGenerating ? '#f1f5f9' : '#ffffff',
+                                            color: pipelineStatus.l2.isGenerating ? '#94a3b8' : '#7c3aed',
+                                            border: '1px solid #ddd6fe',
+                                            borderRadius: '6px',
+                                            padding: '2px 8px',
+                                            fontSize: '11px',
+                                            fontWeight: 700,
+                                            cursor: pipelineStatus.l2.isGenerating ? 'not-allowed' : 'pointer',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            transition: 'all 0.15s ease',
+                                            whiteSpace: 'nowrap'
+                                        }}
+                                    >
+                                        <RefreshCw size={11} className={pipelineStatus.l2.isGenerating ? 'animate-spin' : ''} />
+                                        <span>{pipelineStatus.l2.isGenerating ? '분석 중...' : '재생성'}</span>
+                                    </button>
                                 </div>
                             </div>
 
@@ -793,53 +801,57 @@ const AiReportAnalysisStep = ({
                                 onClick={() => setActiveSubTab('l3')}
                                 title="클릭하여 L3 종합 요약 보고서 보기"
                             >
-                                <div className="ai-pipe-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <div className="ai-pipe-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                         <div className="ai-pipe-level-badge level3">L3</div>
                                         <span className="ai-pipe-title">종합 요약 보고서</span>
                                         <span className="ai-panel-help-icon" title="L1, L2 결과를 종합해 Executive Summary와 전략적 액션 아이템을 생성합니다.">?</span>
                                     </div>
-                                    <div className="ai-pipe-status-row" style={{ margin: 0 }}>
-                                        <div className={`ai-pipe-done-icon ${pipelineStatus.l3.isDone ? 'green' : ''}`}>
-                                            <Check size={12} strokeWidth={3} />
-                                        </div>
-                                        <span className={`ai-pipe-status-text ${pipelineStatus.l3.isDone ? 'font-green' : ''}`}>
-                                            {pipelineStatus.l3.isDone ? `생성 완료 · ${pipelineStatus.l3.countText}` : '분석 대기 중'}
+                                    <div className="ai-pipe-status-row">
+                                        <span className={`ai-pipe-status-dot ${pipelineStatus.l3.isDone ? 'done' : pipelineStatus.l3.isGenerating ? 'generating' : 'waiting'}`}></span>
+                                        <span className={`ai-pipe-status-text ${pipelineStatus.l3.isDone ? 'done' : pipelineStatus.l3.isGenerating ? 'generating' : 'waiting'}`}>
+                                            {pipelineStatus.l3.isDone ? (
+                                                <>
+                                                    생성 완료 <span className="ai-pipe-count-pill">{pipelineStatus.l3.countText}</span>
+                                                </>
+                                            ) : pipelineStatus.l3.isGenerating ? (
+                                                '분석 중...'
+                                            ) : (
+                                                '분석 대기 중'
+                                            )}
                                         </span>
                                     </div>
                                 </div>
-                                <div className="ai-pipe-progress-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                                <div className="ai-pipe-progress-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                     <div className="ai-pipe-progress-bar" style={{ flex: 1 }}>
                                         <div className="ai-pipe-progress-fill l3" style={{ width: `${pipelineStatus.l3.progress}%` }}></div>
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                                        <span className="ai-pipe-percent-label l3">{pipelineStatus.l3.progress}%</span>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                triggerPipelineRegenerate('l3');
-                                            }}
-                                            disabled={pipelineStatus.l3.isGenerating}
-                                            style={{
-                                                background: pipelineStatus.l3.isGenerating ? '#cbd5e1' : '#10b981',
-                                                color: '#ffffff',
-                                                border: 'none',
-                                                borderRadius: '6px',
-                                                padding: '3px 10px',
-                                                fontSize: '11.5px',
-                                                fontWeight: 700,
-                                                cursor: pipelineStatus.l3.isGenerating ? 'not-allowed' : 'pointer',
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                gap: '4px',
-                                                transition: 'all 0.15s ease',
-                                                whiteSpace: 'nowrap'
-                                            }}
-                                        >
-                                            <RefreshCw size={11} className={pipelineStatus.l3.isGenerating ? 'animate-spin' : ''} />
-                                            <span>{pipelineStatus.l3.isGenerating ? '분석 중...' : '재생성'}</span>
-                                        </button>
-                                    </div>
+                                    <span className="ai-pipe-percent-label l3">{pipelineStatus.l3.progress}%</span>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            triggerPipelineRegenerate('l3');
+                                        }}
+                                        disabled={pipelineStatus.l3.isGenerating}
+                                        style={{
+                                            background: pipelineStatus.l3.isGenerating ? '#f1f5f9' : '#ffffff',
+                                            color: pipelineStatus.l3.isGenerating ? '#94a3b8' : '#059669',
+                                            border: '1px solid #a7f3d0',
+                                            borderRadius: '6px',
+                                            padding: '2px 8px',
+                                            fontSize: '11px',
+                                            fontWeight: 700,
+                                            cursor: pipelineStatus.l3.isGenerating ? 'not-allowed' : 'pointer',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            transition: 'all 0.15s ease',
+                                            whiteSpace: 'nowrap'
+                                        }}
+                                    >
+                                        <RefreshCw size={11} className={pipelineStatus.l3.isGenerating ? 'animate-spin' : ''} />
+                                        <span>{pipelineStatus.l3.isGenerating ? '분석 중...' : '재생성'}</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
