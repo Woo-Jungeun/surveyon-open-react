@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Check, ArrowRight, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet, ChevronsUpDown, ChevronsDownUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Presentation, FileText, Target, BarChart2, CheckCircle2, Users } from 'lucide-react';
+import { Check, ArrowRight, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet, ChevronsUpDown, ChevronsDownUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Presentation, FileText, Target, BarChart2, CheckCircle2, Users, ExternalLink } from 'lucide-react';
 import { DpRequestPageApi } from '../../dpRequest/DpRequestPageApi';
 import { AiReportPageApi } from '../AiReportPageApi';
 
@@ -610,7 +610,7 @@ const AiReportAnalysisStep = ({
 
         return (
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>근거 문항:</span>
+                <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 600 }}>근거문항:</span>
                 {stubList.map((stub, sIdx) => (
                     <button
                         key={sIdx}
@@ -618,25 +618,40 @@ const AiReportAnalysisStep = ({
                             e.stopPropagation();
                             handleOpenSingleCrosstab(stub, findItem);
                         }}
-                        title={`[${stub}] 클릭하여 핵심 교차표 팝업 열기`}
+                        title={`[${stub}] 클릭하여 핵심 교차표 새창 보기`}
                         style={{
                             background: '#eff6ff',
-                            color: '#2563eb',
+                            color: '#1d4ed8',
                             border: '1px solid #bfdbfe',
-                            borderRadius: '6px',
-                            padding: '3px 9px',
-                            fontSize: '11px',
+                            borderRadius: '5px',
+                            padding: '4px 10px',
+                            fontSize: '13px',
                             fontWeight: 700,
                             cursor: 'pointer',
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '4px',
-                            transition: 'all 0.15s ease',
-                            boxShadow: '0 1px 2px rgba(37, 99, 235, 0.08)'
+                            lineHeight: 1.3,
+                            transition: 'all 0.15s ease-in-out',
+                            boxShadow: '0 1px 2px rgba(37, 99, 235, 0.06)'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#dbeafe';
+                            e.currentTarget.style.borderColor = '#2563eb';
+                            e.currentTarget.style.color = '#1e40af';
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(37, 99, 235, 0.15)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#eff6ff';
+                            e.currentTarget.style.borderColor = '#bfdbfe';
+                            e.currentTarget.style.color = '#1d4ed8';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 1px 2px rgba(37, 99, 235, 0.06)';
                         }}
                     >
-                        <BarChart2 size={11} color="#2563eb" />
-                        <span>{stub}</span>
+                        <span style={{ fontSize: '13px', fontWeight: 700, lineHeight: 1 }}>{stub}</span>
+                        <Search size={13} color="#2563eb" style={{ marginLeft: '2px' }} />
                     </button>
                 ))}
             </div>
@@ -1834,18 +1849,18 @@ const AiReportAnalysisStep = ({
                                                                                                         display: 'inline-flex',
                                                                                                         alignItems: 'flex-start',
                                                                                                         gap: '6px',
-                                                                                                        padding: '5px 10px',
+                                                                                                        padding: '6px 12px',
                                                                                                         borderRadius: '6px',
-                                                                                                        background: '#eff6ff',
-                                                                                                        border: '1px solid #dbeafe',
+                                                                                                        background: '#fffbeb',
+                                                                                                        border: '1px solid #fde68a',
                                                                                                         marginTop: '4px',
                                                                                                         maxWidth: '100%',
                                                                                                         boxSizing: 'border-box',
                                                                                                         fontSize: '11.5px'
                                                                                                     }}>
-                                                                                                        <BarChart2 size={13} color="#2563eb" style={{ marginTop: '2px', flexShrink: 0 }} />
-                                                                                                        <div style={{ fontSize: '11.5px', color: '#1e40af', lineHeight: '1.45', wordBreak: 'break-all' }}>
-                                                                                                            <strong style={{ color: '#2563eb', marginRight: '5px', fontWeight: 700, fontSize: '11.5px' }}>교차표 판단:</strong>
+                                                                                                        <BarChart2 size={13} color="#d97706" style={{ marginTop: '2px', flexShrink: 0 }} />
+                                                                                                        <div style={{ fontSize: '11.5px', color: '#92400e', lineHeight: '1.45', wordBreak: 'break-all' }}>
+                                                                                                            <strong style={{ color: '#b45309', marginRight: '5px', fontWeight: 700, fontSize: '11.5px' }}>교차표 판단:</strong>
                                                                                                             <span style={{ fontSize: '11.5px' }}>{find.evidence_metric}</span>
                                                                                                         </div>
                                                                                                     </div>
@@ -2000,18 +2015,18 @@ const AiReportAnalysisStep = ({
                                                                                                         display: 'inline-flex',
                                                                                                         alignItems: 'flex-start',
                                                                                                         gap: '6px',
-                                                                                                        padding: '5px 10px',
+                                                                                                        padding: '6px 12px',
                                                                                                         borderRadius: '6px',
-                                                                                                        background: '#eff6ff',
-                                                                                                        border: '1px solid #dbeafe',
+                                                                                                        background: '#fffbeb',
+                                                                                                        border: '1px solid #fde68a',
                                                                                                         marginTop: '4px',
                                                                                                         maxWidth: '100%',
                                                                                                         boxSizing: 'border-box',
                                                                                                         fontSize: '11.5px'
                                                                                                     }}>
-                                                                                                        <BarChart2 size={13} color="#2563eb" style={{ marginTop: '2px', flexShrink: 0 }} />
-                                                                                                        <div style={{ fontSize: '11.5px', color: '#1e40af', lineHeight: '1.45', wordBreak: 'break-all' }}>
-                                                                                                            <strong style={{ color: '#2563eb', marginRight: '5px', fontWeight: 700, fontSize: '11.5px' }}>교차표 판단:</strong>
+                                                                                                        <BarChart2 size={13} color="#d97706" style={{ marginTop: '2px', flexShrink: 0 }} />
+                                                                                                        <div style={{ fontSize: '11.5px', color: '#92400e', lineHeight: '1.45', wordBreak: 'break-all' }}>
+                                                                                                            <strong style={{ color: '#b45309', marginRight: '5px', fontWeight: 700, fontSize: '11.5px' }}>교차표 판단:</strong>
                                                                                                             <span style={{ fontSize: '11.5px' }}>{plan.evidence_metric}</span>
                                                                                                         </div>
                                                                                                     </div>
@@ -2137,7 +2152,7 @@ const AiReportAnalysisStep = ({
                                                                                         {isSelected && (
                                                                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
                                                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                                                                                    {renderStubChips(prof.stubs)}
+                                                                                                    {renderStubChips(prof.stubs, prof, evidenceKey, idx, '타겟 세그먼트 프로필', '세그먼트 특징 근거')}
                                                                                                 </div>
 
                                                                                                 {prof.evidence_metric && (
@@ -2145,18 +2160,18 @@ const AiReportAnalysisStep = ({
                                                                                                         display: 'inline-flex',
                                                                                                         alignItems: 'flex-start',
                                                                                                         gap: '6px',
-                                                                                                        padding: '5px 10px',
+                                                                                                        padding: '6px 12px',
                                                                                                         borderRadius: '6px',
-                                                                                                        background: '#eff6ff',
-                                                                                                        border: '1px solid #dbeafe',
+                                                                                                        background: '#fffbeb',
+                                                                                                        border: '1px solid #fde68a',
                                                                                                         marginTop: '4px',
                                                                                                         maxWidth: '100%',
                                                                                                         boxSizing: 'border-box',
                                                                                                         fontSize: '11.5px'
                                                                                                     }}>
-                                                                                                        <BarChart2 size={13} color="#2563eb" style={{ marginTop: '2px', flexShrink: 0 }} />
-                                                                                                        <div style={{ fontSize: '11.5px', color: '#1e40af', lineHeight: '1.45', wordBreak: 'break-all' }}>
-                                                                                                            <strong style={{ color: '#2563eb', marginRight: '5px', fontWeight: 700, fontSize: '11.5px' }}>교차표 판단:</strong>
+                                                                                                        <BarChart2 size={13} color="#d97706" style={{ marginTop: '2px', flexShrink: 0 }} />
+                                                                                                        <div style={{ fontSize: '11.5px', color: '#92400e', lineHeight: '1.45', wordBreak: 'break-all' }}>
+                                                                                                            <strong style={{ color: '#b45309', marginRight: '5px', fontWeight: 700, fontSize: '11.5px' }}>교차표 판단:</strong>
                                                                                                             <span style={{ fontSize: '11.5px' }}>{prof.evidence_metric}</span>
                                                                                                         </div>
                                                                                                     </div>
