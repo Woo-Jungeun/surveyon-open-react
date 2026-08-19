@@ -6,6 +6,7 @@ import MenuPermissionWrapperView from "./views/hsrt/MenuPermissionWrapperView.js
 import AddQuestionWrapperView from "./views/hsrt/AddQuestionWrapperView.jsx";
 import DpRequestWrapperView from "./views/hsrt/DpRequestWrapperView.jsx";
 import AiReportWrapperView from "./views/hsrt/AiReportWrapperView.jsx";
+import SingleCrosstabViewerPage from "./app/hsrt/aiReport/SingleCrosstabViewerPage.jsx";
 
 import CrossAnalysisWrapperView from "./views/hsrt/CrossAnalysisWrapperView.jsx";
 import "./app/DataStatusTheme.css"; // Global Theme Import
@@ -13,6 +14,8 @@ import "./app/DataStatusTheme.css"; // Global Theme Import
 export default function DataStatusRoutes() {
   return (
     <Routes>
+      {/* 팝업 전용 단독 뷰어 라우트 (MenuBar/Footer 프레임 제외) */}
+      <Route path="hsrt/crosstab_viewer" element={<SingleCrosstabViewerPage />} />
 
       {/* 기본 Wrapper */}
       <Route element={<MainWrapperView />}>

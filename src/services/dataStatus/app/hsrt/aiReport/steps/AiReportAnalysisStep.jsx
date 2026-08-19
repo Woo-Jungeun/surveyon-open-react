@@ -39,83 +39,12 @@ const AiReportAnalysisStep = ({
     const { getOverviewContext } = DpRequestPageApi();
     const { getOverviewProofStyled, getOverviewSingleStyled } = AiReportPageApi();
 
-    // Single Crosstab Modal state
-    const [singleCrosstabModal, setSingleCrosstabModal] = useState({
-        isOpen: false,
-        isLoading: false,
-        stubCode: '',
-        title: '',
-        htmlContent: '',
-        styleCss: '',
-        errorMessage: ''
-    });
-
-    const handleOpenSingleCrosstab = async (stubCode, findItem) => {
+    const handleOpenSingleCrosstab = (stubCode, findItem) => {
         if (!stubCode) return;
-
-        setSingleCrosstabModal({
-            isOpen: true,
-            isLoading: true,
-            stubCode,
-            title: findItem?.headline || `문항 [${stubCode}] 핵심 교차표`,
-            htmlContent: '',
-            styleCss: '',
-            errorMessage: ''
-        });
 
         const pageId = sessionStorage.getItem('pageId') || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
         const user = userId || "jewoo";
-
-        let contextUiSettings = null;
-        try {
-            const contextRes = await getOverviewContext.mutateAsync({ pageid: pageId, user });
-            const ctxPayload = contextRes?.resultjson || contextRes || {};
-            if (ctxPayload.ui_settings && typeof ctxPayload.ui_settings === 'object') {
-                contextUiSettings = ctxPayload.ui_settings;
-            } else if (ctxPayload.effective_render_settings && typeof ctxPayload.effective_render_settings === 'object') {
-                contextUiSettings = ctxPayload.effective_render_settings;
-            }
-        } catch (ctxErr) {
-            console.error("Failed to load context for single-styled:", ctxErr);
-        }
-
-        if (!contextUiSettings) {
-            contextUiSettings = {
-                font_family: "Pretendard",
-                font_size: 13,
-                format_show_n: true,
-                format_show_percent: true,
-                format_percent_as_column: true,
-                format_n_round: 0,
-                format_percent_round: 1,
-                format_percent_symbol: true,
-                format_base_prefix: "(",
-                format_base_postfix: ")",
-                sig_diff_fin_mode: "t_test",
-                sig_diff_test_mode: true,
-                sig_level: 95,
-                theme_primary: "#2F5597",
-                theme_primary_fg: "#FFFFFF",
-                theme_base_bg: "#F1F5F9",
-                theme_base_fg: "#0F172A",
-                stub_group_layout: "merge",
-                zero_display: "-",
-                empty_display: ""
-            };
-        }
-
-        let stubsPayload = [];
-        if (typeof stubCode === 'string') {
-            const trimmed = stubCode.trim();
-            if (trimmed.endsWith('_stub')) {
-                const baseCode = trimmed.replace(/_stub$/, '');
-                stubsPayload = [baseCode, trimmed];
-            } else {
-                stubsPayload = [trimmed, `${trimmed}_stub`];
-            }
-        } else if (Array.isArray(stubCode)) {
-            stubsPayload = stubCode;
-        }
+        const windowTitle = findItem?.question_name || findItem?.question_title || findItem?.question || `문항 [${stubCode}] 핵심 교차표`;
 
         const target = findItem?.evidence_target || {};
         const bannerName = target.banner_name || findItem?.banner_name || "";
@@ -125,59 +54,25 @@ const AiReportAnalysisStep = ({
         } else if (typeof bannerList === 'string') {
             bannerList = [bannerList];
         }
-
         if (!Array.isArray(bannerList)) {
             bannerList = [];
         }
 
-        const weightCol = target.weight_col || findItem?.weight_col || contextUiSettings?.weight_variable || contextUiSettings?.weight_col || "";
+        const weightVar = target.weight_variable || target.weight_col || findItem?.weight_variable || findItem?.weight_col || "";
+        const filterExpr = target.filter_expression || findItem?.filter_expression || "";
 
-        const filterExpr = target.filter_expression || findItem?.filter_expression || contextUiSettings?.filter_expression || "";
-
-        const payload = {
-            pageid: pageId,
+        const queryParams = new URLSearchParams({
+            stub: stubCode,
+            title: windowTitle,
+            pageId: pageId,
             user: user,
-            stubs: stubsPayload,
-            banner: bannerList,
-            banner_mode: "stub",
-            weight_col: weightCol,
-            weight_mode: "default",
-            filter_expression: filterExpr,
-            ui_settings: contextUiSettings,
-            include_stats: ["show_n", "show_percent", "percent_digits", "base_bracket", "t-test"],
-            include_tests: ["t-test"]
-        };
+            banner: JSON.stringify(bannerList),
+            weightVar: weightVar,
+            filterExpr: filterExpr
+        });
 
-        try {
-            const res = await getOverviewSingleStyled.mutateAsync(payload);
-            const data = res?.resultjson || res || {};
-            const rawHtml = data.tables?.[0]?.html || data.html || data.results?.[0]?.html || "";
-            const rawCss = data.style_css || "";
-            const tableTitle = data.tables?.[0]?.title || findItem?.headline || `문항 [${stubCode}] 핵심 교차표`;
-
-            if (rawHtml) {
-                setSingleCrosstabModal(prev => ({
-                    ...prev,
-                    isLoading: false,
-                    htmlContent: rawHtml,
-                    styleCss: rawCss,
-                    title: tableTitle
-                }));
-            } else {
-                setSingleCrosstabModal(prev => ({
-                    ...prev,
-                    isLoading: false,
-                    errorMessage: "해당 문항의 교차표 데이터를 찾을 수 없습니다."
-                }));
-            }
-        } catch (err) {
-            console.error("Failed to fetch single-styled crosstab:", err);
-            setSingleCrosstabModal(prev => ({
-                ...prev,
-                isLoading: false,
-                errorMessage: "서버 통신 오류로 교차표를 불러오지 못했습니다."
-            }));
-        }
+        const viewerUrl = `${window.location.origin}/data_status/hsrt/crosstab_viewer?${queryParams.toString()}`;
+        window.open(viewerUrl, '_blank', 'width=1280,height=900,left=100,top=50,resizable=yes,scrollbars=yes');
     };
     // L2 state and variables
     const [activeCategoryIndex, setActiveCategoryIndex] = useState(-1);
@@ -272,6 +167,7 @@ const AiReportAnalysisStep = ({
         }
 
         const bannerName = target.banner_name || item?.banner_name || "";
+        const bannerColumn = target.banner_column || item?.banner_column || "";
         let bannerList = target.banner || item?.banner;
         if (!bannerList) {
             bannerList = bannerName ? [bannerName] : (bannerVars?.[0] ? [bannerVars[0]] : []);
@@ -283,17 +179,20 @@ const AiReportAnalysisStep = ({
             bannerList = [];
         }
 
+        const proofWeightVar = target.weight_variable || target.weight_col || item?.weight_variable || item?.weight_col || contextUiSettings?.weight_variable || "";
+
         const proofPayload = {
             pageid: pageId,
             user: user,
             stub_id: stubId,
             stubs: stubsList,
             banner_name: bannerName,
+            banner_column: bannerColumn,
             banner: bannerList,
             banner_mode: "override",
             target_column: target.target_column || "",
             compare_column: target.compare_column || "",
-            weight_col: target.weight_col || item?.weight_col || "",
+            weight_variable: proofWeightVar,
             filter_expression: target.filter_expression || "",
             ui_settings: contextUiSettings,
             include_stats: ["t-test"],
@@ -2346,122 +2245,7 @@ const AiReportAnalysisStep = ({
                             </div>
                         )
                     )}
-            {/* Single Crosstab Modal Overlay */}
-            {singleCrosstabModal.isOpen && (
-                <div
-                    style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: 'rgba(15, 23, 42, 0.65)',
-                        backdropFilter: 'blur(4px)',
-                        zIndex: 9999,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '24px'
-                    }}
-                    onClick={() => setSingleCrosstabModal(prev => ({ ...prev, isOpen: false }))}
-                >
-                    <div
-                        style={{
-                            background: '#ffffff',
-                            borderRadius: '14px',
-                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
-                            width: '100%',
-                            maxWidth: '960px',
-                            maxHeight: '85vh',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            overflow: 'hidden'
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Modal Header */}
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: '16px 20px',
-                            borderBottom: '1px solid #e2e8f0',
-                            background: '#f8fafc'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <BarChart2 size={18} color="#2563eb" />
-                                <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>
-                                    {singleCrosstabModal.title}
-                                </h4>
-                                <span style={{ fontSize: '11px', background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
-                                    {singleCrosstabModal.stubCode}
-                                </span>
-                            </div>
-                            <button
-                                onClick={() => setSingleCrosstabModal(prev => ({ ...prev, isOpen: false }))}
-                                style={{
-                                    background: 'transparent',
-                                    border: 'none',
-                                    fontSize: '18px',
-                                    cursor: 'pointer',
-                                    color: '#64748b',
-                                    padding: '4px 8px',
-                                    borderRadius: '6px'
-                                }}
-                            >
-                                ✕
-                            </button>
-                        </div>
 
-                        {/* Modal Body */}
-                        <div style={{ padding: '20px', overflowY: 'auto', flex: 1 }}>
-                            {singleCrosstabModal.isLoading ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 0', gap: '12px', color: '#64748b' }}>
-                                    <RefreshCw size={28} className="animate-spin" color="#2563eb" />
-                                    <span style={{ fontSize: '14px', fontWeight: 600 }}>핵심 교차표 데이터를 생성하는 중입니다...</span>
-                                </div>
-                            ) : singleCrosstabModal.errorMessage ? (
-                                <div style={{ textAlign: 'center', padding: '40px 0', color: '#ef4444', fontSize: '14px' }}>
-                                    {singleCrosstabModal.errorMessage}
-                                </div>
-                            ) : (
-                                <div className="single-styled-table-container hsrt-styled-table-container">
-                                    {singleCrosstabModal.styleCss && (
-                                        <style dangerouslySetInnerHTML={{ __html: singleCrosstabModal.styleCss }} />
-                                    )}
-                                    <div dangerouslySetInnerHTML={{ __html: singleCrosstabModal.htmlContent }} />
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Modal Footer */}
-                        <div style={{
-                            display: 'flex',
-                            justify: 'flex-end',
-                            alignItems: 'center',
-                            padding: '12px 20px',
-                            borderTop: '1px solid #e2e8f0',
-                            background: '#f8fafc'
-                        }}>
-                            <button
-                                onClick={() => setSingleCrosstabModal(prev => ({ ...prev, isOpen: false }))}
-                                style={{
-                                    background: '#ffffff',
-                                    color: '#334155',
-                                    border: '1px solid #cbd5e1',
-                                    borderRadius: '6px',
-                                    padding: '6px 16px',
-                                    fontSize: '13px',
-                                    fontWeight: 600,
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                닫기
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
                 </div>
             </div>
         </div>
