@@ -551,20 +551,12 @@ const AiDataPage = () => {
     };
 
     const MessageCell = (props) => {
-        const { status, message, failureReason, errorCategory, finalQuestion } = props.dataItem;
+        const { status, message, failureReason } = props.dataItem;
         let text = '-';
         if (status === 'pass' || status === 'success') {
             text = message || "-";
-        } else if (status === 'paused') {
-            text = `재개 대기 — 멈춘 문항: ${finalQuestion || "-"}`;
         } else {
-            const baseText = failureReason || errorCategory || "-";
-            if (errorCategory === 'Stopped') {
-                const suffix = message ? (message.startsWith(' ') ? message : ` ${message}`) : ' [사용자 강제중단]';
-                text = `${baseText}${suffix}`;
-            } else {
-                text = baseText;
-            }
+            text = failureReason || "-";
         }
         return (
             <td
