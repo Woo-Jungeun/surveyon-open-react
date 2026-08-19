@@ -208,6 +208,7 @@ const AiReportAnalysisStep = ({
     };
 
     const handleEvidenceClick = async (item, evidenceKey, catIdx, sectionTitle, sectionLabel) => {
+        setIsPipelineExpanded(false);
         if (openEvidences[evidenceKey]) {
             setOpenEvidences(prev => {
                 const next = { ...prev };
