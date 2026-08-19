@@ -105,6 +105,7 @@ const AiReportAnalysisStep = ({
     // L2 state and variables
     const [activeCategoryIndex, setActiveCategoryIndex] = useState(-1);
     const activeTabRef = useRef(null);
+    const l2ContentScrollRef = useRef(null);
 
     useEffect(() => {
         if (activeTabRef.current) {
@@ -114,7 +115,20 @@ const AiReportAnalysisStep = ({
                 inline: 'nearest'
             });
         }
-    }, [activeCategoryIndex]);
+        if (l2ContentScrollRef.current) {
+            l2ContentScrollRef.current.scrollTop = 0;
+        }
+        const outerContainer = document.querySelector('.ai-step-content-container');
+        if (outerContainer) {
+            outerContainer.scrollTop = 0;
+        }
+    }, [activeCategoryIndex, activeSubTab]);
+
+    useEffect(() => {
+        if (activeSubTab === 'l2') {
+            setActiveCategoryIndex(-1);
+        }
+    }, [activeSubTab]);
     const [openEvidences, setOpenEvidences] = useState({});
     const [evidenceDataMap, setEvidenceDataMap] = useState({});
     const [evidenceLoadingMap, setEvidenceLoadingMap] = useState({});
@@ -1732,6 +1746,7 @@ const AiReportAnalysisStep = ({
 
                                     {/* L2 Category Main Contents (Scrollbar starts BELOW tab bar!) */}
                                     <div
+                                        ref={l2ContentScrollRef}
                                         style={{
                                             display: 'flex',
                                             flexDirection: 'column',
