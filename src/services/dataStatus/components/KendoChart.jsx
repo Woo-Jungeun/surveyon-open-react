@@ -166,6 +166,53 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
         ? data.filter(row => allowAggregate || !AGGREGATE_LABELS.has(row.name))
         : data;
 
+    // 카테고리 라벨 마우스오버 시 말줄임 전 원본 텍스트 툴팁 표출
+    const applyCategoryTooltips = useCallback(() => {
+        if (!containerRef.current || !Array.isArray(filteredData) || filteredData.length === 0) return;
+
+        const svgTexts = containerRef.current.querySelectorAll('svg text, svg g');
+        svgTexts.forEach(el => {
+            const textContent = (el.textContent || '').trim();
+            if (!textContent || el.getAttribute('data-has-title') === 'true') return;
+
+            const cleanText = textContent.replace(/\.\.\.$/, '').trim();
+            if (!cleanText) return;
+
+            const matched = filteredData.find(d => {
+                const fullName = String(d.name || '').replace(/\n/g, ' ');
+                return fullName.includes(cleanText) || cleanText.includes(fullName.substring(0, Math.min(8, fullName.length)));
+            });
+
+            if (matched) {
+                const fullText = String(matched.name || '').replace(/\n/g, ' ');
+                el.setAttribute('title', fullText);
+                el.setAttribute('data-has-title', 'true');
+                try {
+                    el.style.cursor = 'pointer';
+                } catch (e) {}
+
+                if (!el.querySelector('title')) {
+                    try {
+                        const titleNode = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                        titleNode.textContent = fullText;
+                        el.appendChild(titleNode);
+                    } catch (e) {}
+                }
+            }
+        });
+    }, [filteredData]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            applyCategoryTooltips();
+        }, 150);
+        return () => clearTimeout(timer);
+    }, [applyCategoryTooltips, filteredData, chartType]);
+
+    const handleMouseOver = useCallback(() => {
+        applyCategoryTooltips();
+    }, [applyCategoryTooltips]);
+
     const renderSeries = () => {
         if (isPieOrDonut) {
             // 기준 필드 찾기: 파이/도넛은 보통 단일 차원이므로 가급적 합계(total) 기준 적용을 우선
@@ -551,7 +598,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
     }
 
     return (
-        <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', width: '100%' }}>
+        <div ref={containerRef} onMouseOver={handleMouseOver} className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', width: '100%' }}>
             <style>{tooltipGlobalStyle}</style>
             {!hideHeader && (
                 <div className="chart-header" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginBottom: '10px', flexShrink: 0 }}>
@@ -751,6 +798,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                                 const rawText = String(e.value || '');
                                                 const originalLines = rawText.split('\n');
                                                 const limit = labelLimit > 0 ? labelLimit : 12;
+                                                const cleanTooltipText = rawText.replace(/\n/g, ' ');
 
                                                 const chunkStr = (str, maxL) => {
                                                     const chunks = [];
@@ -766,7 +814,9 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                                     return chunks;
                                                 };
 
-                                                const group = new drawing.Group();
+                                                const group = new drawing.Group({
+                                                    attributes: { title: cleanTooltipText, style: 'cursor: pointer;' }
+                                                });
                                                 const centerX = e.rect.center().x;
                                                 
                                                 // 1. 소분류 (bold)
@@ -792,7 +842,8 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
 
                                                     const textObj = new drawing.Text(lineStr, [centerX - textWidth / 2, currentY], {
                                                         font: fontStr,
-                                                        fill: { color: "#334155" }
+                                                        fill: { color: "#334155" },
+                                                        attributes: { title: cleanTooltipText, style: 'cursor: pointer;' }
                                                     });
                                                     group.append(textObj);
                                                     currentY += 16; // 줄간격

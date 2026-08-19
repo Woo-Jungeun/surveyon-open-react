@@ -1,8 +1,36 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Check, ArrowRight, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet, ChevronsUpDown, ChevronsDownUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Presentation, FileText, Target, BarChart2, CheckCircle2, Users, ExternalLink } from 'lucide-react';
+import { Check, ArrowRight, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet, ChevronsUpDown, ChevronsDownUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Presentation, FileText, Target, BarChart2, CheckCircle2, Users, ExternalLink, Download, BarChartHorizontal, Layers, Percent, LineChart, PieChart, Aperture, MoreHorizontal, AreaChart, LayoutGrid, Cloud, Settings, LayoutList } from 'lucide-react';
 import { DpRequestPageApi } from '../../dpRequest/DpRequestPageApi';
 import { AiReportPageApi } from '../AiReportPageApi';
+import KendoChart from '@/services/dataStatus/components/KendoChart';
+
+const CHART_THEME_OPTIONS = [
+    { id: 'default', name: '기본 테마', preview: ['#2563eb', '#7c3aed', '#db2777', '#ca8a04', '#16a34a'] },
+    { id: 'professional', name: '프로페셔널', preview: ['#1e40af', '#3b82f6', '#93c5fd', '#64748b', '#94a3b8'] },
+    { id: 'tableau', name: '태블로', preview: ['#4e79a7', '#f28e2b', '#e15759', '#76b7b2', '#59a14f'] },
+    { id: 'pastel', name: '파스텔', preview: ['#a78bfa', '#f472b6', '#38bdf8', '#4ade80', '#fbbf24'] },
+    { id: 'ocean', name: '오션', preview: ['#0284c7', '#06b6d4', '#0d9488', '#14b8a6', '#2dd4bf'] },
+    { id: 'forest', name: '포레스트', preview: ['#15803d', '#16a34a', '#65a30d', '#84cc16', '#a3e635'] },
+    { id: 'sunset', name: '선셋', preview: ['#c026d3', '#e11d48', '#f97316', '#facc15', '#fbbf24'] },
+    { id: 'slate', name: '슬레이트', preview: ['#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1'] },
+    { id: 'vivid', name: '비비드', preview: ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6'] }
+];
+
+const CHART_TYPE_OPTIONS = [
+    { id: 'column', label: '세로 막대형', icon: <BarChart2 size={16} /> },
+    { id: 'bar', label: '가로 막대형', icon: <BarChartHorizontal size={16} /> },
+    { id: 'stackedColumn', label: '누적 막대형', icon: <Layers size={16} /> },
+    { id: 'stacked100Column', label: '100% 누적 막대형', icon: <Percent size={16} /> },
+    { id: 'line', label: '선형', icon: <LineChart size={16} /> },
+    { id: 'pie', label: '원형', icon: <PieChart size={16} /> },
+    { id: 'donut', label: '도넛형', icon: <PieChart size={16} style={{ opacity: 0.8 }} /> },
+    { id: 'radarArea', label: '방사형', icon: <Aperture size={16} /> },
+    { id: 'scatterPoint', label: '점도표', icon: <MoreHorizontal size={16} /> },
+    { id: 'area', label: '영역형', icon: <AreaChart size={16} /> },
+    { id: 'heatmap', label: '히트맵', icon: <LayoutGrid size={16} /> },
+    { id: 'wordCloud', label: '워드클라우드', icon: <Cloud size={16} /> }
+];
 
 const renderInsightText = (val) => {
     if (!val) return '';
@@ -37,7 +65,7 @@ const AiReportAnalysisStep = ({
     userId
 }) => {
     const { getOverviewContext } = DpRequestPageApi();
-    const { getOverviewProofStyled, getOverviewSingleStyled } = AiReportPageApi();
+    const { getOverviewProofStyled, getOverviewProofStyledChart, getOverviewSingleStyled } = AiReportPageApi();
 
     const handleOpenSingleCrosstab = (stubCode, findItem) => {
         if (!stubCode) return;
@@ -90,8 +118,80 @@ const AiReportAnalysisStep = ({
     const [openEvidences, setOpenEvidences] = useState({});
     const [evidenceDataMap, setEvidenceDataMap] = useState({});
     const [evidenceLoadingMap, setEvidenceLoadingMap] = useState({});
+    const [evidenceChartDataMap, setEvidenceChartDataMap] = useState({});
+    const [evidenceChartLoadingMap, setEvidenceChartLoadingMap] = useState({});
     const [crosstabTabMap, setCrosstabTabMap] = useState({});
+    const [chartModeMap, setChartModeMap] = useState({});
+    const [paletteIdMap, setPaletteIdMap] = useState({});
+    const [showLegendMap, setShowLegendMap] = useState({});
+    const [chartDataTypeMap, setChartDataTypeMap] = useState({});
+    const [showChartValuesMap, setShowChartValuesMap] = useState({});
+    const [showPercentSymbolMap, setShowPercentSymbolMap] = useState({});
+    const [openDropdownMap, setOpenDropdownMap] = useState({});
+    const chartContainerRefs = useRef({});
     const [isPipelineExpanded, setIsPipelineExpanded] = useState(true);
+
+    const handleChartDownload = (evidenceKey, format) => {
+        const container = chartContainerRefs.current[evidenceKey];
+        if (!container) return;
+
+        const svgElement = container.querySelector('.k-chart svg') || container.querySelector('svg');
+        if (!svgElement) return;
+
+        const fileName = `crosstab_chart_${evidenceKey}`;
+
+        if (format === 'svg') {
+            const serializer = new XMLSerializer();
+            let source = serializer.serializeToString(svgElement);
+            if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+                source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+            }
+            const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${fileName}.svg`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } else {
+            const serializer = new XMLSerializer();
+            const svgString = serializer.serializeToString(svgElement);
+            const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const bbox = svgElement.getBoundingClientRect();
+                canvas.width = (bbox.width || 600) * 2;
+                canvas.height = (bbox.height || 400) * 2;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.scale(2, 2);
+                ctx.drawImage(img, 0, 0);
+                const pngUrl = canvas.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = pngUrl;
+                a.download = `${fileName}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
+            img.src = url;
+        }
+        setActiveDownloadMenu(null);
+    };
+
+    const fetchEvidenceChartData = (evidenceKey, evidenceItem) => {
+        const evData = evidenceDataMap[evidenceKey];
+        const chartData = evData?.chart_data || evData?.resultjson?.chart_data;
+        if (chartData) {
+            setEvidenceChartDataMap(prev => ({ ...prev, [evidenceKey]: chartData }));
+        }
+    };
 
     const handleEvidenceClick = async (item, evidenceKey, catIdx, sectionTitle, sectionLabel) => {
         if (openEvidences[evidenceKey]) {
@@ -204,6 +304,11 @@ const AiReportAnalysisStep = ({
             const proofRes = await getOverviewProofStyled.mutateAsync(proofPayload);
             const payload = proofRes?.resultjson || proofRes || null;
             setEvidenceDataMap(prev => ({ ...prev, [evidenceKey]: payload }));
+
+            const chartData = payload?.chart_data || payload?.resultjson?.chart_data || proofRes?.chart_data || proofRes?.resultjson?.chart_data || null;
+            if (chartData) {
+                setEvidenceChartDataMap(prev => ({ ...prev, [evidenceKey]: chartData }));
+            }
         } catch (err) {
             console.error("Failed to call /datasets/overview/proof-styled API:", err);
             setEvidenceDataMap(prev => ({ ...prev, [evidenceKey]: null }));
@@ -419,75 +524,325 @@ const AiReportAnalysisStep = ({
         );
     };
 
+    const renderChartToolbar = (evidenceKey, evidenceItem) => {
+        const currentChartMode = chartModeMap[evidenceKey] || 'column';
+        const currentPaletteId = paletteIdMap[evidenceKey] || 'default';
+        const currentShowLegend = showLegendMap[evidenceKey] !== undefined ? showLegendMap[evidenceKey] : false;
+        const currentChartDataType = chartDataTypeMap[evidenceKey] || 'percentage';
+        const currentShowChartValues = showChartValuesMap[evidenceKey] !== undefined ? showChartValuesMap[evidenceKey] : true;
+        const currentShowPercentSymbol = showPercentSymbolMap[evidenceKey] !== undefined ? showPercentSymbolMap[evidenceKey] : true;
+        const activeDropdown = openDropdownMap[evidenceKey] || null;
+
+        const toggleDropdown = (menuType) => {
+            setOpenDropdownMap(prev => ({
+                ...prev,
+                [evidenceKey]: prev[evidenceKey] === menuType ? null : menuType
+            }));
+        };
+
+        const closeDropdown = () => {
+            setOpenDropdownMap(prev => ({ ...prev, [evidenceKey]: null }));
+        };
+
+        return (
+            <div className="chart-type-toolbar" style={{ display: 'inline-flex', alignItems: 'center', background: '#f1f5f9', padding: '3px 6px', borderRadius: '8px', gap: '4px' }}>
+                {/* 1. Download PNG / SVG Menu */}
+                <div style={{ position: 'relative' }}>
+                    <button
+                        className={`view-option-btn download-btn ${activeDropdown === 'download' ? 'active' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); toggleDropdown('download'); }}
+                        title="다운로드"
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', background: activeDropdown === 'download' ? '#ffffff' : '#f1f5f9', border: activeDropdown === 'download' ? '1px solid #cbd5e1' : 'none', borderRadius: '6px', cursor: 'pointer', color: '#475569' }}
+                    >
+                        <Download size={14} />
+                    </button>
+                    {activeDropdown === 'download' && (
+                        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, left: 'auto', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.12)', zIndex: 1100, minWidth: '130px', padding: '4px 0' }}>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleChartDownload(evidenceKey, 'png'); closeDropdown(); }}
+                                style={{ width: '100%', textAlign: 'left', padding: '6px 12px', fontSize: '12px', border: 'none', background: 'none', cursor: 'pointer', color: '#334155', whiteSpace: 'nowrap' }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                            >
+                                PNG (이미지)
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleChartDownload(evidenceKey, 'svg'); closeDropdown(); }}
+                                style={{ width: '100%', textAlign: 'left', padding: '6px 12px', fontSize: '12px', border: 'none', background: 'none', cursor: 'pointer', color: '#334155', whiteSpace: 'nowrap' }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                            >
+                                SVG (PPT용)
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* 2. Color Palette Theme Selector */}
+                <div style={{ position: 'relative' }}>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); toggleDropdown('palette'); }}
+                        title="색상 테마 설정"
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', background: activeDropdown === 'palette' ? '#ffffff' : '#f1f5f9', border: activeDropdown === 'palette' ? '1px solid #cbd5e1' : 'none', borderRadius: '6px', cursor: 'pointer' }}
+                    >
+                        {(() => {
+                            const theme = CHART_THEME_OPTIONS.find(opt => opt.id === currentPaletteId) || CHART_THEME_OPTIONS[0];
+                            const colors = theme.preview;
+                            return (
+                                <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: `conic-gradient(${colors[0]}, ${colors[1]}, ${colors[2]}, ${colors[0]})` }} />
+                            );
+                        })()}
+                    </button>
+                    {activeDropdown === 'palette' && (
+                        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px 0', boxShadow: '0 4px 12px rgba(0,0,0,0.12)' }}>
+                            {CHART_THEME_OPTIONS.map(opt => (
+                                <button
+                                    key={opt.id}
+                                    onClick={(e) => { e.stopPropagation(); setPaletteIdMap(prev => ({ ...prev, [evidenceKey]: opt.id })); closeDropdown(); }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 12px', fontSize: '12px', border: 'none', background: currentPaletteId === opt.id ? '#eff6ff' : 'none', cursor: 'pointer', color: currentPaletteId === opt.id ? '#2563eb' : '#334155', fontWeight: currentPaletteId === opt.id ? 700 : 400 }}
+                                    onMouseEnter={(e) => { if (currentPaletteId !== opt.id) e.currentTarget.style.background = '#f8fafc'; }}
+                                    onMouseLeave={(e) => { if (currentPaletteId !== opt.id) e.currentTarget.style.background = 'none'; }}
+                                >
+                                    <div style={{ display: 'flex', gap: '2px' }}>
+                                        {opt.preview.map((c, i) => <div key={i} style={{ width: '8px', height: '8px', borderRadius: '1px', background: c }} />)}
+                                    </div>
+                                    <span>{opt.name}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <div style={{ width: '1px', height: '14px', background: '#cbd5e1', margin: '0 2px' }} />
+
+                {/* 3. Legend Toggle Button */}
+                <button
+                    onClick={(e) => { e.stopPropagation(); setShowLegendMap(prev => ({ ...prev, [evidenceKey]: !currentShowLegend })); }}
+                    title="범례 보기/숨기기"
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', border: `1px solid ${currentShowLegend ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px', background: currentShowLegend ? '#eff6ff' : '#ffffff', color: currentShowLegend ? '#2563eb' : '#64748b', fontSize: '12px', fontWeight: 600, cursor: 'pointer', height: '28px' }}
+                >
+                    <LayoutList size={14} style={{ flexShrink: 0 }} />
+                    <span style={{ whiteSpace: 'nowrap' }}>범례</span>
+                </button>
+
+                <div style={{ width: '1px', height: '14px', background: '#cbd5e1', margin: '0 2px' }} />
+
+                {/* 4. Options Button */}
+                <div style={{ position: 'relative' }}>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); toggleDropdown('options'); }}
+                        title="차트 옵션"
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', fontSize: '12px', fontWeight: 600, border: `1px solid ${activeDropdown === 'options' ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px', background: activeDropdown === 'options' ? '#eff6ff' : '#ffffff', color: activeDropdown === 'options' ? '#2563eb' : '#64748b', cursor: 'pointer', height: '28px' }}
+                    >
+                        <Settings size={14} style={{ flexShrink: 0 }} />
+                        <span style={{ whiteSpace: 'nowrap' }}>옵션</span>
+                    </button>
+
+                    {activeDropdown === 'options' && (
+                        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '220px', zIndex: 1100, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div>
+                                <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '8px', textAlign: 'left' }}>차트 표출 데이터</span>
+                                <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '6px', padding: '4px' }}>
+                                    <div
+                                        onClick={(e) => { e.stopPropagation(); setChartDataTypeMap(prev => ({ ...prev, [evidenceKey]: 'frequency' })); }}
+                                        style={{ flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px', fontWeight: currentChartDataType === 'frequency' ? 700 : 500, color: currentChartDataType === 'frequency' ? '#2563eb' : '#64748b', background: currentChartDataType === 'frequency' ? '#ffffff' : 'transparent', borderRadius: '4px', cursor: 'pointer', boxShadow: currentChartDataType === 'frequency' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}
+                                    >
+                                        빈도
+                                    </div>
+                                    <div
+                                        onClick={(e) => { e.stopPropagation(); setChartDataTypeMap(prev => ({ ...prev, [evidenceKey]: 'percentage' })); }}
+                                        style={{ flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px', fontWeight: currentChartDataType === 'percentage' ? 700 : 500, color: currentChartDataType === 'percentage' ? '#2563eb' : '#64748b', background: currentChartDataType === 'percentage' ? '#ffffff' : 'transparent', borderRadius: '4px', cursor: 'pointer', boxShadow: currentChartDataType === 'percentage' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}
+                                    >
+                                        비율
+                                    </div>
+                                </div>
+                            </div>
+                            <div style={{ height: '1px', background: '#e2e8f0' }} />
+                            <div>
+                                <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '8px', textAlign: 'left' }}>차트 값 표기</span>
+                                <div
+                                    onClick={(e) => { e.stopPropagation(); setShowChartValuesMap(prev => ({ ...prev, [evidenceKey]: !currentShowChartValues })); }}
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '4px 0' }}
+                                >
+                                    <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>값 표출하기</span>
+                                    <div style={{ width: '36px', height: '20px', background: currentShowChartValues ? '#3b82f6' : '#e2e8f0', borderRadius: '20px', position: 'relative', flexShrink: 0, transition: 'background 0.2s' }}>
+                                        <div style={{ position: 'absolute', top: '2px', left: currentShowChartValues ? '18px' : '2px', width: '16px', height: '16px', background: '#ffffff', borderRadius: '50%', transition: 'left 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }} />
+                                    </div>
+                                </div>
+                                {currentChartDataType !== 'frequency' && (
+                                    <div
+                                        onClick={(e) => { e.stopPropagation(); setShowPercentSymbolMap(prev => ({ ...prev, [evidenceKey]: !currentShowPercentSymbol })); }}
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '4px 0', marginTop: '8px' }}
+                                    >
+                                        <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>% 표출</span>
+                                        <div style={{ width: '36px', height: '20px', background: currentShowPercentSymbol ? '#3b82f6' : '#e2e8f0', borderRadius: '20px', position: 'relative', flexShrink: 0, transition: 'background 0.2s' }}>
+                                            <div style={{ position: 'absolute', top: '2px', left: currentShowPercentSymbol ? '18px' : '2px', width: '16px', height: '16px', background: '#ffffff', borderRadius: '50%', transition: 'left 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }} />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div style={{ width: '1px', height: '14px', background: '#cbd5e1', margin: '0 2px' }} />
+
+                {/* 5. 2-Tier Style Chart Type Dropdown Button! */}
+                <div style={{ position: 'relative' }}>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); toggleDropdown('chartType'); }}
+                        title="차트 타입 변경"
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', border: `1px solid ${activeDropdown === 'chartType' ? '#3b82f6' : '#cbd5e1'}`, borderRadius: '6px', background: activeDropdown === 'chartType' ? '#eff6ff' : '#ffffff', color: activeDropdown === 'chartType' ? '#2563eb' : '#64748b', cursor: 'pointer' }}
+                    >
+                        {CHART_TYPE_OPTIONS.find(opt => opt.id === currentChartMode)?.icon || <BarChart2 size={16} />}
+                    </button>
+
+                    {activeDropdown === 'chartType' && (
+                        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.12)', maxHeight: '260px', overflowY: 'auto', padding: '4px 0' }}>
+                            {CHART_TYPE_OPTIONS.map((option) => (
+                                <button
+                                    key={option.id}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setChartModeMap(prev => ({ ...prev, [evidenceKey]: option.id }));
+                                        closeDropdown();
+                                    }}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '8px 14px', fontSize: '13px', border: 'none',
+                                        background: currentChartMode === option.id ? '#eff6ff' : 'transparent',
+                                        color: currentChartMode === option.id ? '#2563eb' : '#334155',
+                                        fontWeight: currentChartMode === option.id ? 700 : 500,
+                                        cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s'
+                                    }}
+                                    onMouseEnter={(e) => { if (currentChartMode !== option.id) e.currentTarget.style.background = '#f8fafc'; }}
+                                    onMouseLeave={(e) => { if (currentChartMode !== option.id) e.currentTarget.style.background = 'transparent'; }}
+                                >
+                                    {option.icon}
+                                    <span>{option.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     const renderCrosstabChart = (evidenceKey, evidenceItem) => {
-        const isEvidenceLoading = !!evidenceLoadingMap[evidenceKey];
-        if (isEvidenceLoading) {
+        const isChartLoading = !!evidenceChartLoadingMap[evidenceKey];
+        const chartApiPayload = evidenceChartDataMap[evidenceKey];
+        const evidenceCrosstabData = evidenceDataMap[evidenceKey];
+        const selectedEvidence = evidenceItem || openEvidences[evidenceKey];
+
+        if (!chartApiPayload && !isChartLoading && evidenceChartDataMap[evidenceKey] === undefined) {
+            fetchEvidenceChartData(evidenceKey, evidenceItem);
+        }
+
+        if (isChartLoading) {
             return (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '140px', color: '#64748b', fontSize: '13px' }}>
-                    <RefreshCw className="animate-spin" size={18} style={{ marginRight: '6px' }} />
-                    <span>데이터를 불러오는 중입니다...</span>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '260px', color: '#64748b', fontSize: '13px' }}>
+                    <RefreshCw className="animate-spin" size={20} style={{ marginRight: '8px' }} />
+                    <span>차트 데이터를 불러오는 중입니다...</span>
                 </div>
             );
         }
 
-        const evidenceCrosstabData = evidenceDataMap[evidenceKey];
-        const selectedEvidence = evidenceItem || openEvidences[evidenceKey];
+        const currentChartMode = chartModeMap[evidenceKey] || 'column';
+        const currentPaletteId = paletteIdMap[evidenceKey] || 'default';
+        const currentShowLegend = showLegendMap[evidenceKey] !== undefined ? showLegendMap[evidenceKey] : false;
+        const currentChartDataType = chartDataTypeMap[evidenceKey] || 'percentage';
+        const currentShowChartValues = showChartValuesMap[evidenceKey] !== undefined ? showChartValuesMap[evidenceKey] : true;
+        const currentShowPercentSymbol = showPercentSymbolMap[evidenceKey] !== undefined ? showPercentSymbolMap[evidenceKey] : true;
 
-        const summaryMetrics = evidenceCrosstabData?.summary_metrics || evidenceCrosstabData?.resultjson?.summary_metrics;
-        const targetGroupName = evidenceCrosstabData?.target_column || evidenceCrosstabData?.resultjson?.target_column || selectedEvidence?.evidence_target?.target_column || '2030 세대';
-        const compareGroupName = evidenceCrosstabData?.compare_column || evidenceCrosstabData?.resultjson?.compare_column || selectedEvidence?.evidence_target?.compare_column || '전체';
+        let kendoData = [];
+        let kendoSeriesNames = [];
 
-        let chartRows = [
-            { label: '매우 만족', overall: 14.0, target: 18.0 },
-            { label: '만족', overall: 35.0, target: 45.8 },
-            { label: '보통', overall: 40.0, target: 29.2 },
-            { label: '불만족', overall: 7.0, target: 5.0 },
-            { label: '매우 불만족', overall: 4.0, target: 2.0 },
-            { label: 'Top2 (긍정)', overall: 49.0, target: 63.8 },
-            { label: 'Bot2 (부정)', overall: 11.0, target: 7.0 }
-        ];
+        // 1. Primary: from chart-data API
+        if (chartApiPayload && chartApiPayload.labels && chartApiPayload.series) {
+            const labels = chartApiPayload.labels || [];
+            const series = chartApiPayload.series || [];
 
-        if (summaryMetrics) {
-            const targetVal = parseFloat(summaryMetrics.target_val || 0);
-            const compareVal = parseFloat(summaryMetrics.compare_val || 0);
-            chartRows = [
-                { label: '핵심지표 비율', overall: compareVal, target: targetVal }
-            ];
+            kendoData = labels.map((lbl, idx) => {
+                const row = { name: lbl.label || lbl.key || `항목 ${idx + 1}` };
+                series.forEach(s => {
+                    let val = 0;
+                    if (currentChartDataType === 'frequency') {
+                        if (s.count && typeof s.count[idx] === 'number') {
+                            val = s.count[idx];
+                        } else if (s.percent && typeof s.percent[idx] === 'number') {
+                            val = s.percent[idx];
+                        }
+                    } else {
+                        if (s.percent && typeof s.percent[idx] === 'number') {
+                            val = s.percent[idx];
+                        } else if (s.count && typeof s.count[idx] === 'number') {
+                            val = s.count[idx];
+                        }
+                    }
+                    row[s.key] = val;
+                });
+                return row;
+            });
+
+            kendoSeriesNames = series.map(s => ({
+                field: s.key,
+                name: s.label || s.key
+            }));
+        }
+        // 2. Secondary: from proof-styled crosstab API data
+        else if (evidenceCrosstabData && evidenceCrosstabData.columns && evidenceCrosstabData.rows) {
+            const columns = evidenceCrosstabData.columns;
+            const rows = evidenceCrosstabData.rows;
+
+            const validCols = columns.filter((col) => {
+                const lbl = typeof col === 'object' ? col.label || col.name : String(col);
+                return lbl !== '구분' && lbl !== '변수명';
+            });
+
+            kendoSeriesNames = validCols.map((col, cIdx) => ({
+                field: `col_${cIdx}`,
+                name: typeof col === 'object' ? col.label || col.name : String(col)
+            }));
+
+            kendoData = rows.map(r => {
+                const rowObj = { name: r.label || r.name };
+                validCols.forEach((col, cIdx) => {
+                    const originalIdx = columns.indexOf(col);
+                    const valObj = r.values ? r.values[originalIdx] : null;
+                    let numVal = 0;
+                    if (valObj) {
+                        if (currentChartDataType === 'frequency') {
+                            numVal = parseFloat(valObj.count ?? valObj.percent ?? 0);
+                        } else {
+                            numVal = parseFloat(valObj.percent ?? valObj.count ?? 0);
+                        }
+                    }
+                    rowObj[`col_${cIdx}`] = numVal;
+                });
+                return rowObj;
+            });
         }
 
         return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingTop: '4px' }}>
-                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', justifyContent: 'flex-end', fontSize: '11px', color: '#64748b' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#94a3b8' }} />
-                        <span>{compareGroupName}</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#2563eb' }} />
-                        <span style={{ fontWeight: 700, color: '#2563eb' }}>★ {targetGroupName}</span>
-                    </div>
-                </div>
-
-                {chartRows.map((row, rIdx) => {
-                    const isHighlight = row.label.includes('Top2');
-                    return (
-                        <div key={rIdx} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', fontWeight: isHighlight ? 700 : 500, color: isHighlight ? '#0f172a' : '#475569' }}>
-                                <span>{row.label}</span>
-                                <div style={{ display: 'flex', gap: '10px', fontSize: '11px' }}>
-                                    <span style={{ color: '#64748b' }}>전체 {row.overall.toFixed(1)}%</span>
-                                    <span style={{ color: '#2563eb', fontWeight: 700 }}>타겟 {row.target.toFixed(1)}%</span>
-                                </div>
-                            </div>
-                            <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
-                                <div style={{ width: `${row.overall}%`, height: '100%', background: '#94a3b8', borderRadius: '3px' }} />
-                            </div>
-                            <div style={{ height: '6px', background: '#eff6ff', borderRadius: '3px', overflow: 'hidden' }}>
-                                <div style={{ width: `${row.target}%`, height: '100%', background: '#2563eb', borderRadius: '3px' }} />
-                            </div>
-                        </div>
-                    );
-                })}
+            <div
+                ref={el => { chartContainerRefs.current[evidenceKey] = el; }}
+                style={{ height: '340px', maxHeight: '360px', overflowX: 'auto', overflowY: 'auto', position: 'relative', width: '100%', minWidth: 0, marginTop: '6px' }}
+            >
+                <KendoChart
+                    key={`${evidenceKey}-${currentChartMode}-${currentPaletteId}-${currentShowLegend}-${currentShowChartValues}-${currentShowPercentSymbol}-${currentChartDataType}`}
+                    data={kendoData}
+                    seriesNames={kendoSeriesNames}
+                    initialType={currentChartMode}
+                    allowedTypes={[currentChartMode]}
+                    labelLimit={12}
+                    suffix={currentShowPercentSymbol && currentChartDataType !== 'frequency' ? '%' : ''}
+                    isPercent={currentChartDataType === 'percentage'}
+                    paletteId={currentPaletteId}
+                    hideHeader={true}
+                    externalShowLegend={currentShowLegend}
+                    showLabels={currentShowChartValues}
+                    allowAggregate={true}
+                />
             </div>
         );
     };
@@ -502,58 +857,76 @@ const AiReportAnalysisStep = ({
                 borderRadius: '10px',
                 background: '#ffffff',
                 padding: '14px 16px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+                boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                width: '100%',
+                minWidth: 0,
+                boxSizing: 'border-box',
+                overflowX: 'auto'
             }}>
                 <div style={{
-                    display: 'inline-flex',
-                    background: '#f1f5f9',
-                    padding: '3px',
-                    borderRadius: '8px',
-                    marginBottom: '12px',
-                    gap: '2px'
+                    display: 'flex',
+                    justify: 'space-between',
+                    alignItems: 'center',
+                    width: '100%',
+                    marginBottom: '12px'
                 }}>
-                    <button
-                        type="button"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setCrosstabTabMap(prev => ({ ...prev, [evidenceKey]: 'table' }));
-                        }}
-                        style={{
-                            padding: '4px 14px',
-                            borderRadius: '6px',
-                            fontSize: '12px',
-                            fontWeight: activeTab === 'table' ? 700 : 500,
-                            color: activeTab === 'table' ? '#2563eb' : '#64748b',
-                            background: activeTab === 'table' ? '#ffffff' : 'transparent',
-                            border: 'none',
-                            boxShadow: activeTab === 'table' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease'
-                        }}
-                    >
-                        요약표
-                    </button>
-                    <button
-                        type="button"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setCrosstabTabMap(prev => ({ ...prev, [evidenceKey]: 'chart' }));
-                        }}
-                        style={{
-                            padding: '4px 14px',
-                            borderRadius: '6px',
-                            fontSize: '12px',
-                            fontWeight: activeTab === 'chart' ? 700 : 500,
-                            color: activeTab === 'chart' ? '#2563eb' : '#64748b',
-                            background: activeTab === 'chart' ? '#ffffff' : 'transparent',
-                            border: 'none',
-                            boxShadow: activeTab === 'chart' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease'
-                        }}
-                    >
-                        차트
-                    </button>
+                    <div style={{
+                        display: 'inline-flex',
+                        background: '#f1f5f9',
+                        padding: '3px',
+                        borderRadius: '8px',
+                        gap: '2px'
+                    }}>
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setCrosstabTabMap(prev => ({ ...prev, [evidenceKey]: 'table' }));
+                            }}
+                            style={{
+                                padding: '4px 14px',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                fontWeight: activeTab === 'table' ? 700 : 500,
+                                color: activeTab === 'table' ? '#2563eb' : '#64748b',
+                                background: activeTab === 'table' ? '#ffffff' : 'transparent',
+                                border: 'none',
+                                boxShadow: activeTab === 'table' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease'
+                            }}
+                        >
+                            요약표
+                        </button>
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setCrosstabTabMap(prev => ({ ...prev, [evidenceKey]: 'chart' }));
+                                fetchEvidenceChartData(evidenceKey, evidenceItem);
+                            }}
+                            style={{
+                                padding: '4px 14px',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                fontWeight: activeTab === 'chart' ? 700 : 500,
+                                color: activeTab === 'chart' ? '#2563eb' : '#64748b',
+                                background: activeTab === 'chart' ? '#ffffff' : 'transparent',
+                                border: 'none',
+                                boxShadow: activeTab === 'chart' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease'
+                            }}
+                        >
+                            차트
+                        </button>
+                    </div>
+
+                    {activeTab === 'chart' && (
+                        <div style={{ marginLeft: 'auto' }}>
+                            {renderChartToolbar(evidenceKey, evidenceItem)}
+                        </div>
+                    )}
                 </div>
 
                 {activeTab === 'table' ? renderCrosstabTable(evidenceKey, evidenceItem) : renderCrosstabChart(evidenceKey, evidenceItem)}
@@ -1569,11 +1942,11 @@ const AiReportAnalysisStep = ({
                                                             </div>
                                                         )}
 
-                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', width: '100%', minWidth: 0 }}>
                                                             {/* Left Column wrapper using display: contents to participate in parent grid */}
                                                             <div style={{ display: 'contents' }}>
                                                                 {/* 가설 검증 결론 Card (order: 1) */}
-                                                                <div className="ai-card" style={{ padding: '14px 18px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px', order: 1, boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
+                                                                <div className="ai-card" style={{ padding: '14px 18px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px', order: 1, minWidth: 0, width: '100%', height: '100%', boxSizing: 'border-box', boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
                                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid #e2e8f0', paddingBottom: '8px' }}>
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                             <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1752,7 +2125,7 @@ const AiReportAnalysisStep = ({
                                                                 </div>
 
                                                                 {/* 핵심 정량 분석 Card (order: 3) */}
-                                                                <div className="ai-card" style={{ padding: '14px 18px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px', order: 3, boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
+                                                                <div className="ai-card" style={{ padding: '14px 18px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px', order: 3, minWidth: 0, width: '100%', height: '100%', boxSizing: 'border-box', boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1.5px solid #e2e8f0', paddingBottom: '8px' }}>
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                             <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1884,7 +2257,7 @@ const AiReportAnalysisStep = ({
                                                             {/* Right Column wrapper using display: contents to participate in parent grid */}
                                                             <div style={{ display: 'contents' }}>
                                                                 {/* 전략적 시사점 & 액션 플랜 Card (order: 2) */}
-                                                                <div className="ai-card" style={{ padding: '14px 18px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px', order: 2, boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
+                                                                <div className="ai-card" style={{ padding: '14px 18px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px', order: 2, minWidth: 0, width: '100%', height: '100%', boxSizing: 'border-box', boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1.5px solid #e2e8f0', paddingBottom: '8px' }}>
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                             <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2047,7 +2420,7 @@ const AiReportAnalysisStep = ({
                                                                 </div>
 
                                                                 {/* 타겟 세그먼트 프로필 Card (order: 4) */}
-                                                                <div className="ai-card" style={{ padding: '14px 18px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px', order: 4, boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
+                                                                <div className="ai-card" style={{ padding: '14px 18px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px', order: 4, minWidth: 0, width: '100%', height: '100%', boxSizing: 'border-box', boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1.5px solid #e2e8f0', paddingBottom: '8px' }}>
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                             <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

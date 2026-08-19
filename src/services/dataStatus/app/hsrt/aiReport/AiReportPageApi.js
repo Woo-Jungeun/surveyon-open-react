@@ -89,6 +89,14 @@ export function AiReportPageApi() {
         }
     );
 
+    /** 교차분석 - 증명 요약 차트 데이터 조회 (proof-styled/chart-data) */
+    const getOverviewProofStyledChart = useMutation(
+        async (data) => {
+            const { _config, ...restData } = data || {};
+            return await api.post(restData, "/datasets/overview/proof-styled/chart-data", "API_BASE_URL_DATASTATUS", _config);
+        }
+    );
+
     /** 교차분석 - 단발 문항 교차표 조회 (single-styled) */
     const getOverviewSingleStyled = useMutation(
         async (data) => {
@@ -110,6 +118,7 @@ export function AiReportPageApi() {
         generateL3,
         exportL3File,
         getOverviewProofStyled,
+        getOverviewProofStyledChart,
         getOverviewSingleStyled
     };
 }
