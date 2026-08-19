@@ -89,6 +89,14 @@ export function AiReportPageApi() {
         }
     );
 
+    /** 교차분석 - 단발 문항 교차표 조회 (single-styled) */
+    const getOverviewSingleStyled = useMutation(
+        async (data) => {
+            const { _config, ...restData } = data || {};
+            return await api.post(restData, "/datasets/overview/single-styled", "API_BASE_URL_DATASTATUS", _config);
+        }
+    );
+
     return {
         getAiModels,
         getAiSummaryData,
@@ -101,6 +109,7 @@ export function AiReportPageApi() {
         generateL2,
         generateL3,
         exportL3File,
-        getOverviewProofStyled
+        getOverviewProofStyled,
+        getOverviewSingleStyled
     };
 }
