@@ -1167,8 +1167,10 @@ const AiReportAnalysisStep = ({
                                     <div className="ai-pipe-progress-bar" style={{ flex: 1 }}>
                                         <div className="ai-pipe-progress-fill l1" style={{ width: `${pipelineStatus.l1.progress}%` }}></div>
                                     </div>
-                                    <span className="ai-pipe-percent-label">{pipelineStatus.l1.progress}%</span>
-                                    {unsummarizedCount > 0 && (
+                                    {pipelineStatus.l1.progress > 0 && (
+                                        <span className="ai-pipe-percent-label">{pipelineStatus.l1.progress}%</span>
+                                    )}
+                                    {unsummarizedCount > 0 && pipelineStatus.l1.progress > 0 && (
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -1465,7 +1467,7 @@ const AiReportAnalysisStep = ({
                             )}
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                {activeSubTab === 'l1' && (
+                                {activeSubTab === 'l1' && Object.keys(insightData.l1 || {}).length > 0 && (
                                     <>
                                         <div className="ai-detail-search-wrap">
                                             <input
@@ -1489,7 +1491,7 @@ const AiReportAnalysisStep = ({
                                         </button>
                                     </>
                                 )}
-                                {activeSubTab === 'l3' && (
+                                {activeSubTab === 'l3' && (pipelineStatus.l3.isDone || !!(insightData.l3?.executive_summary || insightData.l3?.key_takeaways || (insightData.l3?.action_items && insightData.l3.action_items.length > 0))) && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <button
                                             className="ai-xlsx-btn"
