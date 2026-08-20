@@ -1198,32 +1198,18 @@ const AiReportAnalysisStep = ({
                                         </button>
                                     )}
                                     <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            triggerPipelineRegenerate('l1');
-                                        }}
-                                        disabled={pipelineStatus.l1.isGenerating}
-                                        title="재생성 시 하위 단계(L2-L3) 결과가 초기화됩니다."
-                                        style={{
-                                            background: pipelineStatus.l1.isGenerating ? '#f1f5f9' : '#ffffff',
-                                            color: pipelineStatus.l1.isGenerating ? '#94a3b8' : '#2563eb',
-                                            border: '1px solid #bfdbfe',
-                                            borderRadius: '6px',
-                                            padding: '2px 8px',
-                                            fontSize: '11px',
-                                            fontWeight: 700,
-                                            cursor: pipelineStatus.l1.isGenerating ? 'not-allowed' : 'pointer',
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: '4px',
-                                            transition: 'all 0.15s ease',
-                                            whiteSpace: 'nowrap'
-                                        }}
-                                    >
-                                        <RefreshCw size={11} className={pipelineStatus.l1.isGenerating ? 'animate-spin' : ''} />
-                                        <span>{pipelineStatus.l1.isGenerating ? '분석 중...' : '재생성'}</span>
-                                    </button>
-                                </div>
+                                         onClick={(e) => {
+                                             e.stopPropagation();
+                                             triggerPipelineRegenerate('l1');
+                                         }}
+                                         disabled={pipelineStatus.l1.isGenerating}
+                                         title="재생성 시 하위 단계(L2-L3) 결과가 초기화됩니다."
+                                         className="ai-pipe-regen-btn l1"
+                                     >
+                                         <RefreshCw size={11} className={pipelineStatus.l1.isGenerating ? 'animate-spin' : ''} />
+                                         <span>{pipelineStatus.l1.isGenerating ? '분석 중...' : '재생성'}</span>
+                                     </button>
+                                 </div>
                             </div>
 
                             <div className="ai-pipeline-arrow-in">
@@ -1262,7 +1248,7 @@ const AiReportAnalysisStep = ({
                                     <div className="ai-pipe-progress-bar" style={{ flex: 1 }}>
                                         <div className="ai-pipe-progress-fill l2" style={{ width: `${pipelineStatus.l2.progress}%` }}></div>
                                     </div>
-                                    <span className="ai-pipe-percent-label">{pipelineStatus.l2.progress}%</span>
+                                    <span className="ai-pipe-percent-label l2">{pipelineStatus.l2.progress}%</span>
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -1270,21 +1256,7 @@ const AiReportAnalysisStep = ({
                                         }}
                                         disabled={pipelineStatus.l2.isGenerating}
                                         title="재생성 시 하위 단계(L3) 결과가 초기화됩니다."
-                                        style={{
-                                            background: pipelineStatus.l2.isGenerating ? '#f1f5f9' : '#ffffff',
-                                            color: pipelineStatus.l2.isGenerating ? '#94a3b8' : '#2563eb',
-                                            border: '1px solid #bfdbfe',
-                                            borderRadius: '6px',
-                                            padding: '2px 8px',
-                                            fontSize: '11px',
-                                            fontWeight: 700,
-                                            cursor: pipelineStatus.l2.isGenerating ? 'not-allowed' : 'pointer',
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: '4px',
-                                            transition: 'all 0.15s ease',
-                                            whiteSpace: 'nowrap'
-                                        }}
+                                        className="ai-pipe-regen-btn l2"
                                     >
                                         <RefreshCw size={11} className={pipelineStatus.l2.isGenerating ? 'animate-spin' : ''} />
                                         <span>{pipelineStatus.l2.isGenerating ? '분석 중...' : '재생성'}</span>
@@ -1328,7 +1300,7 @@ const AiReportAnalysisStep = ({
                                     <div className="ai-pipe-progress-bar" style={{ flex: 1 }}>
                                         <div className="ai-pipe-progress-fill l3" style={{ width: `${pipelineStatus.l3.progress}%` }}></div>
                                     </div>
-                                    <span className="ai-pipe-percent-label">{pipelineStatus.l3.progress}%</span>
+                                    <span className="ai-pipe-percent-label l3">{pipelineStatus.l3.progress}%</span>
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -1336,21 +1308,7 @@ const AiReportAnalysisStep = ({
                                         }}
                                         disabled={pipelineStatus.l3.isGenerating}
                                         title="종합 요약 보고서를 다시 생성합니다."
-                                        style={{
-                                            background: pipelineStatus.l3.isGenerating ? '#f1f5f9' : '#ffffff',
-                                            color: pipelineStatus.l3.isGenerating ? '#94a3b8' : '#2563eb',
-                                            border: '1px solid #bfdbfe',
-                                            borderRadius: '6px',
-                                            padding: '2px 8px',
-                                            fontSize: '11px',
-                                            fontWeight: 700,
-                                            cursor: pipelineStatus.l3.isGenerating ? 'not-allowed' : 'pointer',
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: '4px',
-                                            transition: 'all 0.15s ease',
-                                            whiteSpace: 'nowrap'
-                                        }}
+                                        className="ai-pipe-regen-btn l3"
                                     >
                                         <RefreshCw size={11} className={pipelineStatus.l3.isGenerating ? 'animate-spin' : ''} />
                                         <span>{pipelineStatus.l3.isGenerating ? '분석 중...' : '재생성'}</span>
