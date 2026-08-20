@@ -339,7 +339,7 @@ const AiReportAnalysisStep = ({
         : Object.keys(insightData.l1 || {}).length;
     const totalDisplayCount = typeof l1CountInfo?.totalCount === 'number'
         ? l1CountInfo.totalCount
-        : questions.length;
+        : (typeof l1CountInfo?.cachedCount === 'number' ? l1CountInfo.cachedCount : Object.keys(insightData.l1 || {}).length);
     const unsummarizedCount = (Array.isArray(missingVariables) && missingVariables.length > 0)
         ? missingVariables.length
         : Math.max(0, totalDisplayCount - cachedDisplayCount);

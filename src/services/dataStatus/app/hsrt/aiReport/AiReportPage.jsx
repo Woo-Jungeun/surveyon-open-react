@@ -349,8 +349,9 @@ const AiReportPage = () => {
 
 
         loadSummaryData();
+        fetchL1StatusData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [auth?.user?.userId, loadSummaryData]);
+    }, [auth?.user?.userId, loadSummaryData, fetchL1StatusData]);
 
     // Load L1 status when entering Step 3 (최종분석)
     useEffect(() => {
