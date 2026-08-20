@@ -1194,7 +1194,7 @@ const AiReportAnalysisStep = ({
                                             }}
                                         >
                                             <Zap size={11} />
-                                            <span>미요약 {unsummarizedCount}개 생성</span>
+                                            <span>미요약 문항 생성 ({unsummarizedCount}개)</span>
                                         </button>
                                     )}
                                     <button
@@ -1499,30 +1499,6 @@ const AiReportAnalysisStep = ({
                             {activeSubTab === 'l1' ? (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <span className="ai-detail-status-count">요약 완료 <strong>{cachedDisplayCount} / {totalDisplayCount} 문항</strong></span>
-                                    {unsummarizedCount > 0 && (
-                                        <button
-                                            onClick={() => triggerPipelineRegenerate('l1_missing')}
-                                            disabled={pipelineStatus.l1.isGenerating}
-                                            style={{
-                                                background: pipelineStatus.l1.isGenerating ? '#f1f5f9' : '#eff6ff',
-                                                color: pipelineStatus.l1.isGenerating ? '#94a3b8' : '#2563eb',
-                                                border: '1px solid #bfdbfe',
-                                                borderRadius: '6px',
-                                                padding: '2px 8px',
-                                                fontSize: '11px',
-                                                fontWeight: 700,
-                                                cursor: pipelineStatus.l1.isGenerating ? 'not-allowed' : 'pointer',
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                gap: '4px',
-                                                transition: 'all 0.15s ease'
-                                            }}
-                                            title={`누락된 ${unsummarizedCount}개 문항의 L1 요약을 일괄 생성합니다.`}
-                                        >
-                                            <Zap size={11} color="#2563eb" />
-                                            <span>L1 미요약 문항 일괄 생성 ({unsummarizedCount}개)</span>
-                                        </button>
-                                    )}
                                 </div>
                             ) : activeSubTab === 'l2' ? (
                                 <span className="ai-detail-status-count">조사내용 <strong>{insightData.l2?.length || 0}개</strong> 카테고리 분석 완료</span>

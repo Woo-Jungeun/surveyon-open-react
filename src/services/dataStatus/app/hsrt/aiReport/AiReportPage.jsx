@@ -322,6 +322,7 @@ const AiReportPage = () => {
                         totalCount: l1Payload.totalCount
                     });
                 }
+
                 if (l1Payload.l1Insights) {
                     setInsightData(prev => ({
                         ...prev,
@@ -681,7 +682,7 @@ const AiReportPage = () => {
             [level]: { ...prev[level], isGenerating: true, progress: 0 }
         }));
 
-        if (level === 'l1') {
+        if (level === 'l1' || level === 'l1_missing') {
             const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
             const userId = auth?.user?.userId || "jewoo";
 
@@ -930,9 +931,29 @@ const AiReportPage = () => {
     };
 
     const triggerPipelineRegenerate = (level) => {
+        if (level === 'l1_missing') {
+            const count = missingVariables.length > 0 ? missingVariables.length : 0;
+            const countStr = count > 0 ? ` (${count}개)` : '';
+            modal.showConfirm(
+                "확인",
+                `미요약 문항${countStr}의 AI 요약을 생성하시겠습니까?\n(기존 요약 결과는 유지됩니다.)`,
+                {
+                    btns: [
+                        { title: "취소", click: () => { } },
+                        {
+                            title: "생성",
+                            click: () => {
+                                executePipelineRegenerate('l1_missing');
+                            }
+                        }
+                    ]
+                }
+            );
+            return;
+        }
+
         const levelNames = {
             l1: 'L1 문항별 인사이트',
-            l1_missing: 'L1 미요약 문항 일괄 생성',
             l2: 'L2 조사내용별 분석',
             l3: 'L3 종합 요약 보고서'
         };
@@ -945,7 +966,7 @@ const AiReportPage = () => {
 
         modal.showConfirm("재생성 확인", `${targetName} 분석을 다시 실행하시겠습니까?${warningText}`, {
             btns: [
-                { title: "취소", click: () => {} },
+                { title: "취소", click: () => { } },
                 {
                     title: "확인",
                     click: () => {
@@ -1102,7 +1123,7 @@ const AiReportPage = () => {
             setNewHypothesis(cat.desc);
             setNewKpiQuestionId(cat.kpi_question_id);
             setSelectedCategoryId(null);
-            
+
             // Initialize questions checklist
             setQuestions(prev => prev.map(q => ({
                 ...q,
