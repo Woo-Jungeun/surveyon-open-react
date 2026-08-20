@@ -1747,16 +1747,15 @@ const AiReportAnalysisStep = ({
                                         style={{
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            gap: '24px',
                                             flex: 1,
                                             minHeight: 0,
-                                            overflowY: 'auto',
-                                            paddingRight: '6px'
+                                            overflowY: activeCategoryIndex === -1 ? 'hidden' : 'auto',
+                                            paddingRight: activeCategoryIndex === -1 ? '0' : '6px'
                                         }}
                                     >
                                         {activeCategoryIndex === -1 ? (
-                                            /* 전체보기 탭일 때는 3열 격자 요약 카드로 렌더링 */
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', paddingBottom: '20px' }}>
+                                            /* 전체보기 탭일 때는 3개 행 3열 격자로 스크롤 없이 100% 꽉 차게 렌더링 */
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(3, 1fr)', gap: '10px', height: '100%', boxSizing: 'border-box' }}>
                                                 {l2Categories.map((catItem, idx) => {
                                                     const insights = catItem?.insights || {};
                                                     const hypothesisResult = insights.hypothesis_result || {};
@@ -1767,12 +1766,13 @@ const AiReportAnalysisStep = ({
                                                             className="ai-card"
                                                             onClick={() => setActiveCategoryIndex(idx)}
                                                             style={{
-                                                                padding: '12px 16px',
+                                                                padding: '8px 12px',
                                                                 border: '1.5px solid #cbd5e1',
                                                                 borderRadius: '10px',
                                                                 display: 'flex',
                                                                 flexDirection: 'column',
-                                                                gap: '8px',
+                                                                justifyContent: 'space-between',
+                                                                gap: '4px',
                                                                 cursor: 'pointer',
                                                                 transition: 'all 0.2s ease',
                                                                 height: '100%',
@@ -1787,23 +1787,18 @@ const AiReportAnalysisStep = ({
                                                                 e.currentTarget.style.boxShadow = 'none';
                                                             }}
                                                         >
-                                                            {/* Top Row: SLIDE Badge & Title & Status Badge */}
+                                                            {/* Top Row: SLIDE Label & Title & Status Badge */}
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 0 }}>
                                                                     <span style={{
-                                                                        backgroundColor: '#eff6ff',
                                                                         color: '#2563eb',
-                                                                        border: '1px solid #bfdbfe',
-                                                                        fontSize: '10px',
-                                                                        fontWeight: 700,
-                                                                        padding: '2px 8px',
-                                                                        borderRadius: '4px',
-                                                                        textTransform: 'uppercase',
+                                                                        fontSize: '11.5px',
+                                                                        fontWeight: 800,
                                                                         flexShrink: 0
                                                                     }}>
-                                                                        SLIDE {idx + 1}
+                                                                        SLIDE {idx + 1}.
                                                                     </span>
-                                                                    <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                    <h4 style={{ fontSize: '13.5px', fontWeight: 800, color: '#0f172a', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                         {catItem.category_name}
                                                                     </h4>
                                                                 </div>
@@ -1865,7 +1860,7 @@ const AiReportAnalysisStep = ({
                                                                             backgroundColor: bg,
                                                                             color: color,
                                                                             border: border,
-                                                                            padding: '2px 8px',
+                                                                            padding: '2px 7px',
                                                                             borderRadius: '4px',
                                                                             flexShrink: 0
                                                                         }}>
@@ -1875,53 +1870,56 @@ const AiReportAnalysisStep = ({
                                                                 })()}
                                                             </div>
 
-                                                            {/* Subtitle/Text: Hypothesis Result Headline */}
-                                                            <p style={{
-                                                                fontSize: '11.5px',
-                                                                color: '#64748b',
-                                                                lineHeight: '1.5',
-                                                                margin: 0,
-                                                                display: '-webkit-box',
-                                                                WebkitLineClamp: 3,
-                                                                WebkitBoxOrient: 'vertical',
-                                                                overflow: 'hidden',
-                                                                textOverflow: 'ellipsis',
-                                                                flex: 1
-                                                            }}>
-                                                                {(() => {
-                                                                    let text = '';
-                                                                    if (typeof hypothesisResult === 'string') {
-                                                                        text = hypothesisResult;
-                                                                    } else if (hypothesisResult) {
-                                                                        if (hypothesisResult.headline) {
-                                                                            text = hypothesisResult.headline;
-                                                                        } else if (Array.isArray(hypothesisResult.details)) {
-                                                                            text = hypothesisResult.details.filter(Boolean).join(' ');
-                                                                        } else if (typeof hypothesisResult.details === 'string') {
-                                                                            text = hypothesisResult.details;
+                                                            {/* Middle Section: Full summary text ('전체 응답자의 ...') */}
+                                                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', margin: '4px 0' }}>
+                                                                <p style={{
+                                                                    fontSize: '11px',
+                                                                    fontWeight: 400,
+                                                                    color: '#64748b',
+                                                                    lineHeight: '1.4',
+                                                                    margin: 0,
+                                                                    display: '-webkit-box',
+                                                                    WebkitLineClamp: 2,
+                                                                    WebkitBoxOrient: 'vertical',
+                                                                    overflow: 'hidden',
+                                                                    textOverflow: 'ellipsis'
+                                                                }}>
+                                                                    {(() => {
+                                                                        let text = '';
+                                                                        if (typeof hypothesisResult === 'string') {
+                                                                            text = hypothesisResult;
+                                                                        } else if (hypothesisResult) {
+                                                                            if (Array.isArray(hypothesisResult.details)) {
+                                                                                text = hypothesisResult.details.filter(Boolean).join(' ');
+                                                                            } else if (typeof hypothesisResult.details === 'string') {
+                                                                                text = hypothesisResult.details;
+                                                                            } else if (hypothesisResult.headline) {
+                                                                                text = hypothesisResult.headline;
+                                                                            }
                                                                         }
-                                                                    }
-                                                                    if (!text || text.trim() === '') {
-                                                                        return '가설 요약이 없습니다.';
-                                                                    }
-                                                                    return text.length > 120 ? text.substring(0, 120).trim() + '...' : text;
-                                                                })()}
-                                                            </p>
+                                                                        if (!text && catItem?.insights?.core_finding?.length > 0) {
+                                                                            const first = catItem.insights.core_finding[0];
+                                                                            text = typeof first === 'string' ? first : first?.finding || first?.text || '';
+                                                                        }
+                                                                        return text || '가설 검증 요약 정보입니다.';
+                                                                    })()}
+                                                                </p>
+                                                            </div>
 
-                                                            {/* Bottom Row: First KPI Impact or fallback spacer */}
+                                                            {/* Bottom Row: First KPI Impact */}
                                                             {(() => {
                                                                 const firstKpi = Array.isArray(hypothesisResult?.kpi_impacts) && hypothesisResult.kpi_impacts[0];
-                                                                if (!firstKpi) return <div style={{ height: '24px' }} />;
+                                                                if (!firstKpi) return null;
                                                                 const isUp = firstKpi.trend === 'UP';
                                                                 const isDown = firstKpi.trend === 'DOWN';
                                                                 return (
-                                                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', borderTop: '1.5px solid #e2e8f0', paddingTop: '10px', marginTop: '4px' }}>
-                                                                        <span style={{ fontSize: '15px', fontWeight: 800, color: '#1e293b' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', borderTop: '1px solid #e2e8f0', paddingTop: '6px', marginTop: 'auto' }}>
+                                                                        <span style={{ fontSize: '14.5px', fontWeight: 800, color: '#0f172a' }}>
                                                                             {firstKpi.value}{firstKpi.unit || '%'}
                                                                         </span>
                                                                         {isUp && <span style={{ color: '#059669', fontWeight: 800, fontSize: '12px' }}>↑</span>}
                                                                         {isDown && <span style={{ color: '#dc2626', fontWeight: 800, fontSize: '12px' }}>↓</span>}
-                                                                        <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
+                                                                        <span style={{ fontSize: '11.5px', color: '#475569', fontWeight: 600 }}>
                                                                             {firstKpi.label}
                                                                         </span>
                                                                     </div>
