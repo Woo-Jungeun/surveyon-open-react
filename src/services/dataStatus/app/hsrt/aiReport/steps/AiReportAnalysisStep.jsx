@@ -1564,7 +1564,7 @@ const AiReportAnalysisStep = ({
                                                             <div className="ai-bullet-title-row">
                                                                 <span className="ai-bullet-num-badge">1</span>
                                                                 <span className="ai-bullet-title-text">정량 집계 요약</span>
-                                                                <span className="ai-panel-help-icon">?</span>
+                                                                <span className="ai-panel-help-icon" title="교차표 수치에 근거한 사실 서술입니다. 해석·추론 문장은 포함하지 않습니다.">?</span>
                                                             </div>
                                                             <p className="ai-bullet-body-content">
                                                                 {renderInsightText(l1Val.fact_summary)}
@@ -1577,7 +1577,7 @@ const AiReportAnalysisStep = ({
                                                             <div className="ai-bullet-title-row">
                                                                 <span className="ai-bullet-num-badge">2</span>
                                                                 <span className="ai-bullet-title-text">세그먼트 특징 요약</span>
-                                                                <span className="ai-panel-help-icon">?</span>
+                                                                <span className="ai-panel-help-icon" title="각 세그먼트별 주요 유의점 및 뚜렷한 특징 차이를 요약한 결과입니다.">?</span>
                                                             </div>
                                                             <p className="ai-bullet-body-content">
                                                                 {renderInsightText(l1Val.segment_insights)}
@@ -1590,7 +1590,7 @@ const AiReportAnalysisStep = ({
                                                             <div className="ai-bullet-title-row">
                                                                 <span className="ai-bullet-num-badge">{l1Val.segment_insights ? '3' : '2'}</span>
                                                                 <span className="ai-bullet-title-text">응답자 특성 요약</span>
-                                                                <span className="ai-panel-help-icon">?</span>
+                                                                <span className="ai-panel-help-icon" title="인구통계 교차축(G1-G2-G3) 기준으로 최대 격차를 보인 집단을 자동 추출한 결과입니다.">?</span>
                                                             </div>
                                                             <div className="ai-insight-result-box">
                                                                 <span className="ai-result-purple-chip">집단 분석 결과</span>
