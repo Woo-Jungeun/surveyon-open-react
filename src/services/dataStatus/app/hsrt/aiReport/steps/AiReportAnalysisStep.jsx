@@ -77,7 +77,8 @@ const AiReportAnalysisStep = ({
 
         const target = findItem?.evidence_target || {};
         const bannerName = target.banner_name || findItem?.banner_name || "";
-        let bannerList = target.banner || findItem?.banner;
+        const bannerColumn = target.banner_column || findItem?.banner_column || "";
+        let bannerList = bannerColumn && [bannerColumn];
         if (!bannerList) {
             bannerList = bannerName ? [bannerName] : (bannerVars && bannerVars.length > 0 ? bannerVars : []);
         } else if (typeof bannerList === 'string') {
@@ -284,7 +285,7 @@ const AiReportAnalysisStep = ({
 
         const bannerName = target.banner_name || item?.banner_name || "";
         const bannerColumn = target.banner_column || item?.banner_column || "";
-        let bannerList = target.banner || item?.banner;
+        let bannerList = bannerColumn && [bannerColumn];
         if (!bannerList) {
             bannerList = bannerName ? [bannerName] : (bannerVars?.[0] ? [bannerVars[0]] : []);
         } else if (typeof bannerList === 'string') {
@@ -1200,18 +1201,18 @@ const AiReportAnalysisStep = ({
                                         </button>
                                     )}
                                     <button
-                                         onClick={(e) => {
-                                             e.stopPropagation();
-                                             triggerPipelineRegenerate('l1');
-                                         }}
-                                         disabled={pipelineStatus.l1.isGenerating}
-                                         title="재생성 시 하위 단계(L2-L3) 결과가 초기화됩니다."
-                                         className="ai-pipe-regen-btn l1"
-                                     >
-                                         <RefreshCw size={11} className={pipelineStatus.l1.isGenerating ? 'animate-spin' : ''} />
-                                         <span>{pipelineStatus.l1.isGenerating ? '분석 중...' : '재생성'}</span>
-                                     </button>
-                                 </div>
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            triggerPipelineRegenerate('l1');
+                                        }}
+                                        disabled={pipelineStatus.l1.isGenerating}
+                                        title="재생성 시 하위 단계(L2-L3) 결과가 초기화됩니다."
+                                        className="ai-pipe-regen-btn l1"
+                                    >
+                                        <RefreshCw size={11} className={pipelineStatus.l1.isGenerating ? 'animate-spin' : ''} />
+                                        <span>{pipelineStatus.l1.isGenerating ? '분석 중...' : '재생성'}</span>
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="ai-pipeline-arrow-in">
