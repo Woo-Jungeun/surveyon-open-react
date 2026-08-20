@@ -155,7 +155,8 @@ const AiDataPage = () => {
                                 errorCategory: item.failureClass || "",
                                 errorDetail: item.failureDetail || "",
                                 logs: parsedLogs,
-                                lastUrl: item.lastUrl || null
+                                lastUrl: item.lastUrl || null,
+                                resumeNeedsFix: item.resumeNeedsFix === true || String(item.resumeNeedsFix).toLowerCase() === 'true'
                             };
                         });
 
@@ -887,19 +888,27 @@ const AiDataPage = () => {
             return;
         }
 
-        const confirmResult = await new Promise(resolve => {
-            modal.showConfirm(
-                "확인",
-                "문항 이동을 완료하셨습니까?",
-                {
-                    btns: [
-                        { title: "취소", click: () => resolve(false) },
-                        { title: "확인", click: () => resolve(true) }
-                    ]
-                }
-            );
+        // 선택한 대상 중 resumeNeedsFix가 하나라도 true인 항목이 있을 때만 문항 이동 확인 모달 표출
+        const needsFixExist = targetPids.some(pid => {
+            const resp = respondents.find(r => String(r.id) === String(pid));
+            return resp && (resp.resumeNeedsFix === true || String(resp.resumeNeedsFix).toLowerCase() === 'true' || resp.resumeNeedsFix === 'Y');
         });
-        if (!confirmResult) return;
+
+        if (needsFixExist) {
+            const confirmResult = await new Promise(resolve => {
+                modal.showConfirm(
+                    "확인",
+                    "문항 이동을 완료하셨습니까?",
+                    {
+                        btns: [
+                            { title: "취소", click: () => resolve(false) },
+                            { title: "확인", click: () => resolve(true) }
+                        ]
+                    }
+                );
+            });
+            if (!confirmResult) return;
+        }
 
         try {
             setIsSimulating(true);
