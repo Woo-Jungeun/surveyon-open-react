@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Check, ArrowRight, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet, ChevronsUpDown, ChevronsDownUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Presentation, FileText, Target, BarChart2, CheckCircle2, Users, ExternalLink, Download, BarChartHorizontal, Layers, Percent, LineChart, PieChart, Aperture, MoreHorizontal, AreaChart, LayoutGrid, Cloud, Settings, LayoutList } from 'lucide-react';
+import { Check, ArrowRight, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet, ChevronsUpDown, ChevronsDownUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Presentation, FileText, Target, BarChart2, CheckCircle2, Users, ExternalLink, Download, BarChartHorizontal, Layers, Percent, LineChart, PieChart, Aperture, MoreHorizontal, AreaChart, LayoutGrid, Cloud, Settings, LayoutList, Zap } from 'lucide-react';
 import { DpRequestPageApi } from '../../dpRequest/DpRequestPageApi';
 import { AiReportPageApi } from '../AiReportPageApi';
 import KendoChart from '@/services/dataStatus/components/KendoChart';
@@ -58,6 +58,7 @@ const AiReportAnalysisStep = ({
     expandedL1Cards,
     setExpandedL1Cards,
     missingVariables = [],
+    l1CountInfo = {},
     onExportL1Excel,
     onExportL3File,
     categories,
@@ -333,6 +334,15 @@ const AiReportAnalysisStep = ({
     };
 
     const l2Categories = insightData.l2 || [];
+    const cachedDisplayCount = typeof l1CountInfo?.cachedCount === 'number'
+        ? l1CountInfo.cachedCount
+        : Object.keys(insightData.l1 || {}).length;
+    const totalDisplayCount = typeof l1CountInfo?.totalCount === 'number'
+        ? l1CountInfo.totalCount
+        : questions.length;
+    const unsummarizedCount = (Array.isArray(missingVariables) && missingVariables.length > 0)
+        ? missingVariables.length
+        : Math.max(0, totalDisplayCount - cachedDisplayCount);
 
     const allEvidenceItems = useMemo(() => {
         const items = [];
@@ -1143,7 +1153,7 @@ const AiReportAnalysisStep = ({
                                         <span className={`ai-pipe-status-text ${pipelineStatus.l1.isDone ? 'done' : pipelineStatus.l1.isGenerating ? 'generating' : 'waiting'}`}>
                                             {pipelineStatus.l1.isDone ? (
                                                 <>
-                                                    생성 완료 <span className="ai-pipe-count-pill">{pipelineStatus.l1.countText}</span>
+                                                    생성 완료 <span className="ai-pipe-count-pill">{cachedDisplayCount} / {totalDisplayCount}개 문항</span>
                                                 </>
                                             ) : pipelineStatus.l1.isGenerating ? (
                                                 '분석 중...'
@@ -1158,6 +1168,35 @@ const AiReportAnalysisStep = ({
                                         <div className="ai-pipe-progress-fill l1" style={{ width: `${pipelineStatus.l1.progress}%` }}></div>
                                     </div>
                                     <span className="ai-pipe-percent-label">{pipelineStatus.l1.progress}%</span>
+                                    {unsummarizedCount > 0 && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                triggerPipelineRegenerate('l1_missing');
+                                            }}
+                                            disabled={pipelineStatus.l1.isGenerating}
+                                            title={`아직 요약되지 않은 ${unsummarizedCount}개 문항의 L1 AI 요약을 일괄 생성합니다.`}
+                                            style={{
+                                                background: pipelineStatus.l1.isGenerating ? '#f1f5f9' : '#2563eb',
+                                                color: pipelineStatus.l1.isGenerating ? '#94a3b8' : '#ffffff',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                padding: '2px 8px',
+                                                fontSize: '11px',
+                                                fontWeight: 700,
+                                                cursor: pipelineStatus.l1.isGenerating ? 'not-allowed' : 'pointer',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '3px',
+                                                boxShadow: pipelineStatus.l1.isGenerating ? 'none' : '0 1.5px 4px rgba(37, 99, 235, 0.25)',
+                                                transition: 'all 0.15s ease',
+                                                whiteSpace: 'nowrap'
+                                            }}
+                                        >
+                                            <Zap size={11} />
+                                            <span>미요약 {unsummarizedCount}개 생성</span>
+                                        </button>
+                                    )}
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -1223,7 +1262,7 @@ const AiReportAnalysisStep = ({
                                     <div className="ai-pipe-progress-bar" style={{ flex: 1 }}>
                                         <div className="ai-pipe-progress-fill l2" style={{ width: `${pipelineStatus.l2.progress}%` }}></div>
                                     </div>
-                                    <span className="ai-pipe-percent-label l2">{pipelineStatus.l2.progress}%</span>
+                                    <span className="ai-pipe-percent-label">{pipelineStatus.l2.progress}%</span>
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -1233,8 +1272,8 @@ const AiReportAnalysisStep = ({
                                         title="재생성 시 하위 단계(L3) 결과가 초기화됩니다."
                                         style={{
                                             background: pipelineStatus.l2.isGenerating ? '#f1f5f9' : '#ffffff',
-                                            color: pipelineStatus.l2.isGenerating ? '#94a3b8' : '#7c3aed',
-                                            border: '1px solid #ddd6fe',
+                                            color: pipelineStatus.l2.isGenerating ? '#94a3b8' : '#2563eb',
+                                            border: '1px solid #bfdbfe',
                                             borderRadius: '6px',
                                             padding: '2px 8px',
                                             fontSize: '11px',
@@ -1261,7 +1300,7 @@ const AiReportAnalysisStep = ({
                             <div
                                 className={`ai-pipeline-card l3 ${activeSubTab === 'l3' ? 'active' : ''}`}
                                 onClick={() => setActiveSubTab('l3')}
-                                title="클릭하여 L3 종합 요약 보고서 보기"
+                                title="클릭하여 L3 종합 요약 보고서 결과 보기"
                             >
                                 {activeSubTab === 'l3' && <div className="ai-pipe-bottom-pointer l3" />}
                                 <div className="ai-pipe-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
@@ -1289,17 +1328,18 @@ const AiReportAnalysisStep = ({
                                     <div className="ai-pipe-progress-bar" style={{ flex: 1 }}>
                                         <div className="ai-pipe-progress-fill l3" style={{ width: `${pipelineStatus.l3.progress}%` }}></div>
                                     </div>
-                                    <span className="ai-pipe-percent-label l3">{pipelineStatus.l3.progress}%</span>
+                                    <span className="ai-pipe-percent-label">{pipelineStatus.l3.progress}%</span>
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             triggerPipelineRegenerate('l3');
                                         }}
                                         disabled={pipelineStatus.l3.isGenerating}
+                                        title="종합 요약 보고서를 다시 생성합니다."
                                         style={{
                                             background: pipelineStatus.l3.isGenerating ? '#f1f5f9' : '#ffffff',
-                                            color: pipelineStatus.l3.isGenerating ? '#94a3b8' : '#059669',
-                                            border: '1px solid #a7f3d0',
+                                            color: pipelineStatus.l3.isGenerating ? '#94a3b8' : '#2563eb',
+                                            border: '1px solid #bfdbfe',
                                             borderRadius: '6px',
                                             padding: '2px 8px',
                                             fontSize: '11px',
@@ -1457,7 +1497,33 @@ const AiReportAnalysisStep = ({
                     <div className="ai-detail-tabs-row" style={{ flexShrink: 0 }}>
                         <div className="ai-detail-actions" style={{ width: '100%', justifyContent: 'space-between' }}>
                             {activeSubTab === 'l1' ? (
-                                <span className="ai-detail-status-count">요약 완료 <strong>{Object.keys(insightData.l1 || {}).length} / {questions.length} 문항</strong></span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span className="ai-detail-status-count">요약 완료 <strong>{cachedDisplayCount} / {totalDisplayCount} 문항</strong></span>
+                                    {unsummarizedCount > 0 && (
+                                        <button
+                                            onClick={() => triggerPipelineRegenerate('l1_missing')}
+                                            disabled={pipelineStatus.l1.isGenerating}
+                                            style={{
+                                                background: pipelineStatus.l1.isGenerating ? '#f1f5f9' : '#eff6ff',
+                                                color: pipelineStatus.l1.isGenerating ? '#94a3b8' : '#2563eb',
+                                                border: '1px solid #bfdbfe',
+                                                borderRadius: '6px',
+                                                padding: '2px 8px',
+                                                fontSize: '11px',
+                                                fontWeight: 700,
+                                                cursor: pipelineStatus.l1.isGenerating ? 'not-allowed' : 'pointer',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                transition: 'all 0.15s ease'
+                                            }}
+                                            title={`누락된 ${unsummarizedCount}개 문항의 L1 요약을 일괄 생성합니다.`}
+                                        >
+                                            <Zap size={11} color="#2563eb" />
+                                            <span>L1 미요약 문항 일괄 생성 ({unsummarizedCount}개)</span>
+                                        </button>
+                                    )}
+                                </div>
                             ) : activeSubTab === 'l2' ? (
                                 <span className="ai-detail-status-count">조사내용 <strong>{insightData.l2?.length || 0}개</strong> 카테고리 분석 완료</span>
                             ) : (

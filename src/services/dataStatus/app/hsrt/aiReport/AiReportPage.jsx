@@ -119,6 +119,7 @@ const AiReportPage = () => {
     const [isAiCategorized, setIsAiCategorized] = useState(false);
     const [selectedCategoryId, setSelectedCategoryId] = useState(null);
     const [missingVariables, setMissingVariables] = useState([]);
+    const [l1CountInfo, setL1CountInfo] = useState({ cachedCount: null, totalCount: null });
     const [bannerVars, setBannerVars] = useState([]);
 
     // Fallback Mock data definitions
@@ -315,6 +316,12 @@ const AiReportPage = () => {
             if (String(l1StatusRes?.success) === '777' && l1StatusRes?.resultjson) {
                 const l1Payload = l1StatusRes.resultjson;
                 setMissingVariables(l1Payload.missingVariables || []);
+                if (typeof l1Payload.cachedCount === 'number' && typeof l1Payload.totalCount === 'number') {
+                    setL1CountInfo({
+                        cachedCount: l1Payload.cachedCount,
+                        totalCount: l1Payload.totalCount
+                    });
+                }
                 if (l1Payload.l1Insights) {
                     setInsightData(prev => ({
                         ...prev,
@@ -691,7 +698,17 @@ const AiReportPage = () => {
             }
 
             const bannerVarList = bannerVars.length > 0 ? bannerVars : ["banner_001"];
-            const variablesPayload = Object.keys(recodedVars).map(key => {
+            let targetKeys = Object.keys(recodedVars);
+            if (level === 'l1_missing') {
+                if (Array.isArray(missingVariables) && missingVariables.length > 0) {
+                    targetKeys = missingVariables;
+                } else {
+                    const l1Keys = insightData.l1 || {};
+                    targetKeys = Object.keys(recodedVars).filter(k => !l1Keys[k]);
+                }
+            }
+
+            const variablesPayload = targetKeys.map(key => {
                 const item = recodedVars[key];
                 let bannerVal = bannerVarList;
                 if (item && item.banner) {
@@ -740,6 +757,13 @@ const AiReportPage = () => {
                                 const prog = pollData.progress ?? 0;
                                 const isRunning = pollData.running ?? false;
 
+                                if (typeof pollData.cachedCount === 'number' && typeof pollData.totalCount === 'number') {
+                                    setL1CountInfo({
+                                        cachedCount: pollData.cachedCount,
+                                        totalCount: pollData.totalCount
+                                    });
+                                }
+
                                 setPipelineStatus(prev => ({
                                     ...prev,
                                     l1: {
@@ -755,7 +779,7 @@ const AiReportPage = () => {
                                         ...prev,
                                         l1: { ...prev.l1, isGenerating: false, isDone: true, progress: 100 }
                                     }));
-                                    modal.showAlert("알림", "문항별 인사이트 재생성이 완료되었습니다.");
+                                    modal.showAlert("알림", "L1 미요약 문항 일괄 생성이 완료되었습니다.");
                                     await loadSummaryData();
                                     await fetchL1StatusData();
                                 }
@@ -780,7 +804,7 @@ const AiReportPage = () => {
                         ...prev,
                         l1: { ...prev.l1, isGenerating: false }
                     }));
-                    modal.showAlert("오류", res?.message || "문항별 인사이트 재생성 작업 시작에 실패하였습니다.");
+                    modal.showAlert("오류", res?.message || "문항별 인사이트 미요약 생성 작업 시작에 실패하였습니다.");
                 }
             } catch (err) {
                 console.error("Failed to trigger L1 recreate:", err);
@@ -788,7 +812,7 @@ const AiReportPage = () => {
                     ...prev,
                     l1: { ...prev.l1, isGenerating: false }
                 }));
-                modal.showAlert("오류", "서버 통신 실패로 인사이트 재생성을 실행하지 못했습니다.");
+                modal.showAlert("오류", "서버 통신 실패로 인사이트 생성을 실행하지 못했습니다.");
             }
         } else if (level === 'l2') {
             const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
@@ -907,6 +931,7 @@ const AiReportPage = () => {
     const triggerPipelineRegenerate = (level) => {
         const levelNames = {
             l1: 'L1 문항별 인사이트',
+            l1_missing: 'L1 미요약 문항 일괄 생성',
             l2: 'L2 조사내용별 분석',
             l3: 'L3 종합 요약 보고서'
         };
@@ -1389,6 +1414,7 @@ const AiReportPage = () => {
                         expandedL1Cards={expandedL1Cards}
                         setExpandedL1Cards={setExpandedL1Cards}
                         missingVariables={missingVariables}
+                        l1CountInfo={l1CountInfo}
                         onExportL1Excel={handleExportL1Excel}
                         onExportL3File={handleExportL3File}
                         categories={categories}
