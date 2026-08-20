@@ -1749,13 +1749,22 @@ const AiReportAnalysisStep = ({
                                             flexDirection: 'column',
                                             flex: 1,
                                             minHeight: 0,
-                                            overflowY: activeCategoryIndex === -1 ? 'hidden' : 'auto',
-                                            paddingRight: activeCategoryIndex === -1 ? '0' : '6px'
+                                            overflowY: (activeCategoryIndex === -1 && l2Categories.length <= 9) ? 'hidden' : 'auto',
+                                            paddingRight: (activeCategoryIndex === -1 && l2Categories.length <= 9) ? '0' : '6px'
                                         }}
                                     >
                                         {activeCategoryIndex === -1 ? (
-                                            /* 전체보기 탭일 때는 3개 행 3열 격자로 스크롤 없이 100% 꽉 차게 렌더링 */
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(3, 1fr)', gap: '10px', height: '100%', boxSizing: 'border-box' }}>
+                                            /* 전체보기 탭: 9개 이하일 때는 3x3 높이 100% 스크롤 없음, 10개 이상일 때는 세로 스크롤 허용 */
+                                            <div style={{
+                                                display: 'grid',
+                                                gridTemplateColumns: 'repeat(3, 1fr)',
+                                                gridTemplateRows: l2Categories.length <= 9 ? 'repeat(3, 1fr)' : 'none',
+                                                gridAutoRows: l2Categories.length > 9 ? 'minmax(145px, auto)' : 'none',
+                                                gap: '10px',
+                                                height: l2Categories.length <= 9 ? '100%' : 'auto',
+                                                paddingBottom: l2Categories.length > 9 ? '16px' : '0',
+                                                boxSizing: 'border-box'
+                                            }}>
                                                 {l2Categories.map((catItem, idx) => {
                                                     const insights = catItem?.insights || {};
                                                     const hypothesisResult = insights.hypothesis_result || {};
