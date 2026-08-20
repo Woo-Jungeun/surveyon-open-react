@@ -1435,21 +1435,6 @@ const AiReportPage = () => {
 
                 {/* 우측 컨트롤 영역 */}
                 <div className="ai-header-controls">
-                    {currentStep === 2 && pipelineStatus.l3.isDone && (
-                        <button
-                            className="data-header-btn"
-                            style={{
-                                borderColor: '#fca5a5',
-                                color: '#ef4444',
-                                background: '#fff'
-                            }}
-                            onClick={handleReset}
-                        >
-                            <RotateCcw size={14} />
-                            <span>분석 초기화</span>
-                        </button>
-                    )}
-
                     <div className="ai-model-select-group">
                         <span className="ai-model-label">분석 LLM 모델</span>
                         <div className="ai-dropdown-wrapper">
@@ -1464,12 +1449,21 @@ const AiReportPage = () => {
                         </div>
                     </div>
 
-                    {currentStep !== 1 && (
+                    {currentStep === 0 && (
                         <button className="data-header-btn data-header-btn-primary" onClick={handleSave}>
                             <Save size={16} />
                             <span>저장</span>
                         </button>
                     )}
+
+                    {/* 최종분석탭 (currentStep === 2) 저장 버튼 주석 처리
+                    {currentStep === 2 && (
+                        <button className="data-header-btn data-header-btn-primary" onClick={handleSave}>
+                            <Save size={16} />
+                            <span>저장</span>
+                        </button>
+                    )}
+                    */}
                 </div>
             </DataHeader>
 
