@@ -145,6 +145,7 @@ const AdditionalAnalysisPage = () => {
     const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
     const [collapsedIndices, setCollapsedIndices] = useState(new Set());
     const [toast, setToast] = useState({ show: false, message: '' });
+    const [contextUiSettings, setContextUiSettings] = useState({});
     const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
     const [isDisplaySettingsOpen, setIsDisplaySettingsOpen] = useState(false);
     const displaySettingsRef = useRef(null);
@@ -743,10 +744,9 @@ const AdditionalAnalysisPage = () => {
                     sig_diff_min: displayPolicy?.sig_diff_min ?? 5,
                     sig_diff_max: displayPolicy?.sig_diff_max ?? 100
                 },
-                ui_settings: {
-                    theme_base_bg: "#F3F4F6",
-                    theme_base_fg: "#111827"
-                }
+                ui_settings: (contextUiSettings && Object.keys(contextUiSettings).length > 0)
+                    ? contextUiSettings
+                    : (renderSettings || {})
             };
 
             let result;
@@ -839,6 +839,9 @@ const AdditionalAnalysisPage = () => {
                 });
 
                 const ctxPayload = contextRes?.resultjson || contextRes || {};
+                if (ctxPayload.ui_settings && typeof ctxPayload.ui_settings === 'object') {
+                    setContextUiSettings(ctxPayload.ui_settings);
+                }
 
                 baseVariableIdsRef.current.clear();
                 const baseParsed = [];
