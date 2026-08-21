@@ -874,7 +874,7 @@ export const ResultSectionBlock = ({
                                                 <span className="section-title">표</span>
                                             </div>
                                             <div className="section-actions">
-                                                <div className="display-mode-select">
+                                                {/* <div className="display-mode-select">
                                                     <div className="custom-filter-wrapper" ref={displayMenuRef} style={{ position: 'relative' }}>
                                                         <div className="custom-filter-trigger" onClick={() => setIsDisplayMenuOpen(!isDisplayMenuOpen)} style={{ width: '96px', height: '32px' }}>
                                                             <span className="trigger-text">{displayMode === 'all' ? '전체' : displayMode === 'value' ? '사례수' : '퍼센트'}</span>
@@ -894,7 +894,7 @@ export const ResultSectionBlock = ({
                                                              </div>
                                                          )}
                                                     </div>
-                                                </div>
+                                                </div> */}
                                                 <button onClick={() => handleCopyTable(resultData, hasColLabel2, hasColLabel3, hasRowLabel2)} className="action-btn">
                                                     <Copy size={16} />
                                                     <span>표 복사</span>

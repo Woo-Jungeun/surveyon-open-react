@@ -2322,8 +2322,8 @@ const AdditionalAnalysisPage = () => {
                                     표시 설정
                                 </div>
 
-                                {/* 가중치 설정 */}
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                                {/* 가중치 설정 (주석 처리) */}
+                                {/* <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                                     <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>가중치 설정</span>
                                     <div style={{ position: 'relative', width: '180px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
                                         <DropDownList
@@ -2341,7 +2341,7 @@ const AdditionalAnalysisPage = () => {
                                         />
                                         <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
                                     </div>
-                                </div>
+                                </div> */}
 
                                 {/* 차이검증 */}
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
