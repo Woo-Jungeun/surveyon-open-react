@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { X, Trash2, Plus } from 'lucide-react';
+import { X, Trash2, Plus, Sparkles, Play } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { modalContext } from "@/components/common/Modal.jsx";
 import '@/components/common/popup/ConditionBuilderPopup.css';
@@ -51,7 +51,7 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
             const res = await autoGenerateLogic.mutateAsync({
                 pageId: pageId || '',
                 userInput: promptText.trim(),
-                modelKey: modelKey,
+                modelKey: modelKey || models[0]?.value || '',
                 user: user || ''
             });
 
@@ -146,22 +146,8 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
                             />
                         </div>
 
-                        {/* 모델 및 실행 버튼 */}
-                        <div style={{ width: '240px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#1e293b' }}>분석 LLM모델</label>
-                            <DropDownList
-                                data={models}
-                                textField="text"
-                                dataItemKey="value"
-                                value={
-                                    models.find(m => m.value === modelKey) || models[0] || null
-                                }
-                                onChange={(e) => setModelKey(e.value.value)}
-                                style={{
-                                    width: '100%', height: '36px', fontSize: '13px', borderRadius: '4px'
-                                }}
-                            />
-
+                        {/* 실행 버튼 */}
+                        <div style={{ width: '100px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                             <button
                                 onClick={handleExecute}
                                 disabled={isGenerating}
@@ -169,7 +155,7 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
                                     width: '100%', height: '36px', border: 'none', borderRadius: '4px',
                                     background: '#2563eb', color: '#ffffff', fontSize: '13px', fontWeight: 600,
                                     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    gap: '6px', transition: 'background 0.15s', marginTop: '12px'
+                                    gap: '6px', transition: 'background 0.15s', marginTop: '19px'
                                 }}
                                 onMouseOver={(e) => { if (!isGenerating) e.currentTarget.style.background = '#1d4ed8'; }}
                                 onMouseOut={(e) => { if (!isGenerating) e.currentTarget.style.background = '#2563eb'; }}
