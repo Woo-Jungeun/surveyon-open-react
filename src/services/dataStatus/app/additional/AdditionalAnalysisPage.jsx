@@ -23,7 +23,8 @@ const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 const CROSS_FILTER_ALL_ID = '__ALL__';
 const SIG_TYPE_OPTIONS = [
     { text: '미적용', value: 'none' },
-    { text: '차이검증 (t-test)', value: 't_test' },
+    { text: '차이검증 (z-test)', value: 'z-test' },
+    { text: '차이검증 (t-test)', value: 't-test' },
     { text: '전체값 대비 (편차)', value: 'deviation' }
 ];
 
@@ -252,6 +253,17 @@ const AdditionalAnalysisPage = () => {
     const [localDecimalN, setLocalDecimalN] = useState(0);
     const [localDecimalPct, setLocalDecimalPct] = useState(1);
 
+    // 차이검증 세부 설정 상태
+    const [localSigExcludeUnderN, setLocalSigExcludeUnderN] = useState(3);
+    const [localSigExcludeEtc, setLocalSigExcludeEtc] = useState(true);
+    const [localSigLevel, setLocalSigLevel] = useState(95);
+    const [localSigDiffMin, setLocalSigDiffMin] = useState(5);
+    const [localSigDiffMax, setLocalSigDiffMax] = useState(100);
+    const [isSigPopupOpen, setIsSigPopupOpen] = useState(false);
+    const [animateSettingsTrigger, setAnimateSettingsTrigger] = useState(0);
+    const sigAnchorRef = useRef(null);
+    const sigPopupRef = useRef(null);
+
     const { pageList: getPageList } = VariablePageApi();
     const [isPageListOpen, setIsPageListOpen] = useState(false);
     const [pageListData, setPageListData] = useState([]);
@@ -266,6 +278,13 @@ const AdditionalAnalysisPage = () => {
             setLocalShowPct(displayPolicy?.show_percent !== false);
             setLocalDecimalN(displayPolicy?.n_digits ?? 0);
             setLocalDecimalPct(displayPolicy?.percent_digits ?? 1);
+
+            setLocalSigExcludeUnderN(displayPolicy?.sig_exclude_under_n ?? 3);
+            setLocalSigExcludeEtc(displayPolicy?.sig_exclude_etc !== false);
+            setLocalSigLevel(displayPolicy?.sig_level ?? 95);
+            setLocalSigDiffMin(displayPolicy?.sig_diff_min ?? 5);
+            setLocalSigDiffMax(displayPolicy?.sig_diff_max ?? 100);
+            setIsSigPopupOpen(false);
         }
     }, [isDisplaySettingsOpen, selectedWeight, displayPolicy]);
 
@@ -275,6 +294,7 @@ const AdditionalAnalysisPage = () => {
 
     const handleApplyDisplaySettings = async () => {
         setIsDisplaySettingsOpen(false);
+        setIsSigPopupOpen(false);
         const targetWeight = localWeight;
         const targetSigType = localSigType;
         const targetShowN = localShowN;
@@ -284,6 +304,12 @@ const AdditionalAnalysisPage = () => {
 
         setSelectedWeight(targetWeight);
 
+        const sigDiffFinMode = (targetSigType === 't-test' || targetSigType === 't_test')
+            ? 't-test'
+            : ((targetSigType === 'z-test' || targetSigType === 'z_test')
+                ? 'z-test'
+                : (targetSigType === 'deviation' ? 'deviation' : 'none'));
+
         const nextPolicy = {
             ...displayPolicy,
             show_n: targetShowN,
@@ -291,6 +317,13 @@ const AdditionalAnalysisPage = () => {
             n_digits: targetDecimalN,
             percent_digits: targetDecimalPct,
             sig_type: targetSigType,
+            sig_diff_fin_mode: sigDiffFinMode,
+            sig_diff_test_mode: targetSigType === 'deviation',
+            sig_exclude_under_n: localSigExcludeUnderN !== '' ? Number(localSigExcludeUnderN) : 3,
+            sig_exclude_etc: Boolean(localSigExcludeEtc),
+            sig_level: localSigLevel !== '' ? Number(localSigLevel) : 95,
+            sig_diff_min: localSigDiffMin !== '' ? Number(localSigDiffMin) : 5,
+            sig_diff_max: localSigDiffMax !== '' ? Number(localSigDiffMax) : 100,
             weight_col: targetWeight === '없음' ? '' : targetWeight
         };
         setDisplayPolicy(nextPolicy);
@@ -554,21 +587,47 @@ const AdditionalAnalysisPage = () => {
 
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (displaySettingsRef.current && !displaySettingsRef.current.contains(event.target)) {
-                setIsDisplaySettingsOpen(false);
+            const target = event.target;
+            const isKendoClick = target.closest && (
+                target.closest('.k-animation-container') ||
+                target.closest('.k-popup') ||
+                target.closest('.k-list-container') ||
+                target.closest('.custom-xinfo-dropdown')
+            );
+
+            if (isDisplaySettingsOpen && displaySettingsRef.current && !displaySettingsRef.current.contains(target)) {
+                if (sigPopupRef.current && sigPopupRef.current.contains(target)) {
+                    // Inside sig popup, don't close display settings
+                } else if (!isKendoClick) {
+                    setIsDisplaySettingsOpen(false);
+                    setIsSigPopupOpen(false);
+                }
             }
+
+            if (isSigPopupOpen &&
+                sigAnchorRef.current &&
+                !sigAnchorRef.current.contains(target) &&
+                sigPopupRef.current &&
+                !sigPopupRef.current.contains(target)) {
+                if (!isKendoClick) {
+                    setIsSigPopupOpen(false);
+                }
+            }
+
             if (isFilterOpen &&
                 filterAnchorRef.current &&
-                !filterAnchorRef.current.contains(event.target) &&
+                !filterAnchorRef.current.contains(target) &&
                 filterPopupRef.current &&
-                !filterPopupRef.current.contains(event.target)) {
-                setDraftComputedFilterIds(selectedComputedFilterIds);
-                setIsFilterOpen(false);
+                !filterPopupRef.current.contains(target)) {
+                if (!isKendoClick) {
+                    setDraftComputedFilterIds(selectedComputedFilterIds);
+                    setIsFilterOpen(false);
+                }
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isFilterOpen, selectedComputedFilterIds]);
+    }, [isDisplaySettingsOpen, isSigPopupOpen, isFilterOpen, selectedComputedFilterIds]);
 
     const handleExcelExport = async () => {
         if (!auth?.user?.userId) {
@@ -642,7 +701,7 @@ const AdditionalAnalysisPage = () => {
             const currentSigType = displayPolicy?.sig_type || 'none';
             const sigTypeVal = currentSigType !== 'none' ? currentSigType : null;
             const includeStatsList = (sigTypeVal && sigTypeVal !== 'none')
-                ? [sigTypeVal === 't_test' ? 't-test' : sigTypeVal]
+                ? [sigTypeVal === 't_test' ? 't-test' : (sigTypeVal === 'z_test' ? 'z-test' : sigTypeVal)]
                 : [];
 
             const requestData = {
@@ -2305,7 +2364,8 @@ const AdditionalAnalysisPage = () => {
                             <div style={{
                                 position: 'absolute',
                                 top: 'calc(100% + 6px)',
-                                right: 0,
+                                left: '50%',
+                                transform: 'translateX(-50%)',
                                 width: '300px',
                                 background: '#ffffff',
                                 borderRadius: '12px',
@@ -2345,24 +2405,290 @@ const AdditionalAnalysisPage = () => {
 
                                 {/* 차이검증 */}
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>차이검증</span>
-                                    <div style={{ position: 'relative', width: '180px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
-                                        <DropDownList
-                                            data={SIG_TYPE_OPTIONS}
-                                            textField="text"
-                                            dataItemKey="value"
-                                            value={SIG_TYPE_OPTIONS.find(o => o.value === localSigType) || SIG_TYPE_OPTIONS[0]}
-                                            onChange={(e) => {
-                                                const nextVal = (typeof e.value === 'object' && e.value !== null) ? e.value.value : e.value;
-                                                setLocalSigType(nextVal);
-                                            }}
-                                            style={{ width: '100%', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
-                                            className="custom-xinfo-dropdown"
-                                            popupSettings={{ className: "custom-xinfo-dropdown" }}
-                                        />
-                                        <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
+                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap', flexShrink: 0 }}>차이검증</span>
+                                    <div ref={sigAnchorRef} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{ position: 'relative', width: localSigType !== 'none' ? '140px' : '180px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center', transition: 'width 0.2s ease' }}>
+                                            <DropDownList
+                                                data={SIG_TYPE_OPTIONS}
+                                                textField="text"
+                                                dataItemKey="value"
+                                                value={SIG_TYPE_OPTIONS.find(o => o.value === localSigType) || SIG_TYPE_OPTIONS[0]}
+                                                onOpen={() => setIsSigPopupOpen(false)}
+                                                onChange={(e) => {
+                                                    const nextVal = (typeof e.value === 'object' && e.value !== null) ? e.value.value : e.value;
+                                                    const prevVal = localSigType;
+                                                    setLocalSigType(nextVal);
+
+                                                    if (nextVal !== 'none') {
+                                                        setIsSigPopupOpen(true);
+                                                    } else {
+                                                        setIsSigPopupOpen(false);
+                                                    }
+
+                                                    if (nextVal !== 'none' && nextVal !== prevVal) {
+                                                        setAnimateSettingsTrigger(prev => prev + 1);
+                                                    }
+
+                                                    let nextExcludeN = localSigExcludeUnderN;
+                                                    let nextExcludeEtc = localSigExcludeEtc;
+                                                    let nextLevel = localSigLevel;
+                                                    let nextDiffMin = localSigDiffMin;
+                                                    let nextDiffMax = localSigDiffMax;
+
+                                                    if (nextVal === 'z_test' || nextVal === 'z-test' || nextVal === 't_test' || nextVal === 't-test') {
+                                                        nextExcludeN = 20;
+                                                        nextExcludeEtc = true;
+                                                        nextLevel = 95;
+                                                    } else if (nextVal === 'deviation') {
+                                                        nextExcludeN = 30;
+                                                        nextExcludeEtc = false;
+                                                        nextDiffMin = 5;
+                                                        nextDiffMax = 100;
+                                                    } else if (nextVal === 'none') {
+                                                        nextExcludeN = 3;
+                                                        nextExcludeEtc = true;
+                                                        nextLevel = 95;
+                                                        nextDiffMin = 10;
+                                                        nextDiffMax = 60;
+                                                    }
+
+                                                    setLocalSigExcludeUnderN(nextExcludeN);
+                                                    setLocalSigExcludeEtc(nextExcludeEtc);
+                                                    setLocalSigLevel(nextLevel);
+                                                    setLocalSigDiffMin(nextDiffMin);
+                                                    setLocalSigDiffMax(nextDiffMax);
+                                                }}
+                                                style={{ width: '100%', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
+                                                className="custom-xinfo-dropdown"
+                                                popupSettings={{ className: "custom-xinfo-dropdown" }}
+                                            />
+                                            <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
+                                        </div>
+                                        {localSigType !== 'none' && (
+                                            <button
+                                                key={animateSettingsTrigger}
+                                                onClick={() => {
+                                                    setAnimateSettingsTrigger(prev => prev + 1);
+                                                    setIsSigPopupOpen(!isSigPopupOpen);
+                                                }}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    width: '32px',
+                                                    height: '32px',
+                                                    border: '1px solid #cbd5e1',
+                                                    borderRadius: '6px',
+                                                    background: isSigPopupOpen ? '#eff6ff' : '#ffffff',
+                                                    color: isSigPopupOpen ? '#2563eb' : '#64748b',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s',
+                                                }}
+                                                title="차이검증 세부 설정"
+                                            >
+                                                <Settings size={16} />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
+
+                                {/* 차이검증 세부 설정 영역 (표시 설정 모달 내부 확장 카드) */}
+                                {isSigPopupOpen && localSigType !== 'none' && (
+                                    <div style={{
+                                        marginTop: '4px',
+                                        padding: '12px 14px',
+                                        background: '#f8fafc',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '8px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '10px'
+                                    }}>
+                                        {/* 공통 필터링 설정 */}
+                                        <div>
+                                            <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                                                공통 필터링 설정
+                                            </div>
+
+                                            {/* N수 미만 제외 */}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>N수 미만 제외</span>
+                                                <div style={{ width: '60px', height: '28px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <input
+                                                        type="text"
+                                                        value={localSigExcludeUnderN}
+                                                        onChange={(e) => {
+                                                            let val = e.target.value.replace(/[^0-9]/g, '');
+                                                            setLocalSigExcludeUnderN(val !== '' ? parseInt(val) : '');
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'ArrowUp') {
+                                                                e.preventDefault();
+                                                                setLocalSigExcludeUnderN(prev => (prev === '' ? 3 : Number(prev)) + 1);
+                                                            } else if (e.key === 'ArrowDown') {
+                                                                e.preventDefault();
+                                                                setLocalSigExcludeUnderN(prev => Math.max(0, (prev === '' ? 3 : Number(prev)) - 1));
+                                                            }
+                                                        }}
+                                                        onBlur={() => {
+                                                            if (localSigExcludeUnderN === '') setLocalSigExcludeUnderN(3);
+                                                        }}
+                                                        style={{ width: '100%', height: '100%', border: 'none', background: 'transparent', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#1e293b', outline: 'none', padding: 0 }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* 기타/모름/무응답 제외 */}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>기타/모름/무응답 제외</span>
+                                                <div
+                                                    onClick={() => setLocalSigExcludeEtc(!localSigExcludeEtc)}
+                                                    style={{
+                                                        position: 'relative',
+                                                        width: '38px', height: '20px',
+                                                        borderRadius: '10px',
+                                                        background: localSigExcludeEtc ? '#3b82f6' : '#cbd5e1',
+                                                        cursor: 'pointer',
+                                                        transition: 'background-color 0.2s ease',
+                                                        userSelect: 'none'
+                                                    }}
+                                                >
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: '2px',
+                                                        left: localSigExcludeEtc ? '19px' : '2px',
+                                                        width: '16px', height: '16px',
+                                                        borderRadius: '50%',
+                                                        background: '#ffffff',
+                                                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                                                        transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                                                    }} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* 구분선 */}
+                                        <div style={{ height: '1px', background: '#e2e8f0' }} />
+
+                                        {/* z-test / t-test 설정 */}
+                                        {(localSigType === 't-test' || localSigType === 't_test' || localSigType === 'z-test' || localSigType === 'z_test') && (
+                                            <div>
+                                                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                                                    차이검증 ({(localSigType === 'z-test' || localSigType === 'z_test') ? 'Z-TEST' : 'T-TEST'}) 설정
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>신뢰도 (%)</span>
+                                                    <div style={{ width: '60px', height: '28px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        <input
+                                                            type="text"
+                                                            value={localSigLevel}
+                                                            onChange={(e) => {
+                                                                let val = e.target.value.replace(/[^0-9]/g, '');
+                                                                if (val !== '') {
+                                                                    let num = parseInt(val);
+                                                                    if (num > 100) num = 100;
+                                                                    setLocalSigLevel(num);
+                                                                } else {
+                                                                    setLocalSigLevel('');
+                                                                }
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'ArrowUp') {
+                                                                    e.preventDefault();
+                                                                    setLocalSigLevel(prev => Math.min(100, (prev === '' ? 95 : Number(prev)) + 1));
+                                                                } else if (e.key === 'ArrowDown') {
+                                                                    e.preventDefault();
+                                                                    setLocalSigLevel(prev => Math.max(0, (prev === '' ? 95 : Number(prev)) - 1));
+                                                                }
+                                                            }}
+                                                            onBlur={() => {
+                                                                if (localSigLevel === '') setLocalSigLevel(95);
+                                                            }}
+                                                            style={{ width: '100%', height: '100%', border: 'none', background: 'transparent', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#1e293b', outline: 'none', padding: 0 }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* 편차 설정 */}
+                                        {localSigType === 'deviation' && (
+                                            <div>
+                                                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                                                    전체값 대비 차이검증 설정
+                                                </div>
+
+                                                {/* 최소 차이 */}
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>최소 차이 (%)</span>
+                                                    <div style={{ width: '60px', height: '28px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        <input
+                                                            type="text"
+                                                            value={localSigDiffMin}
+                                                            onChange={(e) => {
+                                                                let val = e.target.value.replace(/[^0-9]/g, '');
+                                                                if (val !== '') {
+                                                                    let num = parseInt(val);
+                                                                    if (num > 100) num = 100;
+                                                                    setLocalSigDiffMin(num);
+                                                                } else {
+                                                                    setLocalSigDiffMin('');
+                                                                }
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'ArrowUp') {
+                                                                    e.preventDefault();
+                                                                    setLocalSigDiffMin(prev => Math.min(100, (prev === '' ? 5 : Number(prev)) + 1));
+                                                                } else if (e.key === 'ArrowDown') {
+                                                                    e.preventDefault();
+                                                                    setLocalSigDiffMin(prev => Math.max(0, (prev === '' ? 5 : Number(prev)) - 1));
+                                                                }
+                                                            }}
+                                                            onBlur={() => {
+                                                                if (localSigDiffMin === '') setLocalSigDiffMin(5);
+                                                            }}
+                                                            style={{ width: '100%', height: '100%', border: 'none', background: 'transparent', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#1e293b', outline: 'none', padding: 0 }}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* 최대 차이 */}
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>최대 차이 (%)</span>
+                                                    <div style={{ width: '60px', height: '28px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        <input
+                                                            type="text"
+                                                            value={localSigDiffMax}
+                                                            onChange={(e) => {
+                                                                let val = e.target.value.replace(/[^0-9]/g, '');
+                                                                if (val !== '') {
+                                                                    let num = parseInt(val);
+                                                                    if (num > 100) num = 100;
+                                                                    setLocalSigDiffMax(num);
+                                                                } else {
+                                                                    setLocalSigDiffMax('');
+                                                                }
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'ArrowUp') {
+                                                                    e.preventDefault();
+                                                                    setLocalSigDiffMax(prev => Math.min(100, (prev === '' ? 100 : Number(prev)) + 1));
+                                                                } else if (e.key === 'ArrowDown') {
+                                                                    e.preventDefault();
+                                                                    setLocalSigDiffMax(prev => Math.max(0, (prev === '' ? 100 : Number(prev)) - 1));
+                                                                }
+                                                            }}
+                                                            onBlur={() => {
+                                                                if (localSigDiffMax === '') setLocalSigDiffMax(100);
+                                                            }}
+                                                            style={{ width: '100%', height: '100%', border: 'none', background: 'transparent', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#1e293b', outline: 'none', padding: 0 }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
 
@@ -2511,7 +2837,10 @@ const AdditionalAnalysisPage = () => {
                                 {/* 하단 적용/취소 액션 버튼 영역 */}
                                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '4px', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
                                     <button
-                                        onClick={() => setIsDisplaySettingsOpen(false)}
+                                        onClick={() => {
+                                            setIsDisplaySettingsOpen(false);
+                                            setIsSigPopupOpen(false);
+                                        }}
                                         style={{
                                             display: 'flex',
                                             alignItems: 'center',

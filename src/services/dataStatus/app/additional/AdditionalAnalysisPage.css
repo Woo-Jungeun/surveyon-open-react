@@ -2534,6 +2534,10 @@
     border: none !important;
     box-shadow: none !important;
     outline: none !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 100% !important;
+    width: 100% !important;
 }
 .custom-xinfo-dropdown.k-dropdownlist:hover,
 .custom-xinfo-dropdown.k-dropdownlist:focus,
@@ -2547,6 +2551,9 @@
 .custom-xinfo-dropdown .k-input-inner {
     padding: 0 24px 0 10px !important;
     width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
 }
 .custom-xinfo-dropdown .k-input-button,
 .custom-xinfo-dropdown .k-button {
@@ -2554,4 +2561,12 @@
 }
 .custom-xinfo-dropdown .k-input-value-text {
     font-size: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    line-height: 1 !important;
+}
+.custom-xinfo-dropdown .k-list-item-text {
+    font-size: 12px !important;
+    display: flex !important;
+    align-items: center !important;
 }
