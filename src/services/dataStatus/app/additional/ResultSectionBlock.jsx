@@ -951,13 +951,19 @@ export const ResultSectionBlock = ({
                         border-right: none !important;
                         border-bottom: none !important;
                     }
-                    .table-wrapper .cross-table th.sticky-col,
-                    .table-wrapper .cross-table td.sticky-col {
+                    .table-wrapper .cross-table th.sticky-col {
                         border-right: ${stubBorder} !important;
+                        background-color: ${uiSettings?.theme_stub_header_bg || uiSettings?.theme_primary || '#f8fafc'} !important;
+                        color: ${uiSettings?.theme_stub_header_fg || uiSettings?.theme_primary_fg || '#1e3a8a'} !important;
                     }
                     .table-wrapper .cross-table td.sticky-col {
-                        background-color: ${uiSettings?.theme_stub_header_bg || '#D9E1F2'} !important;
-                        color: ${uiSettings?.theme_stub_header_fg || '#000'} !important;
+                        border-right: ${stubBorder} !important;
+                        background-color: ${uiSettings?.theme_stub_leaf_bg || '#ffffff'} !important;
+                        color: ${uiSettings?.theme_stub_leaf_fg || uiSettings?.theme_text || '#000000'} !important;
+                    }
+                    .table-wrapper .cross-table td.sticky-col.row-group-label {
+                        background-color: ${uiSettings?.theme_stub_group_bg || uiSettings?.theme_primary || '#f8fafc'} !important;
+                        color: ${uiSettings?.theme_stub_group_fg || uiSettings?.theme_primary_fg || '#1e3a8a'} !important;
                     }
                 `}</style>
                                             {resultData.html ? (
