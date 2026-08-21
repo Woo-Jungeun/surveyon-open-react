@@ -2565,8 +2565,10 @@
     align-items: center !important;
     line-height: 1 !important;
 }
-.custom-xinfo-dropdown .k-list-item-text {
+.custom-xinfo-dropdown .k-list-item-text,
+.custom-sig-popup .k-list-item-text {
     font-size: 12px !important;
     display: flex !important;
     align-items: center !important;
+    white-space: nowrap !important;
 }

@@ -20,8 +20,8 @@ const CROSS_FILTER_ALL_ID = "__all__";
 const EMPTY_ARRAY = [];
 const SIG_TYPE_OPTIONS = [
     { text: '미적용', value: 'none' },
-    { text: '차이검증 (z-test)', value: 'z-test' },
-    { text: '차이검증 (t-test)', value: 't-test' },
+    { text: '단일표본 차이검증(z-test)', value: 'z-test' },
+    { text: '독립표본 차이검증(t-test)', value: 't-test' },
     { text: '전체값 대비 (편차)', value: 'deviation' }
 ];
 
@@ -3098,7 +3098,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 top: 'calc(100% + 6px)',
                                 left: '50%',
                                 transform: 'translateX(-50%)',
-                                width: '300px',
+                                width: '350px',
                                 background: '#ffffff',
                                 borderRadius: '12px',
                                 border: '1px solid #e2e8f0',
@@ -3117,7 +3117,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 {/* 가중치 설정 */}
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                                     <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>가중치 설정</span>
-                                    <div style={{ position: 'relative', width: '180px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+                                    <div style={{ position: 'relative', width: '240px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
                                         <DropDownList
                                             data={weightOptions}
                                             textField="text"
@@ -3129,7 +3129,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             }}
                                             style={{ width: '100%', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
                                             className="custom-xinfo-dropdown"
-                                            popupSettings={{ className: "custom-xinfo-dropdown" }}
+                                            popupSettings={{ className: "custom-xinfo-dropdown", width: "235px" }}
                                         />
                                         <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
                                     </div>
@@ -3139,7 +3139,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                                     <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap', flexShrink: 0 }}>차이검증</span>
                                     <div ref={sigAnchorRef} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <div style={{ position: 'relative', width: localSigType !== 'none' ? '140px' : '180px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center', transition: 'width 0.2s ease' }}>
+                                        <div style={{ position: 'relative', width: localSigType !== 'none' ? '200px' : '240px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
                                             <DropDownList
                                                 data={SIG_TYPE_OPTIONS}
                                                 textField="text"
@@ -3192,7 +3192,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                 }}
                                                 style={{ width: '100%', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
                                                 className="custom-xinfo-dropdown"
-                                                popupSettings={{ className: "custom-xinfo-dropdown" }}
+                                                popupSettings={{ className: "custom-xinfo-dropdown custom-sig-popup", width: "235px" }}
                                             />
                                             <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
                                         </div>
@@ -3306,7 +3306,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         {(localSigType === 't-test' || localSigType === 't_test' || localSigType === 'z-test' || localSigType === 'z_test') && (
                                             <div>
                                                 <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
-                                                    차이검증 ({(localSigType === 'z-test' || localSigType === 'z_test') ? 'Z-TEST' : 'T-TEST'}) 설정
+                                                    {(localSigType === 'z-test' || localSigType === 'z_test') ? '단일표본 차이검증(Z-TEST)' : '독립표본 차이검증(T-TEST)'} 설정
                                                 </div>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>신뢰도 (%)</span>
