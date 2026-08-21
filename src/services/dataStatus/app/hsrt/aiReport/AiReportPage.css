@@ -1414,6 +1414,27 @@
     background: #eff6ff;
 }
 
+.ai-pdf-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid #ef4444;
+    background: #ffffff;
+    color: #ef4444;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ai-pdf-btn:hover {
+    background: #fef2f2;
+}
+
 /* Accordion blocks styling */
 .ai-report-blocks-wrap {
     display: flex;

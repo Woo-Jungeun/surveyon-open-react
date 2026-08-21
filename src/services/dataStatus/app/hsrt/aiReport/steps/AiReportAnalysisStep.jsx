@@ -1495,28 +1495,12 @@ const AiReportAnalysisStep = ({
                                 {activeSubTab === 'l3' && (pipelineStatus.l3.isDone || !!(insightData.l3?.executive_summary || insightData.l3?.key_takeaways || (insightData.l3?.action_items && insightData.l3.action_items.length > 0))) && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <button
-                                            className="ai-xlsx-btn"
-                                            onClick={() => onExportL3File('xlsx')}
-                                            title="Excel"
-                                        >
-                                            <FileSpreadsheet size={13} />
-                                            <span>Excel</span>
-                                        </button>
-                                        <button
-                                            className="ai-ppt-btn"
-                                            onClick={() => onExportL3File('pptx')}
-                                            title="PPT"
-                                        >
-                                            <Presentation size={13} />
-                                            <span>PPT</span>
-                                        </button>
-                                        <button
-                                            className="ai-docx-btn"
-                                            onClick={() => onExportL3File('docx')}
-                                            title="DOCX"
+                                            className="ai-pdf-btn"
+                                            onClick={() => onExportL3File('pdf')}
+                                            title="PDF"
                                         >
                                             <FileText size={13} />
-                                            <span>DOCX</span>
+                                            <span>PDF</span>
                                         </button>
                                     </div>
                                 )}

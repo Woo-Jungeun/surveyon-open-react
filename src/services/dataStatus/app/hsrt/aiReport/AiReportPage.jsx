@@ -434,16 +434,14 @@ const AiReportPage = () => {
         const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
         const userId = auth?.user?.userId || "jewoo";
 
-        // Map format parameter to match backend expectation ('excel', 'ppt', 'docx')
         let apiFormat = format;
-        if (format === 'xlsx') apiFormat = 'excel';
-        else if (format === 'pptx') apiFormat = 'ppt';
-        else if (format === 'docx') apiFormat = 'docx';
+        if (format === 'xlsx' || format === 'excel') apiFormat = 'xlsx';
+        else if (format === 'pdf') apiFormat = 'pdf';
 
         const payload = {
             pageId: pageId,
-            format: apiFormat,
-            user: userId
+            user: userId,
+            format: apiFormat
         };
 
         try {
@@ -458,27 +456,26 @@ const AiReportPage = () => {
                     bytes[i] = binaryString.charCodeAt(i);
                 }
 
-                // Determine content type and extension
-                const resFormat = String(payloadRes.format || format).toLowerCase();
+                // Determine content type and requested extension
+                const requestedExt = (apiFormat === 'xlsx') ? 'xlsx' : 'pdf';
                 let contentType = 'application/octet-stream';
-                let fileExt = format;
 
-                if (resFormat === 'xlsx' || resFormat === 'excel') {
+                if (requestedExt === 'xlsx') {
                     contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-                    fileExt = 'xlsx';
-                } else if (resFormat === 'pptx' || resFormat === 'ppt') {
-                    contentType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
-                    fileExt = 'pptx';
-                } else if (resFormat === 'docx' || resFormat === 'word') {
-                    contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-                    fileExt = 'docx';
+                } else if (requestedExt === 'pdf') {
+                    contentType = 'application/pdf';
                 }
+
+                // Build download filename ensuring proper extension
+                let downloadFileName = payloadRes.filename || `AI_요약보고서_${pageId}.${requestedExt}`;
+                const nameWithoutExt = downloadFileName.replace(/\.[^/.]+$/, "");
+                downloadFileName = `${nameWithoutExt}.${requestedExt}`;
 
                 const blob = new Blob([bytes], { type: payloadRes.content_type || contentType });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.setAttribute('download', payloadRes.filename || `AI_요약보고서_${pageId}.${fileExt}`);
+                link.setAttribute('download', downloadFileName);
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
