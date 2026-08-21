@@ -3166,7 +3166,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                                     <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>차이검증</span>
                                     <div ref={sigAnchorRef} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <div style={{ position: 'relative', width: '140px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+                                        <div style={{ position: 'relative', width: localSigType !== 'none' ? '140px' : '180px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center', transition: 'width 0.2s ease' }}>
                                             <DropDownList
                                                 data={SIG_TYPE_OPTIONS}
                                                 textField="text"
