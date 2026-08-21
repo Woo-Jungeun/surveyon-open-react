@@ -715,15 +715,20 @@ const AdditionalAnalysisPage = () => {
                 include_stats: includeStatsList,
                 display_policy: {
                     show_n: displayPolicy?.show_n !== false,
-                    show_percent: excelShowPct,
+                    show_percent: displayPolicy?.show_percent !== false,
                     excel_show_percent: excelShowPct,
                     percent_symbol: excelShowPct,
                     percent_digits: excelDecimalPct === '' ? 1 : Number(excelDecimalPct),
                     show_base_parenthesis: excelShowBaseParenthesis,
                     base_prefix: excelShowBaseParenthesis ? "(" : "",
                     base_postfix: excelShowBaseParenthesis ? ")" : "",
-                    sig_diff_fin_mode: sigTypeVal || "t_test",
-                    sig_level: displayPolicy?.sig_level ?? 95
+                    sig_diff_fin_mode: (sigTypeVal === 't-test' || sigTypeVal === 't_test') ? 't-test' : ((sigTypeVal === 'z-test' || sigTypeVal === 'z_test') ? 'z-test' : (sigTypeVal === 'deviation' ? 'deviation' : 'none')),
+                    sig_diff_test_mode: sigTypeVal === 'deviation',
+                    sig_level: displayPolicy?.sig_level ?? 95,
+                    sig_exclude_under_n: displayPolicy?.sig_exclude_under_n ?? 3,
+                    sig_exclude_etc: Boolean(displayPolicy?.sig_exclude_etc),
+                    sig_diff_min: displayPolicy?.sig_diff_min ?? 5,
+                    sig_diff_max: displayPolicy?.sig_diff_max ?? 100
                 },
                 ui_settings: {
                     theme_base_bg: "#F3F4F6",
@@ -2320,7 +2325,8 @@ const AdditionalAnalysisPage = () => {
             {styleCss && <style dangerouslySetInnerHTML={{ __html: styleCss }} />}
             <DataHeader title="추가분석">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {/* 표시 설정 Button and Popover Popup */}
+                    {/* 표시 설정 Button and Popover Popup (임시 주석) */}
+                    {false && (
                     <div style={{ position: 'relative' }} ref={displaySettingsRef}>
                         <button
                             onClick={() => setIsDisplaySettingsOpen(!isDisplaySettingsOpen)}
@@ -2492,7 +2498,6 @@ const AdditionalAnalysisPage = () => {
                                     </div>
                                 </div>
 
-                                {/* 차이검증 세부 설정 영역 (표시 설정 모달 내부 확장 카드) */}
                                 {isSigPopupOpen && localSigType !== 'none' && (
                                     <div style={{
                                         marginTop: '4px',
@@ -2504,13 +2509,11 @@ const AdditionalAnalysisPage = () => {
                                         flexDirection: 'column',
                                         gap: '10px'
                                     }}>
-                                        {/* 공통 필터링 설정 */}
                                         <div>
                                             <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
                                                 공통 필터링 설정
                                             </div>
 
-                                            {/* N수 미만 제외 */}
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                                                 <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>N수 미만 제외</span>
                                                 <div style={{ width: '60px', height: '28px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2538,7 +2541,6 @@ const AdditionalAnalysisPage = () => {
                                                 </div>
                                             </div>
 
-                                            {/* 기타/모름/무응답 제외 */}
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                 <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>기타/모름/무응답 제외</span>
                                                 <div
@@ -2567,10 +2569,8 @@ const AdditionalAnalysisPage = () => {
                                             </div>
                                         </div>
 
-                                        {/* 구분선 */}
                                         <div style={{ height: '1px', background: '#e2e8f0' }} />
 
-                                        {/* z-test / t-test 설정 */}
                                         {(localSigType === 't-test' || localSigType === 't_test' || localSigType === 'z-test' || localSigType === 'z_test') && (
                                             <div>
                                                 <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
@@ -2611,14 +2611,12 @@ const AdditionalAnalysisPage = () => {
                                             </div>
                                         )}
 
-                                        {/* 편차 설정 */}
                                         {localSigType === 'deviation' && (
                                             <div>
                                                 <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
                                                     전체값 대비 차이검증 설정
                                                 </div>
 
-                                                {/* 최소 차이 */}
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>최소 차이 (%)</span>
                                                     <div style={{ width: '60px', height: '28px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2652,7 +2650,6 @@ const AdditionalAnalysisPage = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* 최대 차이 */}
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>최대 차이 (%)</span>
                                                     <div style={{ width: '60px', height: '28px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2696,7 +2693,6 @@ const AdditionalAnalysisPage = () => {
                                     표시 값 / 소수점
                                 </div>
 
-                                {/* N 설정 */}
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                     <div
                                         onClick={() => {
@@ -2765,7 +2761,6 @@ const AdditionalAnalysisPage = () => {
                                     </div>
                                 </div>
 
-                                {/* % 설정 */}
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                     <div
                                         onClick={() => {
@@ -2834,7 +2829,6 @@ const AdditionalAnalysisPage = () => {
                                     </div>
                                 </div>
 
-                                {/* 하단 적용/취소 액션 버튼 영역 */}
                                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '4px', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
                                     <button
                                         onClick={() => {
@@ -2891,6 +2885,7 @@ const AdditionalAnalysisPage = () => {
                             </div>
                         )}
                     </div>
+                    )}
 
                     {/* 엑셀 다운로드 버튼 */}
                     <button
@@ -2922,7 +2917,8 @@ const AdditionalAnalysisPage = () => {
                 </div>
             </DataHeader>
 
-            {/* 필터 드롭다운 한 줄 영역 (교차분석과 동일) */}
+            {/* 필터 드롭다운 한 줄 영역 (교차분석과 동일) (임시 주석) */}
+            {false && (
             <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -3065,6 +3061,7 @@ const AdditionalAnalysisPage = () => {
                     </>
                 )}
             </div>
+            )}
 
             {/* 데이터 필터 모달 (Popup) */}
             <Popup
