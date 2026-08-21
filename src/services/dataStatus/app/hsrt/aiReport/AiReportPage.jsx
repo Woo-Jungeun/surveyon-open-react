@@ -60,13 +60,8 @@ const AiReportPage = () => {
                     const mapped = res.resultjson.map(m => ({ text: m.label, value: m.value }));
                     if (mapped.length > 0) {
                         setModels(mapped);
-                        // set default selected model
-                        const hasGemma = mapped.some(m => m.value.includes("gemma"));
-                        if (hasGemma) {
-                            setSelectedModel(mapped.find(m => m.value.includes("gemma")).value);
-                        } else {
-                            setSelectedModel(mapped[0].value);
-                        }
+                        // 가져온 분석 모델 리스트 중 첫 번째 모델 선택
+                        setSelectedModel(mapped[0].value);
                     }
                 }
             } catch (e) {
@@ -1480,6 +1475,7 @@ const AiReportPage = () => {
 
                 {/* 우측 컨트롤 영역 */}
                 <div className="ai-header-controls">
+                    {/* 분석 LLM 모델 셀렉터 주석 처리
                     <div className="ai-model-select-group">
                         <span className="ai-model-label">분석 LLM 모델</span>
                         <div className="ai-dropdown-wrapper">
@@ -1493,6 +1489,7 @@ const AiReportPage = () => {
                             />
                         </div>
                     </div>
+                    */}
 
                     {currentStep === 0 && (
                         <button className="data-header-btn data-header-btn-primary" onClick={handleSave}>
