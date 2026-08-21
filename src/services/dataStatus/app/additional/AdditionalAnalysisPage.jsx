@@ -658,26 +658,39 @@ const AdditionalAnalysisPage = () => {
                 let stub = [];
 
                 if (t.id === selectedTableId) {
-                    const xInfoStr = colVars.filter(g => g.length > 0).length > 0
-                        ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')]
+                    const xInfoStr = colVars.filter(g => g && g.length > 0).length > 0
+                        ? [colVars.filter(g => g && g.length > 0).map(group => group.map(v => typeof v === 'object' ? (v.id || v.name) : v).join('*')).join('+')]
                         : [];
                     banner = xInfoStr;
-                    stub = rowVars.map(v => v.id || v.name);
+                    stub = rowVars.map(v => typeof v === 'object' ? (v.id || v.name) : v);
                 } else {
+                    // Extract banner
                     if (Array.isArray(t.banner) && t.banner.length > 0) {
                         banner = t.banner;
+                    } else if (Array.isArray(t.config?.banner) && t.config.banner.length > 0) {
+                        banner = t.config.banner;
                     } else if (Array.isArray(t.col) && t.col.length > 0) {
-                        banner = t.col.map(c => Array.isArray(c) ? c.join('*') : String(c));
+                        const colJoined = t.col.map(c => {
+                            if (Array.isArray(c)) {
+                                return c.map(sub => typeof sub === 'object' ? (sub.id || sub.name) : String(sub)).join('*');
+                            }
+                            return typeof c === 'object' ? (c.id || c.name) : String(c);
+                        }).filter(Boolean).join('+');
+                        banner = colJoined ? [colJoined] : [];
                     } else if (Array.isArray(t.colVars) && t.colVars.length > 0) {
-                        banner = t.colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*'));
+                        const colJoined = t.colVars.filter(g => g && g.length > 0).map(group => group.map(v => typeof v === 'object' ? (v.id || v.name) : v).join('*')).join('+');
+                        banner = colJoined ? [colJoined] : [];
                     }
 
+                    // Extract stub
                     if (Array.isArray(t.stub) && t.stub.length > 0) {
                         stub = t.stub;
+                    } else if (Array.isArray(t.config?.stub) && t.config.stub.length > 0) {
+                        stub = t.config.stub;
                     } else if (Array.isArray(t.row) && t.row.length > 0) {
-                        stub = t.row.map(r => String(r));
+                        stub = t.row.map(r => typeof r === 'object' ? (r.id || r.name) : String(r));
                     } else if (Array.isArray(t.rowVars) && t.rowVars.length > 0) {
-                        stub = t.rowVars.map(v => v.id || v.name);
+                        stub = t.rowVars.map(v => typeof v === 'object' ? (v.id || v.name) : v);
                     }
                 }
 
@@ -918,11 +931,16 @@ const AdditionalAnalysisPage = () => {
 
                     const tableMap = new Map();
                     data.forEach(item => {
+                        const rawBanner = item.banner || item.config?.banner || item.col || item.cols || [];
+                        const rawStub = item.stub || item.config?.stub || item.row || item.rows || [];
                         tableMap.set(item.id, {
                             id: item.id,
-                            name: item.name || item.TABLE_TITLE || item.id || `Table ${item.id}`,
-                            row: item.row || item.rows || [],
-                            col: item.col || item.cols || []
+                            name: item.name || item.TABLE_TITLE || item.title || item.id || `Table ${item.id}`,
+                            row: item.row || item.rows || item.stub || item.config?.stub || [],
+                            col: item.col || item.cols || item.banner || item.config?.banner || [],
+                            banner: Array.isArray(rawBanner) ? rawBanner : (rawBanner ? [rawBanner] : []),
+                            stub: Array.isArray(rawStub) ? rawStub : (rawStub ? [rawStub] : []),
+                            config: item.config || {}
                         });
                     });
 
@@ -1923,9 +1941,18 @@ const AdditionalAnalysisPage = () => {
                 modal.showAlert('성공', '저장되었습니다.');
                 setIsConfigOpen(false); // Close config panel after save
 
-                // Update table list with new name and isNew status
+                // Update table list with new name, banner, stub, and isNew status
                 setTables(tables.map(t =>
-                    t.id === selectedTableId ? { ...t, name: tableName || "Untitled Table", isNew: false, isDirty: false } : t
+                    t.id === selectedTableId ? {
+                        ...t,
+                        name: tableName || "Untitled Table",
+                        banner: savePayload.config.banner,
+                        stub: savePayload.config.stub,
+                        row: rowVars.map(v => v.id || v.name),
+                        col: colVars.map(group => group.map(v => v.id || v.name)),
+                        isNew: false,
+                        isDirty: false
+                    } : t
                 ));
                 isConfigLoadingRef.current = true;
 
@@ -1996,9 +2023,18 @@ const AdditionalAnalysisPage = () => {
             const saveResult = await saveCrossTable.mutateAsync(savePayload);
 
             if (String(saveResult?.success) === '777') {
-                // Update table list with new name and isNew status
+                // Update table list with new name, banner, stub, and isNew status
                 setTables(tables.map(t =>
-                    t.id === selectedTableId ? { ...t, name: tableName || "Untitled Table", isNew: false, isDirty: false } : t
+                    t.id === selectedTableId ? {
+                        ...t,
+                        name: tableName || "Untitled Table",
+                        banner: savePayload.config.banner,
+                        stub: savePayload.config.stub,
+                        row: rowVars.map(v => v.id || v.name),
+                        col: colVars.map(group => group.map(v => v.id || v.name)),
+                        isNew: false,
+                        isDirty: false
+                    } : t
                 ));
                 isConfigLoadingRef.current = true;
 
