@@ -1563,8 +1563,8 @@ const AiReportAnalysisStep = ({
                                                         <div className="ai-insight-bullet" style={{ marginTop: '16px' }}>
                                                             <div className="ai-bullet-title-row">
                                                                 <span className="ai-bullet-num-badge">2</span>
-                                                                <span className="ai-bullet-title-text">세그먼트 특징 요약</span>
-                                                                <span className="ai-panel-help-icon" title="각 세그먼트별 주요 유의점 및 뚜렷한 특징 차이를 요약한 결과입니다.">?</span>
+                                                                <span className="ai-bullet-title-text">배너 요약</span>
+                                                                <span className="ai-panel-help-icon" title="각 배너별 주요 유의점 및 뚜렷한 특징 차이를 요약한 결과입니다.">?</span>
                                                             </div>
                                                             <p className="ai-bullet-body-content">
                                                                 {renderInsightText(l1Val.segment_insights)}
