@@ -7,11 +7,8 @@ import '@/components/common/popup/ConditionBuilderPopup.css';
 const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, getAiModels, user }) => {
     const modal = useContext(modalContext);
     const [promptText, setPromptText] = useState('');
-    const [modelKey, setModelKey] = useState('llm-gpt-oss-120b');
-    const [models, setModels] = useState([
-        { text: "GTP-OSS-120B (내부로컬)", value: "llm-gpt-oss-120b" },
-        { text: "GEMMA-4-31B-IT (내부로컬)", value: "llm-gemma-4-31b-it" }
-    ]);
+    const [modelKey, setModelKey] = useState('');
+    const [models, setModels] = useState([]);
     const [generatedRules, setGeneratedRules] = useState([]);
     const [isGenerating, setIsGenerating] = useState(false);
 
@@ -34,7 +31,7 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
             fetchModels();
         } else {
             setPromptText('');
-            setModelKey('llm-gpt-oss-120b');
+            setModelKey('');
             setGeneratedRules([]);
             setIsGenerating(false);
         }

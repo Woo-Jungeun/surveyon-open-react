@@ -198,7 +198,7 @@ export const ResultSectionBlock = ({
 
     const [rawChartData, setRawChartData] = useState(null);
     const [isChartLoading, setIsChartLoading] = useState(false);
-    const { evaluateChartData, getCrosstabAiSummary } = DpRequestPageApi();
+    const { evaluateChartData, getCrosstabAiSummary, getAiModels } = DpRequestPageApi();
     const auth = useSelector((store) => store.auth);
     const userId = auth?.user?.userId;
 
@@ -606,13 +606,23 @@ export const ResultSectionBlock = ({
             setIsAiLoading(true);
             const pageId = sessionStorage.getItem('pageId') || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
 
+            let targetModel = "";
+            try {
+                const modelsRes = await getAiModels.mutateAsync({ user: userId || "" });
+                if (String(modelsRes?.success) === '777' && Array.isArray(modelsRes?.resultjson) && modelsRes.resultjson.length > 0) {
+                    targetModel = modelsRes.resultjson[0].value;
+                }
+            } catch (e) {
+                console.error("AI 모델 조회 오류:", e);
+            }
+
             const payload = {
                 pageId: pageId,
                 variableId: stub?.[0] || "",
                 banner: xInfo || [],
                 filterExpression: filterExpression || "",
                 weightCol: weightCol === "없음" ? "" : (weightCol || ""),
-                model: "llm-gpt-oss-120b",
+                model: targetModel,
                 user: userId || ""
             };
 
