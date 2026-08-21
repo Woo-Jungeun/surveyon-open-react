@@ -1542,12 +1542,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     const mapped = res.resultjson.map(m => ({ text: m.label, value: m.value }));
                     if (mapped.length > 0) {
                         setModels(mapped);
-                        const hasGpt4o = mapped.some(m => m.value === "openai/gpt-4o");
-                        if (hasGpt4o) {
-                            setSelectedModel("openai/gpt-4o");
-                        } else {
-                            setSelectedModel(mapped[0].value);
-                        }
+                        // 가져온 분석 모델 리스트 중 첫 번째 모델 선택
+                        setSelectedModel(mapped[0].value);
                     }
                 }
             } catch (e) {
@@ -2595,7 +2591,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             pageId: pageId,
             filterExpression: filterExpression || "",
             weightCol: selectedWeight === '없음' ? "" : selectedWeight,
-            model: selectedModel,
+            model: selectedModel || models[0]?.value || "",
             variables: variablesPayload,
             user: user,
             triggerBatch: triggerBatch
@@ -2682,7 +2678,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 pageId: pageId,
                 filterExpression: filterExpression || "",
                 weightCol: selectedWeight === '없음' ? "" : selectedWeight,
-                model: selectedModel,
+                model: selectedModel || models[0]?.value || "",
                 variables: variablesPayload,
                 user: user,
                 triggerBatch: false
@@ -2732,7 +2728,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             user: user,
             filterExpression: filterExpression || "",
             weightCol: selectedWeight === '없음' ? "" : selectedWeight,
-            model: selectedModel
+            model: selectedModel || models[0]?.value || ""
         };
 
         try {
@@ -3801,33 +3797,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 )}
                             </div>
                         )}
-
                     </div>
-
-                    {/* 세로 구분선 */}
-                    <div style={{ width: '1px', height: '14px', background: '#e2e8f0', margin: '0 12px', alignSelf: 'center' }} />
-
-                    {/* AI 요약 Controls */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '0px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>AI 요약</span>
-                        </div>
-
-                        <div style={{ position: 'relative', width: '180px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center', background: '#ffffff' }}>
-                            <DropDownList
-                                data={models}
-                                textField="text"
-                                dataItemKey="value"
-                                value={models.find(m => m.value === selectedModel) || models[0] || null}
-                                onChange={(e) => {
-                                    setSelectedModel(e.value.value);
-                                }}
-                                style={{ width: '100%', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
-                                className="custom-xinfo-dropdown"
-                                popupSettings={{ className: "custom-xinfo-dropdown" }}
-                            />
-                            <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
-                        </div>
 
                         {globalAiRunning ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -3919,10 +3889,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 <span>전체 AI 요약</span>
                             </button>
                         )}
-                    </div>
 
                     {/* 세로 구분선 */}
-                    <div style={{ width: '1px', height: '14px', background: '#e2e8f0', margin: '0 12px', alignSelf: 'center' }} />
+                    <div style={{ width: '1px', height: '14px', background: '#e2e8f0', margin: '0 4px', alignSelf: 'center' }} />
 
                     {/* <button
                         className="dp-btn"

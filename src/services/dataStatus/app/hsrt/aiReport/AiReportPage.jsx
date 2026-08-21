@@ -532,7 +532,7 @@ const AiReportPage = () => {
         formData.append("pageId", pageId);
         formData.append("Pn", pn);
         formData.append("User", userId);
-        formData.append("ModelType", selectedModel || "llm-gpt-oss-120b");
+        formData.append("ModelType", selectedModel || models[0]?.value || "");
         formData.append("DocumentFile", selectedFile);
 
         let secondsElapsed = 0;
@@ -722,7 +722,7 @@ const AiReportPage = () => {
                 pageId: pageId,
                 filterExpression: "",
                 weightCol: "",
-                model: selectedModel || "llm-gpt-oss-120b",
+                model: selectedModel || models[0]?.value || "",
                 variables: variablesPayload,
                 user: userId,
                 triggerBatch: true
@@ -815,7 +815,7 @@ const AiReportPage = () => {
             const payload = {
                 pageId: pageId,
                 user: userId,
-                modelType: selectedModel || "llm-gpt-oss-120b",
+                modelType: selectedModel || models[0]?.value || "",
                 userInstructions: aiGuideline || ""
             };
 
@@ -869,7 +869,7 @@ const AiReportPage = () => {
             const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
             const payload = {
                 pageId: pageId,
-                modelType: selectedModel || "llm-gpt-oss-120b",
+                modelType: selectedModel || models[0]?.value || "",
                 userInstructions: aiGuideline || ""
             };
 
@@ -1019,7 +1019,7 @@ const AiReportPage = () => {
                         setCategories([]); // 로딩 시작 시 기존 카테고리 데이터 비우기
                         const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
                         const userId = auth?.user?.userId || "jewoo";
-                        const modelType = selectedModel || "llm-gpt-oss-120b";
+                        const modelType = selectedModel || models[0]?.value || "";
 
                         const payload = {
                             pageId,
