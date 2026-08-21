@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { ChevronDown, ChevronUp, Play, Search, BarChart2, BarChartHorizontal, Download, X, Settings, ChevronRight, GripVertical, GripHorizontal, LineChart, Map as MapIcon, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2, Maximize, Minimize, Save, Grid, Plus, Table, List, Star, Table2 } from 'lucide-react';
 import Toast from '../../../../components/common/Toast';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
+import { Popup } from '@progress/kendo-react-popup';
 import { saveAs } from '@progress/kendo-file-saver';
 import KendoChart from '../../components/KendoChart';
 import '@progress/kendo-theme-default/dist/all.css';
@@ -19,6 +20,12 @@ import PageListPopup from '../variable/PageListPopup';
 import AdditionalAnalysisFilterPopup from '../../../../components/common/popup/AdditionalAnalysisFilterPopup';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
+const CROSS_FILTER_ALL_ID = '__ALL__';
+const SIG_TYPE_OPTIONS = [
+    { text: '미적용', value: 'none' },
+    { text: '차이검증 (t-test)', value: 't_test' },
+    { text: '전체값 대비 (편차)', value: 'deviation' }
+];
 
 import { ResultSectionBlock } from './ResultSectionBlock';
 
@@ -112,8 +119,8 @@ const processResults = (evalResultData) => {
 const AdditionalAnalysisPage = () => {
     // Auth & API
     const auth = useSelector((store) => store.auth);
-    const { getTableRenderContext, getOverviewContext } = DpRequestPageApi();
-    const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable } = AdditionalAnalysisPageApi();
+    const { getTableRenderContext, getOverviewContext, exportOverviewXlsx } = DpRequestPageApi();
+    const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable, exportAdditionalXlsx } = AdditionalAnalysisPageApi();
     const modal = React.useContext(modalContext);
     const loadingSpinner = React.useContext(loadingSpinnerContext);
     const alertTimerRef = useRef(null);
@@ -138,6 +145,21 @@ const AdditionalAnalysisPage = () => {
     const [collapsedIndices, setCollapsedIndices] = useState(new Set());
     const [toast, setToast] = useState({ show: false, message: '' });
     const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
+    const [isDisplaySettingsOpen, setIsDisplaySettingsOpen] = useState(false);
+    const displaySettingsRef = useRef(null);
+
+    const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
+    const [excelShowPct, setExcelShowPct] = useState(true);
+    const [excelShowBaseParenthesis, setExcelShowBaseParenthesis] = useState(true);
+    const [excelDecimalPct, setExcelDecimalPct] = useState(1);
+
+    const [selectedComputedFilterIds, setSelectedComputedFilterIds] = useState([CROSS_FILTER_ALL_ID]);
+    const [draftComputedFilterIds, setDraftComputedFilterIds] = useState([CROSS_FILTER_ALL_ID]);
+    const [computedFilterOptions, setComputedFilterOptions] = useState([]);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [filterSearchQuery, setFilterSearchQuery] = useState('');
+    const filterAnchorRef = useRef(null);
+    const filterPopupRef = useRef(null);
     const tableListRef = useRef(null);
     const [fullscreenModal, setFullscreenModal] = useState({
         open: false,
@@ -223,15 +245,57 @@ const AdditionalAnalysisPage = () => {
         return ["없음", ...weights];
     }, [variables]);
 
-
-
-    // Total Filter State
+    const [localWeight, setLocalWeight] = useState(selectedWeight);
+    const [localSigType, setLocalSigType] = useState('none');
+    const [localShowN, setLocalShowN] = useState(true);
+    const [localShowPct, setLocalShowPct] = useState(true);
+    const [localDecimalN, setLocalDecimalN] = useState(0);
+    const [localDecimalPct, setLocalDecimalPct] = useState(1);
 
     const { pageList: getPageList } = VariablePageApi();
     const [isPageListOpen, setIsPageListOpen] = useState(false);
     const [pageListData, setPageListData] = useState([]);
     const [displayPolicy, setDisplayPolicy] = useState(null);
     const [renderSettings, setRenderSettings] = useState(null);
+
+    useEffect(() => {
+        if (isDisplaySettingsOpen) {
+            setLocalWeight(selectedWeight);
+            setLocalSigType(displayPolicy?.sig_type || 'none');
+            setLocalShowN(displayPolicy?.show_n !== false);
+            setLocalShowPct(displayPolicy?.show_percent !== false);
+            setLocalDecimalN(displayPolicy?.n_digits ?? 0);
+            setLocalDecimalPct(displayPolicy?.percent_digits ?? 1);
+        }
+    }, [isDisplaySettingsOpen, selectedWeight, displayPolicy]);
+
+    const weightDropdownData = useMemo(() => {
+        return weightVariableOptions.map(w => ({ text: w, value: w }));
+    }, [weightVariableOptions]);
+
+    const handleApplyDisplaySettings = async () => {
+        setIsDisplaySettingsOpen(false);
+        const targetWeight = localWeight;
+        const targetSigType = localSigType;
+        const targetShowN = localShowN;
+        const targetShowPct = localShowPct;
+        const targetDecimalN = localDecimalN === '' ? 0 : Number(localDecimalN);
+        const targetDecimalPct = localDecimalPct === '' ? 0 : Number(localDecimalPct);
+
+        setSelectedWeight(targetWeight);
+
+        const nextPolicy = {
+            ...displayPolicy,
+            show_n: targetShowN,
+            show_percent: targetShowPct,
+            n_digits: targetDecimalN,
+            percent_digits: targetDecimalPct,
+            sig_type: targetSigType,
+            weight_col: targetWeight === '없음' ? '' : targetWeight
+        };
+        setDisplayPolicy(nextPolicy);
+        await handleRun(undefined, nextPolicy);
+    };
 
     const handleOpenPageList = async () => {
         const userId = auth?.user?.userId;
@@ -264,11 +328,390 @@ const AdditionalAnalysisPage = () => {
     };
 
     useEffect(() => {
+        if (!variables || variables.length === 0) return;
+        const filterOpts = variables
+            .filter(value => {
+                const variableId = String(value?.id ?? value?.name ?? '').trim();
+                const isAddQuestion = variableId.toUpperCase().startsWith("ADD_");
+                if (isAddQuestion) {
+                    return String(value?.recoded_type ?? "").toLowerCase() === "computed";
+                }
+                return true;
+            })
+            .flatMap(value => {
+                const variableId = String(value?.id ?? value?.name ?? '');
+                const variableLabel = String(value?.label ?? value?.name ?? variableId).trim() || variableId;
+                const infoList = Array.isArray(value?.info) ? value.info : [];
+                return infoList
+                    .map((info, index) => {
+                        const label = String(info?.label ?? "").trim();
+                        const rawValue = info?.value ?? info?.num ?? index + 1;
+                        const logic = String(info?.logic ?? `${variableId} == ${rawValue}`).trim();
+                        if (!label) return null;
+                        return {
+                            id: `${variableId}::${String(rawValue).trim() || String(index + 1)}`,
+                            label,
+                            logic,
+                            variableId,
+                            variableLabel,
+                        };
+                    })
+                    .filter(Boolean);
+            });
+        setComputedFilterOptions(filterOpts);
+    }, [variables]);
+
+    const filteredGroupedFilters = useMemo(() => {
+        const query = filterSearchQuery.trim().toLowerCase();
+        const groups = [];
+
+        computedFilterOptions.forEach(opt => {
+            let group = groups.find(g => g.variableId === opt.variableId);
+            if (!group) {
+                group = {
+                    variableId: opt.variableId,
+                    variableLabel: opt.variableLabel,
+                    options: []
+                };
+                groups.push(group);
+            }
+            group.options.push(opt);
+        });
+
+        if (!query) return groups;
+
+        return groups.map(g => {
+            const parentMatches = g.variableLabel.toLowerCase().includes(query) || g.variableId.toLowerCase().includes(query);
+            const matchedOptions = g.options.filter(o => o.label.toLowerCase().includes(query));
+
+            if (parentMatches) {
+                return g;
+            } else if (matchedOptions.length > 0) {
+                return { ...g, options: matchedOptions };
+            }
+            return null;
+        }).filter(Boolean);
+    }, [computedFilterOptions, filterSearchQuery]);
+
+    const handleTogglePopup = () => {
+        if (!isFilterOpen) {
+            setDraftComputedFilterIds(selectedComputedFilterIds);
+        }
+        setIsFilterOpen(!isFilterOpen);
+    };
+
+    const applyFilterAndClose = () => {
+        setSelectedComputedFilterIds(draftComputedFilterIds);
+        setIsFilterOpen(false);
+
+        if (draftComputedFilterIds.includes(CROSS_FILTER_ALL_ID)) {
+            setFilterExpression("");
+            setFilterInfo(null);
+            handleRun("");
+            return;
+        }
+
+        const activeOptions = computedFilterOptions.filter(o => draftComputedFilterIds.includes(o.id));
+        if (activeOptions.length === 0) {
+            setFilterExpression("");
+            setFilterInfo(null);
+            handleRun("");
+            return;
+        }
+
+        const groups = {};
+        activeOptions.forEach(o => {
+            const varId = o.variableId || 'default';
+            if (!groups[varId]) {
+                groups[varId] = [];
+            }
+            groups[varId].push(o.logic);
+        });
+
+        const groupExpressions = Object.values(groups).map(logics => `(${logics.join(" or ")})`);
+        const exprStr = groupExpressions.join(" and ");
+        setFilterExpression(exprStr);
+        handleRun(exprStr);
+    };
+
+    const toggleFilter = (id) => {
+        setDraftComputedFilterIds(prev => {
+            if (id === CROSS_FILTER_ALL_ID) {
+                return [CROSS_FILTER_ALL_ID];
+            }
+            const next = prev.filter(x => x !== CROSS_FILTER_ALL_ID);
+            const isChecked = prev.includes(id);
+            const updated = isChecked ? next.filter(x => x !== id) : [...next, id];
+            return updated.length > 0 ? updated : [CROSS_FILTER_ALL_ID];
+        });
+    };
+
+    const toggleParentFilter = (group) => {
+        const allChildIds = group.options.map(o => o.id);
+        const checkedChildIds = allChildIds.filter(id => draftComputedFilterIds.includes(id));
+        const isAllChecked = checkedChildIds.length === allChildIds.length;
+
+        setDraftComputedFilterIds(prev => {
+            let next = prev.filter(x => x !== CROSS_FILTER_ALL_ID);
+            if (isAllChecked) {
+                next = next.filter(id => !allChildIds.includes(id));
+            } else {
+                allChildIds.forEach(id => {
+                    if (!next.includes(id)) {
+                        next.push(id);
+                    }
+                });
+            }
+            return next.length > 0 ? next : [CROSS_FILTER_ALL_ID];
+        });
+    };
+
+    const getFilterButtonText = () => {
+        const activeIds = selectedComputedFilterIds.filter(id => id !== CROSS_FILTER_ALL_ID);
+        if (activeIds.length === 0) return '필터 선택';
+
+        const groups = {};
+        activeIds.forEach(id => {
+            const opt = computedFilterOptions.find(o => o.id === id);
+            if (opt) {
+                if (!groups[opt.variableId]) {
+                    groups[opt.variableId] = {
+                        variableLabel: opt.variableLabel,
+                        count: 0
+                    };
+                }
+                groups[opt.variableId].count += 1;
+            }
+        });
+
+        const selectedSummary = Object.values(groups).map(g => `${g.variableLabel}(${g.count})`);
+        return selectedSummary.length > 0 ? selectedSummary.join(', ') : '필터 선택';
+    };
+
+    const activeFilterChips = useMemo(() => {
+        if (selectedComputedFilterIds.includes(CROSS_FILTER_ALL_ID)) return [];
+
+        const groups = {};
+        selectedComputedFilterIds.forEach(id => {
+            const opt = computedFilterOptions.find(o => o.id === id);
+            if (opt) {
+                if (!groups[opt.variableId]) {
+                    groups[opt.variableId] = {
+                        variableId: opt.variableId,
+                        variableLabel: opt.variableLabel,
+                        labels: []
+                    };
+                }
+                groups[opt.variableId].labels.push(opt.label);
+            }
+        });
+
+        return Object.values(groups).map(g => {
+            const displayText = `${g.variableLabel} [${g.labels.join(', ')}]`;
+            return {
+                variableId: g.variableId,
+                displayText
+            };
+        });
+    }, [selectedComputedFilterIds, computedFilterOptions]);
+
+    const handleRemoveFilterChip = (variableId) => {
+        setSelectedComputedFilterIds(prev => {
+            const next = prev.filter(id => {
+                const opt = computedFilterOptions.find(o => o.id === id);
+                return !opt || opt.variableId !== variableId;
+            });
+            const updated = next.length > 0 ? next : [CROSS_FILTER_ALL_ID];
+            setDraftComputedFilterIds(updated);
+
+            if (updated.includes(CROSS_FILTER_ALL_ID)) {
+                setFilterExpression("");
+                setFilterInfo(null);
+                handleRun("");
+            } else {
+                const activeOptions = computedFilterOptions.filter(o => updated.includes(o.id));
+                const groups = {};
+                activeOptions.forEach(o => {
+                    const vId = o.variableId || 'default';
+                    if (!groups[vId]) groups[vId] = [];
+                    groups[vId].push(o.logic);
+                });
+                const exprStr = Object.values(groups).map(logics => `(${logics.join(" or ")})`).join(" and ");
+                setFilterExpression(exprStr);
+                handleRun(exprStr);
+            }
+            return updated;
+        });
+    };
+
+    const handleResetAllFilters = () => {
+        setSelectedComputedFilterIds([CROSS_FILTER_ALL_ID]);
+        setDraftComputedFilterIds([CROSS_FILTER_ALL_ID]);
+        setFilterExpression("");
+        setFilterInfo(null);
+        handleRun("");
+    };
+
+    useEffect(() => {
         const handleClickOutside = (event) => {
+            if (displaySettingsRef.current && !displaySettingsRef.current.contains(event.target)) {
+                setIsDisplaySettingsOpen(false);
+            }
+            if (isFilterOpen &&
+                filterAnchorRef.current &&
+                !filterAnchorRef.current.contains(event.target) &&
+                filterPopupRef.current &&
+                !filterPopupRef.current.contains(event.target)) {
+                setDraftComputedFilterIds(selectedComputedFilterIds);
+                setIsFilterOpen(false);
+            }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    }, [isFilterOpen, selectedComputedFilterIds]);
+
+    const handleExcelExport = async () => {
+        if (!auth?.user?.userId) {
+            modal.showAlert("알림", "로그인이 필요합니다.");
+            return;
+        }
+        const pageId = sessionStorage.getItem('pageId') || currentPageId;
+        if (!pageId) {
+            modal.showAlert("알림", "페이지 정보가 없습니다.");
+            return;
+        }
+
+        try {
+            loadingSpinner.show();
+
+            const variablesMap = {};
+            if (Array.isArray(variables)) {
+                variables.forEach(v => {
+                    const varId = v?.id || v?.name;
+                    if (varId) {
+                        variablesMap[varId] = v;
+                    }
+                });
+            }
+
+            const formattedTables = (tables && tables.length > 0) ? tables.map((t, idx) => {
+                let banner = [];
+                let stub = [];
+
+                if (t.id === selectedTableId) {
+                    const xInfoStr = colVars.filter(g => g.length > 0).length > 0
+                        ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')]
+                        : [];
+                    banner = xInfoStr;
+                    stub = rowVars.map(v => v.id || v.name);
+                } else {
+                    if (Array.isArray(t.banner) && t.banner.length > 0) {
+                        banner = t.banner;
+                    } else if (Array.isArray(t.col) && t.col.length > 0) {
+                        banner = t.col.map(c => Array.isArray(c) ? c.join('*') : String(c));
+                    } else if (Array.isArray(t.colVars) && t.colVars.length > 0) {
+                        banner = t.colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*'));
+                    }
+
+                    if (Array.isArray(t.stub) && t.stub.length > 0) {
+                        stub = t.stub;
+                    } else if (Array.isArray(t.row) && t.row.length > 0) {
+                        stub = t.row.map(r => String(r));
+                    } else if (Array.isArray(t.rowVars) && t.rowVars.length > 0) {
+                        stub = t.rowVars.map(v => v.id || v.name);
+                    }
+                }
+
+                return {
+                    id: t.id || `table-${idx + 1}`,
+                    name: t.name || t.title || `추가분석 교차표 ${idx + 1}`,
+                    banner: banner,
+                    stub: stub
+                };
+            }) : [
+                {
+                    id: selectedTableId || 'table-1',
+                    name: tableName || "추가분석 교차표 1",
+                    banner: colVars.filter(g => g.length > 0).length > 0
+                        ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')]
+                        : [],
+                    stub: rowVars.map(v => v.id || v.name)
+                }
+            ];
+
+            const currentSigType = displayPolicy?.sig_type || 'none';
+            const sigTypeVal = currentSigType !== 'none' ? currentSigType : null;
+            const includeStatsList = (sigTypeVal && sigTypeVal !== 'none')
+                ? [sigTypeVal === 't_test' ? 't-test' : sigTypeVal]
+                : [];
+
+            const requestData = {
+                user: auth.user.userId,
+                pageid: pageId,
+                tables: formattedTables,
+                variables: variablesMap,
+                weight_col: (selectedWeight && selectedWeight !== "없음" && selectedWeight !== "") ? selectedWeight : null,
+                filter_expression: filterExpression ? filterExpression : null,
+                excel_show_percent: excelShowPct,
+                include_stats: includeStatsList,
+                display_policy: {
+                    show_n: displayPolicy?.show_n !== false,
+                    show_percent: excelShowPct,
+                    excel_show_percent: excelShowPct,
+                    percent_symbol: excelShowPct,
+                    percent_digits: excelDecimalPct === '' ? 1 : Number(excelDecimalPct),
+                    show_base_parenthesis: excelShowBaseParenthesis,
+                    base_prefix: excelShowBaseParenthesis ? "(" : "",
+                    base_postfix: excelShowBaseParenthesis ? ")" : "",
+                    sig_diff_fin_mode: sigTypeVal || "t_test",
+                    sig_level: displayPolicy?.sig_level ?? 95
+                },
+                ui_settings: {
+                    theme_base_bg: "#F3F4F6",
+                    theme_base_fg: "#111827"
+                }
+            };
+
+            let result;
+            try {
+                result = await exportAdditionalXlsx.mutateAsync(requestData);
+            } catch (err) {
+                console.warn("exportAdditionalXlsx endpoint failed, falling back to exportOverviewXlsx:", err);
+                result = await exportOverviewXlsx.mutateAsync(requestData);
+            }
+
+            const payload = result?.resultjson || result || {};
+            const isSuccess = String(result?.success) === "777" || String(payload?.success) === "777";
+            const base64Data = payload.xlsx_base64 || payload.content_base64;
+
+            if (isSuccess && base64Data) {
+                const binaryString = window.atob(base64Data);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                const blob = new Blob([bytes], { type: payload.content_type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                const projectTitle = sessionStorage.getItem("pagetitle") || "프로젝트명";
+                const defaultFilename = `${projectTitle}_추가분석_일괄추출.xlsx`;
+                link.setAttribute('download', payload.filename || defaultFilename);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } else {
+                modal.showAlert('오류', payload?.message || '엑셀 데이터 생성에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Excel Export Error:', error);
+            modal.showAlert('오류', '엑셀 다운로드 중 문제가 발생했습니다.');
+        } finally {
+            loadingSpinner.hide();
+        }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -1816,21 +2259,619 @@ const AdditionalAnalysisPage = () => {
     return (
         <div className="cross-tab-page" data-theme="data-dashboard">
             {styleCss && <style dangerouslySetInnerHTML={{ __html: styleCss }} />}
-            <DataHeader
-                title="추가분석"
-            >
+            <DataHeader title="추가분석">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {/* 표시 설정 Button and Popover Popup */}
+                    <div style={{ position: 'relative' }} ref={displaySettingsRef}>
+                        <button
+                            onClick={() => setIsDisplaySettingsOpen(!isDisplaySettingsOpen)}
+                            style={{
+                                color: '#334155',
+                                border: '1px solid #cbd5e1',
+                                background: '#ffffff',
+                                height: '32px',
+                                padding: '0 16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                borderRadius: '6px',
+                                fontSize: '13px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                userSelect: 'none',
+                                outline: 'none'
+                            }}
+                            className="dp-btn"
+                        >
+                            <Settings size={14} color="#64748b" />
+                            <span>표시 설정</span>
+                            <span style={{
+                                background: '#eff6ff',
+                                color: '#2563eb',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                marginLeft: '4px'
+                            }}>
+                                {(displayPolicy?.show_n !== false && displayPolicy?.show_percent !== false) ? 'N, %' : (displayPolicy?.show_n !== false) ? 'N' : '%'}
+                            </span>
+                            <ChevronDown size={14} color="#64748b" style={{ marginLeft: '2px' }} />
+                        </button>
 
-                {/* 고급 필터 버튼 - AdditionalAnalysisFilterPopup 오픈 */}
-                <div style={{ marginLeft: '12px', display: 'none' }}>
+                        {isDisplaySettingsOpen && (
+                            <div style={{
+                                position: 'absolute',
+                                top: 'calc(100% + 6px)',
+                                right: 0,
+                                width: '300px',
+                                background: '#ffffff',
+                                borderRadius: '12px',
+                                border: '1px solid #e2e8f0',
+                                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                                padding: '16px',
+                                zIndex: 1000,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '14px',
+                                textAlign: 'left'
+                            }}>
+                                <div style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b', paddingBottom: '2px' }}>
+                                    표시 설정
+                                </div>
+
+                                {/* 가중치 설정 */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>가중치 설정</span>
+                                    <div style={{ position: 'relative', width: '180px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+                                        <DropDownList
+                                            data={weightDropdownData}
+                                            textField="text"
+                                            dataItemKey="value"
+                                            value={weightDropdownData.find(o => o.value === localWeight) || weightDropdownData[0]}
+                                            onChange={(e) => {
+                                                const nextVal = (typeof e.value === 'object' && e.value !== null) ? e.value.value : e.value;
+                                                setLocalWeight(nextVal);
+                                            }}
+                                            style={{ width: '100%', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
+                                            className="custom-xinfo-dropdown"
+                                            popupSettings={{ className: "custom-xinfo-dropdown" }}
+                                        />
+                                        <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
+                                    </div>
+                                </div>
+
+                                {/* 차이검증 */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>차이검증</span>
+                                    <div style={{ position: 'relative', width: '180px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+                                        <DropDownList
+                                            data={SIG_TYPE_OPTIONS}
+                                            textField="text"
+                                            dataItemKey="value"
+                                            value={SIG_TYPE_OPTIONS.find(o => o.value === localSigType) || SIG_TYPE_OPTIONS[0]}
+                                            onChange={(e) => {
+                                                const nextVal = (typeof e.value === 'object' && e.value !== null) ? e.value.value : e.value;
+                                                setLocalSigType(nextVal);
+                                            }}
+                                            style={{ width: '100%', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
+                                            className="custom-xinfo-dropdown"
+                                            popupSettings={{ className: "custom-xinfo-dropdown" }}
+                                        />
+                                        <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
+                                    </div>
+                                </div>
+
+                                <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
+
+                                <div style={{ fontSize: '13px', fontWeight: 600, color: '#475569', paddingBottom: '2px' }}>
+                                    표시 값 / 소수점
+                                </div>
+
+                                {/* N 설정 */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div
+                                        onClick={() => {
+                                            if (localShowN && !localShowPct) {
+                                                modal.showAlert("알림", "최소 1개 이상의 지표(N 또는 %)를 선택해야 합니다.");
+                                                return;
+                                            }
+                                            setLocalShowN(!localShowN);
+                                        }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+                                    >
+                                        <div style={{
+                                            width: '18px', height: '18px', borderRadius: '4px',
+                                            background: localShowN ? '#2563eb' : '#fff',
+                                            border: `1.5px solid ${localShowN ? '#2563eb' : '#cbd5e1'}`,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            flexShrink: 0
+                                        }}>
+                                            {localShowN && (
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <span style={{ fontSize: '13px', fontWeight: 500, color: '#334155' }}>N</span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            width: '60px', height: '28px', border: '1px solid #cbd5e1', borderRadius: '6px',
+                                            background: localShowN ? '#ffffff' : '#f8fafc'
+                                        }}>
+                                            <input
+                                                type="text"
+                                                disabled={!localShowN}
+                                                value={localDecimalN}
+                                                onChange={(e) => {
+                                                    let val = e.target.value.replace(/[^0-9]/g, '');
+                                                    if (val !== '') {
+                                                        let num = parseInt(val);
+                                                        if (num > 13) num = 13;
+                                                        setLocalDecimalN(num);
+                                                    } else {
+                                                        setLocalDecimalN('');
+                                                    }
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'ArrowUp') {
+                                                        e.preventDefault();
+                                                        setLocalDecimalN(prev => Math.min(13, (prev === '' ? 0 : prev) + 1));
+                                                    } else if (e.key === 'ArrowDown') {
+                                                        e.preventDefault();
+                                                        setLocalDecimalN(prev => Math.max(0, (prev === '' ? 0 : prev) - 1));
+                                                    }
+                                                }}
+                                                onBlur={() => {
+                                                    if (localDecimalN === '') setLocalDecimalN(0);
+                                                }}
+                                                style={{
+                                                    width: '100%', height: '100%', border: 'none', background: 'transparent',
+                                                    textAlign: 'center', fontSize: '13px', fontWeight: 500, color: localShowN ? '#1e293b' : '#94a3b8',
+                                                    outline: 'none', padding: 0
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* % 설정 */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div
+                                        onClick={() => {
+                                            if (localShowPct && !localShowN) {
+                                                modal.showAlert("알림", "최소 1개 이상의 지표(N 또는 %)를 선택해야 합니다.");
+                                                return;
+                                            }
+                                            setLocalShowPct(!localShowPct);
+                                        }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+                                    >
+                                        <div style={{
+                                            width: '18px', height: '18px', borderRadius: '4px',
+                                            background: localShowPct ? '#2563eb' : '#fff',
+                                            border: `1.5px solid ${localShowPct ? '#2563eb' : '#cbd5e1'}`,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            flexShrink: 0
+                                        }}>
+                                            {localShowPct && (
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <span style={{ fontSize: '13px', fontWeight: 500, color: '#334155' }}>%</span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            width: '60px', height: '28px', border: '1px solid #cbd5e1', borderRadius: '6px',
+                                            background: localShowPct ? '#ffffff' : '#f8fafc'
+                                        }}>
+                                            <input
+                                                type="text"
+                                                disabled={!localShowPct}
+                                                value={localDecimalPct}
+                                                onChange={(e) => {
+                                                    let val = e.target.value.replace(/[^0-9]/g, '');
+                                                    if (val !== '') {
+                                                        let num = parseInt(val);
+                                                        if (num > 13) num = 13;
+                                                        setLocalDecimalPct(num);
+                                                    } else {
+                                                        setLocalDecimalPct('');
+                                                    }
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'ArrowUp') {
+                                                        e.preventDefault();
+                                                        setLocalDecimalPct(prev => Math.min(13, (prev === '' ? 1 : prev) + 1));
+                                                    } else if (e.key === 'ArrowDown') {
+                                                        e.preventDefault();
+                                                        setLocalDecimalPct(prev => Math.max(0, (prev === '' ? 1 : prev) - 1));
+                                                    }
+                                                }}
+                                                onBlur={() => {
+                                                    if (localDecimalPct === '') setLocalDecimalPct(1);
+                                                }}
+                                                style={{
+                                                    width: '100%', height: '100%', border: 'none', background: 'transparent',
+                                                    textAlign: 'center', fontSize: '13px', fontWeight: 500, color: localShowPct ? '#1e293b' : '#94a3b8',
+                                                    outline: 'none', padding: 0
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 하단 적용/취소 액션 버튼 영역 */}
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '4px', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
+                                    <button
+                                        onClick={() => setIsDisplaySettingsOpen(false)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            background: '#f1f5f9',
+                                            color: '#475569',
+                                            border: '1px solid #cbd5e1',
+                                            borderRadius: '6px',
+                                            padding: '6px 14px',
+                                            fontSize: '12px',
+                                            fontWeight: 700,
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.background = '#e2e8f0';
+                                            e.currentTarget.style.color = '#1e293b';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.background = '#f1f5f9';
+                                            e.currentTarget.style.color = '#475569';
+                                        }}
+                                    >
+                                        취소
+                                    </button>
+                                    <button
+                                        onClick={handleApplyDisplaySettings}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            background: '#3b82f6',
+                                            color: '#ffffff',
+                                            border: 'none',
+                                            borderRadius: '6px',
+                                            padding: '6px 16px',
+                                            fontSize: '12px',
+                                            fontWeight: 700,
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                        }}
+                                        onMouseOver={(e) => e.currentTarget.style.background = '#2563eb'}
+                                        onMouseOut={(e) => e.currentTarget.style.background = '#3b82f6'}
+                                    >
+                                        적용
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 엑셀 다운로드 버튼 */}
                     <button
-                        onClick={() => setIsFilterPopupOpen(true)}
-                        className={`advanced-filter-btn ${filterExpression ? 'active' : ''}`}
+                        onClick={() => setIsExcelModalOpen(true)}
+                        style={{
+                            color: '#2563eb',
+                            border: '1px solid #2563eb',
+                            background: '#ffffff',
+                            height: '32px',
+                            padding: '0 16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '6px',
+                            fontSize: '13px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            userSelect: 'none',
+                            outline: 'none'
+                        }}
+                        className="dp-btn"
+                        onMouseOver={(e) => e.currentTarget.style.background = '#eff6ff'}
+                        onMouseOut={(e) => e.currentTarget.style.background = '#ffffff'}
                     >
-                        <Filter size={15} />
-                        고급 필터{filterExpression ? ' ✓' : ''}
+                        <Download size={16} strokeWidth={2.5} style={{ marginRight: '6px' }} color="#2563eb" />
+                        <span>엑셀 다운로드</span>
                     </button>
                 </div>
             </DataHeader>
+
+            {/* 필터 드롭다운 한 줄 영역 (교차분석과 동일) */}
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 24px',
+                background: '#ffffff',
+                borderBottom: '1px solid #e2e8f0',
+                zIndex: 99
+            }}>
+                <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>필터</span>
+
+                {/* 필터 선택 드롭다운 */}
+                <div ref={filterAnchorRef} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <div
+                        onClick={handleTogglePopup}
+                        style={{
+                            width: '320px',
+                            height: '32px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            border: `1px solid ${isFilterOpen ? '#3b82f6' : '#cbd5e1'}`,
+                            borderRadius: '4px',
+                            background: '#fff',
+                            padding: '0 12px',
+                            cursor: 'pointer',
+                            userSelect: 'none'
+                        }}
+                    >
+                        <span style={{ fontSize: '12px', color: '#334155', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '275px' }}>
+                            {getFilterButtonText()}
+                        </span>
+                        <ChevronDown size={14} color="#94a3b8" />
+                    </div>
+                </div>
+
+                {/* 필터 추가 버튼 */}
+                <button
+                    onClick={applyFilterAndClose}
+                    style={{
+                        height: '32px',
+                        padding: '0 16px',
+                        background: '#3b82f6',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease-in-out',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                    }}
+                    onMouseOver={(e) => {
+                        e.currentTarget.style.background = '#2563eb';
+                    }}
+                    onMouseOut={(e) => {
+                        e.currentTarget.style.background = '#3b82f6';
+                    }}
+                >
+                    필터 추가
+                </button>
+
+                {/* 적용된 필터 영역 */}
+                {activeFilterChips.length > 0 && (
+                    <>
+                        <div style={{ width: '1px', height: '24px', backgroundColor: '#e2e8f0', margin: '0 4px' }} />
+                        <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 600, marginLeft: '8px', whiteSpace: 'nowrap' }}>
+                            적용된 필터
+                        </span>
+
+                        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                                {activeFilterChips.map((chip) => (
+                                    <div
+                                        key={`chip-${chip.variableId}`}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            background: '#eff6ff',
+                                            border: '1px solid #bfdbfe',
+                                            borderRadius: '16px',
+                                            padding: '4px 10px',
+                                            fontSize: '11px',
+                                            fontWeight: 500,
+                                            color: '#2563eb',
+                                            userSelect: 'none',
+                                        }}
+                                    >
+                                        <span style={{ fontSize: '11px', lineHeight: '1.4' }}>{chip.displayText}</span>
+                                        <span
+                                            onClick={() => handleRemoveFilterChip(chip.variableId)}
+                                            style={{
+                                                cursor: 'pointer',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                width: '14px',
+                                                height: '14px',
+                                                borderRadius: '50%',
+                                                fontSize: '9px',
+                                                fontWeight: 700,
+                                                background: '#dbeafe',
+                                                color: '#1d4ed8'
+                                            }}
+                                            title="삭제"
+                                        >
+                                            ✕
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* 전체 초기화 버튼 */}
+                        <button
+                            onClick={handleResetAllFilters}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '4px 10px',
+                                borderRadius: '16px',
+                                border: '1px solid #cbd5e1',
+                                background: '#f8fafc',
+                                color: '#475569',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap',
+                                marginLeft: 'auto'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.background = '#e2e8f0'}
+                            onMouseOut={(e) => e.currentTarget.style.background = '#f8fafc'}
+                        >
+                            전체 초기화
+                        </button>
+                    </>
+                )}
+            </div>
+
+            {/* 데이터 필터 모달 (Popup) */}
+            <Popup
+                anchor={filterAnchorRef.current}
+                show={isFilterOpen}
+                anchorAlign={{ horizontal: 'left', vertical: 'bottom' }}
+                popupAlign={{ horizontal: 'left', vertical: 'top' }}
+                popupClass="custom-filter-popup"
+                style={{ width: '320px', marginTop: '4px', zIndex: 1000 }}
+            >
+                <div ref={filterPopupRef} style={{ background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', display: 'flex', flexDirection: 'column', maxHeight: '420px', overflow: 'hidden', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)' }}>
+                    {/* 검색창 영역 */}
+                    <div style={{ padding: '8px 8px 4px 8px', position: 'relative', borderBottom: '1px solid #e2e8f0' }} onClick={(e) => e.stopPropagation()}>
+                        <input
+                            type="text"
+                            placeholder="필터 검색"
+                            value={filterSearchQuery}
+                            onChange={(e) => setFilterSearchQuery(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '6px 10px 6px 30px',
+                                fontSize: '12px',
+                                border: '1px solid #cbd5e1',
+                                borderRadius: '6px',
+                                outline: 'none',
+                                boxSizing: 'border-box',
+                                height: '32px'
+                            }}
+                        />
+                        <Search size={14} style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                        {filterSearchQuery && (
+                            <X
+                                size={14}
+                                style={{ position: 'absolute', right: '18px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', cursor: 'pointer' }}
+                                onClick={() => setFilterSearchQuery('')}
+                            />
+                        )}
+                    </div>
+
+                    <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                        {/* 문항 그룹 및 자식 필터 */}
+                        <div style={{ padding: '2px 0' }}>
+                            {filteredGroupedFilters.length === 0 ? (
+                                <div style={{ padding: '16px', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
+                                    {computedFilterOptions.length === 0 ? '등록된 문항이 없습니다.' : '검색 결과가 없습니다.'}
+                                </div>
+                            ) : (
+                                filteredGroupedFilters.map((group, index) => {
+                                    const allChildIds = group.options.map(o => o.id);
+                                    const checkedChildIds = allChildIds.filter(id => draftComputedFilterIds.includes(id));
+                                    const isParentChecked = allChildIds.length > 0 && checkedChildIds.length === allChildIds.length;
+                                    const isParentIndeterminate = checkedChildIds.length > 0 && checkedChildIds.length < allChildIds.length;
+
+                                    return (
+                                        <div key={group.variableId} style={{ display: 'flex', flexDirection: 'column', borderBottom: index === filteredGroupedFilters.length - 1 ? 'none' : '1px solid #cbd5e1', paddingBottom: '6px' }}>
+                                            {/* Parent Node */}
+                                            <div
+                                                onClick={() => toggleParentFilter(group)}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    padding: '6px 14px',
+                                                    cursor: 'pointer',
+                                                    userSelect: 'none'
+                                                }}
+                                            >
+                                                <div style={{
+                                                    width: '13px',
+                                                    height: '13px',
+                                                    border: (isParentChecked || isParentIndeterminate) ? '1.5px solid #3b82f6' : '1px solid #cbd5e1',
+                                                    borderRadius: '3px',
+                                                    background: '#fff',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    flexShrink: 0
+                                                }}>
+                                                    {isParentChecked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                                                    {isParentIndeterminate && <div style={{ width: '7px', height: '2px', background: '#3b82f6' }} />}
+                                                </div>
+                                                <span style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b' }}>
+                                                    {group.variableLabel}
+                                                </span>
+                                            </div>
+
+                                            {/* Child Nodes */}
+                                            <div style={{ paddingLeft: '28px', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
+                                                {group.options.map(opt => {
+                                                    const isChildChecked = draftComputedFilterIds.includes(opt.id);
+
+                                                    return (
+                                                        <div
+                                                            key={opt.id}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                toggleFilter(opt.id);
+                                                            }}
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '8px',
+                                                                padding: '4px 8px',
+                                                                cursor: 'pointer',
+                                                                borderRadius: '4px',
+                                                                userSelect: 'none'
+                                                            }}
+                                                        >
+                                                            <div style={{
+                                                                width: '13px',
+                                                                height: '13px',
+                                                                border: isChildChecked ? '1.5px solid #3b82f6' : '1px solid #cbd5e1',
+                                                                borderRadius: '3px',
+                                                                background: '#fff',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                flexShrink: 0
+                                                            }}>
+                                                                {isChildChecked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                                                            </div>
+                                                            <span style={{ fontSize: '12px', color: '#475569', fontWeight: 500 }}>
+                                                                {opt.label}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </Popup>
 
             <Toast
                 show={toast.show}
@@ -1870,7 +2911,7 @@ const AdditionalAnalysisPage = () => {
                     />
 
                     {/* Main Content */}
-                    <div className="cross-tab-main" style={{ 
+                    <div className="cross-tab-main" style={{
                         gap: isConfigOpen ? '8px' : '16px',
                         borderRadius: '8px',
                         boxShadow: 'none',
@@ -2367,6 +3408,132 @@ const AdditionalAnalysisPage = () => {
                         handleRun(logicStr);
                     }}
                 />
+            )}
+
+            {/* 엑셀 다운로드 확인 모달 (교차분석과 동일) */}
+            {isExcelModalOpen && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.4)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: '#fff', borderRadius: '16px', padding: '32px', width: '450px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9' }}>
+                        <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Download size={22} color="#2563eb" strokeWidth={2.5} />
+                            엑셀 다운로드
+                        </h3>
+                        <p style={{ margin: '0 0 24px 0', fontSize: '15px', color: '#475569', fontWeight: 500, lineHeight: '1.5' }}>
+                            추가분석표를 엑셀 파일로 다운로드 하시겠습니까?
+                        </p>
+                        <div style={{ marginBottom: '28px', padding: '16px 20px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+                                <div
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none'
+                                    }}
+                                    onClick={() => setExcelShowPct(!excelShowPct)}
+                                >
+                                    <div style={{
+                                        width: '20px', height: '20px', borderRadius: '5px',
+                                        background: excelShowPct ? '#2563eb' : '#fff',
+                                        border: `1.5px solid ${excelShowPct ? '#2563eb' : '#cbd5e1'}`,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        flexShrink: 0,
+                                        transition: 'all 0.15s'
+                                    }}>
+                                        {excelShowPct && (
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        )}
+                                    </div>
+                                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>% 표출 여부</span>
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>% 소수점</span>
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        width: '42px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
+                                        background: '#ffffff'
+                                    }}>
+                                        <input
+                                            type="text"
+                                            value={excelDecimalPct}
+                                            onChange={(e) => {
+                                                let val = e.target.value.replace(/[^0-9]/g, '');
+                                                if (val !== '') {
+                                                    let num = parseInt(val);
+                                                    if (num > 13) num = 13;
+                                                    setExcelDecimalPct(num);
+                                                } else {
+                                                    setExcelDecimalPct('');
+                                                }
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'ArrowUp') {
+                                                    e.preventDefault();
+                                                    setExcelDecimalPct(prev => Math.min(13, (prev === '' ? 1 : prev) + 1));
+                                                } else if (e.key === 'ArrowDown') {
+                                                    e.preventDefault();
+                                                    setExcelDecimalPct(prev => Math.max(0, (prev === '' ? 1 : prev) - 1));
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                if (excelDecimalPct === '') setExcelDecimalPct(1);
+                                            }}
+                                            style={{
+                                                width: '100%', height: '100%', border: 'none', background: 'transparent',
+                                                textAlign: 'center', fontSize: '13px', fontWeight: 800, color: '#1e3a8a',
+                                                outline: 'none', padding: 0
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none'
+                                }}
+                                onClick={() => setExcelShowBaseParenthesis(!excelShowBaseParenthesis)}
+                            >
+                                <div style={{
+                                    width: '20px', height: '20px', borderRadius: '5px',
+                                    background: excelShowBaseParenthesis ? '#2563eb' : '#fff',
+                                    border: `1.5px solid ${excelShowBaseParenthesis ? '#2563eb' : '#cbd5e1'}`,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexShrink: 0,
+                                    transition: 'all 0.15s'
+                                }}>
+                                    {excelShowBaseParenthesis && (
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                    )}
+                                </div>
+                                <span style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>Base 기본 (괄호)</span>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                            <button
+                                onClick={() => setIsExcelModalOpen(false)}
+                                onMouseOver={(e) => e.target.style.background = '#e2e8f0'}
+                                onMouseOut={(e) => e.target.style.background = '#f1f5f9'}
+                                style={{ padding: '10px 20px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, transition: 'background 0.2s' }}
+                            >
+                                취소
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    setIsExcelModalOpen(false);
+                                    await handleExcelExport();
+                                }}
+                                onMouseOver={(e) => e.target.style.background = '#1d4ed8'}
+                                onMouseOut={(e) => e.target.style.background = '#2563eb'}
+                                style={{ padding: '10px 24px', background: '#2563eb', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, transition: 'background 0.2s' }}
+                            >
+                                다운로드
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div >
     );

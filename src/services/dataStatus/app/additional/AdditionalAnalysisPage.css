@@ -2526,3 +2526,32 @@
     height: 14px !important;
     color: #64748b !important;
 }
+
+/* Custom Kendo DropdownList inside Display Settings Popover */
+.custom-xinfo-dropdown.k-dropdownlist,
+.custom-xinfo-dropdown.k-picker {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+.custom-xinfo-dropdown.k-dropdownlist:hover,
+.custom-xinfo-dropdown.k-dropdownlist:focus,
+.custom-xinfo-dropdown.k-dropdownlist.k-focus,
+.custom-xinfo-dropdown.k-dropdownlist:focus-within {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    background-color: transparent !important;
+}
+.custom-xinfo-dropdown .k-input-inner {
+    padding: 0 24px 0 10px !important;
+    width: 100% !important;
+}
+.custom-xinfo-dropdown .k-input-button,
+.custom-xinfo-dropdown .k-button {
+    display: none !important;
+}
+.custom-xinfo-dropdown .k-input-value-text {
+    font-size: 12px !important;
+}

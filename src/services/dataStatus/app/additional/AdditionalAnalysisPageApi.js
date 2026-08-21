@@ -33,12 +33,21 @@ export function AdditionalAnalysisPageApi() {
         async (data) => await api.post(data, "/analysis/evaluate/styled", "API_BASE_URL_DATASTATUS")
     );
 
+    /** 교차테이블 분석 엑셀 다운로드 (export) */
+    const exportAdditionalXlsx = useMutation(
+        async (data) => {
+            const { _config, ...restData } = data || {};
+            return await api.post(restData, "/analysis/evaluate/xlsx-export", "API_BASE_URL_DATASTATUS", _config);
+        }
+    );
+
     return {
         getCrossTabList,
         getCrossTabData,
         saveCrossTable,
         deleteCrossTable,
         evaluateTable,
-        evaluateTables
+        evaluateTables,
+        exportAdditionalXlsx
     };
 }
