@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>차이검증 안내</title>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #1e293b;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation Bar */
+        .tab-bar {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            padding: 0;
+            overflow-x: auto;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 11px 12px;
+            background: none;
+            border: none;
+            border-bottom: 2.5px solid transparent;
+            color: #64748b;
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+
+        .tab-btn:hover {
+            color: #1e293b;
+            background-color: #f8fafc;
+        }
+
+        .tab-btn.active {
+            color: #2563eb;
+            font-weight: 700;
+            border-bottom-color: #2563eb;
+            background-color: #eff6ff;
+        }
+
+        .tab-num-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            background-color: #e2e8f0;
+            color: #475569;
+            font-size: 11px;
+            font-weight: 700;
+            transition: all 0.15s ease;
+        }
+
+        .tab-btn.active .tab-num-badge {
+            background-color: #2563eb;
+            color: #ffffff;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: 16px 28px 28px 28px;
+        }
+
+        .content-card {
+            background-color: #ffffff;
+            padding: 0;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 16.5px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 0;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-desc {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.55;
+            margin-bottom: 14px;
+        }
+
+        .placeholder-box {
+            background-color: #f8fafc;
+            border: 1.5px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: 36px;
+            text-align: center;
+            color: #64748b;
+            font-size: 13.5px;
+        }
+
+        /* Overview Comparison Table */
+        .comp-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 12.5px;
+        }
+
+        .comp-table th,
+        .comp-table td {
+            border: 1px solid #e2e8f0;
+            padding: 9px 12px;
+            text-align: left;
+        }
+
+        .comp-table th {
+            background-color: #f1f5f9;
+            color: #334155;
+            font-weight: 700;
+        }
+
+        .comp-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        /* Mode Key & Plain Value Styling */
+        .mode-key {
+            font-family: inherit;
+            font-size: 13px;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .feature-card {
+            border-radius: 10px;
+            padding: 18px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .feature-ztest {
+            border: 1px solid #bfdbfe;
+            background-color: #f0f7ff;
+        }
+
+        .feature-ttest {
+            border: 1px solid #c7d2fe;
+            background-color: #f5f3ff;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .card-badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-ztest {
+            background-color: #2563eb;
+            color: #ffffff;
+            border: none;
+        }
+
+        .badge-ttest {
+            background-color: #7c3aed;
+            color: #ffffff;
+            border: none;
+        }
+
+        .card-title {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .card-body {
+            font-size: 13px;
+            color: #334155;
+            line-height: 1.65;
+            margin: 0;
+        }
+
+        /* Math Formula Box & Fractions */
+        .math-formula-box {
+            background-color: #f8fafc;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 20px 24px;
+            margin: 20px 0;
+        }
+
+        .math-formula-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .formula-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #0f172a;
+            margin: 12px 0;
+        }
+
+        .frac {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            padding: 0 4px;
+        }
+
+        .frac-num {
+            border-bottom: 1.5px solid #334155;
+            padding-bottom: 2px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .frac-den {
+            padding-top: 2px;
+            text-align: center;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header Title -->
+    <div style="background-color: #ffffff; padding: 16px 28px 12px 28px; border-bottom: 1px solid #e2e8f0;">
+        <h1 style="font-size: 18.5px; font-weight: 800; color: #0f172a; margin: 0 0 4px 0; letter-spacing: -0.4px;">
+            추가분석 차이검증 분석 기준 가이드
+        </h1>
+        <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.45;">
+            추가분석 결과표 분석 시 제공되는 차이검증 옵션별 계산 방식, 통계 검증 수식 및 상세 설정 항목 안내입니다.
+        </p>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab(0)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+                <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" />
+            </svg>
+            <span>한눈에 비교</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab(1)">
+            <span class="tab-num-badge">1</span>
+            <span>단일표본 차이검증 (z-test)</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab(2)">
+            <span class="tab-num-badge">2</span>
+            <span>독립표본 차이검증 (t-test)</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab(3)">
+            <span class="tab-num-badge">3</span>
+            <span>전체값 대비 차이검증 (편차)</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab(4)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+                <line x1="4" y1="21" x2="4" y2="14" />
+                <line x1="4" y1="10" x2="4" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12" y2="3" />
+                <line x1="20" y1="21" x2="20" y2="16" />
+                <line x1="20" y1="12" x2="20" y2="3" />
+                <line x1="1" y1="14" x2="7" y2="14" />
+                <line x1="9" y1="8" x2="15" y2="8" />
+                <line x1="17" y1="16" x2="23" y2="16" />
+            </svg>
+            <span>표 설정 옵션 안내</span>
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="content-card">
+
+            <!-- Tab 0: 한눈에 비교 -->
+            <div class="tab-content active" id="tab-0">
+                <h2 class="section-title" style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" />
+                    </svg>
+                    <span>한눈에 비교</span>
+                </h2>
+                <p class="section-desc">추가분석에서 제공하는 차이검증 옵션의 주요 동작, 검증 수식 및 활용 목적 비교입니다.</p>
+
+                <table class="comp-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 18%;">UI 선택 항목 (LABEL)</th>
+                            <th style="width: 12%;">내부 MODE KEY</th>
+                            <th style="width: 27%;">결과표 동작 및 수치 정의</th>
+                            <th style="width: 21%;">적용 검증 수식</th>
+                            <th style="width: 22%;">주요 활용 목적</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <span style="font-weight: 700; color: #0f172a;">단일표본 차이검증<br>(z-test)</span>
+                            </td>
+                            <td><code class="mode-key">ztest</code></td>
+                            <td>배너의 <strong>'전체(Total) 열'</strong> 값을 고정 기준(모비율)으로 삼아, 각 개별 열 셀 수치와 비교</td>
+                            <td>Single-Sample Z-Test<br><span
+                                    style="font-size: 12px; color: #64748b;">(<em>p</em><sub>0</sub> 전체열 모비율)</span>
+                            </td>
+                            <td>
+                                <strong>전체 평균 대비 도드라진 배너 열(세그먼트) 발굴</strong><br>
+                                <span style="color: #10b981; font-weight: 700; font-size: 12px;">(★ 연구원 권장 모드)</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span style="font-weight: 700; color: #0f172a;">독립표본 차이검증<br>(t-test)</span>
+                            </td>
+                            <td><code class="mode-key">ttest</code></td>
+                            <td>배너 내 <strong>'서로 다른 개별 열 끼리'</strong> (예: 남성열 vs 여성열) 두 집단을 합친 합동 비율 방식으로 일대일 비교</td>
+                            <td>Two-Sample Z/T-Test<br><span
+                                    style="font-size: 12px; color: #64748b;">(<em>p</em><sub>pooled</sub> 합동 비율)</span>
+                            </td>
+                            <td><strong>배너 내 독립된 열 그룹 간 서열 및 수치 우위 직접 비교</strong></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span style="font-weight: 700; color: #0f172a;">전체값 대비 차이검증<br>(편차)</span>
+                            </td>
+                            <td><code class="mode-key">difftest</code></td>
+                            <td>통계 검증 대신, 개별 열 수치와 전체열 수치 간의 <strong>'단순 차이(%p 편차)'</strong>가 최소 차이(기본 5%p) 조건 충족 여부 판단
+                            </td>
+                            <td>Absolute Deviation<br><span style="font-size: 12px; color: #64748b;">(%p 편차 컷오프)</span>
+                            </td>
+                            <td><strong>직관적 단순 비율 차이 (5%p 이상 등) 단순 스크리닝</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Bottom Feature Cards (2 Grid Columns) -->
+                <div class="feature-grid">
+                    <div class="feature-card feature-ztest">
+                        <div class="card-header">
+                            <span class="card-badge badge-ztest">Z-TEST</span>
+                            <span class="card-title">단일표본 Z-test 특징</span>
+                        </div>
+                        <p class="card-body">
+                            전체 응답자 모수 비율(<em>p</em><sub>0</sub>)을 고정 기준값으로 활용하므로 배너 열의 표본 크기(<em>N</em>)가 작아도 표준오차가
+                            안정적입니다. 전체 대비 특이 세그먼트를 발굴할 때 표준으로 사용됩니다.
+                        </p>
+                    </div>
+                    <div class="feature-card feature-ttest">
+                        <div class="card-header">
+                            <span class="card-badge badge-ttest">T-TEST</span>
+                            <span class="card-title">독립표본 T-test 특징</span>
+                        </div>
+                        <p class="card-body">
+                            남성 vs 여성, 10대 vs 20대와 같이 중복 응답자가 없는 상호 배타적 배너 열 간 서열을 검증할 때 사용하며, 두 표본의 합동 비율(Pooled
+                            Proportion)로 표준오차를 추정합니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 1: 단일표본 차이검증 (z-test) -->
+            <div class="tab-content" id="tab-1">
+                <h2 class="section-title" style="display: flex; align-items: center; gap: 8px;">
+                    <span class="tab-num-badge"
+                        style="width: 22px; height: 22px; font-size: 12px; background-color: #2563eb; color: #ffffff;">1</span>
+                    <span>단일표본 차이검증 (z-test)</span>
+                </h2>
+
+                <p class="section-desc"
+                    style="line-height: 1.65; color: #334155; font-size: 14px; margin-bottom: 20px;">
+                    결과표 배너 맨 앞의 <strong>'전체(Total) 열'</strong> 퍼센트 수치를 전체 기준 모수(모비율 <em>P</em><sub>0</sub>)로 삼고, 배너의 각
+                    개별 열(예: 10대열, 20대열)의 셀 수치가 전체열 값 기준 대비 유의미한 차이가 있는지 검증합니다.
+                </p>
+
+                <!-- Formula Box -->
+                <div class="math-formula-box">
+                    <div class="math-formula-title">통계 검증 수식 (SINGLE-SAMPLE Z-TEST)</div>
+
+                    <div class="formula-row">
+                        <span>표준오차 <em>SE</em> =</span>
+                        <span style="display: inline-flex; align-items: stretch; margin-left: 4px;">
+                            <svg width="22" height="52" viewBox="0 0 22 52" fill="none"
+                                style="flex-shrink: 0; margin-right: -1px; display: block;">
+                                <path d="M 2 28 L 7 46 L 19 2 H 22" stroke="#0f172a" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <span
+                                style="border-top: 2px solid #0f172a; padding-top: 5px; padding-left: 4px; padding-right: 6px; display: inline-flex; align-items: center;">
+                                <span class="frac">
+                                    <span class="frac-num"><em>P</em><sub>0</sub> · (1 - <em>P</em><sub>0</sub>)</span>
+                                    <span class="frac-den"><em>N</em><sub>개별열</sub></span>
+                                </span>
+                            </span>
+                        </span>
+                    </div>
+
+                    <div class="formula-row" style="margin-top: 18px;">
+                        <span><em>Z</em>-점수 <em>Z</em> =</span>
+                        <span class="frac">
+                            <span class="frac-num"><em>p</em><sub>개별열</sub> - <em>P</em><sub>0</sub></span>
+                            <span class="frac-den"><em>SE</em></span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Example Table Section -->
+                <div style="margin-top: 24px;">
+                    <h3
+                        style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                        <span>💡</span>
+                        <span>결과표 표출 예시 <span style="font-weight: 500; color: #64748b; font-size: 13px;">(전체열
+                                <em>P</em><sub>0</sub> = 40.0%, 10대열 <em>N</em> = 200명)</span></span>
+                    </h3>
+
+                    <table class="comp-table" style="margin-top: 0;">
+                        <thead>
+                            <tr>
+                                <th style="width: 28%;">구분 (스티브 행)</th>
+                                <th style="width: 24%;">전체 (Total 열)</th>
+                                <th style="width: 24%;">10대 (개별 배너 열)</th>
+                                <th style="width: 24%;">20대 이상</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>SQ1_1. 만족함 (비율)</strong></td>
+                                <td>
+                                    <div style="font-weight: 700; color: #0f172a;">40.0%</div>
+                                    <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">(400/1000명)</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 700; color: #dc2626;">▲ 50.0%</div>
+                                    <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">(100/200명)</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 700; color: #0f172a;">37.5%</div>
+                                    <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">(300/800명)</div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Z-점수 산출값</strong></td>
+                                <td style="color: #475569; font-size: 12.5px;">
+                                    기준 (<em>P</em><sub>0</sub> = 0.40)
+                                </td>
+                                <td>
+                                    <span style="font-weight: 700; color: #2563eb;">+2.887</span>
+                                    <span
+                                        style="font-size: 11.5px; color: #2563eb; font-weight: 600; margin-left: 4px;">(|Z|
+                                        ≥ 1.96)</span>
+                                </td>
+                                <td style="color: #475569; font-size: 13px;">
+                                    -1.443
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 2: 독립표본 차이검증 (t-test) -->
+            <div class="tab-content" id="tab-2">
+                <h2 class="section-title" style="display: flex; align-items: center; gap: 8px;">
+                    <span class="tab-num-badge"
+                        style="width: 22px; height: 22px; font-size: 12px; background-color: #2563eb; color: #ffffff;">2</span>
+                    <span>독립표본 차이검증 (t-test)</span>
+                </h2>
+
+                <p class="section-desc"
+                    style="line-height: 1.65; color: #334155; font-size: 14px; margin-bottom: 20px;">
+                    배너 내의 <strong>'서로 다른 개별 열 끼리'</strong> (예: '남성' 열 vs '여성' 열) 중복 응답자가 없는 상호 배타적 두 집단을 합동 비율(Pooled
+                    Proportion) 방식으로 일대일 직접 비교하여 차이를 검증합니다.
+                </p>
+
+                <!-- Formula Box -->
+                <div class="math-formula-box">
+                    <div class="math-formula-title">통계 검증 수식 (TWO-SAMPLE Z/T-TEST WITH POOLED PROPORTION)</div>
+
+                    <div class="formula-row">
+                        <span>합동 비율 <em>p</em><sub>pooled</sub> =</span>
+                        <span class="frac">
+                            <span class="frac-num"><em>x</em><sub>A</sub> + <em>x</em><sub>B</sub></span>
+                            <span class="frac-den"><em>N</em><sub>A</sub> + <em>N</em><sub>B</sub></span>
+                        </span>
+                    </div>
+
+                    <div class="formula-row" style="margin-top: 20px; flex-wrap: wrap; gap: 16px;">
+                        <div style="display: inline-flex; align-items: center;">
+                            <span><em>SE</em> =</span>
+                            <span style="display: inline-flex; align-items: stretch; margin-left: 6px;">
+                                <svg width="22" height="56" viewBox="0 0 22 56" fill="none"
+                                    style="flex-shrink: 0; margin-right: -1px; display: block;">
+                                    <path d="M 2 30 L 7 50 L 19 2 H 22" stroke="#0f172a" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <span
+                                    style="border-top: 2px solid #0f172a; padding-top: 5px; padding-left: 4px; padding-right: 6px; display: inline-flex; align-items: center;">
+                                    <span><em>p</em><sub>pooled</sub> · (1 - <em>p</em><sub>pooled</sub>) · </span>
+                                    <span
+                                        style="display: inline-flex; align-items: center; font-size: 18px; margin: 0 2px;">(</span>
+                                    <span class="frac">
+                                        <span class="frac-num">1</span>
+                                        <span class="frac-den"><em>N</em><sub>A</sub></span>
+                                    </span>
+                                    <span style="margin: 0 4px;">+</span>
+                                    <span class="frac">
+                                        <span class="frac-num">1</span>
+                                        <span class="frac-den"><em>N</em><sub>B</sub></span>
+                                    </span>
+                                    <span
+                                        style="display: inline-flex; align-items: center; font-size: 18px; margin: 0 2px;">)</span>
+                                </span>
+                            </span>
+                        </div>
+
+                        <div style="display: inline-flex; align-items: center; margin-left: 12px;">
+                            <span>, &nbsp; <em>Z</em> =</span>
+                            <span class="frac" style="margin-left: 6px;">
+                                <span class="frac-num"><em>p</em><sub>A</sub> - <em>p</em><sub>B</sub></span>
+                                <span class="frac-den"><em>SE</em></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Example Table Section -->
+                <div style="margin-top: 24px;">
+                    <h3
+                        style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                        <span>💡</span>
+                        <span>결과표 표출 예시 <span style="font-weight: 500; color: #64748b; font-size: 13px;">(남성 <em>N</em>
+                                = 400명 vs 여성 <em>N</em> = 600명)</span></span>
+                    </h3>
+
+                    <table class="comp-table" style="margin-top: 0;">
+                        <thead>
+                            <tr>
+                                <th style="width: 28%;">구분 (스티브 행)</th>
+                                <th style="width: 24%;">전체 (Total)</th>
+                                <th style="width: 24%;">남성 (배너 열 A)</th>
+                                <th style="width: 24%;">여성 (배너 열 B)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>SQ2_1. 주3회 이상 이용</strong></td>
+                                <td>
+                                    <div style="font-weight: 700; color: #0f172a;">44.0%</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 700; color: #dc2626;">▲ 50.0%</div>
+                                    <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">(200/400명)</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 700; color: #0f172a;">40.0%</div>
+                                    <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">(240/600명)</div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>비교 검증 결과</strong></td>
+                                <td style="color: #64748b; text-align: center;">-</td>
+                                <td>
+                                    <span style="font-weight: 700; color: #2563eb;">+3.121 (여성열 대비 상승)</span>
+                                </td>
+                                <td style="color: #475569; font-size: 13px;">
+                                    기준 대립열
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 3: 전체값 대비 차이검증 (편차) -->
+            <div class="tab-content" id="tab-3">
+                <h2 class="section-title" style="display: flex; align-items: center; gap: 8px;">
+                    <span class="tab-num-badge"
+                        style="width: 22px; height: 22px; font-size: 12px; background-color: #2563eb; color: #ffffff;">3</span>
+                    <span>전체값 대비 차이검증 (편차)</span>
+                </h2>
+
+                <p class="section-desc"
+                    style="line-height: 1.65; color: #334155; font-size: 14px; margin-bottom: 20px;">
+                    통계적 신뢰도 검증 대신, 배너의 각 개별 열 셀 수치와 <strong>'전체(Total) 열'</strong> 셀 수치 간의 <strong>단순 차이(%p
+                        편차)</strong>가 사용자가 설정한 최소 차이(기본 5.0%p 이상) ~ 최대 차이 범위 내에 들어오는지 판단하여 직관적인 편차 기호를 표출합니다.
+                </p>
+
+                <!-- Formula Box -->
+                <div class="math-formula-box">
+                    <div class="math-formula-title">편차 판단 조건식 (DEVIATION CUTOFF RULE)</div>
+
+                    <div class="formula-row">
+                        <span>편차 |Δ| = | <em>p</em><sub>개별열</sub> - <em>P</em><sub>전체열</sub> |</span>
+                    </div>
+
+                    <div class="formula-row" style="margin-top: 14px; font-size: 14.5px;">
+                        <span>판단 조건: 최소 차이(5%p) ≤ |Δ| ≤ 최대 차이(100%p)</span>
+                    </div>
+                </div>
+
+                <!-- Example Table Section -->
+                <div style="margin-top: 24px;">
+                    <h3
+                        style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                        <span>💡</span>
+                        <span>결과표 표출 예시 <span style="font-weight: 500; color: #64748b; font-size: 13px;">(전체열
+                                <em>P</em><sub>전체</sub> = 40.0%, 최소 차이 기준 = 5.0%p)</span></span>
+                    </h3>
+
+                    <table class="comp-table" style="margin-top: 0;">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%;">구분 (스티브 행)</th>
+                                <th style="width: 23%;">전체 (Total 열)</th>
+                                <th style="width: 23%;">10대 (개별 배너 열)</th>
+                                <th style="width: 24%;">판단 결과</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>SQ3_1. 만족함 (비율)</strong></td>
+                                <td>
+                                    <div style="font-weight: 700; color: #0f172a;">40.0%</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 700; color: #dc2626;">▲ 48.0%</div>
+                                </td>
+                                <td>
+                                    <span style="font-weight: 700; color: #16a34a;">+8.0%p 편차</span>
+                                    <span
+                                        style="font-size: 11.5px; color: #16a34a; font-weight: 600; margin-left: 4px;">(|Δ|
+                                        ≥ 5.0%p)</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 4: 표 설정 옵션 안내 -->
+            <div class="tab-content" id="tab-4">
+                <h2 class="section-title" style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" y1="21" x2="4" y2="14" />
+                        <line x1="4" y1="10" x2="4" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="12" />
+                        <line x1="12" y1="8" x2="12" y2="3" />
+                        <line x1="20" y1="21" x2="20" y2="16" />
+                        <line x1="20" y1="12" x2="20" y2="3" />
+                        <line x1="1" y1="14" x2="7" y2="14" />
+                        <line x1="9" y1="8" x2="15" y2="8" />
+                        <line x1="17" y1="16" x2="23" y2="16" />
+                    </svg>
+                    <span>표 설정 팝업 상세 파라미터 안내</span>
+                </h2>
+                <p class="section-desc">차이검증 결과표 설정 팝업에서 지정 가능한 상세 파라미터 및 API 백엔드 제외 처리 규칙 안내입니다.</p>
+
+                <table class="comp-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 22%;">설정 항목 (UI LABEL)</th>
+                            <th style="width: 14%;">기본값</th>
+                            <th style="width: 64%;">상세 기능 및 API 제외 처리 규칙</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>N수 미만 제외</strong></td>
+                            <td><code class="mode-key">30</code></td>
+                            <td>셀의 표본 응답자 수가 설정한 N수 미만인 경우 정규성 미충족으로 차이검증 기호 표출 제외</td>
+                        </tr>
+                        <tr>
+                            <td><strong>전체열 N수 미만 제외</strong></td>
+                            <td><code class="mode-key">0</code></td>
+                            <td>배너의 전체 N수가 설정한 값 미만인 열은 차이검증 대상에서 자동 제외</td>
+                        </tr>
+                        <tr>
+                            <td><strong>기타/모름/무응답 제외</strong></td>
+                            <td><code class="mode-key">OFF (false)</code></td>
+                            <td>
+                                <div style="margin-bottom: 8px; font-weight: 600; color: #0f172a;">
+                                    ON 설정 시 API 백엔드 제외 로직:
+                                </div>
+                                <div style="color: #334155; line-height: 1.6; margin-bottom: 10px;">
+                                    스티브 보기 행 레이블의 공백을 제거한 후, 다음 8가지 제외 키워드가 하나라도 포함되어 있으면 차이검증 대상 및 기호 표출에서 자동 제외됩니다.
+                                </div>
+                                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
+                                    <span
+                                        style="background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; font-size: 11.5px; font-weight: 600; padding: 2px 7px; border-radius: 4px;">기타</span>
+                                    <span
+                                        style="background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; font-size: 11.5px; font-weight: 600; padding: 2px 7px; border-radius: 4px;">모름</span>
+                                    <span
+                                        style="background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; font-size: 11.5px; font-weight: 600; padding: 2px 7px; border-radius: 4px;">무응답</span>
+                                    <span
+                                        style="background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; font-size: 11.5px; font-weight: 600; padding: 2px 7px; border-radius: 4px;">없음</span>
+                                    <span
+                                        style="background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; font-size: 11.5px; font-weight: 600; padding: 2px 7px; border-radius: 4px;">없다</span>
+                                    <span
+                                        style="background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; font-size: 11.5px; font-weight: 600; padding: 2px 7px; border-radius: 4px;">이중없음</span>
+                                    <span
+                                        style="background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; font-size: 11.5px; font-weight: 600; padding: 2px 7px; border-radius: 4px;">해당없음</span>
+                                    <span
+                                        style="background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; font-size: 11.5px; font-weight: 600; padding: 2px 7px; border-radius: 4px;">모름무응답</span>
+                                </div>
+                                <div style="font-size: 12px; color: #64748b;">
+                                    (예: "잘 모름", "해당 없음", "기타 의견", "모름/무응답", "의견 없음" 등 공백 포함 레이블 자동 감지 제외)
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>신뢰도 (%)</strong></td>
+                            <td><code class="mode-key">95%</code></td>
+                            <td>
+                                <div style="font-weight: 600; color: #0f172a; margin-bottom: 6px;">
+                                    차이검증 신뢰 수준 설정 (90%, 95%, 99% 등 선택)
+                                </div>
+                                <ul
+                                    style="margin: 0; padding-left: 18px; color: #334155; font-size: 12.5px; line-height: 1.6;">
+                                    <li><strong>95% (기본):</strong> |Z| ≥ 1.96 이면 진한 표시 (up**), |Z| ≥ 1.645 이면 연한 표시
+                                        (up*)</li>
+                                    <li><strong>90%:</strong> Z-Score 임계값 1.645 적용</li>
+                                    <li><strong>99%:</strong> Z-Score 임계값 2.576 적용</li>
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>표출색상</strong></td>
+                            <td><code class="mode-key">red</code></td>
+                            <td style="line-height: 1.6;">
+                                <div><strong style="color: #475569;">red:</strong> UP(<span
+                                        style="color: #ef4444;">▲</span>) 빨간색 <span
+                                        style="color: #ef4444; font-weight: 600;">#EF4444</span> / DOWN(<span
+                                        style="color: #3b82f6;">▼</span>) 파란색 <span
+                                        style="color: #3b82f6; font-weight: 600;">#3B82F6</span></div>
+                                <div style="margin-top: 2px;"><strong style="color: #475569;">blue:</strong> UP(<span
+                                        style="color: #3b82f6;">▲</span>) 파란색 <span
+                                        style="color: #3b82f6; font-weight: 600;">#3B82F6</span> / DOWN(<span
+                                        style="color: #ef4444;">▼</span>) 빨간색 <span
+                                        style="color: #ef4444; font-weight: 600;">#EF4444</span></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>화살표</strong></td>
+                            <td><code class="mode-key">true</code></td>
+                            <td style="line-height: 1.6;">
+                                <div><strong style="color: #475569;">true:</strong> 차이검증 결과 수치 앞에 ▲/▼ 화살표 선 표출</div>
+                                <div style="margin-top: 2px;"><strong style="color: #475569;">false:</strong> 화살표 없이 깔끔한
+                                    숫자만 표출</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function switchTab(index) {
+            const tabs = document.querySelectorAll('.tab-btn');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach((tab, i) => {
+                if (i === index) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            contents.forEach((content, i) => {
+                if (i === index) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

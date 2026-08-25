@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { ChevronDown, ChevronUp, Play, Search, BarChart2, BarChartHorizontal, Download, X, Settings, ChevronRight, GripVertical, GripHorizontal, LineChart, Map as MapIcon, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2, Maximize, Minimize, Save, Grid, Plus, Table, List, Star, Table2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Play, Search, BarChart2, BarChartHorizontal, Download, X, Settings, ChevronRight, GripVertical, GripHorizontal, LineChart, Map as MapIcon, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2, Maximize, Minimize, Save, Grid, Plus, Table, List, Star, Table2, HelpCircle } from 'lucide-react';
 import Toast from '../../../../components/common/Toast';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { Popup } from '@progress/kendo-react-popup';
@@ -2535,7 +2535,32 @@ const AdditionalAnalysisPage = () => {
 
                                 {/* 차이검증 */}
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap', flexShrink: 0 }}>차이검증</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap', flexShrink: 0 }}>차이검증</span>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                if (e) { e.stopPropagation(); e.preventDefault(); }
+                                                window.open('/additional_analysis_help.html', '_blank', 'width=1040,height=710,scrollbars=yes,resizable=yes,top=80,left=80');
+                                            }}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                padding: '2px',
+                                                margin: 0,
+                                                cursor: 'pointer',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: '#64748b',
+                                                borderRadius: '4px',
+                                                transition: 'all 0.15s ease',
+                                            }}
+                                            title="차이검증 설명 새창 보기"
+                                        >
+                                            <HelpCircle size={14} />
+                                        </button>
+                                    </div>
                                     <div ref={sigAnchorRef} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <div style={{ position: 'relative', width: localSigType !== 'none' ? '200px' : '240px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
                                             <DropDownList

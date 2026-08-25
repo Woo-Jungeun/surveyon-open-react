@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Settings, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Info, Wand2, Plus, Copy, ChevronDown, ChevronUp, Sparkles, Table2, BarChart3, Cloud, BarChart2, BarChartHorizontal, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download, Check, LayoutList, Loader2 } from 'lucide-react';
+import { Settings, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Info, HelpCircle, Wand2, Plus, Copy, ChevronDown, ChevronUp, Sparkles, Table2, BarChart3, Cloud, BarChart2, BarChartHorizontal, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download, Check, LayoutList, Loader2 } from 'lucide-react';
 import { Popup } from '@progress/kendo-react-popup';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
@@ -22,7 +22,7 @@ const SIG_TYPE_OPTIONS = [
     { text: '미적용', value: 'none' },
     { text: '단일표본 차이검증(z-test)', value: 'z-test' },
     { text: '독립표본 차이검증(t-test)', value: 't-test' },
-    { text: '전체값 대비 (편차)', value: 'deviation' }
+    { text: '전체값 대비 차이검증(편차)', value: 'deviation' }
 ];
 
 const formatCountValue = (val, policy) => {
@@ -3194,7 +3194,32 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
                                 {/* 차이검증 */}
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap', flexShrink: 0 }}>차이검증</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap', flexShrink: 0 }}>차이검증</span>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                if (e) { e.stopPropagation(); e.preventDefault(); }
+                                                window.open('/cross_analysis_help.html', '_blank', 'width=1040,height=710,scrollbars=yes,resizable=yes,top=80,left=80');
+                                            }}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                padding: '2px',
+                                                margin: 0,
+                                                cursor: 'pointer',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: '#64748b',
+                                                borderRadius: '4px',
+                                                transition: 'all 0.15s ease'
+                                            }}
+                                            title="차이검증 설명 새창 보기"
+                                        >
+                                            <HelpCircle size={14} />
+                                        </button>
+                                    </div>
                                     <div ref={sigAnchorRef} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <div style={{ position: 'relative', width: localSigType !== 'none' ? '200px' : '240px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
                                             <DropDownList
