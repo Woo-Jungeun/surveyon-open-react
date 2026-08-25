@@ -184,6 +184,7 @@ const AdditionalAnalysisPage = () => {
     const [filterSearchQuery, setFilterSearchQuery] = useState('');
     const filterAnchorRef = useRef(null);
     const filterPopupRef = useRef(null);
+    const filterApplyBtnRef = useRef(null);
     const tableListRef = useRef(null);
     const [fullscreenModal, setFullscreenModal] = useState({
         open: false,
@@ -393,8 +394,13 @@ const AdditionalAnalysisPage = () => {
     };
 
     useEffect(() => {
-        if (!variables || variables.length === 0) return;
-        const filterOpts = variables
+        const baseVars = (allBaseVariablesRef.current && allBaseVariablesRef.current.length > 0)
+            ? allBaseVariablesRef.current
+            : (variables || []).filter(v => v.isBase || !v.isRecoded);
+
+        if (!baseVars || baseVars.length === 0) return;
+
+        const filterOpts = baseVars
             .filter(value => {
                 const variableId = String(value?.id ?? value?.name ?? '').trim();
                 const isAddQuestion = variableId.toUpperCase().startsWith("ADD_");
@@ -412,9 +418,9 @@ const AdditionalAnalysisPage = () => {
                         const label = String(info?.label ?? "").trim();
                         const rawValue = info?.value ?? info?.num ?? index + 1;
                         const logic = String(info?.logic ?? `${variableId} == ${rawValue}`).trim();
-                        if (!label) return null;
+                        if (!label || label.toLowerCase() === 'base') return null;
                         return {
-                            id: `${variableId}::${String(rawValue).trim() || String(index + 1)}`,
+                            id: `${variableId}::${String(rawValue).trim() || String(index + 1)}::${index}`,
                             label,
                             logic,
                             variableId,
@@ -423,6 +429,7 @@ const AdditionalAnalysisPage = () => {
                     })
                     .filter(Boolean);
             });
+        console.log("🔍 [추가분석] computedFilterOptions 생성 완료:", filterOpts.length, "개", filterOpts);
         setComputedFilterOptions(filterOpts);
     }, [variables]);
 
@@ -458,6 +465,40 @@ const AdditionalAnalysisPage = () => {
         }).filter(Boolean);
     }, [computedFilterOptions, filterSearchQuery]);
 
+    const derivedFilterExpression = useMemo(() => {
+        if (!selectedComputedFilterIds || selectedComputedFilterIds.includes(CROSS_FILTER_ALL_ID)) {
+            return "";
+        }
+        const activeOptions = computedFilterOptions.filter(o => selectedComputedFilterIds.includes(o.id));
+        if (activeOptions.length === 0) return "";
+
+        const groups = {};
+        activeOptions.forEach(o => {
+            const varId = o.variableId || 'default';
+            if (!groups[varId]) {
+                groups[varId] = [];
+            }
+            groups[varId].push(o.logic);
+        });
+
+        const groupExpressions = Object.values(groups).map(logics => `(${logics.join(" or ")})`);
+        return groupExpressions.join(" and ");
+    }, [selectedComputedFilterIds, computedFilterOptions]);
+
+    useEffect(() => {
+        if (!filterExpression || !computedFilterOptions || computedFilterOptions.length === 0) return;
+        const matched = [];
+        computedFilterOptions.forEach(opt => {
+            if (opt.logic && filterExpression.includes(opt.logic)) {
+                matched.push(opt.id);
+            }
+        });
+        if (matched.length > 0) {
+            setSelectedComputedFilterIds(matched);
+            setDraftComputedFilterIds(matched);
+        }
+    }, [filterExpression, computedFilterOptions]);
+
     const handleTogglePopup = () => {
         if (!isFilterOpen) {
             setDraftComputedFilterIds(selectedComputedFilterIds);
@@ -466,10 +507,12 @@ const AdditionalAnalysisPage = () => {
     };
 
     const applyFilterAndClose = () => {
+        console.log("🔍 [추가분석] applyFilterAndClose 클릭! draftComputedFilterIds:", draftComputedFilterIds);
         setSelectedComputedFilterIds(draftComputedFilterIds);
         setIsFilterOpen(false);
 
         if (draftComputedFilterIds.includes(CROSS_FILTER_ALL_ID)) {
+            console.log("🔍 [추가분석] CROSS_FILTER_ALL_ID 포함 -> 필터 초기화");
             setFilterExpression("");
             setFilterInfo(null);
             handleRun("");
@@ -477,7 +520,9 @@ const AdditionalAnalysisPage = () => {
         }
 
         const activeOptions = computedFilterOptions.filter(o => draftComputedFilterIds.includes(o.id));
+        console.log("🔍 [추가분석] activeOptions:", activeOptions);
         if (activeOptions.length === 0) {
+            console.log("🔍 [추가분석] activeOptions가 0개 -> 필터 초기화");
             setFilterExpression("");
             setFilterInfo(null);
             handleRun("");
@@ -495,6 +540,7 @@ const AdditionalAnalysisPage = () => {
 
         const groupExpressions = Object.values(groups).map(logics => `(${logics.join(" or ")})`);
         const exprStr = groupExpressions.join(" and ");
+        console.log("🔍 [추가분석] 생성된 필터식 (exprStr):", exprStr);
         setFilterExpression(exprStr);
         handleRun(exprStr);
     };
@@ -650,7 +696,8 @@ const AdditionalAnalysisPage = () => {
                 filterAnchorRef.current &&
                 !filterAnchorRef.current.contains(target) &&
                 filterPopupRef.current &&
-                !filterPopupRef.current.contains(target)) {
+                !filterPopupRef.current.contains(target) &&
+                (!filterApplyBtnRef.current || !filterApplyBtnRef.current.contains(target))) {
                 if (!isKendoClick) {
                     setDraftComputedFilterIds(selectedComputedFilterIds);
                     setIsFilterOpen(false);
@@ -755,7 +802,7 @@ const AdditionalAnalysisPage = () => {
                 tables: formattedTables,
                 variables: variablesMap,
                 weight_col: (selectedWeight && selectedWeight !== "없음" && selectedWeight !== "") ? selectedWeight : null,
-                filter_expression: filterExpression ? filterExpression : null,
+                filter_expression: (filterExpression || derivedFilterExpression) ? (filterExpression || derivedFilterExpression) : null,
                 excel_show_percent: excelShowPct,
                 include_stats: includeStatsList,
                 display_policy: {
@@ -767,13 +814,17 @@ const AdditionalAnalysisPage = () => {
                     show_base_parenthesis: excelShowBaseParenthesis,
                     base_prefix: excelShowBaseParenthesis ? "(" : "",
                     base_postfix: excelShowBaseParenthesis ? ")" : "",
+                    sig_type: sigTypeVal || 'none',
                     sig_diff_fin_mode: (sigTypeVal === 't-test' || sigTypeVal === 't_test') ? 't-test' : ((sigTypeVal === 'z-test' || sigTypeVal === 'z_test') ? 'z-test' : (sigTypeVal === 'deviation' ? 'deviation' : 'none')),
                     sig_diff_test_mode: sigTypeVal === 'deviation',
                     sig_level: displayPolicy?.sig_level ?? 95,
                     sig_exclude_under_n: displayPolicy?.sig_exclude_under_n ?? 3,
                     sig_exclude_etc: Boolean(displayPolicy?.sig_exclude_etc),
                     sig_diff_min: displayPolicy?.sig_diff_min ?? 5,
-                    sig_diff_max: displayPolicy?.sig_diff_max ?? 100
+                    sig_diff_max: displayPolicy?.sig_diff_max ?? 100,
+                    sig_exclude_column_under_n: displayPolicy?.sig_exclude_column_under_n ?? 0,
+                    sig_up_color: displayPolicy?.sig_up_color || "red",
+                    sig_show_arrow: Boolean(displayPolicy?.sig_show_arrow)
                 },
                 ui_settings: (contextUiSettings && Object.keys(contextUiSettings).length > 0)
                     ? contextUiSettings
@@ -1962,7 +2013,7 @@ const AdditionalAnalysisPage = () => {
                 config: {
                     banner: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
                     stub: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join('+')]) : [],
-                    filter_expression: filterExpression,
+                    filter_expression: filterExpression || derivedFilterExpression || "",
                     filter_info: filterInfo,
                     weight_col: selectedWeight === "없음" ? "" : selectedWeight,
                     row_eval_mode: tableMode === 'separated' ? 'split' : 'combined',
@@ -1980,8 +2031,8 @@ const AdditionalAnalysisPage = () => {
                     t.id === selectedTableId ? {
                         ...t,
                         name: tableName || "Untitled Table",
-                        banner: savePayload.config.banner,
-                        stub: savePayload.config.stub,
+                        banner: payload.config.banner,
+                        stub: payload.config.stub,
                         row: rowVars.map(v => v.id || v.name),
                         col: colVars.map(group => group.map(v => v.id || v.name)),
                         isNew: false,
@@ -2030,9 +2081,11 @@ const AdditionalAnalysisPage = () => {
 
             let weightId = "";
             if (selectedWeight && selectedWeight !== "없음" && selectedWeight !== "") {
-                const weightVar = variables.find(v => v.name === selectedWeight);
+                const weightVar = variables.find(v => v.name === selectedWeight || v.id === selectedWeight || v.label === selectedWeight);
                 if (weightVar) {
-                    weightId = weightVar.id;
+                    weightId = weightVar.id || weightVar.name;
+                } else {
+                    weightId = selectedWeight;
                 }
             }
 
@@ -2044,7 +2097,7 @@ const AdditionalAnalysisPage = () => {
                 config: {
                     banner: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
                     stub: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join('+')]) : [],
-                    filter_expression: filterExpression,
+                    filter_expression: filterExpression || derivedFilterExpression || "",
                     filter_info: filterInfo,
                     weight_col: selectedWeight === "없음" ? "" : selectedWeight,
                     row_eval_mode: tableMode === 'separated' ? 'split' : 'combined',
@@ -2139,10 +2192,15 @@ const AdditionalAnalysisPage = () => {
                     pageid: currentPageId,
                     variables: variablesMap,
                     weight_col: weightId,
-                    filter_expression: filterExpression,
-                    include_stats: ALL_STATS,
+                    filter_expression: filterExpression || derivedFilterExpression || "",
+                    include_stats: (displayPolicy?.sig_type && displayPolicy.sig_type !== 'none') ? [...ALL_STATS, (displayPolicy.sig_type === 't_test' ? 't-test' : (displayPolicy.sig_type === 'z_test' ? 'z-test' : displayPolicy.sig_type))] : ALL_STATS,
                     row_eval_mode: 'split', // tableMode === 'separated' ? 'split' : 'combined'
-                    display_policy: displayPolicy || {},
+                    display_policy: {
+                        ...(displayPolicy || {}),
+                        sig_exclude_column_under_n: displayPolicy?.sig_exclude_column_under_n ?? 0,
+                        sig_up_color: displayPolicy?.sig_up_color || "red",
+                        sig_show_arrow: Boolean(displayPolicy?.sig_show_arrow)
+                    },
                     zero_base_columns: displayPolicy?.hide_zero_base_columns ?? false,
                     zero_banners: displayPolicy?.hide_zero_base_columns ?? false,
                     zero_stubs: displayPolicy?.hide_zero_stubs ?? false,
@@ -2245,23 +2303,33 @@ const AdditionalAnalysisPage = () => {
             });
         });
 
-        if (weightId) {
+        if (selectedWeight && selectedWeight !== "없음" && selectedWeight !== "") {
             const weightVar = variables.find(v => v.name === selectedWeight || v.id === selectedWeight || v.label === selectedWeight);
             if (weightVar) {
                 const wId = weightVar.id || weightVar.name;
                 variablesMap[wId] = weightVar;
                 weightId = wId;
+            } else {
+                weightId = selectedWeight;
+                variablesMap[selectedWeight] = { id: selectedWeight, name: selectedWeight, label: selectedWeight, type: "categorical", info: [] };
             }
         }
 
-        const currentFilter = overrideFilter !== undefined ? overrideFilter : filterExpression;
-        const currentDisplayPolicy = overrideDisplayPolicy !== undefined ? overrideDisplayPolicy : displayPolicy;
+        const currentFilter = (typeof overrideFilter === 'string') ? overrideFilter : (filterExpression || derivedFilterExpression || "");
+        const currentDisplayPolicy = (overrideDisplayPolicy && typeof overrideDisplayPolicy === 'object' && !overrideDisplayPolicy.nativeEvent && !overrideDisplayPolicy.target) ? overrideDisplayPolicy : displayPolicy;
+
+        console.log("🚀 [추가분석] handleRun 호출!");
+        console.log("🚀 [추가분석] overrideFilter:", overrideFilter);
+        console.log("🚀 [추가분석] filterExpression state:", filterExpression);
+        console.log("🚀 [추가분석] derivedFilterExpression memo:", derivedFilterExpression);
+        console.log("🚀 [추가분석] currentFilter (최종 적용 필터):", currentFilter);
 
         // Include variables used in filter expression
         if (currentFilter) {
-            variables.forEach(v => {
+            const allSearchVars = [...variables, ...(allBaseVariablesRef.current || [])];
+            allSearchVars.forEach(v => {
                 const vId = v.id || v.name;
-                if (new RegExp('\\b' + vId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(currentFilter)) {
+                if (vId && new RegExp('\\b' + vId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(currentFilter)) {
                     variablesMap[vId] = v;
                 }
             });
@@ -2270,6 +2338,11 @@ const AdditionalAnalysisPage = () => {
         const xInfo = colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [];
         const baseTableName = tableName || "Untitled Table";
 
+        const currentSigType = currentDisplayPolicy?.sig_type || 'none';
+        const sigTypeVal = currentSigType !== 'none' ? currentSigType : null;
+        const includeStatsList = (sigTypeVal && sigTypeVal !== 'none')
+            ? [...ALL_STATS, (sigTypeVal === 't_test' ? 't-test' : (sigTypeVal === 'z_test' ? 'z-test' : sigTypeVal))]
+            : ALL_STATS;
 
         let payload = {
             user: auth.user.userId,
@@ -2277,9 +2350,22 @@ const AdditionalAnalysisPage = () => {
             variables: variablesMap,
             weight_col: weightId,
             filter_expression: currentFilter,
-            include_stats: ALL_STATS,
+            include_stats: includeStatsList,
             row_eval_mode: tableMode === 'separated' ? 'split' : 'combined',
-            display_policy: currentDisplayPolicy || {},
+            display_policy: {
+                ...(currentDisplayPolicy || {}),
+                sig_type: currentSigType,
+                sig_diff_fin_mode: (currentSigType === 't-test' || currentSigType === 't_test') ? 't-test' : ((currentSigType === 'z-test' || currentSigType === 'z_test') ? 'z-test' : (currentSigType === 'deviation' ? 'deviation' : 'none')),
+                sig_diff_test_mode: currentSigType === 'deviation',
+                sig_level: currentDisplayPolicy?.sig_level ?? 95,
+                sig_exclude_under_n: currentDisplayPolicy?.sig_exclude_under_n ?? 3,
+                sig_exclude_etc: Boolean(currentDisplayPolicy?.sig_exclude_etc),
+                sig_diff_min: currentDisplayPolicy?.sig_diff_min ?? 5,
+                sig_diff_max: currentDisplayPolicy?.sig_diff_max ?? 100,
+                sig_exclude_column_under_n: currentDisplayPolicy?.sig_exclude_column_under_n ?? 0,
+                sig_up_color: currentDisplayPolicy?.sig_up_color || "red",
+                sig_show_arrow: Boolean(currentDisplayPolicy?.sig_show_arrow)
+            },
             zero_base_columns: currentDisplayPolicy?.hide_zero_base_columns ?? false,
             zero_banners: currentDisplayPolicy?.hide_zero_base_columns ?? false,
             zero_stubs: currentDisplayPolicy?.hide_zero_stubs ?? false,
@@ -2292,6 +2378,8 @@ const AdditionalAnalysisPage = () => {
             banner: xInfo,
             stub: rowVars.map(v => v.id || v.name)
         };
+
+        console.log("🚀 [추가분석] 서버로 보낼 payload:", payload);
 
         try {
             loadingSpinner.show();
@@ -2457,26 +2545,7 @@ const AdditionalAnalysisPage = () => {
                                     표시 설정
                                 </div>
 
-                                {/* 가중치 설정 */}
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>가중치 설정</span>
-                                    <div style={{ position: 'relative', width: '240px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
-                                        <DropDownList
-                                            data={weightDropdownData}
-                                            textField="text"
-                                            dataItemKey="value"
-                                            value={weightDropdownData.find(o => o.value === localWeight) || weightDropdownData[0]}
-                                            onChange={(e) => {
-                                                const nextVal = (typeof e.value === 'object' && e.value !== null) ? e.value.value : e.value;
-                                                setLocalWeight(nextVal);
-                                            }}
-                                            style={{ width: '100%', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
-                                            className="custom-xinfo-dropdown"
-                                            popupSettings={{ className: "custom-xinfo-dropdown", width: "235px" }}
-                                        />
-                                        <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
-                                    </div>
-                                </div>
+
 
                                 {/* 차이검증 */}
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
@@ -3104,6 +3173,7 @@ const AdditionalAnalysisPage = () => {
 
                 {/* 필터 추가 버튼 */}
                 <button
+                    ref={filterApplyBtnRef}
                     onClick={applyFilterAndClose}
                     style={{
                         height: '32px',

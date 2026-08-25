@@ -2331,7 +2331,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     if (!label || !logic) return null;
                                     const rawValue = info?.value ?? index + 1;
                                     return {
-                                        id: `${variableId}::${String(rawValue).trim() || String(index + 1)}`,
+                                        id: `${variableId}::${String(rawValue).trim() || String(index + 1)}::${index}`,
                                         label,
                                         logic,
                                         variableId,
