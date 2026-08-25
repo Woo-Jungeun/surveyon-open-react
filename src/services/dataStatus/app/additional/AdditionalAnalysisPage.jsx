@@ -429,7 +429,6 @@ const AdditionalAnalysisPage = () => {
                     })
                     .filter(Boolean);
             });
-        console.log("🔍 [추가분석] computedFilterOptions 생성 완료:", filterOpts.length, "개", filterOpts);
         setComputedFilterOptions(filterOpts);
     }, [variables]);
 
@@ -507,12 +506,10 @@ const AdditionalAnalysisPage = () => {
     };
 
     const applyFilterAndClose = () => {
-        console.log("🔍 [추가분석] applyFilterAndClose 클릭! draftComputedFilterIds:", draftComputedFilterIds);
         setSelectedComputedFilterIds(draftComputedFilterIds);
         setIsFilterOpen(false);
 
         if (draftComputedFilterIds.includes(CROSS_FILTER_ALL_ID)) {
-            console.log("🔍 [추가분석] CROSS_FILTER_ALL_ID 포함 -> 필터 초기화");
             setFilterExpression("");
             setFilterInfo(null);
             handleRun("");
@@ -520,9 +517,7 @@ const AdditionalAnalysisPage = () => {
         }
 
         const activeOptions = computedFilterOptions.filter(o => draftComputedFilterIds.includes(o.id));
-        console.log("🔍 [추가분석] activeOptions:", activeOptions);
         if (activeOptions.length === 0) {
-            console.log("🔍 [추가분석] activeOptions가 0개 -> 필터 초기화");
             setFilterExpression("");
             setFilterInfo(null);
             handleRun("");
@@ -540,7 +535,6 @@ const AdditionalAnalysisPage = () => {
 
         const groupExpressions = Object.values(groups).map(logics => `(${logics.join(" or ")})`);
         const exprStr = groupExpressions.join(" and ");
-        console.log("🔍 [추가분석] 생성된 필터식 (exprStr):", exprStr);
         setFilterExpression(exprStr);
         handleRun(exprStr);
     };
@@ -2318,12 +2312,6 @@ const AdditionalAnalysisPage = () => {
         const currentFilter = (typeof overrideFilter === 'string') ? overrideFilter : (filterExpression || derivedFilterExpression || "");
         const currentDisplayPolicy = (overrideDisplayPolicy && typeof overrideDisplayPolicy === 'object' && !overrideDisplayPolicy.nativeEvent && !overrideDisplayPolicy.target) ? overrideDisplayPolicy : displayPolicy;
 
-        console.log("🚀 [추가분석] handleRun 호출!");
-        console.log("🚀 [추가분석] overrideFilter:", overrideFilter);
-        console.log("🚀 [추가분석] filterExpression state:", filterExpression);
-        console.log("🚀 [추가분석] derivedFilterExpression memo:", derivedFilterExpression);
-        console.log("🚀 [추가분석] currentFilter (최종 적용 필터):", currentFilter);
-
         // Include variables used in filter expression
         if (currentFilter) {
             const allSearchVars = [...variables, ...(allBaseVariablesRef.current || [])];
@@ -2378,8 +2366,6 @@ const AdditionalAnalysisPage = () => {
             banner: xInfo,
             stub: rowVars.map(v => v.id || v.name)
         };
-
-        console.log("🚀 [추가분석] 서버로 보낼 payload:", payload);
 
         try {
             loadingSpinner.show();
