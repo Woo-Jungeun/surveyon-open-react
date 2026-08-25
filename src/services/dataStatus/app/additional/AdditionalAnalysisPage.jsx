@@ -117,6 +117,28 @@ const processResults = (evalResultData) => {
 };
 
 
+const SIG_UP_COLOR_OPTIONS = [
+    { text: 'UP 빨강 / DOWN 파랑', value: 'red' },
+    { text: 'UP 파랑 / DOWN 빨강', value: 'blue' }
+];
+
+const renderSigUpColorContent = (item) => {
+    if (!item) return null;
+    const val = typeof item === 'object' ? item.value : item;
+    if (val === 'red') {
+        return (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: 500, userSelect: 'none', cursor: 'pointer' }}>
+                <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '10px' }}>UP</span> 빨강 / <span style={{ color: '#3b82f6', fontWeight: 600, fontSize: '10px' }}>DOWN</span> 파랑
+            </span>
+        );
+    }
+    return (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: 500, userSelect: 'none', cursor: 'pointer' }}>
+            <span style={{ color: '#3b82f6', fontWeight: 600, fontSize: '10px' }}>UP</span> 파랑 / <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '10px' }}>DOWN</span> 빨강
+        </span>
+    );
+};
+
 const AdditionalAnalysisPage = () => {
     // Auth & API
     const auth = useSelector((store) => store.auth);
@@ -260,6 +282,9 @@ const AdditionalAnalysisPage = () => {
     const [localSigLevel, setLocalSigLevel] = useState(95);
     const [localSigDiffMin, setLocalSigDiffMin] = useState(5);
     const [localSigDiffMax, setLocalSigDiffMax] = useState(100);
+    const [localSigExcludeColumnUnderN, setLocalSigExcludeColumnUnderN] = useState(0);
+    const [localSigUpColor, setLocalSigUpColor] = useState("red");
+    const [localSigShowArrow, setLocalSigShowArrow] = useState(false);
     const [isSigPopupOpen, setIsSigPopupOpen] = useState(false);
     const [animateSettingsTrigger, setAnimateSettingsTrigger] = useState(0);
     const sigAnchorRef = useRef(null);
@@ -285,6 +310,9 @@ const AdditionalAnalysisPage = () => {
             setLocalSigLevel(displayPolicy?.sig_level ?? 95);
             setLocalSigDiffMin(displayPolicy?.sig_diff_min ?? 5);
             setLocalSigDiffMax(displayPolicy?.sig_diff_max ?? 100);
+            setLocalSigExcludeColumnUnderN(displayPolicy?.sig_exclude_column_under_n ?? 0);
+            setLocalSigUpColor(displayPolicy?.sig_up_color ?? "red");
+            setLocalSigShowArrow(displayPolicy?.sig_show_arrow ?? false);
             setIsSigPopupOpen(false);
         }
     }, [isDisplaySettingsOpen, selectedWeight, displayPolicy]);
@@ -325,6 +353,9 @@ const AdditionalAnalysisPage = () => {
             sig_level: localSigLevel !== '' ? Number(localSigLevel) : 95,
             sig_diff_min: localSigDiffMin !== '' ? Number(localSigDiffMin) : 5,
             sig_diff_max: localSigDiffMax !== '' ? Number(localSigDiffMax) : 100,
+            sig_exclude_column_under_n: localSigExcludeColumnUnderN !== '' ? Number(localSigExcludeColumnUnderN) : 0,
+            sig_up_color: localSigUpColor || "red",
+            sig_show_arrow: Boolean(localSigShowArrow),
             weight_col: targetWeight === '없음' ? '' : targetWeight
         };
         setDisplayPolicy(nextPolicy);
@@ -2364,8 +2395,7 @@ const AdditionalAnalysisPage = () => {
             {styleCss && <style dangerouslySetInnerHTML={{ __html: styleCss }} />}
             <DataHeader title="추가분석">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {/* 표시 설정 Button and Popover Popup (임시 주석) */}
-                    {false && (
+                    {/* 표시 설정 Button and Popover Popup */}
                     <div style={{ position: 'relative' }} ref={displaySettingsRef}>
                         <button
                             onClick={() => setIsDisplaySettingsOpen(!isDisplaySettingsOpen)}
@@ -2427,8 +2457,8 @@ const AdditionalAnalysisPage = () => {
                                     표시 설정
                                 </div>
 
-                                {/* 가중치 설정 (주석 처리) */}
-                                {/* <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                                {/* 가중치 설정 */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                                     <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>가중치 설정</span>
                                     <div style={{ position: 'relative', width: '240px', height: '32px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
                                         <DropDownList
@@ -2446,7 +2476,7 @@ const AdditionalAnalysisPage = () => {
                                         />
                                         <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
                                     </div>
-                                </div> */}
+                                </div>
 
                                 {/* 차이검증 */}
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
@@ -2580,7 +2610,36 @@ const AdditionalAnalysisPage = () => {
                                                 </div>
                                             </div>
 
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            {/* 전체 열 N수 미만 제외 */}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>전체 열 N수 미만 제외</span>
+                                                <div style={{ width: '60px', height: '28px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <input
+                                                        type="text"
+                                                        value={localSigExcludeColumnUnderN}
+                                                        onChange={(e) => {
+                                                            let val = e.target.value.replace(/[^0-9]/g, '');
+                                                            setLocalSigExcludeColumnUnderN(val !== '' ? parseInt(val) : '');
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'ArrowUp') {
+                                                                e.preventDefault();
+                                                                setLocalSigExcludeColumnUnderN(prev => (prev === '' ? 0 : Number(prev)) + 1);
+                                                            } else if (e.key === 'ArrowDown') {
+                                                                e.preventDefault();
+                                                                setLocalSigExcludeColumnUnderN(prev => Math.max(0, (prev === '' ? 0 : Number(prev)) - 1));
+                                                            }
+                                                        }}
+                                                        onBlur={() => {
+                                                            if (localSigExcludeColumnUnderN === '') setLocalSigExcludeColumnUnderN(0);
+                                                        }}
+                                                        style={{ width: '100%', height: '100%', border: 'none', background: 'transparent', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#1e293b', outline: 'none', padding: 0 }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* 기타/모름/무응답 제외 */}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                                                 <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>기타/모름/무응답 제외</span>
                                                 <div
                                                     onClick={() => setLocalSigExcludeEtc(!localSigExcludeEtc)}
@@ -2598,6 +2657,57 @@ const AdditionalAnalysisPage = () => {
                                                         position: 'absolute',
                                                         top: '2px',
                                                         left: localSigExcludeEtc ? '19px' : '2px',
+                                                        width: '16px', height: '16px',
+                                                        borderRadius: '50%',
+                                                        background: '#ffffff',
+                                                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                                                        transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                                                    }} />
+                                                </div>
+                                            </div>
+
+                                            {/* 표출색상 */}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>표출색상</span>
+                                                <div style={{ position: 'relative', width: '190px', height: '28px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden', display: 'flex', alignItems: 'center', background: '#ffffff' }}>
+                                                    <DropDownList
+                                                        data={SIG_UP_COLOR_OPTIONS}
+                                                        textField="text"
+                                                        dataItemKey="value"
+                                                        value={SIG_UP_COLOR_OPTIONS.find(o => o.value === localSigUpColor) || SIG_UP_COLOR_OPTIONS[0]}
+                                                        onChange={(e) => {
+                                                            const nextVal = (typeof e.value === 'object' && e.value !== null) ? e.value.value : e.value;
+                                                            setLocalSigUpColor(nextVal);
+                                                        }}
+                                                        valueRender={(element, value) => React.cloneElement(element, { ...element.props }, renderSigUpColorContent(value))}
+                                                        itemRender={(li, itemProps) => React.cloneElement(li, { ...li.props }, renderSigUpColorContent(itemProps.dataItem))}
+                                                        style={{ width: '100%', height: '100%', border: 'none', fontSize: '11px', fontWeight: 600, color: '#1e293b' }}
+                                                        className="custom-xinfo-dropdown"
+                                                        popupSettings={{ className: "custom-xinfo-dropdown", width: "190px" }}
+                                                    />
+                                                    <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: '8px', pointerEvents: 'none' }} />
+                                                </div>
+                                            </div>
+
+                                            {/* 화살표 */}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>화살표</span>
+                                                <div
+                                                    onClick={() => setLocalSigShowArrow(!localSigShowArrow)}
+                                                    style={{
+                                                        position: 'relative',
+                                                        width: '38px', height: '20px',
+                                                        borderRadius: '10px',
+                                                        background: localSigShowArrow ? '#3b82f6' : '#cbd5e1',
+                                                        cursor: 'pointer',
+                                                        transition: 'background-color 0.2s ease',
+                                                        userSelect: 'none'
+                                                    }}
+                                                >
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: '2px',
+                                                        left: localSigShowArrow ? '19px' : '2px',
                                                         width: '16px', height: '16px',
                                                         borderRadius: '50%',
                                                         background: '#ffffff',
@@ -2924,7 +3034,6 @@ const AdditionalAnalysisPage = () => {
                             </div>
                         )}
                     </div>
-                    )}
 
                     {/* 엑셀 다운로드 버튼 */}
                     <button
@@ -2956,8 +3065,7 @@ const AdditionalAnalysisPage = () => {
                 </div>
             </DataHeader>
 
-            {/* 필터 드롭다운 한 줄 영역 (교차분석과 동일) (임시 주석) */}
-            {false && (
+            {/* 필터 드롭다운 한 줄 영역 (교차분석과 동일) */}
             <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -3100,7 +3208,6 @@ const AdditionalAnalysisPage = () => {
                     </>
                 )}
             </div>
-            )}
 
             {/* 데이터 필터 모달 (Popup) */}
             <Popup

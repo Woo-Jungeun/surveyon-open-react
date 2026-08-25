@@ -273,6 +273,9 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 percent_symbol: settings.display.percent_symbol,
                 percent_as_column: settings.render.format_percent_as_column,
                 stub_group_layout: settings.render.stub_group_layout,
+                sig_exclude_column_under_n: settings.display.sig_exclude_column_under_n !== undefined ? Number(settings.display.sig_exclude_column_under_n) : 0,
+                sig_up_color: settings.display.sig_up_color ?? "red",
+                sig_show_arrow: Boolean(settings.display.sig_show_arrow),
             }
         };
     };
