@@ -177,12 +177,22 @@ const AiSidebar = ({ onOpenProjectModal }) => {
                     label: "문항 목록",
                     path: "/ai_open_analysis/pro_list",
                     icon: FileText,
-                    isActive: (path) => path.includes("/pro_list"),
+                    isActive: (path) => path.includes("/pro_list") && !path.includes("/pro_list_2"),
                     onClick: () => {
                         sessionStorage.setItem("qnum", "");
                         sessionStorage.setItem("project_lock", "");
                     }
                 },
+                ...(String(auth?.user?.userId || "").toLowerCase() === "jewoo" ? [{
+                    label: "문항목록2",
+                    path: "/ai_open_analysis/pro_list_2",
+                    icon: FileText,
+                    isActive: (path) => path.includes("/pro_list_2"),
+                    onClick: () => {
+                        sessionStorage.setItem("qnum", "");
+                        sessionStorage.setItem("project_lock", "");
+                    }
+                }] : []),
                 ...(qnum && !isOnProList ? [{
                     label: "분석",
                     path: "/ai_open_analysis/option_setting",

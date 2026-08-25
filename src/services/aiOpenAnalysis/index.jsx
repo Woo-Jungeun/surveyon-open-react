@@ -7,6 +7,7 @@ import OptionSettingWrapperView from "./views/optionSetting/OptionSettingWrapper
 import OptionSettingExloadWrapperView from "./views/optionSetting/OptionSettingExloadWrapperView.jsx";
 import ProEnterWrapperView from "./views/ProEnter/ProEnterWrapperView.jsx";
 import ProListWrapperView from "./views/proList/ProListWrapperView.jsx";
+import ProList2WrapperView from "./views/proList/ProList2WrapperView.jsx";
 import ProRegisterWrapperView from "./views/proRegister/ProRegisterWrapperView.jsx";
 import ProPermissionWrapperView from "./views/proPermission/ProPermissionWrapperView.jsx";
 import ProKeyWrapperView from "./views/proKey/ProKeyWrapperView.jsx";
@@ -29,6 +30,7 @@ export default function AiOpenAnalysisRoutes() {
         {/* MainListWrapperView moved out */}
         <Route path="option_setting/*" element={<OptionSettingWrapperView />} />
         <Route path="pro_list/*" element={<ProListWrapperView />} />
+        <Route path="pro_list_2/*" element={<ProList2WrapperView />} />
         <Route path="pro_register/*" element={<ProRegisterWrapperView />} />
         <Route path="pro_permission/*" element={<ProPermissionWrapperView />} />
         <Route path="pro_key/*" element={<ProKeyWrapperView />} />
