@@ -32,6 +32,20 @@ const CATEGORY_COLORS = [
     '#d946ef'  // Fuchsia
 ];
 
+const extractVarIdString = (item) => {
+    if (!item) return "";
+    if (typeof item === 'string') return item;
+    if (typeof item === 'object' && item !== null) {
+        if (typeof item.variableId === 'string') return item.variableId;
+        if (typeof item.variableId === 'object' && item.variableId !== null) {
+            return extractVarIdString(item.variableId);
+        }
+        if (item.id) return String(item.id);
+        if (item.qnum) return String(item.qnum);
+    }
+    return String(item);
+};
+
 const AiReportPage = () => {
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
@@ -310,7 +324,11 @@ const AiReportPage = () => {
             const l1StatusRes = await getL1Status.mutateAsync({ pageId, user: userId });
             if (String(l1StatusRes?.success) === '777' && l1StatusRes?.resultjson) {
                 const l1Payload = l1StatusRes.resultjson;
-                setMissingVariables(l1Payload.missingVariables || []);
+                const rawMissing = l1Payload.missingVariables || [];
+                const normalizedMissing = Array.isArray(rawMissing)
+                    ? rawMissing.map(extractVarIdString).filter(Boolean)
+                    : [];
+                setMissingVariables(normalizedMissing);
                 if (typeof l1Payload.cachedCount === 'number' && typeof l1Payload.totalCount === 'number') {
                     setL1CountInfo({
                         cachedCount: l1Payload.cachedCount,
@@ -691,7 +709,7 @@ const AiReportPage = () => {
                 }
             }
 
-            const bannerVarList = bannerVars.length > 0 ? bannerVars : ["banner_001"];
+            const defaultBannerList = ["banner_001"];
             let targetKeys = Object.keys(recodedVars);
             if (level === 'l1_missing') {
                 if (Array.isArray(missingVariables) && missingVariables.length > 0) {
@@ -702,18 +720,33 @@ const AiReportPage = () => {
                 }
             }
 
-            const variablesPayload = targetKeys.map(key => {
-                const item = recodedVars[key];
-                let bannerVal = bannerVarList;
+            const variablesPayload = targetKeys.map(rawKey => {
+                const varId = extractVarIdString(rawKey);
+                const item = recodedVars[varId] || (typeof rawKey === 'object' ? rawKey : null);
+                let bannerVal = [];
+
                 if (item && item.banner) {
-                    if (Array.isArray(item.banner)) {
+                    if (Array.isArray(item.banner) && item.banner.length > 0) {
                         bannerVal = item.banner;
                     } else if (typeof item.banner === 'string' && item.banner.trim() !== '') {
-                        bannerVal = [item.banner];
+                        bannerVal = [item.banner.trim()];
                     }
                 }
+
+                if (bannerVal.length === 0 && typeof rawKey === 'object' && rawKey !== null && rawKey.banner) {
+                    if (Array.isArray(rawKey.banner) && rawKey.banner.length > 0) {
+                        bannerVal = rawKey.banner;
+                    } else if (typeof rawKey.banner === 'string' && rawKey.banner.trim() !== '') {
+                        bannerVal = [rawKey.banner.trim()];
+                    }
+                }
+
+                if (bannerVal.length === 0) {
+                    bannerVal = defaultBannerList;
+                }
+
                 return {
-                    variableId: key,
+                    variableId: varId,
                     banner: bannerVal
                 };
             });
