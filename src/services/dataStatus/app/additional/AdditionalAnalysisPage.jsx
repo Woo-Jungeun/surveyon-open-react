@@ -915,8 +915,34 @@ const AdditionalAnalysisPage = () => {
                 });
 
                 const ctxPayload = contextRes?.resultjson || contextRes || {};
+                const uiObj = ctxPayload.display_policy || ctxPayload.ui_settings || ctxPayload.effective_render_settings || {};
+                const resolvedSigType = uiObj.sig_diff_fin_mode ?? uiObj.sig_type ?? (uiObj.show_t_test ? 't-test' : 'none');
+
+                const initialPolicy = {
+                    sig_type: resolvedSigType,
+                    sig_level: uiObj.sig_level ?? 95,
+                    sig_exclude_under_n: uiObj.sig_exclude_under_n ?? 3,
+                    sig_exclude_etc: uiObj.sig_exclude_etc !== false,
+                    sig_diff_min: uiObj.sig_diff_min ?? 5,
+                    sig_diff_max: uiObj.sig_diff_max ?? 100,
+                    sig_exclude_column_under_n: uiObj.sig_exclude_column_under_n ?? 0,
+                    sig_up_color: uiObj.sig_up_color || "red",
+                    sig_show_arrow: Boolean(uiObj.sig_show_arrow),
+                    show_n: uiObj.show_n !== false && uiObj.format_show_n !== false,
+                    show_percent: uiObj.show_percent !== false && uiObj.format_show_percent !== false,
+                    n_digits: uiObj.n_digits ?? uiObj.format_n_round ?? 0,
+                    percent_digits: uiObj.percent_digits ?? uiObj.format_percent_round ?? 1,
+                    hide_zero_base_columns: uiObj.hide_zero_base_columns ?? false,
+                    hide_zero_stubs: uiObj.hide_zero_stubs ?? false,
+                    weight_variable: uiObj.weight_variable || uiObj.weight_col || '없음'
+                };
+                setDisplayPolicy(initialPolicy);
+
                 if (ctxPayload.ui_settings && typeof ctxPayload.ui_settings === 'object') {
                     setContextUiSettings(ctxPayload.ui_settings);
+                }
+                if (initialPolicy.weight_variable && initialPolicy.weight_variable !== '없음') {
+                    setSelectedWeight(initialPolicy.weight_variable);
                 }
 
                 baseVariableIdsRef.current.clear();
@@ -1114,6 +1140,16 @@ const AdditionalAnalysisPage = () => {
                                     // Weight Column
                                     if (tData.config.weight_col !== undefined) {
                                         setSelectedWeight(tData.config.weight_col || "없음");
+                                    }
+                                    // Display Policy from config
+                                    if (tData.config.display_policy) {
+                                        const dp = tData.config.display_policy;
+                                        const resolvedSig = dp.sig_diff_fin_mode ?? dp.sig_type ?? (dp.show_t_test ? 't-test' : 'none');
+                                        setDisplayPolicy(prev => ({
+                                            ...(prev || {}),
+                                            ...dp,
+                                            sig_type: resolvedSig
+                                        }));
                                     }
                                     // Set Table Name from result if available
                                     if (tData.name) {
