@@ -39,8 +39,8 @@ const formatPercentValue = (val, policy) => {
 
 const buildSigPolicy = (sigTypeVal, excludeN, excludeEtc, level, diffMin, diffMax, excludeColUnderN, upColor, showArrow) => {
     let mode = 'none';
-    if (sigTypeVal === 't-test' || sigTypeVal === 't_test') mode = 't-test';
-    else if (sigTypeVal === 'z-test' || sigTypeVal === 'z_test') mode = 'z-test';
+    if (sigTypeVal === 't-test') mode = 't-test';
+    else if (sigTypeVal === 'z-test') mode = 'z-test';
     else if (sigTypeVal === 'deviation') mode = 'deviation';
 
     return {
@@ -2215,7 +2215,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     setShowPct(currentShowPct);
                     setDecimalPct(currentDecimalPct);
                     setHideZeroBaseColumns(currentHideZeroBaseColumns);
-                    const resolvedSigType = fetchedUi.sig_diff_fin_mode === 't_test' ? 't-test' : (fetchedUi.sig_diff_fin_mode ?? fetchedUi.sig_type ?? (fetchedUi.show_t_test ? 't-test' : 'none'));
+                    const resolvedSigType = fetchedUi.sig_diff_fin_mode ?? fetchedUi.sig_type ?? (fetchedUi.show_t_test ? 't-test' : 'none');
                     setSigType(resolvedSigType);
                     sigTypeRef.current = resolvedSigType;
 
@@ -2372,7 +2372,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 search: bannerSearchRef.current,
                 filter_expression: currentFilterExp,
                 use_recoded: true,
-                include_stats: (currentSigType === 't-test' || currentSigType === 't_test') ? ["t-test"] : ((currentSigType === 'z-test' || currentSigType === 'z_test') ? ["z-test"] : []),
+                include_stats: currentSigType === 't-test' ? ["t-test"] : (currentSigType === 'z-test' ? ["z-test"] : []),
                 weight_mode: currentWeight !== '없음' ? 'weight' : 'none',
                 weight_variable: currentWeight !== '없음' ? currentWeight : null,
                 display_policy: {
@@ -2892,7 +2892,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 limit: 0,
                 search: bannerSearch,
                 filter_expression: filterExpression,
-                include_stats: (sigType === 't-test' || sigType === 't_test') ? ["t-test"] : ((sigType === 'z-test' || sigType === 'z_test') ? ["z-test"] : []),
+                include_stats: sigType === 't-test' ? ["t-test"] : (sigType === 'z-test' ? ["z-test"] : []),
                 weight_mode: selectedWeight !== '없음' ? 'weight' : 'none',
                 weight_variable: selectedWeight !== '없음' ? selectedWeight : null,
                 excel_show_percent: excelShowPct, // 엑셀 % 표출 여부 추가
@@ -3249,7 +3249,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                     let nextDiffMin = localSigDiffMin;
                                                     let nextDiffMax = localSigDiffMax;
 
-                                                    if (nextVal === 'z_test' || nextVal === 'z-test' || nextVal === 't_test' || nextVal === 't-test') {
+                                                    if (nextVal === 'z-test' || nextVal === 't-test') {
                                                         nextExcludeN = 20;
                                                         nextExcludeEtc = true;
                                                         nextLevel = 95;
@@ -3463,10 +3463,10 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         <div style={{ height: '1px', background: '#e2e8f0' }} />
 
                                         {/* z-test / t-test 설정 */}
-                                        {(localSigType === 't-test' || localSigType === 't_test' || localSigType === 'z-test' || localSigType === 'z_test') && (
+                                        {(localSigType === 't-test' || localSigType === 'z-test') && (
                                             <div>
                                                 <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
-                                                    {(localSigType === 'z-test' || localSigType === 'z_test') ? '단일표본 차이검증(Z-TEST)' : '독립표본 차이검증(T-TEST)'} 설정
+                                                    {localSigType === 'z-test' ? '단일표본 차이검증(Z-TEST)' : '독립표본 차이검증(T-TEST)'} 설정
                                                 </div>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>신뢰도 (%)</span>
@@ -3800,8 +3800,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                     format_n_round: targetDecimalN,
                                                     format_show_percent: targetShowPct,
                                                     format_percent_round: targetDecimalPct,
-                                                    show_t_test: targetSigType === 't-test' || targetSigType === 't_test',
-                                                    sig_type: targetSigType === 't_test' ? 't-test' : targetSigType,
+                                                    show_t_test: targetSigType === 't-test',
+                                                    sig_type: targetSigType,
                                                     sig_diff_fin_mode: targetSigType,
                                                     sig_exclude_under_n: localSigExcludeUnderN,
                                                     sig_exclude_etc: localSigExcludeEtc,
@@ -3827,7 +3827,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                     });
 
                                                     await fetchCrossAnalysisData('normal', null, currentPage, filterExpression, {
-                                                        sigType: targetSigType === 't_test' ? 't-test' : targetSigType,
+                                                        sigType: targetSigType,
                                                         excludeN: localSigExcludeUnderN,
                                                         excludeEtc: localSigExcludeEtc,
                                                         level: localSigLevel,
@@ -4662,7 +4662,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             limit: 0,
                                             search: bannerSearch,
                                             filter_expression: filterExpression,
-                                            include_stats: (sigType === 't-test' || sigType === 't_test') ? ["t-test"] : ((sigType === 'z-test' || sigType === 'z_test') ? ["z-test"] : []),
+                                            include_stats: sigType === 't-test' ? ["t-test"] : (sigType === 'z-test' ? ["z-test"] : []),
                                             display_policy: {
                                                 show_n: showN,
                                                 show_percent: showPct,

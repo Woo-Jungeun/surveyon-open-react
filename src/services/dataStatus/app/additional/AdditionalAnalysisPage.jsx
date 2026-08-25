@@ -334,9 +334,9 @@ const AdditionalAnalysisPage = () => {
 
         setSelectedWeight(targetWeight);
 
-        const sigDiffFinMode = (targetSigType === 't-test' || targetSigType === 't_test')
+        const sigDiffFinMode = (targetSigType === 't-test')
             ? 't-test'
-            : ((targetSigType === 'z-test' || targetSigType === 'z_test')
+            : ((targetSigType === 'z-test')
                 ? 'z-test'
                 : (targetSigType === 'deviation' ? 'deviation' : 'none'));
 
@@ -787,7 +787,7 @@ const AdditionalAnalysisPage = () => {
             const currentSigType = displayPolicy?.sig_type || 'none';
             const sigTypeVal = currentSigType !== 'none' ? currentSigType : null;
             const includeStatsList = (sigTypeVal && sigTypeVal !== 'none')
-                ? [sigTypeVal === 't_test' ? 't-test' : (sigTypeVal === 'z_test' ? 'z-test' : sigTypeVal)]
+                ? [sigTypeVal]
                 : [];
 
             const requestData = {
@@ -809,7 +809,7 @@ const AdditionalAnalysisPage = () => {
                     base_prefix: excelShowBaseParenthesis ? "(" : "",
                     base_postfix: excelShowBaseParenthesis ? ")" : "",
                     sig_type: sigTypeVal || 'none',
-                    sig_diff_fin_mode: (sigTypeVal === 't-test' || sigTypeVal === 't_test') ? 't-test' : ((sigTypeVal === 'z-test' || sigTypeVal === 'z_test') ? 'z-test' : (sigTypeVal === 'deviation' ? 'deviation' : 'none')),
+                    sig_diff_fin_mode: (sigTypeVal === 't-test') ? 't-test' : ((sigTypeVal === 'z-test') ? 'z-test' : (sigTypeVal === 'deviation' ? 'deviation' : 'none')),
                     sig_diff_test_mode: sigTypeVal === 'deviation',
                     sig_level: displayPolicy?.sig_level ?? 95,
                     sig_exclude_under_n: displayPolicy?.sig_exclude_under_n ?? 3,
@@ -2187,7 +2187,7 @@ const AdditionalAnalysisPage = () => {
                     variables: variablesMap,
                     weight_col: weightId,
                     filter_expression: filterExpression || derivedFilterExpression || "",
-                    include_stats: (displayPolicy?.sig_type && displayPolicy.sig_type !== 'none') ? [...ALL_STATS, (displayPolicy.sig_type === 't_test' ? 't-test' : (displayPolicy.sig_type === 'z_test' ? 'z-test' : displayPolicy.sig_type))] : ALL_STATS,
+                    include_stats: (displayPolicy?.sig_type && displayPolicy.sig_type !== 'none') ? [...ALL_STATS, displayPolicy.sig_type] : ALL_STATS,
                     row_eval_mode: 'split', // tableMode === 'separated' ? 'split' : 'combined'
                     display_policy: {
                         ...(displayPolicy || {}),
@@ -2329,7 +2329,7 @@ const AdditionalAnalysisPage = () => {
         const currentSigType = currentDisplayPolicy?.sig_type || 'none';
         const sigTypeVal = currentSigType !== 'none' ? currentSigType : null;
         const includeStatsList = (sigTypeVal && sigTypeVal !== 'none')
-            ? [...ALL_STATS, (sigTypeVal === 't_test' ? 't-test' : (sigTypeVal === 'z_test' ? 'z-test' : sigTypeVal))]
+            ? [...ALL_STATS, sigTypeVal]
             : ALL_STATS;
 
         let payload = {
@@ -2343,7 +2343,7 @@ const AdditionalAnalysisPage = () => {
             display_policy: {
                 ...(currentDisplayPolicy || {}),
                 sig_type: currentSigType,
-                sig_diff_fin_mode: (currentSigType === 't-test' || currentSigType === 't_test') ? 't-test' : ((currentSigType === 'z-test' || currentSigType === 'z_test') ? 'z-test' : (currentSigType === 'deviation' ? 'deviation' : 'none')),
+                sig_diff_fin_mode: (currentSigType === 't-test') ? 't-test' : ((currentSigType === 'z-test') ? 'z-test' : (currentSigType === 'deviation' ? 'deviation' : 'none')),
                 sig_diff_test_mode: currentSigType === 'deviation',
                 sig_level: currentDisplayPolicy?.sig_level ?? 95,
                 sig_exclude_under_n: currentDisplayPolicy?.sig_exclude_under_n ?? 3,
@@ -2590,7 +2590,7 @@ const AdditionalAnalysisPage = () => {
                                                     let nextDiffMin = localSigDiffMin;
                                                     let nextDiffMax = localSigDiffMax;
 
-                                                    if (nextVal === 'z_test' || nextVal === 'z-test' || nextVal === 't_test' || nextVal === 't-test') {
+                                                    if (nextVal === 'z-test' || nextVal === 't-test') {
                                                         nextExcludeN = 20;
                                                         nextExcludeEtc = true;
                                                         nextLevel = 95;
@@ -2800,10 +2800,10 @@ const AdditionalAnalysisPage = () => {
 
                                         <div style={{ height: '1px', background: '#e2e8f0' }} />
 
-                                        {(localSigType === 't-test' || localSigType === 't_test' || localSigType === 'z-test' || localSigType === 'z_test') && (
+                                        {(localSigType === 't-test' || localSigType === 'z-test') && (
                                             <div>
                                                 <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
-                                                    {(localSigType === 'z-test' || localSigType === 'z_test') ? '단일표본 차이검증(Z-TEST)' : '독립표본 차이검증(T-TEST)'} 설정
+                                                    {localSigType === 'z-test' ? '단일표본 차이검증(Z-TEST)' : '독립표본 차이검증(T-TEST)'} 설정
                                                 </div>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>신뢰도 (%)</span>

@@ -268,7 +268,7 @@ const AiReportAnalysisStep = ({
                 format_percent_symbol: true,
                 format_base_prefix: "(",
                 format_base_postfix: ")",
-                sig_diff_fin_mode: "t_test",
+                sig_diff_fin_mode: "t-test",
                 sig_diff_test_mode: true,
                 sig_level: 95,
                 theme_primary: "#2F5597",
