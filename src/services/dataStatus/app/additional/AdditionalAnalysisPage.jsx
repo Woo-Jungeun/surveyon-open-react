@@ -142,7 +142,7 @@ const renderSigUpColorContent = (item) => {
 const AdditionalAnalysisPage = () => {
     // Auth & API
     const auth = useSelector((store) => store.auth);
-    const { getTableRenderContext, getOverviewContext, exportOverviewXlsx } = DpRequestPageApi();
+    const { getTableRenderContext, getOverviewContext, savePageSettings, exportOverviewXlsx } = DpRequestPageApi();
     const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable, exportAdditionalXlsx } = AdditionalAnalysisPageApi();
     const modal = React.useContext(modalContext);
     const loadingSpinner = React.useContext(loadingSpinnerContext);
@@ -360,6 +360,21 @@ const AdditionalAnalysisPage = () => {
             weight_col: targetWeight === '없음' ? '' : targetWeight
         };
         setDisplayPolicy(nextPolicy);
+
+        const pageId = currentPageId || sessionStorage.getItem('pageId');
+        const user = auth?.user?.userId;
+        if (pageId && user) {
+            try {
+                await savePageSettings.mutateAsync({
+                    pageid: pageId,
+                    user: user,
+                    ui_settings: nextPolicy
+                });
+            } catch (saveErr) {
+                console.error("Failed to save page settings via /pages/set:", saveErr);
+            }
+        }
+
         await handleRun(undefined, nextPolicy);
     };
 
