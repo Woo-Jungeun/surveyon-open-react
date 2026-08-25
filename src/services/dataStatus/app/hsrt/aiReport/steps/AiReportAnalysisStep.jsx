@@ -44,6 +44,13 @@ const renderInsightText = (val) => {
     return String(val);
 };
 
+const formatProgressPercent = (val) => {
+    if (val === undefined || val === null) return 0;
+    const num = typeof val === 'number' ? val : parseFloat(val);
+    if (isNaN(num)) return 0;
+    return Number(num.toFixed(2));
+};
+
 const AiReportAnalysisStep = ({
     aiGuideline,
     setAiGuideline,
@@ -146,6 +153,7 @@ const AiReportAnalysisStep = ({
     const [openDropdownMap, setOpenDropdownMap] = useState({});
     const chartContainerRefs = useRef({});
     const [isPipelineExpanded, setIsPipelineExpanded] = useState(true);
+    const [l1StatusTab, setL1StatusTab] = useState('completed'); // 'completed' | 'missing'
 
     const handleChartDownload = (evidenceKey, format) => {
         const container = chartContainerRefs.current[evidenceKey];
@@ -1166,10 +1174,10 @@ const AiReportAnalysisStep = ({
                                 </div>
                                 <div className="ai-pipe-progress-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                     <div className="ai-pipe-progress-bar" style={{ flex: 1 }}>
-                                        <div className="ai-pipe-progress-fill l1" style={{ width: `${pipelineStatus.l1.progress}%` }}></div>
+                                        <div className="ai-pipe-progress-fill l1" style={{ width: `${formatProgressPercent(pipelineStatus.l1.progress)}%` }}></div>
                                     </div>
                                     {pipelineStatus.l1.progress > 0 && (
-                                        <span className="ai-pipe-percent-label">{pipelineStatus.l1.progress}%</span>
+                                        <span className="ai-pipe-percent-label">{formatProgressPercent(pipelineStatus.l1.progress)}%</span>
                                     )}
                                     {unsummarizedCount > 0 && pipelineStatus.l1.progress > 0 && (
                                         <button
@@ -1249,9 +1257,9 @@ const AiReportAnalysisStep = ({
                                 </div>
                                 <div className="ai-pipe-progress-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                     <div className="ai-pipe-progress-bar" style={{ flex: 1 }}>
-                                        <div className="ai-pipe-progress-fill l2" style={{ width: `${pipelineStatus.l2.progress}%` }}></div>
+                                        <div className="ai-pipe-progress-fill l2" style={{ width: `${formatProgressPercent(pipelineStatus.l2.progress)}%` }}></div>
                                     </div>
-                                    <span className="ai-pipe-percent-label l2">{pipelineStatus.l2.progress}%</span>
+                                    <span className="ai-pipe-percent-label l2">{formatProgressPercent(pipelineStatus.l2.progress)}%</span>
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -1301,9 +1309,9 @@ const AiReportAnalysisStep = ({
                                 </div>
                                 <div className="ai-pipe-progress-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                     <div className="ai-pipe-progress-bar" style={{ flex: 1 }}>
-                                        <div className="ai-pipe-progress-fill l3" style={{ width: `${pipelineStatus.l3.progress}%` }}></div>
+                                        <div className="ai-pipe-progress-fill l3" style={{ width: `${formatProgressPercent(pipelineStatus.l3.progress)}%` }}></div>
                                     </div>
-                                    <span className="ai-pipe-percent-label l3">{pipelineStatus.l3.progress}%</span>
+                                    <span className="ai-pipe-percent-label l3">{formatProgressPercent(pipelineStatus.l3.progress)}%</span>
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -1458,9 +1466,50 @@ const AiReportAnalysisStep = ({
                     <div className="ai-detail-tabs-row" style={{ flexShrink: 0 }}>
                         <div className="ai-detail-actions" style={{ width: '100%', justifyContent: 'space-between' }}>
                             {activeSubTab === 'l1' ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span className="ai-detail-status-count">요약 완료 <strong>{cachedDisplayCount} / {totalDisplayCount} 문항</strong></span>
-                                </div>
+                                (Array.isArray(missingVariables) && missingVariables.length > 0) ? (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setL1StatusTab('completed')}
+                                            style={{
+                                                padding: '4px 12px',
+                                                borderRadius: '20px',
+                                                fontSize: '12.5px',
+                                                fontWeight: l1StatusTab === 'completed' ? 700 : 500,
+                                                color: l1StatusTab === 'completed' ? '#15803d' : '#64748b',
+                                                background: l1StatusTab === 'completed' ? '#f0fdf4' : '#f8fafc',
+                                                border: l1StatusTab === 'completed' ? '1.5px solid #16a34a' : '1px solid #cbd5e1',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.15s ease',
+                                                outline: 'none'
+                                            }}
+                                        >
+                                            요약 완료 {cachedDisplayCount} / {totalDisplayCount} 문항
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setL1StatusTab('missing')}
+                                            style={{
+                                                padding: '4px 12px',
+                                                borderRadius: '20px',
+                                                fontSize: '12.5px',
+                                                fontWeight: l1StatusTab === 'missing' ? 700 : 500,
+                                                color: l1StatusTab === 'missing' ? '#d97706' : '#64748b',
+                                                background: l1StatusTab === 'missing' ? '#fffbeb' : '#f8fafc',
+                                                border: l1StatusTab === 'missing' ? '1.5px solid #f59e0b' : '1px solid #cbd5e1',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.15s ease',
+                                                outline: 'none'
+                                            }}
+                                        >
+                                            미완료 {missingVariables.length}개 문항
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span className="ai-detail-status-count">요약 완료 <strong>{cachedDisplayCount} / {totalDisplayCount} 문항</strong></span>
+                                    </div>
+                                )
                             ) : activeSubTab === 'l2' ? (
                                 <span className="ai-detail-status-count">조사내용 <strong>{insightData.l2?.length || 0}개</strong> 카테고리 분석 완료</span>
                             ) : (
@@ -1513,85 +1562,118 @@ const AiReportAnalysisStep = ({
                 <div className="ai-report-blocks-wrap" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
                     {activeSubTab === 'l1' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '8px' }}>
-                            {(!pipelineStatus.l1.isDone || Object.keys(insightData.l1 || {}).length === 0) ? (
-                                <div className="ai-block-empty-state">
-                                    <span>조회된 L1 문항별 인사이트가 없습니다.</span>
-                                </div>
-                            ) : (
-                                Object.keys(insightData.l1 || {}).map((qKey) => {
-                                    const l1Val = insightData.l1[qKey];
-                                    const matchingQ = questions.find(q => q.id === qKey || q.qnum === qKey);
-                                    const qTitle = matchingQ ? `${matchingQ.qnum}. ${matchingQ.label}` : qKey;
+                            {l1StatusTab === 'missing' && Array.isArray(missingVariables) && missingVariables.length > 0 ? (
+                                missingVariables.length === 0 ? (
+                                    <div className="ai-block-empty-state">
+                                        <span>미완료 문항이 없습니다.</span>
+                                    </div>
+                                ) : (
+                                    missingVariables.map((item, idx) => {
+                                        const qKey = typeof item === 'object' && item !== null
+                                            ? (item.variableId || item.id || item.qnum || String(idx))
+                                            : String(item || '');
+                                        const matchingQ = questions.find(q => q && (q.id === qKey || q.qnum === qKey));
+                                        const labelStr = matchingQ ? (typeof matchingQ.label === 'object' ? (matchingQ.label.text || matchingQ.label.label || JSON.stringify(matchingQ.label)) : String(matchingQ.label || '')) : '';
+                                        const qTitle = matchingQ ? `${matchingQ.qnum || matchingQ.id}. ${labelStr}` : String(qKey || '');
 
-                                    if (l1SearchQuery && !qKey.toLowerCase().includes(l1SearchQuery.toLowerCase()) && !qTitle.toLowerCase().includes(l1SearchQuery.toLowerCase())) {
-                                        return null;
-                                    }
+                                        if (l1SearchQuery && !qKey.toLowerCase().includes(l1SearchQuery.toLowerCase()) && !qTitle.toLowerCase().includes(l1SearchQuery.toLowerCase())) {
+                                            return null;
+                                        }
 
-                                    const isExpanded = !!expandedL1Cards[qKey];
-
-                                    return (
-                                        <div className="ai-block-card" key={qKey}>
-                                            <div className="ai-block-header" style={{ borderBottom: isExpanded ? '1px solid #e2e8f0' : 'none' }} onClick={() => {
-                                                setExpandedL1Cards(prev => ({ ...prev, [qKey]: !prev[qKey] }));
-                                            }}>
-                                                <div className="ai-block-header-left">
-                                                    <span className="ai-block-q-id">{qKey}</span>
-                                                    <h4 className="ai-block-q-title">{qTitle}</h4>
-                                                    <span className="ai-block-done-badge">요약 완료</span>
-                                                </div>
-                                                <div className="ai-block-header-right">
-                                                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                        return (
+                                            <div className="ai-block-card" key={qKey || idx}>
+                                                <div className="ai-block-header" style={{ borderBottom: 'none' }}>
+                                                    <div className="ai-block-header-left">
+                                                        <span className="ai-block-q-id">{qKey}</span>
+                                                        <h4 className="ai-block-q-title">{qTitle}</h4>
+                                                        <span className="ai-block-done-badge" style={{ background: '#fffbeb', color: '#d97706', border: '1px solid #fde68a' }}>미완료</span>
+                                                    </div>
                                                 </div>
                                             </div>
+                                        );
+                                    })
+                                )
+                            ) : (
+                                (!pipelineStatus.l1.isDone || Object.keys(insightData.l1 || {}).length === 0) ? (
+                                    <div className="ai-block-empty-state">
+                                        <span>조회된 L1 문항별 인사이트가 없습니다.</span>
+                                    </div>
+                                ) : (
+                                    Object.keys(insightData.l1 || {}).map((qKey) => {
+                                        const l1Val = insightData.l1[qKey];
+                                        const matchingQ = questions.find(q => q.id === qKey || q.qnum === qKey);
+                                        const qTitle = matchingQ ? `${matchingQ.qnum}. ${matchingQ.label}` : qKey;
 
-                                            {isExpanded && (
-                                                <div className="ai-block-body">
-                                                    {l1Val.fact_summary && (
-                                                        <div className="ai-insight-bullet">
-                                                            <div className="ai-bullet-title-row">
-                                                                <span className="ai-bullet-num-badge">1</span>
-                                                                <span className="ai-bullet-title-text">정량 집계 요약</span>
-                                                                <span className="ai-panel-help-icon" title="교차표 수치에 근거한 사실 서술입니다. 해석·추론 문장은 포함하지 않습니다.">?</span>
-                                                            </div>
-                                                            <p className="ai-bullet-body-content">
-                                                                {renderInsightText(l1Val.fact_summary)}
-                                                            </p>
-                                                        </div>
-                                                    )}
+                                        if (l1SearchQuery && !qKey.toLowerCase().includes(l1SearchQuery.toLowerCase()) && !qTitle.toLowerCase().includes(l1SearchQuery.toLowerCase())) {
+                                            return null;
+                                        }
 
-                                                    {l1Val.segment_insights && (
-                                                        <div className="ai-insight-bullet" style={{ marginTop: '16px' }}>
-                                                            <div className="ai-bullet-title-row">
-                                                                <span className="ai-bullet-num-badge">2</span>
-                                                                <span className="ai-bullet-title-text">배너 요약</span>
-                                                                <span className="ai-panel-help-icon" title="각 배너별 주요 유의점 및 뚜렷한 특징 차이를 요약한 결과입니다.">?</span>
-                                                            </div>
-                                                            <p className="ai-bullet-body-content">
-                                                                {renderInsightText(l1Val.segment_insights)}
-                                                            </p>
-                                                        </div>
-                                                    )}
+                                        const isExpanded = !!expandedL1Cards[qKey];
 
-                                                    {l1Val.respondent_characteristics && (
-                                                        <div className="ai-insight-bullet" style={{ marginTop: '16px' }}>
-                                                            <div className="ai-bullet-title-row">
-                                                                <span className="ai-bullet-num-badge">{l1Val.segment_insights ? '3' : '2'}</span>
-                                                                <span className="ai-bullet-title-text">응답자 특성 요약</span>
-                                                                <span className="ai-panel-help-icon" title="인구통계 교차축(G1-G2-G3) 기준으로 최대 격차를 보인 집단을 자동 추출한 결과입니다.">?</span>
-                                                            </div>
-                                                            <div className="ai-insight-result-box">
-                                                                <span className="ai-result-purple-chip">집단 분석 결과</span>
-                                                                <p className="ai-result-text">
-                                                                    {renderInsightText(l1Val.respondent_characteristics)}
+                                        return (
+                                            <div className="ai-block-card" key={qKey}>
+                                                <div className="ai-block-header" style={{ borderBottom: isExpanded ? '1px solid #e2e8f0' : 'none' }} onClick={() => {
+                                                    setExpandedL1Cards(prev => ({ ...prev, [qKey]: !prev[qKey] }));
+                                                }}>
+                                                    <div className="ai-block-header-left">
+                                                        <span className="ai-block-q-id">{qKey}</span>
+                                                        <h4 className="ai-block-q-title">{qTitle}</h4>
+                                                        <span className="ai-block-done-badge">요약 완료</span>
+                                                    </div>
+                                                    <div className="ai-block-header-right">
+                                                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                                    </div>
+                                                </div>
+
+                                                {isExpanded && (
+                                                    <div className="ai-block-body">
+                                                        {l1Val.fact_summary && (
+                                                            <div className="ai-insight-bullet">
+                                                                <div className="ai-bullet-title-row">
+                                                                    <span className="ai-bullet-num-badge">1</span>
+                                                                    <span className="ai-bullet-title-text">정량 집계 요약</span>
+                                                                    <span className="ai-panel-help-icon" title="교차표 수치에 근거한 사실 서술입니다. 해석·추론 문장은 포함하지 않습니다.">?</span>
+                                                                </div>
+                                                                <p className="ai-bullet-body-content">
+                                                                    {renderInsightText(l1Val.fact_summary)}
                                                                 </p>
                                                             </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })
+                                                        )}
+
+                                                        {l1Val.segment_insights && (
+                                                            <div className="ai-insight-bullet" style={{ marginTop: '16px' }}>
+                                                                <div className="ai-bullet-title-row">
+                                                                    <span className="ai-bullet-num-badge">2</span>
+                                                                    <span className="ai-bullet-title-text">배너 요약</span>
+                                                                    <span className="ai-panel-help-icon" title="각 배너별 주요 유의점 및 뚜렷한 특징 차이를 요약한 결과입니다.">?</span>
+                                                                </div>
+                                                                <p className="ai-bullet-body-content">
+                                                                    {renderInsightText(l1Val.segment_insights)}
+                                                                </p>
+                                                            </div>
+                                                        )}
+
+                                                        {l1Val.respondent_characteristics && (
+                                                            <div className="ai-insight-bullet" style={{ marginTop: '16px' }}>
+                                                                <div className="ai-bullet-title-row">
+                                                                    <span className="ai-bullet-num-badge">{l1Val.segment_insights ? '3' : '2'}</span>
+                                                                    <span className="ai-bullet-title-text">응답자 특성 요약</span>
+                                                                    <span className="ai-panel-help-icon" title="인구통계 교차축(G1-G2-G3) 기준으로 최대 격차를 보인 집단을 자동 추출한 결과입니다.">?</span>
+                                                                </div>
+                                                                <div className="ai-insight-result-box">
+                                                                    <span className="ai-result-purple-chip">집단 분석 결과</span>
+                                                                    <p className="ai-result-text">
+                                                                        {renderInsightText(l1Val.respondent_characteristics)}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })
+                                )
                             )}
                         </div>
                     )}

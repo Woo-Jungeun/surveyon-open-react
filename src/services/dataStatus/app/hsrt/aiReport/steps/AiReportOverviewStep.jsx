@@ -1,6 +1,13 @@
 
 import { Paperclip, X, Loader2, Play, Check } from 'lucide-react';
 
+const formatProgressPercent = (val) => {
+    if (val === undefined || val === null) return 0;
+    const num = typeof val === 'number' ? val : parseFloat(val);
+    if (isNaN(num)) return 0;
+    return Number(num.toFixed(2));
+};
+
 const AiReportOverviewStep = ({
     fileInputRef,
     handleFileChange,
@@ -73,7 +80,7 @@ const AiReportOverviewStep = ({
                             {isAnalyzing ? (
                                 <>
                                     <Loader2 className="animate-spin" size={13} />
-                                    <span>분석 중... ({analysisProgress}%)</span>
+                                    <span>분석 중... ({formatProgressPercent(analysisProgress)}%)</span>
                                 </>
                             ) : (
                                 <>
@@ -182,12 +189,12 @@ const AiReportOverviewStep = ({
                                     {pollingInfo.step_info?.description || '설문지 분석 중...'}
                                 </span>
                                 <span style={{ fontWeight: 600, color: '#2f5597' }}>
-                                    {pollingInfo.progress}%
+                                    {formatProgressPercent(pollingInfo.progress)}%
                                 </span>
                             </div>
                             <div style={{ height: '4px', background: '#e2e8f0', borderRadius: '2px', overflow: 'hidden' }}>
                                 <div style={{
-                                    width: `${pollingInfo.progress}%`,
+                                    width: `${formatProgressPercent(pollingInfo.progress)}%`,
                                     height: '100%',
                                     background: 'linear-gradient(90deg, #3b82f6, #6366f1)',
                                     borderRadius: '2px',
