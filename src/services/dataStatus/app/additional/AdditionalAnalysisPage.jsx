@@ -1181,13 +1181,13 @@ const AdditionalAnalysisPage = () => {
                                         zero_base_columns: localDisplayPolicy?.hide_zero_base_columns ?? false,
                                         zero_banners: localDisplayPolicy?.hide_zero_base_columns ?? false,
                                         zero_stubs: localDisplayPolicy?.hide_zero_stubs ?? false,
-                                        table: {
+                                        tables: [{
                                             id: firstTable.id,
                                             name: firstTable.name || tData.name || "Untitled Table",
                                             banner: xInfo,
                                             variable_overrides: variableOverrides,
                                             stub: yInfo
-                                        }
+                                        }]
                                     };
 
                                     const evalResult = await evaluateTable.mutateAsync(payload);
@@ -1538,12 +1538,12 @@ const AdditionalAnalysisPage = () => {
                             // sort: { group_by: "label2_label3" }
                         };
 
-                        runPayload.table = {
+                        runPayload.tables = [{
                             id: item.id,
                             name: item.name || "Untitled Table",
                             banner: xInfo,
                             stub: yInfo
-                        };
+                        }];
 
                         const evalResult = await evaluateTable.mutateAsync(runPayload);
 
@@ -2201,12 +2201,12 @@ const AdditionalAnalysisPage = () => {
                     // sort: { group_by: "label2_label3" }
                 };
 
-                runPayload.table = {
+                runPayload.tables = [{
                     id: selectedTableId || 'T1',
                     name: baseTableName,
                     banner: xInfo,
                     stub: rowVars.map(v => v.id || v.name)
-                };
+                }];
 
                 const evalResult = await evaluateTable.mutateAsync(runPayload);
 
@@ -2360,12 +2360,12 @@ const AdditionalAnalysisPage = () => {
             // sort: { group_by: "label2_label3" }
         };
 
-        payload.table = {
+        payload.tables = [{
             id: selectedTableId || 'T1',
             name: baseTableName,
             banner: xInfo,
             stub: rowVars.map(v => v.id || v.name)
-        };
+        }];
 
         try {
             loadingSpinner.show();
