@@ -1956,6 +1956,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [selectedBanner, setSelectedBanner] = useState('');
     const [baseVariables, setBaseVariables] = useState([]);
     const [isBannerSidebarOpen, setIsBannerSidebarOpen] = useState(true);
+    const [bannerSearchInput, setBannerSearchInput] = useState('');
     const [bannerSearch, setBannerSearch] = useState('');
     const [currentLabel, setCurrentLabel] = useState('');
     const [currentId, setCurrentId] = useState('');
@@ -2120,11 +2121,14 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     // --- 데이터 로직 ---
-    const fetchCrossAnalysisData = async (mode = 'normal', targetIdToSelect = null, targetPage = currentPage, currentFilterExp = filterExpression, overrideSigSettings = null, overrideWeight = undefined) => {
+    const fetchCrossAnalysisData = async (mode = 'normal', targetIdToSelect = null, targetPage = currentPage, currentFilterExp = filterExpression, overrideSigSettings = null, overrideWeight = undefined, searchOverride = undefined) => {
         // 실제 데이터 연동 시 사용할 주석:
         const pageId = sessionStorage.getItem('pageId');
         const user = auth?.user?.userId;
         if (!pageId || !user) return;
+
+        const currentSearch = searchOverride !== undefined ? searchOverride : (bannerSearchRef.current || bannerSearch || "");
+        bannerSearchRef.current = currentSearch;
 
         try {
             loadingSpinner.show();
@@ -2369,7 +2373,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 banner_mode: selectedXInfoRef.current === '__none__' ? 'stub' : 'override',
                 start: (targetPage - 1) * PAGE_SIZE,
                 limit: PAGE_SIZE,
-                search: bannerSearchRef.current,
+                search: currentSearch,
                 filter_expression: currentFilterExp,
                 use_recoded: true,
                 include_stats: currentSigType === 't-test' ? ["t-test"] : (currentSigType === 'z-test' ? ["z-test"] : []),
@@ -2410,9 +2414,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
             const overviewRes = await getOverviewStyled.mutateAsync(reqData);
 
-            // 응답 포맷 대응 (resultjson 래핑 여부)
+            // 응답 포맷 대응 (resultjson 래핑 및 tables/results 키 대응)
             const payload = overviewRes?.resultjson || overviewRes || {};
-            const tablesList = payload.tables || [];
+            const tablesList = payload.tables || payload.results || payload.data || [];
 
             setOverviewPayload(payload);
             if (payload.style_css) {
@@ -2464,9 +2468,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     }
                 }, 50);
 
-                // 총 테이블 개수 갱신
-                let total = payload.total !== undefined ? payload.total : 0;
-                if (payload.total === undefined) {
+                // 총 테이블 개수 갱신 (total / totalCount / row_count / count)
+                let total = (payload.total !== undefined) ? payload.total : ((payload.totalCount !== undefined) ? payload.totalCount : ((payload.row_count !== undefined) ? payload.row_count : (payload.count !== undefined ? payload.count : undefined)));
+                if (total === undefined) {
                     if (targetPage === 1 && formatted.length < PAGE_SIZE) {
                         total = formatted.length;
                     } else if (targetPage === 1) {
@@ -2523,6 +2527,17 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     // 문항 목록 필터링 (서버사이드 필터링 사용)
     const filteredBanners = banners;
 
+    const handleSearchExecute = useCallback((overrideKeyword) => {
+        const targetKeyword = typeof overrideKeyword === 'string' ? overrideKeyword : bannerSearchInput;
+        const keyword = targetKeyword.trim();
+        setBannerSearch(keyword);
+        bannerSearchRef.current = keyword;
+        if (currentPage !== 1) {
+            setCurrentPage(1);
+        }
+        fetchCrossAnalysisData('normal', null, 1, filterExpression, null, undefined, keyword);
+    }, [bannerSearchInput, currentPage, filterExpression, fetchCrossAnalysisData]);
+
     const prevSearchRef = useRef(bannerSearch);
     const prevXInfoRef = useRef(selectedXInfo);
     const prevFilterRef = useRef(filterExpression);
@@ -2546,19 +2561,19 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
         if (searchChanged || xInfoChanged || filterChanged) {
             const timer = setTimeout(() => {
+                bannerSearchRef.current = bannerSearch;
                 if (currentPage !== 1) {
-                    setCurrentPage(1); // currentPage useEffect가 fetch를 수행함
-                } else {
-                    fetchCrossAnalysisData('normal', null, 1, filterExpression);
+                    setCurrentPage(1);
                 }
+                fetchCrossAnalysisData('normal', null, 1, filterExpression, null, undefined, bannerSearch);
             }, 300);
             return () => clearTimeout(timer);
         } else {
+            bannerSearchRef.current = bannerSearch;
             if (currentPage !== 1) {
                 setCurrentPage(1);
-            } else {
-                fetchCrossAnalysisData('normal', null, 1, filterExpression);
             }
+            fetchCrossAnalysisData('normal', null, 1, filterExpression, null, undefined, bannerSearch);
         }
     }, [bannerSearch, selectedXInfo, filterExpression, auth?.user?.userId]);
 
@@ -4017,7 +4032,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 const payload = result?.resultjson || result || {};
 
                                 const css = payload.style_css || '';
-                                const tables = payload.tables || [];
+                                const tables = payload.tables || payload.results || payload.data || [];
                                 const tablesHtml = tables.map(t => t.html || '').join('<div style="height:24px;"></div>');
                                 const fullHtml = `<!doctype html><html><head><meta charset="utf-8"/><style>${css}</style></head><body style="margin:0; padding:16px;">${tablesHtml || payload.html || ''}</body></html>`;
 
@@ -4303,16 +4318,72 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     </button>
                                 </div>
                             </div>
-                            <div className="dp-sidebar-header" style={{ display: 'flex', alignItems: 'center', padding: '12px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
-                                <div className="dp-search-input-wrapper" style={{ flex: 1, width: '100%' }}>
-                                    <Search size={14} className="dp-search-input-icon" />
-                                    <input
-                                        type="text"
-                                        placeholder="변수명 또는 라벨 검색"
-                                        value={bannerSearch}
-                                        onChange={(e) => setBannerSearch(e.target.value)}
-                                        className="dp-search-input"
-                                    />
+                            <div className="dp-sidebar-header" style={{ display: 'flex', alignItems: 'center', padding: '10px 12px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+                                <div className="dp-search-input-wrapper" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px', width: '100%' }}>
+                                    <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+                                        <Search size={14} className="dp-search-input-icon" />
+                                        <input
+                                            type="text"
+                                            placeholder="변수명 또는 라벨 검색"
+                                            value={bannerSearchInput}
+                                            onChange={(e) => setBannerSearchInput(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    handleSearchExecute();
+                                                }
+                                            }}
+                                            className="dp-search-input"
+                                            style={{ width: '100%', paddingRight: bannerSearchInput ? '26px' : '10px' }}
+                                        />
+                                        {bannerSearchInput && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setBannerSearchInput('');
+                                                    handleSearchExecute('');
+                                                }}
+                                                style={{
+                                                    position: 'absolute',
+                                                    right: '8px',
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    color: '#94a3b8',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    padding: 0
+                                                }}
+                                                title="검색어 지우기"
+                                            >
+                                                <X size={13} />
+                                            </button>
+                                        )}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSearchExecute()}
+                                        style={{
+                                            height: '32px',
+                                            padding: '0 10px',
+                                            background: '#2563eb',
+                                            color: '#ffffff',
+                                            border: 'none',
+                                            borderRadius: '6px',
+                                            fontSize: '12px',
+                                            fontWeight: 600,
+                                            cursor: 'pointer',
+                                            whiteSpace: 'nowrap',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            flexShrink: 0,
+                                            transition: 'background 0.15s'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = '#1d4ed8'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = '#2563eb'}
+                                    >
+                                        검색
+                                    </button>
                                 </div>
                             </div>
                             <div className="dp-banner-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
