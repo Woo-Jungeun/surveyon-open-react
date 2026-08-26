@@ -8,7 +8,7 @@ export default function SingleCrosstabViewerPage() {
     const stubParam = searchParams.get('stub') || '';
     const titleParam = searchParams.get('title') || '핵심 교차표';
     const pageIdParam = searchParams.get('pageId') || sessionStorage.getItem('pageId') || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-    const userParam = searchParams.get('user') || "jewoo";
+    const userParam = searchParams.get('user') || "";
 
     const bannerParamRaw = searchParams.get('banner');
     const weightVarParam = searchParams.get('weightVar') || '';

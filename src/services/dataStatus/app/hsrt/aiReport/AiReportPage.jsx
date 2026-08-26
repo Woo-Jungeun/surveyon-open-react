@@ -166,7 +166,7 @@ const AiReportPage = () => {
 
     const loadSummaryData = useCallback(async () => {
         const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-        const userId = auth?.user?.userId || "jewoo";
+        const userId = auth?.user?.userId;
         try {
             const res = await getAiSummaryData.mutateAsync({ pageId, user: userId });
             if (String(res?.success) === '777' && res?.resultjson) {
@@ -319,7 +319,7 @@ const AiReportPage = () => {
     }, [auth?.user?.userId]);
     const fetchL1StatusData = useCallback(async () => {
         const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-        const userId = auth?.user?.userId || "jewoo";
+        const userId = auth?.user?.userId;
         try {
             const l1StatusRes = await getL1Status.mutateAsync({ pageId, user: userId });
             if (String(l1StatusRes?.success) === '777' && l1StatusRes?.resultjson) {
@@ -395,7 +395,7 @@ const AiReportPage = () => {
     }, [loadSummaryData]);
     const handleExportL1Excel = async () => {
         const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-        const userId = auth?.user?.userId || "jewoo";
+        const userId = auth?.user?.userId;
 
         const l1InsightsPayload = {};
         if (insightData.l1) {
@@ -445,7 +445,7 @@ const AiReportPage = () => {
     };
     const handleExportL3File = async (format) => {
         const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-        const userId = auth?.user?.userId || "jewoo";
+        const userId = auth?.user?.userId;
 
         let apiFormat = format;
         if (format === 'xlsx' || format === 'excel') apiFormat = 'xlsx';
@@ -544,7 +544,7 @@ const AiReportPage = () => {
 
         const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
         const pn = sessionStorage.getItem("pn") || sessionStorage.getItem("Pn") || "P001234";
-        const userId = auth?.user?.userId || "jewoo";
+        const userId = auth?.user?.userId;
 
         const formData = new FormData();
         formData.append("pageId", pageId);
@@ -694,7 +694,7 @@ const AiReportPage = () => {
 
         if (level === 'l1' || level === 'l1_missing') {
             const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-            const userId = auth?.user?.userId || "jewoo";
+            const userId = auth?.user?.userId;
 
             // Load recoded_variables if empty
             let recodedVars = recodedVariablesRef.current || {};
@@ -843,7 +843,7 @@ const AiReportPage = () => {
             }
         } else if (level === 'l2') {
             const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-            const userId = auth?.user?.userId || "jewoo";
+            const userId = auth?.user?.userId;
 
             const payload = {
                 pageId: pageId,
@@ -1006,7 +1006,7 @@ const AiReportPage = () => {
     const handleSave = async () => {
         const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
         const pn = sessionStorage.getItem("pn") || sessionStorage.getItem("Pn") || "P001234";
-        const userId = auth?.user?.userId || "jewoo";
+        const userId = auth?.user?.userId;
 
         const frameObj = {
             projectName: overviewData.projectname,
@@ -1051,7 +1051,7 @@ const AiReportPage = () => {
                     click: async () => {
                         setCategories([]); // 로딩 시작 시 기존 카테고리 데이터 비우기
                         const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-                        const userId = auth?.user?.userId || "jewoo";
+                        const userId = auth?.user?.userId;
                         const modelType = selectedModel || models[0]?.value || "";
 
                         const payload = {
@@ -1204,7 +1204,7 @@ const AiReportPage = () => {
 
         const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
         const pn = sessionStorage.getItem("pn") || sessionStorage.getItem("Pn") || "P001234";
-        const userId = auth?.user?.userId || "jewoo";
+        const userId = auth?.user?.userId;
 
         const frameObj = {
             projectName: overviewData.projectname,
@@ -1274,7 +1274,7 @@ const AiReportPage = () => {
 
         const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
         const pn = sessionStorage.getItem("pn") || sessionStorage.getItem("Pn") || "P001234";
-        const userId = auth?.user?.userId || "jewoo";
+        const userId = auth?.user?.userId;
 
         const frameObj = {
             projectName: overviewData.projectname,
@@ -1337,7 +1337,7 @@ const AiReportPage = () => {
 
                         const pageId = sessionStorage.getItem("pageId") || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
                         const pn = sessionStorage.getItem("pn") || sessionStorage.getItem("Pn") || "P001234";
-                        const userId = auth?.user?.userId || "jewoo";
+                        const userId = auth?.user?.userId;
 
                         const frameObj = {
                             projectName: overviewData.projectname,
@@ -1466,7 +1466,7 @@ const AiReportPage = () => {
                         onExportL3File={handleExportL3File}
                         categories={categories}
                         bannerVars={bannerVars}
-                        userId={auth?.user?.userId || "jewoo"}
+                        userId={auth?.user?.userId}
                     />
                 );
             default:

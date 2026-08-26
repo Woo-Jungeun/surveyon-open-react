@@ -79,7 +79,7 @@ const AiReportAnalysisStep = ({
         if (!stubCode) return;
 
         const pageId = sessionStorage.getItem('pageId') || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-        const user = userId || "jewoo";
+        const user = userId || "";
         const windowTitle = findItem?.question_name || findItem?.question_title || findItem?.question || `문항 [${stubCode}] 핵심 교차표`;
 
         const target = findItem?.evidence_target || {};
@@ -241,7 +241,7 @@ const AiReportAnalysisStep = ({
         }));
 
         const pageId = sessionStorage.getItem('pageId') || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-        const user = userId || "jewoo";
+        const user = userId || "";
 
         let contextUiSettings = null;
         try {

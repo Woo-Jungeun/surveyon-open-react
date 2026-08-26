@@ -2595,7 +2595,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     const fetchAiSummaryStatus = async (triggerBatch = false) => {
         const pageId = sessionStorage.getItem('pageId');
-        const user = auth?.user?.userId || "jewoo";
+        const user = auth?.user?.userId;
         if (!pageId || filteredBanners.length === 0) return;
 
         let bannerVarList = [];
@@ -2679,7 +2679,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         if (pollingIntervalRef.current) return;
         pollingIntervalRef.current = setInterval(async () => {
             const pageId = sessionStorage.getItem('pageId');
-            const user = auth?.user?.userId || "jewoo";
+            const user = auth?.user?.userId;
             if (!pageId || filteredBanners.length === 0) {
                 stopPolling();
                 return;
