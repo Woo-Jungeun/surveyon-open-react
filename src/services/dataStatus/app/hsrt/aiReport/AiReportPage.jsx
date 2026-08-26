@@ -336,6 +336,19 @@ const AiReportPage = () => {
                     });
                 }
 
+                if (l1Payload.progress !== undefined && l1Payload.progress !== null) {
+                    const progVal = typeof l1Payload.progress === 'number' ? l1Payload.progress : parseFloat(l1Payload.progress);
+                    if (!isNaN(progVal)) {
+                        setPipelineStatus(prev => ({
+                            ...prev,
+                            l1: {
+                                ...prev.l1,
+                                progress: progVal
+                            }
+                        }));
+                    }
+                }
+
                 if (l1Payload.l1Insights) {
                     setInsightData(prev => ({
                         ...prev,
@@ -804,7 +817,7 @@ const AiReportPage = () => {
                                     clearInterval(pollInterval);
                                     setPipelineStatus(prev => ({
                                         ...prev,
-                                        l1: { ...prev.l1, isGenerating: false, isDone: true, progress: 100 }
+                                        l1: { ...prev.l1, isGenerating: false, isDone: true, progress: prog }
                                     }));
                                     modal.showAlert("알림", "L1 미요약 문항 일괄 생성이 완료되었습니다.");
                                     await loadSummaryData();
