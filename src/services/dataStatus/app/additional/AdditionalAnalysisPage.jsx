@@ -542,7 +542,12 @@ const AdditionalAnalysisPage = () => {
     }, [selectedComputedFilterIds, computedFilterOptions]);
 
     useEffect(() => {
-        if (!filterExpression || !computedFilterOptions || computedFilterOptions.length === 0) return;
+        if (!computedFilterOptions || computedFilterOptions.length === 0) return;
+        if (!filterExpression) {
+            setSelectedComputedFilterIds([CROSS_FILTER_ALL_ID]);
+            setDraftComputedFilterIds([CROSS_FILTER_ALL_ID]);
+            return;
+        }
         const matched = [];
         computedFilterOptions.forEach(opt => {
             if (opt.logic && filterExpression.includes(opt.logic)) {
@@ -552,6 +557,9 @@ const AdditionalAnalysisPage = () => {
         if (matched.length > 0) {
             setSelectedComputedFilterIds(matched);
             setDraftComputedFilterIds(matched);
+        } else {
+            setSelectedComputedFilterIds([CROSS_FILTER_ALL_ID]);
+            setDraftComputedFilterIds([CROSS_FILTER_ALL_ID]);
         }
     }, [filterExpression, computedFilterOptions]);
 
@@ -1451,7 +1459,6 @@ const AdditionalAnalysisPage = () => {
         setTableName(item.name || "");
         setIsConfigOpen(false);
         setResultDataList([]);
-        setFilterExpression('');
         setSelectedWeight("없음");
         loadingSpinner.show();
 
@@ -1469,7 +1476,7 @@ const AdditionalAnalysisPage = () => {
                 });
             }
             const found = variables.find(v => v.id === id);
-            return [found || { id, name: id, label: id, info: [] }];
+            return [found || { id: id, name: id, label: id, info: [] }];
         });
         setRowVars(newRowVars);
         setColVars(newColVars);
@@ -1534,13 +1541,11 @@ const AdditionalAnalysisPage = () => {
                             setRowVars(mappedRows);
                         }
                         // Filter Expression
-                        if (data.config.filter_expression !== undefined) {
+                        if (data.config.filter_expression) {
                             setFilterExpression(data.config.filter_expression);
                         }
                         if (data.config.filter_info !== undefined) {
                             setFilterInfo(data.config.filter_info);
-                        } else {
-                            setFilterInfo(null);
                         }
                         // Weight Column
                         if (data.config.weight_col !== undefined) {
@@ -1556,7 +1561,7 @@ const AdditionalAnalysisPage = () => {
                         const xInfo = config.banner || [];
                         const yInfo = config.stub || [];
                         const weightCol = config.weight_col || "";
-                        const filterExpr = config.filter_expression || "";
+                        const filterExpr = config.filter_expression || filterExpression || derivedFilterExpression || "";
                         const xIds = xInfo;
                         const yIds = yInfo;
 
@@ -1579,6 +1584,17 @@ const AdditionalAnalysisPage = () => {
 
                         extractRawVars(xIds);
                         extractRawVars(yIds);
+
+                        // Extract variables used in filter expression into variablesMap
+                        if (filterExpr) {
+                            const allSearchVars = [...variables, ...(allBaseVariablesRef.current || [])];
+                            allSearchVars.forEach(v => {
+                                const vId = v.id || v.name;
+                                if (vId && new RegExp('\\b' + vId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(filterExpr)) {
+                                    variablesMap[vId] = v;
+                                }
+                            });
+                        }
 
                         let weightId = "";
                         if (weightCol && weightCol !== "없음") {
