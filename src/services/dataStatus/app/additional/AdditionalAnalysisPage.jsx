@@ -139,6 +139,48 @@ const renderSigUpColorContent = (item) => {
     );
 };
 
+const buildDisplayPolicy = (currentDp, ctxUi) => {
+    const dp = currentDp || {};
+    const ctx = ctxUi || {};
+    const sigTypeVal = dp.sig_type || dp.sig_diff_fin_mode || 'none';
+    const sigFinMode = (sigTypeVal === 't-test') ? 't-test' : ((sigTypeVal === 'z-test') ? 'z-test' : (sigTypeVal === 'deviation' ? 'deviation' : 'none'));
+
+    return {
+        show_n: dp.show_n !== false,
+        show_percent: dp.show_percent !== false,
+        percent_symbol: dp.percent_symbol ?? ctx.percent_symbol ?? ctx.format_percent_symbol ?? false,
+        percent_as_column: dp.percent_as_column ?? ctx.percent_as_column ?? ctx.format_percent_as_column ?? false,
+        stub_group_layout: dp.stub_group_layout || ctx.stub_group_layout || "merge",
+        hide_zero_base_columns: dp.hide_zero_base_columns ?? ctx.hide_zero_base_columns ?? true,
+        hide_zero_stubs: dp.hide_zero_stubs ?? ctx.hide_zero_stubs ?? true,
+        hide_zero_banners: dp.hide_zero_banners ?? ctx.hide_zero_banners ?? true,
+        n_digits: dp.n_digits ?? ctx.n_digits ?? ctx.format_n_round ?? 0,
+        percent_digits: dp.percent_digits ?? ctx.percent_digits ?? ctx.format_percent_round ?? 2,
+        mean_digits: dp.mean_digits ?? ctx.mean_digits ?? ctx.format_mean_round ?? 1,
+        std_digits: dp.std_digits ?? ctx.std_digits ?? ctx.format_std_round ?? 1,
+        median_digits: dp.median_digits ?? ctx.median_digits ?? ctx.format_median_round ?? 1,
+        min_digits: dp.min_digits ?? ctx.min_digits ?? ctx.format_min_round ?? 1,
+        max_digits: dp.max_digits ?? ctx.max_digits ?? ctx.format_max_round ?? 1,
+        var_digits: dp.var_digits ?? ctx.var_digits ?? ctx.format_var_round ?? 1,
+        zero_display: dp.zero_display || ctx.zero_display || "0",
+        empty_display: dp.empty_display || ctx.empty_display || "blank",
+        base_prefix: dp.base_prefix || ctx.base_prefix || ctx.format_base_prefix || "(",
+        base_postfix: dp.base_postfix || ctx.base_postfix || ctx.format_base_postfix || ")",
+        sig_diff_fin_mode: sigFinMode,
+        sig_diff_test_mode: sigFinMode === 'deviation',
+        sig_level: dp.sig_level ?? ctx.sig_level ?? 95,
+        sig_exclude_under_n: dp.sig_exclude_under_n ?? ctx.sig_exclude_under_n ?? 20,
+        sig_exclude_etc: dp.sig_exclude_etc !== false,
+        sig_diff_min: dp.sig_diff_min ?? ctx.sig_diff_min ?? 5,
+        sig_diff_max: dp.sig_diff_max ?? ctx.sig_diff_max ?? 100,
+        sig_exclude_column_under_n: dp.sig_exclude_column_under_n ?? ctx.sig_exclude_column_under_n ?? 0,
+        sig_up_color: dp.sig_up_color || ctx.sig_up_color || "red",
+        sig_show_arrow: dp.sig_show_arrow ?? ctx.sig_show_arrow ?? false,
+        sig_type: sigFinMode !== 'none' ? sigFinMode : null,
+        weight_variable: (dp.weight_variable && dp.weight_variable !== "없음" && dp.weight_variable !== "") ? dp.weight_variable : null
+    };
+};
+
 const AdditionalAnalysisPage = () => {
     // Auth & API
     const auth = useSelector((store) => store.auth);
@@ -527,7 +569,7 @@ const AdditionalAnalysisPage = () => {
         if (draftComputedFilterIds.includes(CROSS_FILTER_ALL_ID)) {
             setFilterExpression("");
             setFilterInfo(null);
-            handleRun("");
+            handleRun("", displayPolicy);
             return;
         }
 
@@ -535,7 +577,7 @@ const AdditionalAnalysisPage = () => {
         if (activeOptions.length === 0) {
             setFilterExpression("");
             setFilterInfo(null);
-            handleRun("");
+            handleRun("", displayPolicy);
             return;
         }
 
@@ -551,7 +593,7 @@ const AdditionalAnalysisPage = () => {
         const groupExpressions = Object.values(groups).map(logics => `(${logics.join(" or ")})`);
         const exprStr = groupExpressions.join(" and ");
         setFilterExpression(exprStr);
-        handleRun(exprStr);
+        handleRun(exprStr, displayPolicy);
     };
 
     const toggleFilter = (id) => {
@@ -647,7 +689,7 @@ const AdditionalAnalysisPage = () => {
             if (updated.includes(CROSS_FILTER_ALL_ID)) {
                 setFilterExpression("");
                 setFilterInfo(null);
-                handleRun("");
+                handleRun("", displayPolicy);
             } else {
                 const activeOptions = computedFilterOptions.filter(o => updated.includes(o.id));
                 const groups = {};
@@ -658,7 +700,7 @@ const AdditionalAnalysisPage = () => {
                 });
                 const exprStr = Object.values(groups).map(logics => `(${logics.join(" or ")})`).join(" and ");
                 setFilterExpression(exprStr);
-                handleRun(exprStr);
+                handleRun(exprStr, displayPolicy);
             }
             return updated;
         });
@@ -669,7 +711,7 @@ const AdditionalAnalysisPage = () => {
         setDraftComputedFilterIds([CROSS_FILTER_ALL_ID]);
         setFilterExpression("");
         setFilterInfo(null);
-        handleRun("");
+        handleRun("", displayPolicy);
     };
 
     useEffect(() => {
@@ -802,8 +844,8 @@ const AdditionalAnalysisPage = () => {
             const currentSigType = displayPolicy?.sig_type || 'none';
             const sigTypeVal = currentSigType !== 'none' ? currentSigType : null;
             const includeStatsList = (sigTypeVal && sigTypeVal !== 'none')
-                ? [sigTypeVal]
-                : [];
+                ? [...ALL_STATS, sigTypeVal]
+                : ALL_STATS;
 
             const requestData = {
                 user: auth.user.userId,
@@ -814,27 +856,7 @@ const AdditionalAnalysisPage = () => {
                 filter_expression: (filterExpression || derivedFilterExpression) ? (filterExpression || derivedFilterExpression) : null,
                 excel_show_percent: excelShowPct,
                 include_stats: includeStatsList,
-                display_policy: {
-                    show_n: displayPolicy?.show_n !== false,
-                    show_percent: displayPolicy?.show_percent !== false,
-                    excel_show_percent: excelShowPct,
-                    percent_symbol: excelShowPct,
-                    percent_digits: excelDecimalPct === '' ? 1 : Number(excelDecimalPct),
-                    show_base_parenthesis: excelShowBaseParenthesis,
-                    base_prefix: excelShowBaseParenthesis ? "(" : "",
-                    base_postfix: excelShowBaseParenthesis ? ")" : "",
-                    sig_type: sigTypeVal || 'none',
-                    sig_diff_fin_mode: (sigTypeVal === 't-test') ? 't-test' : ((sigTypeVal === 'z-test') ? 'z-test' : (sigTypeVal === 'deviation' ? 'deviation' : 'none')),
-                    sig_diff_test_mode: sigTypeVal === 'deviation',
-                    sig_level: displayPolicy?.sig_level ?? 95,
-                    sig_exclude_under_n: displayPolicy?.sig_exclude_under_n ?? 3,
-                    sig_exclude_etc: Boolean(displayPolicy?.sig_exclude_etc),
-                    sig_diff_min: displayPolicy?.sig_diff_min ?? 5,
-                    sig_diff_max: displayPolicy?.sig_diff_max ?? 100,
-                    sig_exclude_column_under_n: displayPolicy?.sig_exclude_column_under_n ?? 0,
-                    sig_up_color: displayPolicy?.sig_up_color || "red",
-                    sig_show_arrow: Boolean(displayPolicy?.sig_show_arrow)
-                },
+                display_policy: buildDisplayPolicy(displayPolicy, contextUiSettings),
                 ui_settings: (contextUiSettings && Object.keys(contextUiSettings).length > 0)
                     ? contextUiSettings
                     : (renderSettings || {})
@@ -1228,7 +1250,7 @@ const AdditionalAnalysisPage = () => {
                                         filter_expression: filterExpr,
                                         include_stats: ALL_STATS,
                                         row_eval_mode: 'split', // tData.config?.row_eval_mode ? tData.config.row_eval_mode : (tableMode === 'separated' ? 'split' : 'combined'),
-                                        display_policy: localDisplayPolicy || {},
+                                        display_policy: buildDisplayPolicy(localDisplayPolicy || displayPolicy, contextUiSettings),
                                         zero_base_columns: localDisplayPolicy?.hide_zero_base_columns ?? false,
                                         zero_banners: localDisplayPolicy?.hide_zero_base_columns ?? false,
                                         zero_stubs: localDisplayPolicy?.hide_zero_stubs ?? false,
@@ -1582,7 +1604,7 @@ const AdditionalAnalysisPage = () => {
                             filter_expression: filterExpr,
                             include_stats: ALL_STATS,
                             row_eval_mode: 'split', // data.config?.row_eval_mode ? data.config.row_eval_mode : (tableMode === 'separated' ? 'split' : 'combined')
-                            display_policy: displayPolicy || {},
+                            display_policy: buildDisplayPolicy(displayPolicy, contextUiSettings),
                             zero_base_columns: displayPolicy?.hide_zero_base_columns ?? false,
                             zero_banners: displayPolicy?.hide_zero_base_columns ?? false,
                             zero_stubs: displayPolicy?.hide_zero_stubs ?? false,
@@ -2146,7 +2168,8 @@ const AdditionalAnalysisPage = () => {
                     filter_info: filterInfo,
                     weight_col: selectedWeight === "없음" ? "" : selectedWeight,
                     row_eval_mode: tableMode === 'separated' ? 'split' : 'combined',
-                    variable_overrides: variableOverrides
+                    variable_overrides: variableOverrides,
+                    display_policy: buildDisplayPolicy(displayPolicy, contextUiSettings)
                 }
             };
 
@@ -2240,12 +2263,7 @@ const AdditionalAnalysisPage = () => {
                     filter_expression: filterExpression || derivedFilterExpression || "",
                     include_stats: (displayPolicy?.sig_type && displayPolicy.sig_type !== 'none') ? [...ALL_STATS, displayPolicy.sig_type] : ALL_STATS,
                     row_eval_mode: 'split', // tableMode === 'separated' ? 'split' : 'combined'
-                    display_policy: {
-                        ...(displayPolicy || {}),
-                        sig_exclude_column_under_n: displayPolicy?.sig_exclude_column_under_n ?? 0,
-                        sig_up_color: displayPolicy?.sig_up_color || "red",
-                        sig_show_arrow: Boolean(displayPolicy?.sig_show_arrow)
-                    },
+                    display_policy: buildDisplayPolicy(displayPolicy, contextUiSettings),
                     zero_base_columns: displayPolicy?.hide_zero_base_columns ?? false,
                     zero_banners: displayPolicy?.hide_zero_base_columns ?? false,
                     zero_stubs: displayPolicy?.hide_zero_stubs ?? false,
@@ -2391,20 +2409,7 @@ const AdditionalAnalysisPage = () => {
             filter_expression: currentFilter,
             include_stats: includeStatsList,
             row_eval_mode: tableMode === 'separated' ? 'split' : 'combined',
-            display_policy: {
-                ...(currentDisplayPolicy || {}),
-                sig_type: currentSigType,
-                sig_diff_fin_mode: (currentSigType === 't-test') ? 't-test' : ((currentSigType === 'z-test') ? 'z-test' : (currentSigType === 'deviation' ? 'deviation' : 'none')),
-                sig_diff_test_mode: currentSigType === 'deviation',
-                sig_level: currentDisplayPolicy?.sig_level ?? 95,
-                sig_exclude_under_n: currentDisplayPolicy?.sig_exclude_under_n ?? 3,
-                sig_exclude_etc: Boolean(currentDisplayPolicy?.sig_exclude_etc),
-                sig_diff_min: currentDisplayPolicy?.sig_diff_min ?? 5,
-                sig_diff_max: currentDisplayPolicy?.sig_diff_max ?? 100,
-                sig_exclude_column_under_n: currentDisplayPolicy?.sig_exclude_column_under_n ?? 0,
-                sig_up_color: currentDisplayPolicy?.sig_up_color || "red",
-                sig_show_arrow: Boolean(currentDisplayPolicy?.sig_show_arrow)
-            },
+            display_policy: buildDisplayPolicy(currentDisplayPolicy, contextUiSettings),
             zero_base_columns: currentDisplayPolicy?.hide_zero_base_columns ?? false,
             zero_banners: currentDisplayPolicy?.hide_zero_base_columns ?? false,
             zero_stubs: currentDisplayPolicy?.hide_zero_stubs ?? false,
