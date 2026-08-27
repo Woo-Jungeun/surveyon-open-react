@@ -121,6 +121,7 @@ const ProList2 = () => {
 
     const [columns, setColumns] = useState(() => [
         // ----- VIEW -----
+        { field: "chk", title: "", group: "VIEW", show: true, allowHide: false, order: 0, width: "40px" },
         { field: "no", title: "no", group: "VIEW", show: true, allowHide: false, order: 1, width: "50px" },
         { field: "model", title: "모델", group: "VIEW", show: true, allowHide: false, order: 2, width: "60px" },
         { field: "qnum", title: "문번호", group: "VIEW", show: true, allowHide: false, order: 3, width: "80px", wrap: true },

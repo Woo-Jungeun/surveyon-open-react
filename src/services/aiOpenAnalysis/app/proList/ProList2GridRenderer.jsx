@@ -285,18 +285,68 @@ const FilterSettingHeaderCell = () => {
     );
 };
 
+
+// 두 번째 이미지 스타일의 커스텀 오렌지 체크박스 컴포넌트
+const CustomOrangeCheckbox = ({ checked, onChange, title }) => {
+    return (
+        <div
+            onClick={(e) => {
+                e.stopPropagation();
+                onChange?.(!checked);
+            }}
+            style={{
+                width: '16px',
+                height: '16px',
+                borderRadius: '4px',
+                border: '1.5px solid #ea580c',
+                backgroundColor: '#ffffff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                boxSizing: 'border-box',
+                userSelect: 'none'
+            }}
+            title={title}
+        >
+            {checked && (
+                <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#ea580c"
+                    strokeWidth="3.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                >
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            )}
+        </div>
+    );
+};
+
 // 체크박스 행 셀
 const CheckboxCell = (cellProps) => {
     const ctx = React.useContext(ProListGridContext);
     const row = cellProps.dataItem;
-    const isChecked = !!ctx.selectedRowIds.has(row.id);
+    if (!row || !ctx || !ctx.selectedRowIds) return <td style={{ textAlign: 'center' }}></td>;
+    const rowId = row.id ?? row.no;
+    const isChecked = !!ctx.selectedRowIds.has(rowId);
     return (
-        <td style={{ textAlign: 'center' }} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-            <input
-                type="checkbox"
+        <td
+            style={{ textAlign: 'center', verticalAlign: 'middle', cursor: 'pointer' }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+                e.stopPropagation();
+                ctx.toggleRowSelect(rowId, !isChecked);
+            }}
+        >
+            <CustomOrangeCheckbox
                 checked={isChecked}
-                onChange={(e) => ctx.toggleRowSelect(row.id, e.target.checked)}
-                style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#ea580c' }}
+                onChange={(nextChecked) => ctx.toggleRowSelect(rowId, nextChecked)}
             />
         </td>
     );
@@ -305,13 +355,19 @@ const CheckboxCell = (cellProps) => {
 // 체크박스 전체선택 헤더 셀
 const CheckboxHeaderCell = () => {
     const ctx = React.useContext(ProListGridContext);
+    if (!ctx) return null;
     return (
-        <div style={{ textAlign: 'center', padding: '4px 0' }} onClick={(e) => e.stopPropagation()}>
-            <input
-                type="checkbox"
-                checked={ctx.isAllSelected}
-                onChange={(e) => ctx.toggleAllSelect(e.target.checked)}
-                style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#ea580c' }}
+        <div
+            style={{ textAlign: 'center', padding: '4px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
+            onClick={(e) => {
+                e.stopPropagation();
+                ctx.toggleAllSelect(!ctx.isAllSelected);
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+        >
+            <CustomOrangeCheckbox
+                checked={!!ctx.isAllSelected}
+                onChange={(nextChecked) => ctx.toggleAllSelect(nextChecked)}
                 title="전체 선택 / 해제"
             />
         </div>
@@ -644,7 +700,7 @@ const ProList2GridRenderer = (props) => {
     const toggleAllSelect = useCallback((checked) => {
         const rows = dataState?.data || [];
         if (checked) {
-            setSelectedRowIds(new Set(rows.map(r => r.id)));
+            setSelectedRowIds(new Set(rows.map(r => r.id ?? r.no)));
         } else {
             setSelectedRowIds(new Set());
         }
@@ -653,7 +709,7 @@ const ProList2GridRenderer = (props) => {
     const isAllSelected = useMemo(() => {
         const rows = dataState?.data || [];
         if (!rows.length) return false;
-        return rows.every(r => selectedRowIds.has(r.id));
+        return rows.every(r => selectedRowIds.has(r.id ?? r.no));
     }, [dataState?.data, selectedRowIds]);
 
     const pendingFlushRef = useRef(false);
@@ -832,6 +888,57 @@ const ProList2GridRenderer = (props) => {
 
         modal.showAlert("성공", `선택된 ${selectedRows.length}개 문항의 통합 설정이 해제되었습니다.\n상단의 [문항통합저장] 버튼을 눌러 확정해 주세요.`);
     }, [dataState?.data, selectedState, idGetter, modal, setMergeEditsById]);
+
+    // ✨ 플로팅 바 용 일괄 처리 액션 핸들러
+    const handleMergeSelectedFromBar = useCallback(() => {
+        const rows = dataState?.data ?? [];
+        const selectedRows = rows.filter(r => selectedRowIds.has(r.id ?? r.no));
+        if (selectedRows.length < 2) {
+            modal.showErrorAlert("알림", "통합할 문항을 2개 이상 선택해 주세요.");
+            return;
+        }
+        const targetQnum = norm(getMergeVal(selectedRows[0]) || selectedRows[0].qnum_text || selectedRows[0].qnum);
+        setMergeEditsById(prev => {
+            const next = new Map(prev);
+            selectedRows.forEach(r => next.set(r.id ?? r.no, targetQnum));
+            return next;
+        });
+        setSelectedRowIds(new Set());
+    }, [dataState?.data, selectedRowIds, getMergeVal, norm, setMergeEditsById, modal]);
+
+    const handleBulkSetUseYn = useCallback((shouldExclude) => {
+        const rows = dataState?.data ?? [];
+        const targetRows = rows.filter(r => selectedRowIds.has(r.id ?? r.no));
+        if (targetRows.length === 0) return;
+
+        setExcludedById(prev => {
+            const next = new Map(prev);
+            targetRows.forEach(r => {
+                const rId = r.id ?? r.no;
+                if (!locksById.get(rId)) {
+                    next.set(rId, shouldExclude);
+                }
+            });
+            return next;
+        });
+        setSelectedRowIds(new Set());
+    }, [dataState?.data, selectedRowIds, locksById, setExcludedById]);
+
+    const handleBulkSetLockSelected = useCallback((shouldLock) => {
+        const rows = dataState?.data ?? [];
+        const targetRows = rows.filter(r => selectedRowIds.has(r.id ?? r.no));
+        if (targetRows.length === 0) return;
+
+        setLocksById(prev => {
+            const next = new Map(prev);
+            targetRows.forEach(r => {
+                const rId = r.id ?? r.no;
+                next.set(rId, shouldLock);
+            });
+            return next;
+        });
+        setSelectedRowIds(new Set());
+    }, [dataState?.data, selectedRowIds, setLocksById]);
 
     const sendMergeAll = async () => {
         const beforeEdits = new Map(mergeEditsById);
@@ -1577,8 +1684,8 @@ const ProList2GridRenderer = (props) => {
                 })()}
             </AiDataHeader>
 
-            <div className="pro-list-content">
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <div className="pro-list-content" style={{ paddingBottom: selectedRowIds.size > 0 ? '48px' : '20px', transition: 'padding-bottom 0.2s ease' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <GridDataCount total={filteredCount} />
 
                     {/* 실시간 검색창 */}
@@ -1804,6 +1911,269 @@ const ProList2GridRenderer = (props) => {
                     setPopupShow={setShowRegisterPopup}
                     onRefresh={handleSearch}
                 />
+            )}
+
+            {/* 하단 마우스 오버 / 누름(Active) 절제된 미세 피드백 스타일 */}
+            <style>{`
+                .bulk-dock-btn {
+                    transition: all 0.15s ease !important;
+                }
+                .bulk-dock-btn:not(:disabled):hover {
+                    transform: translateY(-1px) !important;
+                }
+                .bulk-dock-btn:not(:disabled):active {
+                    transform: scale(0.98) !important;
+                }
+
+                .bulk-dock-btn-analysis:hover {
+                    background-color: #f0f9ff !important;
+                    border-color: #0284c7 !important;
+                    box-shadow: 0 3px 8px rgba(2, 132, 199, 0.2) !important;
+                }
+                .bulk-dock-btn-exclude:hover {
+                    background-color: #fef2f2 !important;
+                    border-color: #dc2626 !important;
+                    box-shadow: 0 3px 8px rgba(220, 38, 38, 0.2) !important;
+                }
+                .bulk-dock-btn-merge:not(:disabled):hover {
+                    background-color: #ffedd5 !important;
+                    border-color: #ea580c !important;
+                    box-shadow: 0 3px 10px rgba(249, 115, 22, 0.25) !important;
+                }
+                .bulk-dock-btn-lock:hover {
+                    background-color: #f8fafc !important;
+                    border-color: #334155 !important;
+                    box-shadow: 0 3px 8px rgba(51, 65, 85, 0.15) !important;
+                }
+                .bulk-dock-btn-close:hover {
+                    background-color: #e2e8f0 !important;
+                    color: #0f172a !important;
+                }
+            `}</style>
+
+            {/* 하단 기능 그룹별 세로 구분선 적용 일괄 처리 닥 */}
+            {selectedRowIds.size > 0 && (
+                <div
+                    className="floating-bulk-dock-container"
+                    style={{
+                        position: 'fixed',
+                        bottom: '36px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 99999,
+                        backgroundColor: '#ffffff',
+                        border: '1.5px solid #ea580c',
+                        color: '#0f172a',
+                        padding: '8px 16px',
+                        borderRadius: '14px',
+                        boxShadow: '0 8px 24px -4px rgba(234, 88, 12, 0.22), 0 4px 12px rgba(0, 0, 0, 0.05)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        animation: 'fadeInUp 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                        backdropFilter: 'blur(12px)'
+                    }}
+                >
+                    {/* 0. 선택 갯수 안내 */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '8px', borderRight: '1px solid #fed7aa', height: '32px' }}>
+                        <span style={{ backgroundColor: '#ea580c', color: '#ffffff', borderRadius: '10px', padding: '2px 8px', fontSize: '11px', fontWeight: 800 }}>
+                            {selectedRowIds.size}
+                        </span>
+                        <span style={{ color: '#ea580c', fontWeight: 700, fontSize: '12px', letterSpacing: '-0.2px' }}>개 선택됨</span>
+                    </div>
+
+                    {/* 1. ADMIN 그룹: 분석 지정 & 제외 지정 */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {/* ✓ 분석 지정 */}
+                        <button
+                            type="button"
+                            className="bulk-dock-btn bulk-dock-btn-analysis"
+                            onClick={() => handleBulkSetUseYn(false)}
+                            style={{
+                                height: '32px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '5px',
+                                backgroundColor: '#ffffff',
+                                border: '1.5px solid #0284c7',
+                                color: '#0284c7',
+                                padding: '0 12px',
+                                borderRadius: '8px',
+                                fontSize: '12px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                boxSizing: 'border-box'
+                            }}
+                            title="선택한 문항을 분석 대상으로 지정"
+                        >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="9 12 11.5 14.5 15.5 9.5"></polyline>
+                            </svg>
+                            <span>분석 지정</span>
+                        </button>
+
+                        {/* 🚫 제외 지정 */}
+                        <button
+                            type="button"
+                            className="bulk-dock-btn bulk-dock-btn-exclude"
+                            onClick={() => handleBulkSetUseYn(true)}
+                            style={{
+                                height: '32px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '5px',
+                                backgroundColor: '#ffffff',
+                                border: '1.5px solid #dc2626',
+                                color: '#dc2626',
+                                padding: '0 12px',
+                                borderRadius: '8px',
+                                fontSize: '12px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                boxSizing: 'border-box'
+                            }}
+                            title="선택한 문항을 분석 제외 대상으로 지정"
+                        >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                            </svg>
+                            <span>제외 지정</span>
+                        </button>
+                    </div>
+
+                    {/* 구분 세로선 1 */}
+                    <div style={{ width: '1px', height: '18px', backgroundColor: '#cbd5e1', margin: '0 3px' }} />
+
+                    {/* 2. 문항통합저장 그룹: 선택문항 통합 */}
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <button
+                            type="button"
+                            className="bulk-dock-btn bulk-dock-btn-merge"
+                            onClick={handleMergeSelectedFromBar}
+                            disabled={selectedRowIds.size < 2}
+                            style={{
+                                height: '32px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px',
+                                backgroundColor: selectedRowIds.size >= 2 ? '#ffedd5' : '#f1f5f9',
+                                color: selectedRowIds.size >= 2 ? '#c2410c' : '#94a3b8',
+                                border: selectedRowIds.size >= 2 ? '1.5px solid #f97316' : '1px solid #cbd5e1',
+                                padding: '0 14px',
+                                borderRadius: '8px',
+                                fontSize: '12px',
+                                fontWeight: 700,
+                                cursor: selectedRowIds.size >= 2 ? 'pointer' : 'not-allowed',
+                                boxShadow: selectedRowIds.size >= 2 ? '0 2px 6px rgba(249, 115, 22, 0.2)' : 'none',
+                                boxSizing: 'border-box'
+                            }}
+                            title={selectedRowIds.size < 2 ? '2개 이상의 문항을 선택하면 통합(묶기)할 수 있습니다.' : '선택한 문항들을 하나의 그룹으로 통합(묶기)'}
+                        >
+                            <Link size={13} style={{ color: selectedRowIds.size >= 2 ? '#c2410c' : '#94a3b8' }} />
+                            <span>선택문항 통합 (묶기)</span>
+                        </button>
+                    </div>
+
+                    {/* 구분 세로선 2 */}
+                    <div style={{ width: '1px', height: '18px', backgroundColor: '#cbd5e1', margin: '0 3px' }} />
+
+                    {/* 3. 수정 그룹: 잠금 & 해제 */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {/* 🔒 일괄 잠금 */}
+                        <button
+                            type="button"
+                            className="bulk-dock-btn bulk-dock-btn-lock"
+                            onClick={() => handleBulkSetLockSelected(true)}
+                            style={{
+                                height: '32px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '5px',
+                                backgroundColor: '#ffffff',
+                                border: '1.5px solid #475569',
+                                color: '#334155',
+                                padding: '0 11px',
+                                borderRadius: '8px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                boxSizing: 'border-box'
+                            }}
+                            title="선택한 문항 잠금"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            <span>잠금</span>
+                        </button>
+
+                        {/* 🔓 일괄 잠금 해제 */}
+                        <button
+                            type="button"
+                            className="bulk-dock-btn bulk-dock-btn-lock"
+                            onClick={() => handleBulkSetLockSelected(false)}
+                            style={{
+                                height: '32px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '5px',
+                                backgroundColor: '#ffffff',
+                                border: '1.5px solid #475569',
+                                color: '#334155',
+                                padding: '0 11px',
+                                borderRadius: '8px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                boxSizing: 'border-box'
+                            }}
+                            title="선택한 문항 잠금 해제"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+                            </svg>
+                            <span>해제</span>
+                        </button>
+                    </div>
+
+                    {/* 구분 세로선 3 */}
+                    <div style={{ width: '1px', height: '18px', backgroundColor: '#cbd5e1', margin: '0 1px 0 3px' }} />
+
+                    {/* 4. 선택 해제 */}
+                    <button
+                        type="button"
+                        className="bulk-dock-btn bulk-dock-btn-close"
+                        onClick={() => setSelectedRowIds(new Set())}
+                        style={{
+                            height: '32px',
+                            width: '32px',
+                            background: '#f1f5f9',
+                            border: '1px solid #cbd5e1',
+                            color: '#475569',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: 0,
+                            borderRadius: '50%',
+                            boxSizing: 'border-box'
+                        }}
+                        title="선택 초기화"
+                    >
+                        <X size={14} />
+                    </button>
+                </div>
             )}
         </div>
     );
