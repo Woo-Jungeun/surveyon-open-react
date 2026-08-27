@@ -504,7 +504,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                                             ? (getGeneratedFileCount() === 1
                                                 ? '선택한 1개 파일 다운로드'
                                                 : `선택한 ${getGeneratedFileCount()}개 파일 ZIP 다운로드`)
-                                            : '선택 항목 ZIP 다운로드'
+                                            : '다운로드'
                                     )}
                                 </button>
                             </div>
