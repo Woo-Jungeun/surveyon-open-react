@@ -1860,3 +1860,29 @@ input:checked+.slider:before {
     padding: 2px 6px !important;
     height: 26px !important;
 }
+
+/* === Tactile Press Micro-animations for DownloadModal === */
+.dm-tactile-card {
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease !important;
+}
+
+.dm-tactile-card:hover {
+    transform: translateY(-0.5px) !important;
+}
+
+.dm-tactile-card:active {
+    transform: translateY(0) scale(0.995) !important;
+}
+
+.dm-tactile-btn {
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease, border-color 0.15s ease !important;
+}
+
+.dm-tactile-btn:not(:disabled):hover {
+    transform: translateY(-0.5px) !important;
+    filter: brightness(1.03);
+}
+
+.dm-tactile-btn:not(:disabled):active {
+    transform: translateY(0) scale(0.99) !important;
+}

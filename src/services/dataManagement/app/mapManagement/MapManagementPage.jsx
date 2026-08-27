@@ -732,7 +732,6 @@ const MapManagementPage = () => {
                                     border: '1px solid #16a34a',
                                     background: '#fff',
                                     color: '#16a34a',
-                                    marginRight: '8px'
                                 }}
                                 onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
                                 onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
@@ -740,6 +739,14 @@ const MapManagementPage = () => {
                                 <RefreshCw size={16} />
                                 맵 새로고침
                             </button>
+                            {/* 세로 구분선 1 */}
+                            <div style={{
+                                width: '1px',
+                                height: '16px',
+                                backgroundColor: '#cbd5e1',
+                                margin: '0 4px',
+                                alignSelf: 'center'
+                            }}></div>
                             <button
                                 className="data-header-btn"
                                 onClick={() => setDataUpdateModalOpen(true)}
@@ -749,7 +756,6 @@ const MapManagementPage = () => {
                                     border: '1px solid #16a34a',
                                     background: '#fff',
                                     color: '#16a34a',
-                                    marginRight: '8px'
                                 }}
                                 onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
                                 onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
@@ -773,6 +779,14 @@ const MapManagementPage = () => {
                                 <Download size={16} />
                                 다운로드
                             </button>
+                            {/* 세로 구분선 2 */}
+                            <div style={{
+                                width: '1px',
+                                height: '16px',
+                                backgroundColor: '#cbd5e1',
+                                margin: '0 4px',
+                                alignSelf: 'center'
+                            }}></div>
                         </>
                     )}
                 </DataHeader>
