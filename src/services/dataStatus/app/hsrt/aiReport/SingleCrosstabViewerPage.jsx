@@ -22,6 +22,7 @@ export default function SingleCrosstabViewerPage() {
     const [tableCss, setTableCss] = useState('');
     const [displayTitle, setDisplayTitle] = useState(titleParam);
     const [errorMsg, setErrorMsg] = useState('');
+    const [uiSettings, setUiSettings] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -66,13 +67,15 @@ export default function SingleCrosstabViewerPage() {
                     sig_level: 95,
                     theme_primary: "#2F5597",
                     theme_primary_fg: "#FFFFFF",
-                    theme_base_bg: "#F1F5F9",
+                    theme_base_bg: "#fef08a",
                     theme_base_fg: "#0F172A",
                     stub_group_layout: "merge",
                     zero_display: "-",
                     empty_display: ""
                 };
             }
+
+            setUiSettings(contextUiSettings);
 
             // 2. stubs Payload 구성
             let stubsPayload = [];
@@ -151,6 +154,11 @@ export default function SingleCrosstabViewerPage() {
             isMounted = false;
         };
     }, [stubParam, pageIdParam, userParam, bannerParamRaw, weightVarParam, filterExprParam]);
+
+    const primaryColor = uiSettings?.theme_primary || '#2F5597';
+    const primaryFgColor = uiSettings?.theme_primary_fg || '#FFFFFF';
+    const baseBgColor = uiSettings?.theme_base_bg || '#fef08a';
+    const baseFgColor = uiSettings?.theme_base_fg || '#0F172A';
 
     return (
         <div style={{
@@ -269,19 +277,14 @@ export default function SingleCrosstabViewerPage() {
 
                 ${tableCss}
 
-                /* 상하(수직) 스티키 헤더 고정 및 배경 불투명 보장 */
-                .single-styled-table-container table thead {
-                    position: sticky !important;
-                    top: 0 !important;
-                    z-index: 100 !important;
-                }
+                /* 상하(수직) 스티키 헤더 고정 및 배경 불투명 보장 (ui_settings theme_primary 반영) */
                 .single-styled-table-container table thead tr th,
                 .single-styled-table-container table thead th {
                     position: sticky !important;
                     top: 0 !important;
                     z-index: 100 !important;
-                    background-color: #781c33 !important;
-                    color: #ffffff !important;
+                    background-color: ${primaryColor} !important;
+                    color: ${primaryFgColor} !important;
                 }
 
                 /* 좌우(가로) 스티키 1열 고정 및 배경 불투명 보장 */
@@ -299,16 +302,18 @@ export default function SingleCrosstabViewerPage() {
                 }
                 .single-styled-table-container table tr.base-row td,
                 .single-styled-table-container table tr[class*="base"] td {
-                    background-color: #f7e4e6 !important;
+                    background-color: ${baseBgColor} !important;
+                    color: ${baseFgColor} !important;
                 }
                 .single-styled-table-container table tr.base-row td:first-child,
                 .single-styled-table-container table tr[class*="base"] td:first-child {
-                    background-color: #f7e4e6 !important;
+                    background-color: ${baseBgColor} !important;
+                    color: ${baseFgColor} !important;
                     z-index: 95 !important;
                     box-shadow: 2px 0 4px rgba(15, 23, 42, 0.08) !important;
                 }
 
-                /* 최상단 1행 1열 '구분' 교차 헤더 셀 (최고 z-index) */
+                /* 최상단 1행 1열 '구분' 교차 헤더 셀 (최고 z-index, ui_settings theme_primary 반영) */
                 .single-styled-table-container table thead tr:first-child th:first-child,
                 .single-styled-table-container table thead tr:first-child td:first-child,
                 .single-styled-table-container table thead th.stub-header {
@@ -316,8 +321,8 @@ export default function SingleCrosstabViewerPage() {
                     top: 0 !important;
                     left: 0 !important;
                     z-index: 200 !important;
-                    background-color: #781c33 !important;
-                    color: #ffffff !important;
+                    background-color: ${primaryColor} !important;
+                    color: ${primaryFgColor} !important;
                     box-shadow: 2px 2px 5px rgba(15, 23, 42, 0.1) !important;
                 }
             `}</style>
