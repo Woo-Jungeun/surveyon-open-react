@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Check, ArrowRight, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet, ChevronsUpDown, ChevronsDownUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Presentation, FileText, Target, BarChart2, CheckCircle2, Users, ExternalLink, Download, BarChartHorizontal, Layers, Percent, LineChart, PieChart, Aperture, MoreHorizontal, AreaChart, LayoutGrid, Cloud, Settings, LayoutList, Zap } from 'lucide-react';
 import { DpRequestPageApi } from '../../dpRequest/DpRequestPageApi';
 import { AiReportPageApi } from '../AiReportPageApi';
@@ -70,10 +70,72 @@ const AiReportAnalysisStep = ({
     onExportL3File,
     categories,
     bannerVars,
-    userId
+    userId,
+    recodedVariables = {}
 }) => {
     const { getOverviewContext } = DpRequestPageApi();
     const { getOverviewProofStyled, getOverviewProofStyledChart, getOverviewSingleStyled } = AiReportPageApi();
+
+    const [recodedVariablesMap, setRecodedVariablesMap] = useState(recodedVariables || {});
+
+    useEffect(() => {
+        if (recodedVariables && typeof recodedVariables === 'object' && Object.keys(recodedVariables).length > 0) {
+            setRecodedVariablesMap(recodedVariables);
+            return;
+        }
+        const fetchRecodedVars = async () => {
+            const pageId = sessionStorage.getItem('pageId') || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+            const user = userId || "";
+            try {
+                const contextRes = await getOverviewContext.mutateAsync({ pageid: pageId, user });
+                const ctxPayload = contextRes?.resultjson || contextRes || {};
+                const recodedVars = ctxPayload.recoded_variables || {};
+                if (recodedVars && typeof recodedVars === 'object' && Object.keys(recodedVars).length > 0) {
+                    setRecodedVariablesMap(recodedVars);
+                }
+            } catch (e) {
+                console.error("Failed to load recoded_variables for stub label lookup:", e);
+            }
+        };
+        fetchRecodedVars();
+    }, [userId, getOverviewContext, recodedVariables]);
+
+    const getStubDisplayLabel = useCallback((stubCode) => {
+        if (!stubCode) return '';
+        const stubStr = String(stubCode).trim();
+
+        if (recodedVariablesMap[stubStr]?.label) {
+            return recodedVariablesMap[stubStr].label;
+        }
+
+        const stubWithSuffix = stubStr.endsWith('_stub') ? stubStr : `${stubStr}_stub`;
+        const stubWithoutSuffix = stubStr.replace(/_stub$/, '');
+
+        if (recodedVariablesMap[stubWithSuffix]?.label) {
+            return recodedVariablesMap[stubWithSuffix].label;
+        }
+        if (recodedVariablesMap[stubWithoutSuffix]?.label) {
+            return recodedVariablesMap[stubWithoutSuffix].label;
+        }
+
+        const foundByVal = Object.values(recodedVariablesMap).find(v =>
+            v && (v.id === stubStr || v.id === stubWithSuffix || v.id === stubWithoutSuffix)
+        );
+        if (foundByVal?.label) {
+            return foundByVal.label;
+        }
+
+        if (Array.isArray(questions) && questions.length > 0) {
+            const qMatch = questions.find(q =>
+                q.id === stubStr || q.id === stubWithSuffix || q.id === stubWithoutSuffix || q.qnum === stubStr || q.qnum === stubWithoutSuffix
+            );
+            if (qMatch?.label) {
+                return qMatch.qnum ? `${qMatch.qnum}. ${qMatch.label}` : qMatch.label;
+            }
+        }
+
+        return stubStr;
+    }, [recodedVariablesMap, questions]);
 
     const handleOpenSingleCrosstab = (stubCode, findItem) => {
         if (!stubCode) return;
@@ -98,18 +160,30 @@ const AiReportAnalysisStep = ({
         const weightVar = target.weight_variable || target.weight_col || findItem?.weight_variable || findItem?.weight_col || "";
         const filterExpr = target.filter_expression || findItem?.filter_expression || "";
 
-        const queryParams = new URLSearchParams({
-            stub: stubCode,
-            title: windowTitle,
+        const payload = {
             pageId: pageId,
             user: user,
-            banner: JSON.stringify(bannerList),
+            stubId: stubCode,
+            bannerList: bannerList,
             weightVar: weightVar,
-            filterExpr: filterExpr
-        });
+            filterExpr: filterExpr,
+            windowTitle: windowTitle
+        };
 
-        const viewerUrl = `${window.location.origin}/data_status/hsrt/crosstab_viewer?${queryParams.toString()}`;
-        window.open(viewerUrl, '_blank', 'width=1280,height=900,left=100,top=50,resizable=yes,scrollbars=yes');
+        try {
+            sessionStorage.setItem('singleCrosstabParams', JSON.stringify(payload));
+            const width = Math.min(1400, window.screen.width * 0.9);
+            const height = Math.min(900, window.screen.height * 0.9);
+            const left = (window.screen.width - width) / 2;
+            const top = (window.screen.height - height) / 2;
+            window.open(
+                '/crosstab-single-view',
+                'SingleCrosstabViewWindow',
+                `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes,status=no`
+            );
+        } catch (e) {
+            console.error("Failed to open single crosstab window:", e);
+        }
     };
     // L2 state and variables
     const [activeCategoryIndex, setActiveCategoryIndex] = useState(-1);
@@ -217,28 +291,100 @@ const AiReportAnalysisStep = ({
         }
     };
 
-    const handleEvidenceClick = async (item, evidenceKey, catIdx, sectionTitle, sectionLabel) => {
-        setIsPipelineExpanded(false);
-        if (openEvidences[evidenceKey]) {
-            setOpenEvidences(prev => {
-                const next = { ...prev };
-                delete next[evidenceKey];
-                return next;
-            });
-            return;
+    const [selectedEvidenceStubMap, setSelectedEvidenceStubMap] = useState({});
+
+    const parseStubList = useCallback((list, item) => {
+        let stubList = Array.isArray(list) ? list.filter(Boolean) : [];
+        if (stubList.length === 0) {
+            const single = item?.stub_id || item?.evidence_target?.stub_id || (typeof item?.stubs === 'string' ? item.stubs : null);
+            if (single) stubList.push(single);
+        }
+        return stubList;
+    }, []);
+
+    const getEvidenceTargetAndMetric = useCallback((item, evidenceKey) => {
+        if (!item) return { target: {}, metric: '', stubId: '', stubList: [], activeEv: null };
+
+        const evidences = Array.isArray(item.evidences) && item.evidences.length > 0 ? item.evidences : null;
+
+        let stubList = [];
+        if (evidences) {
+            stubList = evidences.map(ev => ev.stub_id || ev.evidence_target?.stub_id).filter(Boolean);
+        } else if (item.stubs) {
+            stubList = typeof item.stubs === 'string'
+                ? item.stubs.split(',').map(s => s.trim()).filter(Boolean)
+                : Array.isArray(item.stubs) ? item.stubs.map(s => String(s).trim()).filter(Boolean) : [];
         }
 
-        const updatedEvidence = {
-            ...item,
-            evidenceKey,
-            catIdx,
-            sectionTitle,
-            sectionLabel
+        stubList = parseStubList(stubList, item);
+
+        const selectedStub = selectedEvidenceStubMap[evidenceKey] || stubList[0] || item.stub_id || item.evidence_target?.stub_id || '';
+
+        let activeEv = null;
+        if (evidences) {
+            activeEv = evidences.find(ev => {
+                const sid = ev.stub_id || ev.evidence_target?.stub_id || '';
+                return sid === selectedStub || sid.replace(/_stub$/, '') === selectedStub.replace(/_stub$/, '');
+            }) || evidences[0];
+        }
+
+        const rawTarget = activeEv?.evidence_target || item.evidence_target || {};
+        const stubId = selectedStub || activeEv?.stub_id || rawTarget.stub_id || stubList[0] || '';
+        const target = { ...rawTarget, stub_id: stubId };
+
+        let metric = activeEv?.evidence_metric || item.evidence_metric || '';
+        if (metric && stubId) {
+            const labelText = getStubDisplayLabel(stubId);
+            if (labelText && labelText !== stubId) {
+                metric = metric.replace(/\[[a-zA-Z0-9_]+\]/g, `[${labelText}]`);
+            }
+        }
+
+        return {
+            target,
+            metric,
+            stubId,
+            stubList,
+            activeEv
         };
-        setOpenEvidences(prev => ({
-            ...prev,
-            [evidenceKey]: updatedEvidence
-        }));
+    }, [selectedEvidenceStubMap, parseStubList, getStubDisplayLabel]);
+
+    const fetchEvidenceForTarget = useCallback(async (item, evidenceKey, overrideStub) => {
+        const currentStub = overrideStub || selectedEvidenceStubMap[evidenceKey];
+        const tempStubMap = currentStub ? { ...selectedEvidenceStubMap, [evidenceKey]: currentStub } : selectedEvidenceStubMap;
+
+        const evidences = Array.isArray(item?.evidences) && item.evidences.length > 0 ? item.evidences : null;
+        let stubList = [];
+        if (evidences) {
+            stubList = evidences.map(ev => ev.stub_id || ev.evidence_target?.stub_id).filter(Boolean);
+        } else if (item?.stubs) {
+            stubList = typeof item.stubs === 'string'
+                ? item.stubs.split(',').map(s => s.trim()).filter(Boolean)
+                : Array.isArray(item.stubs) ? item.stubs.map(s => String(s).trim()).filter(Boolean) : [];
+        }
+
+        stubList = parseStubList(stubList, item);
+
+        const effectiveStub = currentStub || tempStubMap[evidenceKey] || stubList[0] || item?.stub_id || item?.evidence_target?.stub_id || '';
+
+        let activeEv = null;
+        if (evidences) {
+            activeEv = evidences.find(ev => {
+                const sid = ev.stub_id || ev.evidence_target?.stub_id || '';
+                return sid === effectiveStub || sid.replace(/_stub$/, '') === effectiveStub.replace(/_stub$/, '');
+            }) || evidences[0];
+        }
+
+        const rawTarget = activeEv?.evidence_target || item?.evidence_target || {};
+        const stubId = effectiveStub || activeEv?.stub_id || rawTarget.stub_id || stubList[0] || '';
+        const target = { ...rawTarget, stub_id: stubId };
+
+        let stubsList = target.stubs || item?.stubs;
+        if (!stubsList) {
+            stubsList = stubId ? [stubId] : [];
+        } else if (typeof stubsList === 'string') {
+            stubsList = stubsList.split(',').map(s => s.trim()).filter(Boolean);
+        }
 
         const pageId = sessionStorage.getItem('pageId') || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
         const user = userId || "";
@@ -258,37 +404,12 @@ const AiReportAnalysisStep = ({
 
         if (!contextUiSettings) {
             contextUiSettings = {
-                font_family: "Pretendard",
-                font_size: 13,
-                format_show_n: true,
-                format_show_percent: true,
-                format_percent_as_column: true,
-                format_n_round: 0,
-                format_percent_round: 1,
-                format_percent_symbol: true,
-                format_base_prefix: "(",
-                format_base_postfix: ")",
-                sig_diff_fin_mode: "t-test",
-                sig_diff_test_mode: true,
-                sig_level: 95,
-                theme_primary: "#2F5597",
-                theme_primary_fg: "#FFFFFF",
-                theme_base_bg: "#F1F5F9",
-                theme_base_fg: "#0F172A",
-                stub_group_layout: "merge",
-                zero_display: "-",
-                empty_display: ""
+                font_family: "Pretendard", font_size: 13, format_show_n: true, format_show_percent: true,
+                format_percent_as_column: true, format_n_round: 0, format_percent_round: 1, format_percent_symbol: true,
+                format_base_prefix: "(", format_base_postfix: ")", sig_diff_fin_mode: "t-test", sig_diff_test_mode: true,
+                sig_level: 95, theme_primary: "#2F5597", theme_primary_fg: "#FFFFFF", theme_base_bg: "#F1F5F9",
+                theme_base_fg: "#0F172A", stub_group_layout: "merge", zero_display: "-", empty_display: ""
             };
-        }
-
-        const target = item?.evidence_target || {};
-        const stubId = target.stub_id || item?.stub_id || "";
-
-        let stubsList = target.stubs || item?.stubs;
-        if (!stubsList) {
-            stubsList = stubId ? [stubId] : [];
-        } else if (typeof stubsList === 'string') {
-            stubsList = stubsList.split(',').map(s => s.trim()).filter(Boolean);
         }
 
         const bannerName = target.banner_name || item?.banner_name || "";
@@ -299,10 +420,7 @@ const AiReportAnalysisStep = ({
         } else if (typeof bannerList === 'string') {
             bannerList = [bannerList];
         }
-
-        if (!Array.isArray(bannerList)) {
-            bannerList = [];
-        }
+        if (!Array.isArray(bannerList)) bannerList = [];
 
         const proofWeightVar = target.weight_variable || target.weight_col || item?.weight_variable || item?.weight_col || contextUiSettings?.weight_variable || "";
 
@@ -326,6 +444,8 @@ const AiReportAnalysisStep = ({
 
         try {
             setEvidenceLoadingMap(prev => ({ ...prev, [evidenceKey]: true }));
+            setEvidenceChartDataMap(prev => ({ ...prev, [evidenceKey]: null }));
+
             const proofRes = await getOverviewProofStyled.mutateAsync(proofPayload);
             const payload = proofRes?.resultjson || proofRes || null;
             setEvidenceDataMap(prev => ({ ...prev, [evidenceKey]: payload }));
@@ -340,6 +460,32 @@ const AiReportAnalysisStep = ({
         } finally {
             setEvidenceLoadingMap(prev => ({ ...prev, [evidenceKey]: false }));
         }
+    }, [getOverviewContext, getOverviewProofStyled, userId, bannerVars, selectedEvidenceStubMap]);
+
+    const handleEvidenceClick = async (item, evidenceKey, catIdx, sectionTitle, sectionLabel) => {
+        setIsPipelineExpanded(false);
+        if (openEvidences[evidenceKey]) {
+            setOpenEvidences(prev => {
+                const next = { ...prev };
+                delete next[evidenceKey];
+                return next;
+            });
+            return;
+        }
+
+        const updatedEvidence = {
+            ...item,
+            evidenceKey,
+            catIdx,
+            sectionTitle,
+            sectionLabel
+        };
+        setOpenEvidences(prev => ({
+            ...prev,
+            [evidenceKey]: updatedEvidence
+        }));
+
+        await fetchEvidenceForTarget(item, evidenceKey);
     };
 
     const l2Categories = insightData.l2 || [];
@@ -899,7 +1045,7 @@ const AiReportAnalysisStep = ({
             }}>
                 <div style={{
                     display: 'flex',
-                    justify: 'space-between',
+                    justifyContent: 'space-between',
                     alignItems: 'center',
                     width: '100%',
                     marginBottom: '12px'
@@ -1007,60 +1153,61 @@ const AiReportAnalysisStep = ({
         );
     };
 
-    const renderStubChips = (stubs, findItem) => {
-        if (!stubs) return null;
-        const stubList = typeof stubs === 'string'
-            ? stubs.split(',').map(s => s.trim()).filter(Boolean)
-            : Array.isArray(stubs) ? stubs.map(s => String(s).trim()).filter(Boolean) : [];
+    const renderStubChips = (stubs, findItem, evidenceKey) => {
+        if (!findItem) return null;
+        const { stubList, stubId: currentStub } = getEvidenceTargetAndMetric(findItem, evidenceKey);
 
-        if (stubList.length === 0) return null;
+        if (!stubList || stubList.length === 0) return null;
 
         return (
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
                 <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 600 }}>근거문항:</span>
-                {stubList.map((stub, sIdx) => (
-                    <button
-                        key={sIdx}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenSingleCrosstab(stub, findItem);
-                        }}
-                        title={`[${stub}] 클릭하여 핵심 교차표 새창 보기`}
-                        style={{
-                            background: '#eff6ff',
-                            color: '#1d4ed8',
-                            border: '1px solid #bfdbfe',
-                            borderRadius: '5px',
-                            padding: '4px 10px',
-                            fontSize: '13px',
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            lineHeight: 1.3,
-                            transition: 'all 0.15s ease-in-out',
-                            boxShadow: '0 1px 2px rgba(37, 99, 235, 0.06)'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#dbeafe';
-                            e.currentTarget.style.borderColor = '#2563eb';
-                            e.currentTarget.style.color = '#1e40af';
-                            e.currentTarget.style.transform = 'translateY(-1px)';
-                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(37, 99, 235, 0.15)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.background = '#eff6ff';
-                            e.currentTarget.style.borderColor = '#bfdbfe';
-                            e.currentTarget.style.color = '#1d4ed8';
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '0 1px 2px rgba(37, 99, 235, 0.06)';
-                        }}
-                    >
-                        <span style={{ fontSize: '13px', fontWeight: 700, lineHeight: 1 }}>{stub}</span>
-                        <Search size={13} color="#2563eb" style={{ marginLeft: '2px' }} />
-                    </button>
-                ))}
+                {stubList.map((stub, sIdx) => {
+                    const isSelectedStub = stub === currentStub || stub.replace(/_stub$/, '') === currentStub.replace(/_stub$/, '');
+                    const displayLabel = getStubDisplayLabel(stub);
+                    const truncatedLabel = displayLabel.length > 20 ? `${displayLabel.substring(0, 20)}...` : displayLabel;
+                    return (
+                        <button
+                            key={sIdx}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedEvidenceStubMap(prev => ({ ...prev, [evidenceKey]: stub }));
+                                fetchEvidenceForTarget(findItem, evidenceKey, stub);
+                            }}
+                            title={`[${displayLabel}] (${stub}) 클릭하여 해당 문항 근거 상세 보기`}
+                            style={{
+                                background: isSelectedStub ? '#2563eb' : '#eff6ff',
+                                color: isSelectedStub ? '#ffffff' : '#1d4ed8',
+                                border: `1px solid ${isSelectedStub ? '#2563eb' : '#bfdbfe'}`,
+                                borderRadius: '5px',
+                                padding: '4px 10px',
+                                fontSize: '13px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                lineHeight: 1.3,
+                                transition: 'all 0.15s ease-in-out',
+                                boxShadow: isSelectedStub ? '0 2px 4px rgba(37, 99, 235, 0.25)' : '0 1px 2px rgba(37, 99, 235, 0.06)',
+                                maxWidth: '230px'
+                            }}
+                        >
+                            <span style={{
+                                fontSize: '13px',
+                                fontWeight: 700,
+                                lineHeight: 1,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                maxWidth: '210px',
+                                display: 'inline-block'
+                            }}>
+                                {truncatedLabel}
+                            </span>
+                        </button>
+                    );
+                })}
             </div>
         );
     };
@@ -2299,37 +2446,88 @@ const AiReportAnalysisStep = ({
                                                                                             {find.description}
                                                                                         </p>
 
-                                                                                        {isSelected && (
-                                                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
-                                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                                                                                    {renderStubChips(find.stubs, find, evidenceKey, idx, '핵심 정량 분석', '핵심 분석 근거')}
-                                                                                                </div>
-
-                                                                                                {find.evidence_metric && (
-                                                                                                    <div style={{
-                                                                                                        display: 'inline-flex',
-                                                                                                        alignItems: 'flex-start',
-                                                                                                        gap: '6px',
-                                                                                                        padding: '6px 12px',
-                                                                                                        borderRadius: '6px',
-                                                                                                        background: '#fffbeb',
-                                                                                                        border: '1px solid #fde68a',
-                                                                                                        marginTop: '4px',
-                                                                                                        maxWidth: '100%',
-                                                                                                        boxSizing: 'border-box',
-                                                                                                        fontSize: '11.5px'
-                                                                                                    }}>
-                                                                                                        <BarChart2 size={13} color="#d97706" style={{ marginTop: '2px', flexShrink: 0 }} />
-                                                                                                        <div style={{ fontSize: '11.5px', color: '#92400e', lineHeight: '1.45', wordBreak: 'break-all' }}>
-                                                                                                            <strong style={{ color: '#b45309', marginRight: '5px', fontWeight: 700, fontSize: '11.5px' }}>교차표 판단:</strong>
-                                                                                                            <span style={{ fontSize: '11.5px' }}>{find.evidence_metric}</span>
-                                                                                                        </div>
+                                                                                        {isSelected && (() => {
+                                                                                            const activeEvInfo = getEvidenceTargetAndMetric(find, evidenceKey);
+                                                                                            return (
+                                                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                                                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                                                                        {renderStubChips(find.stubs, find, evidenceKey)}
                                                                                                     </div>
-                                                                                                )}
 
-                                                                                                {renderEvidenceTabbedContainer(evidenceKey, find)}
-                                                                                            </div>
-                                                                                        )}
+                                                                                                    {activeEvInfo.metric && (
+                                                                                                        <div style={{
+                                                                                                            display: 'flex',
+                                                                                                            alignItems: 'center',
+                                                                                                            justifyContent: 'space-between',
+                                                                                                            gap: '10px',
+                                                                                                            padding: '6px 12px',
+                                                                                                            borderRadius: '6px',
+                                                                                                            background: '#fffbeb',
+                                                                                                            border: '1px solid #fde68a',
+                                                                                                            marginTop: '4px',
+                                                                                                            maxWidth: '100%',
+                                                                                                            boxSizing: 'border-box',
+                                                                                                            fontSize: '11.5px'
+                                                                                                        }}>
+                                                                                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', flex: 1, minWidth: 0 }}>
+                                                                                                                <BarChart2 size={13} color="#d97706" style={{ marginTop: '2px', flexShrink: 0 }} />
+                                                                                                                <div style={{ fontSize: '11.5px', color: '#92400e', lineHeight: '1.45', wordBreak: 'break-all' }}>
+                                                                                                                    <strong style={{ color: '#b45309', marginRight: '5px', fontWeight: 700, fontSize: '11.5px' }}>교차표 판단:</strong>
+                                                                                                                    <span style={{ fontSize: '11.5px' }}>{activeEvInfo.metric}</span>
+                                                                                                                </div>
+                                                                                                            </div>
+
+                                                                                                            {activeEvInfo.stubId && (
+                                                                                                                <button
+                                                                                                                    type="button"
+                                                                                                                    onClick={(e) => {
+                                                                                                                        e.stopPropagation();
+                                                                                                                        handleOpenSingleCrosstab(activeEvInfo.stubId, {
+                                                                                                                            ...find,
+                                                                                                                            evidence_target: activeEvInfo.target
+                                                                                                                        });
+                                                                                                                    }}
+                                                                                                                    title={`[${activeEvInfo.stubId}] 클릭하여 핵심 교차표 새창 보기`}
+                                                                                                                    style={{
+                                                                                                                        padding: '5.5px 10px',
+                                                                                                                        borderRadius: '6px',
+                                                                                                                        fontSize: '12px',
+                                                                                                                        fontWeight: 600,
+                                                                                                                        color: '#1e293b',
+                                                                                                                        background: '#ffffff',
+                                                                                                                        border: '1px solid #cbd5e1',
+                                                                                                                        cursor: 'pointer',
+                                                                                                                        display: 'inline-flex',
+                                                                                                                        alignItems: 'center',
+                                                                                                                        gap: '4px',
+                                                                                                                        flexShrink: 0,
+                                                                                                                        boxShadow: '0 1px 2px rgba(15, 23, 42, 0.06)',
+                                                                                                                        transition: 'all 0.15s ease'
+                                                                                                                    }}
+                                                                                                                    onMouseEnter={(e) => {
+                                                                                                                        e.currentTarget.style.background = '#f8fafc';
+                                                                                                                        e.currentTarget.style.borderColor = '#2563eb';
+                                                                                                                        e.currentTarget.style.color = '#2563eb';
+                                                                                                                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(37, 99, 235, 0.12)';
+                                                                                                                    }}
+                                                                                                                    onMouseLeave={(e) => {
+                                                                                                                        e.currentTarget.style.background = '#ffffff';
+                                                                                                                        e.currentTarget.style.borderColor = '#cbd5e1';
+                                                                                                                        e.currentTarget.style.color = '#1e293b';
+                                                                                                                        e.currentTarget.style.boxShadow = '0 1px 2px rgba(15, 23, 42, 0.06)';
+                                                                                                                    }}
+                                                                                                                >
+                                                                                                                    <ExternalLink size={12} color="#2563eb" />
+                                                                                                                    <span style={{ fontSize: '12px', lineHeight: 1.2 }}>핵심 교차표</span>
+                                                                                                                </button>
+                                                                                                            )}
+                                                                                                        </div>
+                                                                                                    )}
+
+                                                                                                    {renderEvidenceTabbedContainer(evidenceKey, find)}
+                                                                                                </div>
+                                                                                            );
+                                                                                        })()}
                                                                                     </div>
                                                                                 );
                                                                             })
@@ -2465,37 +2663,88 @@ const AiReportAnalysisStep = ({
                                                                                             {plan.description}
                                                                                         </p>
 
-                                                                                        {isSelected && (
-                                                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
-                                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                                                                                    {renderStubChips(plan.stubs, plan, evidenceKey, idx, '전략적 시사점 & 액션 플랜', '전략 과제 근거')}
-                                                                                                </div>
-
-                                                                                                {plan.evidence_metric && (
-                                                                                                    <div style={{
-                                                                                                        display: 'inline-flex',
-                                                                                                        alignItems: 'flex-start',
-                                                                                                        gap: '6px',
-                                                                                                        padding: '6px 12px',
-                                                                                                        borderRadius: '6px',
-                                                                                                        background: '#fffbeb',
-                                                                                                        border: '1px solid #fde68a',
-                                                                                                        marginTop: '4px',
-                                                                                                        maxWidth: '100%',
-                                                                                                        boxSizing: 'border-box',
-                                                                                                        fontSize: '11.5px'
-                                                                                                    }}>
-                                                                                                        <BarChart2 size={13} color="#d97706" style={{ marginTop: '2px', flexShrink: 0 }} />
-                                                                                                        <div style={{ fontSize: '11.5px', color: '#92400e', lineHeight: '1.45', wordBreak: 'break-all' }}>
-                                                                                                            <strong style={{ color: '#b45309', marginRight: '5px', fontWeight: 700, fontSize: '11.5px' }}>교차표 판단:</strong>
-                                                                                                            <span style={{ fontSize: '11.5px' }}>{plan.evidence_metric}</span>
-                                                                                                        </div>
+                                                                                        {isSelected && (() => {
+                                                                                            const activeEvInfo = getEvidenceTargetAndMetric(plan, evidenceKey);
+                                                                                            return (
+                                                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                                                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                                                                        {renderStubChips(plan.stubs, plan, evidenceKey)}
                                                                                                     </div>
-                                                                                                )}
 
-                                                                                                {renderEvidenceTabbedContainer(evidenceKey, plan)}
-                                                                                            </div>
-                                                                                        )}
+                                                                                                    {activeEvInfo.metric && (
+                                                                                                        <div style={{
+                                                                                                            display: 'flex',
+                                                                                                            alignItems: 'center',
+                                                                                                            justifyContent: 'space-between',
+                                                                                                            gap: '10px',
+                                                                                                            padding: '6px 12px',
+                                                                                                            borderRadius: '6px',
+                                                                                                            background: '#fffbeb',
+                                                                                                            border: '1px solid #fde68a',
+                                                                                                            marginTop: '4px',
+                                                                                                            maxWidth: '100%',
+                                                                                                            boxSizing: 'border-box',
+                                                                                                            fontSize: '11.5px'
+                                                                                                        }}>
+                                                                                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', flex: 1, minWidth: 0 }}>
+                                                                                                                <BarChart2 size={13} color="#d97706" style={{ marginTop: '2px', flexShrink: 0 }} />
+                                                                                                                <div style={{ fontSize: '11.5px', color: '#92400e', lineHeight: '1.45', wordBreak: 'break-all' }}>
+                                                                                                                    <strong style={{ color: '#b45309', marginRight: '5px', fontWeight: 700, fontSize: '11.5px' }}>교차표 판단:</strong>
+                                                                                                                    <span style={{ fontSize: '11.5px' }}>{activeEvInfo.metric}</span>
+                                                                                                                </div>
+                                                                                                            </div>
+
+                                                                                                            {activeEvInfo.stubId && (
+                                                                                                                <button
+                                                                                                                    type="button"
+                                                                                                                    onClick={(e) => {
+                                                                                                                        e.stopPropagation();
+                                                                                                                        handleOpenSingleCrosstab(activeEvInfo.stubId, {
+                                                                                                                            ...plan,
+                                                                                                                            evidence_target: activeEvInfo.target
+                                                                                                                        });
+                                                                                                                    }}
+                                                                                                                    title={`[${activeEvInfo.stubId}] 클릭하여 핵심 교차표 새창 보기`}
+                                                                                                                    style={{
+                                                                                                                        padding: '5.5px 10px',
+                                                                                                                        borderRadius: '6px',
+                                                                                                                        fontSize: '12px',
+                                                                                                                        fontWeight: 600,
+                                                                                                                        color: '#1e293b',
+                                                                                                                        background: '#ffffff',
+                                                                                                                        border: '1px solid #cbd5e1',
+                                                                                                                        cursor: 'pointer',
+                                                                                                                        display: 'inline-flex',
+                                                                                                                        alignItems: 'center',
+                                                                                                                        gap: '4px',
+                                                                                                                        flexShrink: 0,
+                                                                                                                        boxShadow: '0 1px 2px rgba(15, 23, 42, 0.06)',
+                                                                                                                        transition: 'all 0.15s ease'
+                                                                                                                    }}
+                                                                                                                    onMouseEnter={(e) => {
+                                                                                                                        e.currentTarget.style.background = '#f8fafc';
+                                                                                                                        e.currentTarget.style.borderColor = '#2563eb';
+                                                                                                                        e.currentTarget.style.color = '#2563eb';
+                                                                                                                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(37, 99, 235, 0.12)';
+                                                                                                                    }}
+                                                                                                                    onMouseLeave={(e) => {
+                                                                                                                        e.currentTarget.style.background = '#ffffff';
+                                                                                                                        e.currentTarget.style.borderColor = '#cbd5e1';
+                                                                                                                        e.currentTarget.style.color = '#1e293b';
+                                                                                                                        e.currentTarget.style.boxShadow = '0 1px 2px rgba(15, 23, 42, 0.06)';
+                                                                                                                    }}
+                                                                                                                >
+                                                                                                                    <ExternalLink size={12} color="#2563eb" />
+                                                                                                                    <span style={{ fontSize: '12px', lineHeight: 1.2 }}>핵심 교차표</span>
+                                                                                                                </button>
+                                                                                                            )}
+                                                                                                        </div>
+                                                                                                    )}
+
+                                                                                                    {renderEvidenceTabbedContainer(evidenceKey, plan)}
+                                                                                                </div>
+                                                                                            );
+                                                                                        })()}
                                                                                     </div>
                                                                                 );
                                                                             })
@@ -2610,37 +2859,88 @@ const AiReportAnalysisStep = ({
                                                                                             {prof.description}
                                                                                         </p>
 
-                                                                                        {isSelected && (
-                                                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
-                                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                                                                                    {renderStubChips(prof.stubs, prof, evidenceKey, idx, '타겟 세그먼트 프로필', '세그먼트 특징 근거')}
-                                                                                                </div>
-
-                                                                                                {prof.evidence_metric && (
-                                                                                                    <div style={{
-                                                                                                        display: 'inline-flex',
-                                                                                                        alignItems: 'flex-start',
-                                                                                                        gap: '6px',
-                                                                                                        padding: '6px 12px',
-                                                                                                        borderRadius: '6px',
-                                                                                                        background: '#fffbeb',
-                                                                                                        border: '1px solid #fde68a',
-                                                                                                        marginTop: '4px',
-                                                                                                        maxWidth: '100%',
-                                                                                                        boxSizing: 'border-box',
-                                                                                                        fontSize: '11.5px'
-                                                                                                    }}>
-                                                                                                        <BarChart2 size={13} color="#d97706" style={{ marginTop: '2px', flexShrink: 0 }} />
-                                                                                                        <div style={{ fontSize: '11.5px', color: '#92400e', lineHeight: '1.45', wordBreak: 'break-all' }}>
-                                                                                                            <strong style={{ color: '#b45309', marginRight: '5px', fontWeight: 700, fontSize: '11.5px' }}>교차표 판단:</strong>
-                                                                                                            <span style={{ fontSize: '11.5px' }}>{prof.evidence_metric}</span>
-                                                                                                        </div>
+                                                                                        {isSelected && (() => {
+                                                                                            const activeEvInfo = getEvidenceTargetAndMetric(prof, evidenceKey);
+                                                                                            return (
+                                                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                                                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                                                                        {renderStubChips(prof.stubs, prof, evidenceKey)}
                                                                                                     </div>
-                                                                                                )}
 
-                                                                                                {renderEvidenceTabbedContainer(evidenceKey, prof)}
-                                                                                            </div>
-                                                                                        )}
+                                                                                                    {activeEvInfo.metric && (
+                                                                                                        <div style={{
+                                                                                                            display: 'flex',
+                                                                                                            alignItems: 'center',
+                                                                                                            justifyContent: 'space-between',
+                                                                                                            gap: '10px',
+                                                                                                            padding: '6px 12px',
+                                                                                                            borderRadius: '6px',
+                                                                                                            background: '#fffbeb',
+                                                                                                            border: '1px solid #fde68a',
+                                                                                                            marginTop: '4px',
+                                                                                                            maxWidth: '100%',
+                                                                                                            boxSizing: 'border-box',
+                                                                                                            fontSize: '11.5px'
+                                                                                                        }}>
+                                                                                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', flex: 1, minWidth: 0 }}>
+                                                                                                                <BarChart2 size={13} color="#d97706" style={{ marginTop: '2px', flexShrink: 0 }} />
+                                                                                                                <div style={{ fontSize: '11.5px', color: '#92400e', lineHeight: '1.45', wordBreak: 'break-all' }}>
+                                                                                                                    <strong style={{ color: '#b45309', marginRight: '5px', fontWeight: 700, fontSize: '11.5px' }}>교차표 판단:</strong>
+                                                                                                                    <span style={{ fontSize: '11.5px' }}>{activeEvInfo.metric}</span>
+                                                                                                                </div>
+                                                                                                            </div>
+
+                                                                                                            {activeEvInfo.stubId && (
+                                                                                                                <button
+                                                                                                                    type="button"
+                                                                                                                    onClick={(e) => {
+                                                                                                                        e.stopPropagation();
+                                                                                                                        handleOpenSingleCrosstab(activeEvInfo.stubId, {
+                                                                                                                            ...prof,
+                                                                                                                            evidence_target: activeEvInfo.target
+                                                                                                                        });
+                                                                                                                    }}
+                                                                                                                    title={`[${activeEvInfo.stubId}] 클릭하여 핵심 교차표 새창 보기`}
+                                                                                                                    style={{
+                                                                                                                        padding: '5.5px 10px',
+                                                                                                                        borderRadius: '6px',
+                                                                                                                        fontSize: '12px',
+                                                                                                                        fontWeight: 600,
+                                                                                                                        color: '#1e293b',
+                                                                                                                        background: '#ffffff',
+                                                                                                                        border: '1px solid #cbd5e1',
+                                                                                                                        cursor: 'pointer',
+                                                                                                                        display: 'inline-flex',
+                                                                                                                        alignItems: 'center',
+                                                                                                                        gap: '4px',
+                                                                                                                        flexShrink: 0,
+                                                                                                                        boxShadow: '0 1px 2px rgba(15, 23, 42, 0.06)',
+                                                                                                                        transition: 'all 0.15s ease'
+                                                                                                                    }}
+                                                                                                                    onMouseEnter={(e) => {
+                                                                                                                        e.currentTarget.style.background = '#f8fafc';
+                                                                                                                        e.currentTarget.style.borderColor = '#2563eb';
+                                                                                                                        e.currentTarget.style.color = '#2563eb';
+                                                                                                                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(37, 99, 235, 0.12)';
+                                                                                                                    }}
+                                                                                                                    onMouseLeave={(e) => {
+                                                                                                                        e.currentTarget.style.background = '#ffffff';
+                                                                                                                        e.currentTarget.style.borderColor = '#cbd5e1';
+                                                                                                                        e.currentTarget.style.color = '#1e293b';
+                                                                                                                        e.currentTarget.style.boxShadow = '0 1px 2px rgba(15, 23, 42, 0.06)';
+                                                                                                                    }}
+                                                                                                                >
+                                                                                                                    <ExternalLink size={12} color="#2563eb" />
+                                                                                                                    <span style={{ fontSize: '12px', lineHeight: 1.2 }}>핵심 교차표</span>
+                                                                                                                </button>
+                                                                                                            )}
+                                                                                                        </div>
+                                                                                                    )}
+
+                                                                                                    {renderEvidenceTabbedContainer(evidenceKey, prof)}
+                                                                                                </div>
+                                                                                            );
+                                                                                        })()}
                                                                                     </div>
                                                                                 );
                                                                             })

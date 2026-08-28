@@ -1480,6 +1480,7 @@ const AiReportPage = () => {
                         categories={categories}
                         bannerVars={bannerVars}
                         userId={auth?.user?.userId}
+                        recodedVariables={recodedVariablesRef.current}
                     />
                 );
             default:
