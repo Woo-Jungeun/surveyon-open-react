@@ -194,8 +194,8 @@ const AiSidebar = ({ onOpenProjectModal }) => {
                     }
                 }] : []),
                 ...(qnum && !isOnProList ? [{
-                    label: "분석",
-                    path: "/ai_open_analysis/option_setting",
+                    label: location.pathname.includes("/option_setting_2") ? "분석2" : "분석",
+                    path: location.pathname.includes("/option_setting_2") ? "/ai_open_analysis/option_setting_2" : "/ai_open_analysis/option_setting",
                     icon: BrainCircuit,
                     isActive: (path) => path.includes("/option_setting")
                 }] : []),

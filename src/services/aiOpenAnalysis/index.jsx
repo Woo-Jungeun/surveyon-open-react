@@ -4,6 +4,7 @@ import MainWrapperView from "./views/MainWrapperView.jsx";
 import PopupWrapperView from "./views/PopupWrapperView.jsx";
 import MainListWrapperView from "./views/MainList/MainListWrapperView.jsx";
 import OptionSettingWrapperView from "./views/optionSetting/OptionSettingWrapperView.jsx";
+import OptionSetting2WrapperView from "./views/optionSetting/OptionSetting2WrapperView.jsx";
 import OptionSettingExloadWrapperView from "./views/optionSetting/OptionSettingExloadWrapperView.jsx";
 import ProEnterWrapperView from "./views/ProEnter/ProEnterWrapperView.jsx";
 import ProListWrapperView from "./views/proList/ProListWrapperView.jsx";
@@ -29,6 +30,7 @@ export default function AiOpenAnalysisRoutes() {
         <Route index element={<Navigate to="pro_list" replace />} />
         {/* MainListWrapperView moved out */}
         <Route path="option_setting/*" element={<OptionSettingWrapperView />} />
+        <Route path="option_setting_2/*" element={<OptionSetting2WrapperView />} />
         <Route path="pro_list/*" element={<ProListWrapperView />} />
         <Route path="pro_list_2/*" element={<ProList2WrapperView />} />
         <Route path="pro_register/*" element={<ProRegisterWrapperView />} />

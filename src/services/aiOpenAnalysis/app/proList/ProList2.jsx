@@ -151,7 +151,7 @@ const ProList2 = () => {
         sessionStorage.setItem("qnum", merge_qnum || "");
         sessionStorage.setItem("project_lock", project_lock || "");
         sessionStorage.setItem("userPerm", userPerm);
-        navigate('/ai_open_analysis/option_setting');
+        navigate('/ai_open_analysis/option_setting_2');
     }, [navigate, userPerm]);
 
     // 권한 반영 컬럼 배열
