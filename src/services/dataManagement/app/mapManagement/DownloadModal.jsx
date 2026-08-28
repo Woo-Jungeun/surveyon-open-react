@@ -341,7 +341,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                             userSelect: 'none'
                         }}
                     >
-                        <div
+                        {/* <div
                             onClick={() => setIsAccordionOpen(!isAccordionOpen)}
                             style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: '#475569', cursor: 'pointer', flex: 1 }}
                         >
@@ -364,7 +364,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                                     {getGeneratedFileCount()}
                                 </span>
                             )}
-                        </div>
+                        </div> */}
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             {isAccordionOpen && selectedFormats.length > 0 && (

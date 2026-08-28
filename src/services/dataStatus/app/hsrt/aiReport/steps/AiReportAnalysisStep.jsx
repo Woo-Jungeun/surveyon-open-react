@@ -1688,7 +1688,7 @@ const AiReportAnalysisStep = ({
                                         </button>
                                     </>
                                 )}
-                                {activeSubTab === 'l3' && (pipelineStatus.l3.isDone || !!(insightData.l3?.executive_summary || insightData.l3?.key_takeaways || (insightData.l3?.action_items && insightData.l3.action_items.length > 0))) && (
+                                {/* {activeSubTab === 'l3' && (pipelineStatus.l3.isDone || !!(insightData.l3?.executive_summary || insightData.l3?.key_takeaways || (insightData.l3?.action_items && insightData.l3.action_items.length > 0))) && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <button
                                             className="ai-pdf-btn"
@@ -1699,7 +1699,7 @@ const AiReportAnalysisStep = ({
                                             <span>PDF</span>
                                         </button>
                                     </div>
-                                )}
+                                )} */}
                             </div>
                         </div>
                     </div>
