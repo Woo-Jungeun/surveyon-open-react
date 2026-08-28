@@ -170,6 +170,16 @@ const AiReportAnalysisStep = ({
             windowTitle: windowTitle
         };
 
+        const queryParams = new URLSearchParams({
+            stub: stubCode,
+            title: windowTitle,
+            pageId: pageId,
+            user: user,
+            banner: JSON.stringify(bannerList),
+            weightVar: weightVar,
+            filterExpr: filterExpr
+        }).toString();
+
         try {
             sessionStorage.setItem('singleCrosstabParams', JSON.stringify(payload));
             const width = Math.min(1400, window.screen.width * 0.9);
@@ -177,7 +187,7 @@ const AiReportAnalysisStep = ({
             const left = (window.screen.width - width) / 2;
             const top = (window.screen.height - height) / 2;
             window.open(
-                '/crosstab-single-view',
+                `/crosstab-single-view?${queryParams}`,
                 'SingleCrosstabViewWindow',
                 `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes,status=no`
             );

@@ -22,6 +22,7 @@ import InquiryList from "@/services/inquiry/InquiryList";
 import InquiryDetail from "@/services/inquiry/InquiryDetail";
 import InquiryWrite from "@/services/inquiry/InquiryWrite";
 import DpRequestPreviewPopup from "@/services/dataStatus/app/hsrt/dpRequest/steps/DpRequestPreviewPopup";
+import SingleCrosstabViewerPage from "@/services/dataStatus/app/hsrt/aiReport/SingleCrosstabViewerPage";
 
 function App() {
   const [cookies] = useCookies();
@@ -91,8 +92,6 @@ function App() {
             </>
           )}
 
-          {/* 404 처리 */}
-          <Route path="*" element={<PageNotFound />} />
         </Route>
 
         {/* ---------------------------
@@ -102,6 +101,10 @@ function App() {
         <Route path="/manual/editor" element={<ManualEditor />} />
         <Route path="/excel_guide" element={<ExcelGuidePage />} />
         <Route path="/dp_request_preview" element={<DpRequestPreviewPopup />} />
+        <Route path="/crosstab-single-view" element={<SingleCrosstabViewerPage />} />
+
+        {/* 404 처리 (모든 라우트의 최하단에 위치해야 상위 팝업/독립 페이지 라우트가 낚이지 않음) */}
+        <Route path="*" element={<MainLayout><PageNotFound /></MainLayout>} />
       </Routes>
     </Fragment>
   );

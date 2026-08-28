@@ -5,14 +5,25 @@ import { AiReportPageApi } from './AiReportPageApi';
 
 export default function SingleCrosstabViewerPage() {
     const [searchParams] = useSearchParams();
-    const stubParam = searchParams.get('stub') || '';
-    const titleParam = searchParams.get('title') || '핵심 교차표';
-    const pageIdParam = searchParams.get('pageId') || sessionStorage.getItem('pageId') || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-    const userParam = searchParams.get('user') || "";
 
-    const bannerParamRaw = searchParams.get('banner');
-    const weightVarParam = searchParams.get('weightVar') || '';
-    const filterExprParam = searchParams.get('filterExpr') || '';
+    let storedParams = {};
+    try {
+        const storedStr = sessionStorage.getItem('singleCrosstabParams');
+        if (storedStr) {
+            storedParams = JSON.parse(storedStr) || {};
+        }
+    } catch (e) {
+        console.error("Failed to parse singleCrosstabParams from sessionStorage:", e);
+    }
+
+    const stubParam = searchParams.get('stub') || storedParams.stubId || storedParams.stub || '';
+    const titleParam = searchParams.get('title') || storedParams.windowTitle || '핵심 교차표';
+    const pageIdParam = searchParams.get('pageId') || storedParams.pageId || sessionStorage.getItem('pageId') || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+    const userParam = searchParams.get('user') || storedParams.user || "";
+
+    const bannerParamRaw = searchParams.get('banner') || (storedParams.bannerList ? JSON.stringify(storedParams.bannerList) : null);
+    const weightVarParam = searchParams.get('weightVar') || storedParams.weightVar || '';
+    const filterExprParam = searchParams.get('filterExpr') || storedParams.filterExpr || '';
 
     const { getOverviewContext } = DpRequestPageApi();
     const { getOverviewSingleStyled } = AiReportPageApi();
