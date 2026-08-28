@@ -235,6 +235,18 @@ const AiReportAnalysisStep = ({
     const [showChartValuesMap, setShowChartValuesMap] = useState({});
     const [showPercentSymbolMap, setShowPercentSymbolMap] = useState({});
     const [openDropdownMap, setOpenDropdownMap] = useState({});
+
+    useEffect(() => {
+        const hasOpenDropdown = Object.values(openDropdownMap).some(Boolean);
+        if (!hasOpenDropdown) return;
+
+        const handleOutsideClick = () => {
+            setOpenDropdownMap({});
+        };
+
+        window.addEventListener('click', handleOutsideClick);
+        return () => window.removeEventListener('click', handleOutsideClick);
+    }, [openDropdownMap]);
     const chartContainerRefs = useRef({});
     const [isPipelineExpanded, setIsPipelineExpanded] = useState(true);
     const [l1StatusTab, setL1StatusTab] = useState('completed'); // 'completed' | 'missing'
@@ -389,12 +401,7 @@ const AiReportAnalysisStep = ({
         const stubId = effectiveStub || activeEv?.stub_id || rawTarget.stub_id || stubList[0] || '';
         const target = { ...rawTarget, stub_id: stubId };
 
-        let stubsList = target.stubs || item?.stubs;
-        if (!stubsList) {
-            stubsList = stubId ? [stubId] : [];
-        } else if (typeof stubsList === 'string') {
-            stubsList = stubsList.split(',').map(s => s.trim()).filter(Boolean);
-        }
+        const stubsList = stubId ? [stubId] : [];
 
         const pageId = sessionStorage.getItem('pageId') || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
         const user = userId || "";
@@ -747,7 +754,7 @@ const AiReportAnalysisStep = ({
                         <Download size={14} />
                     </button>
                     {activeDropdown === 'download' && (
-                        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, left: 'auto', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.12)', zIndex: 1100, minWidth: '130px', padding: '4px 0' }}>
+                        <div onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, left: 'auto', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.12)', zIndex: 1100, minWidth: '130px', padding: '4px 0' }}>
                             <button
                                 onClick={(e) => { e.stopPropagation(); handleChartDownload(evidenceKey, 'png'); closeDropdown(); }}
                                 style={{ width: '100%', textAlign: 'left', padding: '6px 12px', fontSize: '12px', border: 'none', background: 'none', cursor: 'pointer', color: '#334155', whiteSpace: 'nowrap' }}
@@ -784,7 +791,7 @@ const AiReportAnalysisStep = ({
                         })()}
                     </button>
                     {activeDropdown === 'palette' && (
-                        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px 0', boxShadow: '0 4px 12px rgba(0,0,0,0.12)' }}>
+                        <div onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px 0', boxShadow: '0 4px 12px rgba(0,0,0,0.12)' }}>
                             {CHART_THEME_OPTIONS.map(opt => (
                                 <button
                                     key={opt.id}
@@ -829,7 +836,7 @@ const AiReportAnalysisStep = ({
                     </button>
 
                     {activeDropdown === 'options' && (
-                        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '220px', zIndex: 1100, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '220px', zIndex: 1100, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div>
                                 <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '8px', textAlign: 'left' }}>차트 표출 데이터</span>
                                 <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '6px', padding: '4px' }}>
@@ -888,7 +895,7 @@ const AiReportAnalysisStep = ({
                     </button>
 
                     {activeDropdown === 'chartType' && (
-                        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.12)', maxHeight: '260px', overflowY: 'auto', padding: '4px 0' }}>
+                        <div onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.12)', maxHeight: '260px', overflowY: 'auto', padding: '4px 0' }}>
                             {CHART_TYPE_OPTIONS.map((option) => (
                                 <button
                                     key={option.id}
