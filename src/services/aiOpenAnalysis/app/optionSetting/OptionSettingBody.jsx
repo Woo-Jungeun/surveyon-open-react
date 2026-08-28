@@ -86,6 +86,24 @@ const CommonActionButton = ({ label, onClick, tooltipText }) => {
   );
 };
 
+// ref가 마운트될 때까지 브라우저 프레임 단위(requestAnimationFrame)로 대기
+const waitForRef = (getRef, maxWait = 1000) => {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    const check = () => {
+      const ref = getRef();
+      if (ref) {
+        resolve(ref);
+      } else if (Date.now() - start >= maxWait) {
+        resolve(null);
+      } else {
+        requestAnimationFrame(check);
+      }
+    };
+    check();
+  });
+};
+
 const OptionSettingBody = () => {
   const modal = useContext(modalContext);
   const auth = useSelector((store) => store.auth);
@@ -700,10 +718,16 @@ const OptionSettingBody = () => {
                 await tab1Ref.current?.saveChanges?.();
               }}
               onFetchIn={async () => {
-                try { await tab1Ref.current?.reload?.(); } catch (e) { }
+                try {
+                  const ref = await waitForRef(() => tab1Ref.current);
+                  await ref?.reload?.();
+                } catch (e) { }
               }}
               onSaveIn={async (skipReload) => {
-                try { await tab1Ref.current?.saveChanges?.(skipReload); } catch (e) { }
+                try {
+                  const ref = await waitForRef(() => tab1Ref.current);
+                  await ref?.saveChanges?.(skipReload);
+                } catch (e) { }
               }}
               onSaveLb={async () => {
                 try { await tab2Ref.current?.saveChanges?.(); } catch (e) { }

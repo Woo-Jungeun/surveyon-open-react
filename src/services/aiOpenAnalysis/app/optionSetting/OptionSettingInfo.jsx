@@ -128,6 +128,14 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                     {
                         title: "확인",
                         click: async () => {
+                            // 1. 먼저 대상 탭으로 화면 이동하여 해당 탭 컴포넌트(tab1Ref / tab2Ref) 마운트
+                            if (nextTabRef.current) {
+                                onNavigateTab?.(nextTabRef.current);
+                                nextTabRef.current = null;
+                                // 탭 컴포넌트 마운트 및 ref 연결 대기
+                                await sleep(80);
+                            }
+
                             const curType = activeTypeRef.current;
                             if (curType === "response" || curType === "recallResponse") {
                                 try {
@@ -209,12 +217,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                                 } catch (e) {
                                     console.error("[OptionSettingInfo] 분석 완료 후 프로세스 에러:", e);
                                 }
-                            }
-
-                            // 탭 이동
-                            if (nextTabRef.current) {
-                                onNavigateTab?.(nextTabRef.current);
-                                nextTabRef.current = null;
                             }
                         },
                     },
