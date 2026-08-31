@@ -390,6 +390,18 @@ const DownloadModal = ({ isOpen, onClose }) => {
         );
     };
 
+    const handleCloseExportProgress = () => {
+        setExportProgress({
+            isExporting: false,
+            percent: 0,
+            step: 1,
+            statusText: '',
+            isCompleted: false,
+            fileBlob: null,
+            filename: ''
+        });
+    };
+
     const renderExportProgressModal = () => {
         if (!exportProgress.isExporting) return null;
 
@@ -409,6 +421,38 @@ const DownloadModal = ({ isOpen, onClose }) => {
                     textAlign: 'center',
                     position: 'relative'
                 }}>
+                    {/* Close Button */}
+                    <button
+                        type="button"
+                        onClick={handleCloseExportProgress}
+                        style={{
+                            position: 'absolute',
+                            top: '20px',
+                            right: '20px',
+                            width: '32px',
+                            height: '32px',
+                            border: 'none',
+                            background: 'transparent',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#94a3b8',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f1f5f9';
+                            e.currentTarget.style.color = '#334155';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = '#94a3b8';
+                        }}
+                        title="닫기"
+                    >
+                        <X size={20} />
+                    </button>
                     {/* Header Title & Subtitle */}
                     <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
                         통계 데이터 추출 (Export)
