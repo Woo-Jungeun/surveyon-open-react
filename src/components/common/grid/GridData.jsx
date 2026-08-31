@@ -106,6 +106,29 @@ const GridData = ({
                 }
             }
 
+            // 백엔드가 비동기/동기화 객체 래퍼 형태로 이중 resultjson을 리턴한 경우 unwrapping
+            if (!Array.isArray(raw) && raw && typeof raw === 'object') {
+                if (Array.isArray(raw.resultjson)) {
+                    raw = raw.resultjson;
+                } else if (typeof raw.resultjson === 'string') {
+                    try {
+                        raw = JSON.parse(raw.resultjson);
+                    } catch (e) {
+                        raw = [];
+                    }
+                } else if (Array.isArray(raw.data)) {
+                    raw = raw.data;
+                } else if (Array.isArray(raw.list)) {
+                    raw = raw.list;
+                } else {
+                    raw = [];
+                }
+            }
+
+            if (!Array.isArray(raw)) {
+                raw = [];
+            }
+
             // 복합키 + 행번호
             const keyed = raw.map((item, idx) => {
                 const next = { ...item };
