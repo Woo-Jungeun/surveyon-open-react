@@ -627,10 +627,12 @@ const DownloadModal = ({ isOpen, onClose }) => {
         );
     };
 
+    if (exportProgress.isExporting) {
+        return renderExportProgressModal();
+    }
+
     return (
-        <>
-            {renderExportProgressModal()}
-            <div className="variable-modal-overlay">
+        <div className="variable-modal-overlay">
             <div className="variable-modal-content download-modal-content" style={{ width: '480px' }}>
                 {/* 1. Standard Header */}
                 <div className="variable-modal-header">
@@ -905,7 +907,6 @@ const DownloadModal = ({ isOpen, onClose }) => {
                 </div>
             </div>
         </div>
-        </>
     );
 };
 
