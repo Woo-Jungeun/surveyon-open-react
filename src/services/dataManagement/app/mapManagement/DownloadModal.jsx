@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useSelector } from 'react-redux';
-import { Download, X, FileText, ChevronDown, ChevronUp, Check, RotateCcw } from 'lucide-react';
+import { Download, X, FileText, ChevronDown, ChevronUp, Check, RotateCcw, Monitor } from 'lucide-react';
 import { MapManagementPageApi } from './MapManagementPageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
 import moment from 'moment';
+import * as signalR from "@microsoft/signalr";
 import './MapManagementPage.css';
 
 const OTHER_FORMAT_OPTIONS = [
@@ -25,18 +26,69 @@ const DownloadModal = ({ isOpen, onClose }) => {
     const [downloading, setDownloading] = useState(false);
     const [downloadingSav, setDownloadingSav] = useState(false);
 
+    // Export Progress Bar Modal State (matching screenshots UI)
+    const [exportProgress, setExportProgress] = useState({
+        isExporting: false,
+        percent: 0,
+        step: 1, // 1: 준비, 2: 파일 생성, 3: 압축 · 전송
+        statusText: '',
+        isCompleted: false,
+        fileBlob: null,
+        filename: ''
+    });
+
     // 팝업이 닫히거나 상태가 변경될 때 선택 항목 및 토글 초기화
     useEffect(() => {
         if (!isOpen) {
             setSelectedFormats([]);
             setIsAccordionOpen(false);
+            setExportProgress({
+                isExporting: false,
+                percent: 0,
+                step: 1,
+                statusText: '',
+                isCompleted: false,
+                fileBlob: null,
+                filename: ''
+            });
         }
     }, [isOpen]);
 
     const handleCloseModal = () => {
         setSelectedFormats([]);
         setIsAccordionOpen(false);
+        setExportProgress({
+            isExporting: false,
+            percent: 0,
+            step: 1,
+            statusText: '',
+            isCompleted: false,
+            fileBlob: null,
+            filename: ''
+        });
         if (onClose) onClose();
+    };
+
+    const getFileListForGb = (gbParam) => {
+        if (!gbParam) return ['Export File'];
+        const tokens = gbParam.split(',').map(s => s.trim()).filter(Boolean);
+        const files = [];
+
+        tokens.forEach(tok => {
+            if (tok === 'sav') files.push('SAV 데이터');
+            else if (tok === 'crd') files.push('CRD');
+            else if (tok === 'sps') files.push('SPS');
+            else if (tok === 'sps-open') {
+                files.push('SPS');
+                files.push('SPS (Text)');
+            } else if (tok === 'open-excel') files.push('OPEN EXCEL');
+            else if (tok === 'map-txt') files.push('MAP.TXT');
+            else if (tok === 'stp') {
+                files.push('STP');
+                files.push('TABLE STP');
+            } else files.push(tok.toUpperCase());
+        });
+        return files;
     };
 
     if (!isOpen) return null;
@@ -57,33 +109,136 @@ const DownloadModal = ({ isOpen, onClose }) => {
     const executeExport = async (gbParam) => {
         if (!gbParam) return;
 
-        try {
-            const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '';
-            const userId = auth?.user?.userId || '';
+        const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '';
+        const userId = auth?.user?.userId || '';
 
-            if (!pn) {
-                modal.showErrorAlert("알림", "프로젝트 정보를 찾을 수 없습니다.");
-                return;
+        if (!pn) {
+            modal.showErrorAlert("알림", "프로젝트 정보를 찾을 수 없습니다.");
+            return;
+        }
+
+        const filesList = getFileListForGb(gbParam);
+        const totalCount = filesList.length;
+
+        // Export Progress Modal 시작
+        setExportProgress({
+            isExporting: true,
+            percent: 4,
+            step: 1,
+            statusText: `[1/${totalCount}] ${filesList[0]} 생성 중...`,
+            isCompleted: false,
+            fileBlob: null,
+            filename: ''
+        });
+
+        let currentPercent = 4;
+        let myConnectionId = null;
+        let signalrConn = null;
+
+        try {
+            const baseUrl = window.API_CONFIG?.API_BASE_URL_DATAMANAGEMENT || "";
+            let hubUrl = baseUrl.replace(/\/+$/, '') + "/hubs/task-progress";
+            if (!hubUrl.startsWith('http')) {
+                hubUrl = window.location.origin + hubUrl;
             }
 
+            signalrConn = new signalR.HubConnectionBuilder()
+                .withUrl(hubUrl)
+                .withAutomaticReconnect()
+                .configureLogging(signalR.LogLevel.None)
+                .build();
+
+            const handleReceiveProgress = (...args) => {
+                let percent = 0;
+                let msg = '';
+
+                if (args.length >= 2 && typeof args[1] === 'number') {
+                    msg = args[0];
+                    percent = args[1];
+                } else if (args.length === 1 && typeof args[0] === 'object' && args[0] !== null) {
+                    msg = args[0].message || args[0].Message;
+                    percent = args[0].percent || args[0].Percent || args[0].percentage || args[0].Percentage;
+                } else if (args.length >= 2 && typeof args[0] === 'number') {
+                    percent = args[0];
+                    msg = args[1];
+                }
+
+                if (percent) {
+                    const p = Math.min(99, Math.max(1, percent));
+                    let currentStep = 1;
+                    if (p >= 25 && p < 70) currentStep = 2;
+                    else if (p >= 70) currentStep = 3;
+
+                    setExportProgress(prev => ({
+                        ...prev,
+                        percent: p,
+                        step: currentStep,
+                        statusText: msg || prev.statusText
+                    }));
+                }
+            };
+
+            signalrConn.on("ReceiveProgress", handleReceiveProgress);
+            signalrConn.on("progress", handleReceiveProgress);
+
+            await signalrConn.start();
+            myConnectionId = signalrConn.connectionId;
+        } catch (e) {
+            console.error("SignalR Connection Error in Export:", e);
+        }
+
+        const progressTimer = setInterval(() => {
+            currentPercent += Math.floor(Math.random() * 6) + 3;
+            if (currentPercent > 92) {
+                currentPercent = 92;
+            }
+
+            let currentStep = 1;
+            let currentText = '';
+
+            if (currentPercent < 25) {
+                currentStep = 1;
+                currentText = `[1/${totalCount}] ${filesList[0]} 생성 중...`;
+            } else if (currentPercent < 70) {
+                currentStep = 2;
+                const fileIdx = Math.min(Math.floor((currentPercent - 25) / (45 / Math.max(1, totalCount))), totalCount - 1);
+                const fileItem = filesList[fileIdx] || filesList[0];
+                currentText = `[${fileIdx + 1}/${totalCount}] ${fileItem} 완료`;
+            } else {
+                currentStep = 3;
+                currentText = `[${Math.max(1, totalCount - 1)}/${totalCount}] EXPORT 완료`;
+            }
+
+            setExportProgress(prev => ({
+                ...prev,
+                percent: Math.max(prev.percent, currentPercent),
+                step: currentStep,
+                statusText: prev.statusText || currentText
+            }));
+        }, 250);
+
+        try {
             const payload = {
                 pn: pn,
                 gb: gbParam,
-                answerStateCode: "4", // API 명세: answerStateCode (완료만)
+                answerStateCode: "4",
                 user: userId
             };
+            if (myConnectionId) {
+                payload.connectionId = myConnectionId;
+            }
 
             const res = await exportData.mutateAsync(payload);
-
-            // Blob 응답 파싱 (Axios response 객체 또는 Blob)
             const blob = res?.data instanceof Blob ? res.data : (res instanceof Blob ? res : null);
 
+            clearInterval(progressTimer);
+
             if (!blob) {
+                setExportProgress(prev => ({ ...prev, isExporting: false }));
                 modal.showErrorAlert("에러", "파일을 생성하지 못했습니다.");
                 return;
             }
 
-            // JSON 오류 응답이 Blob 형태로 온 경우 처리
             if (blob.type?.includes("application/json")) {
                 const text = await blob.text();
                 let msg = "다운로드 요청이 거부되었습니다.";
@@ -91,11 +246,11 @@ const DownloadModal = ({ isOpen, onClose }) => {
                     const parsed = JSON.parse(text);
                     if (parsed.message) msg = parsed.message;
                 } catch (e) { }
+                setExportProgress(prev => ({ ...prev, isExporting: false }));
                 modal.showErrorAlert("에러", msg);
                 return;
             }
 
-            // 응답 헤더의 Content-Disposition 에서 파일명 추출 시도
             let filename = '';
             const disposition = res?.headers?.['content-disposition'] || res?.headers?.['Content-Disposition'];
             if (disposition && disposition.includes('filename=')) {
@@ -105,7 +260,6 @@ const DownloadModal = ({ isOpen, onClose }) => {
                 }
             }
 
-            // 헤더 파일명이 없는 경우 명세에 맞는 Fallback 파일명 생성
             if (!filename) {
                 const timestamp = moment().format("YYYYMMDDHHmmss");
                 if (gbParam === 'sav') {
@@ -129,19 +283,53 @@ const DownloadModal = ({ isOpen, onClose }) => {
                 }
             }
 
-            // 브라우저 파일 다운로드 트리거
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
+            // 100% 완료 상태 설정
+            setExportProgress({
+                isExporting: true,
+                percent: 100,
+                step: 3,
+                statusText: '완료',
+                isCompleted: true,
+                fileBlob: blob,
+                filename: filename
+            });
+
         } catch (error) {
+            clearInterval(progressTimer);
+            setExportProgress(prev => ({ ...prev, isExporting: false }));
             console.error("Export error:", error);
             modal.showErrorAlert("에러", "다운로드 요청 처리 중 오류가 발생했습니다.");
+        } finally {
+            if (signalrConn) {
+                try {
+                    signalrConn.stop();
+                } catch (e) { }
+            }
         }
+    };
+
+    const handleDownloadCompleteFile = () => {
+        if (!exportProgress.fileBlob || !exportProgress.filename) return;
+
+        const url = URL.createObjectURL(exportProgress.fileBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = exportProgress.filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        setExportProgress({
+            isExporting: false,
+            percent: 0,
+            step: 1,
+            statusText: '',
+            isCompleted: false,
+            fileBlob: null,
+            filename: ''
+        });
+        handleCloseModal();
     };
 
     /** SPSS (.sav) 단독 다운로드 */
@@ -237,8 +425,212 @@ const DownloadModal = ({ isOpen, onClose }) => {
         );
     };
 
+    const renderExportProgressModal = () => {
+        if (!exportProgress.isExporting) return null;
+
+        const { percent, step, statusText, isCompleted } = exportProgress;
+
+        return (
+            <div className="variable-modal-overlay" style={{ zIndex: 1300, backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)' }}>
+                <div style={{
+                    width: '440px',
+                    backgroundColor: '#ffffff',
+                    borderRadius: '24px',
+                    padding: '36px 32px',
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                    position: 'relative'
+                }}>
+                    {/* Header Title & Subtitle */}
+                    <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                        통계 데이터 추출 (Export)
+                    </h2>
+                    <p style={{ fontSize: '13px', color: '#64748b', marginTop: '10px', marginBottom: 0, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+                        선택한 산출물을 하나씩 만들어 내려줍니다.{"\n"}여러 개를 고르면 ZIP 으로 묶입니다.
+                    </p>
+
+                    {/* Step Tracker (3 Horizontal Steps) */}
+                    <div style={{ width: '100%', position: 'relative', marginTop: '32px', marginBottom: '36px' }}>
+                        {/* Connecting Line Track */}
+                        <div style={{
+                            position: 'absolute',
+                            top: '26px',
+                            left: '50px',
+                            right: '50px',
+                            height: '2px',
+                            backgroundColor: '#e2e8f0',
+                            zIndex: 1
+                        }}>
+                            <div style={{
+                                height: '100%',
+                                width: isCompleted ? '100%' : (step >= 3 ? '85%' : (step >= 2 ? '50%' : '0%')),
+                                backgroundColor: isCompleted ? '#10b981' : '#8b5cf6',
+                                transition: 'width 0.3s ease'
+                            }} />
+                        </div>
+
+                        {/* Step Nodes */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 2, padding: '0 10px' }}>
+                            {/* Step 1: 준비 */}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                <div style={{
+                                    width: '52px',
+                                    height: '52px',
+                                    borderRadius: '50%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: (step > 1 || isCompleted) ? '#10b981' : '#ffffff',
+                                    border: (step > 1 || isCompleted) ? 'none' : '2px solid #8b5cf6',
+                                    boxShadow: (step > 1 || isCompleted) ? '0 4px 12px rgba(16, 185, 129, 0.25)' : (step === 1 ? '0 0 0 6px rgba(139, 92, 246, 0.15)' : 'none'),
+                                    transition: 'all 0.3s ease'
+                                }}>
+                                    {(step > 1 || isCompleted) ? (
+                                        <Check size={24} color="#ffffff" strokeWidth={3} />
+                                    ) : (
+                                        <Monitor size={22} color="#8b5cf6" />
+                                    )}
+                                </div>
+                                <span style={{
+                                    fontSize: '13px',
+                                    fontWeight: (step >= 1 || isCompleted) ? 700 : 500,
+                                    color: (step > 1 || isCompleted) ? '#10b981' : (step === 1 ? '#8b5cf6' : '#94a3b8')
+                                }}>
+                                    준비
+                                </span>
+                            </div>
+
+                            {/* Step 2: 파일 생성 */}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                <div style={{
+                                    width: '52px',
+                                    height: '52px',
+                                    borderRadius: '50%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: (step > 2 || isCompleted) ? '#10b981' : (step === 2 ? '#ffffff' : '#f8fafc'),
+                                    border: (step > 2 || isCompleted) ? 'none' : (step === 2 ? '2px solid #8b5cf6' : '1.5px solid #e2e8f0'),
+                                    boxShadow: (step > 2 || isCompleted) ? '0 4px 12px rgba(16, 185, 129, 0.25)' : (step === 2 ? '0 0 0 6px rgba(139, 92, 246, 0.15)' : 'none'),
+                                    transition: 'all 0.3s ease'
+                                }}>
+                                    {(step > 2 || isCompleted) ? (
+                                        <Check size={24} color="#ffffff" strokeWidth={3} />
+                                    ) : (
+                                        <FileText size={22} color={step === 2 ? '#8b5cf6' : '#94a3b8'} />
+                                    )}
+                                </div>
+                                <span style={{
+                                    fontSize: '13px',
+                                    fontWeight: (step >= 2 || isCompleted) ? 700 : 500,
+                                    color: (step > 2 || isCompleted) ? '#10b981' : (step === 2 ? '#8b5cf6' : '#94a3b8')
+                                }}>
+                                    파일 생성
+                                </span>
+                            </div>
+
+                            {/* Step 3: 압축 · 전송 */}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                <div style={{
+                                    width: '52px',
+                                    height: '52px',
+                                    borderRadius: '50%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: isCompleted ? '#10b981' : (step === 3 ? '#ffffff' : '#f8fafc'),
+                                    border: isCompleted ? 'none' : (step === 3 ? '2px solid #8b5cf6' : '1.5px solid #e2e8f0'),
+                                    boxShadow: isCompleted ? '0 4px 12px rgba(16, 185, 129, 0.25)' : (step === 3 ? '0 0 0 6px rgba(139, 92, 246, 0.15)' : 'none'),
+                                    transition: 'all 0.3s ease'
+                                }}>
+                                    {isCompleted ? (
+                                        <Check size={24} color="#ffffff" strokeWidth={3} />
+                                    ) : (
+                                        <Download size={22} color={step === 3 ? '#8b5cf6' : '#94a3b8'} />
+                                    )}
+                                </div>
+                                <span style={{
+                                    fontSize: '13px',
+                                    fontWeight: isCompleted ? 700 : (step === 3 ? 700 : 500),
+                                    color: isCompleted ? '#10b981' : (step === 3 ? '#8b5cf6' : '#94a3b8')
+                                }}>
+                                    압축 · 전송
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Progress Bar Section */}
+                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '14px', fontWeight: 700, color: isCompleted ? '#334155' : '#64748b' }}>
+                                {statusText}
+                            </span>
+                            <span style={{ fontSize: '18px', fontWeight: 800, color: '#7c3aed' }}>
+                                {percent}%
+                            </span>
+                        </div>
+
+                        <div style={{
+                            width: '100%',
+                            height: '10px',
+                            backgroundColor: '#f1f5f9',
+                            borderRadius: '9999px',
+                            overflow: 'hidden'
+                        }}>
+                            <div style={{
+                                height: '100%',
+                                width: `${percent}%`,
+                                background: 'linear-gradient(90deg, #8b5cf6 0%, #6d28d9 100%)',
+                                borderRadius: '9999px',
+                                transition: 'width 0.25s ease-out'
+                            }} />
+                        </div>
+                    </div>
+
+                    {/* Action Button on Completion */}
+                    {isCompleted && (
+                        <button
+                            type="button"
+                            onClick={handleDownloadCompleteFile}
+                            style={{
+                                width: '100%',
+                                height: '48px',
+                                backgroundColor: '#10b981',
+                                color: '#ffffff',
+                                border: 'none',
+                                borderRadius: '12px',
+                                fontSize: '15px',
+                                fontWeight: 700,
+                                marginTop: '24px',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)',
+                                transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = '#059669';
+                                e.currentTarget.style.transform = 'translateY(-1px)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = '#10b981';
+                                e.currentTarget.style.transform = 'none';
+                            }}
+                        >
+                            추출된 파일 다운로드
+                        </button>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     return (
-        <div className="variable-modal-overlay">
+        <>
+            {renderExportProgressModal()}
+            <div className="variable-modal-overlay">
             <div className="variable-modal-content download-modal-content" style={{ width: '480px' }}>
                 {/* 1. Standard Header */}
                 <div className="variable-modal-header">
@@ -513,6 +905,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                 </div>
             </div>
         </div>
+        </>
     );
 };
 

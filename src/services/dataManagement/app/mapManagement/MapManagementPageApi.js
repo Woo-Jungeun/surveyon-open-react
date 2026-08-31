@@ -64,11 +64,7 @@ export function MapManagementPageApi() {
 
     /** 데이터 추출 (SPS/CRD) */
     const exportData = useMutation(
-        async (data) => await api.file(data, "/export", "API_BASE_URL_DATAMANAGEMENT"),
-        {
-            onMutate: () => loadingSpinner.show(),
-            onSettled: () => loadingSpinner.hide(),
-        }
+        async (data) => await api.file(data, "/export", "API_BASE_URL_DATAMANAGEMENT")
     );
 
     /** SPS 파일 업로드 */
