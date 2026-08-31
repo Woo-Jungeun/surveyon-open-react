@@ -117,21 +117,17 @@ const DownloadModal = ({ isOpen, onClose }) => {
             return;
         }
 
-        const filesList = getFileListForGb(gbParam);
-        const totalCount = filesList.length;
-
-        // Export Progress Modal 시작
+        // Export Progress Modal 시작 (순수 백엔드 SignalR 데이터만 적용)
         setExportProgress({
             isExporting: true,
-            percent: 4,
+            percent: 0,
             step: 1,
-            statusText: `[1/${totalCount}] ${filesList[0]} 생성 중...`,
+            statusText: '추출 작업 준비 중...',
             isCompleted: false,
             fileBlob: null,
             filename: ''
         });
 
-        let currentPercent = 4;
         let myConnectionId = null;
         let signalrConn = null;
 
@@ -149,6 +145,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                 .build();
 
             const handleReceiveProgress = (...args) => {
+                console.log("[Export SignalR Received]:", args);
                 let percent = 0;
                 let msg = '';
 
@@ -163,8 +160,8 @@ const DownloadModal = ({ isOpen, onClose }) => {
                     msg = args[1];
                 }
 
-                if (percent) {
-                    const p = Math.min(99, Math.max(1, percent));
+                if (typeof percent === 'number') {
+                    const p = Math.min(99, Math.max(0, percent));
                     let currentStep = 1;
                     if (p >= 25 && p < 70) currentStep = 2;
                     else if (p >= 70) currentStep = 3;
@@ -187,36 +184,6 @@ const DownloadModal = ({ isOpen, onClose }) => {
             console.error("SignalR Connection Error in Export:", e);
         }
 
-        const progressTimer = setInterval(() => {
-            currentPercent += Math.floor(Math.random() * 6) + 3;
-            if (currentPercent > 92) {
-                currentPercent = 92;
-            }
-
-            let currentStep = 1;
-            let currentText = '';
-
-            if (currentPercent < 25) {
-                currentStep = 1;
-                currentText = `[1/${totalCount}] ${filesList[0]} 생성 중...`;
-            } else if (currentPercent < 70) {
-                currentStep = 2;
-                const fileIdx = Math.min(Math.floor((currentPercent - 25) / (45 / Math.max(1, totalCount))), totalCount - 1);
-                const fileItem = filesList[fileIdx] || filesList[0];
-                currentText = `[${fileIdx + 1}/${totalCount}] ${fileItem} 완료`;
-            } else {
-                currentStep = 3;
-                currentText = `[${Math.max(1, totalCount - 1)}/${totalCount}] EXPORT 완료`;
-            }
-
-            setExportProgress(prev => ({
-                ...prev,
-                percent: Math.max(prev.percent, currentPercent),
-                step: currentStep,
-                statusText: prev.statusText || currentText
-            }));
-        }, 250);
-
         try {
             const payload = {
                 pn: pn,
@@ -230,8 +197,6 @@ const DownloadModal = ({ isOpen, onClose }) => {
 
             const res = await exportData.mutateAsync(payload);
             const blob = res?.data instanceof Blob ? res.data : (res instanceof Blob ? res : null);
-
-            clearInterval(progressTimer);
 
             if (!blob) {
                 setExportProgress(prev => ({ ...prev, isExporting: false }));
