@@ -15,6 +15,18 @@
     <div id="root"></div>
     <!-- Runtime Configuration -->
     <script src="/config.js"></script>
+    <!-- Chrome unload Violation Suppression -->
+    <script>
+        (function () {
+            var _orig = window.addEventListener;
+            window.addEventListener = function (type, listener, options) {
+                if (type === 'unload') {
+                    return _orig.call(this, 'pagehide', listener, options);
+                }
+                return _orig.call(this, type, listener, options);
+            };
+        })();
+    </script>
     <!-- jQuery -->
     <script src="/Scripts/jquery-3.7.1.min.js"></script>
     <!-- SignalR 2.x (jQuery용) -->
