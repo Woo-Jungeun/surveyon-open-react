@@ -2,6 +2,7 @@ import { useMutation } from "react-query";
 import api from "@/common/queries/Api.js";
 import { useContext } from "react";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+import axios from "axios";
 
 export function MapManagementPageApi() {
 
@@ -64,7 +65,19 @@ export function MapManagementPageApi() {
 
     /** 데이터 추출 (SPS/CRD) */
     const exportData = useMutation(
-        async (data) => await api.file(data, "/export", "API_BASE_URL_DATAMANAGEMENT")
+        async (args) => {
+            try {
+                if (args && args.data && args.config) {
+                    return await api.file(args.data, "/export", "API_BASE_URL_DATAMANAGEMENT", args.config);
+                }
+                return await api.file(args, "/export", "API_BASE_URL_DATAMANAGEMENT");
+            } catch (err) {
+                if (axios.isCancel(err) || err?.name === 'CanceledError' || err?.name === 'AbortError' || err?.code === 'ERR_CANCELED') {
+                    return null;
+                }
+                throw err;
+            }
+        }
     );
 
     /** SPS 파일 업로드 */

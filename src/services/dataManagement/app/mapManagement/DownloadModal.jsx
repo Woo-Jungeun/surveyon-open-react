@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Download, X, FileText, ChevronDown, ChevronUp, Check, RotateCcw, Monitor } from 'lucide-react';
 import { MapManagementPageApi } from './MapManagementPageApi';
@@ -36,6 +36,9 @@ const DownloadModal = ({ isOpen, onClose }) => {
         fileBlob: null,
         filename: ''
     });
+
+    const exportAbortControllerRef = useRef(null);
+    const exportSignalrConnRef = useRef(null);
 
     // 팝업이 닫히거나 상태가 변경될 때 선택 항목 및 토글 초기화
     useEffect(() => {
@@ -128,6 +131,9 @@ const DownloadModal = ({ isOpen, onClose }) => {
             filename: ''
         });
 
+        const abortController = new AbortController();
+        exportAbortControllerRef.current = abortController;
+
         let myConnectionId = null;
         let signalrConn = null;
 
@@ -143,9 +149,10 @@ const DownloadModal = ({ isOpen, onClose }) => {
                 .withAutomaticReconnect()
                 .configureLogging(signalR.LogLevel.None)
                 .build();
+            exportSignalrConnRef.current = signalrConn;
 
             const handleReceiveProgress = (...args) => {
-                console.log("[Export SignalR Received]:", args);
+                // console.log("[Export SignalR Received]:", args); // TODO: 추후 삭제 예정
                 let percent = 0;
                 let msg = '';
 
@@ -195,12 +202,19 @@ const DownloadModal = ({ isOpen, onClose }) => {
                 payload.connectionId = myConnectionId;
             }
 
-            const res = await exportData.mutateAsync(payload);
+            const res = await exportData.mutateAsync({
+                data: payload,
+                config: { signal: abortController.signal }
+            });
             const blob = res?.data instanceof Blob ? res.data : (res instanceof Blob ? res : null);
 
             if (!blob) {
-                setExportProgress(prev => ({ ...prev, isExporting: false }));
-                modal.showErrorAlert("에러", "파일을 생성하지 못했습니다.");
+                if (!abortController.signal.aborted) {
+                    setExportProgress(prev => ({ ...prev, isExporting: false }));
+                    modal.showErrorAlert("에러", "파일을 생성하지 못했습니다.");
+                } else {
+                    // console.log("[Export Cancelled by User]");
+                }
                 return;
             }
 
@@ -260,16 +274,21 @@ const DownloadModal = ({ isOpen, onClose }) => {
             });
 
         } catch (error) {
-            clearInterval(progressTimer);
+            if (abortController.signal.aborted || error?.name === 'CanceledError' || error?.name === 'AbortError' || error?.code === 'ERR_CANCELED') {
+                // console.log("[Export Cancelled by User]");
+                return;
+            }
             setExportProgress(prev => ({ ...prev, isExporting: false }));
             console.error("Export error:", error);
             modal.showErrorAlert("에러", "다운로드 요청 처리 중 오류가 발생했습니다.");
         } finally {
+            exportAbortControllerRef.current = null;
             if (signalrConn) {
                 try {
                     signalrConn.stop();
                 } catch (e) { }
             }
+            exportSignalrConnRef.current = null;
         }
     };
 
@@ -391,6 +410,22 @@ const DownloadModal = ({ isOpen, onClose }) => {
     };
 
     const handleCloseExportProgress = () => {
+        // 진행 중일 때 X 버튼을 누르면 HTTP 요청 취소 (ctrl.abort()) 및 SignalR 해제
+        if (!exportProgress.isCompleted) {
+            if (exportAbortControllerRef.current) {
+                try {
+                    exportAbortControllerRef.current.abort();
+                } catch (e) { }
+                exportAbortControllerRef.current = null;
+            }
+            if (exportSignalrConnRef.current) {
+                try {
+                    exportSignalrConnRef.current.stop();
+                } catch (e) { }
+                exportSignalrConnRef.current = null;
+            }
+        }
+
         setExportProgress({
             isExporting: false,
             percent: 0,

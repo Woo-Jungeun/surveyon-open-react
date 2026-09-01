@@ -204,6 +204,9 @@ function deleteCookie(name, { path = "/", domain } = {}) {
 
 apiAxios.interceptors.response.use(function (response) {
     const { status, data, headers, config } = response;
+    if (data instanceof Blob || config?.responseType === 'blob') {
+        return response;
+    }
     if (String(data?.success) !== '777') {
         if (String(data?.success) === '710') {
             deleteCookie("TOKEN")
@@ -230,6 +233,11 @@ apiAxios.interceptors.response.use(function (response) {
     return response;
 
 }, async function (error) {
+    // 요청 취소(AbortController.abort() 또는 axios cancel)인 경우 로그아웃(토큰 삭제)을 시키지 않고 그대로 reject
+    if (axios.isCancel(error) || error?.name === 'CanceledError' || error?.name === 'AbortError' || error?.code === 'ERR_CANCELED') {
+        return Promise.reject(error);
+    }
+
     try {
         const { status, data, headers, config } = error.response || {};
 
@@ -244,35 +252,17 @@ apiAxios.interceptors.response.use(function (response) {
             return Promise.reject(error);
         }
 
-        // if (status === 404) {
-        //     window.location.href = '/pageNotFound/PageNotFound';
-        //     return Promise.reject(error);
-        // }
-
-        if (status) {
-            // const { status, data, headers, config } = error.response; // Removed redundancy
-        } else {
-            throw new Error("No response");
-        }
         if (String(data?.success) !== '777') {
             if (String(data?.success) === '710') {
-                deleteCookie("TOKEN")
+                deleteCookie("TOKEN");
                 persistor.purge();
-                //return { data: { status: data?.su ccess, message: "로그인을 다시 해주세요." } };
             } else if (["401", "402", "701", "702", "703"].includes(String(data?.success))) {
-                // return {data: {status: data?.succes, message: data?.message}};
                 return { data: { status: "오류", message: data?.message } };
             }
         }
-        // if (String(data.success) === '404') {
-        //     // url Not Found 화면 이동(NS_ER_CT_01: url 찾을 수 없음)
-        //     window.location.href = '/pageNotFound/PageNotFound'
-        // }
-        return { data: { status: "NS_ER_SV_01", message: "요청한 서비스에 문제가 발생했습니다. 잠시 후에 다시 시도해 주세요." } };
+        return Promise.reject(error);
 
     } catch (e) {
-        deleteCookie("TOKEN")
-        persistor.purge();
-        return { data: { status: "NS_ER_SV_01", message: "요청한 서비스에 문제가 발생했습니다. 잠시 후에 다시 시도해 주세요." } };
+        return Promise.reject(error);
     }
 });

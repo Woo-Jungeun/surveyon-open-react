@@ -69,13 +69,14 @@ export default {
     },
 
     // 파일 다운로드(Blob)용
-    async file(data, url, type) {
+    async file(data, url, type, config = {}) {
         const response = await apiAxios.post(
             join(url, type),
             data,
             {
                 headers: { "Content-Type": "application/json" },
                 responseType: "blob",
+                ...config
             }
         );
         return response;
