@@ -1049,10 +1049,13 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 modal.showAlert('알림', '문항이 저장되었습니다.');
                 if (onUnsavedChange) onUnsavedChange(false);
 
-                // 현재 활성화된 ID를 유지하여 리스트 재조회
+                // 현재 활성화된 ID 및 스크롤 위치를 유지하여 리스트 재조회
                 const currentActiveId = currentId.trim().toUpperCase();
+                const savedScrollTop = listContainerRef.current ? listContainerRef.current.scrollTop : 0;
                 await fetchVariablesData('select', currentActiveId);
-                setTimeout(scrollToBottom, 100);
+                if (listContainerRef.current) {
+                    listContainerRef.current.scrollTop = savedScrollTop;
+                }
                 return true;
             } else {
                 modal.showAlert('오류', result?.Message || '저장 중 문제가 발생했습니다.');
