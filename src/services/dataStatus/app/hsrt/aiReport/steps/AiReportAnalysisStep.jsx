@@ -196,9 +196,12 @@ const AiReportAnalysisStep = ({
         }
     };
     // L2 state and variables
+    const [l1StatusTab, setL1StatusTab] = useState('completed'); // 'completed' | 'missing'
     const [activeCategoryIndex, setActiveCategoryIndex] = useState(-1);
     const activeTabRef = useRef(null);
     const l2ContentScrollRef = useRef(null);
+    const l1ListScrollRef = useRef(null);
+    const l3ListScrollRef = useRef(null);
 
     useEffect(() => {
         if (activeTabRef.current) {
@@ -208,14 +211,24 @@ const AiReportAnalysisStep = ({
                 inline: 'nearest'
             });
         }
+        if (l1ListScrollRef.current) {
+            l1ListScrollRef.current.scrollTop = 0;
+        }
         if (l2ContentScrollRef.current) {
             l2ContentScrollRef.current.scrollTop = 0;
+        }
+        if (l3ListScrollRef.current) {
+            l3ListScrollRef.current.scrollTop = 0;
         }
         const outerContainer = document.querySelector('.ai-step-content-container');
         if (outerContainer) {
             outerContainer.scrollTop = 0;
         }
-    }, [activeCategoryIndex, activeSubTab]);
+        const allOverflowElements = document.querySelectorAll('.ai-report-blocks-wrap div[style*="overflow"]');
+        allOverflowElements.forEach(el => {
+            el.scrollTop = 0;
+        });
+    }, [activeCategoryIndex, activeSubTab, l1StatusTab]);
 
     useEffect(() => {
         if (activeSubTab === 'l2') {
@@ -249,7 +262,6 @@ const AiReportAnalysisStep = ({
     }, [openDropdownMap]);
     const chartContainerRefs = useRef({});
     const [isPipelineExpanded, setIsPipelineExpanded] = useState(true);
-    const [l1StatusTab, setL1StatusTab] = useState('completed'); // 'completed' | 'missing'
 
     const handleChartDownload = (evidenceKey, format) => {
         const container = chartContainerRefs.current[evidenceKey];
@@ -1725,7 +1737,7 @@ const AiReportAnalysisStep = ({
                 {/* Report content blocks */}
                 <div className="ai-report-blocks-wrap" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
                     {activeSubTab === 'l1' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '8px' }}>
+                        <div ref={l1ListScrollRef} style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '8px' }}>
                             {l1StatusTab === 'missing' && Array.isArray(missingVariables) && missingVariables.length > 0 ? (
                                 missingVariables.length === 0 ? (
                                     <div className="ai-block-empty-state">
@@ -2987,7 +2999,7 @@ const AiReportAnalysisStep = ({
                                 <span>조회된 L3 종합 요약 보고서 결과가 없습니다.</span>
                             </div>
                         ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '8px' }}>
+                            <div ref={l3ListScrollRef} style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '8px' }}>
                                 {/* Executive Summary Card */}
                                 <div className="ai-card" style={{ padding: '24px', background: '#f1f5f9', borderRadius: '12px', border: '1.5px solid #cbd5e1', boxShadow: 'none' }}>
                                     <div style={{ marginBottom: '16px' }}>
