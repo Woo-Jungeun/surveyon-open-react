@@ -1322,14 +1322,14 @@ const AiReportAnalysisStep = ({
                                         <span className="ai-panel-help-icon" title="교차표 캐시를 로드하고, 아직 요약되지 않은 문항을 일괄 생성합니다.">?</span>
                                     </div>
                                     <div className="ai-pipe-status-row">
-                                        <span className={`ai-pipe-status-dot ${pipelineStatus.l1.isDone ? 'done' : pipelineStatus.l1.isGenerating ? 'generating' : 'waiting'}`}></span>
-                                        <span className={`ai-pipe-status-text ${pipelineStatus.l1.isDone ? 'done' : pipelineStatus.l1.isGenerating ? 'generating' : 'waiting'}`}>
-                                            {pipelineStatus.l1.isDone ? (
+                                        <span className={`ai-pipe-status-dot ${pipelineStatus.l1.isGenerating ? 'generating' : pipelineStatus.l1.isDone ? 'done' : 'waiting'}`}></span>
+                                        <span className={`ai-pipe-status-text ${pipelineStatus.l1.isGenerating ? 'generating' : pipelineStatus.l1.isDone ? 'done' : 'waiting'}`}>
+                                            {pipelineStatus.l1.isGenerating ? (
+                                                '분석 중...'
+                                            ) : pipelineStatus.l1.isDone ? (
                                                 <>
                                                     생성 완료 <span className="ai-pipe-count-pill">{cachedDisplayCount} / {totalDisplayCount}개 문항</span>
                                                 </>
-                                            ) : pipelineStatus.l1.isGenerating ? (
-                                                '분석 중...'
                                             ) : (
                                                 '분석 대기 중'
                                             )}
@@ -1405,14 +1405,14 @@ const AiReportAnalysisStep = ({
                                         <span className="ai-panel-help-icon" title="L1 문항 요약을 조사내용(카테고리)별로 결합해 가설 검증 핵심 사실전략 제안을 작성합니다.">?</span>
                                     </div>
                                     <div className="ai-pipe-status-row">
-                                        <span className={`ai-pipe-status-dot ${pipelineStatus.l2.isDone ? 'done' : pipelineStatus.l2.isGenerating ? 'generating' : 'waiting'}`}></span>
-                                        <span className={`ai-pipe-status-text ${pipelineStatus.l2.isDone ? 'done' : pipelineStatus.l2.isGenerating ? 'generating' : 'waiting'}`}>
-                                            {pipelineStatus.l2.isDone ? (
+                                        <span className={`ai-pipe-status-dot ${pipelineStatus.l2.isGenerating ? 'generating' : pipelineStatus.l2.isDone ? 'done' : 'waiting'}`}></span>
+                                        <span className={`ai-pipe-status-text ${pipelineStatus.l2.isGenerating ? 'generating' : pipelineStatus.l2.isDone ? 'done' : 'waiting'}`}>
+                                            {pipelineStatus.l2.isGenerating ? (
+                                                '분석 중...'
+                                            ) : pipelineStatus.l2.isDone ? (
                                                 <>
                                                     생성 완료 <span className="ai-pipe-count-pill">{pipelineStatus.l2.countText}</span>
                                                 </>
-                                            ) : pipelineStatus.l2.isGenerating ? (
-                                                '분석 중...'
                                             ) : (
                                                 '분석 대기 중'
                                             )}
@@ -1457,14 +1457,14 @@ const AiReportAnalysisStep = ({
                                         <span className="ai-panel-help-icon" title="L1, L2 결과를 종합해 Executive Summary와 전략적 액션 아이템을 생성합니다.">?</span>
                                     </div>
                                     <div className="ai-pipe-status-row">
-                                        <span className={`ai-pipe-status-dot ${pipelineStatus.l3.isDone ? 'done' : pipelineStatus.l3.isGenerating ? 'generating' : 'waiting'}`}></span>
-                                        <span className={`ai-pipe-status-text ${pipelineStatus.l3.isDone ? 'done' : pipelineStatus.l3.isGenerating ? 'generating' : 'waiting'}`}>
-                                            {pipelineStatus.l3.isDone ? (
+                                        <span className={`ai-pipe-status-dot ${pipelineStatus.l3.isGenerating ? 'generating' : pipelineStatus.l3.isDone ? 'done' : 'waiting'}`}></span>
+                                        <span className={`ai-pipe-status-text ${pipelineStatus.l3.isGenerating ? 'generating' : pipelineStatus.l3.isDone ? 'done' : 'waiting'}`}>
+                                            {pipelineStatus.l3.isGenerating ? (
+                                                '분석 중...'
+                                            ) : pipelineStatus.l3.isDone ? (
                                                 <>
                                                     생성 완료 <span className="ai-pipe-count-pill">{pipelineStatus.l3.countText}</span>
                                                 </>
-                                            ) : pipelineStatus.l3.isGenerating ? (
-                                                '분석 중...'
                                             ) : (
                                                 '분석 대기 중'
                                             )}
@@ -1540,7 +1540,7 @@ const AiReportAnalysisStep = ({
                                         outline: 'none'
                                     }}
                                 >
-                                    <span className={`ai-pipe-status-dot ${pipelineStatus.l1.isDone ? 'done' : pipelineStatus.l1.isGenerating ? 'generating' : 'waiting'}`} />
+                                    <span className={`ai-pipe-status-dot ${pipelineStatus.l1.isGenerating ? 'generating' : pipelineStatus.l1.isDone ? 'done' : 'waiting'}`} />
                                     <span>L1 문항별 보기</span>
                                     {pipelineStatus.l1.isDone && <span style={{ fontSize: '10px', opacity: 0.85, fontWeight: 700 }}>({pipelineStatus.l1.countText})</span>}
                                 </button>
@@ -1567,7 +1567,7 @@ const AiReportAnalysisStep = ({
                                         outline: 'none'
                                     }}
                                 >
-                                    <span className={`ai-pipe-status-dot ${pipelineStatus.l2.isDone ? 'done' : pipelineStatus.l2.isGenerating ? 'generating' : 'waiting'}`} />
+                                    <span className={`ai-pipe-status-dot ${pipelineStatus.l2.isGenerating ? 'generating' : pipelineStatus.l2.isDone ? 'done' : 'waiting'}`} />
                                     <span>L2 조사내용별 보기</span>
                                     {pipelineStatus.l2.isDone && <span style={{ fontSize: '10px', opacity: 0.85, fontWeight: 700 }}>({pipelineStatus.l2.countText})</span>}
                                 </button>
@@ -1594,7 +1594,7 @@ const AiReportAnalysisStep = ({
                                         outline: 'none'
                                     }}
                                 >
-                                    <span className={`ai-pipe-status-dot ${pipelineStatus.l3.isDone ? 'done' : pipelineStatus.l3.isGenerating ? 'generating' : 'waiting'}`} />
+                                    <span className={`ai-pipe-status-dot ${pipelineStatus.l3.isGenerating ? 'generating' : pipelineStatus.l3.isDone ? 'done' : 'waiting'}`} />
                                     <span>L3 종합 요약 보기</span>
                                 </button>
                             </div>
