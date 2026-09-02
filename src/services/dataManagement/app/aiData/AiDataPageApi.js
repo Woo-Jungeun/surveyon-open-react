@@ -47,6 +47,11 @@ export function AiDataPageApi() {
         async (data) => await api.post(data, "/qa/stop-job", "API_BASE_URL_DATAMANAGEMENT")
     );
 
+    /** 러너 활성화 상태 (다른 프로젝트 중복 실행 방지 가드) */
+    const checkRunnerActive = useMutation(
+        async (data) => await api.post(data, "/qa/runner/active", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
     return {
         viewQaJobs,
         getQaTicket,
@@ -56,6 +61,7 @@ export function AiDataPageApi() {
         exportTestData,
         checkRunnerStatus,
         resumeQaJobs,
-        stopQaJob
+        stopQaJob,
+        checkRunnerActive
     };
 }

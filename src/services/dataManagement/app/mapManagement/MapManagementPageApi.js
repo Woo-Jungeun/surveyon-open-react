@@ -80,6 +80,16 @@ export function MapManagementPageApi() {
         }
     );
 
+    /** export PC 도구용 티켓 발급 */
+    const exportSupplyTicket = useMutation(
+        async (data) => await api.post(data, "/export/supply/ticket", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** export PC 도구 구동 확인 */
+    const exportSupplyToolStatus = useMutation(
+        async (data) => await api.post(data, "/export/supply/tool/status", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
     /** SPS 파일 업로드 */
     const uploadSpss = useMutation(
         async (data) => await api.post(data, "/upload", "API_BASE_URL_DATAMANAGEMENT"),
@@ -133,6 +143,8 @@ export function MapManagementPageApi() {
         updateMapLabels,
         createMapLabels,
         exportData,
+        exportSupplyTicket,
+        exportSupplyToolStatus,
         uploadSpss,
         updateDataFromSav,
         generateRelabels,

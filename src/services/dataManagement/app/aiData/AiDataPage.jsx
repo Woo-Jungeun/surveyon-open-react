@@ -63,7 +63,7 @@ const AiDataPage = () => {
     const isAiSolutionTeam = auth?.user?.userGroup === "AI솔루션팀";
     const [progressInfo, setProgressInfo] = useState(null);
     const [jobError, setJobError] = useState("");
-    const { viewQaJobs, getQaTicket, runQaE2eJobs, resetTestPids, exportTestData, checkRunnerStatus, resumeQaJobs, stopQaJob } = AiDataPageApi();
+    const { viewQaJobs, getQaTicket, runQaE2eJobs, resetTestPids, exportTestData, checkRunnerStatus, resumeQaJobs, stopQaJob, checkRunnerActive } = AiDataPageApi();
 
     // 티켓 관리 (시뮬레이션 실행 시작 시에만 발급)
 
@@ -733,6 +733,19 @@ const AiDataPage = () => {
             setJobError("");
             setRunnerNotResponding(false);
 
+            // [가드] 다른 프로젝트 러너 중복 실행 여부 확인 (/qa/runner/active)
+            try {
+                const activeRes = await checkRunnerActive.mutateAsync({ pn: projectnum, user: userId });
+                const isBusy = activeRes?.resultjson?.busy ?? activeRes?.resultjson?.Busy;
+                if (isBusy) {
+                    modal.showAlert("알림", activeRes?.message || "다른 프로젝트의 테스트가 실행 중입니다. 끝난 뒤에 시작해 주세요.");
+                    setIsSimulating(false);
+                    return;
+                }
+            } catch (activeErr) {
+                console.error("checkRunnerActive error:", activeErr);
+            }
+
             // 1. 프로토콜에 실을 티켓 발급
             const ticket = await fetchFreshTicket();
 
@@ -912,6 +925,19 @@ const AiDataPage = () => {
 
         try {
             setIsSimulating(true);
+
+            // [가드] 다른 프로젝트 러너 중복 실행 여부 확인 (/qa/runner/active)
+            try {
+                const activeRes = await checkRunnerActive.mutateAsync({ pn: projectnum, user: userId });
+                const isBusy = activeRes?.resultjson?.busy ?? activeRes?.resultjson?.Busy;
+                if (isBusy) {
+                    modal.showAlert("알림", activeRes?.message || "다른 프로젝트의 테스트가 실행 중입니다. 끝난 뒤에 시작해 주세요.");
+                    setIsSimulating(false);
+                    return;
+                }
+            } catch (activeErr) {
+                console.error("checkRunnerActive error:", activeErr);
+            }
 
             // 1. 프로토콜에 실을 티켓 발급
             const ticket = await fetchFreshTicket();

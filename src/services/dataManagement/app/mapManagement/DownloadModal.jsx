@@ -17,7 +17,7 @@ const OTHER_FORMAT_OPTIONS = [
 ];
 
 const DownloadModal = ({ isOpen, onClose }) => {
-    const { exportData } = MapManagementPageApi();
+    const { exportData, exportSupplyTicket, exportSupplyToolStatus } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
 
@@ -25,6 +25,11 @@ const DownloadModal = ({ isOpen, onClose }) => {
     const [selectedFormats, setSelectedFormats] = useState([]);
     const [downloading, setDownloading] = useState(false);
     const [downloadingSav, setDownloadingSav] = useState(false);
+
+    // PC 도구 구동 확인 로딩 & 10초 카운트다운 상태
+    const [checkingTool, setCheckingTool] = useState(false);
+    const [countdown, setCountdown] = useState(10);
+    const countdownTimerRef = useRef(null);
 
     // Export Progress Bar Modal State (matching screenshots UI)
     const [exportProgress, setExportProgress] = useState({
@@ -45,6 +50,12 @@ const DownloadModal = ({ isOpen, onClose }) => {
         if (!isOpen) {
             setSelectedFormats([]);
             setIsAccordionOpen(false);
+            setCheckingTool(false);
+            setDownloading(false);
+            if (countdownTimerRef.current) {
+                clearInterval(countdownTimerRef.current);
+                countdownTimerRef.current = null;
+            }
             setExportProgress({
                 isExporting: false,
                 percent: 0,
@@ -101,194 +112,120 @@ const DownloadModal = ({ isOpen, onClose }) => {
             prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
         );
     };
+    const handleFormatToggle = toggleFormat;
 
     const handleReset = () => {
         setSelectedFormats([]);
     };
 
     /**
-     * API 호출 - gb 토큰 1개 또는 콤마 나열 방식 (예: "sav" 또는 "crd,sps")
+     * PC 내보내기 도구 실행 (surveyonexport://run?...)
+     * ① 티켓 발급 (POST /export/supply/ticket)
+     * ② 프로토콜 URL 조립 및 실행
+     * ③ 10초 뒤 1회 구동 확인 (POST /export/supply/tool/status)
      */
     const executeExport = async (gbParam) => {
         if (!gbParam) return;
 
         const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '';
-        const userId = auth?.user?.userId || '';
+        const userId = auth?.user?.userId || sessionStorage.getItem('userId') || '';
 
-        if (!pn) {
-            modal.showErrorAlert("알림", "프로젝트 정보를 찾을 수 없습니다.");
+        if (!pn || !userId) {
+            modal.showAlert("알림", "프로젝트 정보 또는 사용자 정보가 올바르지 않습니다.");
             return;
         }
 
-        // Export Progress Modal 시작 (순수 백엔드 SignalR 데이터만 적용)
-        setExportProgress({
-            isExporting: true,
-            percent: 0,
-            step: 1,
-            statusText: '추출 작업 준비 중...',
-            isCompleted: false,
-            fileBlob: null,
-            filename: ''
-        });
-
-        const abortController = new AbortController();
-        exportAbortControllerRef.current = abortController;
-
-        let myConnectionId = null;
-        let signalrConn = null;
-
         try {
-            const baseUrl = window.API_CONFIG?.API_BASE_URL_DATAMANAGEMENT || "";
-            let hubUrl = baseUrl.replace(/\/+$/, '') + "/hubs/task-progress";
-            if (!hubUrl.startsWith('http')) {
-                hubUrl = window.location.origin + hubUrl;
-            }
+            setDownloading(true);
+            setCheckingTool(true);
+            setCountdown(10);
 
-            signalrConn = new signalR.HubConnectionBuilder()
-                .withUrl(hubUrl)
-                .withAutomaticReconnect()
-                .configureLogging(signalR.LogLevel.None)
-                .build();
-            exportSignalrConnRef.current = signalrConn;
+            // ① 티켓 발급 (POST /export/supply/ticket)
+            const ticketRes = await exportSupplyTicket.mutateAsync({ pn, user: userId });
 
-            const handleReceiveProgress = (...args) => {
-                // console.log("[Export SignalR Received]:", args); // TODO: 추후 삭제 예정
-                let percent = 0;
-                let msg = '';
-
-                if (args.length >= 2 && typeof args[1] === 'number') {
-                    msg = args[0];
-                    percent = args[1];
-                } else if (args.length === 1 && typeof args[0] === 'object' && args[0] !== null) {
-                    msg = args[0].message || args[0].Message;
-                    percent = args[0].percent || args[0].Percent || args[0].percentage || args[0].Percentage;
-                } else if (args.length >= 2 && typeof args[0] === 'number') {
-                    percent = args[0];
-                    msg = args[1];
-                }
-
-                if (typeof percent === 'number') {
-                    const p = Math.min(99, Math.max(0, percent));
-                    let currentStep = 1;
-                    if (p >= 25 && p < 70) currentStep = 2;
-                    else if (p >= 70) currentStep = 3;
-
-                    setExportProgress(prev => ({
-                        ...prev,
-                        percent: p,
-                        step: currentStep,
-                        statusText: msg || prev.statusText
-                    }));
-                }
-            };
-
-            signalrConn.on("ReceiveProgress", handleReceiveProgress);
-            signalrConn.on("progress", handleReceiveProgress);
-
-            await signalrConn.start();
-            myConnectionId = signalrConn.connectionId;
-        } catch (e) {
-            console.error("SignalR Connection Error in Export:", e);
-        }
-
-        try {
-            const payload = {
-                pn: pn,
-                gb: gbParam,
-                answerStateCode: "4",
-                user: userId
-            };
-            if (myConnectionId) {
-                payload.connectionId = myConnectionId;
-            }
-
-            const res = await exportData.mutateAsync({
-                data: payload,
-                config: { signal: abortController.signal }
-            });
-            const blob = res?.data instanceof Blob ? res.data : (res instanceof Blob ? res : null);
-
-            if (!blob) {
-                if (!abortController.signal.aborted) {
-                    setExportProgress(prev => ({ ...prev, isExporting: false }));
-                    modal.showErrorAlert("에러", "파일을 생성하지 못했습니다.");
-                } else {
-                    // console.log("[Export Cancelled by User]");
-                }
+            if (String(ticketRes?.success) !== '777' || !ticketRes?.resultjson?.ticket) {
+                setDownloading(false);
+                setCheckingTool(false);
+                const errMsg = ticketRes?.resultjson?.errorcontent || ticketRes?.resultjson?.Errorcontent || ticketRes?.message || "이미 진행 중인 작업이 있습니다. 완료된 후 다시 시작해 주세요.";
+                modal.showAlert("알림", errMsg);
                 return;
             }
 
-            if (blob.type?.includes("application/json")) {
-                const text = await blob.text();
-                let msg = "다운로드 요청이 거부되었습니다.";
+            const ticket = ticketRes.resultjson.ticket;
+
+            // ② URL 조립 (surveyonexport://run?central=..&ticket=..&pn=..&gb=..&state=..)
+            const host = window.API_CONFIG?.API_BASE_URL_DATAMANAGEMENT || window.API_CONFIG?.API_BASE_URL || window.location.origin;
+            const p = new URLSearchParams();
+            p.set('central', host);
+            p.set('ticket', ticket);
+            p.set('pn', pn);
+            p.set('gb', gbParam);
+            p.set('state', '4');
+
+            window.location.href = `surveyonexport://run?${p.toString()}`;
+
+            // 10초 카운트다운 타이머 시작
+            if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+            countdownTimerRef.current = setInterval(() => {
+                setCountdown(prev => Math.max(0, prev - 1));
+            }, 1000);
+
+            // ③ 10초 뒤 1회 구동 확인 (POST /export/supply/tool/status)
+            setTimeout(async () => {
+                if (countdownTimerRef.current) {
+                    clearInterval(countdownTimerRef.current);
+                    countdownTimerRef.current = null;
+                }
+                setCheckingTool(false);
+                setDownloading(false);
+
                 try {
-                    const parsed = JSON.parse(text);
-                    if (parsed.message) msg = parsed.message;
-                } catch (e) { }
-                setExportProgress(prev => ({ ...prev, isExporting: false }));
-                modal.showErrorAlert("에러", msg);
-                return;
-            }
+                    const statusRes = await exportSupplyToolStatus.mutateAsync({ pn, user: userId });
+                    const isStarted = statusRes?.resultjson?.started ?? statusRes?.started ?? false;
 
-            let filename = '';
-            const disposition = res?.headers?.['content-disposition'] || res?.headers?.['Content-Disposition'];
-            if (disposition && disposition.includes('filename=')) {
-                const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-                if (match && match[1]) {
-                    filename = match[1].replace(/['"]/g, '');
+                    if (isStarted) {
+                        modal.showAlert("알림", "PC 내보내기 도구 창에서 작업이 진행됩니다.");
+                    } else {
+                        const downloadUrl = statusRes?.resultjson?.downloadUrl || statusRes?.downloadUrl || `${host.replace(/\/+$/, '')}/export/supply/tool/download`;
+                        modal.showConfirm(
+                            "PC 내보내기 도구 설치 안내",
+                            "PC 내보내기 도구가 감지되지 않았습니다.\n\n" +
+                            "1. [도구 다운로드] 버튼을 눌러 SurveyonExportTool.exe를 내려받아 주세요.\n" +
+                            "2. 내려받은 파일(SurveyonExportTool.exe)을 더블클릭 후 [예]를 눌러 설치를 완료해 주세요.\n" +
+                            "3. 설치 완료 후 [다운로드] 버튼을 다시 눌러주시면 작업이 시작됩니다.\n\n" +
+                            "(※ 이미 설치하셨다면 브라우저 확장 프로그램의 프로토콜 차단 여부를 확인해 주세요.)",
+                            {
+                                btns: [
+                                    { title: "닫기", click: () => { } },
+                                    {
+                                        title: "도구 다운로드",
+                                        click: () => {
+                                            const link = document.createElement('a');
+                                            link.href = downloadUrl;
+                                            link.setAttribute('download', 'SurveyonExportTool.exe');
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            link.parentNode.removeChild(link);
+                                        }
+                                    }
+                                ]
+                            }
+                        );
+                    }
+                } catch (e) {
+                    console.error("exportSupplyToolStatus error:", e);
                 }
-            }
+            }, 10000);
 
-            if (!filename) {
-                const timestamp = moment().format("YYYYMMDDHHmmss");
-                if (gbParam === 'sav') {
-                    filename = `${pn}_Data_${timestamp}.sav`;
-                } else if (gbParam.includes(',')) {
-                    filename = `${pn}_Export_${timestamp}.zip`;
-                } else if (gbParam === 'crd') {
-                    filename = `${pn}.crd`;
-                } else if (gbParam === 'sps') {
-                    filename = `${pn}.sps`;
-                } else if (gbParam === 'sps-open') {
-                    filename = `${pn}_openText.zip`;
-                } else if (gbParam === 'open-excel') {
-                    filename = `${pn}_${timestamp}.XLSX`;
-                } else if (gbParam === 'map-txt') {
-                    filename = `${pn}Map.txt`;
-                } else if (gbParam === 'stp') {
-                    filename = `${pn}_stp.zip`;
-                } else {
-                    filename = `${pn}_Export_${timestamp}.zip`;
-                }
+        } catch (err) {
+            setDownloading(false);
+            setCheckingTool(false);
+            if (countdownTimerRef.current) {
+                clearInterval(countdownTimerRef.current);
+                countdownTimerRef.current = null;
             }
-
-            // 100% 완료 상태 설정
-            setExportProgress({
-                isExporting: true,
-                percent: 100,
-                step: 3,
-                statusText: '완료',
-                isCompleted: true,
-                fileBlob: blob,
-                filename: filename
-            });
-
-        } catch (error) {
-            if (abortController.signal.aborted || error?.name === 'CanceledError' || error?.name === 'AbortError' || error?.code === 'ERR_CANCELED') {
-                // console.log("[Export Cancelled by User]");
-                return;
-            }
-            setExportProgress(prev => ({ ...prev, isExporting: false }));
-            console.error("Export error:", error);
-            modal.showErrorAlert("에러", "다운로드 요청 처리 중 오류가 발생했습니다.");
-        } finally {
-            exportAbortControllerRef.current = null;
-            if (signalrConn) {
-                try {
-                    signalrConn.stop();
-                } catch (e) { }
-            }
-            exportSignalrConnRef.current = null;
+            console.error("executeExport error:", err);
+            modal.showAlert("알림", "PC 내보내기 실행 중 오류가 발생했습니다.");
         }
     };
 
@@ -386,22 +323,12 @@ const DownloadModal = ({ isOpen, onClose }) => {
             );
         }
 
-        let zipName = `${currentPn}_Export_{일시}.zip`;
-        if (selectedFormats.length === 1 && selectedFormats[0] === 'sps_open') {
-            zipName = `${currentPn}_openText.zip`;
-        } else if (selectedFormats.length === 1 && selectedFormats[0] === 'stp') {
-            zipName = `${currentPn}_stp.zip`;
-        }
-
         return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <div style={{ fontSize: '12px', color: '#475569' }}>
-                    선택된 {totalCount}개 파일이 ZIP으로 압축되어 내려옵니다.
+                    선택된 {totalCount}개 산출물 파일이 PC 내보내기 도구를 통해 다운로드 폴더로 추출됩니다.
                 </div>
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#16a34a' }}>
-                    {zipName}
-                </div>
-                <div style={{ fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 600, color: '#16a34a', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <span style={{ fontSize: '11px' }}>└</span>
                     <span>{generatedFiles.join('  ·  ')}</span>
                 </div>
@@ -677,7 +604,87 @@ const DownloadModal = ({ isOpen, onClose }) => {
 
     return (
         <div className="variable-modal-overlay">
-            <div className="variable-modal-content download-modal-content" style={{ width: '480px' }}>
+            <div className="variable-modal-content download-modal-content" style={{ width: '480px', position: 'relative', overflow: 'hidden' }}>
+                {/* PC 도구 구동 상태 확인 글래스모피즘 전체 로딩 오버레이 */}
+                {checkingTool && (
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(4px)',
+                        zIndex: 100,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '24px',
+                        borderRadius: '8px'
+                    }}>
+                        {/* Monitor Icon with Status Pulsing Light */}
+                        <div style={{
+                            width: '60px',
+                            height: '60px',
+                            borderRadius: '16px',
+                            backgroundColor: '#f0fdf4',
+                            border: '1.5px solid #bbf7d0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom: '16px',
+                            color: '#16a34a',
+                            position: 'relative',
+                            boxShadow: '0 4px 12px rgba(22, 163, 74, 0.12)'
+                        }}>
+                            <Monitor size={30} />
+                            <span style={{
+                                position: 'absolute',
+                                top: '-2px',
+                                right: '-2px',
+                                width: '12px',
+                                height: '12px',
+                                borderRadius: '50%',
+                                backgroundColor: '#22c55e',
+                                border: '2px solid #ffffff',
+                                boxShadow: '0 0 8px rgba(34, 197, 94, 0.8)'
+                            }} />
+                        </div>
+
+                        <div style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a', marginBottom: '6px', letterSpacing: '-0.3px' }}>
+                            PC 내보내기 도구 연결 확인 중
+                        </div>
+
+                        <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '22px', textAlign: 'center', lineHeight: '1.5' }}>
+                            프로그램 구동 상태를 확인하고 있습니다.<br />
+                            잠시만 기다려 주세요.
+                        </div>
+
+                        {/* Animated Smooth Progress Bar */}
+                        <div style={{ width: '260px', backgroundColor: '#e2e8f0', height: '8px', borderRadius: '4px', overflow: 'hidden', marginBottom: '10px' }}>
+                            <div style={{
+                                width: `${Math.min(100, Math.max(5, ((10 - countdown) / 10) * 100))}%`,
+                                height: '100%',
+                                backgroundColor: '#16a34a',
+                                borderRadius: '4px',
+                                transition: 'width 1s linear'
+                            }} />
+                        </div>
+
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#16a34a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                backgroundColor: '#22c55e',
+                                display: 'inline-block'
+                            }} />
+                            <span>확인 대기 남은 시간: <strong>{countdown}초</strong></span>
+                        </div>
+                    </div>
+                )}
+
                 {/* 1. Standard Header */}
                 <div className="variable-modal-header">
                     <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -784,20 +791,20 @@ const DownloadModal = ({ isOpen, onClose }) => {
                             style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: '#475569', cursor: 'pointer', flex: 1 }}
                         >
                             {isAccordionOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                            <span>다른 형식으로 받기 (다중 선택 가능)</span>
-                            {isAccordionOpen && selectedFormats.length > 0 && (
+                            <span style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b' }}>
+                                다른 형식으로 받기 (다중 선택 가능)
+                            </span>
+                            {selectedFormats.length > 0 && (
                                 <span style={{
-                                    backgroundColor: '#16a34a',
-                                    color: '#ffffff',
-                                    borderRadius: '50%',
-                                    width: '20px',
-                                    height: '20px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
                                     fontSize: '11px',
                                     fontWeight: 700,
-                                    marginLeft: '2px'
+                                    color: '#ffffff',
+                                    backgroundColor: '#16a34a',
+                                    borderRadius: '10px',
+                                    padding: '1px 7px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
                                 }}>
                                     {getGeneratedFileCount()}
                                 </span>
@@ -808,69 +815,56 @@ const DownloadModal = ({ isOpen, onClose }) => {
                             {isAccordionOpen && selectedFormats.length > 0 && (
                                 <button
                                     type="button"
-                                    className="dm-tactile-btn"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleReset();
-                                    }}
+                                    onClick={handleReset}
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: '4px',
-                                        padding: '3px 8px',
-                                        borderRadius: '6px',
+                                        fontSize: '12px',
+                                        color: '#64748b',
+                                        background: '#fff',
                                         border: '1px solid #cbd5e1',
-                                        backgroundColor: '#ffffff',
-                                        color: '#475569',
-                                        fontSize: '11px',
-                                        fontWeight: 600,
-                                        cursor: 'pointer',
-                                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
+                                        borderRadius: '6px',
+                                        padding: '3px 8px',
+                                        cursor: 'pointer'
                                     }}
                                 >
-                                    <RotateCcw size={11} />
+                                    <RotateCcw size={12} />
                                     <span>초기화</span>
                                 </button>
                             )}
                         </div>
                     </div>
 
-                    {/* 5. Collapsible Grid & Summary Box & Footer Buttons */}
+                    {/* 5. Formats Grid Container (Controlled by isAccordionOpen) */}
                     {isAccordionOpen && (
-                        <div>
-                            {/* 2-Column Grid */}
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: '1fr 1fr',
-                                gap: '8px',
-                                marginBottom: '12px'
-                            }}>
-                                {OTHER_FORMAT_OPTIONS.map((item) => {
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                {OTHER_FORMAT_OPTIONS.map(item => {
                                     const isChecked = selectedFormats.includes(item.id);
                                     return (
                                         <div
                                             key={item.id}
-                                            className="dm-tactile-card"
                                             onClick={() => toggleFormat(item.id)}
                                             style={{
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'space-between',
-                                                padding: '10px 12px',
+                                                padding: '10px 14px',
                                                 borderRadius: '8px',
-                                                border: isChecked ? '1.5px solid #16a34a' : '1px solid #e2e8f0',
-                                                backgroundColor: isChecked ? '#f0faf5' : '#ffffff',
+                                                border: `1.5px solid ${isChecked ? '#16a34a' : '#e2e8f0'}`,
+                                                backgroundColor: isChecked ? '#f0fdf4' : '#ffffff',
                                                 cursor: 'pointer',
+                                                transition: 'all 0.15s ease',
                                                 userSelect: 'none'
                                             }}
                                         >
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                {/* Checkbox */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                                 <div style={{
                                                     width: '16px',
                                                     height: '16px',
                                                     borderRadius: '4px',
-                                                    border: isChecked ? '1.5px solid #16a34a' : '1.5px solid #cbd5e1',
+                                                    border: `1.5px solid ${isChecked ? '#16a34a' : '#cbd5e1'}`,
                                                     backgroundColor: isChecked ? '#16a34a' : '#ffffff',
                                                     display: 'flex',
                                                     alignItems: 'center',
@@ -941,7 +935,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                                         selectedFormats.length > 0
                                             ? (getGeneratedFileCount() === 1
                                                 ? '선택한 1개 파일 다운로드'
-                                                : `선택한 ${getGeneratedFileCount()}개 파일 ZIP 다운로드`)
+                                                : `선택한 ${getGeneratedFileCount()}개 파일 다운로드`)
                                             : '다운로드'
                                     )}
                                 </button>
