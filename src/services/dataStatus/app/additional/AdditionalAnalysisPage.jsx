@@ -3552,10 +3552,10 @@ const AdditionalAnalysisPage = () => {
                                 {/* Config Section */}
                                 <div className="config-section" style={{
                                     height: isConfigOpen ? '100%' : 'auto',
-                                    flex: isConfigOpen ? 1.5 : 'none',
+                                    flex: isConfigOpen ? 1 : 'none',
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    minHeight: isConfigOpen ? '750px' : 'auto',
+                                    minHeight: 0,
                                     transition: 'all 0.3s ease',
                                     borderRadius: '8px'
                                 }}>
@@ -3575,26 +3575,6 @@ const AdditionalAnalysisPage = () => {
                                                     onClick={(e) => e.stopPropagation()}
                                                     placeholder="테이블 명을 입력하세요"
                                                 />
-                                                {/* <div
-                                                    title={mainBannerId === selectedTableId ? "주배너 해제" : "이 배너를 주배너로 지정합니다"}
-                                                    onClick={() => setMainBannerId(mainBannerId === selectedTableId ? null : selectedTableId)}
-                                                    style={{
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                        width: '28px', height: '28px', marginLeft: '6px',
-                                                        cursor: 'pointer', transition: 'all 0.2s'
-                                                    }}
-                                                >
-                                                    <Star 
-                                                        size={22} 
-                                                        fill={mainBannerId === selectedTableId ? '#facc15' : 'none'} 
-                                                        color={mainBannerId === selectedTableId ? '#facc15' : '#cbd5e1'} 
-                                                        strokeWidth={mainBannerId === selectedTableId ? 2.5 : 2} 
-                                                        style={{ 
-                                                            transition: 'all 0.2s', 
-                                                            transform: mainBannerId === selectedTableId ? 'scale(1.05)' : 'scale(1)'
-                                                        }}
-                                                    />
-                                                </div> */}
                                             </div>
                                         </div>
 
@@ -3625,11 +3605,11 @@ const AdditionalAnalysisPage = () => {
                                     {isConfigOpen && (
                                         <div className="config-body" style={{
                                             flex: 1,
-                                            height: 'auto',
+                                            minHeight: 0,
                                             overflow: 'hidden'
                                         }}>
                                             {/* Variable Panel */}
-                                            <div className={`variable-panel ${!isVariablePanelOpen ? 'collapsed' : ''}`}>
+                                            <div className={`variable-panel ${!isVariablePanelOpen ? 'collapsed' : ''}`} style={{ display: 'flex', flexDirection: 'column', flexShrink: 0, minHeight: 0 }}>
                                                 <div className="variable-panel-title-row" style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', height: '48px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: isVariablePanelOpen ? 'space-between' : 'center', flexShrink: 0 }}>
                                                     {isVariablePanelOpen ? (
                                                         <>
@@ -3670,7 +3650,7 @@ const AdditionalAnalysisPage = () => {
                                                 )}
 
                                                 {isVariablePanelOpen && (
-                                                    <div className="variable-list" style={{ height: filteredVariables.length === 0 ? '100%' : 'auto' }}>
+                                                    <div className="variable-list" style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
                                                         {filteredVariables.length === 0 ? (
                                                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '220px', padding: '20px', textAlign: 'center' }}>
                                                                 <Table2 size={25} color="#94a3b8" style={{ marginBottom: '12px', strokeWidth: 1.5 }} />
