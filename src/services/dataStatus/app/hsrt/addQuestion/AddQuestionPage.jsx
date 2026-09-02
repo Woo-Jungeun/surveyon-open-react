@@ -57,6 +57,9 @@ const PasteableEditCell = (props) => {
 
         let updated = [...currentInfo];
 
+        const columns = ['label2', 'label', 'logic'];
+        const startColIdx = Math.max(0, columns.indexOf(field));
+
         // 선택한 위치(startIdx)부터 기존 행 범위 내에서만 덮어쓰기 진행
         lines.forEach((line, offset) => {
             const targetIdx = startIdx + offset;
@@ -65,13 +68,15 @@ const PasteableEditCell = (props) => {
             const parts = line.split('\t');
 
             if (parts.length > 1) {
-                // 엑셀 탭 구분 다중 열 복사 시 (할당값 \t 라벨 \t 조건식)
-                updated[targetIdx] = {
-                    ...updated[targetIdx],
-                    label2: parts[0]?.trim() ?? updated[targetIdx].label2,
-                    label: parts[1]?.trim() ?? updated[targetIdx].label,
-                    logic: parts[2]?.trim() ?? updated[targetIdx].logic,
-                };
+                // 엑셀 탭 구분 다중 열 복사 시: 현재 붙여넣는 컬럼(startColIdx)부터 순서대로 채움
+                const rowObj = { ...updated[targetIdx] };
+                parts.forEach((val, pIdx) => {
+                    const colField = columns[startColIdx + pIdx];
+                    if (colField) {
+                        rowObj[colField] = val.trim();
+                    }
+                });
+                updated[targetIdx] = rowObj;
             } else {
                 // 단일 열 복사 시 (선택한 컬럼에 연속 덮어쓰기)
                 updated[targetIdx] = {
