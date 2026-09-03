@@ -1085,13 +1085,13 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                 const scrollbarBuffer = isHorizontalScrollable ? 28 : 12;
                                                 const totalNeededHeight = Math.ceil(rawHeight + scrollbarBuffer);
 
-                                                if (totalNeededHeight > 700) {
-                                                    iframe.style.height = '700px';
-                                                    if (iframe.parentElement) iframe.parentElement.style.height = '700px';
+                                                if (totalNeededHeight > 600) {
+                                                    iframe.style.height = '600px';
+                                                    if (iframe.parentElement) iframe.parentElement.style.height = '600px';
                                                     if (doc.documentElement) doc.documentElement.style.overflowY = 'auto';
                                                     if (doc.body) {
                                                         doc.body.style.overflowY = 'auto';
-                                                        doc.body.style.maxHeight = '700px';
+                                                        doc.body.style.maxHeight = '600px';
                                                     }
                                                 } else {
                                                     const calcHeight = Math.max(totalNeededHeight, 100);
