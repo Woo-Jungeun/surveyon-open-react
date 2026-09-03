@@ -234,6 +234,11 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 theme_data_col_divider_color: settings.render.theme_data_col_divider_color?.toUpperCase(),
                 theme_data_col_divider_style: settings.render.theme_data_col_divider_style,
                 theme_data_col_divider_width: settings.render.theme_data_col_divider_width,
+                theme_group_preset_bg: settings.render.theme_group_preset_bg?.toUpperCase(),
+                theme_group_preset_fg: settings.render.theme_group_preset_fg?.toUpperCase(),
+                theme_group_preset_divider_color: settings.render.theme_group_preset_divider_color?.toUpperCase(),
+                theme_group_preset_divider_style: settings.render.theme_group_preset_divider_style,
+                theme_group_preset_divider_width: settings.render.theme_group_preset_divider_width,
                 stub_group_layout: settings.render.stub_group_layout,
                 format_percent_as_column: settings.render.format_percent_as_column,
                 format_is_transpose: !!settings.display.is_transpose,
@@ -1251,10 +1256,10 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             { label: '헤더 그룹 글자', field: 'theme_header_group_fg' },
                                             { label: '구분 헤더 배경', field: 'theme_stub_header_bg' },
                                             { label: '구분 헤더 글자', field: 'theme_stub_header_fg' },
-                                            { label: '스터브 구분 배경', field: 'theme_stub_group_bg' },
-                                            { label: '스터브 구분 글자', field: 'theme_stub_group_fg' },
-                                            { label: '스터브 항목 배경', field: 'theme_stub_leaf_bg' },
-                                            { label: '스터브 항목 글자', field: 'theme_stub_leaf_fg' },
+                                            { label: '스터브(대, 중분류) 배경', field: 'theme_stub_group_bg' },
+                                            { label: '스터브(대, 중분류) 글자', field: 'theme_stub_group_fg' },
+                                            { label: '스터브(소분류) 배경', field: 'theme_stub_leaf_bg' },
+                                            { label: '스터브(소분류) 글자', field: 'theme_stub_leaf_fg' },
                                             { label: '본문 배경', field: 'theme_bg' },
                                             { label: '교차 행 배경', field: 'theme_stripe' },
                                             { label: '본문 글자', field: 'theme_text' },
@@ -1263,6 +1268,8 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             { label: 'Base 행 글자', field: 'theme_base_fg' },
                                             { label: '통계 행 배경', field: 'theme_etc_bg' },
                                             { label: '통계 행 글자', field: 'theme_etc_fg' },
+                                            { label: '그룹(STT) 배경', field: 'theme_group_preset_bg' },
+                                            { label: '그룹(STT) 글자', field: 'theme_group_preset_fg' },
                                         ].map((item) => (
                                             <div key={item.field} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', borderBottom: '1px solid #F1F5F9', paddingBottom: '4px', paddingTop: '4px' }}>
                                                 <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>{item.label}</label>
@@ -1384,6 +1391,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             { group: '데이터 기본선', prefix: 'theme_grid', color: 'theme_grid_color', style: 'theme_grid_style', width: 'theme_grid_width' },
                                             { group: '배너 그룹 경계선', prefix: 'theme_banner_divider', color: 'theme_banner_divider_color', style: 'theme_banner_divider_style', width: 'theme_banner_divider_width' },
                                             { group: '열 구분선(배너 그룹 내)', prefix: 'theme_data_col_divider', color: 'theme_data_col_divider_color', style: 'theme_data_col_divider_style', width: 'theme_data_col_divider_width' },
+                                            { group: '그룹(STT) 구분선', prefix: 'theme_group_preset_divider', color: 'theme_group_preset_divider_color', style: 'theme_group_preset_divider_style', width: 'theme_group_preset_divider_width' },
                                         ].map((g, i) => {
                                             const isSelected = selectedBorder === g.prefix;
                                             return (
