@@ -819,6 +819,7 @@ const AiReportPage = () => {
                                         ...prev,
                                         l1: { ...prev.l1, isGenerating: false, isDone: true, progress: prog }
                                     }));
+                                    setActiveSubTab('l1');
                                     modal.showAlert("알림", "L1 미요약 문항 일괄 생성이 완료되었습니다.");
                                     await loadSummaryData();
                                     await fetchL1StatusData();
@@ -867,12 +868,17 @@ const AiReportPage = () => {
 
             let prog = 0;
             const progressInterval = setInterval(() => {
-                prog = Math.min(prog + 15, 95);
+                prog = prog < 30 ? Math.min(prog + 2.5, 30)
+                     : prog < 50 ? Math.min(prog + 1.2, 50)
+                     : prog < 75 ? Math.min(prog + 0.8, 75)
+                     : prog < 90 ? Math.min(prog + 0.4, 90)
+                     : Math.min(prog + 0.1, 98.5);
+
                 setPipelineStatus(prev => ({
                     ...prev,
-                    l2: { ...prev.l2, progress: prog }
+                    l2: { ...prev.l2, progress: Math.round(prog) }
                 }));
-            }, 300);
+            }, 350);
 
             try {
                 const res = await generateL2.mutateAsync(payload);
@@ -894,6 +900,7 @@ const AiReportPage = () => {
                             countText: `${res.resultjson?.length || 0}개 카테고리`
                         }
                     }));
+                    setActiveSubTab('l2');
                     modal.showAlert("알림", "조사내용별 분석(L2) 생성이 성공적으로 완료되었습니다.");
                 } else {
                     setPipelineStatus(prev => ({
@@ -921,12 +928,17 @@ const AiReportPage = () => {
 
             let prog = 0;
             const progressInterval = setInterval(() => {
-                prog = Math.min(prog + 15, 95);
+                prog = prog < 50 ? Math.min(prog + 10, 50)
+                     : prog < 75 ? Math.min(prog + 2, 75)
+                     : prog < 90 ? Math.min(prog + 1, 90)
+                     : prog < 96 ? Math.min(prog + 0.4, 96)
+                     : Math.min(prog + 0.1, 98.5);
+
                 setPipelineStatus(prev => ({
                     ...prev,
-                    l3: { ...prev.l3, progress: prog }
+                    l3: { ...prev.l3, progress: Math.round(prog) }
                 }));
-            }, 300);
+            }, 350);
 
             try {
                 const res = await generateL3.mutateAsync(payload);
@@ -948,6 +960,7 @@ const AiReportPage = () => {
                             countText: "보고서 추출 가능"
                         }
                     }));
+                    setActiveSubTab('l3');
                     modal.showAlert("알림", "종합 AI 요약 보고서(L3) 생성이 성공적으로 완료되었습니다.");
                 } else {
                     setPipelineStatus(prev => ({
