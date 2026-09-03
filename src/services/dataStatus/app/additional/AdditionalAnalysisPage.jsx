@@ -146,6 +146,7 @@ const buildDisplayPolicy = (currentDp, ctxUi) => {
     const sigFinMode = (sigTypeVal === 't-test') ? 't-test' : ((sigTypeVal === 'z-test') ? 'z-test' : (sigTypeVal === 'deviation' ? 'deviation' : 'none'));
 
     return {
+        is_transpose: dp.is_transpose ?? ctx.is_transpose ?? false,
         show_n: dp.show_n !== false,
         show_percent: dp.show_percent !== false,
         percent_symbol: dp.percent_symbol ?? ctx.percent_symbol ?? ctx.format_percent_symbol ?? false,
@@ -313,6 +314,7 @@ const AdditionalAnalysisPage = () => {
     }, [variables]);
 
     const [localWeight, setLocalWeight] = useState(selectedWeight);
+    const [localIsTranspose, setLocalIsTranspose] = useState(false);
     const [localSigType, setLocalSigType] = useState('none');
     const [localShowN, setLocalShowN] = useState(true);
     const [localShowPct, setLocalShowPct] = useState(true);
@@ -342,6 +344,7 @@ const AdditionalAnalysisPage = () => {
     useEffect(() => {
         if (isDisplaySettingsOpen) {
             setLocalWeight(selectedWeight);
+            setLocalIsTranspose(displayPolicy?.is_transpose ?? false);
             setLocalSigType(displayPolicy?.sig_type || 'none');
             setLocalShowN(displayPolicy?.show_n !== false);
             setLocalShowPct(displayPolicy?.show_percent !== false);
@@ -384,6 +387,7 @@ const AdditionalAnalysisPage = () => {
 
         const nextPolicy = {
             ...displayPolicy,
+            is_transpose: Boolean(localIsTranspose),
             show_n: targetShowN,
             show_percent: targetShowPct,
             n_digits: targetDecimalN,
@@ -410,6 +414,7 @@ const AdditionalAnalysisPage = () => {
                 await savePageSettings.mutateAsync({
                     pageid: pageId,
                     user: user,
+                    is_transpose: Boolean(localIsTranspose),
                     ui_settings: nextPolicy
                 });
             } catch (saveErr) {
@@ -864,6 +869,7 @@ const AdditionalAnalysisPage = () => {
                 filter_expression: (filterExpression || derivedFilterExpression) ? (filterExpression || derivedFilterExpression) : null,
                 excel_show_percent: excelShowPct,
                 include_stats: includeStatsList,
+                is_transpose: displayPolicy?.is_transpose ?? false,
                 display_policy: buildDisplayPolicy(displayPolicy, contextUiSettings),
                 ui_settings: (contextUiSettings && Object.keys(contextUiSettings).length > 0)
                     ? contextUiSettings
@@ -964,6 +970,7 @@ const AdditionalAnalysisPage = () => {
                 const resolvedSigType = uiObj.sig_diff_fin_mode ?? uiObj.sig_type ?? (uiObj.show_t_test ? 't-test' : 'none');
 
                 const initialPolicy = {
+                    is_transpose: ctxPayload.is_transpose ?? uiObj.is_transpose ?? ctxPayload.ui_settings?.is_transpose ?? false,
                     sig_type: resolvedSigType,
                     sig_level: uiObj.sig_level ?? 95,
                     sig_exclude_under_n: uiObj.sig_exclude_under_n ?? 3,
@@ -1193,7 +1200,13 @@ const AdditionalAnalysisPage = () => {
                                         setDisplayPolicy(prev => ({
                                             ...(prev || {}),
                                             ...dp,
+                                            is_transpose: dp.is_transpose ?? tData.config.is_transpose ?? tData.is_transpose ?? false,
                                             sig_type: resolvedSig
+                                        }));
+                                    } else if (tData.config.is_transpose !== undefined || tData.is_transpose !== undefined) {
+                                        setDisplayPolicy(prev => ({
+                                            ...(prev || {}),
+                                            is_transpose: tData.config.is_transpose ?? tData.is_transpose ?? false
                                         }));
                                     }
                                     // Set Table Name from result if available
@@ -1257,7 +1270,7 @@ const AdditionalAnalysisPage = () => {
                                         weight_col: weightCol === "없음" ? "" : weightCol,
                                         filter_expression: filterExpr,
                                         include_stats: ALL_STATS,
-                                        row_eval_mode: 'split', // tData.config?.row_eval_mode ? tData.config.row_eval_mode : (tableMode === 'separated' ? 'split' : 'combined'),
+                                        row_eval_mode: 'split',
                                         display_policy: buildDisplayPolicy(localDisplayPolicy || displayPolicy, contextUiSettings),
                                         zero_base_columns: localDisplayPolicy?.hide_zero_base_columns ?? false,
                                         zero_banners: localDisplayPolicy?.hide_zero_base_columns ?? false,
@@ -1531,10 +1544,8 @@ const AdditionalAnalysisPage = () => {
                             }
                             if (data.config.row_eval_mode) {
                                 setTableMode('separated');
-                                // setTableMode(data.config.row_eval_mode === 'split' ? 'separated' : 'merged');
                             } else if (yIds.length === 1 && typeof yIds[0] === 'string' && (yIds[0].includes('*') || yIds[0].includes('+'))) {
                                 setTableMode('separated');
-                                // setTableMode(yIds[0].includes('+') ? 'merged' : 'separated');
                             } else if (yIds.length > 1) {
                                 setTableMode('separated');
                             }
@@ -2093,6 +2104,7 @@ const AdditionalAnalysisPage = () => {
                 table_id: selectedTableId,
                 pageid: currentPageId,
                 name: tableName || "Untitled Table",
+                is_transpose: displayPolicy?.is_transpose ?? false,
                 config: {
                     banner: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
                     stub: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join('+')]) : [],
@@ -2177,6 +2189,7 @@ const AdditionalAnalysisPage = () => {
                 table_id: selectedTableId,
                 pageid: currentPageId,
                 name: tableName || "Untitled Table",
+                is_transpose: displayPolicy?.is_transpose ?? false,
                 config: {
                     banner: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
                     stub: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join('+')]) : [],
@@ -2992,6 +3005,29 @@ const AdditionalAnalysisPage = () => {
 
                                 <div style={{ fontSize: '13px', fontWeight: 600, color: '#475569', paddingBottom: '2px' }}>
                                     표시 값 / 소수점
+                                </div>
+
+                                {/* 행/열 순서 변경 */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div
+                                        onClick={() => setLocalIsTranspose(!localIsTranspose)}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+                                    >
+                                        <div style={{
+                                            width: '18px', height: '18px', borderRadius: '4px',
+                                            background: localIsTranspose ? '#2563eb' : '#fff',
+                                            border: `1.5px solid ${localIsTranspose ? '#2563eb' : '#cbd5e1'}`,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            flexShrink: 0
+                                        }}>
+                                            {localIsTranspose && (
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <span style={{ fontSize: '13px', fontWeight: 500, color: '#334155' }}>행/열 순서 변경</span>
+                                    </div>
                                 </div>
 
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

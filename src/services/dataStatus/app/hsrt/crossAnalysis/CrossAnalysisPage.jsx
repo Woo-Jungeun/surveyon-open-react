@@ -1651,6 +1651,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [showN, setShowN] = useState(false);
     const [decimalN, setDecimalN] = useState(0);
     const [showPct, setShowPct] = useState(true);
+    const [isTranspose, setIsTranspose] = useState(false);
     const [excelShowPct, setExcelShowPct] = useState(true); // 엑셀 다운로드 시 % 표출 여부
     const [excelShowBaseParenthesis, setExcelShowBaseParenthesis] = useState(true); // 엑셀 다운로드 시 Base 기본 괄호 여부
     const [excelDecimalPct, setExcelDecimalPct] = useState(1); // 엑셀 다운로드 시 % 소수점 자리수
@@ -1671,6 +1672,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [localSigType, setLocalSigType] = useState('none');
     const [localShowN, setLocalShowN] = useState(true);
     const [localShowPct, setLocalShowPct] = useState(true);
+    const [localIsTranspose, setLocalIsTranspose] = useState(false);
 
     const [selectedWeight, setSelectedWeight] = useState('없음');
     const [weightOptions, setWeightOptions] = useState([{ text: '없음', value: '없음' }]);
@@ -1716,6 +1718,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             setLocalSigType(sigType);
             setLocalShowN(showN);
             setLocalShowPct(showPct);
+            setLocalIsTranspose(isTranspose);
             setLocalDecimalN(decimalN);
             setLocalDecimalPct(decimalPct);
 
@@ -1729,7 +1732,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             setLocalSigShowArrow(sigShowArrow);
         }
     }, [
-        isDisplaySettingsOpen, selectedWeight, sigType, showN, showPct, decimalN, decimalPct,
+        isDisplaySettingsOpen, selectedWeight, sigType, showN, showPct, isTranspose, decimalN, decimalPct,
         sigExcludeUnderN, sigExcludeEtc, sigLevel, sigDiffMin, sigDiffMax,
         sigExcludeColumnUnderN, sigUpColor, sigShowArrow
     ]);
@@ -1969,6 +1972,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     // Refs to avoid stale closures in event listeners
     const showNRef = useRef(showN);
     const showPctRef = useRef(showPct);
+    const isTransposeRef = useRef(isTranspose);
     const decimalNRef = useRef(decimalN);
     const decimalPctRef = useRef(decimalPct);
     const hideZeroBaseColumnsRef = useRef(hideZeroBaseColumns);
@@ -1989,6 +1993,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     useEffect(() => {
         showNRef.current = showN;
         showPctRef.current = showPct;
+        isTransposeRef.current = isTranspose;
         decimalNRef.current = decimalN;
         decimalPctRef.current = decimalPct;
         hideZeroBaseColumnsRef.current = hideZeroBaseColumns;
@@ -2190,6 +2195,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         percent_as_column: ctxPayload.ui_settings?.percent_as_column ?? ctxPayload.ui_settings?.format_percent_as_column ?? ctxPayload.display_policy?.percent_as_column ?? false,
                         base_prefix: ctxPayload.ui_settings?.base_prefix ?? ctxPayload.ui_settings?.format_base_prefix ?? ctxPayload.display_policy?.base_prefix ?? "(",
                         base_postfix: ctxPayload.ui_settings?.base_postfix ?? ctxPayload.ui_settings?.format_base_postfix ?? ctxPayload.display_policy?.base_postfix ?? ")",
+                        is_transpose: ctxPayload.ui_settings?.is_transpose ?? ctxPayload.display_policy?.is_transpose ?? false,
                         mean_digits: resolvedMeanDigits,
                         std_digits: resolvedStdDigits,
                         median_digits: resolvedMedianDigits,
@@ -2206,18 +2212,21 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     currentShowPct = fetchedUi.format_show_percent ?? true;
                     currentDecimalPct = fetchedUi.format_percent_round ?? ctxPayload.percent_digits ?? 1;
                     currentHideZeroBaseColumns = fetchedUi.hide_zero_base_columns ?? false;
+                    const currentIsTranspose = fetchedUi.is_transpose ?? false;
 
                     // Update refs immediately so they are fresh for this synchronous execution
                     showNRef.current = currentShowN;
                     decimalNRef.current = currentDecimalN;
                     showPctRef.current = currentShowPct;
                     decimalPctRef.current = currentDecimalPct;
+                    isTransposeRef.current = currentIsTranspose;
                     hideZeroBaseColumnsRef.current = currentHideZeroBaseColumns;
 
                     setShowN(currentShowN);
                     setDecimalN(currentDecimalN);
                     setShowPct(currentShowPct);
                     setDecimalPct(currentDecimalPct);
+                    setIsTranspose(currentIsTranspose);
                     setHideZeroBaseColumns(currentHideZeroBaseColumns);
                     const resolvedSigType = fetchedUi.sig_diff_fin_mode ?? fetchedUi.sig_type ?? (fetchedUi.show_t_test ? 't-test' : 'none');
                     setSigType(resolvedSigType);
@@ -2382,6 +2391,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 display_policy: {
                     show_n: currentShowN,
                     show_percent: currentShowPct,
+                    is_transpose: isTransposeRef.current ?? false,
                     percent_symbol: isInitialSetupRef.current ? (fetchedUi?.percent_symbol ?? fetchedUi?.format_percent_symbol ?? true) : (uiSettingsRef.current?.percent_symbol ?? uiSettingsRef.current?.format_percent_symbol ?? true),
                     percent_as_column: isInitialSetupRef.current ? (fetchedUi?.percent_as_column ?? false) : (uiSettingsRef.current?.percent_as_column ?? false),
                     stub_group_layout: isInitialSetupRef.current ? (fetchedUi?.stub_group_layout ?? 'merge') : (uiSettingsRef.current?.stub_group_layout ?? 'merge'),
@@ -2911,9 +2921,11 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 weight_mode: selectedWeight !== '없음' ? 'weight' : 'none',
                 weight_variable: selectedWeight !== '없음' ? selectedWeight : null,
                 excel_show_percent: excelShowPct, // 엑셀 % 표출 여부 추가
+                is_transpose: isTranspose,
                 display_policy: {
                     show_n: showN,
                     show_percent: showPct,
+                    is_transpose: isTranspose,
                     excel_show_percent: excelShowPct, // 엑셀 % 표출 여부 추가
                     percent_symbol: excelShowPct,
                     percent_as_column: uiSettings?.percent_as_column ?? uiSettings?.format_percent_as_column ?? false,
@@ -3600,7 +3612,29 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     표시 값 / 소수점
                                 </div>
 
-                                {/* N 설정 */}
+                                {/* 행/열 순서 변경 */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div
+                                        onClick={() => setLocalIsTranspose(!localIsTranspose)}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+                                    >
+                                        <div style={{
+                                            width: '18px', height: '18px', borderRadius: '4px',
+                                            background: localIsTranspose ? '#2563eb' : '#fff',
+                                            border: `1.5px solid ${localIsTranspose ? '#2563eb' : '#cbd5e1'}`,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            flexShrink: 0
+                                        }}>
+                                            {localIsTranspose && (
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <span style={{ fontSize: '13px', fontWeight: 500, color: '#334155' }}>행/열 순서 변경</span>
+                                    </div>
+                                </div>
+
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                     <div
                                         onClick={() => {
@@ -3669,7 +3703,6 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     </div>
                                 </div>
 
-                                {/* % 설정 */}
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                     <div
                                         onClick={() => {
@@ -3738,35 +3771,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     </div>
                                 </div>
 
-                                {/* 하단 적용/취소 액션 버튼 영역 */}
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
-                                    <button
-                                        onClick={() => setIsDisplaySettingsOpen(false)}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            background: '#f1f5f9',
-                                            color: '#475569',
-                                            border: '1px solid #cbd5e1',
-                                            borderRadius: '6px',
-                                            padding: '6px 14px',
-                                            fontSize: '12px',
-                                            fontWeight: 700,
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s',
-                                        }}
-                                        onMouseOver={(e) => {
-                                            e.currentTarget.style.background = '#e2e8f0';
-                                            e.currentTarget.style.color = '#1e293b';
-                                        }}
-                                        onMouseOut={(e) => {
-                                            e.currentTarget.style.background = '#f1f5f9';
-                                            e.currentTarget.style.color = '#475569';
-                                        }}
-                                    >
-                                        취소
-                                    </button>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
                                     <button
                                         onClick={async () => {
                                             setIsDisplaySettingsOpen(false);
@@ -3775,6 +3780,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             const targetSigType = localSigType;
                                             const targetShowN = localShowN;
                                             const targetShowPct = localShowPct;
+                                            const targetIsTranspose = localIsTranspose;
                                             const targetDecimalN = localDecimalN === '' ? 0 : Number(localDecimalN);
                                             const targetDecimalPct = localDecimalPct === '' ? 0 : Number(localDecimalPct);
 
@@ -3782,6 +3788,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             setSigType(targetSigType);
                                             setShowN(targetShowN);
                                             setShowPct(targetShowPct);
+                                            setIsTranspose(targetIsTranspose);
                                             setDecimalN(targetDecimalN);
                                             setDecimalPct(targetDecimalPct);
 
@@ -3799,6 +3806,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             decimalNRef.current = targetDecimalN;
                                             showPctRef.current = targetShowPct;
                                             decimalPctRef.current = targetDecimalPct;
+                                            isTransposeRef.current = targetIsTranspose;
                                             sigTypeRef.current = targetSigType;
                                             sigExcludeUnderNRef.current = localSigExcludeUnderN;
                                             sigExcludeEtcRef.current = localSigExcludeEtc;
@@ -3815,6 +3823,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                     format_n_round: targetDecimalN,
                                                     format_show_percent: targetShowPct,
                                                     format_percent_round: targetDecimalPct,
+                                                    is_transpose: targetIsTranspose,
                                                     show_t_test: targetSigType === 't-test',
                                                     sig_type: targetSigType,
                                                     sig_diff_fin_mode: targetSigType,
@@ -3841,7 +3850,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                     await savePageSettings.mutateAsync({
                                                         pageid: pageId,
                                                         user: user,
-                                                        ui_settings: newUi
+                                                        is_transpose: targetIsTranspose,
+                                                        ui_settings: newUi,
+                                                        display_policy: {
+                                                            ...newUi,
+                                                            is_transpose: targetIsTranspose
+                                                        }
                                                     });
 
                                                     await fetchCrossAnalysisData('normal', null, currentPage, filterExpression, {
@@ -4009,6 +4023,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     display_policy: {
                                         show_n: showN,
                                         show_percent: showPct,
+                                        is_transpose: isTranspose,
                                         hide_zero_base_columns: hideZeroBaseColumns,
                                         hide_zero_stubs: uiSettings?.hide_zero_stubs ?? false,
                                         hide_zero_banners: uiSettings?.hide_zero_banners ?? false,

@@ -548,7 +548,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             percent_symbol: true,
             hide_zero_base_columns: true,
             hide_zero_banners: true,
-            hide_zero_stubs: true
+            hide_zero_stubs: true,
+            is_transpose: false
         }
     });
 
@@ -626,6 +627,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 if (ui.hide_zero_stubs !== undefined && ui.hide_zero_stubs !== null) initDisplay.hide_zero_stubs = ui.hide_zero_stubs;
                 if (ui.percent_symbol !== undefined && ui.percent_symbol !== null) initDisplay.percent_symbol = ui.percent_symbol;
                 else if (renderContext?.effective_display_policy?.percent_symbol !== undefined) initDisplay.percent_symbol = renderContext.effective_display_policy.percent_symbol;
+                if (ui.is_transpose !== undefined && ui.is_transpose !== null) initDisplay.is_transpose = ui.is_transpose;
+                else if (ui.format_is_transpose !== undefined && ui.format_is_transpose !== null) initDisplay.is_transpose = ui.format_is_transpose;
+                else if (policy && policy.is_transpose !== undefined && policy.is_transpose !== null) initDisplay.is_transpose = policy.is_transpose;
 
                 // base_prefix / base_postfix 값에 따라 show_base_parenthesis 값 판별
                 const policy = actualTableDetail?.display_policy || renderContext?.effective_display_policy;
@@ -1160,6 +1164,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 pageid: pageId,
                 weight_variable: settings.weight_variable !== '없음' ? settings.weight_variable : null,
                 confidence_level: settings.confidence_level,
+                is_transpose: !!settings.display.is_transpose,
                 ui_settings: {
                     font_family: settings.render.font_family,
                     font_size: settings.render.font_size,
@@ -1222,6 +1227,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     theme_data_col_divider_width: settings.render.theme_data_col_divider_width,
                     stub_group_layout: settings.render.stub_group_layout,
                     format_percent_as_column: settings.render.format_percent_as_column,
+                    format_is_transpose: !!settings.display.is_transpose,
+                    is_transpose: !!settings.display.is_transpose,
                     format_show_n: settings.display.show_n,
                     format_show_percent: settings.display.show_percent,
                     format_n_round: settings.display.n_digits !== "" && settings.display.n_digits !== null && settings.display.n_digits !== undefined ? Number(settings.display.n_digits) : undefined,
@@ -1243,6 +1250,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 display_policy: {
                     show_n: settings.display.show_n,
                     show_percent: settings.display.show_percent,
+                    is_transpose: !!settings.display.is_transpose,
                     n_digits: settings.display.n_digits !== "" && settings.display.n_digits !== null && settings.display.n_digits !== undefined ? Number(settings.display.n_digits) : undefined,
                     percent_digits: settings.display.percent_digits !== "" && settings.display.percent_digits !== null && settings.display.percent_digits !== undefined ? Number(settings.display.percent_digits) : undefined,
                     mean_digits: settings.display.mean_digits !== "" && settings.display.mean_digits !== null && settings.display.mean_digits !== undefined ? Number(settings.display.mean_digits) : undefined,

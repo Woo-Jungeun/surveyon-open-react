@@ -173,6 +173,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
             user: auth?.user?.userId,
             pageid: pageId,
             limit: 1,
+            is_transpose: !!settings.display.is_transpose,
             ui_settings: {
                 font_family: settings.render.font_family,
                 font_size: settings.render.font_size,
@@ -235,6 +236,8 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 theme_data_col_divider_width: settings.render.theme_data_col_divider_width,
                 stub_group_layout: settings.render.stub_group_layout,
                 format_percent_as_column: settings.render.format_percent_as_column,
+                format_is_transpose: !!settings.display.is_transpose,
+                is_transpose: !!settings.display.is_transpose,
                 format_show_n: settings.display.show_n,
                 format_show_percent: settings.display.show_percent,
                 format_n_round: settings.display.n_digits !== "" && settings.display.n_digits !== null && settings.display.n_digits !== undefined ? Number(settings.display.n_digits) : undefined,
@@ -256,6 +259,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
             display_policy: {
                 show_n: settings.display.show_n,
                 show_percent: settings.display.show_percent,
+                is_transpose: !!settings.display.is_transpose,
                 n_digits: settings.display.n_digits !== "" && settings.display.n_digits !== null && settings.display.n_digits !== undefined ? Number(settings.display.n_digits) : undefined,
                 percent_digits: settings.display.percent_digits !== "" && settings.display.percent_digits !== null && settings.display.percent_digits !== undefined ? Number(settings.display.percent_digits) : undefined,
                 mean_digits: settings.display.mean_digits !== "" && settings.display.mean_digits !== null && settings.display.mean_digits !== undefined ? Number(settings.display.mean_digits) : undefined,
@@ -1164,6 +1168,15 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             {settings.render.format_percent_as_column && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                                         </div>
                                         <span style={{ fontWeight: 500, fontSize: '12px' }}>N/% 가로 분리 표시 (열 분할)</span>
+                                    </div>
+                                    <div
+                                        onClick={() => toggleDisplay('is_transpose')}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 14px', borderRadius: '6px' }}
+                                    >
+                                        <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display.is_transpose ? '#3B82F6' : '#fff', border: settings.display.is_transpose ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            {settings.display.is_transpose && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                                        </div>
+                                        <span style={{ fontWeight: 500, fontSize: '12px' }}>행/열 순서 변경</span>
                                     </div>
                                 </div>
                             </div>
