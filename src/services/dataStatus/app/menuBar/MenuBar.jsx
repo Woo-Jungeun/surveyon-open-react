@@ -317,7 +317,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     myRole: sessionStorage.getItem("myRole") || ""
   });
 
-  // pageSelected 이벤트 발생(다른 곳에서 삭제, 변경 등) 시 즉각 갱신
+  // pageSelected / pageTitleUpdated 이벤트 발생 시 즉각 갱신
   useEffect(() => {
     const handlePageUpdate = () => {
       setPageState({
@@ -327,7 +327,11 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       });
     };
     window.addEventListener("pageSelected", handlePageUpdate);
-    return () => window.removeEventListener("pageSelected", handlePageUpdate);
+    window.addEventListener("pageTitleUpdated", handlePageUpdate);
+    return () => {
+      window.removeEventListener("pageSelected", handlePageUpdate);
+      window.removeEventListener("pageTitleUpdated", handlePageUpdate);
+    };
   }, []);
 
   // 대시보드 권한 정보 실시간 갱신 및 sessionStorage 세팅
@@ -357,7 +361,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       }
     };
     fetchMyRole();
-  }, [auth?.user?.userId, pageState.title]);
+  }, [auth?.user?.userId, pageState.merge_pn]);
 
   const location = useLocation();
 

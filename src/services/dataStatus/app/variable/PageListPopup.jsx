@@ -171,6 +171,27 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
             const result = await pageSet.mutateAsync(payload);
 
             if (String(result?.success) === '777') {
+                // 현재 수정한 대시보드가 선택된 대시보드(세션 ID/제목)와 일치하는지 비교
+                const targetPageId = dataItem.isNew
+                    ? (result.resultjson?.[0]?.pageid || result.resultjson?.[0]?.page_id || result.resultjson?.[0]?.id)
+                    : (dataItem.pageid || dataItem.page_id || dataItem.id);
+                const currentSessionPageId = sessionStorage.getItem("pageId");
+                const currentSessionTitle = sessionStorage.getItem("pagetitle");
+
+                const isCurrentDashboard = Boolean(
+                    (currentSessionPageId && targetPageId && String(currentSessionPageId) === String(targetPageId)) ||
+                    (currentSessionTitle && (
+                        currentSessionTitle === dataItem.originalTitle ||
+                        currentSessionTitle === dataItem.title ||
+                        currentSessionTitle === dataItem.name
+                    ))
+                );
+
+                if (isCurrentDashboard) {
+                    sessionStorage.setItem("pagetitle", finalTitle);
+                    window.dispatchEvent(new Event("pageTitleUpdated"));
+                }
+
                 // 저장 성공 시 목록 재조회
                 const refreshRes = await pageList.mutateAsync({ user: auth?.user?.userId, pn: dataItem.merge_pn });
 
