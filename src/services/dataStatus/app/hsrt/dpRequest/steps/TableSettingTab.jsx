@@ -1154,12 +1154,12 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                             <div>
                                 <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>레이아웃 설정</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', minHeight: '42px', boxSizing: 'border-box' }}>
                                         <span style={{ fontSize: '12px', color: '#475569', fontWeight: 600 }}>스터브 그룹 레이아웃</span>
                                         <select
                                             value={settings.render.stub_group_layout || 'merge'}
                                             onChange={(e) => handleChange('render.stub_group_layout', e.target.value)}
-                                            style={{ padding: '4px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none', background: '#fff' }}
+                                            style={{ padding: '4px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none', background: '#fff', height: '26px' }}
                                         >
                                             <option value="merge">라벨 셀 병합</option>
                                             <option value="row">라벨 셀 분할</option>
@@ -1167,7 +1167,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     </div>
                                     <div
                                         onClick={() => handleChange('render.format_percent_as_column', !settings.render.format_percent_as_column)}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 14px', borderRadius: '6px' }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 14px', borderRadius: '6px', minHeight: '42px', boxSizing: 'border-box' }}
                                     >
                                         <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.render.format_percent_as_column ? '#3B82F6' : '#fff', border: settings.render.format_percent_as_column ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                             {settings.render.format_percent_as_column && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
@@ -1176,7 +1176,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     </div>
                                     <div
                                         onClick={() => toggleDisplay('is_transpose')}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 14px', borderRadius: '6px' }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 14px', borderRadius: '6px', minHeight: '42px', boxSizing: 'border-box' }}
                                     >
                                         <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display.is_transpose ? '#3B82F6' : '#fff', border: settings.display.is_transpose ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                             {settings.display.is_transpose && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
