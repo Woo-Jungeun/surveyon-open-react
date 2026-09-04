@@ -543,28 +543,44 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     const columns = useMemo(() => resultData.columns || EMPTY_ARRAY, [resultData.columns]);
     const rows = useMemo(() => resultData.rows || EMPTY_ARRAY, [resultData.rows]);
 
+    const initialBannerRef = useRef(null);
+
     const bannerVarList = useMemo(() => {
+        if (selectedXInfo && selectedXInfo !== '__none__') {
+            return [selectedXInfo];
+        }
         const rawBanner = banner.raw?.banner || banner.raw?.config?.banner;
         const rawBanners = banner.raw?.banners || banner.raw?.config?.banners;
-        let list = [];
-        if (selectedXInfo && selectedXInfo !== '__none__') {
-            list = [selectedXInfo];
-        } else if (rawBanner && (Array.isArray(rawBanner) ? rawBanner.length > 0 : String(rawBanner).trim() !== '')) {
-            list = Array.isArray(rawBanner) ? rawBanner : [rawBanner];
+
+        let candidate = null;
+        if (rawBanner && (Array.isArray(rawBanner) ? rawBanner.length > 0 : String(rawBanner).trim() !== '')) {
+            candidate = Array.isArray(rawBanner) ? rawBanner : [rawBanner];
         } else if (rawBanners && (Array.isArray(rawBanners) ? rawBanners.length > 0 : String(rawBanners).trim() !== '')) {
-            list = Array.isArray(rawBanners) ? rawBanners : [rawBanners];
-        } else if (columns && columns.length > 0) {
-            const colWithDunder = columns.find(c => c.key && c.key.includes('__'));
-            if (colWithDunder) {
-                list = [colWithDunder.key.split('__')[0]];
-            }
+            candidate = Array.isArray(rawBanners) ? rawBanners : [rawBanners];
         }
 
-        if (!list.length && defaultBannerId) {
-            list = [defaultBannerId];
+        if (candidate && candidate.length > 0) {
+            const isStubId = candidate.length === 1 && String(candidate[0]) === String(banner.id);
+            if (!isStubId) {
+                initialBannerRef.current = candidate;
+                return candidate;
+            } else if (initialBannerRef.current) {
+                return initialBannerRef.current;
+            }
+            return candidate;
         }
-        return list;
-    }, [banner.raw?.banner, banner.raw?.config?.banner, banner.raw?.banners, banner.raw?.config?.banners, selectedXInfo, columns, defaultBannerId]);
+
+        if (initialBannerRef.current) {
+            return initialBannerRef.current;
+        }
+
+        if (defaultBannerId) {
+            return [defaultBannerId];
+        }
+        return [];
+    }, [selectedXInfo, banner.raw?.banner, banner.raw?.config?.banner, banner.raw?.banners, banner.raw?.config?.banners, defaultBannerId, banner.id]);
+
+    const bannerVarKey = useMemo(() => bannerVarList.join(','), [bannerVarList]);
 
     const isTranspose = useMemo(() => {
         return Boolean(
@@ -913,7 +929,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     }, [
         isChartOpen,
         banner?.id,
-        bannerVarList,
+        bannerVarKey,
         userId,
         uiSettings?.weight_variable,
         filterExpression,
