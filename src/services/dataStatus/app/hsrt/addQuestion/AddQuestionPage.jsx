@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, createContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Trash2, Search, ChevronLeft, ChevronRight, Wand2, Plus, Info, Sparkles } from 'lucide-react';
+import { Trash2, Search, ChevronLeft, ChevronRight, Wand2, Plus, Info, Sparkles, RotateCcw } from 'lucide-react';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -551,6 +551,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [isCartesianModalOpen, setIsCartesianModalOpen] = useState(false);
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
     const [banners, setBanners] = useState([]);
+    const [deletedIds, setDeletedIds] = useState([]); // 삭제 대기 중인 기존 문항 ID 목록
     const [selectedBanner, setSelectedBanner] = useState('');
     const [baseVariables, setBaseVariables] = useState([]);
     const [isBannerSidebarOpen, setIsBannerSidebarOpen] = useState(true);
@@ -722,32 +723,20 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 if (nextBanners.length > 0) { selectBanner(nextBanners[0]); scrollToTop(); }
                 else { setSelectedBanner(''); setCurrentId(''); setCurrentLabel(''); setCurrentXInfo(''); setCurrentInfo([]); currentInfoRef.current = []; }
             }
+            if (onUnsavedChange) onUnsavedChange(true);
             return;
         }
-        modal.showConfirm('알림', <span style={{ wordBreak: 'break-all' }}>문항({bannerId})을 삭제하시겠습니까?</span>, {
-            btns: [
-                { title: "취소", click: () => { } },
-                {
-                    title: "삭제",
-                    click: async () => {
-                        const pageId = sessionStorage.getItem('pageId');
-                        const user = auth?.user?.userId;
-                        if (!pageId || !user) return;
-                        try {
-                            const result = await deleteBaseVariable.mutateAsync({ pageid: pageId, user, variables: [bannerId] });
-                            if (String(result?.success) === '777') {
-                                modal.showAlert('알림', '삭제되었습니다.');
-                                await fetchVariablesData(selectedBanner === bannerId ? 'delete' : 'normal');
-                            } else if (result?.message?.includes("사용 중이라 삭제할 수 없습니다")) {
-                                modal.showErrorAlert("에러", "문항이 다른 설정에서 사용 중이라 삭제할 수 없습니다.");
-                            } else {
-                                modal.showAlert('오류', result?.Message || result?.message || '삭제 중 문제가 발생했습니다.');
-                            }
-                        } catch { modal.showAlert('오류', '삭제 요청에 실패했습니다.'); }
-                    }
-                }
-            ]
-        });
+
+        // 이미 삭제 예정된 문항이면 복원(삭제 취소)
+        if (deletedIds.includes(bannerId)) {
+            setDeletedIds(prev => prev.filter(id => id !== bannerId));
+            if (onUnsavedChange) onUnsavedChange(true);
+            return;
+        }
+
+        // 삭제 처리 -> deletedIds에 등록하고 목록에는 (삭제 예정) 상태로 유지
+        setDeletedIds(prev => [...new Set([...prev, bannerId])]);
+        if (onUnsavedChange) onUnsavedChange(true);
     };
 
     const handleAddNew = async () => {
@@ -864,6 +853,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                     }));
 
                 setBanners(compVars);
+                setDeletedIds([]);
                 history.reset(compVars);
 
                 if (compVars.length > 0) {
@@ -975,13 +965,13 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
             }
         }
 
-        // 2. 저장 대상 수집 (isDirty === true)
-        const dirtyBanners = latestBanners.filter(b => b.isDirty);
-        if (dirtyBanners.length === 0) {
+        // 2. 저장 대상 수집 (isDirty === true 이면서 삭제 대기가 아닌 항목들)
+        const dirtyBanners = latestBanners.filter(b => b.isDirty && !deletedIds.includes(b.id));
+        if (dirtyBanners.length === 0 && deletedIds.length === 0) {
             return modal.showAlert('알림', '저장할 변경 사항이 없습니다.');
         }
 
-        // 3. 일괄 유효성 검사
+        // 3. 일괄 유효성 검사 (수정/신규 작성 중인 문항에 대해서만)
         for (const b of dirtyBanners) {
             if (!b.id?.trim()) {
                 return modal.showAlert('알림', '문항 ID를 입력해주세요.');
@@ -1041,15 +1031,41 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
 
         try {
             loadingSpinner.show();
-            const result = await saveBaseVariableMerge.mutateAsync({ pageid: pageId, user, variables: payloadVariables });
-            if (String(result?.success) === '777') {
-                // 재계산 API 호출
-                await recomputeComputedVariables.mutateAsync({ pageid: pageId, user });
 
-                modal.showAlert('알림', '문항이 저장되었습니다.');
+            // 삭제 대기 중인 문항 처리
+            let deleteSuccess = true;
+            if (deletedIds.length > 0) {
+                const delResult = await deleteBaseVariable.mutateAsync({ pageid: pageId, user, variables: deletedIds });
+                if (String(delResult?.success) !== '777') {
+                    deleteSuccess = false;
+                    const errorMsg = delResult?.errortext || delResult?.errorcontent || delResult?.message;
+                    if (errorMsg?.includes("사용 중이라 삭제할 수 없습니다")) {
+                        modal.showErrorAlert("에러", "일부 문항이 다른 설정에서 사용 중이라 삭제할 수 없습니다.");
+                    } else {
+                        modal.showErrorAlert("에러", errorMsg || "삭제 처리 중 오류가 발생했습니다.");
+                    }
+                    loadingSpinner.hide();
+                    return false;
+                }
+            }
+
+            // 신규/수정된 문항 저장 처리
+            let saveSuccess = true;
+            if (dirtyBanners.length > 0) {
+                const result = await saveBaseVariableMerge.mutateAsync({ pageid: pageId, user, variables: payloadVariables });
+                if (String(result?.success) === '777') {
+                    await recomputeComputedVariables.mutateAsync({ pageid: pageId, user });
+                } else {
+                    saveSuccess = false;
+                    modal.showAlert('오류', result?.Message || '저장 중 문제가 발생했습니다.');
+                }
+            }
+
+            if (deleteSuccess && saveSuccess) {
+                setDeletedIds([]);
+                modal.showAlert('알림', '저장되었습니다.');
                 if (onUnsavedChange) onUnsavedChange(false);
 
-                // 현재 활성화된 ID 및 스크롤 위치를 유지하여 리스트 재조회
                 const currentActiveId = currentId.trim().toUpperCase();
                 const savedScrollTop = listContainerRef.current ? listContainerRef.current.scrollTop : 0;
                 await fetchVariablesData('select', currentActiveId);
@@ -1057,8 +1073,6 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                     listContainerRef.current.scrollTop = savedScrollTop;
                 }
                 return true;
-            } else {
-                modal.showAlert('오류', result?.Message || '저장 중 문제가 발생했습니다.');
             }
         } catch (error) {
             console.error(error);
@@ -1234,27 +1248,63 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 </div>
                             </div>
                             <div ref={listContainerRef} className="dp-banner-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-                                {filteredBanners.map(banner => (
-                                    <div key={banner.id}
-                                        className={`dp-banner-item ${selectedBanner === banner.id ? 'active' : ''}`}
-                                        onClick={() => selectBanner(banner)}
-                                        style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', minHeight: '40px', borderRadius: '8px' }}
-                                        title={`${banner.label || ''}${banner.id && !banner.id.startsWith('NEW_') ? ` (${banner.id})` : ''}`}
-                                    >
-                                        <div className="dp-banner-item-info" style={{ flex: 1, paddingRight: '8px' }}>
-                                            <span className="dp-banner-label" style={{ display: 'block', marginBottom: '1px', lineHeight: 1.3, fontSize: '12px', wordBreak: 'break-all' }}>
-                                                {banner.id.startsWith('NEW_') ? (banner.label || '(새 문항 작성 중)') : banner.label}
-                                            </span>
-                                            <span className="dp-banner-sub" style={{ display: 'block', fontSize: '11px', opacity: 0.6, wordBreak: 'break-all', lineHeight: 1.3 }}>
-                                                {banner.id.startsWith('NEW_') ? '저장 대기' : banner.id}
-                                                {banner.isDirty && <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px' }}>(수정됨)</span>}
-                                            </span>
+                                {filteredBanners.map(banner => {
+                                    const isPendingDelete = deletedIds.includes(banner.id);
+                                    return (
+                                        <div key={banner.id}
+                                            className={`dp-banner-item ${selectedBanner === banner.id ? 'active' : ''}`}
+                                            onClick={() => selectBanner(banner)}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                padding: '8px 12px',
+                                                minHeight: '40px',
+                                                borderRadius: '8px',
+                                                background: isPendingDelete ? '#f1f5f9' : undefined,
+                                                border: isPendingDelete ? '1px dashed #cbd5e1' : undefined
+                                            }}
+                                            title={`${banner.label || ''}${banner.id && !banner.id.startsWith('NEW_') ? ` (${banner.id})` : ''}`}
+                                        >
+                                            <div className="dp-banner-item-info" style={{ flex: 1, paddingRight: '8px' }}>
+                                                <span className="dp-banner-label" style={{
+                                                    display: 'block',
+                                                    marginBottom: '1px',
+                                                    lineHeight: 1.3,
+                                                    fontSize: '12px',
+                                                    fontWeight: isPendingDelete ? 600 : 700,
+                                                    wordBreak: 'break-all',
+                                                    textDecoration: isPendingDelete ? 'line-through' : 'none',
+                                                    textDecorationColor: isPendingDelete ? '#64748b' : 'currentColor',
+                                                    color: isPendingDelete ? '#64748b' : 'inherit'
+                                                }}>
+                                                    {banner.id.startsWith('NEW_') ? (banner.label || '(새 문항 작성 중)') : banner.label}
+                                                </span>
+                                                <span className="dp-banner-sub" style={{ display: 'block', fontSize: '11px', textDecoration: isPendingDelete ? 'line-through' : 'none', color: '#94a3b8', wordBreak: 'break-all', lineHeight: 1.3 }}>
+                                                    {banner.id.startsWith('NEW_') ? '저장 대기' : banner.id}
+                                                    {isPendingDelete ? (
+                                                        <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px' }}>(삭제 예정)</span>
+                                                    ) : (
+                                                        banner.isDirty && <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px' }}>(수정됨)</span>
+                                                    )}
+                                                </span>
+                                            </div>
+                                            <button
+                                                className="dp-banner-delete"
+                                                onClick={(e) => handleDeleteBanner(e, banner.id)}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    padding: '4px',
+                                                    color: isPendingDelete ? '#16a34a' : undefined
+                                                }}
+                                                title={isPendingDelete ? "삭제 취소 (복원)" : "삭제"}
+                                            >
+                                                {isPendingDelete ? <RotateCcw size={14} /> : <Trash2 size={16} />}
+                                            </button>
                                         </div>
-                                        <button className="dp-banner-delete" onClick={(e) => handleDeleteBanner(e, banner.id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' }}>
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
