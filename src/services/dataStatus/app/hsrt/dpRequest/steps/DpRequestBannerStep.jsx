@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, memo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Save, Trash2, ChevronDown, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, Info } from 'lucide-react';
+import { Save, Trash2, ChevronDown, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, Info, RotateCcw } from 'lucide-react';
 import { Popup } from '@progress/kendo-react-popup';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV3, { GridColumn as Column } from "@/components/kendo/KendoGridV3";
@@ -1296,62 +1296,18 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     const handleDeleteBanner = (e, bannerId) => {
         e.stopPropagation();
-        const bannerToDelete = banners.find(b => b.id === bannerId);
-
-        modal.showConfirm('삭제 확인', `배너(${bannerToDelete?.label || bannerId})를 삭제하시겠습니까?`, {
-            btns: [
-                { title: "취소", click: () => { } },
-                {
-                    title: "삭제",
-                    click: async () => {
-                        // 1. 만약 저장되지 않은 새 배너라면 로컬에서만 제거
-                        if (bannerToDelete?.isNew) {
-                            setBanners(prev => prev.filter(b => b.id !== bannerId));
-                            const nextBanners = banners.filter(b => b.id !== bannerId);
-                            if (nextBanners.length > 0) {
-                                setSelectedBanner(nextBanners[0].id);
-                                setCurrentLabel(nextBanners[0].label);
-                                scrollToTop();
-                            } else {
-                                setSelectedBanner(null);
-                                setCurrentLabel('');
-                            }
-                            return;
-                        }
-
-                        // 2. 서버에 저장된 배너라면 API 호출
-                        const pageId = sessionStorage.getItem('pageId');
-                        if (!pageId) return;
-
-                        try {
-                            loadingSpinner.show();
-                            const requestData = {
-                                pageid: pageId,
-                                user: auth?.user?.userId,
-                                variables: {},
-                                delete_ids: [bannerId]
-                            };
-
-                            const result = await saveBannerDetail.mutateAsync(requestData);
-                            if (String(result?.success) === '777') {
-                                modal.showAlert('알림', '배너가 삭제되었습니다.');
-                                if (onUnsavedChange) onUnsavedChange(false);
-                                await fetchBannerData(false, true); // 삭제 시 무조건 첫 번째 배너 선택
-                            }
-                        } catch (error) {
-                            console.error('Delete error:', error);
-                            modal.showAlert('오류', '배너 삭제 중 문제가 발생했습니다.');
-                        } finally {
-                            loadingSpinner.hide();
-                        }
-                    }
-                }
-            ]
+        setDeletedBannerIds(prev => {
+            if (prev.includes(bannerId)) {
+                return prev.filter(id => id !== bannerId);
+            } else {
+                return [...prev, bannerId];
+            }
         });
+        if (onUnsavedChange) onUnsavedChange(true);
     };
 
     // --- 데이터 로직 ---
-    const fetchBannerData = async (isFresh = false, forceSelectFirst = false) => {
+    const fetchBannerData = async (isFresh = true, forceSelectFirst = false) => {
         const pageId = sessionStorage.getItem('pageId');
         if (!pageId || !auth?.user?.userId) return;
         try {
@@ -1417,7 +1373,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                     // 서버에서 온 원본 ID들 보관
                     const ids = formatted.map(b => b.id);
                     setOriginalBannerIds(ids);
-                    setDeletedBannerIds([]); // 삭제 목록 초기화
+                    setDeletedBannerIds(prev => isFresh ? [] : prev.filter(id => ids.includes(id))); // isFresh가 false일 때는 삭제 예정 목록 유지
 
                     if (formatted.length > 0) {
                         const target = isFresh ? formatted[formatted.length - 1] : formatted[0];
@@ -1475,7 +1431,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                     setCurrentLabel(generatedVar.name || generatedVar.label);
                     setColVars([]);
                     setIsWizardOpen(false);
-                    if (onUnsavedChange) onUnsavedChange(false); // 생성 성공 시 더티 해제
+                    if (onUnsavedChange) onUnsavedChange(deletedBannerIds.length > 0);
                     modal.showAlert('알림', '배너가 정상적으로 생성 및 저장되었습니다.');
                 } else {
                     modal.showAlert('오류', '배너 저장에 실패했습니다.');
@@ -1814,9 +1770,9 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         const pageId = sessionStorage.getItem('pageId');
         if (!pageId) return;
 
-        // 1. 저장할 대상 배너(신규 또는 수정된 배너)들을 모두 찾는다.
-        const bannersToSave = banners.filter(b => b.isNew || b.isDirty);
-        if (bannersToSave.length === 0) {
+        // 1. 저장할 대상 배너(신규 또는 수정된 배너)들을 모두 찾는다 (단, 삭제 예정 제외).
+        const bannersToSave = banners.filter(b => (b.isNew || b.isDirty) && !deletedBannerIds.includes(b.id));
+        if (bannersToSave.length === 0 && deletedBannerIds.length === 0) {
             if (onUnsavedChange) onUnsavedChange(false);
             return true;
         }
@@ -1843,13 +1799,14 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             pageid: pageId,
             user: auth?.user?.userId,
             variables: variablesPayload,
-            delete_ids: []
+            delete_ids: deletedBannerIds
         };
 
         try {
             loadingSpinner.show();
             const result = await saveBannerDetail.mutateAsync(requestData);
             if (String(result?.success) === '777') {
+                setDeletedBannerIds([]);
                 modal.showAlert('알림', '배너 정보가 저장되었습니다.');
                 if (onUnsavedChange) onUnsavedChange(false); // 저장 성공 시 더티 해제
                 await fetchBannerData();
@@ -1910,33 +1867,64 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             </div>
                         </div>
                         <div ref={listContainerRef} className="dp-banner-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-                            {filteredBanners.map((banner, index) => (
-                                <div key={`${banner.id}-${index}`}
-                                    className={`dp-banner-item ${selectedBanner === banner.id ? 'active' : ''}`}
-                                    onClick={() => { setSelectedBanner(banner.id); setCurrentLabel(banner.label); }}
-                                    onContextMenu={(e) => handleSidebarContextMenu(e, banner.id, banner.label)}
-                                    style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', minHeight: '40px', borderRadius: '8px' }}
-                                    title={`${banner.label || ''}${banner.id && !banner.isNew ? ` (${banner.id})` : ''}`}
-                                >
-                                    <div className="dp-banner-item-info" style={{ flex: 1, paddingRight: '8px' }}>
-                                        <span className="dp-banner-label" style={{ display: 'block', marginBottom: '1px', lineHeight: 1.3, fontSize: '12px', wordBreak: 'break-all', fontWeight: banner.isNew ? 700 : 'normal' }}>
-                                            {banner.isNew ? (banner.label || '(새 배너 작성중)') : banner.label}
-                                        </span>
-                                        <span className="dp-banner-sub" style={{ display: 'block', fontSize: '11px', opacity: 0.6, wordBreak: 'break-all', lineHeight: 1.3, fontWeight: banner.isNew ? 600 : 'normal' }}>
-                                            {banner.isNew ? '저장 대기' : banner.id}
-                                            {!banner.isNew && banner.isDirty && (
-                                                <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px' }}>(수정됨)</span>
-                                            )}
-                                        </span>
-                                    </div>
-                                    <button className="dp-banner-delete"
-                                        onClick={(e) => handleDeleteBanner(e, banner.id)}
-                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' }}
+                            {filteredBanners.map((banner, index) => {
+                                const isPendingDelete = deletedBannerIds.includes(banner.id);
+                                return (
+                                    <div key={`${banner.id}-${index}`}
+                                        className={`dp-banner-item ${selectedBanner === banner.id ? 'active' : ''}`}
+                                        onClick={() => { setSelectedBanner(banner.id); setCurrentLabel(banner.label); }}
+                                        onContextMenu={(e) => handleSidebarContextMenu(e, banner.id, banner.label)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            padding: '8px 12px',
+                                            minHeight: '40px',
+                                            borderRadius: '8px',
+                                            background: isPendingDelete ? '#f1f5f9' : undefined,
+                                            border: isPendingDelete ? '1px dashed #cbd5e1' : undefined
+                                        }}
+                                        title={`${banner.label || ''}${banner.id && !banner.isNew ? ` (${banner.id})` : ''}`}
                                     >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                            ))}
+                                        <div className="dp-banner-item-info" style={{ flex: 1, paddingRight: '8px' }}>
+                                            <span className="dp-banner-label" style={{
+                                                display: 'block',
+                                                marginBottom: '1px',
+                                                lineHeight: 1.3,
+                                                fontSize: '12px',
+                                                fontWeight: 700,
+                                                wordBreak: 'break-all',
+                                                textDecoration: isPendingDelete ? 'line-through' : 'none',
+                                                color: 'inherit'
+                                            }}>
+                                                {banner.isNew ? (banner.label || '(새 배너 작성중)') : banner.label}
+                                            </span>
+                                            <span className="dp-banner-sub" style={{ display: 'block', fontSize: '11px', textDecoration: isPendingDelete ? 'line-through' : 'none', color: 'rgb(148, 163, 184)', wordBreak: 'break-all', lineHeight: 1.3 }}>
+                                                {banner.isNew ? '저장 대기' : banner.id}
+                                                {isPendingDelete ? (
+                                                    <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px', textDecoration: 'none' }}>(삭제예정)</span>
+                                                ) : (
+                                                    !banner.isNew && banner.isDirty && (
+                                                        <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px' }}>(수정됨)</span>
+                                                    )
+                                                )}
+                                            </span>
+                                        </div>
+                                        <button className="dp-banner-delete"
+                                            onClick={(e) => handleDeleteBanner(e, banner.id)}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                padding: '4px',
+                                                color: isPendingDelete ? '#16a34a' : undefined
+                                            }}
+                                            title={isPendingDelete ? "삭제 취소 (복원)" : "삭제"}
+                                        >
+                                            {isPendingDelete ? <RotateCcw size={16} /> : <Trash2 size={16} />}
+                                        </button>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

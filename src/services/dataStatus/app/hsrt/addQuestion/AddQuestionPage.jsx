@@ -853,7 +853,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                     }));
 
                 setBanners(compVars);
-                setDeletedIds([]);
+                setDeletedIds(prev => mode === 'fresh' ? [] : prev.filter(id => compVars.some(b => b.id === id)));
                 history.reset(compVars);
 
                 if (compVars.length > 0) {
@@ -1271,18 +1271,17 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                     marginBottom: '1px',
                                                     lineHeight: 1.3,
                                                     fontSize: '12px',
-                                                    fontWeight: isPendingDelete ? 600 : 700,
+                                                    fontWeight: 700,
                                                     wordBreak: 'break-all',
                                                     textDecoration: isPendingDelete ? 'line-through' : 'none',
-                                                    textDecorationColor: isPendingDelete ? '#64748b' : 'currentColor',
-                                                    color: isPendingDelete ? '#64748b' : 'inherit'
+                                                    color: 'inherit'
                                                 }}>
                                                     {banner.id.startsWith('NEW_') ? (banner.label || '(새 문항 작성 중)') : banner.label}
                                                 </span>
-                                                <span className="dp-banner-sub" style={{ display: 'block', fontSize: '11px', textDecoration: isPendingDelete ? 'line-through' : 'none', color: '#94a3b8', wordBreak: 'break-all', lineHeight: 1.3 }}>
+                                                <span className="dp-banner-sub" style={{ display: 'block', fontSize: '11px', textDecoration: isPendingDelete ? 'line-through' : 'none', color: 'rgb(148, 163, 184)', wordBreak: 'break-all', lineHeight: 1.3 }}>
                                                     {banner.id.startsWith('NEW_') ? '저장 대기' : banner.id}
                                                     {isPendingDelete ? (
-                                                        <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px' }}>(삭제 예정)</span>
+                                                        <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px', textDecoration: 'none' }}>(삭제 예정)</span>
                                                     ) : (
                                                         banner.isDirty && <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px' }}>(수정됨)</span>
                                                     )}
