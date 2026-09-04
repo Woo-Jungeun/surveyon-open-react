@@ -219,6 +219,16 @@ export const ResultSectionBlock = ({
         return layoutOptions.find(opt => opt.id === 'ai')?.checked;
     }, [layoutOptions]);
 
+    const isTranspose = useMemo(() => {
+        return Boolean(
+            displayPolicy?.is_transpose ??
+            displayPolicy?.format_is_transpose ??
+            renderSettings?.is_transpose ??
+            renderSettings?.display_policy?.is_transpose ??
+            false
+        );
+    }, [displayPolicy, renderSettings]);
+
     useEffect(() => {
         const fetchChartData = async () => {
             if (!isChartVisible && !isAiVisible) return;
@@ -231,13 +241,14 @@ export const ResultSectionBlock = ({
             try {
                 setIsChartLoading(true);
                 const pageId = sessionStorage.getItem('pageId');
+
                 const payload = {
                     pageid: pageId,
                     user: userId,
                     table: {
                         id: resultData?.table_id || 'T1',
-                        stub,
-                        banner: xInfo
+                        stub: isTranspose ? (xInfo || []) : stub,
+                        banner: isTranspose ? stub : (xInfo || [])
                     },
                     weight_col: weightCol || null,
                     filter_expression: filterExpression || "",
@@ -265,7 +276,7 @@ export const ResultSectionBlock = ({
         };
 
         fetchChartData();
-    }, [isChartVisible, isAiVisible, stub, xInfo, weightCol, filterExpression, userId, resultData?.table_id, displayMode]);
+    }, [isChartVisible, isAiVisible, stub, xInfo, weightCol, filterExpression, userId, resultData?.table_id, displayMode, isTranspose]);
 
     const {
         chartData: fullChartData = [],

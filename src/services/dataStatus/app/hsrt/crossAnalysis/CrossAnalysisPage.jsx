@@ -566,6 +566,17 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
         return list;
     }, [banner.raw?.banner, banner.raw?.config?.banner, banner.raw?.banners, banner.raw?.config?.banners, selectedXInfo, columns, defaultBannerId]);
 
+    const isTranspose = useMemo(() => {
+        return Boolean(
+            uiSettings?.is_transpose ??
+            uiSettings?.display_policy?.is_transpose ??
+            uiSettings?.format_is_transpose ??
+            overviewPayload?.display_policy?.is_transpose ??
+            overviewPayload?.ui_settings?.is_transpose ??
+            false
+        );
+    }, [uiSettings, overviewPayload]);
+
     const [aiSummaryData, setAiSummaryData] = useState(null);
     const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
 
@@ -870,13 +881,14 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
             try {
                 setIsChartLoading(true);
                 const pageId = sessionStorage.getItem('pageId');
+
                 const payload = {
                     pageid: pageId,
                     user: userId,
                     table: {
                         id: banner.id,
-                        stub,
-                        banner: bannerVarList
+                        stub: isTranspose ? bannerVarList : stub,
+                        banner: isTranspose ? stub : bannerVarList
                     },
                     weight_col: uiSettings?.weight_variable || null,
                     filter_expression: filterExpression || ""
@@ -904,7 +916,8 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
         bannerVarList,
         userId,
         uiSettings?.weight_variable,
-        filterExpression
+        filterExpression,
+        isTranspose
     ]);
 
     const availableChartGroups = useMemo(() => {
