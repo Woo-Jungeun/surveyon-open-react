@@ -647,20 +647,17 @@ const MapManagementPage = () => {
                 setSelectedVariableId(null);
                 setSidebarSearchQuery('');
                 setActiveTab(targetTab);
-                if (targetTab === 'mapping') setRefreshKey(prev => prev + 1);
             } else if (action === "saveThenGo") {
                 const success = await executeSave(false);
-                console.log(success) //todo 아직 에러코드 적용 X
+                console.log(success); //todo 아직 에러코드 적용 X
                 //if (success) {
                 setSelectedVariableId(null);
                 setSidebarSearchQuery('');
                 setActiveTab(targetTab);
-                if (targetTab === 'mapping') setRefreshKey(prev => prev + 1);
                 // }
             }
         } else {
             setActiveTab(targetTab);
-            if (targetTab === 'mapping') setRefreshKey(prev => prev + 1);
         }
     };
 
