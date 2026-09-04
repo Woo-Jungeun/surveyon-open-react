@@ -1693,7 +1693,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 effSourceId = null;
             }
 
-            let filterExp = stub.condition || null;
+            const hasStubCondition = stub.condition !== undefined && stub.condition !== null && String(stub.condition).trim() !== '';
+            let filterExp = hasStubCondition ? String(stub.condition).trim() : null;
             let infoArray = undefined;
 
             if (stub.info) {
@@ -1704,7 +1705,9 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     const rowRole = isBase ? 'base' : (isStat ? "stat" : (opt.row_role || "item"));
 
                     if (isBase) {
-                        filterExp = opt.logic || null;
+                        if (!hasStubCondition && opt.logic && String(opt.logic).trim() !== '') {
+                            filterExp = String(opt.logic).trim();
+                        }
                     }
 
                     // ID 보정 (임시 ID 제거 및 rank parent 형식 맞춤)
@@ -1725,6 +1728,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     else if (opt.line === "이중선") mappedLine = "double";
                     else if (opt.line && opt.line !== "선택 안함") mappedLine = opt.line;
 
+                    const rowLogic = isBase ? (filterExp || '') : (opt.logic || '');
+
                     return {
                         ...opt,
                         id: finalId,
@@ -1735,7 +1740,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                         target_var: opt.target_var || null,
                         line: mappedLine,
                         round: opt.round !== undefined && opt.round !== '' ? Number(opt.round) : (isStat ? 2 : null),
-                        logic: opt.logic || '',
+                        logic: rowLogic,
                         value: opt.value !== undefined && opt.value !== null && String(opt.value).trim() !== '' && !isNaN(Number(opt.value)) ? Number(opt.value) : null
                     };
                 });
@@ -2218,10 +2223,12 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                             // 해당 stub의 info 및 rank_outputs 업데이트
                             setStubs(prev => prev.map(s => {
                                 if (s.recoded_var_id === selectedStubForModal?.recoded_var_id) {
+                                    const baseRule = normalizedRules.find(r => r.type === 'base');
                                     return {
                                         ...s,
                                         info: normalizedRules,
                                         sort_mode: sortMode,
+                                        ...(baseRule && baseRule.logic !== undefined ? { condition: baseRule.logic } : {}),
                                         ...(rankOutputs ? { rank_outputs: rankOutputs } : {})
                                     };
                                 }
