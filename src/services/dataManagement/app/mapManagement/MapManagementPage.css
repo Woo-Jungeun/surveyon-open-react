@@ -1948,3 +1948,14 @@ input:checked+.slider:before {
     opacity: 1;
     transform: translateY(0);
 }
+
+/* Map Management Grid Row Drag Indicators (Green) */
+.variable-page-card .cmn_grid table tr.dm-drag-over-top td,
+.cmn_grid table tr.dm-drag-over-top td {
+    border-top: 2px solid #16a34a !important;
+}
+
+.variable-page-card .cmn_grid table tr.dm-drag-over-bottom td,
+.cmn_grid table tr.dm-drag-over-bottom td {
+    border-bottom: 2px solid #16a34a !important;
+}

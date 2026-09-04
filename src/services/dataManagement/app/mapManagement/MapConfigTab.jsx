@@ -100,7 +100,7 @@ const CustomReLabelHeaderCell = (props) => {
 };
 
 const DragCell = (props) => {
-    const { moveVariable, variables } = useContext(MapManagementContext);
+    const { variables } = useContext(MapManagementContext);
     const { dataItem } = props;
     const index = variables.findIndex(v => v.id === dataItem.id);
 
@@ -109,23 +109,9 @@ const DragCell = (props) => {
         e.dataTransfer.effectAllowed = "move";
     };
 
-    const handleDragOver = (e) => {
-        e.preventDefault();
-    };
-
-    const handleDrop = (e) => {
-        e.preventDefault();
-        const fromIndex = parseInt(e.dataTransfer.getData("fromIndex"), 10);
-        if (!isNaN(fromIndex) && fromIndex !== index) {
-            moveVariable(fromIndex, index);
-        }
-    };
-
     return (
         <td
             style={{ ...props.style, textAlign: 'center', verticalAlign: 'middle', cursor: 'grab' }}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
         >
             <div
                 draggable
@@ -798,7 +784,7 @@ const MapConfigTab = ({
     searchQuery,
     setSearchQuery
 }) => {
-    const { variables: ctxVars, setVariables, editingRowId } = useContext(MapManagementContext);
+    const { variables: ctxVars, setVariables, editingRowId, moveVariable } = useContext(MapManagementContext);
 
     React.useLayoutEffect(() => {
         if (window.mapScrollPosToRestore) {
@@ -1074,7 +1060,7 @@ const MapConfigTab = ({
     }, [variables, skip, pageSize, bakedSelectedState, silsaSelectedState]);
 
     const rowRender = useCallback((trElement, props) => {
-        const { dataItem } = props;
+        const { dataItem, dataIndex } = props;
         const isEditing = dataItem.id === editingRowId;
         const isNew = dataItem.isNew;
 
@@ -1088,10 +1074,53 @@ const MapConfigTab = ({
             style: {
                 ...trElement.props.style,
                 borderLeft: isEditing ? '3px solid var(--dm-primary)' : trElement.props.style?.borderLeft,
+            },
+            onDragOver: (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                const rect = e.currentTarget.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+
+                if (y < rect.height / 2) {
+                    e.currentTarget.classList.add("dm-drag-over-top");
+                    e.currentTarget.classList.remove("dm-drag-over-bottom");
+                } else {
+                    e.currentTarget.classList.add("dm-drag-over-bottom");
+                    e.currentTarget.classList.remove("dm-drag-over-top");
+                }
+            },
+            onDragLeave: (e) => {
+                e.currentTarget.classList.remove("dm-drag-over-top");
+                e.currentTarget.classList.remove("dm-drag-over-bottom");
+            },
+            onDrop: (e) => {
+                e.preventDefault();
+                e.currentTarget.classList.remove("dm-drag-over-top");
+                e.currentTarget.classList.remove("dm-drag-over-bottom");
+
+                const fromIndexStr = e.dataTransfer.getData("fromIndex");
+                const fromIndex = parseInt(fromIndexStr, 10);
+                if (!isNaN(fromIndex)) {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const y = e.clientY - rect.top;
+                    let targetIndex = dataIndex;
+
+                    if (y >= rect.height / 2) {
+                        targetIndex += 1;
+                    }
+
+                    if (fromIndex < targetIndex) {
+                        targetIndex -= 1;
+                    }
+
+                    if (fromIndex !== targetIndex) {
+                        moveVariable(fromIndex, targetIndex);
+                    }
+                }
             }
         };
         return React.cloneElement(trElement, { ...trProps }, trElement.props.children);
-    }, [editingRowId]);
+    }, [editingRowId, moveVariable]);
 
     const handlePageChange = useCallback((e) => {
         if (pageChange) {

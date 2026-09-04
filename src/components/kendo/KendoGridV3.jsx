@@ -33,7 +33,8 @@ const KendoGridV3 = (props) => {
         ...rest
     } = props;
 
-    const [draggedItemIndex, setDraggedItemIndex] = useState(null);
+    const dragHandleRef = React.useRef(false);
+    const draggedItemIndexRef = React.useRef(null);
     const [colWidths, setColWidths] = useState({});
 
     const handleColumnResize = (event) => {
@@ -159,14 +160,37 @@ const KendoGridV3 = (props) => {
         const extendedProps = {
             ...trElement.props,
             draggable: true,
+            onMouseDown: (e) => {
+                const target = e.target;
+                const isHandle = Boolean(
+                    (target.classList && target.classList.contains('dp-grid-handle')) ||
+                    (target.closest && target.closest('.dp-grid-handle'))
+                );
+                dragHandleRef.current = isHandle;
+                if (trElement.props.onMouseDown) {
+                    trElement.props.onMouseDown(e);
+                }
+            },
             onDragStart: (e) => {
-                setDraggedItemIndex(index);
+                if (!dragHandleRef.current) {
+                    e.preventDefault();
+                    return;
+                }
+
+                draggedItemIndexRef.current = index;
                 e.dataTransfer.effectAllowed = "move";
                 e.currentTarget.classList.add("dragging");
+                if (trElement.props.onDragStart) {
+                    trElement.props.onDragStart(e);
+                }
             },
             onDragEnd: (e) => {
                 e.currentTarget.classList.remove("dragging");
-                setDraggedItemIndex(null);
+                draggedItemIndexRef.current = null;
+                dragHandleRef.current = false;
+                if (trElement.props.onDragEnd) {
+                    trElement.props.onDragEnd(e);
+                }
             },
             onDragOver: (e) => {
                 e.preventDefault();
@@ -181,17 +205,27 @@ const KendoGridV3 = (props) => {
                     e.currentTarget.classList.add("drag-over-bottom");
                     e.currentTarget.classList.remove("drag-over-top");
                 }
+                if (trElement.props.onDragOver) {
+                    trElement.props.onDragOver(e);
+                }
             },
             onDragLeave: (e) => {
                 e.currentTarget.classList.remove("drag-over-top");
                 e.currentTarget.classList.remove("drag-over-bottom");
+                if (trElement.props.onDragLeave) {
+                    trElement.props.onDragLeave(e);
+                }
             },
             onDrop: (e) => {
                 e.preventDefault();
                 e.currentTarget.classList.remove("drag-over-top");
                 e.currentTarget.classList.remove("drag-over-bottom");
 
-                if (draggedItemIndex !== null) {
+                const fromIndex = draggedItemIndexRef.current;
+                draggedItemIndexRef.current = null;
+                dragHandleRef.current = false;
+
+                if (fromIndex !== null && fromIndex !== undefined) {
                     const rect = e.currentTarget.getBoundingClientRect();
                     const y = e.clientY - rect.top;
                     let targetIndex = index;
@@ -200,13 +234,16 @@ const KendoGridV3 = (props) => {
                         targetIndex += 1;
                     }
 
-                    if (draggedItemIndex < targetIndex) {
+                    if (fromIndex < targetIndex) {
                         targetIndex -= 1;
                     }
 
-                    if (draggedItemIndex !== targetIndex) {
-                        handleReorder(draggedItemIndex, targetIndex);
+                    if (fromIndex !== targetIndex) {
+                        handleReorder(fromIndex, targetIndex);
                     }
+                }
+                if (trElement.props.onDrop) {
+                    trElement.props.onDrop(e);
                 }
             }
         };
@@ -286,9 +323,9 @@ const KendoGridV3 = (props) => {
                             </div>
                         )}
                         cell={(cellProps) => (
-                            <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
+                            <td className="dp-grid-handle" style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle', cursor: 'grab' }}>
                                 {(!isReorderableRow || isReorderableRow(cellProps.dataItem)) ? (
-                                    <div className="dp-grid-handle" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                                         <GripVertical size={16} />
                                     </div>
                                 ) : (
