@@ -1,20 +1,21 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { modalContext } from "@/components/common/Modal.jsx";
 
-const AddLabelPopup = ({ isOpen, onClose, onSave, initialLabels }) => {
+const AddLabelPopup = ({ isOpen, onClose, onSave, initialLabels, targetCount = 1 }) => {
     const [addValueText, setAddValueText] = useState("");
     const modal = useContext(modalContext);
 
     useEffect(() => {
         if (isOpen) {
-            if (initialLabels && initialLabels.length > 0) {
+            // 다중 선택 편집(targetCount > 1)일 때는 빈 입력창으로 시작, 단일 선택 편집일 때는 기존 레이블 불러옴
+            if (targetCount <= 1 && initialLabels && initialLabels.length > 0) {
                 const initText = initialLabels.map(l => `${l.code}. ${l.label}`).join('\n');
                 setAddValueText(initText);
             } else {
                 setAddValueText("");
             }
         }
-    }, [isOpen, initialLabels]);
+    }, [isOpen, initialLabels, targetCount]);
 
     if (!isOpen) return null;
 
@@ -77,14 +78,25 @@ const AddLabelPopup = ({ isOpen, onClose, onSave, initialLabels }) => {
                 <div className="variable-modal-header">
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         <div style={{ width: '4px', height: '18px', backgroundColor: 'var(--dm-primary)', borderRadius: '4px', marginRight: '8px' }}></div>
-                        <h3 className="variable-modal-title">보기 레이블 편집</h3>
+                        <h3 className="variable-modal-title">
+                            {targetCount > 1 ? `보기 레이블 다중 편집 (${targetCount}개 변수)` : '보기 레이블 편집'}
+                        </h3>
                     </div>
                     <button onClick={handleClose} className="variable-modal-close">&times;</button>
                 </div>
                 <div className="variable-modal-body">
-                    <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '10px' }}>
-                        한 줄에 하나의 보기를 입력하세요. (예: 1. 첫번째 보기)<br />
-                        번호 없이 입력하면 자동으로 코드가 부여되며, 기존 내용은 덮어씌워집니다.
+                    <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '10px', lineHeight: '1.4' }}>
+                        {targetCount > 1 ? (
+                            <>
+                                <strong style={{ color: 'var(--dm-primary)' }}>선택한 {targetCount}개 변수</strong>에 동일한 보기 레이블이 일괄 세팅됩니다.<br />
+                                한 줄에 하나의 보기를 입력하세요. (예: 1. 첫번째 보기)
+                            </>
+                        ) : (
+                            <>
+                                한 줄에 하나의 보기를 입력하세요. (예: 1. 첫번째 보기)<br />
+                                번호 없이 입력하면 자동으로 코드가 부여되며, 기존 내용은 덮어씌워집니다.
+                            </>
+                        )}
                     </p>
                     <textarea
                         value={addValueText}

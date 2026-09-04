@@ -39,6 +39,8 @@ const MapManagementPage = () => {
     const [activeTab, setActiveTab] = useState('mapping');    // 'mapping' | 'category'
     const [isDetailed, setIsDetailed] = useState(false);      // 상세 설정 토글
     const [selectedVariableId, setSelectedVariableId] = useState(null); // 보기 레이블 탭에서 선택된 변수 id
+    const [selectedVariableIds, setSelectedVariableIds] = useState([]); // 보기 레이블 탭에서 다중 선택된 변수 id 목록
+    const [modalTargetIds, setModalTargetIds] = useState(null);          // 모달 오픈 시 적용 대상 변수 ID 목록
     const [editingRowId, setEditingRowId] = useState(null);   // 현재 편집 중인 행 id
     const [editingField, setEditingField] = useState(null);   // 현재 편집 진입 시 클릭한 필드명
 
@@ -183,6 +185,8 @@ const MapManagementPage = () => {
         setSidebarSearchQuery('');
         setMappingSearchQuery('');
         setSelectedVariableId(null);
+        setSelectedVariableIds([]);
+        setModalTargetIds(null);
     }, [activeTab]);
 
     // 보기 레이블 탭 진입 시 첫 번째 항목 자동 선택
@@ -227,12 +231,21 @@ const MapManagementPage = () => {
     };
 
     const handleAddValueSave = (newLabels) => {
-        if (!selectedVariableId) return;
+        let targetIds = [];
+        if (modalTargetIds && modalTargetIds.length > 0) {
+            targetIds = modalTargetIds;
+        } else if (selectedVariableIds.length > 0) {
+            targetIds = selectedVariableIds;
+        } else if (selectedVariableId) {
+            targetIds = [selectedVariableId];
+        }
 
-        const newCategoryStr = newLabels.map(l => `{${l.code};${l.label}}`).join('');
+        if (targetIds.length === 0) return;
 
-        setVariables(variables.map(v => {
-            if (v.id !== selectedVariableId) return v;
+        const targetSet = new Set(targetIds);
+
+        setVariables(prev => prev.map(v => {
+            if (!targetSet.has(v.id)) return v;
 
             const existingLabels = v.labels || [];
             const existingLabelsMap = new Map();
@@ -829,6 +842,9 @@ const MapManagementPage = () => {
                             setSidebarSearchQuery={setSidebarSearchQuery}
                             selectedVariableId={selectedVariableId}
                             setSelectedVariableId={setSelectedVariableId}
+                            selectedVariableIds={selectedVariableIds}
+                            setSelectedVariableIds={setSelectedVariableIds}
+                            setModalTargetIds={setModalTargetIds}
                             selectedVariable={selectedVariable}
                             SetEditingCategoryPopupOpen={SetEditingCategoryPopupOpen}
                             setAddValueModalOpen={setAddValueModalOpen}
@@ -866,9 +882,13 @@ const MapManagementPage = () => {
                 {/* 레이블 팝업 (textarea) */}
                 <AddLabelPopup
                     isOpen={addValueModalOpen}
-                    onClose={() => setAddValueModalOpen(false)}
+                    onClose={() => {
+                        setAddValueModalOpen(false);
+                        setModalTargetIds(null);
+                    }}
                     onSave={handleAddValueSave}
                     initialLabels={selectedVariable?.labels}
+                    targetCount={modalTargetIds ? modalTargetIds.length : (selectedVariableIds.length > 0 ? selectedVariableIds.length : (selectedVariableId ? 1 : 0))}
                 />
 
                 {/* 다운로드 모달 */}
