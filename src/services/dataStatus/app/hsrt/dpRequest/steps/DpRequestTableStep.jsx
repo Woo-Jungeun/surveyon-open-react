@@ -470,6 +470,26 @@ const MultiSelectHeaderCell = (props) => {
 // React 상태(useState) 렌더링으로 인한 표(Grid) 전체 렉(Lag) 현상을 방지하기 위해,
 // 순수 자바스크립트 전역 변수와 DOM 직접 제어(classList)를 활용해 60fps의 부드러운 드래그를 구현합니다.
 // ============================================================================
+let activeStubDropdownCloseFn = null;
+
+const closeAllOpenStubDropdowns = () => {
+    if (activeStubDropdownCloseFn) {
+        try {
+            activeStubDropdownCloseFn();
+        } catch (e) {}
+        activeStubDropdownCloseFn = null;
+    }
+};
+
+const registerActiveStubDropdown = (closeFn) => {
+    if (activeStubDropdownCloseFn && activeStubDropdownCloseFn !== closeFn) {
+        try {
+            activeStubDropdownCloseFn();
+        } catch (e) {}
+    }
+    activeStubDropdownCloseFn = closeFn;
+};
+
 let isDraggingStubGrid = false;           // 현재 마우스를 클릭한 채로 드래그(Drag) 중인지 여부
 let stubDragStartId = null;               // 드래그를 처음 시작한 최초 셀의 행(Row) ID
 let stubDragLastEnteredId = null;         // 드래그 도중, 가장 마지막에 마우스가 도착한 셀의 행 ID
@@ -518,17 +538,29 @@ const handleGlobalPointerDownStub = (e) => {
     }
 };
 
+const handleGlobalScrollStub = (e) => {
+    if (e.target && (
+        (e.target.classList && e.target.classList.contains('k-list-scroller')) ||
+        (e.target.closest && e.target.closest('.dp-custom-popup'))
+    )) {
+        return;
+    }
+    closeAllOpenStubDropdowns();
+};
+
 if (typeof window !== 'undefined') {
     // 중복 등록 방지를 위해 기존 것 제거
     window.removeEventListener('mouseup', handleGlobalPointerUpStub);
     window.removeEventListener('pointerup', handleGlobalPointerUpStub);
     window.removeEventListener('mousedown', handleGlobalPointerDownStub);
     window.removeEventListener('pointerdown', handleGlobalPointerDownStub);
+    window.removeEventListener('scroll', handleGlobalScrollStub, true);
 
     window.addEventListener('mouseup', handleGlobalPointerUpStub);
     window.addEventListener('pointerup', handleGlobalPointerUpStub);
     window.addEventListener('mousedown', handleGlobalPointerDownStub);
     window.addEventListener('pointerdown', handleGlobalPointerDownStub);
+    window.addEventListener('scroll', handleGlobalScrollStub, true);
 }
 
 const STUB_INLINE_STYLE = `
@@ -539,6 +571,20 @@ const STUB_INLINE_STYLE = `
 .dp-mini-dropdown-popup .k-list-optionlabel {
     font-size: 12px !important;
     min-height: 24px !important;
+}
+.dp-mini-dropdown-popup.k-popup,
+.dp-custom-popup.k-popup {
+    animation: dpFadeIn 0.12s cubic-bezier(0, 0, 0.2, 1) !important;
+}
+@keyframes dpFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 .dp-custom-popup {
     border-radius: 8px !important;
@@ -561,11 +607,14 @@ const STUB_INLINE_STYLE = `
 }
 .dp-custom-list-item {
     font-size: 12px !important;
-    padding: 4px 12px !important;
+    padding: 6px 12px !important;
     min-height: 24px !important;
     display: flex !important;
     align-items: center !important;
     cursor: pointer !important;
+    white-space: normal !important;
+    word-break: break-all !important;
+    line-height: 1.4 !important;
 }
 .dp-custom-list-item:hover {
     background-color: #f1f5f9 !important;
@@ -613,7 +662,10 @@ const handleStubPointerDownCapture = (e, rowId, field) => {
         return;
     }
 
-    // 2. [캡처 차단]
+    // 2. [열려있는 다른 스터브 드롭다운 강제 닫기]
+    closeAllOpenStubDropdowns();
+
+    // 3. [캡처 차단]
     if (e.ctrlKey || e.metaKey || e.shiftKey) {
         e.stopPropagation();
     }
@@ -737,6 +789,10 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
     const anchor = useRef(null);
     const latestSelectedRef = useRef(selected);
 
+    const closeSelf = useCallback(() => {
+        setShow(false);
+    }, []);
+
     // Sync from parent if changed externally while closed
     useEffect(() => {
         if (!show) {
@@ -758,27 +814,47 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
     // Flush changes to parent
     const handleClose = useCallback(() => {
         setShow(false);
+        if (activeStubDropdownCloseFn === closeSelf) {
+            activeStubDropdownCloseFn = null;
+        }
         const currentStr = latestSelectedRef.current.join(',');
         const originalStr = getParsedValues(selectedValues).join(',');
         if (currentStr !== originalStr) {
             onUpdate(dataItem, 'stat_summary', currentStr);
         }
-    }, [selectedValues, getParsedValues, dataItem, onUpdate]);
+    }, [selectedValues, getParsedValues, dataItem, onUpdate, closeSelf]);
 
-    // 팝업 외부 클릭 시 닫기
+    const handleOpen = useCallback(() => {
+        closeAllOpenStubDropdowns();
+        registerActiveStubDropdown(closeSelf);
+        setShow(true);
+    }, [closeSelf]);
+
+    // 팝업 외부 클릭 및 스크롤 시 닫기
     useEffect(() => {
         if (!show) return;
         const handleClickOutside = (e) => {
-            if (e.target.closest('.k-popup')) return;
+            if (e.target.closest('.k-popup') || e.target.closest('.dp-custom-popup')) return;
             if (anchor.current && !anchor.current.contains(e.target)) {
                 handleClose();
             }
         };
+        const handleScroll = (e) => {
+            if (e.target && (
+                (e.target.classList && e.target.classList.contains('k-list-scroller')) ||
+                (e.target.closest && e.target.closest('.dp-custom-popup'))
+            )) {
+                return;
+            }
+            handleClose();
+        };
         document.addEventListener('mousedown', handleClickOutside, true);
         document.addEventListener('pointerdown', handleClickOutside, true);
+        window.addEventListener('scroll', handleScroll, true);
         return () => {
             document.removeEventListener('mousedown', handleClickOutside, true);
             document.removeEventListener('pointerdown', handleClickOutside, true);
+            window.removeEventListener('scroll', handleScroll, true);
         };
     }, [show, handleClose]);
 
@@ -804,22 +880,25 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
             <div
                 ref={anchor}
                 className={`dp-mini-dropdown k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid ${show ? 'k-focus' : ''}`}
-                style={{ width: '100%', height: '22px', cursor: 'pointer', display: 'flex' }}
+                style={{ width: '100%', height: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', paddingRight: '2px' }}
                 onClick={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     if (show) handleClose();
-                    else setShow(true);
+                    else handleOpen();
                 }}
             >
-                <div className="k-input-inner" style={{ flex: 1, padding: '0 8px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', overflow: 'hidden' }}>
+                <div className="k-input-inner" style={{ flex: 1, padding: '0 4px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', overflow: 'hidden' }}>
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', width: '100%', textAlign: 'left' }}>
                         {displayText}
                     </span>
                 </div>
-                <button className="k-select k-input-button k-button k-icon-button" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', paddingRight: '2px', flexShrink: 0, pointerEvents: 'none' }}>
+                    <ChevronDown size={14} color="#2563eb" />
+                </span>
             </div>
             {show && (
-                <Popup anchor={anchor.current} show={show} popupClass="k-list-container k-popup k-group k-reset dp-custom-popup" style={{ minWidth: anchor.current?.offsetWidth, marginTop: '4px' }}>
+                <Popup anchor={anchor.current} show={show} animate={false} popupClass="k-list-container k-popup k-group k-reset dp-custom-popup" style={{ minWidth: anchor.current?.offsetWidth, marginTop: '4px', zIndex: 100000 }}>
                     <div className="k-list-scroller" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                         <ul className="k-list k-reset">
                             {STAT_OPTIONS.map(itemData => {
@@ -869,8 +948,7 @@ const getQuestionTypeInfo = (type) => {
     return { color, displayType };
 };
 
-// const VAR_TYPE_OPTIONS = ['single', 'multi', 'rank', 'minrank', 'maxrank', 'scale', 'dummy', 'custom', 'open(문자)', 'open(숫자)'];
-const VAR_TYPE_OPTIONS = ['single', 'multi', 'rank', /* 'minrank', 'maxrank', */ 'scale', /* 'dummy', 'custom', */ 'open(문자)', 'open(숫자)'];
+const VAR_TYPE_OPTIONS = ['single', 'multi', 'rank', 'scale', 'open(문자)', 'open(숫자)'];
 
 const canUseScalePreset = (type) => {
     const t = String(type || '').toLowerCase();
@@ -905,33 +983,71 @@ const DISABLED_CELL_STYLE = {
     userSelect: 'none'
 };
 
-// --- 공통 컴포넌트: 프리셋 드롭다운 셀 (단일 선택 Kendo DropDownList) ---
+// --- 공통 컴포넌트: 프리셋 드롭다운 셀 ---
 const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) => {
+    const [show, setShow] = useState(false);
+    const anchor = useRef(null);
     const val = dataItem[field];
 
+    const closeSelf = useCallback(() => {
+        setShow(false);
+    }, []);
+
+    const handleOpen = useCallback(() => {
+        closeAllOpenStubDropdowns();
+        registerActiveStubDropdown(closeSelf);
+        setShow(true);
+    }, [closeSelf]);
+
+    const handleClose = useCallback(() => {
+        setShow(false);
+        if (activeStubDropdownCloseFn === closeSelf) {
+            activeStubDropdownCloseFn = null;
+        }
+    }, [closeSelf]);
+
+    // 팝업 외부 클릭 및 스크롤 시 닫기
+    useEffect(() => {
+        if (!show) return;
+        const handleClickOutside = (e) => {
+            if (e.target.closest('.k-popup') || e.target.closest('.dp-custom-popup')) return;
+            if (anchor.current && !anchor.current.contains(e.target)) {
+                handleClose();
+            }
+        };
+        const handleScroll = (e) => {
+            if (e.target && (
+                (e.target.classList && e.target.classList.contains('k-list-scroller')) ||
+                (e.target.closest && e.target.closest('.dp-custom-popup'))
+            )) {
+                return;
+            }
+            handleClose();
+        };
+        document.addEventListener('mousedown', handleClickOutside, true);
+        document.addEventListener('pointerdown', handleClickOutside, true);
+        window.addEventListener('scroll', handleScroll, true);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside, true);
+            document.removeEventListener('pointerdown', handleClickOutside, true);
+            window.removeEventListener('scroll', handleScroll, true);
+        };
+    }, [show, handleClose]);
+
     const options = useMemo(() => {
-        if (!presets) return [];
-        return presets.map(p => {
-            const text = typeof p === 'object' ? (p.label || p.name || p.id || 'Unknown') : p;
-            const id = typeof p === 'object' ? (p.id || p.value || text) : p;
-            return { text: String(text), id: String(id) };
-        });
+        const list = [{ text: "미설정", id: "" }];
+        if (presets && Array.isArray(presets)) {
+            presets.forEach(p => {
+                const text = typeof p === 'object' ? (p.label || p.name || p.id || 'Unknown') : p;
+                const id = typeof p === 'object' ? (p.id || p.value || text) : p;
+                list.push({ text: String(text), id: String(id) });
+            });
+        }
+        return list;
     }, [presets]);
 
-    const valueItem = options.find(o => o.id === String(val) || o.text === String(val)) || null;
-
-    const isEmpty = !valueItem || !valueItem.id;
-
-    const valueRender = (element, value) => {
-        if (!value || !value.id) {
-            return <span style={{ color: '#94a3b8', fontSize: '13px' }}></span>;
-        }
-        return React.cloneElement(element, { ...element.props }, <span style={{ fontSize: '13px', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>{value.text}</span>);
-    };
-
-    const itemRender = (li, itemProps) => {
-        return React.cloneElement(li, li.props, <span style={{ fontSize: '12px' }}>{itemProps.dataItem.text}</span>);
-    };
+    const selectedItem = options.find(o => o.id === String(val) || o.text === String(val)) || options[0];
+    const displayText = selectedItem && selectedItem.id ? selectedItem.text : '';
 
     const SELECTABLE_FIELDS = ['x_info', 'group_preset_name', 'scale_preset_name', 'rank_preset_name'];
     const isSelectable = SELECTABLE_FIELDS.includes(field);
@@ -944,28 +1060,65 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
             onPointerEnter={isSelectable ? e => handleStubPointerEnter(e, dataItem.source_var_id, field) : undefined}
             onMouseDownCapture={isSelectable ? preventCtrlEvent : undefined}
             onClickCapture={isSelectable ? preventCtrlEvent : undefined}
-            onMouseDown={isSelectable ? e => e.stopPropagation() : undefined}
+            onMouseDown={isSelectable ? e => { if (e.ctrlKey || e.metaKey || e.shiftKey) e.stopPropagation(); } : undefined}
             draggable={isSelectable ? true : undefined}
             onDragStart={isSelectable ? e => { e.stopPropagation(); e.preventDefault(); } : undefined}
             className={isSelectable ? getStubDragClasses(dataItem.source_var_id) : ''}
             style={{ padding: '1px 4px', verticalAlign: 'middle', userSelect: 'none' }}
         >
-            <DropDownList
-                className="k-dropdown-solid dp-mini-dropdown"
-                popupSettings={{ className: "dp-mini-dropdown-popup" }}
-                data={options}
-                textField="text"
-                dataItemKey="id"
-                value={valueItem}
-                onChange={(e) => {
-                    const selectedId = e.value ? e.value.id : '';
-                    onChange(dataItem, field, selectedId);
+            <div
+                ref={anchor}
+                className={`dp-mini-dropdown k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid ${show ? 'k-focus' : ''}`}
+                style={{ width: '100%', height: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', paddingRight: '2px' }}
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (show) handleClose();
+                    else handleOpen();
                 }}
-                defaultItem={{ text: "미설정", id: "" }}
-                valueRender={valueRender}
-                itemRender={itemRender}
-                style={{ width: '100%', height: '22px', fontSize: '13px' }}
-            />
+            >
+                <div className="k-input-inner" style={{ flex: 1, padding: '0 4px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', overflow: 'hidden' }}>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', width: '100%', textAlign: 'left', fontSize: '13px', color: displayText ? '#1e293b' : '#94a3b8' }}>
+                        {displayText}
+                    </span>
+                </div>
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', paddingRight: '2px', flexShrink: 0, pointerEvents: 'none' }}>
+                    <ChevronDown size={14} color="#2563eb" />
+                </span>
+            </div>
+            {show && (
+                <Popup anchor={anchor.current} show={show} animate={false} popupClass="k-list-container k-popup k-group k-reset dp-custom-popup" style={{ minWidth: Math.max(anchor.current?.offsetWidth || 0, 160), maxWidth: '260px', marginTop: '4px', zIndex: 100000 }}>
+                    <div className="k-list-scroller" style={{ maxHeight: '220px', overflowY: 'auto' }}>
+                        <ul className="k-list k-reset">
+                            {options.map(item => {
+                                const isSelected = String(item.id) === String(selectedItem.id);
+                                return (
+                                    <li
+                                        key={item.id}
+                                        className={`k-list-item dp-custom-list-item ${isSelected ? 'k-selected' : ''}`}
+                                        style={{
+                                            backgroundColor: isSelected ? '#eff6ff' : 'transparent',
+                                            fontWeight: isSelected ? 600 : 400,
+                                            color: isSelected ? '#2563eb' : '#1e293b',
+                                            whiteSpace: 'normal',
+                                            wordBreak: 'break-all',
+                                            lineHeight: 1.4,
+                                            padding: '6px 10px'
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onChange(dataItem, field, item.id);
+                                            handleClose();
+                                        }}
+                                    >
+                                        <span style={{ fontSize: '12px', whiteSpace: 'normal', wordBreak: 'break-all', display: 'block', width: '100%' }}>{item.text}</span>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                </Popup>
+            )}
         </td>
     );
 });
@@ -1067,23 +1220,54 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', pl
 
 // --- 유형 선택 드롭다운 셀 (Kendo DropDownList 연동) ---
 const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
+    const [show, setShow] = useState(false);
+    const anchor = useRef(null);
     const val = dataItem.var_type || '';
     const isNew = String(dataItem.source_var_id).startsWith('new_');
 
-    const handleChange = (e) => {
-        onUpdate(dataItem, 'var_type', e.value);
-    };
+    const closeSelf = useCallback(() => {
+        setShow(false);
+    }, []);
 
-    const valueRender = (element, value) => {
-        if (!value) {
-            return <span style={{ color: '#94a3b8', fontSize: '13px' }}></span>;
+    const handleOpen = useCallback(() => {
+        closeAllOpenStubDropdowns();
+        registerActiveStubDropdown(closeSelf);
+        setShow(true);
+    }, [closeSelf]);
+
+    const handleClose = useCallback(() => {
+        setShow(false);
+        if (activeStubDropdownCloseFn === closeSelf) {
+            activeStubDropdownCloseFn = null;
         }
-        return React.cloneElement(element, { ...element.props }, <span style={{ fontSize: '13px', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>{value}</span>);
-    };
+    }, [closeSelf]);
 
-    const itemRender = (li, itemProps) => {
-        return React.cloneElement(li, li.props, <span style={{ fontSize: '12px' }}>{itemProps.dataItem}</span>);
-    };
+    useEffect(() => {
+        if (!show) return;
+        const handleClickOutside = (e) => {
+            if (e.target.closest('.k-popup') || e.target.closest('.dp-custom-popup')) return;
+            if (anchor.current && !anchor.current.contains(e.target)) {
+                handleClose();
+            }
+        };
+        const handleScroll = (e) => {
+            if (e.target && (
+                (e.target.classList && e.target.classList.contains('k-list-scroller')) ||
+                (e.target.closest && e.target.closest('.dp-custom-popup'))
+            )) {
+                return;
+            }
+            handleClose();
+        };
+        document.addEventListener('mousedown', handleClickOutside, true);
+        document.addEventListener('pointerdown', handleClickOutside, true);
+        window.addEventListener('scroll', handleScroll, true);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside, true);
+            document.removeEventListener('pointerdown', handleClickOutside, true);
+            window.removeEventListener('scroll', handleScroll, true);
+        };
+    }, [show, handleClose]);
 
     if (isNew) {
         return (
@@ -1092,16 +1276,55 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
                 data-row-id={dataItem.source_var_id}
                 style={{ padding: '1px 4px', verticalAlign: 'middle', userSelect: 'none' }}
             >
-                <DropDownList
-                    className="k-dropdown-solid dp-mini-dropdown"
-                    popupSettings={{ className: "dp-mini-dropdown-popup" }}
-                    data={VAR_TYPE_OPTIONS}
-                    value={val}
-                    onChange={handleChange}
-                    itemRender={itemRender}
-                    valueRender={valueRender}
-                    style={{ width: '100%', height: '22px', fontSize: '13px' }}
-                />
+                <div
+                    ref={anchor}
+                    className={`dp-mini-dropdown k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid ${show ? 'k-focus' : ''}`}
+                    style={{ width: '100%', height: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', paddingRight: '2px' }}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (show) handleClose();
+                        else handleOpen();
+                    }}
+                >
+                    <div className="k-input-inner" style={{ flex: 1, padding: '0 4px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', overflow: 'hidden' }}>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', width: '100%', textAlign: 'left', fontSize: '13px', color: '#1e293b' }}>
+                            {val}
+                        </span>
+                    </div>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', paddingRight: '2px', flexShrink: 0, pointerEvents: 'none' }}>
+                        <ChevronDown size={14} color="#2563eb" />
+                    </span>
+                </div>
+                {show && (
+                    <Popup anchor={anchor.current} show={show} animate={false} popupClass="k-list-container k-popup k-group k-reset dp-custom-popup" style={{ minWidth: anchor.current?.offsetWidth, marginTop: '4px', zIndex: 100000 }}>
+                        <div className="k-list-scroller" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                            <ul className="k-list k-reset">
+                                {VAR_TYPE_OPTIONS.map(opt => {
+                                    const isSelected = opt === val;
+                                    return (
+                                        <li
+                                            key={opt}
+                                            className={`k-list-item dp-custom-list-item ${isSelected ? 'k-selected' : ''}`}
+                                            style={{
+                                                backgroundColor: isSelected ? '#eff6ff' : 'transparent',
+                                                fontWeight: isSelected ? 600 : 400,
+                                                color: isSelected ? '#2563eb' : '#1e293b'
+                                            }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onUpdate(dataItem, 'var_type', opt);
+                                                handleClose();
+                                            }}
+                                        >
+                                            <span style={{ fontSize: '12px' }}>{opt}</span>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
+                    </Popup>
+                )}
             </td>
         );
     }
