@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
-import { ChevronDown, Check, Search, X, Info, RotateCcw, ArrowDown } from 'lucide-react';
+import { ChevronDown, Check, Search, X, Info, RotateCcw, ArrowDown, ArrowUp } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { Popup } from '@progress/kendo-react-popup';
 import { DropDownList, MultiSelect } from '@progress/kendo-react-dropdowns';
@@ -406,10 +406,61 @@ const ConditionHeaderCell = (props) => {
             <div
                 onClick={handleOpenHelp}
                 style={{ cursor: 'pointer', display: 'flex' }}
-                title="클락하여 도움말 새창으로 열기"
+                title="클릭하여 도움말 새창으로 열기"
             >
                 <Info size={14} color="#94a3b8" />
             </div>
+        </div>
+    );
+};
+
+const MultiSelectHeaderCell = (props) => {
+    const [isHovered, setIsHovered] = useState(false);
+    const anchorRef = useRef(null);
+
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', width: '100%', height: '100%' }}>
+            <span>{props.title}</span>
+            <div
+                ref={anchorRef}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
+            >
+                <Info size={13} color={isHovered ? "#2563eb" : "#94a3b8"} style={{ transition: 'color 0.15s' }} />
+            </div>
+            {isHovered && anchorRef.current && (
+                <Popup
+                    anchor={anchorRef.current}
+                    show={true}
+                    popupClass="dp-tooltip-clean-popup"
+                    animate={false}
+                >
+                    <div style={{
+                        width: '210px',
+                        padding: '14px 16px',
+                        background: '#ffffff',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '10px',
+                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                        zIndex: 99999,
+                        pointerEvents: 'none',
+                        marginTop: '6px',
+                        textAlign: 'left',
+                        whiteSpace: 'nowrap'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
+                            <span>💡</span>
+                            <span>다중 선택 팁</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', color: '#334155', fontWeight: 500, lineHeight: 1.4 }}>
+                            <div>• <b>Shift + 클릭</b>: 연속 범위 선택</div>
+                            <div>• <b>Ctrl + 클릭</b>: 개별 추가 / 해제</div>
+                            <div>• <b>마우스 드래그</b>: 연속 범위 선택</div>
+                        </div>
+                    </div>
+                </Popup>
+            )}
         </div>
     );
 };
@@ -422,10 +473,13 @@ const ConditionHeaderCell = (props) => {
 let isDraggingStubGrid = false;           // 현재 마우스를 클릭한 채로 드래그(Drag) 중인지 여부
 let stubDragStartId = null;               // 드래그를 처음 시작한 최초 셀의 행(Row) ID
 let stubDragLastEnteredId = null;         // 드래그 도중, 가장 마지막에 마우스가 도착한 셀의 행 ID
-let stubDragLastEnteredField = null;      // 현재 조작 중인 컬럼(Field) 이름 (예: var_type, x_info 등)
+let stubDragLastEnteredField = null;      // 현재 조작 중인 컬럼(Field) 이름 (예: x_info, sort_mode 등)
 let stubDragHasMoved = false;             // 단순 0.1초 클릭이 아니라, '실제로 다른 셀로 마우스가 이동'했는지 판별
 const stubDragSelectedIds = new Set();    // 현재 하늘색으로 강조(하이라이트)된 모든 행 ID 보관
 let stubDragBaseSelectedIds = new Set();  // Ctrl 키를 누르고 추가 다중 선택 시, 기존에 이미 선택된 영역을 날리지 않고 보존하는 징검다리 셋
+let stubDragLastClickedId = null;         // Shift+클릭 시 범위 선택의 기준점이 되는 마지막 클릭 행 ID
+
+const TARGET_DRAG_FIELDS = ['x_info', 'sort_mode', 'group_preset_name', 'stat_summary', 'scale_preset_name', 'rank_preset_name'];
 
 // 마우스를 뗐을 때 (드래그 종료) 처리하는 전역 이벤트
 const handleGlobalPointerUpStub = (e) => {
@@ -453,9 +507,9 @@ const handleGlobalPointerDownStub = (e) => {
         const isPopup = e.target.closest('.k-popup') || e.target.closest('.k-list-container') || e.target.closest('.k-animation-container') || e.target.closest('.dp-dropdown-popup') || e.target.closest('.dp-custom-popup');
         if (isPopup) return;
 
-        const isDragCell = e.target.closest('td[data-field="x_info"]') || e.target.closest('td[data-field="sort_mode"]');
+        const isDragCell = TARGET_DRAG_FIELDS.some(f => e.target.closest(`td[data-field="${f}"]`));
 
-        if (!isDragCell && !e.ctrlKey && !e.metaKey) {
+        if (!isDragCell && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
             stubDragSelectedIds.clear();
             stubDragBaseSelectedIds.clear();
             stubDragStartId = null;
@@ -491,6 +545,19 @@ const STUB_INLINE_STYLE = `
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1) !important;
     padding: 4px 0 !important;
     border: 1px solid var(--primary-color, #4f46e5) !important;
+}
+.dp-tooltip-clean-popup,
+.dp-tooltip-clean-popup.k-animation-container,
+.dp-tooltip-clean-popup .k-popup,
+.dp-tooltip-clean-popup.k-popup,
+.dp-tooltip-clean-popup .k-child-animation-container {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    animation: none !important;
+    transition: none !important;
 }
 .dp-custom-list-item {
     font-size: 12px !important;
@@ -533,7 +600,7 @@ if (typeof document !== 'undefined') {
 // 자식 요소(Kendo DropdownList 등)가 클릭 이벤트를 받아 팝업을 여는 것을 막기 위한 캡처 핸들러
 // td 래퍼에 부착되어 이벤트가 아래로(자식으로) 내려가기 전(Capture Phase)에 미리 낚아챕니다.
 const preventCtrlEvent = (e) => {
-    if (e.ctrlKey || e.metaKey) {
+    if (e.ctrlKey || e.metaKey || e.shiftKey) {
         e.stopPropagation(); // 이벤트를 낚아채서 소멸시킴 (자식은 클릭이 된지 모름)
         e.preventDefault();
     }
@@ -542,15 +609,12 @@ const preventCtrlEvent = (e) => {
 // 마우스를 클릭했을 때 (Capture 단계에서 수신)
 const handleStubPointerDownCapture = (e, rowId, field) => {
     // 1. [포탈 버블링 방어] 
-    // Kendo 드롭다운 팝업 리스트는 React Portal을 사용해 document.body 끝에 렌더링되지만, 
-    // 이벤트는 React 트리를 따라 td까지 거슬러 올라옵니다. 이 경우를 무시합니다.
-    if (e.target && (e.target.closest('.k-popup') || e.target.closest('.k-list-container') || e.target.closest('.k-animation-container') || e.target.closest('.dp-dropdown-popup'))) {
+    if (e.target && (e.target.closest('.k-popup') || e.target.closest('.k-list-container') || e.target.closest('.k-animation-container') || e.target.closest('.dp-dropdown-popup') || e.target.closest('.dp-custom-popup'))) {
         return;
     }
 
     // 2. [캡처 차단]
-    // 사용자가 Ctrl 클릭 시 단순 다중 선택만 하고 싶어 하므로, 드롭다운이 열리지 않게 자식으로 전파를 끊어냅니다.
-    if (e.ctrlKey || e.metaKey) {
+    if (e.ctrlKey || e.metaKey || e.shiftKey) {
         e.stopPropagation();
     }
 
@@ -561,6 +625,34 @@ const handleStubPointerDownCapture = (e, rowId, field) => {
     stubDragLastEnteredId = idStr;
     stubDragLastEnteredField = field;
     stubDragHasMoved = false;
+
+    const cells = Array.from(document.querySelectorAll(`td[data-field="${field}"]`));
+
+    // Shift + 클릭 범위 선택
+    if (e.shiftKey && stubDragLastClickedId) {
+        const startIdx = cells.findIndex(c => c.getAttribute('data-row-id') === String(stubDragLastClickedId));
+        const currentIdx = cells.findIndex(c => c.getAttribute('data-row-id') === idStr);
+        if (startIdx !== -1 && currentIdx !== -1) {
+            const min = Math.min(startIdx, currentIdx);
+            const max = Math.max(startIdx, currentIdx);
+
+            if (!e.ctrlKey && !e.metaKey) {
+                stubDragSelectedIds.clear();
+                document.querySelectorAll('.stub-cell-selected').forEach(el => el.classList.remove('stub-cell-selected'));
+            }
+
+            for (let i = min; i <= max; i++) {
+                const targetCell = cells[i];
+                if (targetCell) {
+                    targetCell.classList.add('stub-cell-selected');
+                    const rId = targetCell.getAttribute('data-row-id');
+                    if (rId) stubDragSelectedIds.add(rId);
+                }
+            }
+            stubDragBaseSelectedIds = new Set(stubDragSelectedIds);
+            return;
+        }
+    }
 
     // 4. 단일 / 다중 선택 로직 분기
     const isMultiSelect = e.ctrlKey || e.metaKey;
@@ -583,6 +675,7 @@ const handleStubPointerDownCapture = (e, rowId, field) => {
     stubDragBaseSelectedIds = new Set(stubDragSelectedIds);
     stubDragSelectedIds.add(idStr);
     e.currentTarget.classList.add('stub-cell-selected');
+    stubDragLastClickedId = idStr;
 };
 
 // 마우스가 눌린 상태로 다른 셀을 훑고 지나갈 때 (드래그 다중 범위 선택)
@@ -698,6 +791,14 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
         <td
             data-field="stat_summary"
             data-row-id={dataItem.source_var_id}
+            onPointerDownCapture={e => handleStubPointerDownCapture(e, dataItem.source_var_id, 'stat_summary')}
+            onPointerEnter={e => handleStubPointerEnter(e, dataItem.source_var_id, 'stat_summary')}
+            onMouseDownCapture={preventCtrlEvent}
+            onClickCapture={preventCtrlEvent}
+            onMouseDown={e => e.stopPropagation()}
+            draggable={true}
+            onDragStart={e => { e.stopPropagation(); e.preventDefault(); }}
+            className={getStubDragClasses(dataItem.source_var_id)}
             style={{ padding: '1px 4px', verticalAlign: 'middle', userSelect: 'none' }}
         >
             <div
@@ -832,18 +933,21 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
         return React.cloneElement(li, li.props, <span style={{ fontSize: '12px' }}>{itemProps.dataItem.text}</span>);
     };
 
+    const SELECTABLE_FIELDS = ['x_info', 'group_preset_name', 'scale_preset_name', 'rank_preset_name'];
+    const isSelectable = SELECTABLE_FIELDS.includes(field);
+
     return (
         <td
             data-field={field}
             data-row-id={dataItem.source_var_id}
-            onPointerDownCapture={field === 'x_info' ? e => handleStubPointerDownCapture(e, dataItem.source_var_id, field) : undefined}
-            onPointerEnter={field === 'x_info' ? e => handleStubPointerEnter(e, dataItem.source_var_id, field) : undefined}
-            onMouseDownCapture={field === 'x_info' ? preventCtrlEvent : undefined}
-            onClickCapture={field === 'x_info' ? preventCtrlEvent : undefined}
-            onMouseDown={field === 'x_info' ? e => e.stopPropagation() : undefined}
-            draggable={field === 'x_info' ? true : undefined}
-            onDragStart={field === 'x_info' ? e => { e.stopPropagation(); e.preventDefault(); } : undefined}
-            className={field === 'x_info' ? getStubDragClasses(dataItem.source_var_id) : ''}
+            onPointerDownCapture={isSelectable ? e => handleStubPointerDownCapture(e, dataItem.source_var_id, field) : undefined}
+            onPointerEnter={isSelectable ? e => handleStubPointerEnter(e, dataItem.source_var_id, field) : undefined}
+            onMouseDownCapture={isSelectable ? preventCtrlEvent : undefined}
+            onClickCapture={isSelectable ? preventCtrlEvent : undefined}
+            onMouseDown={isSelectable ? e => e.stopPropagation() : undefined}
+            draggable={isSelectable ? true : undefined}
+            onDragStart={isSelectable ? e => { e.stopPropagation(); e.preventDefault(); } : undefined}
+            className={isSelectable ? getStubDragClasses(dataItem.source_var_id) : ''}
             style={{ padding: '1px 4px', verticalAlign: 'middle', userSelect: 'none' }}
         >
             <DropDownList
@@ -1454,6 +1558,11 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         if (stubDragSelectedIds.size > 1 && stubDragSelectedIds.has(String(item.source_var_id))) {
             setStubs(prev => prev.map(s => {
                 if (stubDragSelectedIds.has(String(s.source_var_id))) {
+                    if (field === 'group_preset_name' && !canUseGroupPreset(s.var_type)) return s;
+                    if (field === 'stat_summary' && !canUseStatPreset(s.var_type)) return s;
+                    if (field === 'scale_preset_name' && !canUseScalePreset(s.var_type)) return s;
+                    if (field === 'rank_preset_name' && !canUseRankPreset(s.var_type)) return s;
+
                     let updated = { ...s };
                     if (field !== 'recoded_var_id') {
                         if (updated[field] !== value) {
@@ -2069,10 +2178,10 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                 <Column field="recoded_var_id" title="변수" width="115px" headerClassName="k-text-center"
                                     cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" onUpdate={handleCellUpdate} placeholder="" />}
                                 />
-                                <Column field="var_label" title="라벨" width="200px" headerClassName="k-text-center"
+                                <Column field="var_label" title="라벨" width="210px" headerClassName="k-text-center"
                                     cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} />}
                                 />
-                                <Column title="상세 설정" width="65px" headerClassName="k-text-center"
+                                <Column title="상세 설정" width="60px" headerClassName="k-text-center"
                                     cell={(p) => (
                                         <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '0 4px' }}>
                                             <button
@@ -2097,7 +2206,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                         </td>
                                     )}
                                 />
-                                <Column field="sort_mode" title="정렬" width="40px" headerClassName="k-text-center"
+                                <Column field="sort_mode" title="정렬" width="45px" headerClassName="k-text-center"
+                                    headerCell={MultiSelectHeaderCell}
                                     cell={(p) => {
                                         const sortMode = p.dataItem.sort_mode || 'none';
                                         const isDesc = sortMode === 'n_desc';
@@ -2131,7 +2241,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                                 }}
                                             >
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px' }}>
-                                                    {isDesc ? <ArrowDown size={15} color="#2563eb" strokeWidth={3} /> : ''}
+                                                    {isDesc ? <ArrowDown size={15} color="#2563eb" strokeWidth={3} /> : <ArrowUp size={15} color="#94a3b8" strokeWidth={2} />}
                                                 </div>
                                             </td>
                                         );
@@ -2144,11 +2254,13 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                     headerCell={ConditionHeaderCell}
                                     cell={(p) => <TextEditCell dataItem={p.dataItem} field="condition" onUpdate={handleCellUpdate} />}
                                 />
-                                <Column field="x_info" title="배너" width="150px" headerClassName="k-text-center"
+                                <Column field="x_info" title="배너" width="125px" headerClassName="k-text-center"
+                                    headerCell={MultiSelectHeaderCell}
                                     cell={(p) => <PresetDropdownCell field="x_info" dataItem={p.dataItem} presets={banners} onChange={handleCellUpdate} />}
                                 />
 
-                                <Column field="group_preset_name" title="그룹" width="150px" headerClassName="k-text-center"
+                                <Column field="group_preset_name" title="그룹" width="125px" headerClassName="k-text-center"
+                                    headerCell={MultiSelectHeaderCell}
                                     cell={(p) => {
                                         if (!canUseGroupPreset(p.dataItem.var_type)) {
                                             return <td style={DISABLED_CELL_STYLE}>-</td>;
@@ -2156,7 +2268,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                         return <PresetDropdownCell field="group_preset_name" dataItem={p.dataItem} presets={groupPresets} onChange={handleCellUpdate} />;
                                     }}
                                 />
-                                <Column field="stat_summary" title="통계 설정" width="150px" headerClassName="k-text-center"
+                                <Column field="stat_summary" title="통계 설정" width="125px" headerClassName="k-text-center"
+                                    headerCell={MultiSelectHeaderCell}
                                     cell={(p) => {
                                         if (!canUseStatPreset(p.dataItem.var_type)) {
                                             return <td style={DISABLED_CELL_STYLE}>-</td>;
@@ -2164,7 +2277,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                         return <StatSettingCell dataItem={p.dataItem} selectedValues={p.dataItem.stat_summary} onUpdate={handleCellUpdate} />;
                                     }}
                                 />
-                                <Column field="scale_preset_name" title="척도" width="150px" headerClassName="k-text-center"
+                                <Column field="scale_preset_name" title="척도" width="125px" headerClassName="k-text-center"
+                                    headerCell={MultiSelectHeaderCell}
                                     cell={(p) => {
                                         if (!canUseScalePreset(p.dataItem.var_type)) {
                                             return <td style={DISABLED_CELL_STYLE}>-</td>;
@@ -2172,7 +2286,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                         return <PresetDropdownCell field="scale_preset_name" dataItem={p.dataItem} presets={scalePresets} onChange={handleCellUpdate} />;
                                     }}
                                 />
-                                <Column field="rank_preset_name" title="순위" width="150px" headerClassName="k-text-center"
+                                <Column field="rank_preset_name" title="순위" width="125px" headerClassName="k-text-center"
+                                    headerCell={MultiSelectHeaderCell}
                                     cell={(p) => {
                                         if (!canUseRankPreset(p.dataItem.var_type)) {
                                             return <td style={DISABLED_CELL_STYLE}>-</td>;
