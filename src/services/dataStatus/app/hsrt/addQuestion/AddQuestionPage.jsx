@@ -1083,10 +1083,28 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         return false;
     };
 
-    const handleApplyGeneratedRules = async (rules) => {
+    const handleApplyGeneratedRules = async (rules, generatedType) => {
         const mappedRules = rules.map(rule => ({ label2: rule.label2, label: rule.label, logic: rule.logic, inEdit: false }));
         const pageId = sessionStorage.getItem('pageId');
         const user = auth?.user?.userId;
+
+        const targetType = (() => {
+            if (!generatedType) return currentXInfoRef.current || 'single';
+            const raw = String(generatedType).trim().toLowerCase();
+            if (raw === 'single') return 'single';
+            if (raw === 'multi') return 'multi';
+            if (raw === 'scale') return 'scale';
+            if (raw === 'rank') return 'rank';
+            if (raw === 'open(문자)' || raw === 'open-text' || raw === 'open_text') return 'open(문자)';
+            if (raw === 'open(숫자)' || raw === 'open-num' || raw === 'open_num' || raw === 'double') return 'open(숫자)';
+            if (raw === 'open') return 'open(문자)';
+            return generatedType;
+        })();
+
+        if (generatedType) {
+            setCurrentXInfo(targetType);
+            currentXInfoRef.current = targetType;
+        }
 
         // 현재 선택/작성 중인 문항 ID가 없다면 자동으로 신규 ID를 서버에서 받아와 문항 개설
         if (!currentId && pageId && user) {
@@ -1095,7 +1113,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 const res = await getNextBaseVariableId.mutateAsync({ pageid: pageId, user });
                 if (String(res?.success) === '777' && res.resultjson?.next_id) {
                     const tempId = getUniqueNextId(res.resultjson.next_id, banners);
-                    const newBanner = { id: tempId, label: '', type: 'single', recoded_type: 'computed', info: mappedRules, isDirty: true };
+                    const newBanner = { id: tempId, label: '', type: targetType, recoded_type: 'computed', info: mappedRules, isDirty: true };
 
                     // 현재 active banner의 변경 사항을 임시로 캡처
                     const prevId = selectedBannerRef.current;
@@ -1138,8 +1156,8 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                     setCurrentLabel('');
                     currentLabelRef.current = '';
 
-                    setCurrentXInfo('single');
-                    currentXInfoRef.current = 'single';
+                    setCurrentXInfo(targetType);
+                    currentXInfoRef.current = targetType;
 
                     setCurrentInfo(mappedRules);
                     currentInfoRef.current = mappedRules;

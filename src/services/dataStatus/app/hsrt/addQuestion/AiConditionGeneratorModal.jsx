@@ -10,6 +10,7 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
     const [modelKey, setModelKey] = useState('');
     const [models, setModels] = useState([]);
     const [generatedRules, setGeneratedRules] = useState([]);
+    const [generatedType, setGeneratedType] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
 
     useEffect(() => {
@@ -33,6 +34,7 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
             setPromptText('');
             setModelKey('');
             setGeneratedRules([]);
+            setGeneratedType('');
             setIsGenerating(false);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -56,8 +58,10 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
             });
 
             const rules = res?.resultjson?.rules || res?.rules;
+            const genType = res?.resultjson?.type || res?.type || '';
             if (String(res?.success) === '777' && Array.isArray(rules)) {
                 setGeneratedRules(rules);
+                if (genType) setGeneratedType(genType);
             } else {
                 modal.showAlert('오류', res?.message || '조건식 생성에 실패했습니다.');
             }
@@ -99,7 +103,7 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
             label: r.label,
             logic: r.logic
         }));
-        onApply(formatted);
+        onApply(formatted, generatedType);
         onClose();
     };
 
