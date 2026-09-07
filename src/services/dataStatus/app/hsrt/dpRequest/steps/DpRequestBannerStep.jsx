@@ -672,7 +672,7 @@ const getTypeClass = (type) => {
     return lower;
 };
 
-const VariableItem = memo(({ v, isSelected, onDragStart, onClick }) => {
+const VariableItem = memo(({ v, index, isSelected, onDragStart, onMouseDown, onMouseEnter, onDragOver }) => {
     const infoLabels = useMemo(() => {
         const list = Array.isArray(v.info) ? v.info : (Array.isArray(v.categories) ? v.categories : []);
         return list.map(item => item.label).filter(Boolean);
@@ -691,13 +691,15 @@ const VariableItem = memo(({ v, isSelected, onDragStart, onClick }) => {
             className={`variable-item ${isSelected ? 'selected' : ''}`}
             draggable
             onDragStart={(e) => onDragStart(e, v)}
-            onClick={(e) => { e.stopPropagation(); onClick(v.id); }}
+            onMouseDown={(e) => onMouseDown && onMouseDown(e, v, index)}
+            onMouseEnter={(e) => onMouseEnter && onMouseEnter(e, v, index)}
+            onDragOver={(e) => onDragOver && onDragOver(e, v, index)}
             onMouseUp={(e) => {
                 if (infoLabels.length > 0) {
                     console.log(`[${v.label} (${v.id})] 보기 목록:`, infoLabels);
                 }
             }}
-            style={{ borderRadius: '6px' }}
+            style={{ borderRadius: '6px', userSelect: 'none' }}
             title={tooltipText}
         >
             <div className="variable-item-header">
@@ -1183,21 +1185,130 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         setContextMenu(null);
     }, [banners, onUnsavedChange, scrollToBottom]);
 
-    // --- Interaction Logic ---
-    const toggleSelection = useCallback((id) => {
-        setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    const filteredVariables = useMemo(() => {
+        const search = wizardSearch.toLowerCase();
+        const allowedTypes = ['single', 'multi', 'scale', 'rank'];
+        return (Array.isArray(baseVariables) ? baseVariables : []).filter(v => {
+            const matchesSearch = (v.label || '').toLowerCase().includes(search) || (v.id || '').toLowerCase().includes(search);
+            const isAllowedType = allowedTypes.includes((v.type || '').toLowerCase());
+            return matchesSearch && isAllowedType;
+        });
+    }, [baseVariables, wizardSearch]);
+
+    // 배너 목록 필터링
+    const filteredBanners = useMemo(() => {
+        const search = bannerSearch.toLowerCase();
+        return banners.filter(b =>
+            (b.label || '').toLowerCase().includes(search) || (b.id || '').toLowerCase().includes(search)
+        );
+    }, [banners, bannerSearch]);
+
+    // --- Interaction Logic (Multi-Selection: Ctrl, Shift, Mouse Drag) ---
+    const lastClickedIndexRef = useRef(null);
+    const isDraggingSelectionRef = useRef(false);
+    const dragStartIndexRef = useRef(null);
+    const dragBaseSelectedIdsRef = useRef(new Set());
+    const [showMultiSelectHelp, setShowMultiSelectHelp] = useState(false);
+    const infoBtnRef = useRef(null);
+
+    useEffect(() => {
+        const handleGlobalMouseUp = () => {
+            isDraggingSelectionRef.current = false;
+            dragStartIndexRef.current = null;
+        };
+        window.addEventListener('mouseup', handleGlobalMouseUp);
+        window.addEventListener('dragend', handleGlobalMouseUp);
+        return () => {
+            window.removeEventListener('mouseup', handleGlobalMouseUp);
+            window.removeEventListener('dragend', handleGlobalMouseUp);
+        };
     }, []);
+
+    const updateSelectionRange = useCallback((targetIndex) => {
+        if (dragStartIndexRef.current === null) return;
+        const start = Math.min(dragStartIndexRef.current, targetIndex);
+        const end = Math.max(dragStartIndexRef.current, targetIndex);
+        const rangeIds = filteredVariables.slice(start, end + 1).map(x => x.id);
+
+        const combined = new Set([...dragBaseSelectedIdsRef.current, ...rangeIds]);
+        setSelectedIds(Array.from(combined));
+        lastClickedIndexRef.current = targetIndex;
+    }, [filteredVariables]);
+
+    const handleVariableMouseDown = useCallback((e, v, index) => {
+        if (e.button !== 0) return;
+
+        isDraggingSelectionRef.current = true;
+        dragStartIndexRef.current = index;
+
+        if (e.shiftKey && lastClickedIndexRef.current !== null) {
+            const start = Math.min(lastClickedIndexRef.current, index);
+            const end = Math.max(lastClickedIndexRef.current, index);
+            const rangeIds = filteredVariables.slice(start, end + 1).map(x => x.id);
+
+            if (e.ctrlKey || e.metaKey) {
+                const combined = new Set([...selectedIds, ...rangeIds]);
+                setSelectedIds(Array.from(combined));
+                dragBaseSelectedIdsRef.current = combined;
+            } else {
+                setSelectedIds(rangeIds);
+                dragBaseSelectedIdsRef.current = new Set(rangeIds);
+            }
+        } else if (e.ctrlKey || e.metaKey) {
+            setSelectedIds(prev => {
+                const next = prev.includes(v.id) ? prev.filter(id => id !== v.id) : [...prev, v.id];
+                dragBaseSelectedIdsRef.current = new Set(next);
+                return next;
+            });
+            lastClickedIndexRef.current = index;
+        } else {
+            if (selectedIds.includes(v.id) && selectedIds.length > 1) {
+                dragBaseSelectedIdsRef.current = new Set(selectedIds);
+            } else {
+                setSelectedIds([v.id]);
+                dragBaseSelectedIdsRef.current = new Set([v.id]);
+                lastClickedIndexRef.current = index;
+            }
+        }
+    }, [filteredVariables, selectedIds]);
+
+    const handleVariableMouseEnter = useCallback((e, v, index) => {
+        if (dragStartIndexRef.current === null) return;
+        updateSelectionRange(index);
+    }, [updateSelectionRange]);
+
+    const handleVariableDragOver = useCallback((e, v, index) => {
+        e.preventDefault();
+        if (e.dataTransfer) {
+            e.dataTransfer.dropEffect = 'copy';
+        }
+        if (dragStartIndexRef.current === null) return;
+        updateSelectionRange(index);
+    }, [updateSelectionRange]);
 
     const handleDragStart = useCallback((e, draggedVar) => {
         draggedTypeRef.current = 'EXTERNAL';
+        if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = 'all';
+        }
         let targets = [];
         if (selectedIds.includes(draggedVar.id)) {
             targets = baseVariables.filter(v => selectedIds.includes(v.id));
         } else {
             targets = [draggedVar];
             setSelectedIds([draggedVar.id]);
+            dragBaseSelectedIdsRef.current = new Set([draggedVar.id]);
         }
         e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'EXTERNAL', items: targets }));
+
+        // 드래그 시 마우스를 따라다니는 이미지/미니맵을 완전히 제거 (투명 1x1 이미지 적용)
+        try {
+            const emptyImg = new Image();
+            emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+            e.dataTransfer.setDragImage(emptyImg, 0, 0);
+        } catch (err) {
+            console.error("Failed to clear drag image:", err);
+        }
     }, [selectedIds, baseVariables]);
 
     const handleInternalItemDragStart = (e, gIdx, iIdx) => {
@@ -1705,23 +1816,6 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: b.info.map(it => ({ ...it, inEdit: it === e.dataItem })) } : b));
     }, [selectedBanner]);
 
-    const filteredVariables = useMemo(() => {
-        const search = wizardSearch.toLowerCase();
-        const allowedTypes = ['single', 'multi', 'scale', 'rank'];
-        return (Array.isArray(baseVariables) ? baseVariables : []).filter(v => {
-            const matchesSearch = (v.label || '').toLowerCase().includes(search) || (v.id || '').toLowerCase().includes(search);
-            const isAllowedType = allowedTypes.includes((v.type || '').toLowerCase());
-            return matchesSearch && isAllowedType;
-        });
-    }, [baseVariables, wizardSearch]);
-
-    // 배너 목록 필터링
-    const filteredBanners = useMemo(() => {
-        const search = bannerSearch.toLowerCase();
-        return banners.filter(b =>
-            (b.label || '').toLowerCase().includes(search) || (b.id || '').toLowerCase().includes(search)
-        );
-    }, [banners, bannerSearch]);
 
     // 배너 탭이 변경될 때 셀 선택 상태 초기화
     useEffect(() => {
@@ -1963,15 +2057,81 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 <div className={`variable-panel ${!isVariablePanelOpen ? 'collapsed' : ''}`}>
                                     <div className="variable-panel-header">
                                         {isVariablePanelOpen && (
-                                            <div className="dp-search-input-wrapper">
-                                                <Search size={14} className="dp-search-input-icon" />
-                                                <input
-                                                    type="text"
-                                                    placeholder="변수명 검색"
-                                                    value={wizardSearch}
-                                                    onChange={(e) => setWizardSearch(e.target.value)}
-                                                    className="dp-search-input"
-                                                />
+                                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '6px', flex: 1, marginRight: '4px' }}>
+                                                <div className="dp-search-input-wrapper" style={{ flex: 1 }}>
+                                                    <Search size={14} className="dp-search-input-icon" />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="변수명 검색"
+                                                        value={wizardSearch}
+                                                        onChange={(e) => setWizardSearch(e.target.value)}
+                                                        className="dp-search-input"
+                                                    />
+                                                </div>
+                                                <div style={{ position: 'relative' }}>
+                                                    <button
+                                                        ref={infoBtnRef}
+                                                        type="button"
+                                                        onClick={() => setShowMultiSelectHelp(prev => !prev)}
+                                                        onMouseEnter={() => setShowMultiSelectHelp(true)}
+                                                        onMouseLeave={() => setShowMultiSelectHelp(false)}
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            width: '24px',
+                                                            height: '24px',
+                                                            borderRadius: '50%',
+                                                            border: 'none',
+                                                            background: '#eff6ff',
+                                                            color: '#3b82f6',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.15s ease'
+                                                        }}
+                                                    >
+                                                        <Info size={16} />
+                                                    </button>
+
+                                                    <Popup
+                                                        anchor={infoBtnRef.current}
+                                                        show={showMultiSelectHelp}
+                                                        popupClass="multi-select-help-popup"
+                                                        animate={false}
+                                                        anchorAlign={{ horizontal: 'right', vertical: 'bottom' }}
+                                                        popupAlign={{ horizontal: 'right', vertical: 'top' }}
+                                                        margin={{ horizontal: 0, vertical: 6 }}
+                                                    >
+                                                        <style>{`
+                                                            .multi-select-help-popup.k-popup,
+                                                            .multi-select-help-popup {
+                                                                background: transparent !important;
+                                                                border: none !important;
+                                                                box-shadow: none !important;
+                                                                padding: 0 !important;
+                                                                overflow: visible !important;
+                                                            }
+                                                        `}</style>
+                                                        <div style={{
+                                                            width: '210px',
+                                                            padding: '14px 16px',
+                                                            background: '#ffffff',
+                                                            border: '1px solid #cbd5e1',
+                                                            borderRadius: '10px',
+                                                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                                                            zIndex: 99999
+                                                        }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
+                                                                <span>💡</span>
+                                                                <span>다중 선택 팁</span>
+                                                            </div>
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', color: '#334155', fontWeight: 500, lineHeight: 1.4 }}>
+                                                                <div>• <b>Shift + 클릭</b>: 연속 범위 선택</div>
+                                                                <div>• <b>Ctrl + 클릭</b>: 개별 추가 / 해제</div>
+                                                                <div>• <b>마우스 드래그</b>: 연속 범위 선택</div>
+                                                            </div>
+                                                        </div>
+                                                    </Popup>
+                                                </div>
                                             </div>
                                         )}
                                         <button onClick={() => setIsVariablePanelOpen(prev => !prev)} className="dp-sidebar-toggle-btn-compact">
@@ -1979,14 +2139,26 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         </button>
                                     </div>
                                     {isVariablePanelOpen && (
-                                        <div className="variable-list custom-scrollbar" style={{ paddingTop: '6px' }}>
+                                        <div
+                                            className="variable-list custom-scrollbar"
+                                            style={{ paddingTop: '6px' }}
+                                            onDragOver={(e) => {
+                                                e.preventDefault();
+                                                if (e.dataTransfer) {
+                                                    e.dataTransfer.dropEffect = 'copy';
+                                                }
+                                            }}
+                                        >
                                             {filteredVariables.map((v, index) => (
                                                 <VariableItem
                                                     key={`${v.id}-${index}`}
                                                     v={v}
+                                                    index={index}
                                                     isSelected={selectedIds.includes(v.id)}
                                                     onDragStart={handleDragStart}
-                                                    onClick={toggleSelection}
+                                                    onMouseDown={handleVariableMouseDown}
+                                                    onMouseEnter={handleVariableMouseEnter}
+                                                    onDragOver={handleVariableDragOver}
                                                 />
                                             ))}
                                         </div>
