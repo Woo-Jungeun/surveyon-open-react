@@ -15,7 +15,8 @@ import DownloadModal from './DownloadModal';
 import UploadModal from './UploadModal';
 import DataUpdateModal from './DataUpdateModal';
 import RelabelModal from './RelabelModal';
-import { Download, Upload, Tags, RefreshCw } from 'lucide-react';
+import BatchMapEditModal from './BatchMapEditModal';
+import { Download, Upload, Tags, RefreshCw, FileSpreadsheet } from 'lucide-react';
 
 import '../../../../assets/css/grid_vertical_borders.css';
 import './MapManagementPage.css';
@@ -54,6 +55,7 @@ const MapManagementPage = () => {
     const [dataUpdateModalOpen, setDataUpdateModalOpen] = useState(false);          //  데이터 등록 모달 상태
     const [reLabelModalOpen, setReLabelModalOpen] = useState(false);                // Re_Label 모달 상태
     const [addValueModalOpen, setAddValueModalOpen] = useState(false);              // 레이블 추가 팝업 상태
+    const [batchMapEditModalOpen, setBatchMapEditModalOpen] = useState(false);      // 맵 일괄 수정 모달 상태
 
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
@@ -749,6 +751,26 @@ const MapManagementPage = () => {
                                 <RefreshCw size={16} />
                                 맵 새로고침
                             </button>
+                            <button
+                                className="data-header-btn"
+                                onClick={() => setBatchMapEditModalOpen(true)}
+                                style={{
+                                    height: '32px',
+                                    padding: '0 12px',
+                                    border: '1px solid #16a34a',
+                                    background: '#fff',
+                                    color: '#16a34a',
+                                    marginLeft: '8px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                            >
+                                <FileSpreadsheet size={16} />
+                                맵 일괄 수정
+                            </button>
                             {/* 세로 구분선 1 */}
                             <div style={{
                                 width: '1px',
@@ -915,6 +937,15 @@ const MapManagementPage = () => {
                 <RelabelModal
                     isOpen={reLabelModalOpen}
                     onClose={() => setReLabelModalOpen(false)}
+                    refreshData={() => setRefreshKey(prev => prev + 1)}
+                />
+
+                {/* 맵 일괄 수정 모달 */}
+                <BatchMapEditModal
+                    isOpen={batchMapEditModalOpen}
+                    onClose={() => setBatchMapEditModalOpen(false)}
+                    variables={variables}
+                    hasChanges={hasChanges}
                     refreshData={() => setRefreshKey(prev => prev + 1)}
                 />
             </div>

@@ -135,6 +135,36 @@ export function MapManagementPageApi() {
         }
     );
 
+    /** 엑셀 일괄수정 - 엑셀 내보내기 */
+    const exportExcel = useMutation(
+        async (data) => await api.file(data, "/map/excel/export", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 엑셀 일괄수정 - 검사 (저장 안함) */
+    const validateExcel = useMutation(
+        async (formData) => await api.form(formData, "/map/excel/validate", {}, "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 엑셀 일괄수정 - 적용 (저장) */
+    const applyExcel = useMutation(
+        async (formData) => await api.form(formData, "/map/excel/apply", {}, "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 엑셀 일괄수정 - 복원지점 목록 */
+    const getExcelVersions = useMutation(
+        async (data) => await api.post(data, "/map/excel/versions", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 엑셀 일괄수정 - 복원 실행 */
+    const restoreExcelVersion = useMutation(
+        async (data) => await api.post(data, "/map/excel/restore", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 엑셀 일괄수정 - 복원지점 수동 생성 */
+    const createExcelVersion = useMutation(
+        async (data) => await api.post(data, "/map/excel/versions/create", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
     return {
         getMapVariables,
         srtTransfer,
@@ -149,6 +179,12 @@ export function MapManagementPageApi() {
         updateDataFromSav,
         generateRelabels,
         syncMap,
-        updateMap
+        updateMap,
+        exportExcel,
+        validateExcel,
+        applyExcel,
+        getExcelVersions,
+        restoreExcelVersion,
+        createExcelVersion
     };
 }
