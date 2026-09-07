@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { X, Upload, FileSpreadsheet, Loader2, AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
+import { X, Upload, FileSpreadsheet, Loader2, AlertTriangle, Info, CheckCircle2, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useSelector } from 'react-redux';
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -471,33 +471,84 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                 </div>
 
                 {/* ── 바디 영역 ── */}
-                <div style={{ padding: '24px', background: '#f8fafc', minHeight: '440px', maxHeight: '600px', overflowY: 'auto' }}>
+                <div style={{ padding: '20px 24px 12px 24px', background: '#ffffff', maxHeight: '600px', overflowY: 'auto' }}>
 
                     {/* ───────────────────────────────────────────── */}
                     {/* TAB 1: 엑셀 받기 */}
                     {/* ───────────────────────────────────────────── */}
                     {activeTab === 1 && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            <p style={{ margin: 0, fontSize: '14px', color: '#475569', lineHeight: '1.5' }}>
-                                지금 저장된 맵을 엑셀로 내려받습니다. 화면에 보이는 항목을 전부 담되, 고칠 수 있는 칸만 잠금이 풀려 있습니다.
-                            </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            {/* 상단 엑셀 다운로드 카드 */}
+                            <div style={{
+                                background: '#f8fafc',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '8px',
+                                padding: '16px 20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: '16px',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
+                                    <div style={{
+                                        width: '42px',
+                                        height: '42px',
+                                        borderRadius: '8px',
+                                        background: '#f0faf5',
+                                        border: '1px solid #bbf7d0',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: '#16a34a',
+                                        flexShrink: 0
+                                    }}>
+                                        <FileSpreadsheet size={22} />
+                                    </div>
+                                    <div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>
+                                                현재 맵 엑셀 양식 내려받기
+                                            </h4>
+                                            <span style={{ fontSize: '12px', color: '#16a34a', background: '#f0faf5', border: '1px solid #bbf7d0', padding: '1px 8px', borderRadius: '10px', fontWeight: '600' }}>
+                                                {variables.length || 0}행
+                                            </span>
+                                            <span style={{ fontSize: '12px', color: '#64748b' }}>
+                                                ({currentPn}_map.xlsx)
+                                            </span>
+                                        </div>
+                                        <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b', lineHeight: '1.4' }}>
+                                            지금 저장된 맵 데이터를 엑셀 양식으로 내려받습니다. 지정된 16개 항목만 수정이 가능합니다.
+                                        </p>
+                                    </div>
+                                </div>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <button
-                                    onClick={handleExportExcel}
-                                    style={{
-                                        alignSelf: 'flex-start', height: '40px', padding: '0 20px', background: '#16a34a',
-                                        color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: '600',
-                                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'background 0.15s'
-                                    }}
-                                    onMouseOver={e => e.currentTarget.style.background = '#15803d'}
-                                    onMouseOut={e => e.currentTarget.style.background = '#16a34a'}
-                                >
-                                    현재 맵을 엑셀로 받기
-                                </button>
-                                <span style={{ fontSize: '13px', color: '#94a3b8' }}>
-                                    {currentPn}_map.xlsx · {variables.length || 360}행
-                                </span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                                    <button
+                                        onClick={handleExportExcel}
+                                        style={{
+                                            height: '38px',
+                                            padding: '0 16px',
+                                            background: '#16a34a',
+                                            color: '#ffffff',
+                                            border: 'none',
+                                            borderRadius: '6px',
+                                            fontSize: '13px',
+                                            fontWeight: '600',
+                                            cursor: 'pointer',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            transition: 'background 0.15s',
+                                            whiteSpace: 'nowrap'
+                                        }}
+                                        onMouseOver={e => e.currentTarget.style.background = '#15803d'}
+                                        onMouseOut={e => e.currentTarget.style.background = '#16a34a'}
+                                    >
+                                        <Download size={15} />
+                                        <span>엑셀 다운로드</span>
+                                    </button>
+                                </div>
                             </div>
 
                             {/* 저장하지 않은 변경 안내 경고 박스 */}
@@ -507,45 +558,56 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                 </div>
                             )}
 
-                            {/* 고칠 수 있는 칸 vs 엑셀 안내 영역 */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px' }}>
-                                {/* 좌측: 고칠 수 있는 칸 */}
+                            {/* 고칠 수 있는 칸 & 엑셀 작성 안내 영역 (2줄 세로 스택) */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                {/* 1행: 고칠 수 있는 칸 (헤더 우측에 흰칸/회색칸 범례 표출) */}
                                 <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                                        <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>고칠 수 있는 칸</span>
-                                        <span style={{ background: '#f1f5f9', color: '#475569', fontSize: '12px', fontWeight: 'bold', padding: '1px 7px', borderRadius: '10px' }}>
-                                            {modifiableFields.length}
-                                        </span>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>수정 가능 항목</span>
+                                            <span style={{ background: '#f1f5f9', color: '#475569', fontSize: '12px', fontWeight: 'bold', padding: '1px 7px', borderRadius: '10px' }}>
+                                                {modifiableFields.length}
+                                            </span>
+                                        </div>
+
+                                        {/* 수정 가능 / 수정 불가 범례 */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '12px', color: '#475569' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <div style={{ width: '20px', height: '14px', border: '1px solid #cbd5e1', background: '#ffffff', borderRadius: '3px' }}></div>
+                                                <span><strong style={{ color: '#16a34a' }}>수정 가능</strong></span>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <div style={{ width: '20px', height: '14px', border: '1px solid #cbd5e1', background: '#e2e8f0', borderRadius: '3px' }}></div>
+                                                <span><strong style={{ color: '#64748b' }}>수정 불가</strong></span>
+                                            </div>
+                                        </div>
                                     </div>
+
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                                         {modifiableFields.map((field, idx) => (
-                                            <span key={idx} style={{ background: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', fontSize: '12px', padding: '4px 10px', borderRadius: '6px', fontWeight: '500', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }}>
+                                            <span key={idx} style={{
+                                                background: '#ffffff',
+                                                border: '1px solid #cbd5e1',
+                                                color: '#0f172a',
+                                                fontSize: '12px',
+                                                padding: '4px 10px',
+                                                borderRadius: '6px',
+                                                fontWeight: '500',
+                                                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                                            }}>
                                                 {field}
                                             </span>
                                         ))}
                                     </div>
                                 </div>
 
-                                {/* 우측: 엑셀에서 보이는 것 */}
-                                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>엑셀에서 보이는 것</span>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: '#334155' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <div style={{ width: '28px', height: '18px', border: '1px solid #cbd5e1', background: '#ffffff', borderRadius: '3px' }}></div>
-                                            <span><strong>흰 칸</strong> — 고칠 수 있습니다</span>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <div style={{ width: '28px', height: '18px', border: '1px solid #cbd5e1', background: '#e2e8f0', borderRadius: '3px' }}></div>
-                                            <span><strong>회색 칸</strong> — 잠겨 있습니다</span>
-                                        </div>
-                                    </div>
-
-                                    <div style={{ height: '1px', background: '#f1f5f9', margin: '2px 0' }}></div>
-
-                                    <div style={{ fontSize: '12px', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '6px', lineHeight: '1.4' }}>
-                                        <div>O / X 와 변수유형은 드롭다운으로 고릅니다</div>
-                                        <div>여러 줄을 한 번에 바꿀 땐 복사 → 붙여넣기를 쓰세요. 드롭다운 칸은 끌어서 채우기가 막혀 있습니다(엑셀 제약)</div>
-                                        <div>시트가 보호돼 있어도 정렬·필터는 됩니다</div>
+                                {/* 2행: 엑셀 작성 참고사항 */}
+                                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>엑셀 작성 참고사항</span>
+                                    <div style={{ fontSize: '12px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '6px', lineHeight: '1.5' }}>
+                                        <div>• O/X 여부 및 변수유형 항목은 엑셀 내 드롭다운 목록에서 선택합니다.</div>
+                                        <div>• 다중 행 일괄 수정 시에는 <strong>복사(Ctrl+C) → 붙여넣기(Ctrl+V)</strong>를 사용하세요. (드롭다운 자동 채우기 제한)</div>
+                                        <div>• 시트보호 상태에서도 정렬 및 필터 기능은 정상 이용할 수 있습니다.</div>
                                     </div>
                                 </div>
                             </div>
@@ -829,58 +891,42 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                 </div>
 
                 {/* ── 푸터 ── */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderTop: '1px solid #e2e8f0', background: '#ffffff' }}>
-                    <div style={{ fontSize: '13px', color: '#64748b' }}>
-                        {activeTab === 1 && "고칠 수 있는 칸만 잠금이 풀려 있습니다. 회색 칸은 고쳐도 반영되지 않습니다."}
-                        {activeTab === 2 && !selectedFile && "엑셀 파일을 고르면 바로 검사합니다."}
-                        {activeTab === 2 && selectedFile && isValidating && "검사하는 중입니다. 아직 저장하지 않았습니다."}
-                        {activeTab === 2 && selectedFile && !isValidating && !isApplied && !hasFileErrors && `검사만 한 상태입니다. [적용 (${changedRowsCount}행)] 을 눌러야 저장됩니다.`}
-                        {activeTab === 2 && selectedFile && !isValidating && !isApplied && hasFileErrors && <span style={{ color: '#dc2626' }}>파일에 문제가 있어 아무것도 반영할 수 없습니다.</span>}
-                        {activeTab === 2 && isApplied && "성공적으로 적용되었습니다."}
-                        {activeTab === 3 && "되돌리기 전에도 지금 상태를 자동으로 저장합니다."}
-                    </div>
+                <div className="variable-modal-footer" style={{ borderTop: 'none', padding: '8px 24px 24px 24px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                    <button
+                        type="button"
+                        className="upload-cancel-btn"
+                        onClick={handleModalClose}
+                    >
+                        취소
+                    </button>
 
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    {activeTab === 2 && (
                         <button
                             type="button"
-                            onClick={handleModalClose}
+                            className="upload-submit-btn"
+                            onClick={handleApplyRules}
+                            disabled={isApplyDisabled}
                             style={{
-                                height: '36px', padding: '0 16px', border: '1px solid #cbd5e1', borderRadius: '6px',
-                                background: '#ffffff', color: '#334155', fontSize: '13px', fontWeight: '600', cursor: 'pointer'
+                                backgroundColor: isApplyDisabled ? '#cbd5e1' : '#16a34a',
+                                cursor: isApplyDisabled ? 'not-allowed' : 'pointer',
+                                opacity: isApplyDisabled ? 0.6 : 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px'
                             }}
                         >
-                            닫기
+                            {isApplying ? (
+                                <>
+                                    <Loader2 size={14} className="animate-spin" />
+                                    <span>적용 중...</span>
+                                </>
+                            ) : isApplied ? (
+                                '적용됨'
+                            ) : (
+                                `적용 (${changedRowsCount}행)`
+                            )}
                         </button>
-
-                        {activeTab === 2 && (
-                            <button
-                                onClick={handleApplyRules}
-                                disabled={isApplyDisabled}
-                                style={{
-                                    height: '36px', padding: '0 20px', border: 'none', borderRadius: '6px',
-                                    background: !isApplyDisabled ? '#16a34a' : '#cbd5e1',
-                                    color: '#ffffff', fontSize: '13px', fontWeight: '600',
-                                    cursor: !isApplyDisabled ? 'pointer' : 'not-allowed',
-                                    opacity: !isApplyDisabled ? 1 : 0.6,
-                                    transition: 'all 0.15s',
-                                    display: 'flex', alignItems: 'center', gap: '6px'
-                                }}
-                                onMouseOver={e => { if (!isApplyDisabled) e.currentTarget.style.background = '#15803d'; }}
-                                onMouseOut={e => { if (!isApplyDisabled) e.currentTarget.style.background = '#16a34a'; }}
-                            >
-                                {isApplying ? (
-                                    <>
-                                        <Loader2 size={14} className="animate-spin" />
-                                        <span>적용 중...</span>
-                                    </>
-                                ) : isApplied ? (
-                                    '적용됨'
-                                ) : (
-                                    `적용 (${changedRowsCount}행)`
-                                )}
-                            </button>
-                        )}
-                    </div>
+                    )}
                 </div>
             </div>
         </div>
