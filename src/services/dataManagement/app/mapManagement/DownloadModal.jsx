@@ -120,21 +120,11 @@ const DownloadModal = ({ isOpen, onClose }) => {
 
     /**
      * PC 내보내기 도구 실행 (surveyonexport://run?...)
-     * ① 티켓 발급 (POST /export/supply/ticket)
-     * ② 프로토콜 URL 조립 및 실행
+     * ① 1회용 티켓 발급 (POST /export/supply/ticket)
+     * ② 프로토콜 URL 조립 및 실행 (surveyonexport://run?...)
      * ③ 10초 뒤 1회 구동 확인 (POST /export/supply/tool/status)
      */
-    const executeExport = async (gbParam) => {
-        if (!gbParam) return;
-
-        const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '';
-        const userId = auth?.user?.userId || sessionStorage.getItem('userId') || '';
-
-        if (!pn || !userId) {
-            modal.showAlert("알림", "프로젝트 정보 또는 사용자 정보가 올바르지 않습니다.");
-            return;
-        }
-
+    const launchExportTool = async (gbParam, pn, userId, answerStateCode = '4') => {
         try {
             setDownloading(true);
             setCheckingTool(true);
@@ -153,14 +143,16 @@ const DownloadModal = ({ isOpen, onClose }) => {
 
             const ticket = ticketRes.resultjson.ticket;
 
-            // ② URL 조립 (surveyonexport://run?central=..&ticket=..&pn=..&gb=..&state=..)
+            // ② URL 조립 (surveyonexport://run?central=..&ticket=..&pn=..&gb=..&state=..) - URL에 user/auth는 싣지 않음
             const host = window.API_CONFIG?.API_BASE_URL_DATAMANAGEMENT || window.API_CONFIG?.API_BASE_URL || window.location.origin;
             const p = new URLSearchParams();
             p.set('central', host);
             p.set('ticket', ticket);
             p.set('pn', pn);
             p.set('gb', gbParam);
-            p.set('state', '4');
+            if (answerStateCode) {
+                p.set('state', answerStateCode);
+            }
 
             window.location.href = `surveyonexport://run?${p.toString()}`;
 
@@ -224,8 +216,216 @@ const DownloadModal = ({ isOpen, onClose }) => {
                 clearInterval(countdownTimerRef.current);
                 countdownTimerRef.current = null;
             }
-            console.error("executeExport error:", err);
+            console.error("launchExportTool error:", err);
             modal.showAlert("알림", "PC 내보내기 실행 중 오류가 발생했습니다.");
+        }
+    };
+
+    /**
+     * 내보내기 투트랙 실행 (POST /export 호출 후 판정)
+     * ① Content-Type이 JSON이 아니면: 서버가 직접 파일 생성 -> 즉시 다운로드
+     * ② Content-Type이 JSON이고 resultjson.track === "tool" 이면: PC 내보내기 도구 호출
+     * ③ 기타 JSON 실패: 진짜 오류 팝업 표시
+     */
+    const executeExport = async (gbParam, answerStateCode = '4') => {
+        if (!gbParam) return;
+
+        const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '';
+        const userId = auth?.user?.userId || sessionStorage.getItem('userId') || '';
+
+        if (!pn || !userId) {
+            modal.showAlert("알림", "프로젝트 정보 또는 사용자 정보가 올바르지 않습니다.");
+            return;
+        }
+
+        setDownloading(true);
+
+        // SignalR task-progress 연결 (서버 진행률 수신용)
+        let connectionId = null;
+        let signalrConn = null;
+        try {
+            const host = window.API_CONFIG?.API_BASE_URL_DATAMANAGEMENT || window.API_CONFIG?.API_BASE_URL || window.location.origin;
+            let hubUrl = host.replace(/\/+$/, '') + "/hubs/task-progress";
+            if (!hubUrl.startsWith('http')) {
+                hubUrl = window.location.origin + hubUrl;
+            }
+
+            signalrConn = new signalR.HubConnectionBuilder()
+                .withUrl(hubUrl)
+                .withAutomaticReconnect()
+                .configureLogging(signalR.LogLevel.None)
+                .build();
+
+            signalrConn.on("ReceiveProgress", (data) => {
+                if (data) {
+                    const msg = typeof data === 'string' ? data : (data.message || data.statusText || '');
+                    const pct = typeof data === 'object' && data.percent !== undefined ? data.percent : null;
+
+                    setExportProgress(prev => ({
+                        ...prev,
+                        isExporting: true,
+                        statusText: msg || prev.statusText,
+                        percent: pct !== null ? pct : prev.percent,
+                        step: (pct !== null && pct > 50) ? 2 : prev.step
+                    }));
+                }
+            });
+
+            await signalrConn.start();
+            connectionId = signalrConn.connectionId;
+            exportSignalrConnRef.current = signalrConn;
+        } catch (e) {
+            console.warn("SignalR task-progress 연결 실패 (진행률 수신 생략):", e);
+        }
+
+        const abortController = new AbortController();
+        exportAbortControllerRef.current = abortController;
+
+        // 진행 상태 프로그래스바 모달 표시
+        setExportProgress({
+            isExporting: true,
+            percent: 10,
+            step: 1,
+            statusText: '서버에서 내보내기 처리 중입니다...',
+            isCompleted: false,
+            fileBlob: null,
+            filename: ''
+        });
+
+        try {
+            const host = window.API_CONFIG?.API_BASE_URL_DATAMANAGEMENT || window.API_CONFIG?.API_BASE_URL || window.location.origin;
+            const url = `${host.replace(/\/+$/, '')}/export`;
+
+            const authHeaders = {};
+            if (auth?.token) {
+                authHeaders['Authorization'] = `Bearer ${auth.token}`;
+            }
+
+            const bodyData = {
+                pn,
+                gb: gbParam,
+                user: userId,
+                answerStateCode: answerStateCode || '4',
+                connectionId: connectionId || null
+            };
+
+            const r = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    ...authHeaders,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(bodyData),
+                signal: abortController.signal
+            });
+
+            const contentType = r.headers.get('content-type') || '';
+
+            // ① 파일 응답 (JSON이 아닌 경우): 서버가 직접 생성한 파일 -> 즉시 내려받기
+            if (!contentType.includes('json')) {
+                setExportProgress(prev => ({
+                    ...prev,
+                    step: 2,
+                    percent: 85,
+                    statusText: '파일 생성이 완료되어 내려받는 중입니다...'
+                }));
+
+                const blob = await r.blob();
+                const cd = r.headers.get('content-disposition') || '';
+                const m = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(cd);
+                const downloadFilename = m ? decodeURIComponent(m[1]) : `${pn}_export`;
+
+                // 브라우저 파일 내려받기
+                const downloadUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = downloadFilename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(downloadUrl);
+
+                setExportProgress({
+                    isExporting: false,
+                    percent: 100,
+                    step: 3,
+                    statusText: '다운로드가 완료되었습니다.',
+                    isCompleted: false,
+                    fileBlob: null,
+                    filename: ''
+                });
+
+                setDownloading(false);
+                if (signalrConn) {
+                    try { signalrConn.stop(); } catch (e) {}
+                }
+                return;
+            }
+
+            // ② JSON 응답인 경우
+            const j = await r.json();
+
+            // 🟢 [핵심 1순위 판단] track === 'tool' 검사 (서버 거부 → 즉시 PC 도구 트랙 실행)
+            if (j?.resultjson?.track === 'tool') {
+                setExportProgress({
+                    isExporting: false,
+                    percent: 0,
+                    step: 1,
+                    statusText: '',
+                    isCompleted: false,
+                    fileBlob: null,
+                    filename: ''
+                });
+                setDownloading(false);
+                if (signalrConn) {
+                    try { signalrConn.stop(); } catch (e) {}
+                }
+
+                // 알림창 팝업 없이 바로 PC 도구 구동 실행
+                await launchExportTool(gbParam, pn, userId, answerStateCode);
+                return;
+            }
+
+            // 🔴 [진짜 오류] (track이 없거나 다른 거부 메시지)
+            setExportProgress({
+                isExporting: false,
+                percent: 0,
+                step: 1,
+                statusText: '',
+                isCompleted: false,
+                fileBlob: null,
+                filename: ''
+            });
+            setDownloading(false);
+            if (signalrConn) {
+                try { signalrConn.stop(); } catch (e) {}
+            }
+
+            const errorMsg = j?.resultjson?.errorcontent || j?.message || "내보내기 중 오류가 발생했습니다.";
+            modal.showAlert("오류", errorMsg);
+
+        } catch (err) {
+            setExportProgress({
+                isExporting: false,
+                percent: 0,
+                step: 1,
+                statusText: '',
+                isCompleted: false,
+                fileBlob: null,
+                filename: ''
+            });
+            setDownloading(false);
+            if (signalrConn) {
+                try { signalrConn.stop(); } catch (e) {}
+            }
+
+            if (err?.name === 'AbortError' || err?.name === 'CanceledError') {
+                console.log("Export request aborted by user.");
+                return;
+            }
+
+            console.error("executeExport error:", err);
+            modal.showAlert("오류", "서버 내보내기 요청 중 오류가 발생했습니다.");
         }
     };
 
