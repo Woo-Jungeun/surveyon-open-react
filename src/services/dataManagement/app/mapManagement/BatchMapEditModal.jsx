@@ -395,7 +395,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                         }}
                     >
                         <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: activeTab === 1 ? '#16a34a' : '#cbd5e1', color: '#fff', fontSize: '11px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>1</span>
-                        엑셀 받기
+                        맵 다운로드
                     </button>
                     <button
                         onClick={() => setActiveTab(2)}
@@ -407,7 +407,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                         }}
                     >
                         <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: activeTab === 2 ? '#16a34a' : '#cbd5e1', color: '#fff', fontSize: '11px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>2</span>
-                        올려서 반영
+                        업로드 및 반영
                         {validationResult?.errors && validationResult.errors.length > 0 && (
                             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444', position: 'absolute', top: '12px', right: '8px' }}></span>
                         )}
@@ -422,7 +422,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                         }}
                     >
                         <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: activeTab === 3 ? '#16a34a' : '#cbd5e1', color: '#fff', fontSize: '11px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>3</span>
-                        되돌리기
+                        히스토리 및 복원
                     </button>
                 </div>
 
@@ -430,7 +430,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                 <div className="custom-scrollbar" style={{ flex: 1, padding: '16px 24px 12px 24px', background: '#ffffff', maxHeight: 'calc(92vh - 130px)', overflowY: 'auto', transition: 'all 0.2s ease-in-out' }}>
 
                     {/* ───────────────────────────────────────────── */}
-                    {/* TAB 1: 엑셀 받기 */}
+                    {/* TAB 1: 맵 다운로드 */}
                     {/* ───────────────────────────────────────────── */}
                     {activeTab === 1 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -474,7 +474,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                             </span>
                                         </div>
                                         <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b', lineHeight: '1.4' }}>
-                                            지금 저장된 맵 데이터를 엑셀 양식으로 내려받습니다. 지정된 16개 항목만 수정이 가능합니다.
+                                            지금 저장된 맵 데이터를 엑셀 양식으로 내려받습니다.
                                         </p>
                                     </div>
                                 </div>
@@ -686,7 +686,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                         ))}
                                                     </div>
                                                     <div style={{ marginTop: '2px', paddingTop: '8px', borderTop: '1px solid #fee2e2', color: '#991b1b', fontSize: '12.5px', fontWeight: '500' }}>
-                                                        ※ 변경사항은 반영되지 않았습니다. <strong>'1. 엑셀 받기'</strong> 탭에서 최신 엑셀을 다시 내려받아 작업해주세요.
+                                                        ※ 변경사항은 반영되지 않았습니다. <strong>[맵 다운로드]</strong> 탭에서 최신 엑셀을 다시 내려받아 작업해주세요.
                                                     </div>
                                                 </div>
                                             ) : (
@@ -882,7 +882,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                     )}
 
                     {/* ───────────────────────────────────────────── */}
-                    {/* TAB 3: 되돌리기 */}
+                    {/* TAB 3: 히스토리 및 복원 */}
                     {/* ───────────────────────────────────────────── */}
                     {activeTab === 3 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
