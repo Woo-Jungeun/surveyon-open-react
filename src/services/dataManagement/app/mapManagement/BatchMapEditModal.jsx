@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { X, Upload, FileSpreadsheet, Loader2, AlertTriangle, Info, CheckCircle2, Download } from 'lucide-react';
+import { X, Upload, FileSpreadsheet, Loader2, AlertTriangle, Info, CheckCircle2, Download, ChevronDown, ChevronUp, MinusCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useSelector } from 'react-redux';
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -29,6 +29,20 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
     const [isApplying, setIsApplying] = useState(false);
     const [isApplied, setIsApplied] = useState(false);
     const [validationResult, setValidationResult] = useState(null);
+
+    // 섹션별 접기/펼치기 상태 (손대지 않은 것, 오류, 참고)
+    const [expandedSections, setExpandedSections] = useState({
+        ignored: false,
+        errors: false,
+        notes: false
+    });
+
+    const toggleSection = (key) => {
+        setExpandedSections(prev => ({
+            ...prev,
+            [key]: !prev[key]
+        }));
+    };
 
     // 되돌리기 목록 상태
     const [versions, setVersions] = useState([]);
@@ -138,43 +152,29 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
         try {
             const timestampStr = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 12);
             const fileName = `${currentPn}_map_${timestampStr}.xlsx`;
-            const dataToExport = variables.length > 0
-                ? variables.map(v => ({
-                    '문항': v.sysName || '',
-                    '표제목': v.label || '',
-                    'SPSS변수명': v.spssName || '',
-                    '변수유형': v.type || 'single',
-                    'SRT이관': v.isBaked ? 'O' : 'X',
-                    '실사이관': v.isSilsa ? 'O' : 'X',
-                    '출력제외': v.excludeOutput ? 'O' : 'X',
-                    '검증문항': v.verificationVar ? 'O' : 'X',
-                    '멀티값변경': v.multiValChange ? 'O' : 'X',
-                    '오픈머지제외': v.excludeOpenMerge ? 'O' : 'X',
-                    '소수점자리수': v.decimal || 0,
-                    '문항최소갯수': v.minQuestions || 0,
-                    '분석제외코드': v.excludeCode || '',
-                    '기타오픈정의': v.etcOpen || '',
-                    '로직체크': v.logic || '',
-                    '메모': v.memo || ''
-                }))
-                : Array.from({ length: 360 }).map((_, i) => ({
-                    '문항': `q${i + 1}`,
-                    '표제목': `문항 ${i + 1} 라벨`,
-                    'SPSS변수명': `q${i + 1}`,
-                    '변수유형': 'single',
-                    'SRT이관': 'O',
-                    '실사이관': 'O',
-                    '출력제외': 'X',
-                    '검증문항': 'X',
-                    '멀티값변경': 'X',
-                    '오픈머지제외': 'X',
-                    '소수점자리수': 0,
-                    '문항최소갯수': 0,
-                    '분석제외코드': '',
-                    '기타오픈정의': '',
-                    '로직체크': '',
-                    '메모': ''
-                }));
+            if (!variables || variables.length === 0) {
+                modal.showErrorAlert('알림', '다운로드할 변수 데이터가 없습니다.');
+                return;
+            }
+
+            const dataToExport = variables.map(v => ({
+                '문항': v.sysName || '',
+                '표제목': v.label || '',
+                'SPSS변수명': v.spssName || '',
+                '변수유형': v.type || 'single',
+                'SRT이관': v.isBaked ? 'O' : 'X',
+                '실사이관': v.isSilsa ? 'O' : 'X',
+                '출력제외': v.excludeOutput ? 'O' : 'X',
+                '검증문항': v.verificationVar ? 'O' : 'X',
+                '멀티값변경': v.multiValChange ? 'O' : 'X',
+                '오픈머지제외': v.excludeOpenMerge ? 'O' : 'X',
+                '소수점자리수': v.decimal || 0,
+                '문항최소갯수': v.minQuestions || 0,
+                '분석제외코드': v.excludeCode || '',
+                '기타오픈정의': v.etcOpen || '',
+                '로직체크': v.logic || '',
+                '메모': v.memo || ''
+            }));
 
             const worksheet = XLSX.utils.json_to_sheet(dataToExport);
             const workbook = XLSX.utils.book_new();
@@ -219,45 +219,10 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
             }
         } catch (err) {
             console.error("검사 API 호출 오류:", err);
-            // 시뮬레이션 예시
-            if (file.name.includes('other') || file.name.includes('q260568')) {
-                setValidationResult({
-                    fileErrors: [`이 파일은 설문 ${currentPn} 의 것이 아닙니다. (파일 표시: 설문 q260568_6 · 양식 v1)`]
-                });
-            } else if (file.name.includes('error')) {
-                setValidationResult({
-                    fileErrors: [],
-                    totalRows: 360,
-                    changedRows: 47,
-                    errorRows: 3,
-                    ignoredRows: 2,
-                    missingRows: 3,
-                    ignored: [
-                        "엑셀에만 있는 행 2개는 무시했습니다 (361행, 362행). 맵에 없는 변수를 엑셀에 적어 넣는다고 만들어지지 않습니다. 변수 추가는 맵 화면에서 해주세요.",
-                        "이 설문의 변수 363개 중 파일에는 360개만 있습니다. 빠진 3개는 손대지 않았습니다 — 지워지지 않습니다."
-                    ],
-                    changeByField: { "SRT이관": 31, "변수유형": 12, "표제목": 4 },
-                    errors: [
-                        { row: 12, varName: "q120", messages: ["SPSS변수명 'A1' 이(가) 이미 쓰이고 있습니다 (q090)."] },
-                        { row: 88, varName: "q450", messages: ["변수유형 'sngle' — 알 수 없는 값입니다. 허용: single, multi, scale, rank, minrank, maxrank, open(문자), open(숫자), dummy, custom"] },
-                        { row: 204, varName: "q780_r2", messages: ["SRT이관 이(가) 비어 있습니다."] }
-                    ],
-                    notes: [{ row: 150, message: "q510 — 보기가 1개라 multi 로 바꿔도 …" }]
-                });
-            } else {
-                setValidationResult({
-                    fileErrors: [],
-                    totalRows: 363,
-                    changedRows: 39,
-                    errorRows: 0,
-                    ignoredRows: 0,
-                    missingRows: 0,
-                    ignored: [],
-                    changeByField: { "SRT이관": 31, "메모": 8 },
-                    errors: [],
-                    notes: []
-                });
-            }
+            const errMsg = err?.response?.data?.message || err?.message || '검사 처리 중 오류가 발생했습니다.';
+            setValidationResult({
+                fileErrors: [errMsg]
+            });
         } finally {
             setIsValidating(false);
         }
@@ -303,13 +268,8 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
             }
         } catch (err) {
             console.error("적용 API 호출 오류:", err);
-            // 백업 적용 시뮬레이션
-            const appliedCount = validationResult.changedRows || 39;
-            modal.showAlert('알림', `${appliedCount}행을 성공적으로 반영하였습니다.`);
-            setIsApplied(true);
-
-            if (refreshData) refreshData();
-            fetchVersionsList();
+            const errorMsg = err?.response?.data?.message || err?.message || '적용 처리 중 오류가 발생했습니다.';
+            modal.showErrorAlert('오류', errorMsg);
         } finally {
             setIsApplying(false);
         }
@@ -330,14 +290,9 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                 modal.showErrorAlert('오류', res?.resultjson?.errorcontent || res?.message || '복원 지점 생성에 실패했습니다.');
             }
         } catch (err) {
-            console.error(err);
-            // 백업 local state 추가
-            const newVNum = versions.length + 10;
-            const newTime = new Date().toISOString().slice(5, 16).replace('T', ' ');
-            setVersions(prev => [
-                { id: newVNum, versionNumber: newVNum, versionName: '사용자 지정 복원 지점', changedCount: '—', createdAt: newTime, restoredAt: null },
-                ...prev
-            ]);
+            console.error("복원 지점 생성 오류:", err);
+            const errorMsg = err?.response?.data?.message || err?.message || '복원 지점 생성에 실패했습니다.';
+            modal.showErrorAlert('오류', errorMsg);
         }
     };
 
@@ -373,10 +328,9 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                     modal.showErrorAlert('오류', res?.resultjson?.errorcontent || res?.message || '복원 처리에 실패했습니다.');
                                 }
                             } catch (err) {
-                                console.error(err);
-                                modal.showAlert('알림', `복원이 완료되었습니다.`);
-                                if (refreshData) refreshData();
-                                fetchVersionsList();
+                                console.error("복원 API 오류:", err);
+                                const errorMsg = err?.response?.data?.message || err?.message || '복원 처리 중 오류가 발생했습니다.';
+                                modal.showErrorAlert('오류', errorMsg);
                             }
                         }
                     }
@@ -397,9 +351,9 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
     if (!isOpen) return null;
 
     return (
-        <div className="variable-modal-overlay" style={{ zIndex: 1050 }}>
-            <div className="variable-modal-content" style={{ width: '840px', maxWidth: '95vw', padding: 0, borderRadius: '12px', overflow: 'hidden', background: '#fff', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}>
-                
+        <div className="variable-modal-overlay" style={{ zIndex: 1050, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="variable-modal-content" style={{ width: '840px', maxWidth: '95vw', padding: 0, borderRadius: '12px', overflow: 'hidden', background: '#fff', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', maxHeight: '92vh' }}>
+
                 {/* ── 맵 관리 고유 그린 헤더 ── */}
                 <div className="variable-modal-header" style={{ padding: '18px 24px', borderBottom: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -471,7 +425,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                 </div>
 
                 {/* ── 바디 영역 ── */}
-                <div style={{ padding: '20px 24px 12px 24px', background: '#ffffff', maxHeight: '600px', overflowY: 'auto' }}>
+                <div className="custom-scrollbar" style={{ flex: 1, padding: '16px 24px 12px 24px', background: '#ffffff', maxHeight: 'calc(92vh - 130px)', overflowY: 'auto' }}>
 
                     {/* ───────────────────────────────────────────── */}
                     {/* TAB 1: 엑셀 받기 */}
@@ -619,6 +573,18 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                     {/* ───────────────────────────────────────────── */}
                     {activeTab === 2 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                style={{ display: 'none' }}
+                                accept=".xlsx, .xls"
+                                onChange={(e) => {
+                                    if (e.target.files?.[0]) {
+                                        handleFileSelect(e.target.files[0]);
+                                    }
+                                    e.target.value = "";
+                                }}
+                            />
 
                             {/* 파일 선택 드롭존 (파일이 없을 때) */}
                             {!selectedFile && (
@@ -635,69 +601,67 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px'
                                         }}
                                     >
-                                        <input
-                                            type="file"
-                                            ref={fileInputRef}
-                                            style={{ display: 'none' }}
-                                            accept=".xlsx, .xls"
-                                            onChange={(e) => { if (e.target.files?.[0]) handleFileSelect(e.target.files[0]); }}
-                                        />
                                         <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#f0faf5', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4px' }}>
                                             <Upload size={24} />
                                         </div>
                                         <p style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#1e293b' }}>
-                                            엑셀 파일을 여기에 놓거나 클릭해서 고르세요
+                                            엑셀 파일을 드래그하거나 클릭하여 선택하세요
                                         </p>
                                         <span style={{ fontSize: '13px', color: '#94a3b8' }}>
-                                            .xlsx · 고르면 바로 검사합니다. 이때는 저장하지 않습니다.
+                                            .xlsx 형식 지원
                                         </span>
                                     </div>
 
                                     <div style={{ padding: '14px 16px', background: '#f0faf5', border: '1px solid #bbf7d0', borderRadius: '8px', fontSize: '13px', color: '#15803d', lineHeight: '1.5' }}>
-                                        <strong>검사 → 확인 → 적용 순서입니다.</strong> 무엇이 몇 건 바뀌는지 먼저 보여드리고, <strong>[적용]</strong> 을 누르셔야 저장됩니다. 적용 직전 상태는 자동으로 되돌림 지점에 남습니다.
+                                        <strong>파일 반영 안내:</strong> 파일 선택 시 자동 검사하며, <strong>[적용]</strong> 버튼을 클릭해야 저장됩니다. (적용 직전 데이터는 되돌리기 지점에 자동 저장됩니다.)
                                     </div>
                                 </>
                             )}
 
                             {/* 파일이 선택된 상태 */}
                             {selectedFile && (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     {/* 선택된 파일 카드 */}
-                                    <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', color: '#1e293b' }}>
-                                            <FileSpreadsheet size={18} color="#16a34a" />
-                                            <span>{selectedFile.name}</span>
+                                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div style={{ width: '30px', height: '30px', borderRadius: '6px', background: '#ffffff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a' }}>
+                                                <FileSpreadsheet size={16} />
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <span style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b' }}>{selectedFile.name}</span>
+                                                <span style={{ fontSize: '11px', color: '#94a3b8' }}>{(selectedFile.size / 1024).toFixed(0)} KB</span>
+                                            </div>
                                         </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <span style={{ fontSize: '12px', color: '#94a3b8' }}>{(selectedFile.size / 1024).toFixed(0)} KB</span>
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedFile(null);
-                                                    setValidationResult(null);
-                                                    setIsApplied(false);
-                                                }}
-                                                style={{ height: '28px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '4px', background: '#ffffff', color: '#475569', fontSize: '12px', cursor: 'pointer' }}
-                                            >
-                                                다른 파일
-                                            </button>
-                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (fileInputRef.current) {
+                                                    fileInputRef.current.click();
+                                                }
+                                            }}
+                                            style={{ height: '28px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#475569', fontSize: '12px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.15s' }}
+                                            onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
+                                            onMouseOut={e => e.currentTarget.style.background = '#ffffff'}
+                                        >
+                                            파일 변경
+                                        </button>
                                     </div>
 
                                     {/* 1. 검사 진행 중 */}
                                     {isValidating && (
-                                        <div style={{ padding: '16px', background: '#f0faf5', border: '1px solid #bbf7d0', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', color: '#15803d', fontSize: '13px' }}>
+                                        <div style={{ padding: '14px 16px', background: '#f0faf5', border: '1px solid #bbf7d0', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', color: '#15803d', fontSize: '13px' }}>
                                             <Loader2 size={18} className="animate-spin" />
-                                            <span><strong>검사하는 중입니다. 아직 저장하지 않았습니다</strong> — 지금 닫아도 아무 일도 일어나지 않습니다.</span>
+                                            <span><strong>검사하는 중입니다...</strong> 잠시만 기다려주세요.</span>
                                         </div>
                                     )}
 
                                     {/* 2. 적용 처리 완료 상태 */}
                                     {!isValidating && isApplied && (
-                                        <div style={{ padding: '24px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', color: '#166534' }}>
-                                            <CheckCircle2 size={40} color="#16a34a" />
-                                            <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>성공적으로 반영되었습니다!</h4>
-                                            <p style={{ margin: 0, fontSize: '13px', color: '#15803d' }}>
-                                                엑셀 변경사항이 맵 데이터에 반영되었으며, 복원 지점이 생성되었습니다.
+                                        <div style={{ padding: '20px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', color: '#166534' }}>
+                                            <CheckCircle2 size={36} color="#16a34a" />
+                                            <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>성공적으로 반영되었습니다!</h4>
+                                            <p style={{ margin: 0, fontSize: '12px', color: '#15803d' }}>
+                                                엑셀 변경사항이 맵 데이터에 반영되었으며, 복원 지점이 자동 생성되었습니다.
                                             </p>
                                         </div>
                                     )}
@@ -707,69 +671,150 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                         <>
                                             {/* fileErrors가 존재하는 경우 (다른 설문 파일 / 엑셀 형식 오류 등 전체 차단) */}
                                             {hasFileErrors ? (
-                                                <div style={{ padding: '16px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                    <strong style={{ fontSize: '14px', color: '#dc2626' }}>이 파일은 진행할 수 없습니다.</strong>
-                                                    {validationResult.fileErrors.map((err, idx) => (
-                                                        <div key={idx} style={{ lineHeight: '1.5' }}>
-                                                            • {err}
-                                                        </div>
-                                                    ))}
-                                                    <div>한 건도 반영하지 않았습니다. 이 화면에서 엑셀을 다시 받아 작업해주세요.</div>
+                                                <div style={{ padding: '16px 18px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <AlertTriangle size={16} color="#dc2626" />
+                                                        <strong style={{ fontSize: '14px', color: '#dc2626' }}>업로드할 수 없는 파일입니다.</strong>
+                                                    </div>
+                                                    <div style={{ paddingLeft: '4px', display: 'flex', flexDirection: 'column', gap: '4px', color: '#7f1d1d', lineHeight: '1.45' }}>
+                                                        {validationResult.fileErrors.map((err, idx) => (
+                                                            <div key={idx}>
+                                                                • {err}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    <div style={{ marginTop: '2px', paddingTop: '8px', borderTop: '1px solid #fee2e2', color: '#991b1b', fontSize: '12.5px', fontWeight: '500' }}>
+                                                        ※ 변경사항은 반영되지 않았습니다. <strong>'1. 엑셀 받기'</strong> 탭에서 최신 엑셀을 다시 내려받아 작업해주세요.
+                                                    </div>
                                                 </div>
                                             ) : (
                                                 /* 정상 또는 오류 섞인 파일 결과 내역 */
-                                                <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                                                    {/* 요약 바 */}
-                                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                                                        <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: '#16a34a' }}>
-                                                            {validationResult.changedRows || 0} 행이 바뀝니다
-                                                        </h4>
-                                                        <span style={{ fontSize: '13px', color: '#94a3b8' }}>
-                                                            / 파일에서 확인한 {validationResult.totalRows || 0}행
-                                                        </span>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    {/* 요약 상태 배너 */}
+                                                    <div style={{
+                                                        padding: '8px 14px',
+                                                        background: (validationResult.changedRows || 0) > 0 ? '#f0faf5' : '#f8fafc',
+                                                        border: `1px solid ${(validationResult.changedRows || 0) > 0 ? '#bbf7d0' : '#e2e8f0'}`,
+                                                        borderRadius: '8px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between'
+                                                    }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            {(validationResult.changedRows || 0) > 0 ? (
+                                                                <CheckCircle2 size={18} color="#16a34a" />
+                                                            ) : (
+                                                                <Info size={18} color="#64748b" />
+                                                            )}
+                                                            <div>
+                                                                <div style={{ fontSize: '14px', fontWeight: 'bold', color: (validationResult.changedRows || 0) > 0 ? '#15803d' : '#334155' }}>
+                                                                    {(validationResult.changedRows || 0) > 0
+                                                                        ? `총 ${validationResult.changedRows}개 행이 변경됩니다`
+                                                                        : '변경사항이 없습니다 (0개 행)'}
+                                                                </div>
+                                                                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '1px' }}>
+                                                                    {(validationResult.changedRows || 0) > 0
+                                                                        ? `업로드한 파일에서 확인한 ${validationResult.totalRows || 0}행 중 ${validationResult.changedRows}개 행의 값이 수정됩니다.`
+                                                                        : `업로드한 ${validationResult.totalRows || 0}행의 데이터가 현재 저장된 맵과 동일합니다.`}
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
 
                                                     {/* 항목별 변경 칩 (changeByField) */}
                                                     {validationResult.changeByField && Object.keys(validationResult.changeByField).length > 0 && (
-                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                                            {Object.entries(validationResult.changeByField).map(([key, val], idx) => (
-                                                                <span key={idx} style={{ background: '#f0faf5', border: '1px solid #bbf7d0', color: '#15803d', fontSize: '12px', fontWeight: '600', padding: '2px 8px', borderRadius: '12px' }}>
-                                                                    {key} {val}
-                                                                </span>
-                                                            ))}
+                                                        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                            <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#1e293b' }}>항목별 변경 내역</span>
+                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                                                {Object.entries(validationResult.changeByField).map(([key, val], idx) => (
+                                                                    <span key={idx} style={{ background: '#f0faf5', border: '1px solid #bbf7d0', color: '#15803d', fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '12px' }}>
+                                                                        {key} <strong style={{ marginLeft: '3px' }}>+{val}</strong>
+                                                                    </span>
+                                                                ))}
+                                                            </div>
                                                         </div>
                                                     )}
 
-                                                    {/* 손대지 않은 것 (ignored / missing) */}
-                                                    {((validationResult.ignored && validationResult.ignored.length > 0) || (validationResult.ignoredRows || 0) > 0 || (validationResult.missingRows || 0) > 0) && (
-                                                        <div style={{ border: '1px solid #f1f5f9', background: '#fafafa', borderRadius: '6px', padding: '12px', fontSize: '12px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                            <span style={{ fontWeight: 'bold', color: '#1e293b' }}>
-                                                                손대지 않은 것 <span style={{ background: '#e2e8f0', padding: '1px 6px', borderRadius: '8px', fontSize: '11px' }}>{(validationResult.ignoredRows || 0) + (validationResult.missingRows || 0) || validationResult.ignored?.length || 0}</span>
-                                                            </span>
-                                                            {validationResult.ignored && validationResult.ignored.length > 0 ? (
-                                                                validationResult.ignored.map((text, idx) => (
-                                                                    <div key={idx}>• {text}</div>
-                                                                ))
-                                                            ) : (
-                                                                <div>• 엑셀에 포함되지 않거나 무시된 행은 반영되지 않고 원본이 유지됩니다.</div>
-                                                            )}
-                                                        </div>
-                                                    )}
+                                                    {/* 미변경 항목 (ignored / missing) */}
+                                                    {validationResult.ignored && validationResult.ignored.length > 0 && (() => {
+                                                        const ignoredList = validationResult.ignored;
+                                                        const ignoredCount = (validationResult.ignoredRows || 0) + (validationResult.missingRows || 0) || ignoredList.length;
+
+                                                        return (
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: '2px', paddingRight: '2px' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                        <MinusCircle size={14} color="#64748b" />
+                                                                        <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#334155' }}>미변경 항목</span>
+                                                                        <span style={{ background: '#e2e8f0', color: '#475569', padding: '1px 7px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' }}>
+                                                                            {ignoredCount}
+                                                                        </span>
+                                                                    </div>
+                                                                    {ignoredList.length > 2 && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => toggleSection('ignored')}
+                                                                            style={{
+                                                                                display: 'inline-flex', alignItems: 'center', gap: '2px',
+                                                                                background: 'transparent', border: 'none', color: '#475569',
+                                                                                fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+                                                                                padding: '1px 5px', borderRadius: '4px', transition: 'all 0.15s'
+                                                                            }}
+                                                                            onMouseOver={e => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#1e293b'; }}
+                                                                            onMouseOut={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#475569'; }}
+                                                                        >
+                                                                            <span style={{ fontSize: '12px' }}>{expandedSections.ignored ? '접기' : '펼쳐보기'}</span>
+                                                                            {expandedSections.ignored ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                                <div className="custom-scrollbar" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '6px', display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: expandedSections.ignored ? '260px' : '85px', overflowY: 'auto', transition: 'max-height 0.2s ease-in-out' }}>
+                                                                    {ignoredList.map((text, idx) => (
+                                                                        <div key={idx} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '6px 10px', fontSize: '12px', color: '#334155', lineHeight: '1.35' }}>
+                                                                            {text}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })()}
 
                                                     {/* 오류 상세 카드 (errors) */}
                                                     {validationResult.errors && validationResult.errors.length > 0 && (
-                                                        <div style={{ border: '1px solid #fee2e2', background: '#fef2f2', borderRadius: '6px', padding: '12px', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                            <div style={{ color: '#dc2626', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                <AlertTriangle size={14} />
-                                                                <span>오류 {validationResult.errors.length}</span>
-                                                                <span style={{ fontWeight: 'normal', color: '#991b1b', marginLeft: '4px' }}>— 이 행만 건너뜁니다</span>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: '2px', paddingRight: '2px' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                    <AlertTriangle size={14} color="#dc2626" />
+                                                                    <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#991b1b' }}>오류</span>
+                                                                    <span style={{ background: '#fee2e2', color: '#dc2626', padding: '1px 7px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' }}>
+                                                                        {validationResult.errors.length}
+                                                                    </span>
+                                                                    <span style={{ fontSize: '12px', color: '#64748b', marginLeft: '4px' }}>— 해당 행만 제외하고 진행됩니다</span>
+                                                                </div>
+                                                                {validationResult.errors.length > 2 && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => toggleSection('errors')}
+                                                                        style={{
+                                                                            display: 'inline-flex', alignItems: 'center', gap: '2px',
+                                                                            background: 'transparent', border: 'none', color: '#475569',
+                                                                            fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+                                                                            padding: '1px 5px', borderRadius: '4px', transition: 'all 0.15s'
+                                                                        }}
+                                                                        onMouseOver={e => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#1e293b'; }}
+                                                                        onMouseOut={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#475569'; }}
+                                                                    >
+                                                                        <span style={{ fontSize: '12px' }}>{expandedSections.errors ? '접기' : '펼쳐보기'}</span>
+                                                                        {expandedSections.errors ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                                                                    </button>
+                                                                )}
                                                             </div>
-                                                            <div style={{ background: '#ffffff', border: '1px solid #fca5a5', borderRadius: '4px', overflow: 'hidden' }}>
+                                                            <div className="custom-scrollbar" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '6px', display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: expandedSections.errors ? '280px' : '90px', overflowY: 'auto', transition: 'max-height 0.2s ease-in-out' }}>
                                                                 {validationResult.errors.map((errItem, idx) => (
-                                                                    <div key={idx} style={{ display: 'flex', padding: '6px 10px', borderBottom: idx < validationResult.errors.length - 1 ? '1px solid #fee2e2' : 'none', color: '#334155' }}>
-                                                                        <span style={{ width: '50px', color: '#64748b' }}>{errItem.row}행</span>
-                                                                        <span style={{ width: '80px', fontWeight: 'bold' }}>{errItem.varName || errItem.id}</span>
-                                                                        <span style={{ flex: 1, color: '#dc2626' }}>
+                                                                    <div key={idx} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '5px 10px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
+                                                                        <span style={{ width: '40px', color: '#94a3b8', flexShrink: 0, fontSize: '12px' }}>{errItem.row}행</span>
+                                                                        <span style={{ width: '70px', fontWeight: 'bold', color: '#1e293b', flexShrink: 0, fontSize: '12px' }}>{errItem.varName || errItem.id}</span>
+                                                                        <span style={{ flex: 1, color: '#334155', fontSize: '12px' }}>
                                                                             {Array.isArray(errItem.messages) ? errItem.messages.join(', ') : errItem.messages || errItem.message}
                                                                         </span>
                                                                     </div>
@@ -779,20 +824,52 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                     )}
 
                                                     {/* 참고 상세 카드 (notes) */}
-                                                    {validationResult.notes && validationResult.notes.length > 0 && (
-                                                        <div style={{ color: '#475569', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                            <div style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                <Info size={14} color="#64748b" />
-                                                                <span>참고 {validationResult.notes.length}</span>
-                                                                <span style={{ fontWeight: 'normal', color: '#64748b' }}>— 적용은 됩니다</span>
-                                                            </div>
-                                                            {validationResult.notes.map((noteItem, idx) => (
-                                                                <div key={idx} style={{ paddingLeft: '18px', color: '#64748b' }}>
-                                                                    • {noteItem.row ? `${noteItem.row}행: ` : ''}{noteItem.message}
+                                                    {validationResult.notes && validationResult.notes.length > 0 && (() => {
+                                                        const notesList = validationResult.notes;
+
+                                                        return (
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: '2px', paddingRight: '2px' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                        <Info size={14} color="#0284c7" />
+                                                                        <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#0369a1' }}>참고</span>
+                                                                        <span style={{ background: '#e0f2fe', color: '#0284c7', padding: '1px 7px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' }}>
+                                                                            {notesList.length}
+                                                                        </span>
+                                                                        <span style={{ fontSize: '12px', color: '#64748b', marginLeft: '4px' }}>— 자동 변경 또는 안내사항</span>
+                                                                    </div>
+                                                                    {notesList.length > 2 && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => toggleSection('notes')}
+                                                                            style={{
+                                                                                display: 'inline-flex', alignItems: 'center', gap: '2px',
+                                                                                background: 'transparent', border: 'none', color: '#475569',
+                                                                                fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+                                                                                padding: '1px 5px', borderRadius: '4px', transition: 'all 0.15s'
+                                                                            }}
+                                                                            onMouseOver={e => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#1e293b'; }}
+                                                                            onMouseOut={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#475569'; }}
+                                                                        >
+                                                                            <span style={{ fontSize: '12px' }}>{expandedSections.notes ? '접기' : '펼쳐보기'}</span>
+                                                                            {expandedSections.notes ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                                                                        </button>
+                                                                    )}
                                                                 </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
+                                                                <div className="custom-scrollbar" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '6px', display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: expandedSections.notes ? '260px' : '85px', overflowY: 'auto', transition: 'max-height 0.2s ease-in-out' }}>
+                                                                    {notesList.map((noteItem, idx) => (
+                                                                        <div key={idx} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '5px 10px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
+                                                                            <span style={{ width: '40px', color: '#94a3b8', flexShrink: 0, fontSize: '12px' }}>{noteItem.row ? `${noteItem.row}행` : ''}</span>
+                                                                            <span style={{ flex: 1, color: '#334155', fontSize: '12px' }}>
+                                                                                {noteItem.varName && <strong style={{ color: '#1e293b', marginRight: '6px', fontSize: '12px' }}>{noteItem.varName}</strong>}
+                                                                                {typeof noteItem === 'string' ? noteItem : noteItem.message}
+                                                                            </span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </div>
                                             )}
                                         </>
@@ -892,40 +969,64 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
 
                 {/* ── 푸터 ── */}
                 <div className="variable-modal-footer" style={{ borderTop: 'none', padding: '8px 24px 24px 24px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                    <button
-                        type="button"
-                        className="upload-cancel-btn"
-                        onClick={handleModalClose}
-                    >
-                        취소
-                    </button>
-
-                    {activeTab === 2 && (
+                    {isApplied ? (
                         <button
                             type="button"
                             className="upload-submit-btn"
-                            onClick={handleApplyRules}
-                            disabled={isApplyDisabled}
+                            onClick={handleModalClose}
                             style={{
-                                backgroundColor: isApplyDisabled ? '#cbd5e1' : '#16a34a',
-                                cursor: isApplyDisabled ? 'not-allowed' : 'pointer',
-                                opacity: isApplyDisabled ? 0.6 : 1,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px'
+                                backgroundColor: '#16a34a',
+                                color: '#ffffff',
+                                cursor: 'pointer',
+                                height: '36px',
+                                padding: '0 20px',
+                                borderRadius: '6px',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                border: 'none',
+                                transition: 'all 0.15s'
                             }}
+                            onMouseOver={e => e.currentTarget.style.backgroundColor = '#15803d'}
+                            onMouseOut={e => e.currentTarget.style.backgroundColor = '#16a34a'}
                         >
-                            {isApplying ? (
-                                <>
-                                    <Loader2 size={14} className="animate-spin" />
-                                    <span>적용 중...</span>
-                                </>
-                            ) : isApplied ? (
-                                '적용됨'
-                            ) : (
-                                `적용 (${changedRowsCount}행)`
-                            )}
+                            닫기
                         </button>
+                    ) : (
+                        <>
+                            <button
+                                type="button"
+                                className="upload-cancel-btn"
+                                onClick={handleModalClose}
+                            >
+                                취소
+                            </button>
+
+                            {activeTab === 2 && (
+                                <button
+                                    type="button"
+                                    className="upload-submit-btn"
+                                    onClick={handleApplyRules}
+                                    disabled={isApplyDisabled}
+                                    style={{
+                                        backgroundColor: isApplyDisabled ? '#cbd5e1' : '#16a34a',
+                                        cursor: isApplyDisabled ? 'not-allowed' : 'pointer',
+                                        opacity: isApplyDisabled ? 0.6 : 1,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px'
+                                    }}
+                                >
+                                    {isApplying ? (
+                                        <>
+                                            <Loader2 size={14} className="animate-spin" />
+                                            <span>적용 중...</span>
+                                        </>
+                                    ) : (
+                                        `적용 (${changedRowsCount}행)`
+                                    )}
+                                </button>
+                            )}
+                        </>
                     )}
                 </div>
             </div>
