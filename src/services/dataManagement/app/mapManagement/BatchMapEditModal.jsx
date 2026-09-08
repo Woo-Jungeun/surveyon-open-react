@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { X, Upload, FileSpreadsheet, Loader2, AlertTriangle, Info, CheckCircle2, Download, ChevronDown, ChevronUp, MinusCircle } from 'lucide-react';
+import { X, Upload, FileSpreadsheet, Loader2, AlertTriangle, Info, CheckCircle2, Download, ChevronDown, ChevronUp, MinusCircle, Plus } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useSelector } from 'react-redux';
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -303,7 +303,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
 
         modal.showConfirm(
             '복원 확인',
-            `[${vName}] 지점으로 되돌리시겠습니까?\n\n되돌리면 지금 상태도 먼저 저장합니다. 잘못 눌러도 다시 앞으로 올 수 있습니다.`,
+            `[${vName}] 지점으로 되돌리시겠습니까?\n\n현재 맵 상태가 먼저 자동 저장된 후 선택하신 지점으로 복원됩니다. (언제든 다시 원복 가능)`,
             {
                 btns: [
                     { title: '취소', click: () => { } },
@@ -884,22 +884,27 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                     {/* ───────────────────────────────────────────── */}
                     {activeTab === 3 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <p style={{ margin: 0, fontSize: '13px', color: '#475569', lineHeight: '1.5' }}>
-                                엑셀을 적용하기 직전 상태가 자동으로 남습니다. 직접 남길 수도 있습니다. 최근 <strong>20개</strong>까지 보관하고 오래된 것부터 지워집니다.
-                            </p>
-
-                            <div>
+                            {/* 상단 통합 안내 및 복원 지점 생성 바 */}
+                            <div style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+                                background: '#f8fafc', border: '1px solid #e2e8f0', padding: '12px 16px', borderRadius: '8px'
+                            }}>
+                                <div style={{ fontSize: '13px', color: '#334155', lineHeight: '1.45' }}>
+                                    엑셀 적용 전 상태가 자동 저장되며, 필요한 경우 직접 복원 지점을 만드실 수 있습니다. <span style={{ color: '#64748b', fontSize: '12px' }}>(최근 <strong>20개</strong>까지 보관)</span>
+                                </div>
                                 <button
                                     onClick={handleCreateVersion}
                                     style={{
-                                        height: '36px', padding: '0 16px', background: '#ffffff', border: '1px solid #cbd5e1',
-                                        borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#334155', cursor: 'pointer',
-                                        transition: 'all 0.15s'
+                                        display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0,
+                                        height: '34px', padding: '0 14px', background: '#ffffff', border: '1px solid #16a34a',
+                                        borderRadius: '6px', fontSize: '12.5px', fontWeight: '600', color: '#15803d', cursor: 'pointer',
+                                        transition: 'all 0.15s', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)'
                                     }}
-                                    onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
-                                    onMouseOut={e => e.currentTarget.style.background = '#ffffff'}
+                                    onMouseOver={e => { e.currentTarget.style.background = '#f0faf5'; e.currentTarget.style.borderColor = '#15803d'; }}
+                                    onMouseOut={e => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = '#16a34a'; }}
                                 >
-                                    지금 상태를 복원 지점으로 저장
+                                    <Plus size={14} color="#16a34a" />
+                                    <span>현재 상태 복원 지점으로 생성</span>
                                 </button>
                             </div>
 
@@ -910,7 +915,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                     <span style={{ width: '130px' }}>시각</span>
                                     <span style={{ flex: 1 }}>이름</span>
                                     <span style={{ width: '80px', textAlign: 'center' }}>바뀐 행</span>
-                                    <span style={{ width: '90px', textAlign: 'right' }}>작동</span>
+                                    <span style={{ width: '90px', textAlign: 'right' }}></span>
                                 </div>
                                 <div className="custom-scrollbar" style={{ maxHeight: '240px', overflowY: 'auto' }}>
                                     {isLoadingVersions ? (
@@ -933,9 +938,19 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                     {point.isAuto && (
                                                         <span style={{ background: '#f1f5f9', color: '#64748b', fontSize: '11px', padding: '1px 6px', borderRadius: '4px' }}>자동</span>
                                                     )}
-                                                    {point.restoredAt && (
-                                                        <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '11px', padding: '1px 6px', borderRadius: '4px' }}>복원됨</span>
-                                                    )}
+                                                    {point.restoredAt && (() => {
+                                                        const s = String(point.restoredAt).replace('T', ' ').trim();
+                                                        let text = '복원됨';
+                                                        if (s && s !== 'true') {
+                                                            const formatted = s.length >= 16 ? s.slice(5, 16) : s;
+                                                            text = `${formatted} 복원됨`;
+                                                        }
+                                                        return (
+                                                            <span style={{ background: '#f0f9ff', color: '#0369a1', border: '1px solid #bae6fd', fontSize: '11px', fontWeight: '500', padding: '1px 7px', borderRadius: '4px' }}>
+                                                                {text}
+                                                            </span>
+                                                        );
+                                                    })()}
                                                 </div>
                                                 <span style={{ width: '80px', textAlign: 'center', fontSize: '12px', color: '#475569' }}>
                                                     {point.changedCount ?? '—'}
@@ -945,10 +960,11 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                         onClick={() => handleRestore(point)}
                                                         style={{
                                                             height: '28px', padding: '0 12px', border: '1px solid #cbd5e1', borderRadius: '4px',
-                                                            background: '#ffffff', color: '#334155', fontSize: '12px', cursor: 'pointer', fontWeight: '500'
+                                                            background: '#ffffff', color: '#334155', fontSize: '12px', cursor: 'pointer', fontWeight: '500',
+                                                            transition: 'all 0.15s'
                                                         }}
-                                                        onMouseOver={e => e.currentTarget.style.background = '#f1f5f9'}
-                                                        onMouseOut={e => e.currentTarget.style.background = '#ffffff'}
+                                                        onMouseOver={e => { e.currentTarget.style.background = '#f0faf5'; e.currentTarget.style.borderColor = '#86efac'; e.currentTarget.style.color = '#15803d'; }}
+                                                        onMouseOut={e => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#334155'; }}
                                                     >
                                                         되돌리기
                                                     </button>
@@ -960,8 +976,8 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                             </div>
 
                             {/* 되돌리기 안내 박스 */}
-                            <div style={{ padding: '14px 16px', background: '#f0faf5', border: '1px solid #bbf7d0', borderRadius: '8px', fontSize: '13px', color: '#15803d', lineHeight: '1.5' }}>
-                                <strong>되돌리면 지금 상태도 먼저 저장합니다.</strong> 잘못 눌러도 다시 앞으로 올 수 있습니다. 실제로 달라진 행만 되돌립니다 — 47행을 적용했다면 되돌릴 때도 47행만 손댑니다.
+                            <div style={{ padding: '13px 16px', background: '#f0faf5', border: '1px solid #bbf7d0', borderRadius: '8px', fontSize: '12.5px', fontWeight: '500', color: '#15803d', lineHeight: '1.5' }}>
+                                복원 시 현재 상태가 먼저 자동 저장되므로 언제든 다시 원복할 수 있습니다. 변경이 일어났던 해당 행들만 안전하게 복원됩니다.
                             </div>
                         </div>
                     )}
@@ -969,25 +985,25 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
 
                 {/* ── 푸터 ── */}
                 <div className="variable-modal-footer" style={{ borderTop: 'none', padding: '8px 24px 24px 24px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                    {isApplied ? (
+                    {isApplied || activeTab === 1 || activeTab === 3 ? (
                         <button
                             type="button"
-                            className="upload-submit-btn"
+                            className="upload-cancel-btn"
                             onClick={handleModalClose}
                             style={{
-                                backgroundColor: '#16a34a',
-                                color: '#ffffff',
-                                cursor: 'pointer',
                                 height: '36px',
                                 padding: '0 20px',
                                 borderRadius: '6px',
                                 fontSize: '13px',
                                 fontWeight: '600',
-                                border: 'none',
+                                border: '1px solid #cbd5e1',
+                                background: '#ffffff',
+                                color: '#334155',
+                                cursor: 'pointer',
                                 transition: 'all 0.15s'
                             }}
-                            onMouseOver={e => e.currentTarget.style.backgroundColor = '#15803d'}
-                            onMouseOut={e => e.currentTarget.style.backgroundColor = '#16a34a'}
+                            onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
+                            onMouseOut={e => e.currentTarget.style.background = '#ffffff'}
                         >
                             닫기
                         </button>
