@@ -82,18 +82,20 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen]);
 
-    // 탭 3으로 이동 시 버전 목록 자동 갱신
+    // 탭 3으로 이동 시 버전 목록 자동 갱신 (이미 데이터가 있으면 배경에서 조용히 갱신하여 깜빡임 방지)
     useEffect(() => {
         if (isOpen && activeTab === 3) {
-            fetchVersionsList();
+            fetchVersionsList(versions && versions.length > 0);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab]);
 
     // ── 버전 목록 조회 API 호출 ──
-    const fetchVersionsList = async () => {
+    const fetchVersionsList = async (isSilent = false) => {
         if (!currentPn) return;
-        setIsLoadingVersions(true);
+        if (!isSilent) {
+            setIsLoadingVersions(true);
+        }
         try {
             const res = await getExcelVersions.mutateAsync({ pn: currentPn, user: userId });
             if (String(res?.success) === '777' && Array.isArray(res?.resultjson)) {
@@ -302,13 +304,13 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
         const vName = item.versionName || `v${item.versionNumber || vId}`;
 
         modal.showConfirm(
-            '복원 확인',
+            '확인',
             `[${vName}] 지점으로 되돌리시겠습니까?\n\n현재 맵 상태가 먼저 자동 저장된 후 선택하신 지점으로 복원됩니다. (언제든 다시 원복 가능)`,
             {
                 btns: [
                     { title: '취소', click: () => { } },
                     {
-                        title: '되돌리기 실행',
+                        title: '실행',
                         click: async () => {
                             try {
                                 const res = await restoreExcelVersion.mutateAsync({
@@ -425,7 +427,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                 </div>
 
                 {/* ── 바디 영역 ── */}
-                <div className="custom-scrollbar" style={{ flex: 1, padding: '16px 24px 12px 24px', background: '#ffffff', maxHeight: 'calc(92vh - 130px)', overflowY: 'auto' }}>
+                <div className="custom-scrollbar" style={{ flex: 1, padding: '16px 24px 12px 24px', background: '#ffffff', maxHeight: 'calc(92vh - 130px)', overflowY: 'auto', transition: 'all 0.2s ease-in-out' }}>
 
                     {/* ───────────────────────────────────────────── */}
                     {/* TAB 1: 엑셀 받기 */}
@@ -917,13 +919,13 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                     <span style={{ width: '80px', textAlign: 'center' }}>바뀐 행</span>
                                     <span style={{ width: '90px', textAlign: 'right' }}></span>
                                 </div>
-                                <div className="custom-scrollbar" style={{ maxHeight: '240px', overflowY: 'auto' }}>
-                                    {isLoadingVersions ? (
-                                        <div style={{ padding: '24px', textAlign: 'center', color: '#64748b', fontSize: '13px' }}>
+                                <div className="custom-scrollbar" style={{ minHeight: '210px', maxHeight: '240px', overflowY: 'auto' }}>
+                                    {isLoadingVersions && (!versions || versions.length === 0) ? (
+                                        <div style={{ height: '210px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: '13px' }}>
                                             복원 지점 목록을 불러오는 중...
                                         </div>
-                                    ) : versions.length === 0 ? (
-                                        <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                                    ) : !versions || versions.length === 0 ? (
+                                        <div style={{ height: '210px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '13px' }}>
                                             저장된 복원 지점이 없습니다.
                                         </div>
                                     ) : (
