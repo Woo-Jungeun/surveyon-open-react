@@ -147,7 +147,8 @@ const KendoGridV3 = (props) => {
     const internalRowRender = (trElement, trProps) => {
         if (!reorderable) return trElement;
 
-        const index = trProps.dataIndex;
+        const realIndex = data.indexOf(trProps.dataItem);
+        const index = realIndex !== -1 ? realIndex : trProps.dataIndex;
         const isReorderable = !isReorderableRow || isReorderableRow(data[index]);
 
         if (!isReorderable) {
@@ -195,6 +196,19 @@ const KendoGridV3 = (props) => {
             onDragOver: (e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = "move";
+
+                // 드래그 중 상/하단 엣지 영역에 도달하면 그리드 스크롤 자동 이동
+                const gridContent = e.currentTarget.closest('.k-grid-content');
+                if (gridContent) {
+                    const contentRect = gridContent.getBoundingClientRect();
+                    const edgeThreshold = 40;
+                    if (e.clientY < contentRect.top + edgeThreshold) {
+                        gridContent.scrollTop -= 15;
+                    } else if (e.clientY > contentRect.bottom - edgeThreshold) {
+                        gridContent.scrollTop += 15;
+                    }
+                }
+
                 const rect = e.currentTarget.getBoundingClientRect();
                 const y = e.clientY - rect.top;
 
@@ -346,9 +360,10 @@ const KendoGridV3 = (props) => {
                         headerClassName="k-text-center"
                         cell={(cellProps) => {
                             const isOnlyAdd = addable && !copyable;
+                            const itemIndex = data.indexOf(cellProps.dataItem) !== -1 ? data.indexOf(cellProps.dataItem) : cellProps.dataIndex;
                             return (
                                 <td 
-                                    onClick={isOnlyAdd ? (e) => { e.preventDefault(); e.stopPropagation(); handleAdd(cellProps.dataIndex); } : undefined}
+                                    onClick={isOnlyAdd ? (e) => { e.preventDefault(); e.stopPropagation(); handleAdd(itemIndex); } : undefined}
                                     style={{ 
                                         textAlign: 'center', 
                                         padding: '0 4px', 
@@ -362,7 +377,7 @@ const KendoGridV3 = (props) => {
                                                 type="button" 
                                                 title="빈 행 추가" 
                                                 className="dp-grid-add-row-btn" 
-                                                onClick={!isOnlyAdd ? (e) => { e.preventDefault(); e.stopPropagation(); handleAdd(cellProps.dataIndex); } : undefined} 
+                                                onClick={!isOnlyAdd ? (e) => { e.preventDefault(); e.stopPropagation(); handleAdd(itemIndex); } : undefined} 
                                                 style={{ 
                                                     display: 'flex', 
                                                     alignItems: 'center', 
@@ -381,7 +396,7 @@ const KendoGridV3 = (props) => {
                                             <div style={{ width: '1px', height: '12px', background: '#cbd5e1' }} />
                                         )}
                                         {copyable && (
-                                            <button type="button" title="현재 행 복사" className="dp-grid-copy-row-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopy(cellProps.dataIndex); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', padding: 0, border: 'none', background: 'transparent' }}>
+                                            <button type="button" title="현재 행 복사" className="dp-grid-copy-row-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopy(itemIndex); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', padding: 0, border: 'none', background: 'transparent' }}>
                                                 <Copy size={15} color="#94a3b8" strokeWidth={2} />
                                             </button>
                                         )}
@@ -399,30 +414,33 @@ const KendoGridV3 = (props) => {
                         title="삭제"
                         width="50px"
                         resizable={false}
-                        cell={(cellProps) => (
-                            <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
-                                {(!isDeletableRow || isDeletableRow(cellProps.dataItem)) ? (
-                                    <button
-                                        type="button"
-                                        className="dp-row-del-btn"
-                                        onMouseEnter={(e) => {
-                                            const tr = e.currentTarget.closest('tr');
-                                            if (tr) tr.classList.add('dp-row-del-hover');
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            const tr = e.currentTarget.closest('tr');
-                                            if (tr) tr.classList.remove('dp-row-del-hover');
-                                        }}
-                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(cellProps.dataIndex); }}
-                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '24px', padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}
-                                    >
-                                        <Trash2 size={16} color="currentColor" />
-                                    </button>
-                                ) : (
-                                    <span style={{ color: '#cbd5e1', fontWeight: 600 }}>-</span>
-                                )}
-                            </td>
-                        )}
+                        cell={(cellProps) => {
+                            const itemIndex = data.indexOf(cellProps.dataItem) !== -1 ? data.indexOf(cellProps.dataItem) : cellProps.dataIndex;
+                            return (
+                                <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
+                                    {(!isDeletableRow || isDeletableRow(cellProps.dataItem)) ? (
+                                        <button
+                                            type="button"
+                                            className="dp-row-del-btn"
+                                            onMouseEnter={(e) => {
+                                                const tr = e.currentTarget.closest('tr');
+                                                if (tr) tr.classList.add('dp-row-del-hover');
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                const tr = e.currentTarget.closest('tr');
+                                                if (tr) tr.classList.remove('dp-row-del-hover');
+                                            }}
+                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(itemIndex); }}
+                                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '24px', padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}
+                                        >
+                                            <Trash2 size={16} color="currentColor" />
+                                        </button>
+                                    ) : (
+                                        <span style={{ color: '#cbd5e1', fontWeight: 600 }}>-</span>
+                                    )}
+                                </td>
+                            );
+                        }}
                     />
                 )}
 
@@ -433,11 +451,14 @@ const KendoGridV3 = (props) => {
                         title="No"
                         width="45px"
                         resizable={false}
-                        cell={(cellProps) => (
-                            <td style={{ textAlign: 'center', color: '#64748b', fontWeight: 600, padding: '0 4px', verticalAlign: 'middle' }}>
-                                {cellProps.dataIndex + 1}
-                            </td>
-                        )}
+                        cell={(cellProps) => {
+                            const itemIndex = data.indexOf(cellProps.dataItem) !== -1 ? data.indexOf(cellProps.dataItem) : cellProps.dataIndex;
+                            return (
+                                <td style={{ textAlign: 'center', color: '#64748b', fontWeight: 600, padding: '0 4px', verticalAlign: 'middle' }}>
+                                    {itemIndex + 1}
+                                </td>
+                            );
+                        }}
                     />
                 )}
 
@@ -451,30 +472,33 @@ const KendoGridV3 = (props) => {
                         title="삭제"
                         width="50px"
                         resizable={false}
-                        cell={(cellProps) => (
-                            <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
-                                {(!isDeletableRow || isDeletableRow(cellProps.dataItem)) ? (
-                                    <button
-                                        type="button"
-                                        className="dp-row-del-btn"
-                                        onMouseEnter={(e) => {
-                                            const tr = e.currentTarget.closest('tr');
-                                            if (tr) tr.classList.add('dp-row-del-hover');
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            const tr = e.currentTarget.closest('tr');
-                                            if (tr) tr.classList.remove('dp-row-del-hover');
-                                        }}
-                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(cellProps.dataIndex); }}
-                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '24px', padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}
-                                    >
-                                        <Trash2 size={16} color="currentColor" />
-                                    </button>
-                                ) : (
-                                    <span style={{ color: '#cbd5e1', fontWeight: 600 }}>-</span>
-                                )}
-                            </td>
-                        )}
+                        cell={(cellProps) => {
+                            const itemIndex = data.indexOf(cellProps.dataItem) !== -1 ? data.indexOf(cellProps.dataItem) : cellProps.dataIndex;
+                            return (
+                                <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
+                                    {(!isDeletableRow || isDeletableRow(cellProps.dataItem)) ? (
+                                        <button
+                                            type="button"
+                                            className="dp-row-del-btn"
+                                            onMouseEnter={(e) => {
+                                                const tr = e.currentTarget.closest('tr');
+                                                if (tr) tr.classList.add('dp-row-del-hover');
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                const tr = e.currentTarget.closest('tr');
+                                                if (tr) tr.classList.remove('dp-row-del-hover');
+                                            }}
+                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(itemIndex); }}
+                                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '24px', padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}
+                                        >
+                                            <Trash2 size={16} color="currentColor" />
+                                        </button>
+                                    ) : (
+                                        <span style={{ color: '#cbd5e1', fontWeight: 600 }}>-</span>
+                                    )}
+                                </td>
+                            );
+                        }}
                     />
                 )}
             </Grid>
