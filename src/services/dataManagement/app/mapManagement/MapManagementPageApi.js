@@ -180,6 +180,16 @@ export function MapManagementPageApi() {
         async (data) => await api.post(data, "/map/history/preview", "API_BASE_URL_DATAMANAGEMENT")
     );
 
+    /** XML 맵 가져오기 - 검사 (저장 안함) */
+    const validateXml = useMutation(
+        async (formData) => await api.form(formData, "/map/xml/validate", {}, "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** XML 맵 가져오기 - 적용 (저장) */
+    const applyXml = useMutation(
+        async (formData) => await api.form(formData, "/map/xml/apply", {}, "API_BASE_URL_DATAMANAGEMENT")
+    );
+
     return {
         getMapVariables,
         srtTransfer,
@@ -199,6 +209,8 @@ export function MapManagementPageApi() {
         exportExcel,
         validateExcel,
         applyExcel,
+        validateXml,
+        applyXml,
         getExcelVersions,
         restoreExcelVersion,
         createExcelVersion,

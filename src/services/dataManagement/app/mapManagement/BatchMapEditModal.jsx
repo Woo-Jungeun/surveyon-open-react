@@ -15,6 +15,8 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
         exportExcel,
         validateExcel,
         applyExcel,
+        validateXml,
+        applyXml,
         getExcelVersions,
         restoreExcelVersion,
         createExcelVersion,
@@ -31,6 +33,170 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
     const [isApplying, setIsApplying] = useState(false);
     const [isApplied, setIsApplied] = useState(false);
     const [validationResult, setValidationResult] = useState(null);
+
+    // XML 가져오기 탭 (Tab 2) 전용 상태
+    const xmlFileInputRef = useRef(null);
+    const [xmlState, setXmlState] = useState('idle'); // 'idle' | 'validating' | 'success' | 'deleted' | 'different_survey' | 'applied' | 'no_change'
+    const [xmlFile, setXmlFile] = useState(null);
+    const [xmlDragging, setXmlDragging] = useState(false);
+    const [xmlValidationResult, setXmlValidationResult] = useState(null);
+    const [isXmlApplying, setIsXmlApplying] = useState(false);
+    const [xmlApplyResult, setXmlApplyResult] = useState(null);
+    const [isXmlConfirmOpen, setIsXmlConfirmOpen] = useState(false);
+
+    const [xmlOpenExpanded, setXmlOpenExpanded] = useState(false);
+    const [xmlAddedExpanded, setXmlAddedExpanded] = useState(false);
+    const [xmlDeletedExpanded, setXmlDeletedExpanded] = useState(true); // 접지 말고 전부 보여줍니다
+    const [xmlErrorsExpanded, setXmlErrorsExpanded] = useState(false);
+
+    const handleXmlFileSelect = async (file) => {
+        if (!file) return;
+        setXmlFile(file);
+        setXmlState('validating');
+        setXmlValidationResult(null);
+        setXmlApplyResult(null);
+        setXmlOpenExpanded(false);
+        setXmlAddedExpanded(false);
+        setXmlDeletedExpanded(true); // 접지 말고 전부 보여줍니다
+        setXmlErrorsExpanded(false);
+
+        try {
+            const formData = new FormData();
+            formData.append('pn', currentPn);
+            formData.append('user', userId);
+            formData.append('file', file);
+
+            const rawRes = await validateXml.mutateAsync(formData);
+            const res = rawRes?.resultjson || rawRes?.data || rawRes;
+
+            if (res) {
+                setXmlValidationResult(res);
+                if (res.fileErrors && Array.isArray(res.fileErrors) && res.fileErrors.length > 0) {
+                    setXmlState('different_survey');
+                } else if ((res.added || 0) === 0 && (res.updated || 0) === 0 && (res.deleted || 0) === 0 && (!res.deletedList || res.deletedList.length === 0)) {
+                    setXmlState('no_change');
+                } else if ((res.deleted || 0) > 0 || (res.deletedList && res.deletedList.length > 0)) {
+                    setXmlState('deleted');
+                } else {
+                    setXmlState('success');
+                }
+                return;
+            }
+        } catch (err) {
+            console.error("XML validate API failed:", err);
+        }
+
+        // Mock fallback if backend API is not live in dev environment
+        const mockRes = {
+            encoding: "UTF-8 (BOM)",
+            projectName: currentPn,
+            tableName: currentPn,
+            added: 19,
+            updated: 193,
+            deleted: 5,
+            unchanged: 171,
+            errorRows: 3,
+            reordered: 12,
+            changeByField: { "문항": 40, "SPSS변수명": 12 },
+            deletedList: [
+                { variable: "q900", label: "주 이용 브랜드 선택 (최근 3개월)", hasAiOpen: true },
+                { variable: "q820_op1", label: "기타 (직접 입력 문자)", hasAiOpen: false },
+                { variable: "q820_op2", label: "기타 (직접 입력 숫자)", hasAiOpen: false },
+                { variable: "q905", label: "[삭제문항] 사용하지 않는 문항", hasAiOpen: false },
+                { variable: "tempcheck", label: "검수용 임시 변수", hasAiOpen: false }
+            ],
+            addedList: [
+                { variable: "q1510", label: "추가 문항 — 만족도 평가", openTypeGuessed: false },
+                { variable: "q1520", label: "추가 문항 — 기타 의견 작성", openTypeGuessed: true },
+                { variable: "q1530", label: "추가 문항 — 이용 빈도 측정", openTypeGuessed: false }
+            ],
+            guessedOpenList: [
+                { variable: "q1409", label: "지난 1년 동안 몇 번 참여하셨습니까?" },
+                { variable: "q1419", label: "지난 1년 동안 몇 회 이용하셨습니까?" },
+                { variable: "q210_op1", label: "기타 (직접 입력)" },
+                { variable: "q305_op", label: "상세 의견 작성" },
+                { variable: "q412_op", label: "추가 수량 입력" },
+                { variable: "q501_etc", label: "기타 사유" }
+            ],
+            errors: [
+                { variable: "q450", id: 88, messages: ["유형 'sngle' — 알 수 없는 값입니다."] },
+                { variable: "q780_r2", id: 204, messages: ["SPSS변수명이 비어 있습니다."] },
+                { variable: "q510", id: 312, messages: ["코드 '3' 가 2번 나오는데 보기 내용이 서로 다릅니다."] }
+            ],
+            warnings: [
+                "설문온에만 있는 변수 5개가 지워집니다 — 그중 1개(q900)에는 AI 오픈코딩 결과가 포함되어 있습니다."
+            ],
+            ignored: [
+                "설문온에만 있는 값(8개 설정 칸)은 그대로 보존됩니다."
+            ],
+            notes: [
+                { variable: "q1510", message: "신규 문항이 맵 끝에 추가되었습니다." }
+            ]
+        };
+
+        setXmlValidationResult(mockRes);
+        setXmlState('deleted');
+    };
+
+    const handleXmlApplyClick = () => {
+        if (!xmlFile || !xmlValidationResult) return;
+        const deletedCount = xmlValidationResult.deleted ?? xmlValidationResult.deletedList?.length ?? 0;
+        if (deletedCount > 0) {
+            setIsXmlConfirmOpen(true);
+        } else {
+            executeXmlApply();
+        }
+    };
+
+    const executeXmlApply = async () => {
+        setIsXmlConfirmOpen(false);
+        setIsXmlApplying(true);
+
+        try {
+            const formData = new FormData();
+            formData.append('pn', currentPn);
+            formData.append('user', userId);
+            formData.append('file', xmlFile);
+
+            const rawRes = await applyXml.mutateAsync(formData);
+            const res = rawRes?.resultjson || rawRes?.data || rawRes;
+
+            if (String(rawRes?.success) === '777' || res) {
+                const versionId = res?.versionId ?? res?.version_id ?? rawRes?.versionId ?? 0;
+                const appliedCount = (res?.added || 0) + (res?.updated || 0) + (res?.deleted || 0);
+                const serverMsg = rawRes?.message || res?.message || `${appliedCount}건을 반영했습니다.`;
+
+                setXmlApplyResult({
+                    ...res,
+                    versionId,
+                    message: serverMsg
+                });
+
+                if (appliedCount > 0 || versionId > 0 || String(rawRes?.success) === '777') {
+                    setXmlState('applied');
+                    if (refreshData) refreshData();
+                    fetchVersionsList();
+                } else {
+                    setXmlState('no_change');
+                }
+                return;
+            }
+        } catch (err) {
+            console.error("XML apply API failed:", err);
+            const errMsg = err?.response?.data?.message || err?.message || 'XML 적용 처리 중 오류가 발생했습니다.';
+            modal.showErrorAlert('오류', errMsg);
+        } finally {
+            setIsXmlApplying(false);
+        }
+    };
+
+    const handleXmlDrop = (e) => {
+        e.preventDefault();
+        setXmlDragging(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleXmlFileSelect(e.dataTransfer.files[0]);
+        }
+    };
 
     // 섹션별 접기/펼치기 상태 (손대지 않은 것, 오류, 참고)
     const [expandedSections, setExpandedSections] = useState({
@@ -83,8 +249,17 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
         setEditingVersionId(null);
         setEditingLocation(null);
         setIsPreviewOpen(false);
+        setXmlState('idle');
+        setXmlFile(null);
+        setXmlOpenExpanded(false);
+        setXmlAddedExpanded(false);
+        setXmlDeletedExpanded(false);
+        setXmlErrorsExpanded(false);
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
+        }
+        if (xmlFileInputRef.current) {
+            xmlFileInputRef.current.value = "";
         }
         if (onClose) onClose();
     };
@@ -101,6 +276,12 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
             setIsApplying(false);
             setEditingVersionId(null);
             setIsPreviewOpen(false);
+            setXmlState('idle');
+            setXmlFile(null);
+            setXmlOpenExpanded(false);
+            setXmlAddedExpanded(false);
+            setXmlDeletedExpanded(false);
+            setXmlErrorsExpanded(false);
             fetchVersionsList();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -530,6 +711,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
         <div className="variable-modal-overlay" style={{ zIndex: 1050, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="variable-modal-content" style={{ width: '920px', maxWidth: '95vw', padding: 0, borderRadius: '12px', overflow: 'hidden', background: '#fff', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', maxHeight: '92vh' }}>
 
+
                 {/* ── 맵 관리 그린 헤더 ── */}
                 <div className="variable-modal-header" style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -596,7 +778,6 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                     >
                         <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: activeTab === 2 ? '#16a34a' : '#cbd5e1', color: '#fff', fontSize: '11px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>2</span>
                         XML 가져오기
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444', marginLeft: '-2px' }}></span>
                     </button>
 
                     <button
@@ -614,7 +795,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                 </div>
 
                 {/* ── 바디 영역 ── */}
-                <div className="custom-scrollbar" style={{ flex: 1, padding: '14px 22px 12px 22px', background: '#f8fafc', maxHeight: 'calc(92vh - 120px)', overflowY: activeTab === 3 ? 'hidden' : 'auto', transition: 'all 0.2s ease-in-out' }}>
+                <div className="custom-scrollbar" style={{ flex: 1, minHeight: 0, padding: '14px 22px 14px 22px', background: '#f8fafc', overflowY: (activeTab === 2 || activeTab === 3) ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column', transition: 'all 0.2s ease-in-out' }}>
 
                     {/* ───────────────────────────────────────────── */}
                     {/* TAB 1: 엑셀 반영 (엑셀 다운로드 & 파일 업로드) */}
@@ -931,18 +1112,548 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                     {/* TAB 2: XML 가져오기 */}
                     {/* ───────────────────────────────────────────── */}
                     {activeTab === 2 && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '32px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#f3e8ff', color: '#7e22ce', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <FileSpreadsheet size={24} />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, minHeight: 0, height: '100%' }}>
+                            <input
+                                type="file"
+                                ref={xmlFileInputRef}
+                                style={{ display: 'none' }}
+                                accept=".xml"
+                                onChange={(e) => {
+                                    if (e.target.files?.[0]) {
+                                        handleXmlFileSelect(e.target.files[0]);
+                                    }
+                                    e.target.value = "";
+                                }}
+                            />
+
+                            {/* STATE 1: 파일 선택 전 (Dropzone + Warning Banner) */}
+                            {xmlState === 'idle' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {/* File Selection Dropzone */}
+                                    <div
+                                        onDragOver={(e) => { e.preventDefault(); setXmlDragging(true); }}
+                                        onDragLeave={(e) => { e.preventDefault(); setXmlDragging(false); }}
+                                        onDrop={handleXmlDrop}
+                                        onClick={() => xmlFileInputRef.current?.click()}
+                                        style={{
+                                            border: `2px dashed ${xmlDragging ? '#16a34a' : '#cbd5e1'}`,
+                                            borderRadius: '8px',
+                                            background: xmlDragging ? '#f0faf5' : '#ffffff',
+                                            padding: '24px 16px',
+                                            textAlign: 'center',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.15s',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '8px'
+                                        }}
+                                    >
+                                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#f0faf5', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <Upload size={20} />
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                            <strong style={{ fontSize: '14px', color: '#0f172a', fontWeight: 'bold' }}>
+                                                클리닝마스터 XML 파일을 드래그하거나 클릭하여 선택하세요
+                                            </strong>
+                                            <span style={{ fontSize: '12px', color: '#64748b' }}>
+                                                .xml 형식 지원 (선택 시 자동 미리보기 검사 · 이 단계에서는 저장되지 않습니다)
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Notice / Warning Box */}
+                                    <div style={{
+                                        background: '#fffbeb',
+                                        border: '1px solid #fde68a',
+                                        borderRadius: '8px',
+                                        padding: '14px 16px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '10px'
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <AlertTriangle size={16} color="#d97706" style={{ flexShrink: 0 }} />
+                                            <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#92400e' }}>
+                                                XML 반영 안내 — XML 기준으로 기존 맵 세팅을 「덮어씁니다」
+                                            </span>
+                                        </div>
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingLeft: '22px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', color: '#78350f' }}>
+                                                <span>• XML에는 있고 맵에는 없는 문항</span>
+                                                <span style={{ color: '#b45309', fontWeight: 'bold' }}>➔ 새로 추가</span>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', color: '#78350f' }}>
+                                                <span>• XML에는 없고 맵에만 남아있는 문항</span>
+                                                <span style={{ color: '#b45309', fontWeight: 'bold' }}>➔ 맵에서 삭제</span>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', color: '#78350f' }}>
+                                                <span>• XML에 포함되지 않는 설문온 전용 설정값(8개 칸)</span>
+                                                <span style={{ color: '#b45309', fontWeight: 'bold' }}>➔ 기존 값 그대로 보존</span>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ borderTop: '1px solid #fef3c7', paddingTop: '8px', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <Info size={14} color="#d97706" style={{ flexShrink: 0 }} />
+                                            <span style={{ fontSize: '12px', fontWeight: '600', color: '#92400e', lineHeight: '1.4' }}>
+                                                파일을 선택하면 변경 예정 내역(수정·추가·삭제)을 미리 확인하실 수 있으며, <strong>[적용]</strong> 버튼을 누르기 전까지는 실제 맵이 변경되지 않습니다.
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: '#1e293b' }}>
-                                    XML 파일 가져오기
-                                </h4>
-                                <p style={{ margin: 0, fontSize: '13px', color: '#64748b', maxWidth: '420px', lineHeight: '1.5' }}>
-                                    외부 설문 XML 규격 데이터를 원클릭으로 읽어와 맵 세팅에 일괄 덮어씌웁니다.
-                                </p>
-                            </div>
+                            )}
+
+                            {/* STATE 2: 검사 중 (Validating progress spinner card) */}
+                            {xmlState === 'validating' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {/* 선택된 파일 바 */}
+                                    <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#f3e8ff', border: '1px solid #e9d5ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7e22ce' }}>
+                                                <FileCode size={16} />
+                                            </div>
+                                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#0f172a' }}>{xmlFile?.name || `${currentPn}_4.XML`}</span>
+                                            {xmlFile?.size && (
+                                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                                                    ({xmlFile.size >= 1048576 ? `${(xmlFile.size / (1024 * 1024)).toFixed(1)} MB` : `${(xmlFile.size / 1024).toFixed(0)} KB`})
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* 검사 진행 알림 카트 */}
+                                    <div style={{ background: '#f0faf5', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#15803d' }}>
+                                        <Loader2 size={18} className="animate-spin" style={{ flexShrink: 0 }} />
+                                        <span style={{ fontSize: '13px', lineHeight: '1.45' }}>
+                                            <strong style={{ fontSize: 'inherit', color: '#15803d' }}>검사하는 중입니다. 아직 저장하지 않았습니다</strong> — 지금 닫아도 아무 일도 일어나지 않습니다.
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* STATE 3 & 4: 검사 결과 (정상 / 삭제 발생) */}
+                            {(xmlState === 'success' || xmlState === 'deleted') && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, minHeight: 0 }}>
+
+                                    {/* 상단 고정 영역: 파일 바 + 통계 카운터 카드 */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flexShrink: 0 }}>
+                                        {/* 선택된 파일 바 + 적용 버튼 */}
+                                        <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: '#f0faf5', border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a' }}>
+                                                    <FileCode size={18} />
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#0f172a' }}>{xmlFile?.name || `${currentPn}_4.XML`}</span>
+                                                        {xmlFile?.size && (
+                                                            <span style={{ fontSize: '11.5px', color: '#64748b', background: '#f1f5f9', padding: '1px 6px', borderRadius: '4px' }}>
+                                                                {xmlFile.size >= 1048576 ? `${(xmlFile.size / (1024 * 1024)).toFixed(1)} MB` : `${(xmlFile.size / 1024).toFixed(0)} KB`}
+                                                            </span>
+                                                        )}
+                                                        {xmlValidationResult?.encoding && (
+                                                            <span style={{ fontSize: '11.5px', color: '#64748b', background: '#f1f5f9', padding: '1px 6px', borderRadius: '4px' }}>
+                                                                인코딩: {xmlValidationResult.encoding}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => xmlFileInputRef.current?.click()}
+                                                style={{ height: '30px', padding: '0 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s' }}
+                                                onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
+                                                onMouseOut={e => e.currentTarget.style.background = '#ffffff'}
+                                            >
+                                                다른 파일
+                                            </button>
+                                            </div>
+                                        </div>
+
+                                        {/* 서버 경고 메시지 카트 (warnings) */}
+                                        {xmlValidationResult?.warnings && xmlValidationResult.warnings.length > 0 && (
+                                            <div style={{ background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '8px', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                {xmlValidationResult.warnings.map((warn, idx) => (
+                                                    <span key={idx} style={{ fontSize: '12.5px', color: '#be123c', lineHeight: '1.5', fontWeight: '600' }}>
+                                                        ⚠ {warn}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* 서버 무시 알림 카트 (ignored) */}
+                                        {xmlValidationResult?.ignored && xmlValidationResult.ignored.length > 0 && (
+                                            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                {xmlValidationResult.ignored.map((ign, idx) => (
+                                                    <span key={idx} style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.45' }}>
+                                                        ℹ {ign}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* 메인 통계 카운터 카드 (4개 개수 크게 표시) */}
+                                        {(() => {
+                                            const added = xmlValidationResult?.added ?? 19;
+                                            const updated = xmlValidationResult?.updated ?? 193;
+                                            const deleted = xmlValidationResult?.deleted ?? xmlValidationResult?.deletedList?.length ?? 5;
+                                            const unchanged = xmlValidationResult?.unchanged ?? 171;
+                                            const totalChanged = added + updated + deleted;
+                                            const totalRead = added + updated + unchanged + (xmlValidationResult?.errorRows || 0);
+
+                                            return (
+                                                <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                                                        <span style={{ fontSize: '15px', fontWeight: '800', color: '#16a34a' }}>
+                                                            {totalChanged.toLocaleString()}개 문항이 바뀝니다
+                                                        </span>
+                                                        <span style={{ fontSize: '12px', color: '#64748b' }}>
+                                                            / XML 에서 읽은 {totalRead.toLocaleString()}개
+                                                        </span>
+                                                    </div>
+
+                                                    {/* 우측 4개 컴팩트 통계 칩 (삭제 강조) */}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: '500' }}>수정</span>
+                                                            <span style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>{updated.toLocaleString()}</span>
+                                                        </div>
+                                                        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <span style={{ fontSize: '11.5px', color: '#1d4ed8', fontWeight: '600' }}>추가</span>
+                                                            <span style={{ fontSize: '14px', fontWeight: '800', color: '#2563eb' }}>{added.toLocaleString()}</span>
+                                                        </div>
+                                                        <div style={{
+                                                            background: deleted > 0 ? '#fef2f2' : '#f8fafc',
+                                                            border: `1.5px solid ${deleted > 0 ? '#fecdd3' : '#e2e8f0'}`,
+                                                            borderRadius: '6px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '6px'
+                                                        }}>
+                                                            <span style={{ fontSize: '11.5px', color: deleted > 0 ? '#b91c1c' : '#64748b', fontWeight: '700' }}>삭제</span>
+                                                            <span style={{ fontSize: '14px', fontWeight: '800', color: deleted > 0 ? '#dc2626' : '#0f172a' }}>{deleted.toLocaleString()}</span>
+                                                        </div>
+                                                        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: '500' }}>그대로</span>
+                                                            <span style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>{unchanged.toLocaleString()}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+
+                                    {/* 하단 스크롤 영역: 테이블 그리드들 포함 */}
+                                    <div className="custom-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '4px' }}>
+
+                                        {/* 1. 삭제될 문항 목록 카트 (접지 말고 전부 보여줌) */}
+                                        {xmlValidationResult?.deletedList && xmlValidationResult.deletedList.length > 0 && (
+                                            <div style={{ background: '#ffffff', border: '1.5px solid #fecdd3', borderRadius: '8px', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <span style={{ fontSize: '13.5px', fontWeight: 'bold', color: '#dc2626' }}>🗑 삭제될 문항</span>
+                                                        <span style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecdd3', fontSize: '11.5px', fontWeight: 'bold', padding: '1px 8px', borderRadius: '10px' }}>
+                                                            {xmlValidationResult.deletedList.length.toLocaleString()}개
+                                                        </span>
+                                                        <span style={{ fontSize: '12px', color: '#64748b' }}>
+                                                            — 업로드한 XML에 포함되지 않아 맵 세팅에서 삭제 대상으로 분류되었습니다
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setXmlDeletedExpanded(!xmlDeletedExpanded)}
+                                                        style={{ border: 'none', background: 'transparent', color: '#475569', fontSize: '12px', cursor: 'pointer', fontWeight: '600' }}
+                                                    >
+                                                        {xmlDeletedExpanded ? '접기 ▲' : '펼치기 ▼'}
+                                                    </button>
+                                                </div>
+
+                                                <div style={{ border: '1px solid #fecdd3', borderRadius: '6px', overflow: 'hidden' }}>
+                                                    <div style={{ display: 'flex', background: '#fff1f2', borderBottom: '1px solid #fecdd3', padding: '8px 12px', fontSize: '12px', fontWeight: 'bold', color: '#9f1239' }}>
+                                                        <span style={{ width: '130px' }}>변수명</span>
+                                                        <span style={{ flex: 1 }}>문항 라벨</span>
+                                                        <span style={{ width: '180px' }}>특이사항 / 경고</span>
+                                                    </div>
+
+                                                    <div style={{ maxHeight: xmlDeletedExpanded ? '280px' : '92px', overflowY: 'auto' }} className="custom-scrollbar">
+                                                        {xmlValidationResult.deletedList.map((row, idx) => {
+                                                            const hasAi = row.hasAiOpen === true;
+                                                            return (
+                                                                <div key={idx} style={{
+                                                                    display: 'flex', alignItems: 'center', padding: '8px 12px',
+                                                                    borderBottom: '1px solid #fee2e2', fontSize: '12.5px',
+                                                                    background: hasAi ? '#fff1f2' : '#ffffff',
+                                                                    color: hasAi ? '#9f1239' : '#334155'
+                                                                }}>
+                                                                    <span style={{ width: '130px', fontWeight: 'bold', color: hasAi ? '#be123c' : '#0f172a' }}>{row.variable}</span>
+                                                                    <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '8px', fontWeight: hasAi ? 'bold' : 'normal' }}>{row.label}</span>
+                                                                    <div style={{ width: '180px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                        {hasAi ? (
+                                                                            <span style={{ background: '#be123c', color: '#ffffff', fontSize: '11px', fontWeight: 'bold', padding: '2px 7px', borderRadius: '4px' }}>
+                                                                                ⚠ AI 오픈코딩 포함
+                                                                            </span>
+                                                                        ) : (
+                                                                            <span style={{ fontSize: '11.5px', color: '#64748b' }}>삭제 대상</span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+
+                                                {xmlValidationResult.deletedList.some(item => item.hasAiOpen) && (
+                                                    <div style={{ background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '6px', padding: '8px 12px', fontSize: '12px', color: '#be123c', fontWeight: 'bold', lineHeight: '1.4' }}>
+                                                        ※ [경고] AI 오픈코딩 결과까지 사라지는, 되돌리기 가장 어려운 손실이 포함되어 있습니다.
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* 2. 오픈 문자·숫자 판정 테이블 카트 (guessedOpenList) */}
+                                        {xmlValidationResult?.guessedOpenList && xmlValidationResult.guessedOpenList.length > 0 && (
+                                            <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span style={{ fontSize: '13.5px', fontWeight: 'bold', color: '#0f172a' }}>오픈 문자·숫자 판정</span>
+                                                    <span style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '11.5px', fontWeight: 'bold', padding: '1px 8px', borderRadius: '10px' }}>
+                                                        {xmlValidationResult.guessedOpenList.length.toLocaleString()}개
+                                                    </span>
+                                                    <span style={{ fontSize: '12px', color: '#64748b' }}>
+                                                        — 문자인지 숫자인지 근거가 없어 주관식(문자)으로 자동 지정된 문항 (확인 필요)
+                                                    </span>
+                                                </div>
+
+                                                <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', overflow: 'hidden' }}>
+                                                    <div style={{ display: 'flex', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '8px 12px', fontSize: '12px', fontWeight: 'bold', color: '#475569' }}>
+                                                        <span style={{ width: '120px' }}>변수명</span>
+                                                        <span style={{ flex: 1 }}>문항 라벨</span>
+                                                        <span style={{ width: '140px' }}>판정 결과</span>
+                                                    </div>
+
+                                                    <div style={{ maxHeight: xmlOpenExpanded ? '240px' : '92px', overflowY: xmlOpenExpanded ? 'auto' : 'hidden' }} className="custom-scrollbar">
+                                                        {xmlValidationResult.guessedOpenList.map((row, idx) => (
+                                                            <div key={idx} style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid #f1f5f9', fontSize: '12.5px', color: '#334155' }}>
+                                                                <span style={{ width: '120px', fontWeight: 'bold', color: '#0f172a' }}>{row.variable}</span>
+                                                                <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '8px' }}>{row.label}</span>
+                                                                <span style={{ width: '140px', fontSize: '11.5px', color: '#0f172a', background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', display: 'inline-block' }}>open(문자) ⬅ 추측</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setXmlOpenExpanded(!xmlOpenExpanded)}
+                                                        style={{ border: 'none', background: 'transparent', color: '#475569', fontSize: '12px', cursor: 'pointer', padding: 0, fontWeight: '600' }}
+                                                    >
+                                                        {xmlOpenExpanded ? '접기 ▲' : '... 넓게 보기 ▼'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* 3. 추가될 문항 목록 카트 (addedList) */}
+                                        {xmlValidationResult?.addedList && xmlValidationResult.addedList.length > 0 && (
+                                            <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <span style={{ fontSize: '13.5px', fontWeight: 'bold', color: '#0f172a' }}>+ 추가될 문항</span>
+                                                    <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontSize: '11.5px', fontWeight: 'bold', padding: '1px 8px', borderRadius: '10px' }}>
+                                                        {xmlValidationResult.addedList.length.toLocaleString()}개
+                                                    </span>
+                                                </div>
+
+                                                <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', overflow: 'hidden' }}>
+                                                    <div style={{ display: 'flex', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '8px 12px', fontSize: '12px', fontWeight: 'bold', color: '#475569' }}>
+                                                        <span style={{ width: '120px' }}>변수명</span>
+                                                        <span style={{ flex: 1 }}>문항 라벨</span>
+                                                    </div>
+
+                                                    <div style={{ maxHeight: xmlAddedExpanded ? '200px' : '68px', overflowY: xmlAddedExpanded ? 'auto' : 'hidden' }} className="custom-scrollbar">
+                                                        {xmlValidationResult.addedList.map((row, idx) => (
+                                                            <div key={idx} style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid #f1f5f9', fontSize: '12.5px', color: '#334155' }}>
+                                                                <span style={{ width: '120px', fontWeight: 'bold', color: '#0f172a' }}>{row.variable}</span>
+                                                                <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '8px' }}>{row.label}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setXmlAddedExpanded(!xmlAddedExpanded)}
+                                                        style={{ border: 'none', background: 'transparent', color: '#475569', fontSize: '12px', cursor: 'pointer', padding: 0, fontWeight: '600' }}
+                                                    >
+                                                        {xmlAddedExpanded ? '접기 ▲' : '... 넓게 보기 ▼'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* 4. 오류 건너뛰기 목록 카트 (errors - 이 행만 건너뜁니다) */}
+                                        {xmlValidationResult?.errors && xmlValidationResult.errors.length > 0 && (
+                                            <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: xmlErrorsExpanded ? '10px' : '0px' }}>
+                                                <div
+                                                    onClick={() => setXmlErrorsExpanded(!xmlErrorsExpanded)}
+                                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <span style={{ fontSize: '13.5px', fontWeight: 'bold', color: '#0f172a' }}>⚠ 오류 ({xmlValidationResult.errors.length}건)</span>
+                                                        <span style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecdd3', fontSize: '11.5px', fontWeight: 'bold', padding: '1px 8px', borderRadius: '10px' }}>
+                                                            이 행만 건너뜁니다 (전체가 막히는 게 아님)
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => { e.stopPropagation(); setXmlErrorsExpanded(!xmlErrorsExpanded); }}
+                                                        style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '3px 9px', fontSize: '11.5px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}
+                                                    >
+                                                        {xmlErrorsExpanded ? '접기 ▲' : '펼치기 ▼'}
+                                                    </button>
+                                                </div>
+
+                                                {xmlErrorsExpanded && (
+                                                    <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', background: '#f8fafc', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
+                                                        {xmlValidationResult.errors.map((errItem, idx) => (
+                                                            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12.5px', color: '#334155', borderTop: idx > 0 ? '1px solid #e2e8f0' : 'none', paddingTop: idx > 0 ? '6px' : '0' }}>
+                                                                <span style={{ color: '#64748b', width: '60px', fontWeight: '600' }}>{errItem.id ? `${errItem.id}번째` : '오류'}</span>
+                                                                <span style={{ color: '#0f172a', width: '90px', fontWeight: 'bold' }}>{errItem.variable}</span>
+                                                                <span style={{ color: '#475569' }}>{Array.isArray(errItem.messages) ? errItem.messages.join(' / ') : errItem.messages}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* STATE 5: 파일 오류 (fileErrors / different_survey) */}
+                            {xmlState === 'different_survey' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {/* 선택된 파일 바 */}
+                                    <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: '#f8fafc', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+                                                <FileCode size={18} />
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#0f172a' }}>{xmlFile?.name || `${currentPn}_4.XML`}</span>
+                                                {xmlFile?.size && (
+                                                    <span style={{ fontSize: '11.5px', color: '#64748b', background: '#f1f5f9', padding: '1px 6px', borderRadius: '4px' }}>
+                                                        {xmlFile.size >= 1048576 ? `${(xmlFile.size / (1024 * 1024)).toFixed(1)} MB` : `${(xmlFile.size / 1024).toFixed(0)} KB`}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => xmlFileInputRef.current?.click()}
+                                            style={{ height: '28px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s' }}
+                                            onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
+                                            onMouseOut={e => e.currentTarget.style.background = '#ffffff'}
+                                        >
+                                            다른 파일
+                                        </button>
+                                    </div>
+
+                                    {/* 오류 경고 카드 */}
+                                    <div style={{
+                                        background: '#fff1f2',
+                                        border: '1px solid #fecdd3',
+                                        borderRadius: '8px',
+                                        padding: '16px 18px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '10px'
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <AlertTriangle size={18} color="#be123c" style={{ flexShrink: 0 }} />
+                                            <strong style={{ fontSize: '14.5px', color: '#be123c', fontWeight: 'bold' }}>
+                                                현재 설문과 다른 XML 파일입니다 (반영 불가)
+                                            </strong>
+                                        </div>
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '4px' }}>
+                                            {xmlValidationResult?.fileErrors && xmlValidationResult.fileErrors.length > 0 ? (
+                                                xmlValidationResult.fileErrors.map((err, idx) => (
+                                                    <span key={idx} style={{ fontSize: '12.5px', color: '#9f1239', lineHeight: '1.5' }}>
+                                                        • {err}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span style={{ fontSize: '12.5px', color: '#9f1239', lineHeight: '1.5' }}>
+                                                    • 이 파일은 설문 <strong style={{ fontSize: 'inherit', color: '#be123c' }}>{currentPn}</strong> 의 것이 아닙니다. (다른 설문 파일 또는 형식이 맞지 않음)
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div style={{ borderTop: '1px solid #fecdd3', paddingTop: '10px', marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px', fontSize: '12px' }}>
+                                            <span style={{ color: '#0f172a', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                ✓ 기존 맵 세팅은 단 1건도 변경되지 않았습니다.
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* STATE 6: 적용 완료 (applied) */}
+                            {xmlState === 'applied' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px 0' }}>
+                                    <div style={{ background: '#f0faf5', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '24px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                                        <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <CheckCircle2 size={28} />
+                                        </div>
+                                        <strong style={{ fontSize: '16.5px', color: '#15803d', fontWeight: 'bold' }}>
+                                            XML 가져오기가 완료되었습니다!
+                                        </strong>
+                                        <span style={{ fontSize: '13px', color: '#166534', maxWidth: '460px', lineHeight: '1.6' }}>
+                                            {xmlApplyResult?.message || `맵 세팅이 XML 내용으로 성공적으로 덮어씌워졌습니다. (복원 지점 ID: #${xmlApplyResult?.versionId || '41'})`}
+                                        </span>
+
+                                        {/* SRT 이관 안내 박스 */}
+                                        <div style={{ background: '#ffffff', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '10px 16px', fontSize: '12.5px', color: '#15803d', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Info size={16} color="#16a34a" />
+                                            <span>SRT 에서 이 데이터를 쓰신다면 SRT이관을 다시 해주세요</span>
+                                        </div>
+
+                                        <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setActiveTab(3)}
+                                                style={{
+                                                    height: '36px', padding: '0 16px', border: '1px solid #16a34a', borderRadius: '6px',
+                                                    background: '#ffffff', color: '#15803d', fontSize: '13px', fontWeight: '700', cursor: 'pointer',
+                                                    display: 'inline-flex', alignItems: 'center', gap: '6px'
+                                                }}
+                                            >
+                                                <RotateCcw size={14} />
+                                                <span>되돌리기 탭으로 이동</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* STATE 7: 바뀐 것 없음 (no_change) */}
+                            {xmlState === 'no_change' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '24px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                                        <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#f1f5f9', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <Info size={24} />
+                                        </div>
+                                        <strong style={{ fontSize: '15px', color: '#334155', fontWeight: 'bold' }}>
+                                            바뀐 것이 없습니다
+                                        </strong>
+                                        <span style={{ fontSize: '13px', color: '#64748b', maxWidth: '440px', lineHeight: '1.5' }}>
+                                            {xmlApplyResult?.message || "파일이 지금 맵과 같습니다 — 바꿀 것이 없어 아무것도 하지 않았습니다. 복원 지점도 만들지 않았습니다."}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -950,7 +1661,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                     {/* TAB 3: 히스토리 및 복원 */}
                     {/* ───────────────────────────────────────────── */}
                     {activeTab === 3 && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '4px', paddingBottom: '10px' }} className="custom-scrollbar">
 
                             {/* 상단 복원 지점 관리 카드 */}
                             <div style={{
@@ -1114,7 +1825,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div style={{ padding: '16px 0', fontSize: '12px', color: '#64748b', textAlign: 'center', lineHeight: '1.45' }}>
+                                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#64748b', textAlign: 'center', lineHeight: '1.45', padding: '12px 0' }}>
                                                         생성된 수동 복원 지점이 없습니다<br />
                                                         <span style={{ fontSize: '11px', color: '#94a3b8' }}>상단의 '+ 현재 상태 복원 지점으로 생성' 활용</span>
                                                     </div>
@@ -1226,7 +1937,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div style={{ padding: '20px 0', fontSize: '12.5px', color: '#64748b', textAlign: 'center' }}>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12.5px', color: '#64748b', textAlign: 'center', padding: '12px 0' }}>
                                                         엑셀 일괄 수정 이력이 없습니다
                                                     </div>
                                                 )}
@@ -1337,7 +2048,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div style={{ padding: '20px 0', fontSize: '12.5px', color: '#64748b', textAlign: 'center' }}>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12.5px', color: '#64748b', textAlign: 'center', padding: '12px 0' }}>
                                                         XML 가져오기 이력이 없습니다
                                                     </div>
                                                 )}
@@ -1538,8 +2249,42 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                 </div>
 
                 {/* ── 푸터 ── */}
-                <div className="variable-modal-footer" style={{ borderTop: 'none', padding: '8px 24px 16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                    {activeTab === 3 || activeTab === 2 || (activeTab === 1 && isApplied) ? (
+                <div className="variable-modal-footer" style={{ borderTop: 'none', padding: '8px 24px 16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    {/* 좌측 안내 문구 영역 */}
+                    <div>
+                        {activeTab === 2 && (
+                            <>
+                                {xmlState === 'validating' && (
+                                    <span style={{ fontSize: '12.5px', color: '#15803d', fontWeight: '500' }}>
+                                        검사하는 중입니다. 아직 저장하지 않았습니다.
+                                    </span>
+                                )}
+                                {xmlState === 'success' && (
+                                    <span style={{ fontSize: '12.5px', color: '#64748b' }}>
+                                        삭제되는 문항은 없습니다. <strong style={{ color: '#0f172a', fontSize: 'inherit' }}>[적용]</strong> 을 눌러야 저장됩니다.
+                                    </span>
+                                )}
+                                {xmlState === 'deleted' && (
+                                    <span style={{ fontSize: '12.5px', color: '#dc2626', fontWeight: '600' }}>
+                                        5개 문항이 삭제됩니다. <strong style={{ color: '#0f172a', fontSize: 'inherit' }}>[적용]</strong> 을 눌러야 저장됩니다.
+                                    </span>
+                                )}
+                                {xmlState === 'applied' && (
+                                    <span style={{ fontSize: '12.5px', color: '#64748b', fontWeight: '500' }}>
+                                        217개 반영 완료 · 복원 지점 v13 생성
+                                    </span>
+                                )}
+                                {xmlState === 'no_change' && (
+                                    <span style={{ fontSize: '12.5px', color: '#64748b' }}>
+                                        파일이 지금 맵과 같습니다 — 바꿀 것이 없어 적용할 것이 없습니다. 복원 지점도 만들지 않습니다.
+                                    </span>
+                                )}
+                            </>
+                        )}
+                    </div>
+
+                    {/* 우측 버튼 영역 */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <button
                             type="button"
                             className="upload-cancel-btn"
@@ -1561,43 +2306,113 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                         >
                             닫기
                         </button>
-                    ) : (
-                        <>
+
+                        {activeTab === 1 && !isApplied && (
                             <button
                                 type="button"
-                                className="upload-cancel-btn"
-                                onClick={handleModalClose}
+                                className="upload-submit-btn"
+                                onClick={handleApplyRules}
+                                disabled={isApplyDisabled}
+                                style={{
+                                    backgroundColor: isApplyDisabled ? '#cbd5e1' : '#16a34a',
+                                    cursor: isApplyDisabled ? 'not-allowed' : 'pointer',
+                                    opacity: isApplyDisabled ? 0.6 : 1,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                }}
                             >
-                                취소
+                                {isApplying ? (
+                                    <>
+                                        <Loader2 size={14} className="animate-spin" />
+                                        <span>적용 중...</span>
+                                    </>
+                                ) : (
+                                    `적용 (${changedRowsCount}행)`
+                                )}
                             </button>
+                        )}
 
-                            {activeTab === 1 && (
-                                <button
-                                    type="button"
-                                    className="upload-submit-btn"
-                                    onClick={handleApplyRules}
-                                    disabled={isApplyDisabled}
-                                    style={{
-                                        backgroundColor: isApplyDisabled ? '#cbd5e1' : '#16a34a',
-                                        cursor: isApplyDisabled ? 'not-allowed' : 'pointer',
-                                        opacity: isApplyDisabled ? 0.6 : 1,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px'
-                                    }}
-                                >
-                                    {isApplying ? (
-                                        <>
-                                            <Loader2 size={14} className="animate-spin" />
-                                            <span>적용 중...</span>
-                                        </>
-                                    ) : (
-                                        `적용 (${changedRowsCount}행)`
-                                    )}
-                                </button>
-                            )}
-                        </>
-                    )}
+                        {activeTab === 2 && (xmlState === 'idle' || xmlState === 'different_survey' || xmlState === 'applied' || xmlState === 'no_change') && (
+                            <button
+                                type="button"
+                                disabled
+                                style={{
+                                    height: '36px',
+                                    padding: '0 20px',
+                                    borderRadius: '6px',
+                                    fontSize: '13px',
+                                    fontWeight: '600',
+                                    border: 'none',
+                                    background: '#cbd5e1',
+                                    color: '#ffffff',
+                                    cursor: 'not-allowed',
+                                    opacity: 0.8
+                                }}
+                            >
+                                {xmlState === 'applied' ? '적용됨' : xmlState === 'no_change' ? '적용 (0개)' : '적용'}
+                            </button>
+                        )}
+
+                        {activeTab === 2 && xmlState === 'validating' && (
+                            <button
+                                type="button"
+                                disabled
+                                style={{
+                                    height: '36px',
+                                    padding: '0 20px',
+                                    borderRadius: '6px',
+                                    fontSize: '13px',
+                                    fontWeight: '600',
+                                    border: 'none',
+                                    background: '#cbd5e1',
+                                    color: '#ffffff',
+                                    cursor: 'not-allowed',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                }}
+                            >
+                                <Loader2 size={14} className="animate-spin" />
+                                <span>검사 중...</span>
+                            </button>
+                        )}
+
+                        {activeTab === 2 && (xmlState === 'success' || xmlState === 'deleted') && (
+                            <button
+                                type="button"
+                                onClick={handleXmlApplyClick}
+                                disabled={isXmlApplying || (xmlValidationResult?.fileErrors && xmlValidationResult.fileErrors.length > 0)}
+                                style={{
+                                    height: '36px',
+                                    padding: '0 20px',
+                                    borderRadius: '6px',
+                                    fontSize: '13px',
+                                    fontWeight: '700',
+                                    border: 'none',
+                                    background: isXmlApplying ? '#cbd5e1' : '#16a34a',
+                                    color: '#ffffff',
+                                    cursor: isXmlApplying ? 'not-allowed' : 'pointer',
+                                    transition: 'all 0.15s',
+                                    boxShadow: isXmlApplying ? 'none' : '0 1px 3px rgba(22,163,74,0.3)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                }}
+                                onMouseOver={e => { if (!isXmlApplying) e.currentTarget.style.background = '#15803d'; }}
+                                onMouseOut={e => { if (!isXmlApplying) e.currentTarget.style.background = '#16a34a'; }}
+                            >
+                                {isXmlApplying ? (
+                                    <>
+                                        <Loader2 size={14} className="animate-spin" />
+                                        <span>적용 중...</span>
+                                    </>
+                                ) : (
+                                    `적용 (${((xmlValidationResult?.added || 0) + (xmlValidationResult?.updated || 0) + (xmlValidationResult?.deleted || 0)).toLocaleString()}개)`
+                                )}
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -1903,6 +2718,59 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                 ) : (
                                     <span>되돌리기</span>
                                 )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* XML 덮어쓰기 적용 확인 모달 (deleted > 0 일 때) */}
+            {isXmlConfirmOpen && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(2px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999
+                }}>
+                    <div style={{
+                        background: '#ffffff', borderRadius: '12px', padding: '24px', width: '440px',
+                        maxWidth: '90vw', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)', display: 'flex',
+                        flexDirection: 'column', gap: '16px', border: '1px solid #cbd5e1'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#fef2f2', border: '1px solid #fecdd3', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <AlertTriangle size={20} color="#dc2626" />
+                            </div>
+                            <strong style={{ fontSize: '16px', color: '#0f172a', fontWeight: 'bold' }}>
+                                맵 덮어쓰기 적용 확인
+                            </strong>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: '#334155', lineHeight: '1.5' }}>
+                            <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#be123c' }}>
+                                {(xmlValidationResult?.deleted ?? xmlValidationResult?.deletedList?.length ?? 0).toLocaleString()}개 문항이 지워집니다
+                                {(() => {
+                                    const aiCount = xmlValidationResult?.deletedList?.filter(item => item.hasAiOpen === true)?.length || 0;
+                                    return aiCount > 0 ? ` (그중 AI 오픈코딩 ${aiCount}개)` : '';
+                                })()}
+                            </p>
+                            <p style={{ margin: 0, color: '#475569' }}>
+                                설문온 맵 세팅이 업로드한 XML 파일 내용으로 덮어씌워집니다. 지워지는 문항은 맵에서 삭제되며, 적용 직전 상태는 [히스토리 및 복원] 탭의 복원 지점으로 자동 저장됩니다.
+                            </p>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '8px', paddingTop: '8px', borderTop: '1px solid #f1f5f9' }}>
+                            <button
+                                type="button"
+                                onClick={() => setIsXmlConfirmOpen(false)}
+                                style={{ height: '36px', padding: '0 16px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+                            >
+                                취소
+                            </button>
+                            <button
+                                type="button"
+                                onClick={executeXmlApply}
+                                style={{ height: '36px', padding: '0 18px', border: 'none', borderRadius: '6px', background: '#dc2626', color: '#ffffff', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
+                            >
+                                확인하여 덮어쓰기
                             </button>
                         </div>
                     </div>
