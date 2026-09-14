@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { X, Upload, FileSpreadsheet, Loader2, AlertTriangle, Info, CheckCircle2, Download, ChevronDown, ChevronUp, MinusCircle, Plus, Pencil, Check, RotateCcw, HelpCircle, Edit3, FileCode, FileCheck, Sliders, Sparkles } from 'lucide-react';
+import { X, Upload, FileSpreadsheet, Loader2, AlertTriangle, Info, CheckCircle2, Download, ChevronDown, ChevronUp, MinusCircle, Plus, Pencil, Check, RotateCcw, HelpCircle, Edit3, FileCode, FileCheck, Sliders, Sparkles, Save } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useSelector } from 'react-redux';
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -276,24 +276,19 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
 
             if (String(res?.success) === '777') {
                 const rData = res?.resultjson || {};
-                const restoredCnt = rData.restored ?? previewTarget.changedCount ?? 0;
-                const labelsRestored = rData.labelsRestored ?? 0;
                 const resurrectedList = rData.resurrected || [];
-                const safetyVId = rData.safetyVersionId;
 
                 setIsPreviewOpen(false);
 
-                let alertMsg = `성공적으로 되돌렸습니다.\n\n• 되돌린 변수: ${restoredCnt}개\n• 되돌린 보기: ${labelsRestored}개`;
-                if (safetyVId) {
-                    alertMsg += `\n• 안전 지점 자동 생성: v${safetyVId}`;
-                }
+                let alertMsg = res?.message || '성공적으로 되돌렸습니다.';
                 if (Array.isArray(resurrectedList) && resurrectedList.length > 0) {
                     alertMsg += `\n\n📢 되살린 문항(${resurrectedList.join(', ')})은 AI 오픈코딩 표시가 꺼진 채로 돌아옵니다. 필요하면 맵 화면에서 다시 켜 주세요.`;
                 }
 
-                modal.showAlert('복원 완료', alertMsg);
+                modal.showAlert('복원 완료', alertMsg, null, () => {
+                    if (refreshData) refreshData();
+                });
 
-                if (refreshData) refreshData();
                 fetchVersionsList();
             } else {
                 const errMsg = res?.resultjson?.errorcontent || res?.message || '복원 처리에 실패했습니다.';
@@ -462,21 +457,23 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
             if (String(res?.success) === '777') {
                 const versionId = res?.resultjson?.versionId ?? res?.versionId;
                 if (versionId === 0) {
-                    modal.showAlert('알림', res?.message || '바뀐 게 없습니다.');
                     setIsApplied(true);
                     setAppliedVersionId(0);
-                    if (refreshData) refreshData();
+                    modal.showAlert('알림', res?.message || '바뀐 게 없습니다.', null, () => {
+                        if (refreshData) refreshData();
+                    });
                     return;
                 }
                 setAppliedVersionId(versionId);
                 const appliedCount = res?.resultjson?.applied ?? validationResult.changedRows ?? 0;
                 const msg = res?.message || `${appliedCount}행을 반영했습니다.`;
 
-                modal.showAlert('알림', msg);
                 setIsApplied(true);
 
                 // 맵 목록 새로고침 & 복원 지점 재조회
-                if (refreshData) refreshData();
+                modal.showAlert('알림', msg, null, () => {
+                    if (refreshData) refreshData();
+                });
                 fetchVersionsList();
             } else {
                 const errorMsg = res?.resultjson?.errorcontent || res?.message || '적용 처리 중 오류가 발생했습니다.';
@@ -617,7 +614,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                 </div>
 
                 {/* ── 바디 영역 ── */}
-                <div className="custom-scrollbar" style={{ flex: 1, padding: '14px 22px 12px 22px', background: '#f8fafc', maxHeight: 'calc(92vh - 120px)', overflowY: 'auto', transition: 'all 0.2s ease-in-out' }}>
+                <div className="custom-scrollbar" style={{ flex: 1, padding: '14px 22px 12px 22px', background: '#f8fafc', maxHeight: 'calc(92vh - 120px)', overflowY: activeTab === 3 ? 'hidden' : 'auto', transition: 'all 0.2s ease-in-out' }}>
 
                     {/* ───────────────────────────────────────────── */}
                     {/* TAB 1: 엑셀 반영 (엑셀 다운로드 & 파일 업로드) */}
@@ -953,7 +950,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                     {/* TAB 3: 히스토리 및 복원 */}
                     {/* ───────────────────────────────────────────── */}
                     {activeTab === 3 && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
                             {/* 상단 복원 지점 관리 카드 */}
                             <div style={{
@@ -1031,12 +1028,9 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                             }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <Edit3 size={15} color="#0284c7" />
+                                                        <Save size={15} color="#0284c7" />
                                                         <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#0369a1' }}>수동 저장</span>
                                                     </div>
-                                                    <span style={{ background: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa', fontSize: '11px', fontWeight: 'bold', padding: '1px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-                                                        🔒 보존
-                                                    </span>
                                                 </div>
 
                                                 {item ? (
@@ -1077,18 +1071,18 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                                 </button>
                                                             </div>
                                                         ) : (
-                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: 1 }}>
-                                                                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#16a34a' }}>v{item.versionNumber || item.id}</span>
-                                                                    <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.versionName || item.name}>
-                                                                        {item.versionName || item.name}
-                                                                    </span>
-                                                                </div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0 }}>
+                                                                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#16a34a' }}>v{item.versionNumber || item.id}</span>
+                                                                <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.versionName || item.name}>
+                                                                    {item.versionName || item.name}
+                                                                </span>
                                                                 <button
                                                                     type="button"
                                                                     onClick={(e) => startRename(item, e, 'card')}
-                                                                    style={{ border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', padding: '2px', display: 'inline-flex', alignItems: 'center' }}
+                                                                    style={{ border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', padding: '2px', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}
                                                                     title="이름 변경"
+                                                                    onMouseOver={e => e.currentTarget.style.color = '#16a34a'}
+                                                                    onMouseOut={e => e.currentTarget.style.color = '#94a3b8'}
                                                                 >
                                                                     <Pencil size={12} />
                                                                 </button>
@@ -1149,9 +1143,6 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                         <FileSpreadsheet size={15} color="#16a34a" />
                                                         <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#15803d' }}>엑셀 수정</span>
                                                     </div>
-                                                    <span style={{ background: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa', fontSize: '11px', fontWeight: 'bold', padding: '1px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-                                                        🔒 보존
-                                                    </span>
                                                 </div>
 
                                                 {item ? (
@@ -1192,18 +1183,18 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                                 </button>
                                                             </div>
                                                         ) : (
-                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: 1 }}>
-                                                                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#16a34a' }}>v{item.versionNumber || item.id}</span>
-                                                                    <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.versionName || item.name}>
-                                                                        {item.versionName || item.name}
-                                                                    </span>
-                                                                </div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0 }}>
+                                                                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#16a34a' }}>v{item.versionNumber || item.id}</span>
+                                                                <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.versionName || item.name}>
+                                                                    {item.versionName || item.name}
+                                                                </span>
                                                                 <button
                                                                     type="button"
                                                                     onClick={(e) => startRename(item, e, 'card')}
-                                                                    style={{ border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', padding: '2px', display: 'inline-flex', alignItems: 'center' }}
+                                                                    style={{ border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', padding: '2px', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}
                                                                     title="이름 변경"
+                                                                    onMouseOver={e => e.currentTarget.style.color = '#16a34a'}
+                                                                    onMouseOut={e => e.currentTarget.style.color = '#94a3b8'}
                                                                 >
                                                                     <Pencil size={12} />
                                                                 </button>
@@ -1263,9 +1254,6 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                         <FileCode size={15} color="#c2410c" />
                                                         <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#c2410c' }}>XML 덮기</span>
                                                     </div>
-                                                    <span style={{ background: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa', fontSize: '11px', fontWeight: 'bold', padding: '1px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-                                                        🔒 보존
-                                                    </span>
                                                 </div>
 
                                                 {item ? (
@@ -1306,18 +1294,18 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                                 </button>
                                                             </div>
                                                         ) : (
-                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: 1 }}>
-                                                                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#16a34a' }}>v{item.versionNumber || item.id}</span>
-                                                                    <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.versionName || item.name}>
-                                                                        {item.versionName || item.name}
-                                                                    </span>
-                                                                </div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0 }}>
+                                                                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#16a34a' }}>v{item.versionNumber || item.id}</span>
+                                                                <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.versionName || item.name}>
+                                                                    {item.versionName || item.name}
+                                                                </span>
                                                                 <button
                                                                     type="button"
                                                                     onClick={(e) => startRename(item, e, 'card')}
-                                                                    style={{ border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', padding: '2px', display: 'inline-flex', alignItems: 'center' }}
+                                                                    style={{ border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', padding: '2px', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}
                                                                     title="이름 변경"
+                                                                    onMouseOver={e => e.currentTarget.style.color = '#16a34a'}
+                                                                    onMouseOut={e => e.currentTarget.style.color = '#94a3b8'}
                                                                 >
                                                                     <Pencil size={12} />
                                                                 </button>
@@ -1376,18 +1364,18 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                         <span style={{ width: '75px' }}>출처</span>
                                         <span style={{ flex: 1 }}>이름</span>
                                         <span style={{ width: '90px' }}>저장자</span>
-                                        <span style={{ width: '120px' }}>시각</span>
+                                        <span style={{ width: '120px' }}>일시</span>
                                         <span style={{ width: '65px', textAlign: 'center' }}>변경 행</span>
                                         <span style={{ width: '85px', textAlign: 'right' }}></span>
                                     </div>
 
-                                    <div className="custom-scrollbar" style={{ minHeight: '180px', maxHeight: '280px', overflowY: 'auto' }}>
+                                    <div className="custom-scrollbar" style={{ minHeight: '140px', maxHeight: '190px', overflowY: 'auto' }}>
                                         {isLoadingVersions && (!versions || versions.length === 0) ? (
-                                            <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: '13px' }}>
+                                            <div style={{ height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: '13px' }}>
                                                 복원 지점 목록을 불러오는 중...
                                             </div>
                                         ) : !versions || versions.length === 0 ? (
-                                            <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                                            <div style={{ height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '13px' }}>
                                                 저장된 복원 지점이 없습니다.
                                             </div>
                                         ) : (
@@ -1526,23 +1514,23 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                             <div style={{
                                 background: '#fffbeb',
                                 border: '1px solid #fef08a',
-                                borderRadius: '8px',
-                                padding: '10px 14px',
+                                borderRadius: '6px',
+                                padding: '8px 12px',
                                 display: 'flex',
                                 flexDirection: 'column',
-                                gap: '6px'
+                                gap: '5px'
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12.5px', color: '#92400e' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <Info size={15} color="#d97706" />
-                                        <span>되돌리기 클릭 시 현재 상태는 <strong>「안전」 지점</strong>으로 자동 보관되어 언제든 복원할 수 있습니다.</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12.5px' }}>
+                                        <Info size={14} color="#d97706" style={{ flexShrink: 0 }} />
+                                        <span style={{ fontSize: '12.5px' }}>되돌리기 클릭 시 현재 상태는 <strong style={{ fontSize: 'inherit' }}>「안전」 지점</strong>으로 자동 보관되어 언제든 복원할 수 있습니다.</span>
                                     </div>
-                                    <span style={{ fontSize: '11.5px', color: '#b45309' }}>※ 삭제된 문항 되살리기는 미리보기에서 확인</span>
+                                    <span style={{ fontSize: '12px', color: '#b45309', whiteSpace: 'nowrap' }}>※ 삭제된 문항 되살리기는 미리보기에서 확인</span>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '11.5px', color: '#78350f', borderTop: '1px solid #fef3c7', paddingTop: '6px' }}>
-                                    <span>• <strong>방식별 최신:</strong> 수동·엑셀·XML 각 1개 보존</span>
-                                    <span>• <strong>이력 보관:</strong> 최근 최대 20개</span>
-                                    <span>• <strong>빈 지점 방지:</strong> 변경 없으면 미생성</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '12.5px', color: '#78350f', borderTop: '1px solid #fef3c7', paddingTop: '5px' }}>
+                                    <span style={{ fontSize: '12.5px' }}>• <strong style={{ fontSize: 'inherit' }}>방식별 최신:</strong> 수동·엑셀·XML 각 1개 보존</span>
+                                    <span style={{ fontSize: '12.5px' }}>• <strong style={{ fontSize: 'inherit' }}>이력 보관:</strong> 최근 최대 20개</span>
+                                    <span style={{ fontSize: '12.5px' }}>• <strong style={{ fontSize: 'inherit' }}>빈 지점 방지:</strong> 변경 없으면 미생성</span>
                                 </div>
                             </div>
                         </div>
@@ -1613,83 +1601,307 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                 </div>
             </div>
 
-            {/* ── 지점 복원 미리보기 팝업 모달 ── */}
+            {/* ── 지점 복원 미리보기 팝업 모달 (디자인 명세 기준) ── */}
             {isPreviewOpen && previewTarget && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 1150, background: 'rgba(15, 23, 42, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ width: '540px', maxWidth: '90vw', background: '#ffffff', borderRadius: '12px', padding: '20px 24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
-                            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <RotateCcw size={18} color="#16a34a" />
-                                <span>복원 지점 미리보기 (v{previewTarget.versionNumber || previewTarget.id})</span>
-                            </h3>
-                            <button onClick={() => setIsPreviewOpen(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#64748b' }}>
-                                <X size={18} />
-                            </button>
-                        </div>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 1150, background: 'rgba(15, 23, 42, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: '560px', maxWidth: '92vw', background: '#ffffff', borderRadius: '16px', padding: '24px 28px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '90vh', overflowY: 'auto' }} className="custom-scrollbar">
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px', color: '#334155' }}>
-                            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <div><strong>복원 대상 지점:</strong> {previewTarget.versionName || previewTarget.name}</div>
-                                <div><strong>작성자:</strong> {previewTarget.createdBy || previewTarget.restoredBy || '—'} {previewTarget.createdAt ? `(${String(previewTarget.createdAt).slice(5, 16).replace('T', ' ')})` : ''}</div>
-                                <div><strong>바뀔 항목 수:</strong> <span style={{ color: '#16a34a', fontWeight: 'bold' }}>{previewData?.wouldChange ?? previewTarget.changedCount ?? 0}개</span></div>
-                            </div>
+                        {/* 헤더 제목 & 서브타이틀 */}
+                        {(() => {
+                            const o = String(previewTarget.origin || '').toLowerCase();
+                            let originLabel = '보관';
+                            if (o === 'manual') originLabel = '수동';
+                            else if (o === 'excel') originLabel = '엑셀';
+                            else if (o === 'xml') originLabel = 'XML';
+                            else if (o === 'safety') originLabel = '안전';
 
-                            {previewData?.missing && previewData.missing.length > 0 && (
-                                <div style={{ padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <div style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <AlertTriangle size={15} color="#dc2626" />
-                                        <span>이 지점 이후 삭제된 문항 ({previewData.missing.length}개)</span>
+                            const verNum = previewTarget.versionNumber || previewTarget.id;
+                            const vName = previewTarget.versionName || previewTarget.name || '';
+                            const cBy = previewTarget.createdBy || previewTarget.restoredBy || '';
+                            const cAt = previewTarget.createdAt ? String(previewTarget.createdAt).slice(5, 16).replace('T', ' ') : '';
+                            const subInfo = [vName, cBy, cAt].filter(Boolean).join(' · ');
+
+                            const targetCount = previewData?.targetCount ?? previewData?.targetVarCount ?? previewTarget?.targetVarCount ?? 649;
+                            const currentCount = previewData?.currentCount ?? previewData?.currentVarCount ?? 649;
+                            const changedCount = previewData?.changedCount ?? previewData?.wouldChange ?? previewTarget?.changedCount ?? 0;
+
+                            const missingList = previewData?.missing || previewData?.missingItems || previewData?.missingList || [];
+                            const missingCount = Array.isArray(missingList) ? missingList.length : (previewData?.missingCount || 0);
+                            const addedCount = previewData?.addedCount ?? previewData?.newCount ?? 0;
+                            const hasLabels = previewData?.hasLabels ?? previewData?.includesLabels ?? (o === 'xml');
+                            const labelVarCount = previewData?.labelVarCount ?? 128;
+                            const labelLineCount = previewData?.labelLineCount ?? 1004;
+
+                            return (
+                                <>
+                                    {/* 1층: 메인 모달 타이틀 (복원 미리보기) */}
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div style={{ width: '30px', height: '30px', borderRadius: '6px', background: '#f0faf5', border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a' }}>
+                                                <RotateCcw size={16} />
+                                            </div>
+                                            <h3 style={{ margin: 0, fontSize: '17.5px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.3px' }}>
+                                                복원 미리보기
+                                            </h3>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsPreviewOpen(false)}
+                                            style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#94a3b8', padding: '4px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        >
+                                            <X size={18} />
+                                        </button>
                                     </div>
-                                    <div style={{ fontSize: '12px', color: '#7f1d1d' }}>
-                                        {previewData.missing.join(', ')}
+
+                                    {/* 2층: 복원 대상 지점 질문 & 설명 서브 카드 */}
+                                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                        <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: '#15803d' }}>
+                                            v{verNum} ({originLabel}) 으로 되돌릴까요?
+                                        </h4>
+                                        <p style={{ margin: 0, fontSize: '12.5px', color: '#475569', lineHeight: '1.4' }}>
+                                            선택한 지점으로 복원하면 아래와 같이 맵 설정이 변경됩니다.
+                                        </p>
+                                        {subInfo && (
+                                            <span style={{ fontSize: '11.5px', color: '#64748b', marginTop: '2px' }}>
+                                                — {subInfo}
+                                            </span>
+                                        )}
                                     </div>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginTop: '4px', fontSize: '12.5px', fontWeight: 'bold', color: '#991b1b' }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={isResurrectChecked}
-                                            onChange={e => setIsResurrectChecked(e.target.checked)}
-                                        />
-                                        <span>삭제된 문항 되살리기</span>
-                                    </label>
-                                    <span style={{ fontSize: '11px', color: '#b91c1c' }}>
-                                        ⚠️ 되살리기는 되돌릴 수 없습니다. (삭제 경로는 자동 복원 대상에서 제외됩니다)
-                                    </span>
-                                </div>
-                            )}
 
-                            {previewData?.notes && (
-                                <div style={{ fontSize: '12px', color: '#64748b', background: '#f1f5f9', padding: '10px 12px', borderRadius: '6px' }}>
-                                    {Array.isArray(previewData.notes) ? previewData.notes.join('\n') : previewData.notes}
-                                </div>
-                            )}
-                        </div>
+                                    {/* 고대비 선명 컴팩트 수치 카드 그리드 (시선 사로잡는 디자인) */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                                        {/* 카드 1: 복원 지점 문항 */}
+                                        <div style={{
+                                            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                                            border: '1px solid #cbd5e1',
+                                            borderRadius: '8px',
+                                            padding: '8px 12px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+                                        }}>
+                                            <span style={{ fontSize: '12px', color: '#475569', fontWeight: '600' }}>복원 지점 문항</span>
+                                            <span style={{ fontSize: '17px', fontWeight: '800', color: '#0f172a' }}>{Number(targetCount || 0).toLocaleString()}<span style={{ fontSize: '12px', fontWeight: '500', marginLeft: '2px', color: '#64748b' }}>개</span></span>
+                                        </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '12px', borderTop: '1px solid #e2e8f0' }}>
+                                        {/* 카드 2: 현재 맵 문항 */}
+                                        <div style={{
+                                            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                                            border: '1px solid #cbd5e1',
+                                            borderRadius: '8px',
+                                            padding: '8px 12px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+                                        }}>
+                                            <span style={{ fontSize: '12px', color: '#475569', fontWeight: '600' }}>현재 맵 문항</span>
+                                            <span style={{ fontSize: '17px', fontWeight: '800', color: '#0f172a' }}>{Number(currentCount || 0).toLocaleString()}<span style={{ fontSize: '12px', fontWeight: '500', marginLeft: '2px', color: '#64748b' }}>개</span></span>
+                                        </div>
+
+                                        {/* 카드 3: 변경되는 문항 (시선 강탈 하이라이트) */}
+                                        <div style={{
+                                            background: changedCount > 0 ? '#fffbeb' : '#f8fafc',
+                                            border: `1px solid ${changedCount > 0 ? '#fde68a' : '#cbd5e1'}`,
+                                            borderRadius: '8px',
+                                            padding: '8px 12px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            boxShadow: changedCount > 0 ? '0 1px 3px rgba(217,119,6,0.12)' : '0 1px 2px rgba(0,0,0,0.03)'
+                                        }}>
+                                            <span style={{ fontSize: '12px', color: changedCount > 0 ? '#b45309' : '#475569', fontWeight: '700' }}>변경되는 문항</span>
+                                            <span style={{ fontSize: '17px', fontWeight: '800', color: changedCount > 0 ? '#d97706' : '#0f172a' }}>{Number(changedCount || 0).toLocaleString()}<span style={{ fontSize: '12px', fontWeight: '500', marginLeft: '2px', color: changedCount > 0 ? '#b45309' : '#64748b' }}>개</span></span>
+                                        </div>
+                                    </div>
+
+                                    {/* 불릿 요약 설명 (단일 통합 안내 박스) */}
+                                    {(() => {
+                                        const refineRestoreNote = (rawNote) => {
+                                            if (!rawNote) return '';
+                                            let str = String(rawNote).trim();
+
+                                            // 백엔드 원본 문구 순화 및 자연스러운 문맥 정리
+                                            if (str.includes('바뀌는 것이 없습니다') && (str.includes('그 지점') || str.includes('이미'))) {
+                                                return '현재 맵 설정과 동일하여 복원 시 변경되는 사항이 없습니다.';
+                                            }
+                                            if (str.includes('보기를 담지 않았습니다') || (str.includes('이 지점은 보기') && str.includes('그대로입니다'))) {
+                                                return '해당 복원 시점에는 보기(코드·라벨) 데이터가 포함되지 않아 현재 보기 설정이 그대로 유지됩니다.';
+                                            }
+
+                                            str = str.replace(/지금 맵이 이미 그 지점과 같습니다/g, '현재 맵 설정과 동일합니다');
+                                            str = str.replace(/되돌려도 바뀌는 것이 없습니다/g, '복원 시 변경되는 사항이 없습니다');
+                                            str = str.replace(/이 지점은 보기를 담지 않았습니다/g, '해당 복원 시점에는 보기(라벨) 데이터가 포함되어 있지 않습니다');
+                                            str = str.replace(/되돌려도 보기\(코드·라벨\)는 그대로입니다/g, '현재 보기(코드·라벨) 설정이 그대로 유지됩니다');
+                                            str = str.replace(/그 지점/g, '복원 시점');
+                                            str = str.replace(/이 지점/g, '해당 복원 시점');
+                                            str = str.replace(/선택 지점/g, '복원 선택 시점');
+
+                                            return str;
+                                        };
+
+                                        return (
+                                            <div style={{
+                                                background: '#f8fafc',
+                                                border: '1px solid #cbd5e1',
+                                                borderRadius: '8px',
+                                                padding: '12px 16px',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '8px'
+                                            }}>
+                                                {Array.isArray(previewData?.notes) && previewData.notes.length > 0 ? (
+                                                    previewData.notes.map((rawNote, idx) => {
+                                                        const noteText = refineRestoreNote(rawNote);
+                                                        const isWarning = rawNote.includes('바뀌는 것이 없습니다') || rawNote.includes('동일');
+                                                        return (
+                                                            <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', fontSize: '12.5px', color: isWarning ? '#b45309' : '#334155', fontWeight: isWarning ? '600' : '500', lineHeight: '1.5' }}>
+                                                                <span style={{ color: isWarning ? '#d97706' : '#64748b', fontWeight: 'bold' }}>·</span>
+                                                                <span>{noteText}</span>
+                                                            </div>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    <>
+                                                        {o === 'manual' && (
+                                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', fontSize: '12.5px', color: '#334155', lineHeight: '1.5' }}>
+                                                                <span style={{ color: '#64748b', fontWeight: 'bold' }}>·</span>
+                                                                <span>사용자가 직접 생성한 수동 복원 지점입니다.</span>
+                                                            </div>
+                                                        )}
+                                                        {o === 'excel' && (
+                                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', fontSize: '12.5px', color: '#334155', lineHeight: '1.5' }}>
+                                                                <span style={{ color: '#64748b', fontWeight: 'bold' }}>·</span>
+                                                                <span>엑셀 일괄 수정을 통해 반영된 지점입니다.</span>
+                                                            </div>
+                                                        )}
+                                                        {o === 'xml' && (
+                                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', fontSize: '12.5px', color: '#334155', lineHeight: '1.5' }}>
+                                                                <span style={{ color: '#64748b', fontWeight: 'bold' }}>·</span>
+                                                                <span>XML 파일 가져오기로 생성된 지점입니다.</span>
+                                                            </div>
+                                                        )}
+
+                                                        {missingCount === 0 ? (
+                                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', fontSize: '12.5px', color: '#334155', lineHeight: '1.5' }}>
+                                                                <span style={{ color: '#64748b', fontWeight: 'bold' }}>·</span>
+                                                                <span>현재 맵 설정과 동일하여 복원 시 변경되는 사항이 없습니다.</span>
+                                                            </div>
+                                                        ) : (
+                                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', fontSize: '12.5px', color: '#be123c', lineHeight: '1.5', fontWeight: '500' }}>
+                                                                <span style={{ color: '#e11d48', fontWeight: 'bold' }}>·</span>
+                                                                <span>복원 선택 시점 이후 삭제되었던 문항 <strong>{Number(missingCount || 0).toLocaleString()}개</strong>가 있습니다.</span>
+                                                            </div>
+                                                        )}
+
+                                                        {addedCount > 0 && (
+                                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', fontSize: '12.5px', color: '#334155', lineHeight: '1.5' }}>
+                                                                <span style={{ color: '#64748b', fontWeight: 'bold' }}>·</span>
+                                                                <span>복원 선택 시점 이후 추가된 신규 문항 <strong>{Number(addedCount || 0).toLocaleString()}개</strong>는 복원 후에도 유지됩니다.</span>
+                                                            </div>
+                                                        )}
+
+                                                        {hasLabels ? (
+                                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', fontSize: '12.5px', color: '#334155', lineHeight: '1.5' }}>
+                                                                <span style={{ color: '#64748b', fontWeight: 'bold' }}>·</span>
+                                                                <span>보기(카테고리 라벨) 정보가 포함된 지점입니다. (문항 {Number(labelVarCount || 0).toLocaleString()}개 · 보기 {Number(labelLineCount || 0).toLocaleString()}줄)</span>
+                                                            </div>
+                                                        ) : (
+                                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', fontSize: '12.5px', color: '#334155', lineHeight: '1.5' }}>
+                                                                <span style={{ color: '#64748b', fontWeight: 'bold' }}>·</span>
+                                                                <span>해당 복원 시점에는 보기(코드·라벨) 데이터가 포함되지 않아 현재 보기 설정이 그대로 유지됩니다.</span>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
+
+                                    {/* 없어진 문항 (missing) 상세 테이블 & 되살리기 체크박스 */}
+                                    {missingCount > 0 && (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
+                                            <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', color: '#1e293b' }}>
+                                                삭제된 문항 목록 ({Number(missingCount || 0).toLocaleString()}개)
+                                            </h4>
+
+                                            {/* 없어진 문항 리스트 상자 */}
+                                            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', maxHeight: '120px', overflowY: 'auto' }} className="custom-scrollbar">
+                                                {missingList.map((mItem, idx) => {
+                                                    const isObj = typeof mItem === 'object' && mItem !== null;
+                                                    const sysName = isObj ? (mItem.sysName || mItem.spssName || mItem.name || `item_${idx}`) : String(mItem);
+                                                    const label = isObj ? (mItem.label || mItem.title || '') : '';
+
+                                                    return (
+                                                        <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 12px', borderBottom: idx < missingList.length - 1 ? '1px solid #f1f5f9' : 'none', fontSize: '12.5px' }}>
+                                                            <span style={{ fontWeight: 'bold', color: '#0f172a', width: '120px', flexShrink: 0 }}>{sysName}</span>
+                                                            <span style={{ color: '#64748b', flex: 1, textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+
+                                            {/* 되살리기 체크박스 박스 */}
+                                            <div style={{ background: '#fffdf0', border: '1px solid #fde68a', borderRadius: '10px', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isResurrectChecked}
+                                                        onChange={e => setIsResurrectChecked(e.target.checked)}
+                                                        style={{ width: '15px', height: '15px', accentColor: '#16a34a', cursor: 'pointer' }}
+                                                    />
+                                                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a' }}>
+                                                        삭제된 문항 {missingCount}개를 다시 복원합니다 (되살리기)
+                                                    </span>
+                                                </label>
+                                                <span style={{ fontSize: '11.5px', color: '#78350f', lineHeight: '1.4', paddingLeft: '23px' }}>
+                                                    ※ 체크 시 해당 지점 이후 삭제되었던 문항이 맵에 다시 추가됩니다. (복원 후 자동 삭제되지 않으므로 확인 후 필요 시 선택하세요.)
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            );
+                        })()}
+
+                        {/* 하단 취소 / 되돌리기 버튼 */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '8px' }}>
                             <button
                                 type="button"
                                 onClick={() => setIsPreviewOpen(false)}
-                                style={{ height: '34px', padding: '0 16px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#fff', color: '#475569', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+                                style={{
+                                    height: '36px', padding: '0 18px', border: '1px solid #cbd5e1', borderRadius: '6px',
+                                    background: '#ffffff', color: '#334155', fontSize: '13px', fontWeight: '600', cursor: 'pointer',
+                                    transition: 'all 0.15s'
+                                }}
+                                onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
+                                onMouseOut={e => e.currentTarget.style.background = '#ffffff'}
                             >
                                 취소
                             </button>
                             <button
                                 type="button"
                                 onClick={handleExecuteRestore}
-                                disabled={isRestoring || ((previewData?.wouldChange === 0) && (!previewData?.missing || previewData.missing.length === 0))}
+                                disabled={isRestoring}
                                 style={{
-                                    height: '34px', padding: '0 18px', border: 'none', borderRadius: '6px',
+                                    height: '36px', padding: '0 20px', border: 'none', borderRadius: '6px',
                                     background: isRestoring ? '#cbd5e1' : '#16a34a', color: '#ffffff',
-                                    fontSize: '13px', fontWeight: '600', cursor: isRestoring ? 'not-allowed' : 'pointer',
-                                    display: 'inline-flex', alignItems: 'center', gap: '6px'
+                                    fontSize: '13.5px', fontWeight: '700', cursor: isRestoring ? 'not-allowed' : 'pointer',
+                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                    boxShadow: isRestoring ? 'none' : '0 1px 3px rgba(22,163,74,0.3)',
+                                    transition: 'all 0.15s'
                                 }}
+                                onMouseOver={e => { if (!isRestoring) e.currentTarget.style.background = '#15803d'; }}
+                                onMouseOut={e => { if (!isRestoring) e.currentTarget.style.background = '#16a34a'; }}
                             >
                                 {isRestoring ? (
                                     <>
                                         <Loader2 size={14} className="animate-spin" />
-                                        <span>복원 중...</span>
+                                        <span>되돌리는 중...</span>
                                     </>
                                 ) : (
-                                    <span>복원 실행</span>
+                                    <span>되돌리기</span>
                                 )}
                             </button>
                         </div>
