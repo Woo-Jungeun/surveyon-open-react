@@ -55,7 +55,7 @@ const MapManagementPage = () => {
     const [dataUpdateModalOpen, setDataUpdateModalOpen] = useState(false);          //  데이터 등록 모달 상태
     const [reLabelModalOpen, setReLabelModalOpen] = useState(false);                // Re_Label 모달 상태
     const [addValueModalOpen, setAddValueModalOpen] = useState(false);              // 레이블 추가 팝업 상태
-    const [batchMapEditModalOpen, setBatchMapEditModalOpen] = useState(false);      // 맵 일괄 수정 모달 상태
+    const [batchMapEditModalOpen, setBatchMapEditModalOpen] = useState(false);      // 맵 세팅 관리 모달 상태
 
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
@@ -203,7 +203,7 @@ const MapManagementPage = () => {
     const filteredMappingVariables = useMemo(() => {
         if (!mappingSearchQuery.trim()) return variables;
         const q = mappingSearchQuery.toLowerCase().trim();
-        return variables.filter(v => 
+        return variables.filter(v =>
             (v.sysName && String(v.sysName).toLowerCase().includes(q)) ||
             (v.name && String(v.name).toLowerCase().includes(q)) ||
             (v.label && String(v.label).toLowerCase().includes(q)) ||
@@ -769,7 +769,7 @@ const MapManagementPage = () => {
                                 onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
                             >
                                 <FileSpreadsheet size={16} />
-                                맵 일괄 수정
+                                맵 세팅 관리
                             </button>
                             {/* 세로 구분선 1 */}
                             <div style={{
@@ -940,7 +940,7 @@ const MapManagementPage = () => {
                     refreshData={() => setRefreshKey(prev => prev + 1)}
                 />
 
-                {/* 맵 일괄 수정 모달 */}
+                {/* 맵 세팅 관리 모달 */}
                 <BatchMapEditModal
                     isOpen={batchMapEditModalOpen}
                     onClose={() => setBatchMapEditModalOpen(false)}

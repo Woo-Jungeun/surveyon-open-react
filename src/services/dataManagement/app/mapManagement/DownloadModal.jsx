@@ -17,7 +17,7 @@ const OTHER_FORMAT_OPTIONS = [
 ];
 
 const DownloadModal = ({ isOpen, onClose }) => {
-    const { exportData, exportSupplyTicket, exportSupplyToolStatus } = MapManagementPageApi();
+    const { exportData, exportSupplyTicket, exportSupplyToolStatus, resetExportSupplyTool } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
 
@@ -121,8 +121,9 @@ const DownloadModal = ({ isOpen, onClose }) => {
     /**
      * PC 내보내기 도구 실행 (surveyonexport://run?...)
      * ① 1회용 티켓 발급 (POST /export/supply/ticket)
-     * ② 프로토콜 URL 조립 및 실행 (surveyonexport://run?...)
-     * ③ 10초 뒤 1회 구동 확인 (POST /export/supply/tool/status)
+     * ② 프로토콜 실행 직전 상태 리셋 (POST /export/supply/tool/reset)
+     * ③ 프로토콜 URL 조립 및 실행 (surveyonexport://run?...)
+     * ④ 10초 뒤 1회 구동 확인 (POST /export/supply/tool/status)
      */
     const launchExportTool = async (gbParam, pn, userId, answerStateCode = '4') => {
         try {
@@ -143,7 +144,14 @@ const DownloadModal = ({ isOpen, onClose }) => {
 
             const ticket = ticketRes.resultjson.ticket;
 
-            // ② URL 조립 (surveyonexport://run?central=..&ticket=..&pn=..&gb=..&state=..) - URL에 user/auth는 싣지 않음
+            // ② 프로토콜 실행 직전에 reset 호출 (/export/supply/tool/reset)
+            try {
+                await resetExportSupplyTool.mutateAsync({ pn, user: userId });
+            } catch (resetErr) {
+                console.warn("resetExportSupplyTool warning:", resetErr);
+            }
+
+            // ③ URL 조립 (surveyonexport://run?central=..&ticket=..&pn=..&gb=..&state=..) - URL에 user/auth는 싣지 않음
             const host = window.API_CONFIG?.API_BASE_URL_DATAMANAGEMENT || window.API_CONFIG?.API_BASE_URL || window.location.origin;
             const p = new URLSearchParams();
             p.set('central', host);

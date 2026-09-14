@@ -150,19 +150,34 @@ export function MapManagementPageApi() {
         async (formData) => await api.form(formData, "/map/excel/apply", {}, "API_BASE_URL_DATAMANAGEMENT")
     );
 
+    /** export PC 도구 상태 리셋 */
+    const resetExportSupplyTool = useMutation(
+        async (data) => await api.post(data, "/export/supply/tool/reset", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
     /** 엑셀 일괄수정 - 복원지점 목록 */
     const getExcelVersions = useMutation(
-        async (data) => await api.post(data, "/map/excel/versions", "API_BASE_URL_DATAMANAGEMENT")
+        async (data) => await api.post(data, "/map/history", "API_BASE_URL_DATAMANAGEMENT")
     );
 
     /** 엑셀 일괄수정 - 복원 실행 */
     const restoreExcelVersion = useMutation(
-        async (data) => await api.post(data, "/map/excel/restore", "API_BASE_URL_DATAMANAGEMENT")
+        async (data) => await api.post(data, "/map/history/restore", "API_BASE_URL_DATAMANAGEMENT")
     );
 
-    /** 엑셀 일괄수정 - 복원지점 수동 생성 */
+    /** 복원 지점 수동 생성 */
     const createExcelVersion = useMutation(
-        async (data) => await api.post(data, "/map/excel/versions/create", "API_BASE_URL_DATAMANAGEMENT")
+        async (data) => await api.post(data, "/map/history/create", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 복원 지점 이름 변경 */
+    const renameMapVersion = useMutation(
+        async (data) => await api.post(data, "/map/history/rename", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 복원 미리보기 */
+    const previewMapRestore = useMutation(
+        async (data) => await api.post(data, "/map/history/preview", "API_BASE_URL_DATAMANAGEMENT")
     );
 
     return {
@@ -175,6 +190,7 @@ export function MapManagementPageApi() {
         exportData,
         exportSupplyTicket,
         exportSupplyToolStatus,
+        resetExportSupplyTool,
         uploadSpss,
         updateDataFromSav,
         generateRelabels,
@@ -185,6 +201,8 @@ export function MapManagementPageApi() {
         applyExcel,
         getExcelVersions,
         restoreExcelVersion,
-        createExcelVersion
+        createExcelVersion,
+        renameMapVersion,
+        previewMapRestore
     };
 }

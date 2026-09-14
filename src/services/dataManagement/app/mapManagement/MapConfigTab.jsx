@@ -806,23 +806,23 @@ const MapConfigTab = ({
 
     // ── Grid Props & 상태 최적화 ──
     const bakedSelectedState = useMemo(() =>
-        (ctxVars || []).reduce((obj, v) => ({ ...obj, [v.id]: v.sysName === 'pid' ? true : !!v.isBaked }), {}),
+        (ctxVars || []).reduce((obj, v) => ({ ...obj, [v.id]: (v.sysName === 'pid' || v.sysName === 'pn') ? true : !!v.isBaked }), {}),
         [ctxVars]);
 
     const silsaSelectedState = useMemo(() =>
-        (ctxVars || []).reduce((obj, v) => ({ ...obj, [v.id]: !!v.isSilsa }), {}),
+        (ctxVars || []).reduce((obj, v) => ({ ...obj, [v.id]: (v.sysName === 'pid' || v.sysName === 'pn') ? true : !!v.isSilsa }), {}),
         [ctxVars]);
 
     const handleBakedSelectedChange = useCallback((state) => {
-        setVariables(prev => prev.map(v => ({ ...v, isBaked: v.sysName === 'pid' ? true : !!state[v.id] })));
+        setVariables(prev => prev.map(v => ({ ...v, isBaked: (v.sysName === 'pid' || v.sysName === 'pn') ? true : !!state[v.id] })));
     }, [setVariables]);
 
     const handleSilsaSelectedChange = useCallback((state) => {
-        setVariables(prev => prev.map(v => ({ ...v, isSilsa: !!state[v.id] })));
+        setVariables(prev => prev.map(v => ({ ...v, isSilsa: (v.sysName === 'pid' || v.sysName === 'pn') ? true : !!state[v.id] })));
     }, [setVariables]);
 
-    const isItemSelectable = useCallback((item) => item?.sysName !== 'pid' && String(item?.type || '').toLowerCase() !== 'custom', []);
-    const isSilsaSelectable = useCallback((item) => String(item?.type || '').toLowerCase() !== 'custom', []);
+    const isItemSelectable = useCallback((item) => item?.sysName !== 'pid' && item?.sysName !== 'pn' && String(item?.type || '').toLowerCase() !== 'custom', []);
+    const isSilsaSelectable = useCallback((item) => item?.sysName !== 'pid' && item?.sysName !== 'pn' && String(item?.type || '').toLowerCase() !== 'custom', []);
 
     const BakedSelectionCell = useCallback((props) => {
         const { dataItem } = props;
@@ -1054,8 +1054,8 @@ const MapConfigTab = ({
         const sliced = variables.slice(skip, skip + pageSize);
         return sliced.map(item => ({
             ...item,
-            isBaked: item.sysName === 'pid' ? true : !!bakedSelectedState[item.id],
-            isSilsa: !!silsaSelectedState[item.id]
+            isBaked: (item.sysName === 'pid' || item.sysName === 'pn') ? true : !!bakedSelectedState[item.id],
+            isSilsa: (item.sysName === 'pid' || item.sysName === 'pn') ? true : !!silsaSelectedState[item.id]
         }));
     }, [variables, skip, pageSize, bakedSelectedState, silsaSelectedState]);
 
