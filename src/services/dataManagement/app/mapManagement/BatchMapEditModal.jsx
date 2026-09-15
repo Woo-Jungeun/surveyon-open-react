@@ -1113,6 +1113,8 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                     {/* ───────────────────────────────────────────── */}
                     {activeTab === 2 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, minHeight: 0, height: '100%' }}>
+
+
                             <input
                                 type="file"
                                 ref={xmlFileInputRef}
@@ -1344,7 +1346,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                         })()}
                                     </div>
 
-                                    {/* 하단 스크롤 영역: 테이블 그리드들 포함 */}
+                                    {/* 하단 스크롤 영역: 테이블 그리드들 포함 (Tab 2 전용 단일 스크롤바) */}
                                     <div className="custom-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '4px' }}>
 
                                         {/* 1. 삭제될 문항 목록 카트 (접지 말고 전부 보여줌) */}
@@ -1352,7 +1354,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                             <div style={{ background: '#ffffff', border: '1.5px solid #fecdd3', borderRadius: '8px', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <span style={{ fontSize: '13.5px', fontWeight: 'bold', color: '#dc2626' }}>🗑 삭제될 문항</span>
+                                                        <span style={{ fontSize: '13.5px', fontWeight: 'bold', color: '#dc2626' }}>삭제될 문항</span>
                                                         <span style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecdd3', fontSize: '11.5px', fontWeight: 'bold', padding: '1px 8px', borderRadius: '10px' }}>
                                                             {xmlValidationResult.deletedList.length.toLocaleString()}개
                                                         </span>
@@ -1365,7 +1367,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                         onClick={() => setXmlDeletedExpanded(!xmlDeletedExpanded)}
                                                         style={{ border: 'none', background: 'transparent', color: '#475569', fontSize: '12px', cursor: 'pointer', fontWeight: '600' }}
                                                     >
-                                                        {xmlDeletedExpanded ? '접기 ▲' : '펼치기 ▼'}
+                                                        {xmlDeletedExpanded ? '접기 ▲' : `전체보기 (${xmlValidationResult.deletedList.length}개) ▼`}
                                                     </button>
                                                 </div>
 
@@ -1376,7 +1378,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                         <span style={{ width: '180px' }}>특이사항 / 경고</span>
                                                     </div>
 
-                                                    <div style={{ maxHeight: xmlDeletedExpanded ? '280px' : '92px', overflowY: 'auto' }} className="custom-scrollbar">
+                                                    <div style={{ maxHeight: xmlDeletedExpanded ? 'none' : '92px', overflowY: xmlDeletedExpanded ? 'visible' : 'hidden' }}>
                                                         {xmlValidationResult.deletedList.map((row, idx) => {
                                                             const hasAi = row.hasAiOpen === true;
                                                             return (
@@ -1414,14 +1416,23 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                         {/* 2. 오픈 문자·숫자 판정 테이블 카트 (guessedOpenList) */}
                                         {xmlValidationResult?.guessedOpenList && xmlValidationResult.guessedOpenList.length > 0 && (
                                             <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ fontSize: '13.5px', fontWeight: 'bold', color: '#0f172a' }}>오픈 문자·숫자 판정</span>
-                                                    <span style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '11.5px', fontWeight: 'bold', padding: '1px 8px', borderRadius: '10px' }}>
-                                                        {xmlValidationResult.guessedOpenList.length.toLocaleString()}개
-                                                    </span>
-                                                    <span style={{ fontSize: '12px', color: '#64748b' }}>
-                                                        — 문자인지 숫자인지 근거가 없어 주관식(문자)으로 자동 지정된 문항 (확인 필요)
-                                                    </span>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <span style={{ fontSize: '13.5px', fontWeight: 'bold', color: '#0f172a' }}>오픈 문자·숫자 판정</span>
+                                                        <span style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '11.5px', fontWeight: 'bold', padding: '1px 8px', borderRadius: '10px' }}>
+                                                            {xmlValidationResult.guessedOpenList.length.toLocaleString()}개
+                                                        </span>
+                                                        <span style={{ fontSize: '12px', color: '#64748b' }}>
+                                                            — 문자인지 숫자인지 근거가 없어 주관식(문자)으로 자동 지정된 문항 (확인 필요)
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setXmlOpenExpanded(!xmlOpenExpanded)}
+                                                        style={{ border: 'none', background: 'transparent', color: '#475569', fontSize: '12px', cursor: 'pointer', fontWeight: '600' }}
+                                                    >
+                                                        {xmlOpenExpanded ? '접기 ▲' : `전체보기 (${xmlValidationResult.guessedOpenList.length}개) ▼`}
+                                                    </button>
                                                 </div>
 
                                                 <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', overflow: 'hidden' }}>
@@ -1429,9 +1440,9 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                         <span style={{ width: '120px' }}>변수명</span>
                                                         <span style={{ flex: 1 }}>문항 라벨</span>
                                                         <span style={{ width: '140px' }}>판정 결과</span>
-                                                    </div>
+                                                     </div>
 
-                                                    <div style={{ maxHeight: xmlOpenExpanded ? '240px' : '92px', overflowY: xmlOpenExpanded ? 'auto' : 'hidden' }} className="custom-scrollbar">
+                                                    <div style={{ maxHeight: xmlOpenExpanded ? 'none' : '92px', overflowY: xmlOpenExpanded ? 'visible' : 'hidden' }}>
                                                         {xmlValidationResult.guessedOpenList.map((row, idx) => (
                                                             <div key={idx} style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid #f1f5f9', fontSize: '12.5px', color: '#334155' }}>
                                                                 <span style={{ width: '120px', fontWeight: 'bold', color: '#0f172a' }}>{row.variable}</span>
@@ -1441,27 +1452,26 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                         ))}
                                                     </div>
                                                 </div>
-
-                                                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setXmlOpenExpanded(!xmlOpenExpanded)}
-                                                        style={{ border: 'none', background: 'transparent', color: '#475569', fontSize: '12px', cursor: 'pointer', padding: 0, fontWeight: '600' }}
-                                                    >
-                                                        {xmlOpenExpanded ? '접기 ▲' : '... 넓게 보기 ▼'}
-                                                    </button>
-                                                </div>
                                             </div>
                                         )}
 
                                         {/* 3. 추가될 문항 목록 카트 (addedList) */}
                                         {xmlValidationResult?.addedList && xmlValidationResult.addedList.length > 0 && (
                                             <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                    <span style={{ fontSize: '13.5px', fontWeight: 'bold', color: '#0f172a' }}>+ 추가될 문항</span>
-                                                    <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontSize: '11.5px', fontWeight: 'bold', padding: '1px 8px', borderRadius: '10px' }}>
-                                                        {xmlValidationResult.addedList.length.toLocaleString()}개
-                                                    </span>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <span style={{ fontSize: '13.5px', fontWeight: 'bold', color: '#0f172a' }}>+ 추가될 문항</span>
+                                                        <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontSize: '11.5px', fontWeight: 'bold', padding: '1px 8px', borderRadius: '10px' }}>
+                                                            {xmlValidationResult.addedList.length.toLocaleString()}개
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setXmlAddedExpanded(!xmlAddedExpanded)}
+                                                        style={{ border: 'none', background: 'transparent', color: '#475569', fontSize: '12px', cursor: 'pointer', fontWeight: '600' }}
+                                                    >
+                                                        {xmlAddedExpanded ? '접기 ▲' : `전체보기 (${xmlValidationResult.addedList.length}개) ▼`}
+                                                    </button>
                                                 </div>
 
                                                 <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', overflow: 'hidden' }}>
@@ -1470,7 +1480,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                         <span style={{ flex: 1 }}>문항 라벨</span>
                                                     </div>
 
-                                                    <div style={{ maxHeight: xmlAddedExpanded ? '200px' : '68px', overflowY: xmlAddedExpanded ? 'auto' : 'hidden' }} className="custom-scrollbar">
+                                                    <div style={{ maxHeight: xmlAddedExpanded ? 'none' : '68px', overflowY: xmlAddedExpanded ? 'visible' : 'hidden' }}>
                                                         {xmlValidationResult.addedList.map((row, idx) => (
                                                             <div key={idx} style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid #f1f5f9', fontSize: '12.5px', color: '#334155' }}>
                                                                 <span style={{ width: '120px', fontWeight: 'bold', color: '#0f172a' }}>{row.variable}</span>
@@ -1478,16 +1488,6 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                             </div>
                                                         ))}
                                                     </div>
-                                                </div>
-
-                                                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setXmlAddedExpanded(!xmlAddedExpanded)}
-                                                        style={{ border: 'none', background: 'transparent', color: '#475569', fontSize: '12px', cursor: 'pointer', padding: 0, fontWeight: '600' }}
-                                                    >
-                                                        {xmlAddedExpanded ? '접기 ▲' : '... 넓게 보기 ▼'}
-                                                    </button>
                                                 </div>
                                             </div>
                                         )}
@@ -2267,11 +2267,6 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                 {xmlState === 'applied' && (
                                     <span style={{ fontSize: '12.5px', color: '#64748b', fontWeight: '500' }}>
                                         217개 반영 완료 · 복원 지점 v13 생성
-                                    </span>
-                                )}
-                                {xmlState === 'no_change' && (
-                                    <span style={{ fontSize: '12.5px', color: '#64748b' }}>
-                                        파일이 지금 맵과 같습니다 — 바꿀 것이 없어 적용할 것이 없습니다. 복원 지점도 만들지 않습니다.
                                     </span>
                                 )}
                             </>
