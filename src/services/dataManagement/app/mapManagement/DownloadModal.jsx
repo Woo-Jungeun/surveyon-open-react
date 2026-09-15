@@ -5,6 +5,7 @@ import { MapManagementPageApi } from './MapManagementPageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
 import moment from 'moment';
 import * as signalR from "@microsoft/signalr";
+import { AES256 } from "@/common/utils/AES256";
 import './MapManagementPage.css';
 
 const OTHER_FORMAT_OPTIONS = [
@@ -305,8 +306,22 @@ const DownloadModal = ({ isOpen, onClose }) => {
             const url = `${host.replace(/\/+$/, '')}/export`;
 
             const authHeaders = {};
-            if (auth?.token) {
-                authHeaders['Authorization'] = `Bearer ${auth.token}`;
+            const matchToken = document.cookie.match(/(?:^|; )TOKEN=([^;]*)/);
+            const token = auth?.token || (matchToken ? decodeURIComponent(matchToken[1]) : null);
+            if (token) {
+                authHeaders['Authorization'] = `Bearer ${token}`;
+            }
+            if (userId) {
+                authHeaders['X-User-Id'] = userId;
+                try {
+                    authHeaders['hrc'] = AES256.Crypto.encryptAES256(String(userId));
+                } catch (e) {
+                    console.warn("AES256 encrypt user error:", e);
+                }
+            }
+            const matchAuthToken = document.cookie.match(/(?:^|; )X-Auth-Token=([^;]*)/);
+            if (matchAuthToken) {
+                authHeaders['X-Auth-Token'] = decodeURIComponent(matchAuthToken[1]);
             }
 
             const bodyData = {
