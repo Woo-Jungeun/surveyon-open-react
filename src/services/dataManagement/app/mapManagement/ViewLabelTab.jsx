@@ -943,7 +943,7 @@ const ViewLabelTab = ({
                                     }}
                                 >
                                     <Filter size={11} color={onlyShowIssues ? '#b45309' : '#64748b'} />
-                                    <span style={{ fontSize: '12px', lineHeight: 1 }}>오류/경고 항목 {labelCheckResult?.variables?.length > 0 ? `(${labelCheckResult.variables.length})` : ''}</span>
+                                    <span style={{ fontSize: '12px', lineHeight: 1 }}>이슈 항목 {labelCheckResult?.variables?.length > 0 ? `(${labelCheckResult.variables.length})` : ''}</span>
                                 </button>
                             )}
 
