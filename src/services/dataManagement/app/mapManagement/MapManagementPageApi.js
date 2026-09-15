@@ -190,6 +190,16 @@ export function MapManagementPageApi() {
         async (formData) => await api.form(formData, "/map/xml/apply", {}, "API_BASE_URL_DATAMANAGEMENT")
     );
 
+    /** 보기 레이블 검사 (timeout 6분) */
+    const checkMapLabels = useMutation(
+        async (data) => await api.post(
+            data,
+            "/map/labels/check",
+            "API_BASE_URL_DATAMANAGEMENT",
+            { timeout: 360000 }
+        )
+    );
+
     return {
         getMapVariables,
         srtTransfer,
@@ -215,6 +225,7 @@ export function MapManagementPageApi() {
         restoreExcelVersion,
         createExcelVersion,
         renameMapVersion,
-        previewMapRestore
+        previewMapRestore,
+        checkMapLabels
     };
 }

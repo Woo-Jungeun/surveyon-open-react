@@ -25,7 +25,7 @@ import './MapManagementPage.css';
 // 메인 컴포넌트
 // ─────────────────────────────────────────────
 const MapManagementPage = () => {
-    const { getMapVariables, srtTransfer, createMapVariables, updateMapVariables, updateMapLabels, createMapLabels, syncMap, updateMap } = MapManagementPageApi();
+    const { getMapVariables, srtTransfer, createMapVariables, updateMapVariables, updateMapLabels, createMapLabels, syncMap, updateMap, checkMapLabels } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
     const modal = React.useContext(modalContext);
     const loadingSpinner = React.useContext(loadingSpinnerContext);
@@ -172,7 +172,10 @@ const MapManagementPage = () => {
     }, [auth?.user?.userId, refreshKey]);
 
     useEffect(() => {
-        const handlePageSelected = () => setRefreshKey(prev => prev + 1);
+        const handlePageSelected = () => {
+            setActiveTab('mapping');
+            setRefreshKey(prev => prev + 1);
+        };
         const handleOpenUpload = () => setUploadModalOpen(true);
         window.addEventListener("pageSelected", handlePageSelected);
         window.addEventListener("openUploadModal", handleOpenUpload);
@@ -871,6 +874,9 @@ const MapManagementPage = () => {
                             SetEditingCategoryPopupOpen={SetEditingCategoryPopupOpen}
                             setAddValueModalOpen={setAddValueModalOpen}
                             handleDeleteLabel={handleDeleteLabel}
+                            auth={auth}
+                            checkMapLabels={checkMapLabels}
+                            hasChanges={hasChanges}
                         />
                     )}
                 </div>
