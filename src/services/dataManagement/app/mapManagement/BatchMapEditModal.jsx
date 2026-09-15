@@ -1227,7 +1227,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                     <div style={{ background: '#f0faf5', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#15803d' }}>
                                         <Loader2 size={18} className="animate-spin" style={{ flexShrink: 0 }} />
                                         <span style={{ fontSize: '13px', lineHeight: '1.45' }}>
-                                            <strong style={{ fontSize: 'inherit', color: '#15803d' }}>검사하는 중입니다. 아직 저장하지 않았습니다</strong> — 지금 닫아도 아무 일도 일어나지 않습니다.
+                                            <strong style={{ fontSize: 'inherit', color: '#15803d' }}>파일을 검사하는 중입니다. 아직 맵에 반영되지 않았습니다.</strong>
                                         </span>
                                     </div>
                                 </div>
@@ -1262,15 +1262,15 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <button
-                                                type="button"
-                                                onClick={() => xmlFileInputRef.current?.click()}
-                                                style={{ height: '30px', padding: '0 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s' }}
-                                                onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
-                                                onMouseOut={e => e.currentTarget.style.background = '#ffffff'}
-                                            >
-                                                다른 파일
-                                            </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => xmlFileInputRef.current?.click()}
+                                                    style={{ height: '30px', padding: '0 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#334155', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s' }}
+                                                    onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
+                                                    onMouseOut={e => e.currentTarget.style.background = '#ffffff'}
+                                                >
+                                                    다른 파일
+                                                </button>
                                             </div>
                                         </div>
 
@@ -2254,11 +2254,6 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                     <div>
                         {activeTab === 2 && (
                             <>
-                                {xmlState === 'validating' && (
-                                    <span style={{ fontSize: '12.5px', color: '#15803d', fontWeight: '500' }}>
-                                        검사하는 중입니다. 아직 저장하지 않았습니다.
-                                    </span>
-                                )}
                                 {xmlState === 'success' && (
                                     <span style={{ fontSize: '12.5px', color: '#64748b' }}>
                                         삭제되는 문항은 없습니다. <strong style={{ color: '#0f172a', fontSize: 'inherit' }}>[적용]</strong> 을 눌러야 저장됩니다.
