@@ -1,7 +1,7 @@
 import React, { useRef, useState, useContext, useEffect, useMemo, useCallback } from 'react';
 import KendoGridV2 from '../../../../components/kendo/KendoGridV2';
 import { GridColumn as Column } from "@progress/kendo-react-grid";
-import { Plus, Trash2, Edit2, Info, Loader2, AlertTriangle, CheckCircle2, X, Filter } from 'lucide-react';
+import { Plus, Trash2, Edit2, Info, Loader2, AlertTriangle, CheckCircle2, X, Filter, ChevronDown } from 'lucide-react';
 import { modalContext } from "@/components/common/Modal.jsx";
 import { MapManagementContext } from './MapManagementUtils';
 
@@ -348,8 +348,10 @@ const ViewLabelTab = ({
     const [labelCheckResult, setLabelCheckResult] = useState(null);
     const [isResultStale, setIsResultStale] = useState(false);
     const [onlyShowIssues, setOnlyShowIssues] = useState(false);
+    const [isIssuePopoverOpen, setIsIssuePopoverOpen] = useState(false);
 
     const requestPnRef = useRef(null);
+    const popoverRef = useRef(null);
 
     // 마우스 업 전역 이벤트 처리 (드래그 종료)
     useEffect(() => {
@@ -361,10 +363,26 @@ const ViewLabelTab = ({
         return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
     }, []);
 
-    // 변수가 변경될 때 편집 상태 초기화
+    // 팝오버 외부 클릭 시 닫기
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (popoverRef.current && !popoverRef.current.contains(e.target)) {
+                setIsIssuePopoverOpen(false);
+            }
+        };
+        if (isIssuePopoverOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isIssuePopoverOpen]);
+
+    // 변수가 변경될 때 편집 상태 및 팝오버 초기화
     useEffect(() => {
         setEditingRowId(null);
         setEditingField(null);
+        setIsIssuePopoverOpen(false);
     }, [selectedVariableId]);
 
     // 맵 내용(보기/변수) 변경 시 검사 결과 낡음 처리
@@ -1025,20 +1043,118 @@ const ViewLabelTab = ({
                                     </span>
                                 )}
 
-                                {/* 오류/경고 발견 배지 바로 옆에 검사 문제 문장 내용만 직접 출력 */}
-                                {currentVarIssueInfo && currentVarIssueInfo.issues && currentVarIssueInfo.issues.length > 0 && (
-                                    currentVarIssueInfo.issues.map((iss, idx) => {
-                                        const rawMsg = iss.message || '';
-                                        const cleanedMsg = rawMsg.replace(/^\[(오류|경고|참고)\]\s*/, '');
-                                        const textColor = iss.grade === 'error' ? '#dc2626' : (iss.grade === 'warn' ? '#b45309' : '#2563eb');
+                                {/* 오류/경고 발견 배지 및 검사 문제 출력 (1개: 메시지 직접 출력 / 2개 이상: 대표 1개 + '외 N건' 팝오버) */}
+                                {currentVarIssueInfo && currentVarIssueInfo.issues && currentVarIssueInfo.issues.length > 0 && (() => {
+                                    const issues = currentVarIssueInfo.issues;
+                                    const firstIssue = issues[0];
+                                    const rawMsg = firstIssue.message || '';
+                                    const cleanedMsg = rawMsg.replace(/^\[(오류|경고|참고)\]\s*/, '');
+                                    const textColor = firstIssue.grade === 'error' ? '#dc2626' : (firstIssue.grade === 'warn' ? '#b45309' : '#2563eb');
 
-                                        return (
-                                            <span key={idx} style={{ fontSize: '12px', color: textColor, fontWeight: '600', marginLeft: '2px' }}>
+                                    return (
+                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minWidth: 0, flexWrap: 'wrap' }}>
+                                            <span style={{ fontSize: '12px', color: textColor, fontWeight: '600', marginLeft: '2px' }}>
                                                 {cleanedMsg}
                                             </span>
-                                        );
-                                    })
-                                )}
+
+                                            {issues.length > 1 && (
+                                                <div ref={popoverRef} style={{ position: 'relative', display: 'inline-block' }}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setIsIssuePopoverOpen(prev => !prev);
+                                                        }}
+                                                        style={{
+                                                            height: '20px',
+                                                            fontSize: '11px',
+                                                            fontWeight: '700',
+                                                            padding: '0 7px',
+                                                            borderRadius: '10px',
+                                                            background: isIssuePopoverOpen ? '#e2e8f0' : '#f1f5f9',
+                                                            border: '1px solid #cbd5e1',
+                                                            color: '#475569',
+                                                            cursor: 'pointer',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '3px',
+                                                            transition: 'all 0.15s ease',
+                                                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
+                                                        }}
+                                                    >
+                                                        외 {issues.length - 1}건
+                                                        <ChevronDown size={11} style={{ transform: isIssuePopoverOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }} />
+                                                    </button>
+
+                                                    {/* 전체 이슈 팝오버 드롭다운 */}
+                                                    {isIssuePopoverOpen && (
+                                                        <div
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            style={{
+                                                                position: 'absolute',
+                                                                top: 'calc(100% + 4px)',
+                                                                left: 0,
+                                                                width: '380px',
+                                                                background: '#ffffff',
+                                                                border: '1px solid #e2e8f0',
+                                                                borderRadius: '8px',
+                                                                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                                                                padding: '12px',
+                                                                zIndex: 1000,
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                gap: '8px'
+                                                            }}
+                                                        >
+                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '6px' }}>
+                                                                <span style={{ fontSize: '12.5px', fontWeight: '700', color: '#0f172a' }}>
+                                                                    {selectedVariable?.sysName} 문제 항목 목록 ({issues.length}건)
+                                                                </span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setIsIssuePopoverOpen(false)}
+                                                                    style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#94a3b8', padding: '2px', display: 'flex', alignItems: 'center' }}
+                                                                >
+                                                                    <X size={14} />
+                                                                </button>
+                                                            </div>
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '220px', overflowY: 'auto' }}>
+                                                                {issues.map((iss, idx) => {
+                                                                    const msg = (iss.message || '').replace(/^\[(오류|경고|참고)\]\s*/, '');
+                                                                    const gradeColor = iss.grade === 'error' ? '#dc2626' : (iss.grade === 'warn' ? '#b45309' : '#2563eb');
+                                                                    const gradeBg = iss.grade === 'error' ? '#fef2f2' : (iss.grade === 'warn' ? '#fef3c7' : '#eff6ff');
+                                                                    const gradeBorder = iss.grade === 'error' ? '#fecdd3' : (iss.grade === 'warn' ? '#fcd34d' : '#bfdbfe');
+                                                                    const gradeLabel = iss.grade === 'error' ? '오류' : (iss.grade === 'warn' ? '경고' : '참고');
+
+                                                                    return (
+                                                                        <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', fontSize: '12px', lineHeight: '1.4' }}>
+                                                                            <span style={{
+                                                                                fontSize: '10px',
+                                                                                fontWeight: '700',
+                                                                                padding: '1px 5px',
+                                                                                borderRadius: '4px',
+                                                                                background: gradeBg,
+                                                                                color: gradeColor,
+                                                                                border: `1px solid ${gradeBorder}`,
+                                                                                flexShrink: 0,
+                                                                                marginTop: '1px'
+                                                                            }}>
+                                                                                {gradeLabel}
+                                                                            </span>
+                                                                            <span style={{ color: '#334155', fontWeight: '500' }}>
+                                                                                {msg}
+                                                                            </span>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
 
                                 {isCurrentVarComposite && (
                                     <>

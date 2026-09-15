@@ -334,7 +334,8 @@ input:checked+.slider:before {
     display: flex;
     flex-direction: column;
     background: #fff;
-    overflow: hidden;
+    position: relative;
+    overflow: visible;
 }
 
 .detail-header {
@@ -345,7 +346,9 @@ input:checked+.slider:before {
     gap: 12px;
     border-bottom: 1px solid #e2e8f0;
     min-width: 0;
-    /* flex 자식이 overflow 처리되도록 */
+    position: relative;
+    z-index: 100;
+    overflow: visible;
 }
 
 .v-info-title {
@@ -355,9 +358,8 @@ input:checked+.slider:before {
     align-items: flex-start;
     gap: 4px;
     min-width: 0;
-    /* overflow 처리를 위해 필수 */
     flex: 1;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .v-info-title>span:first-child {
