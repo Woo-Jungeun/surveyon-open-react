@@ -1,3 +1,18 @@
+/* Spinner Animation */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite !important;
+    display: inline-block;
+}
+
 /* Variable Page Container */
 .variable-page {
     display: flex;
@@ -221,7 +236,8 @@ input:checked+.slider:before {
 /* Category Label Layout */
 .category-label-layout {
     display: flex;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     background: #fff;
     overflow: hidden;
 }
@@ -232,6 +248,7 @@ input:checked+.slider:before {
     display: flex;
     flex-direction: column;
     background: #f8fafc;
+    min-height: 0;
 }
 
 .sidebar-header-box {
@@ -313,9 +330,11 @@ input:checked+.slider:before {
 
 .category-detail-content {
     flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     background: #fff;
+    overflow: hidden;
 }
 
 .detail-header {
@@ -384,9 +403,12 @@ input:checked+.slider:before {
 
 .category-grid-container {
     flex: 1;
+    min-height: 0;
     padding: 10px;
     background: #f8fafc;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Sidebar Box Shadow */
@@ -399,7 +421,8 @@ input:checked+.slider:before {
     border-radius: 0;
     padding: 10px;
     box-shadow: none;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
