@@ -222,6 +222,8 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
     const [editingLocation, setEditingLocation] = useState(null); // 'card' | 'table'
     const [editingVersionName, setEditingVersionName] = useState('');
     const [isRenaming, setIsRenaming] = useState(false);
+    const [hoveredTableVersionId, setHoveredTableVersionId] = useState(null);
+    const [hoveredCardVersionId, setHoveredCardVersionId] = useState(null);
 
     // 미리보기 & 되돌리기 모달 상태
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -1720,7 +1722,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                     </span>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '12px' }}>
 
                                     {/* Card 1: 수동 저장 */}
                                     {(() => {
@@ -1735,7 +1737,9 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                 flexDirection: 'column',
                                                 justifyContent: 'space-between',
                                                 minHeight: '110px',
-                                                boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                                                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                                                minWidth: 0,
+                                                overflow: 'hidden'
                                             }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -1745,9 +1749,9 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                 </div>
 
                                                 {item ? (
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px', minWidth: 0 }}>
                                                         {editingVersionId === item.id && editingLocation === 'card' ? (
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', width: '100%' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', width: '100%', minWidth: 0 }}>
                                                                 <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#16a34a', flexShrink: 0 }}>v{item.versionNumber || item.id}</span>
                                                                 <input
                                                                     type="text"
@@ -1782,11 +1786,40 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                                 </button>
                                                             </div>
                                                         ) : (
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0 }}>
-                                                                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#16a34a' }}>v{item.versionNumber || item.id}</span>
-                                                                <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.versionName || item.name}>
-                                                                    {item.versionName || item.name}
-                                                                </span>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0, width: '100%', position: 'relative' }}>
+                                                                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#16a34a', flexShrink: 0 }}>v{item.versionNumber || item.id}</span>
+                                                                <div
+                                                                    style={{ position: 'relative', display: 'flex', alignItems: 'center', minWidth: 0, flex: 1, overflow: 'hidden' }}
+                                                                    onMouseEnter={() => setHoveredCardVersionId(item.id)}
+                                                                    onMouseLeave={() => setHoveredCardVersionId(null)}
+                                                                >
+                                                                    <span
+                                                                        style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: 'pointer', flex: 1, minWidth: 0 }}
+                                                                        title={item.versionName || item.name}
+                                                                    >
+                                                                        {item.versionName || item.name}
+                                                                    </span>
+                                                                    {hoveredCardVersionId === item.id && (
+                                                                        <div style={{
+                                                                            position: 'absolute',
+                                                                            left: '0',
+                                                                            top: '-28px',
+                                                                            background: '#ffffff',
+                                                                            color: '#0f172a',
+                                                                            padding: '3px 10px',
+                                                                            borderRadius: '6px',
+                                                                            fontSize: '12px',
+                                                                            fontWeight: '700',
+                                                                            whiteSpace: 'nowrap',
+                                                                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.18), 0 4px 6px -2px rgba(0, 0, 0, 0.08)',
+                                                                            border: '1.5px solid #16a34a',
+                                                                            zIndex: 100,
+                                                                            pointerEvents: 'none'
+                                                                        }}>
+                                                                            {item.versionName || item.name}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                                 <button
                                                                     type="button"
                                                                     onClick={(e) => startRename(item, e, 'card')}
@@ -1800,7 +1833,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                             </div>
                                                         )}
 
-                                                        <div style={{ fontSize: '11px', color: '#64748b' }}>
+                                                        <div style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                             {[
                                                                 item.createdBy || userId || '',
                                                                 item.createdAt ? String(item.createdAt).slice(5, 16).replace('T', ' ') : '',
@@ -1847,7 +1880,9 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                 flexDirection: 'column',
                                                 justifyContent: 'space-between',
                                                 minHeight: '110px',
-                                                boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                                                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                                                minWidth: 0,
+                                                overflow: 'hidden'
                                             }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -1857,9 +1892,9 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                 </div>
 
                                                 {item ? (
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px', minWidth: 0 }}>
                                                         {editingVersionId === item.id && editingLocation === 'card' ? (
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', width: '100%' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', width: '100%', minWidth: 0 }}>
                                                                 <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#16a34a', flexShrink: 0 }}>v{item.versionNumber || item.id}</span>
                                                                 <input
                                                                     type="text"
@@ -1894,11 +1929,40 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                                 </button>
                                                             </div>
                                                         ) : (
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0 }}>
-                                                                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#16a34a' }}>v{item.versionNumber || item.id}</span>
-                                                                <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.versionName || item.name}>
-                                                                    {item.versionName || item.name}
-                                                                </span>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0, width: '100%', position: 'relative' }}>
+                                                                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#16a34a', flexShrink: 0 }}>v{item.versionNumber || item.id}</span>
+                                                                <div
+                                                                    style={{ position: 'relative', display: 'flex', alignItems: 'center', minWidth: 0, flex: 1, overflow: 'hidden' }}
+                                                                    onMouseEnter={() => setHoveredCardVersionId(item.id)}
+                                                                    onMouseLeave={() => setHoveredCardVersionId(null)}
+                                                                >
+                                                                    <span
+                                                                        style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: 'pointer', flex: 1, minWidth: 0 }}
+                                                                        title={item.versionName || item.name}
+                                                                    >
+                                                                        {item.versionName || item.name}
+                                                                    </span>
+                                                                    {hoveredCardVersionId === item.id && (
+                                                                        <div style={{
+                                                                            position: 'absolute',
+                                                                            left: '0',
+                                                                            top: '-28px',
+                                                                            background: '#ffffff',
+                                                                            color: '#0f172a',
+                                                                            padding: '3px 10px',
+                                                                            borderRadius: '6px',
+                                                                            fontSize: '12px',
+                                                                            fontWeight: '700',
+                                                                            whiteSpace: 'nowrap',
+                                                                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.18), 0 4px 6px -2px rgba(0, 0, 0, 0.08)',
+                                                                            border: '1.5px solid #16a34a',
+                                                                            zIndex: 100,
+                                                                            pointerEvents: 'none'
+                                                                        }}>
+                                                                            {item.versionName || item.name}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                                 <button
                                                                     type="button"
                                                                     onClick={(e) => startRename(item, e, 'card')}
@@ -1912,7 +1976,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                             </div>
                                                         )}
 
-                                                        <div style={{ fontSize: '11px', color: '#64748b' }}>
+                                                        <div style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                             {[
                                                                 item.createdBy || userId || '',
                                                                 item.createdAt ? String(item.createdAt).slice(5, 16).replace('T', ' ') : '',
@@ -1958,7 +2022,9 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                 flexDirection: 'column',
                                                 justifyContent: 'space-between',
                                                 minHeight: '110px',
-                                                boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                                                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                                                minWidth: 0,
+                                                overflow: 'hidden'
                                             }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -1968,9 +2034,9 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                 </div>
 
                                                 {item ? (
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px', minWidth: 0 }}>
                                                         {editingVersionId === item.id && editingLocation === 'card' ? (
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', width: '100%' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', width: '100%', minWidth: 0 }}>
                                                                 <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#16a34a', flexShrink: 0 }}>v{item.versionNumber || item.id}</span>
                                                                 <input
                                                                     type="text"
@@ -2005,11 +2071,37 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                                 </button>
                                                             </div>
                                                         ) : (
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0 }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0, position: 'relative' }}>
                                                                 <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#16a34a' }}>v{item.versionNumber || item.id}</span>
-                                                                <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.versionName || item.name}>
-                                                                    {item.versionName || item.name}
-                                                                </span>
+                                                                <div
+                                                                    style={{ position: 'relative', display: 'flex', alignItems: 'center', minWidth: 0, flex: 1 }}
+                                                                    onMouseEnter={() => setHoveredCardVersionId(item.id)}
+                                                                    onMouseLeave={() => setHoveredCardVersionId(null)}
+                                                                >
+                                                                    <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: 'pointer' }} title={item.versionName || item.name}>
+                                                                        {item.versionName || item.name}
+                                                                    </span>
+                                                                    {hoveredCardVersionId === item.id && (
+                                                                        <div style={{
+                                                                            position: 'absolute',
+                                                                            left: '0',
+                                                                            top: '-28px',
+                                                                            background: '#ffffff',
+                                                                            color: '#0f172a',
+                                                                            padding: '3px 10px',
+                                                                            borderRadius: '6px',
+                                                                            fontSize: '12px',
+                                                                            fontWeight: '700',
+                                                                            whiteSpace: 'nowrap',
+                                                                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.18), 0 4px 6px -2px rgba(0, 0, 0, 0.08)',
+                                                                            border: '1.5px solid #16a34a',
+                                                                            zIndex: 100,
+                                                                            pointerEvents: 'none'
+                                                                        }}>
+                                                                            {item.versionName || item.name}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                                 <button
                                                                     type="button"
                                                                     onClick={(e) => startRename(item, e, 'card')}
@@ -2071,16 +2163,17 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
 
                                 <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
                                     <div style={{ display: 'flex', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '10px 16px', fontSize: '12px', fontWeight: 'bold', color: '#475569' }}>
-                                        <span style={{ width: '55px' }}>지점</span>
-                                        <span style={{ width: '75px' }}>출처</span>
+                                        <span style={{ width: '40px' }}>지점</span>
+                                        <span style={{ width: '60px' }}>출처</span>
                                         <span style={{ flex: 1 }}>이름</span>
-                                        <span style={{ width: '90px' }}>저장자</span>
-                                        <span style={{ width: '120px' }}>일시</span>
-                                        <span style={{ width: '65px', textAlign: 'center' }}>변경 행</span>
-                                        <span style={{ width: '85px', textAlign: 'right' }}></span>
+                                        <span style={{ width: '65px' }}>저장자</span>
+                                        <span style={{ width: '78px' }}>일시</span>
+                                        <span style={{ width: '50px', textAlign: 'center' }}>변경 행</span>
+                                        <span style={{ width: '70px', textAlign: 'right' }}></span>
                                     </div>
 
-                                    <div className="custom-scrollbar" style={{ minHeight: '140px', maxHeight: '190px', overflowY: 'auto' }}>
+                                    <div className="custom-scrollbar" style={{ minHeight: '130px', maxHeight: '165px', overflowY: 'auto' }}>
+
                                         {isLoadingVersions && (!versions || versions.length === 0) ? (
                                             <div style={{ height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: '13px' }}>
                                                 복원 지점 목록을 불러오는 중...
@@ -2102,17 +2195,17 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                     }}>
 
                                                         {/* 지점 번호 (v13 등) */}
-                                                        <span style={{ width: '55px', fontWeight: 'bold', color: '#16a34a' }}>
+                                                        <span style={{ width: '40px', fontWeight: 'bold', color: '#16a34a' }}>
                                                             v{point.versionNumber || point.id}
                                                         </span>
 
                                                         {/* 출처 배지 */}
-                                                        <span style={{ width: '75px', display: 'inline-flex', alignItems: 'center' }}>
+                                                        <span style={{ width: '60px', display: 'inline-flex', alignItems: 'center' }}>
                                                             {renderOriginBadge(point.origin)}
                                                         </span>
 
                                                         {/* 이름 & 배지 */}
-                                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '10px', minWidth: 0 }}>
+                                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '10px', minWidth: 0, overflow: 'visible', position: 'relative' }}>
                                                             {editingVersionId === point.id && editingLocation === 'table' ? (
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
                                                                     <input
@@ -2146,24 +2239,27 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                                     </button>
                                                                 </div>
                                                             ) : (
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 0 }}>
-                                                                    <span style={{ fontWeight: '500', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                                                                    <span
+                                                                        style={{ fontWeight: '500', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 1, cursor: 'default' }}
+                                                                        title={point.versionName || point.name}
+                                                                    >
                                                                         {point.versionName || point.name}
                                                                     </span>
 
                                                                     {/* 최신 배지 / 복원됨 배지 */}
                                                                     {point.kept && String(point.origin).toLowerCase() === 'xml' && (
-                                                                        <span style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '11px', fontWeight: 'bold', padding: '1px 6px', borderRadius: '4px' }}>최신 XML</span>
+                                                                        <span style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '11px', fontWeight: 'bold', padding: '1px 6px', borderRadius: '4px', flexShrink: 0 }}>최신 XML</span>
                                                                     )}
                                                                     {point.kept && String(point.origin).toLowerCase() === 'manual' && (
-                                                                        <span style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '11px', fontWeight: 'bold', padding: '1px 6px', borderRadius: '4px' }}>최신 수동</span>
+                                                                        <span style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '11px', fontWeight: 'bold', padding: '1px 6px', borderRadius: '4px', flexShrink: 0 }}>최신 수동</span>
                                                                     )}
                                                                     {point.kept && String(point.origin).toLowerCase() === 'excel' && (
-                                                                        <span style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '11px', fontWeight: 'bold', padding: '1px 6px', borderRadius: '4px' }}>최신 엑셀</span>
+                                                                        <span style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '11px', fontWeight: 'bold', padding: '1px 6px', borderRadius: '4px', flexShrink: 0 }}>최신 엑셀</span>
                                                                     )}
                                                                     {point.restoredAt && (
-                                                                        <span style={{ background: '#f0faf5', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '11px', fontWeight: 'bold', padding: '1px 6px', borderRadius: '4px' }}>
-                                                                            {String(point.restoredAt).length > 5 ? `${String(point.restoredAt).slice(5, 10)} 복원됨` : '복원됨'}
+                                                                        <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontSize: '11px', fontWeight: 'bold', padding: '1px 6px', borderRadius: '4px', flexShrink: 0 }}>
+                                                                            {String(point.restoredAt).length > 5 ? `${String(point.restoredAt).slice(5, 10)} 복원` : '복원됨'}
                                                                         </span>
                                                                     )}
 
@@ -2182,28 +2278,28 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                         </div>
 
                                                         {/* 저장자 */}
-                                                        <span style={{ width: '90px', fontSize: '12.5px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={point.createdBy || point.restoredBy || ''}>
+                                                        <span style={{ width: '70px', fontSize: '12.5px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={point.createdBy || point.restoredBy || ''}>
                                                             {point.createdBy || point.restoredBy || '—'}
                                                         </span>
 
                                                         {/* 시각 */}
-                                                        <span style={{ width: '120px', fontSize: '12px', color: '#64748b' }}>
+                                                        <span style={{ width: '90px', fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap' }}>
                                                             {point.createdAt ? String(point.createdAt).slice(5, 16).replace('T', ' ') : '—'}
                                                         </span>
 
                                                         {/* 변경 행 */}
-                                                        <span style={{ width: '65px', textAlign: 'center', fontSize: '12.5px', color: '#475569' }}>
+                                                        <span style={{ width: '55px', textAlign: 'center', fontSize: '12.5px', color: '#475569' }}>
                                                             {point.changedCount ?? 0}행
                                                         </span>
 
                                                         {/* 작업 버튼 */}
-                                                        <div style={{ width: '85px', textAlign: 'right' }}>
+                                                        <div style={{ width: '75px', textAlign: 'right' }}>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleOpenRestorePreview(point)}
                                                                 disabled={previewLoadingId === (point.id || point.versionNumber)}
                                                                 style={{
-                                                                    height: '28px', padding: '0 12px', border: '1px solid #cbd5e1', borderRadius: '4px',
+                                                                    height: '28px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '4px',
                                                                     background: '#ffffff', color: '#334155', fontSize: '12px', cursor: 'pointer', fontWeight: '500',
                                                                     transition: 'all 0.15s'
                                                                 }}
@@ -2213,6 +2309,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                                 되돌리기
                                                             </button>
                                                         </div>
+
                                                     </div>
                                                 );
                                             })
