@@ -200,6 +200,20 @@ export function MapManagementPageApi() {
         )
     );
 
+    /** 오픈 문항 유형 검사 (저장 안함) */
+    const checkOpenType = useMutation(
+        async (data) => await api.post(data, "/map/open-type/check", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 오픈 문항 유형 교정 (적용) */
+    const fixOpenType = useMutation(
+        async (data) => await api.post(data, "/map/open-type/fix", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
     return {
         getMapVariables,
         srtTransfer,
@@ -226,6 +240,9 @@ export function MapManagementPageApi() {
         createExcelVersion,
         renameMapVersion,
         previewMapRestore,
-        checkMapLabels
+        checkMapLabels,
+        checkOpenType,
+        fixOpenType
     };
 }
+

@@ -16,7 +16,8 @@ import UploadModal from './UploadModal';
 import DataUpdateModal from './DataUpdateModal';
 import RelabelModal from './RelabelModal';
 import BatchMapEditModal from './BatchMapEditModal';
-import { Download, Upload, Tags, RefreshCw, FileSpreadsheet } from 'lucide-react';
+import OpenTypeCheckModal from './OpenTypeCheckModal';
+import { Download, Upload, Tags, RefreshCw, FileSpreadsheet, FileCheck } from 'lucide-react';
 
 import '../../../../assets/css/grid_vertical_borders.css';
 import './MapManagementPage.css';
@@ -56,6 +57,7 @@ const MapManagementPage = () => {
     const [reLabelModalOpen, setReLabelModalOpen] = useState(false);                // Re_Label 모달 상태
     const [addValueModalOpen, setAddValueModalOpen] = useState(false);              // 레이블 추가 팝업 상태
     const [batchMapEditModalOpen, setBatchMapEditModalOpen] = useState(false);      // 맵 세팅 관리 모달 상태
+    const [openTypeCheckModalOpen, setOpenTypeCheckModalOpen] = useState(false);    // 오픈 유형 검사 모달 상태
 
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
@@ -774,6 +776,26 @@ const MapManagementPage = () => {
                                 <FileSpreadsheet size={16} />
                                 맵 세팅 관리
                             </button>
+                            <button
+                                className="data-header-btn"
+                                onClick={() => setOpenTypeCheckModalOpen(true)}
+                                style={{
+                                    height: '32px',
+                                    padding: '0 12px',
+                                    border: '1px solid #16a34a',
+                                    background: '#fff',
+                                    color: '#16a34a',
+                                    marginLeft: '8px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                            >
+                                <FileCheck size={16} />
+                                오픈 유형 검사
+                            </button>
                             {/* 세로 구분선 1 */}
                             <div style={{
                                 width: '1px',
@@ -952,6 +974,13 @@ const MapManagementPage = () => {
                     onClose={() => setBatchMapEditModalOpen(false)}
                     variables={variables}
                     hasChanges={hasChanges}
+                    refreshData={() => setRefreshKey(prev => prev + 1)}
+                />
+
+                {/* 오픈 유형 검사 및 교정 모달 */}
+                <OpenTypeCheckModal
+                    isOpen={openTypeCheckModalOpen}
+                    onClose={() => setOpenTypeCheckModalOpen(false)}
                     refreshData={() => setRefreshKey(prev => prev + 1)}
                 />
             </div>
