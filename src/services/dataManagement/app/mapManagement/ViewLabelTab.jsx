@@ -106,7 +106,7 @@ const VariableCardItem = React.memo(({
             </label>
             <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px', marginBottom: '3px' }}>
-                    <span className="v-name" style={{ margin: 0, fontWeight: 700, fontSize: '13px', color: '#0f172a' }}>{v.sysName}</span>
+                    <span className="v-name" style={{ margin: 0, fontWeight: 700, fontSize: '13px', color: '#0f172a', cursor: 'pointer' }} title={v.sysName}>{v.sysName}</span>
                     {badgeText && (
                         <span style={{
                             fontSize: '10.5px',
@@ -133,7 +133,7 @@ const VariableCardItem = React.memo(({
                         </span>
                     )}
                 </div>
-                <div className="v-label" style={{ fontSize: '11.5px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div className="v-label" style={{ fontSize: '11.5px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={v.label || '레이블 없음'}>
                     {v.label || '레이블 없음'}
                 </div>
             </div>
@@ -226,7 +226,7 @@ const LabelInputCell = ({
                     transition: 'background-color 0.15s'
                 }}
                 className={className}
-                title={issueInfo ? `${issueInfo.message}` : (dataItem[field] ? String(dataItem[field]) : '')}
+                title={issueInfo ? `${issueInfo.message}\n${dataItem[field] ? String(dataItem[field]) : ''}` : (dataItem[field] ? String(dataItem[field]) : '')}
                 onClick={() => {
                     setEditingField(field);
                     setEditingRowId(dataItem.id);
@@ -236,7 +236,9 @@ const LabelInputCell = ({
                     background: 'transparent',
                     border: 'none',
                     pointerEvents: 'none',
-                    whiteSpace: 'pre-wrap',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
                     fontSize: '13px',
                     color: textColor,
                     fontWeight: issueInfo ? '700' : '400',

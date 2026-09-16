@@ -56,6 +56,7 @@ const OpenTypeCheckModal = ({ isOpen, onClose, refreshData }) => {
 
     const res = checkData?.result || {};
     const rows = res?.rows || [];
+
     const toNumber = res?.toNumber ?? 0;
     const toText = res?.toText ?? 0;
     const skipped = res?.skipped;
@@ -178,12 +179,10 @@ const OpenTypeCheckModal = ({ isOpen, onClose, refreshData }) => {
                     </div>
                 )}
 
-
-
                 {/* 메인 리스트 / 테이블 */}
-                <div style={{ flex: 1, minHeight: 0, padding: '16px 24px', overflowY: 'auto', background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
+                <div className="custom-scrollbar" style={{ flex: 1, minHeight: 0, padding: '16px 24px', overflowY: 'auto', background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
                     {!isChecking && (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexShrink: 0 }}>
                             <div style={{ fontSize: '13.5px', fontWeight: 'bold', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <span>교정 대상 문항</span>
                                 <span style={{ background: rows.length > 0 ? '#ef4444' : '#16a34a', color: '#fff', padding: '1px 8px', borderRadius: '10px', fontSize: '11.5px', fontWeight: 'bold' }}>
@@ -217,47 +216,64 @@ const OpenTypeCheckModal = ({ isOpen, onClose, refreshData }) => {
                             <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>모든 오픈 문항의 데이터 유형(문자/숫자)이 스크립트와 일치합니다.</div>
                         </div>
                     ) : (
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                            <thead>
-                                <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1', color: '#334155', textAlign: 'left' }}>
-                                    <th style={{ padding: '10px 12px', width: '150px' }}>변수명</th>
-                                    <th style={{ padding: '10px 12px' }}>레이블</th>
-                                    <th style={{ padding: '10px 12px', width: '220px', textAlign: 'center' }}>지금 값 → 바뀔 값</th>
-                                    <th style={{ padding: '10px 12px', width: '120px', textAlign: 'center' }}>스크립트 자릿수</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {rows.map((row, idx) => (
-                                    <tr 
-                                        key={row.variable || idx} 
-                                        style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s ease' }}
-                                        onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
-                                        onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-                                    >
-                                        <td style={{ padding: '12px 14px', fontWeight: '600', color: '#0f172a', fontFamily: 'monospace', fontSize: '13.5px' }}>
-                                            {row.variable}
-                                        </td>
-                                        <td style={{ padding: '12px 14px', color: '#334155' }}>
-                                            {row.label || '—'}
-                                        </td>
-                                        <td style={{ padding: '12px 14px', textAlign: 'center' }}>
-                                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                                                <span style={{ background: '#f1f5f9', color: '#64748b', padding: '3px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '500', border: '1px solid #e2e8f0' }}>
-                                                    {row.was || '—'}
-                                                </span>
-                                                <ArrowRight size={14} style={{ color: '#94a3b8' }} />
-                                                <span style={{ background: row.now?.includes('숫자') ? '#dcfce7' : '#fef3c7', color: row.now?.includes('숫자') ? '#15803d' : '#b45309', padding: '3px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', border: row.now?.includes('숫자') ? '1px solid #bbf7d0' : '1px solid #fde68a' }}>
-                                                    {row.now || '—'}
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: '12px 14px', textAlign: 'center', color: '#64748b', fontWeight: '500' }}>
-                                            {row.scriptLen !== undefined ? `${row.scriptLen}자리` : '—'}
-                                        </td>
+                        <div className="custom-scrollbar" style={{ border: '1px solid #cbd5e1', borderRadius: '8px', overflowY: 'auto', maxHeight: '380px' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', tableLayout: 'fixed' }}>
+                                <thead style={{ position: 'sticky', top: 0, zIndex: 10, background: '#f1f5f9' }}>
+                                    <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1', color: '#334155', textAlign: 'left' }}>
+                                        <th style={{ padding: '10px 12px', width: '120px', background: '#f1f5f9', position: 'sticky', top: 0, zIndex: 10 }}>변수명</th>
+                                        <th style={{ padding: '10px 12px', width: '280px', background: '#f1f5f9', position: 'sticky', top: 0, zIndex: 10 }}>레이블</th>
+                                        <th style={{ padding: '10px 12px', width: '240px', textAlign: 'center', background: '#f1f5f9', position: 'sticky', top: 0, zIndex: 10 }}>지금 값 → 바뀔 값</th>
+                                        <th style={{ padding: '10px 12px', width: '100px', textAlign: 'center', background: '#f1f5f9', position: 'sticky', top: 0, zIndex: 10 }}>스크립트 자릿수</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {rows.map((row, idx) => (
+                                        <tr 
+                                            key={row.variable || idx} 
+                                            style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s ease' }}
+                                            onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                                        >
+                                            <td 
+                                                style={{ padding: '12px 14px', fontWeight: '600', color: '#0f172a', fontFamily: 'monospace', fontSize: '13.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: 'pointer' }}
+                                                title={row.variable || '—'}
+                                            >
+                                                {row.variable}
+                                            </td>
+                                            <td style={{ padding: '12px 14px', color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                <span
+                                                    style={{
+                                                        whiteSpace: 'nowrap',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        display: 'block',
+                                                        width: '100%',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                    title={row.label || '—'}
+                                                >
+                                                    {row.label || '—'}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '12px 14px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
+                                                    <span style={{ background: '#f1f5f9', color: '#64748b', padding: '3px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '500', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>
+                                                        {row.was || '—'}
+                                                    </span>
+                                                    <ArrowRight size={14} style={{ color: '#94a3b8', flexShrink: 0 }} />
+                                                    <span style={{ background: row.now?.includes('숫자') ? '#dcfce7' : '#fef3c7', color: row.now?.includes('숫자') ? '#15803d' : '#b45309', padding: '3px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', border: row.now?.includes('숫자') ? '1px solid #bbf7d0' : '1px solid #fde68a', whiteSpace: 'nowrap' }}>
+                                                        {row.now || '—'}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '12px 14px', textAlign: 'center', color: '#64748b', fontWeight: '500' }}>
+                                                {row.scriptLen !== undefined ? `${row.scriptLen}자리` : '—'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </div>
 
