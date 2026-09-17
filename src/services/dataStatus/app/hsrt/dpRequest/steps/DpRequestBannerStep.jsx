@@ -672,7 +672,7 @@ const getTypeClass = (type) => {
     return lower;
 };
 
-const VariableItem = memo(({ v, index, isSelected, onDragStart, onMouseDown, onMouseEnter, onDragOver }) => {
+const VariableItem = memo(({ v, index, isSelected, onDragStart, onMouseDown, onMouseEnter, onDragOver, onClick }) => {
     const infoLabels = useMemo(() => {
         const list = Array.isArray(v.info) ? v.info : (Array.isArray(v.categories) ? v.categories : []);
         return list.map(item => item.label).filter(Boolean);
@@ -690,16 +690,17 @@ const VariableItem = memo(({ v, index, isSelected, onDragStart, onMouseDown, onM
         <div
             className={`variable-item ${isSelected ? 'selected' : ''}`}
             draggable
-            onDragStart={(e) => onDragStart(e, v)}
+            onDragStart={(e) => onDragStart && onDragStart(e, v)}
             onMouseDown={(e) => onMouseDown && onMouseDown(e, v, index)}
             onMouseEnter={(e) => onMouseEnter && onMouseEnter(e, v, index)}
             onDragOver={(e) => onDragOver && onDragOver(e, v, index)}
-            onMouseUp={(e) => {
-                if (infoLabels.length > 0) {
-                    console.log(`[${v.label} (${v.id})] 보기 목록:`, infoLabels);
+            onClick={(e) => {
+                if (onClick) {
+                    e.stopPropagation();
+                    onClick(v);
                 }
             }}
-            style={{ borderRadius: '6px', userSelect: 'none' }}
+            style={{ borderRadius: '6px', userSelect: 'none', cursor: onClick ? 'pointer' : 'default' }}
             title={tooltipText}
         >
             <div className="variable-item-header">
@@ -1002,8 +1003,9 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         });
     }, [baseVariables, addVarSearch]);
 
-    const handleAddVariableToGrid = useCallback((vId) => {
-        const v = baseVariables.find(item => item.id === vId);
+    const handleAddVariableToGrid = useCallback((vOrId) => {
+        const targetId = typeof vOrId === 'object' ? vOrId?.id : vOrId;
+        const v = (Array.isArray(baseVariables) ? baseVariables : []).find(item => item.id === targetId) || (typeof vOrId === 'object' ? vOrId : null);
         if (!v) return;
 
         if (!selectedBanner) {
@@ -1017,13 +1019,18 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             return;
         }
 
-        const newItems = cats.map(cat => ({
-            label3: '',
-            label2: v.label || v.name || '',
-            label: cat.label || cat.name || '',
-            logic: `${v.id} == ${cat.value !== undefined ? cat.value : ''}`,
-            inEdit: false
-        }));
+        const newItems = cats.map((cat, idx) => {
+            const catLabel = typeof cat === 'object' ? (cat.label || cat.name || cat.text || '') : String(cat);
+            const catVal = typeof cat === 'object' ? (cat.value !== undefined ? cat.value : (cat.id !== undefined ? cat.id : idx + 1)) : cat;
+            const catLogic = typeof cat === 'object' && cat.logic ? cat.logic : `${v.id} == ${catVal}`;
+            return {
+                label3: '',
+                label2: v.label || v.name || '',
+                label: catLabel,
+                logic: catLogic,
+                inEdit: false
+            };
+        });
 
         setBanners(prev => prev.map(b => {
             if (b.id === selectedBanner) {
