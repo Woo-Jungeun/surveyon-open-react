@@ -603,6 +603,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 const initDisplay = {
                     ...settings.display,
                 };
+                const policy = actualTableDetail?.display_policy || renderContext?.effective_display_policy;
+
                 const policySources = [
                     renderContext?.effective_display_policy,
                     actualTableDetail?.display_policy
@@ -637,7 +639,6 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 else if (policy && policy.is_transpose !== undefined && policy.is_transpose !== null) initDisplay.is_transpose = policy.is_transpose;
 
                 // base_prefix / base_postfix 값에 따라 show_base_parenthesis 값 판별
-                const policy = actualTableDetail?.display_policy || renderContext?.effective_display_policy;
                 if (policy && policy.base_prefix !== undefined && policy.base_prefix !== null) {
                     initDisplay.show_base_parenthesis = (policy.base_prefix === "(" && policy.base_postfix === ")");
                 } else if (ui.base_prefix !== undefined && ui.base_prefix !== null) {
