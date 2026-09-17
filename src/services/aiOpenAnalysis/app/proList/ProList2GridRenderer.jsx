@@ -1,4 +1,4 @@
-﻿import React, { useRef, useMemo, useCallback, useEffect, useState } from "react";
+import React, { useRef, useMemo, useCallback, useEffect, useState } from "react";
 import { Button } from "@progress/kendo-react-buttons";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
@@ -315,9 +315,9 @@ const StatusTextCell = (cellProps) => {
 
     if (val.includes("진행") || val.includes("분석중")) {
         badgeStyle = {
-            backgroundColor: '#fff7ed',
-            color: '#c2410c',
-            border: '1px solid #fed7aa'
+            backgroundColor: '#f0f9ff',
+            color: '#0284c7',
+            border: '1px solid #bae6fd'
         };
     } else if (val.includes("완료") || val.includes("성공")) {
         badgeStyle = {
@@ -361,7 +361,7 @@ const TokensCell = (cellProps) => {
     const formatted = num.toLocaleString();
 
     return (
-        <td style={{ textAlign: 'center', fontSize: '12px', fontWeight: num > 0 ? '600' : '400', color: num > 0 ? '#ea580c' : '#94a3b8' }}>
+        <td style={{ textAlign: 'center' }}>
             {num > 0 ? `${formatted} 토큰` : '0 토큰'}
         </td>
     );
@@ -724,8 +724,9 @@ const MergeDisplayCell = (cellProps) => {
 
     if (isMasterOfGroup) {
         const displayQnum = cur || origQnum;
+        const fullTitle = `${displayQnum} (대표)\n(클릭하여 통합 문항번호 커스텀 수정 또는 그룹 해제)`;
         return (
-            <td ref={tdRef} style={{ textAlign: 'center', padding: '4px' }} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+            <td ref={tdRef} style={{ textAlign: 'center', padding: '4px 2px', overflow: 'hidden' }} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
                 <button
                     disabled={disabled}
                     onClick={(e) => {
@@ -740,22 +741,32 @@ const MergeDisplayCell = (cellProps) => {
                         color: '#c2410c',
                         fontSize: '12px',
                         fontWeight: '600',
-                        padding: '3px 10px',
+                        padding: '3px 8px',
                         borderRadius: '12px',
                         display: 'inline-flex',
                         flexDirection: 'row',
                         alignItems: 'center',
                         justifyContent: 'center',
                         whiteSpace: 'nowrap',
-                        gap: '4px',
+                        gap: '3px',
                         height: '26px',
+                        maxWidth: '100%',
                         boxSizing: 'border-box',
-                        cursor: disabled ? 'not-allowed' : 'pointer'
+                        cursor: disabled ? 'not-allowed' : 'pointer',
+                        overflow: 'hidden'
                     }}
-                    title="클릭하여 통합 문항번호 커스텀 수정 또는 그룹 해제"
+                    title={fullTitle}
                 >
-                    <span>{displayQnum} (대표)</span>
-                    <span style={{ fontSize: '10px', opacity: 0.8 }}>✏️</span>
+                    <span style={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '85px',
+                        display: 'inline-block'
+                    }}>
+                        {displayQnum} (대표)
+                    </span>
+                    <span style={{ fontSize: '10px', opacity: 0.8, flexShrink: 0 }}>✏️</span>
                 </button>
             </td>
         );
@@ -763,8 +774,9 @@ const MergeDisplayCell = (cellProps) => {
 
     if (isMergedChild || isMerged) {
         const masterQnum = row.__masterItem ? (row.__masterItem.qnum_text || row.__masterItem.qnum) : (cur || origQnum);
+        const fullTitle = `↳ ${masterQnum}로 통합\n(클릭 시 통합 해제)`;
         return (
-            <td ref={tdRef} style={{ textAlign: 'center', padding: '4px' }} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+            <td ref={tdRef} style={{ textAlign: 'center', padding: '4px 2px', overflow: 'hidden' }} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
                 <button
                     disabled={disabled}
                     onClick={() => { if (!disabled && ctx?.unmergeRow) ctx.unmergeRow(row); }}
@@ -774,29 +786,39 @@ const MergeDisplayCell = (cellProps) => {
                         color: '#475569',
                         fontSize: '11px',
                         fontWeight: '500',
-                        padding: '2px 8px',
+                        padding: '2px 6px',
                         borderRadius: '10px',
                         display: 'inline-flex',
                         flexDirection: 'row',
                         alignItems: 'center',
                         justifyContent: 'center',
                         whiteSpace: 'nowrap',
-                        gap: '3px',
+                        gap: '2px',
                         height: '24px',
+                        maxWidth: '100%',
                         boxSizing: 'border-box',
-                        cursor: disabled ? 'not-allowed' : 'pointer'
+                        cursor: disabled ? 'not-allowed' : 'pointer',
+                        overflow: 'hidden'
                     }}
-                    title={`클릭 시 ${masterQnum} 통합 해제`}
+                    title={fullTitle}
                 >
-                    <span>↳ {masterQnum}로 통합</span>
-                    <span style={{ fontSize: '9px', opacity: 0.7 }}>✕</span>
+                    <span style={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '85px',
+                        display: 'inline-block'
+                    }}>
+                        ↳ {masterQnum}로 통합
+                    </span>
+                    <span style={{ fontSize: '9px', opacity: 0.7, flexShrink: 0 }}>✕</span>
                 </button>
             </td>
         );
     }
 
     return (
-        <td ref={tdRef} style={{ textAlign: 'center', padding: '4px', fontSize: '13px', color: '#64748b' }}>
+        <td ref={tdRef} title={origQnum} style={{ textAlign: 'center', padding: '4px 2px', fontSize: '13px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {origQnum}
         </td>
     );
