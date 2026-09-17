@@ -1208,34 +1208,23 @@ const MapConfigTab = ({
         ];
 
         let cols = [];
-        if (isResearcher) {
-            cols = [
-                ...commonPrefix,
-                { field: 'logic', title: '로직체크', width: '180px' },
-                { field: 'label', title: '문항', minWidth: 250 },
-                { field: 'reLabel', title: '표제목', width: '200px', headerCell: CustomReLabelHeaderCell },
-                { field: 'spssName', title: 'SPSS\n변수명', width: '90px' },
-                { field: 'type', title: '변수 유형', width: '140px' },
-                { field: 'memo', title: '메모', minWidth: 120 },
-                { field: 'delete', title: '삭제', width: '50px' }
-            ];
-        } else if (isDetailed) {
+        if (isDetailed) {
             cols = [
                 ...commonPrefix,
                 { field: 'logic', title: '로직체크', width: '110px' },
-                { field: 'label', title: '문항', width: '120px' },
-                { field: 'reLabel', title: '표제목', width: '120px', headerCell: CustomReLabelHeaderCell },
+                { field: 'label', title: '문항', width: '220px' },
+                { field: 'reLabel', title: '표제목', width: '180px', headerCell: CustomReLabelHeaderCell },
                 { field: 'excludeCode', title: '분석제외\n코드', width: '90px' },
                 { field: 'decimal', title: '소수점\n자리수', width: '75px' },
                 { field: 'spssName', title: 'SPSS\n변수명', width: '90px' },
                 { field: 'type', title: '변수 유형', width: '100px' },
                 { field: 'minQuestions', title: '문항\n최소갯수', width: '80px' },
-                { field: 'etcOpen', title: '기타\n오픈정의', width: '80px' },
+                { field: 'etcOpen', title: '기타\n오픈정의', width: '140px' },
                 { field: 'multiValChange', title: '멀티값\n변경', width: '75px' },
                 { field: 'excludeOpenMerge', title: '오픈머지\n제외', width: '80px' },
                 { field: 'verificationVar', title: '검증\n문항', width: '70px' },
                 { field: 'excludeOutput', title: '출력\n제외', width: '70px' },
-                { field: 'memo', title: '메모', minWidth: 120 },
+                { field: 'memo', title: '메모', width: '180px' },
                 { field: 'delete', title: '삭제', width: '50px' }
             ];
         } else {
@@ -1245,17 +1234,17 @@ const MapConfigTab = ({
                 { field: 'valLen', title: '보기\n자리수', width: '90px' },
                 { field: 'valCnt', title: '보기\n갯수', width: '85px' },
                 { field: 'totalLen', title: '총\n자리수', width: '90px' },
-                { field: 'etcOpen', title: '기타\n오픈정의', width: '100px' },
-                { field: 'logic', title: '로직체크', width: '150px' },
-                { field: 'label', title: '문항', minWidth: 50 },
+                { field: 'etcOpen', title: '기타\n오픈정의', width: '140px' },
+                { field: 'logic', title: '로직체크', width: '130px' },
+                { field: 'label', title: '문항', width: '220px' },
                 { field: 'decimal', title: '소수점\n자리수', width: '90px' },
-                { field: 'type', title: '변수\n유형', width: '140px' },
+                { field: 'type', title: '변수\n유형', width: '120px' },
                 { field: 'minQuestions', title: '문항\n최소갯수', width: '100px' },
                 { field: 'delete', title: '삭제', width: '50px' }
             ];
         }
 
-        const insertAfterField = (isDetailed || isResearcher) ? "reLabel" : "label";
+        const insertAfterField = isDetailed ? "reLabel" : "label";
         const insertIdx = cols.findIndex(c => c.field === insertAfterField);
 
         const silsaSelectionCol = {
@@ -1281,7 +1270,7 @@ const MapConfigTab = ({
         }
 
         return cols;
-    }, [isDetailed, isResearcher, BakedSelectionCell, BakedSelectionHeaderCell, SilsaSelectionCell, SilsaSelectionHeaderCell]);
+    }, [isDetailed, BakedSelectionCell, BakedSelectionHeaderCell, SilsaSelectionCell, SilsaSelectionHeaderCell]);
 
     return (
         <>
@@ -1329,15 +1318,13 @@ const MapConfigTab = ({
                             </button>
                         )}
                     </div>
-                    {!isResearcher && (
-                        <div className="toggle-wrapper">
-                            <span className="toggle-label">상세 설정</span>
-                            <label className="switch">
-                                <input type="checkbox" checked={isDetailed} onChange={() => setIsDetailed(!isDetailed)} />
-                                <span className="slider round"></span>
-                            </label>
-                        </div>
-                    )}
+                    <div className="toggle-wrapper">
+                        <span className="toggle-label">상세 설정</span>
+                        <label className="switch">
+                            <input type="checkbox" checked={isDetailed} onChange={() => setIsDetailed(!isDetailed)} />
+                            <span className="slider round"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
