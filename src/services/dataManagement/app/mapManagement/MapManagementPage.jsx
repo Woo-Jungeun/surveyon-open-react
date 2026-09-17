@@ -749,6 +749,9 @@ const MapManagementPage = () => {
                                     border: '1px solid #16a34a',
                                     background: '#fff',
                                     color: '#16a34a',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
                                 }}
                                 onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
                                 onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
@@ -765,7 +768,6 @@ const MapManagementPage = () => {
                                     border: '1px solid #16a34a',
                                     background: '#fff',
                                     color: '#16a34a',
-                                    marginLeft: '8px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '6px'
@@ -776,6 +778,14 @@ const MapManagementPage = () => {
                                 <FileSpreadsheet size={16} />
                                 맵 세팅 관리
                             </button>
+                            {/* 세로 구분선 (맵 세팅 vs 오픈 유형 검사) */}
+                            <div style={{
+                                width: '1px',
+                                height: '16px',
+                                backgroundColor: '#cbd5e1',
+                                margin: '0 4px',
+                                alignSelf: 'center'
+                            }}></div>
                             <button
                                 className="data-header-btn"
                                 onClick={() => setOpenTypeCheckModalOpen(true)}
@@ -785,7 +795,6 @@ const MapManagementPage = () => {
                                     border: '1px solid #16a34a',
                                     background: '#fff',
                                     color: '#16a34a',
-                                    marginLeft: '8px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '6px'
