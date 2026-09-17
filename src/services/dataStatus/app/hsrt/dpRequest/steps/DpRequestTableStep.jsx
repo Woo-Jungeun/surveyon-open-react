@@ -522,12 +522,16 @@ const handleGlobalPointerUpStub = (e) => {
     stubDragStartId = null;
     stubDragHasMoved = false;
 };
+const isInsideElement = (target, selector) => {
+    return target && typeof target.closest === 'function' ? !!target.closest(selector) : false;
+};
+
 const handleGlobalPointerDownStub = (e) => {
     if (e.target) {
-        const isPopup = e.target.closest('.k-popup') || e.target.closest('.k-list-container') || e.target.closest('.k-animation-container') || e.target.closest('.dp-dropdown-popup') || e.target.closest('.dp-custom-popup');
+        const isPopup = isInsideElement(e.target, '.k-popup') || isInsideElement(e.target, '.k-list-container') || isInsideElement(e.target, '.k-animation-container') || isInsideElement(e.target, '.dp-dropdown-popup') || isInsideElement(e.target, '.dp-custom-popup');
         if (isPopup) return;
 
-        const isDragCell = TARGET_DRAG_FIELDS.some(f => e.target.closest(`td[data-field="${f}"]`));
+        const isDragCell = TARGET_DRAG_FIELDS.some(f => isInsideElement(e.target, `td[data-field="${f}"]`));
 
         if (!isDragCell && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
             stubDragSelectedIds.clear();
@@ -662,7 +666,7 @@ const preventCtrlEvent = (e) => {
 // 마우스를 클릭했을 때 (Capture 단계에서 수신)
 const handleStubPointerDownCapture = (e, rowId, field) => {
     // 1. [포탈 버블링 방어] 
-    if (e.target && (e.target.closest('.k-popup') || e.target.closest('.k-list-container') || e.target.closest('.k-animation-container') || e.target.closest('.dp-dropdown-popup') || e.target.closest('.dp-custom-popup'))) {
+    if (isInsideElement(e.target, '.k-popup') || isInsideElement(e.target, '.k-list-container') || isInsideElement(e.target, '.k-animation-container') || isInsideElement(e.target, '.dp-dropdown-popup') || isInsideElement(e.target, '.dp-custom-popup')) {
         return;
     }
 
@@ -838,7 +842,7 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
     useEffect(() => {
         if (!show) return;
         const handleClickOutside = (e) => {
-            if (e.target.closest('.k-popup') || e.target.closest('.dp-custom-popup')) return;
+            if (isInsideElement(e.target, '.k-popup') || isInsideElement(e.target, '.dp-custom-popup')) return;
             if (anchor.current && !anchor.current.contains(e.target)) {
                 handleClose();
             }
@@ -1014,7 +1018,7 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
     useEffect(() => {
         if (!show) return;
         const handleClickOutside = (e) => {
-            if (e.target.closest('.k-popup') || e.target.closest('.dp-custom-popup')) return;
+            if (isInsideElement(e.target, '.k-popup') || isInsideElement(e.target, '.dp-custom-popup')) return;
             if (anchor.current && !anchor.current.contains(e.target)) {
                 handleClose();
             }
@@ -1249,7 +1253,7 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
     useEffect(() => {
         if (!show) return;
         const handleClickOutside = (e) => {
-            if (e.target.closest('.k-popup') || e.target.closest('.dp-custom-popup')) return;
+            if (isInsideElement(e.target, '.k-popup') || isInsideElement(e.target, '.dp-custom-popup')) return;
             if (anchor.current && !anchor.current.contains(e.target)) {
                 handleClose();
             }

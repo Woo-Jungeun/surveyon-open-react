@@ -317,6 +317,10 @@ const LogicCell = (props) => {
     );
 };
 
+const isInsideElement = (target, selector) => {
+    return target && typeof target.closest === 'function' ? !!target.closest(selector) : false;
+};
+
 let isDraggingTypeCell = false;
 let dragStartId = null;
 let dragLastEnteredId = null;
@@ -328,7 +332,7 @@ let isPendingCtrlRelease = false; // Ctrl 키를 누르고 다중선택 중인�
 
 window.addEventListener('pointerdown', (e) => {
     typeDragJustEnded = false;
-    if (e.target && !e.target.closest('.k-popup') && !e.target.closest('.k-list-container') && !e.target.closest('.k-animation-container') && !e.target.closest('.dm-dropdown-popup') && !e.target.closest('.dm-type-dropdown')) {
+    if (e.target && !isInsideElement(e.target, '.k-popup') && !isInsideElement(e.target, '.k-list-container') && !isInsideElement(e.target, '.k-animation-container') && !isInsideElement(e.target, '.dm-dropdown-popup') && !isInsideElement(e.target, '.dm-type-dropdown')) {
         window.dispatchEvent(new CustomEvent('closeOtherTypeDropdowns', { detail: null }));
     }
 }, { capture: true });
@@ -352,7 +356,7 @@ window.addEventListener('mouseup', handleGlobalPointerUp);
 window.addEventListener('pointerup', handleGlobalPointerUp);
 
 const handleGlobalScrollTypeCell = (e) => {
-    if (e.target && (e.target.closest('.k-popup') || e.target.closest('.k-list-container') || e.target.closest('.dm-dropdown-popup') || e.target.classList?.contains('k-list-content') || e.target.classList?.contains('k-popup'))) {
+    if (isInsideElement(e.target, '.k-popup') || isInsideElement(e.target, '.k-list-container') || isInsideElement(e.target, '.dm-dropdown-popup') || e.target?.classList?.contains('k-list-content') || e.target?.classList?.contains('k-popup')) {
         return;
     }
     window.dispatchEvent(new CustomEvent('closeOtherTypeDropdowns', { detail: null }));
@@ -543,7 +547,7 @@ const TypeCell = memo((props) => {
     const handlePointerDown = (e) => {
         if (!isEditing) {
             // Portal 내부 클릭 시 무시
-            if (e.target && (e.target.closest('.k-popup') || e.target.closest('.k-list-container') || e.target.closest('.k-animation-container') || e.target.closest('.dm-dropdown-popup'))) {
+            if (isInsideElement(e.target, '.k-popup') || isInsideElement(e.target, '.k-list-container') || isInsideElement(e.target, '.k-animation-container') || isInsideElement(e.target, '.dm-dropdown-popup')) {
                 return;
             }
 
