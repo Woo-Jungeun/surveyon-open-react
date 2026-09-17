@@ -6,6 +6,7 @@ import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import ProListPopup from "@/services/aiOpenAnalysis/app/proList/ProListPopup";
 import ProRegisterPopup from "@/services/aiOpenAnalysis/app/proList/ProRegisterPopup";
 import ProListBatchMergePopup from "./ProListBatchMergePopup";
+import ProListBatchQuestionEditPopup from "./ProListBatchQuestionEditPopup";
 import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
 import GridHeaderBtnTxt from "@/components/style/button/GridHeaderBtnTxt.jsx";
 import AiDataHeader from "@/services/aiOpenAnalysis/components/AiDataHeader.jsx";
@@ -13,7 +14,7 @@ import { PERM, hasPerm, addSortProxies, GROUP_MIN_PERM, FIELD_MIN_PERM } from ".
 import GridDataCount from "@/components/common/grid/GridDataCount";
 import "./ProList.css";
 import { process } from "@progress/kendo-data-query";
-import { ChevronDown, ChevronRight, Link, Unlink, Layers, Search, X, Trash2, Plus, Minus } from 'lucide-react';
+import { ChevronDown, ChevronRight, Link, Unlink, Layers, Search, X, Trash2, Plus, Minus, Edit3 } from 'lucide-react';
 
 const DropdownMenu = ({ label, items, isPrimary }) => {
     const [open, setOpen] = useState(false);
@@ -875,6 +876,8 @@ const ProList2GridRenderer = (props) => {
     const [showRegisterPopup, setShowRegisterPopup] = useState(false);
     const [batchMergePopupShow, setBatchMergePopupShow] = useState(false);
     const [batchMergeRows, setBatchMergeRows] = useState([]);
+    const [batchEditQuestionPopupShow, setBatchEditQuestionPopupShow] = useState(false);
+    const [batchEditQuestionRows, setBatchEditQuestionRows] = useState([]);
     const [gridSkip, setGridSkip] = useState(0);
 
     const {
@@ -1222,6 +1225,47 @@ const ProList2GridRenderer = (props) => {
         setBatchMergeRows([]);
         sendMergeAllRef.current?.(nextEdits);
     }, [batchMergeRows, mergeEditsById]);
+
+    const handleBatchEditQuestionFromBar = useCallback(() => {
+        const rows = displayData ?? dataState?.data ?? [];
+        const selectedRows = rows.filter(r => selectedRowIds.has(r.id ?? r.no));
+        if (selectedRows.length === 0) {
+            modal.showErrorAlert("알림", "수정할 문항을 선택해 주세요.");
+            return;
+        }
+
+        const allItemsToEdit = [];
+        selectedRows.forEach(r => {
+            const list = (r.__isGroupMaster && r.__groupList) ? r.__groupList : [r];
+            list.forEach(item => allItemsToEdit.push(item));
+        });
+
+        setBatchEditQuestionRows(allItemsToEdit);
+        setBatchEditQuestionPopupShow(true);
+    }, [displayData, dataState?.data, selectedRowIds, modal]);
+
+    const handleBatchEditQuestionConfirm = useCallback(async (editedMap) => {
+        try {
+            const payload = {
+                user: auth?.user?.userId || "",
+                projectnum,
+                gb: "update_question_fin",
+                val: editedMap
+            };
+            const res = await editMutation.mutateAsync(payload);
+            if (String(res?.success) === '777') {
+                setBatchEditQuestionPopupShow(false);
+                setBatchEditQuestionRows([]);
+                setSelectedRowIds(new Set());
+                handleSearch?.();
+            } else {
+                modal.showErrorAlert("에러", res?.message || "문항 수정 중 오류가 발생했습니다.");
+            }
+        } catch (e) {
+            console.error(e);
+            modal.showErrorAlert("에러", "문항 수정 중 오류가 발생했습니다.");
+        }
+    }, [auth?.user?.userId, projectnum, editMutation, handleSearch, modal]);
 
     const handleBulkSetUseYn = useCallback((shouldExclude) => {
         const rows = displayData ?? dataState?.data ?? [];
@@ -2429,6 +2473,15 @@ const ProList2GridRenderer = (props) => {
                 />
             )}
 
+            {batchEditQuestionPopupShow && (
+                <ProListBatchQuestionEditPopup
+                    show={batchEditQuestionPopupShow}
+                    onClose={() => setBatchEditQuestionPopupShow(false)}
+                    selectedRows={batchEditQuestionRows}
+                    onConfirm={handleBatchEditQuestionConfirm}
+                />
+            )}
+
             {/* 하단 마우스 오버 / 누름(Active) 절제된 미세 피드백 스타일 */}
             <style>{`
                 .bulk-dock-btn {
@@ -2574,10 +2627,10 @@ const ProList2GridRenderer = (props) => {
                             </>
                         )}
 
-                        {/* 2. 문항통합저장 그룹: 선택문항 통합 (MANAGE 이상) */}
+                        {/* 2. 문항통합 & 문항수정 그룹 (MANAGE 이상) */}
                         {canManage && (
                             <>
-                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <button
                                         type="button"
                                         className="bulk-dock-btn bulk-dock-btn-merge"
@@ -2604,6 +2657,34 @@ const ProList2GridRenderer = (props) => {
                                     >
                                         <Link size={13} style={{ color: selectedRowIds.size >= 2 ? '#ea580c' : '#94a3b8' }} />
                                         <span>선택문항 통합 (묶기)</span>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        className="bulk-dock-btn bulk-dock-btn-merge"
+                                        onClick={handleBatchEditQuestionFromBar}
+                                        disabled={selectedRowIds.size < 1}
+                                        style={{
+                                            height: '32px',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '6px',
+                                            backgroundColor: selectedRowIds.size >= 1 ? '#ffffff' : '#f8fafc',
+                                            color: selectedRowIds.size >= 1 ? '#ea580c' : '#94a3b8',
+                                            border: selectedRowIds.size >= 1 ? '1.5px solid #ea580c' : '1px solid #cbd5e1',
+                                            padding: '0 13px',
+                                            borderRadius: '8px',
+                                            fontSize: '12px',
+                                            fontWeight: 700,
+                                            cursor: selectedRowIds.size >= 1 ? 'pointer' : 'not-allowed',
+                                            boxShadow: selectedRowIds.size >= 1 ? '0 2px 8px rgba(234, 88, 12, 0.15)' : 'none',
+                                            boxSizing: 'border-box'
+                                        }}
+                                        title={selectedRowIds.size < 1 ? '수정할 문항을 선택해 주세요.' : '선택한 문항의 문항최종 일괄 수정'}
+                                    >
+                                        <Edit3 size={13} style={{ color: selectedRowIds.size >= 1 ? '#ea580c' : '#94a3b8' }} />
+                                        <span>문항 수정</span>
                                     </button>
                                 </div>
 

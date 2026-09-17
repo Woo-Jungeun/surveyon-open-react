@@ -15,7 +15,7 @@ import * as XLSX from "xlsx";
  * 문항 목록
  *
  * @author jewoo
- * @since 2026-08-24<br />
+ * @since 2025-09-12<br />
  */
 
 const ProList = () => {
@@ -97,17 +97,13 @@ const ProList = () => {
         setLocksById(l);
     }, [proListData?.data?.resultjson, deriveExcluded]);
 
-    //컬럼 표출 권한 체크 (초기값: Redux auth / 세션 정보 활용하여 로딩 중 헤더 덜컥거림 방지)
-    const [userPerm, setUserPerm] = useState(() => {
-        const ug = auth?.user?.userAuth || sessionStorage.getItem("userAuth");
-        return ug ? roleToPerm(ug) : PERM.MANAGE;
-    });
+    //컬럼 표출 권한 체크
+    const [userPerm, setUserPerm] = useState(PERM.READ);
 
     useEffect(() => {
         const ug = proListData?.data?.usergroup;
         if (!ug) return;
         setUserPerm(roleToPerm(ug));
-        sessionStorage.setItem("userAuth", ug);
 
         // userAuth가 이미 동일하면 dispatch 생략
         if (auth?.user?.userAuth !== ug) {
@@ -125,17 +121,17 @@ const ProList = () => {
 
     const [columns, setColumns] = useState(() => [
         // ----- VIEW -----
-        { field: "chk", title: "", group: "VIEW", show: true, allowHide: false, order: 0, width: "40px" },
         { field: "no", title: "no", group: "VIEW", show: true, allowHide: false, order: 1, width: "50px" },
         { field: "model", title: "모델", group: "VIEW", show: true, allowHide: false, order: 2, width: "60px" },
-        { field: "qnum", title: "문번호", group: "VIEW", show: true, allowHide: false, order: 3, width: "100px", wrap: true },
+        { field: "qnum", title: "문번호", group: "VIEW", show: true, allowHide: false, order: 3, width: "80px", wrap: true },
 
-        { field: "qnum_text", title: "문항번호", group: "VIEW", show: true, allowHide: false, order: 4, width: "65px", wrap: true },
-        { field: "question_fin", title: "문항최종", group: "VIEW", show: true, allowHide: false, order: 5, wrap: true },
+        // 문항최종(이미 묶음)
+        withSubgroup("문항최종", 1)({ field: "qnum_text", title: "문항최종번호", group: "VIEW", show: true, allowHide: false, order: 4, width: "60px", wrap: true }),
+        withSubgroup("문항최종", 2)({ field: "question_fin", title: "문항최종", group: "VIEW", show: true, allowHide: false, order: 4, wrap: true }),
 
-        { field: "status_cnt", title: "응답자수", group: "응답 → 분석대상 (중복제거) → 완료", show: true, allowHide: false, order: 5, width: "80px" },
-        { field: "status_cnt_duplicated", title: "분석\n대상수", group: "응답 → 분석대상 (중복제거) → 완료", show: true, allowHide: false, order: 6, width: "65px" },
-        { field: "status_cnt_fin", title: "분석\n완료수", group: "응답 → 분석대상 (중복제거) → 완료", show: true, allowHide: false, order: 7, width: "65px" },
+        { field: "status_cnt", title: "응답자수", group: "VIEW", show: true, allowHide: false, order: 5, width: "80px" },
+        { field: "status_cnt_duplicated", title: "분석\n대상수", group: "VIEW", show: true, allowHide: false, order: 6, width: "65px" },
+        { field: "status_cnt_fin", title: "분석\n완료수", group: "VIEW", show: true, allowHide: false, order: 7, width: "65px" },
         { field: "status_text", title: "진행상황", group: "VIEW", show: true, allowHide: false, order: 8, width: "80px" },
         { field: "filterSetting", title: "필터문항\n설정", group: "VIEW", show: true, editable: false, allowHide: true, order: 9, width: "75px" },
         { field: "tokens_text", title: "예상비용", group: "VIEW", show: true, allowHide: false, order: 10, width: "80px" },
@@ -144,8 +140,10 @@ const ProList = () => {
         { field: "useYN", title: "관리", group: "ADMIN", show: true, order: 1, width: "115px" },
         { field: "exclude", title: "분석보기", group: "ADMIN", show: true, order: 2, width: "90px" },
 
-        // ----- EDIT -----
-        { field: "merge_qnum", title: "문항통합", group: "EDIT", show: true, allowHide: false, order: 1, width: "125px" },
+        // ----- EDIT  → "문항통합"으로 합치기 -----
+        withSubgroup("문항통합저장", 1)({ field: "qnum_text", title: "", group: "EDIT", show: true, allowHide: false, order: 1, width: "85px", wrap: true }),
+        withSubgroup("문항통합저장", 2)({ field: "merge_qnum", title: "", group: "EDIT", show: true, allowHide: false, order: 1, width: "85px", wrap: true }),
+
         { field: "project_lock", title: "수정", group: "EDIT", show: true, allowHide: false, order: 2 },
     ]);
 
