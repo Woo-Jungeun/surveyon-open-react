@@ -326,8 +326,11 @@ const dragSelectedIds = new Set();
 let dragBaseSelectedIds = new Set(); // Ctrl 다중 선택용 베이스 스냅샷
 let isPendingCtrlRelease = false; // Ctrl 키를 누르고 다중선택 중인지 여부
 
-window.addEventListener('pointerdown', () => {
+window.addEventListener('pointerdown', (e) => {
     typeDragJustEnded = false;
+    if (e.target && !e.target.closest('.k-popup') && !e.target.closest('.k-list-container') && !e.target.closest('.k-animation-container') && !e.target.closest('.dm-dropdown-popup') && !e.target.closest('.dm-type-dropdown')) {
+        window.dispatchEvent(new CustomEvent('closeOtherTypeDropdowns', { detail: null }));
+    }
 }, { capture: true });
 
 const handleGlobalPointerUp = (e) => {
@@ -348,6 +351,14 @@ const handleGlobalPointerUp = (e) => {
 window.addEventListener('mouseup', handleGlobalPointerUp);
 window.addEventListener('pointerup', handleGlobalPointerUp);
 
+const handleGlobalScrollTypeCell = (e) => {
+    if (e.target && (e.target.closest('.k-popup') || e.target.closest('.k-list-container') || e.target.closest('.dm-dropdown-popup') || e.target.classList?.contains('k-list-content') || e.target.classList?.contains('k-popup'))) {
+        return;
+    }
+    window.dispatchEvent(new CustomEvent('closeOtherTypeDropdowns', { detail: null }));
+};
+window.addEventListener('scroll', handleGlobalScrollTypeCell, true);
+
 // Ctrl 뗐을 때 보류해둔 편집 모드 진입 실행
 window.addEventListener('keyup', (e) => {
     if (e.key === 'Control' || e.key === 'Meta') {
@@ -362,33 +373,42 @@ window.addEventListener('keyup', (e) => {
 });
 
 const INLINE_STYLE = `
-.type-cell-selected > div {
-    background-color: #d1fae5 !important;
-    color: #065f46 !important;
-    border: 1px solid #10b981 !important;
+td.type-cell-selected,
+.type-cell-selected {
+    background-color: #f0faf5 !important;
 }
-.dm-dropdown-popup .k-list-item {
-    min-height: 24px !important;
-    padding: 2px 8px !important;
-}
-.dm-dropdown-popup .k-list-item-text {
-    font-size: 13px !important;
-    line-height: 1.2 !important;
-}
-.dm-type-dropdown, .dm-type-dropdown .k-input-inner, .dm-type-dropdown .k-input-value-text {
-    font-size: 13px !important;
+.type-cell-selected > div,
+.type-cell-selected .variable-text-readonly,
+.type-cell-selected .dm-type-dropdown,
+td.type-cell-selected .dm-type-dropdown {
+    background-color: #f0faf5 !important;
 }
 .dm-type-dropdown {
     height: 22px !important;
     min-height: 22px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 4px !important;
+    background-color: #ffffff !important;
     box-sizing: border-box !important;
+    transition: all 0.15s ease !important;
+    font-size: 13px !important;
 }
-.dm-type-dropdown .k-input-inner {
+.dm-type-dropdown:focus,
+.dm-type-dropdown.k-focus,
+.dm-type-dropdown.k-state-focused,
+.dm-type-dropdown:focus-within {
+    border-color: #16a34a !important;
+    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.15) !important;
+    outline: none !important;
+}
+.dm-type-dropdown .k-input-inner,
+.dm-type-dropdown .k-input-value-text {
     padding: 0px 6px !important;
     height: 20px !important;
     line-height: 20px !important;
     display: flex !important;
     align-items: center !important;
+    font-size: 13px !important;
 }
 .dm-type-dropdown .k-input-button,
 .dm-type-dropdown .k-select {
@@ -399,6 +419,34 @@ const INLINE_STYLE = `
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    border: none !important;
+    background: transparent !important;
+    color: #64748b !important;
+}
+.dm-dropdown-popup {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+    padding: 2px 0 !important;
+}
+.dm-dropdown-popup .k-list-item {
+    min-height: 24px !important;
+    padding: 3px 8px !important;
+    font-size: 13px !important;
+    line-height: 1.3 !important;
+    transition: background-color 0.15s ease !important;
+}
+.dm-dropdown-popup .k-list-item:hover,
+.dm-dropdown-popup .k-list-item.k-hover,
+.dm-dropdown-popup .k-item.k-state-hover {
+    background-color: #f0faf5 !important;
+    color: #15803d !important;
+}
+.dm-dropdown-popup .k-list-item.k-selected,
+.dm-dropdown-popup .k-item.k-state-selected {
+    background-color: #dcfce7 !important;
+    color: #166534 !important;
+    font-weight: 600 !important;
 }
 .dm-type-cell .variable-text-readonly {
     font-size: 13px !important;
@@ -426,7 +474,11 @@ const TypeCell = memo((props) => {
     useEffect(() => {
         const handler = (e) => {
             if (String(e.detail) === String(dataItem.id)) {
+                window.dispatchEvent(new CustomEvent('closeOtherTypeDropdowns', { detail: dataItem.id }));
                 setIsLocalEditing(true);
+            } else {
+                setIsOpen(false);
+                setIsLocalEditing(false);
             }
         };
         window.addEventListener('openTypeCell', handler);
@@ -434,18 +486,33 @@ const TypeCell = memo((props) => {
     }, [dataItem.id]);
 
     useEffect(() => {
+        const closeHandler = (e) => {
+            if (String(e.detail) !== String(dataItem.id)) {
+                setIsOpen(false);
+                setIsLocalEditing(false);
+            }
+        };
+        window.addEventListener('closeOtherTypeDropdowns', closeHandler);
+        return () => window.removeEventListener('closeOtherTypeDropdowns', closeHandler);
+    }, [dataItem.id]);
+
+    useEffect(() => {
         if (isEditing && typeDragJustEnded) {
             // React 렌더링 + Kendo 내부 포커스 이벤트를 충분히 기다린 후 안정적으로 열기
             const timer = setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('closeOtherTypeDropdowns', { detail: dataItem.id }));
                 setIsOpen(true);
                 // 연 이후에는 재실행 방지를 위해 flag 해제
                 typeDragJustEnded = false;
             }, 100);
             return () => clearTimeout(timer);
         }
-    }, [isEditing]);
+    }, [isEditing, dataItem.id]);
 
-    const handleOpen = () => setIsOpen(true);
+    const handleOpen = () => {
+        window.dispatchEvent(new CustomEvent('closeOtherTypeDropdowns', { detail: dataItem.id }));
+        setIsOpen(true);
+    };
     const handleClose = () => setIsOpen(false);
 
     const handleChange = (e) => {
