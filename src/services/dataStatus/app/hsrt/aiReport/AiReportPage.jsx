@@ -482,7 +482,26 @@ const AiReportPage = () => {
                     bytes[i] = binaryString.charCodeAt(i);
                 }
 
-                // Determine content type and requested extension
+                // UTF-8 디코딩 후 반환된 내용이 HTML 문서인지 확인 (프론트엔드 인쇄 뷰어 실행용)
+                const decodedText = new TextDecoder('utf-8').decode(bytes);
+                const trimmedText = decodedText.trim().toLowerCase();
+                const isHtml = trimmedText.includes('<!doctype html') || trimmedText.includes('<html');
+
+                if (isHtml) {
+                    // 고해상도 A4 벡터 PDF 미리보기 팝업 창 열기 (인쇄 다이얼로그는 팝업 상단 버튼으로 사용자 선택 실행)
+                    const printWin = window.open('', '_blank', 'width=1200,height=900,scrollbars=yes');
+                    if (!printWin) {
+                        modal.showAlert('알림', '팝업 차단이 설정되어 있습니다. 브라우저 팝업 허용 후 다시 시도해 주세요.');
+                        return;
+                    }
+                    printWin.document.open();
+                    printWin.document.write(decodedText);
+                    printWin.document.close();
+                    printWin.focus();
+                    return;
+                }
+
+                // Determine content type and requested extension for binary files
                 const requestedExt = (apiFormat === 'xlsx') ? 'xlsx' : 'pdf';
                 let contentType = 'application/octet-stream';
 
