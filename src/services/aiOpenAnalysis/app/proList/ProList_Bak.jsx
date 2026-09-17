@@ -7,18 +7,18 @@ import { ProListApi } from "@/services/aiOpenAnalysis/app/proList/ProListApi.js"
 import "@/services/aiOpenAnalysis/app/AiCommonLayout.css";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
-import ProList2GridRenderer from "./ProList2GridRenderer";
+import ProListGridRenderer from "./ProListGridRenderer";
 import { PERM, roleToPerm, hasPerm, GROUP_MIN_PERM, FIELD_MIN_PERM, natKey, NAT_FIELDS, addSortProxies } from "./ProListUtils";
 import * as XLSX from "xlsx";
 
 /**
- * 문항 목록2 (UI 고도화용 사본)
+ * 문항 목록
  *
  * @author jewoo
  * @since 2026-08-24<br />
  */
 
-const ProList2 = () => {
+const ProList = () => {
     const auth = useSelector((store) => store.auth);
     const userAuth = auth?.user?.userAuth || "";
     const dispatch = useDispatch();
@@ -128,7 +128,7 @@ const ProList2 = () => {
         { field: "chk", title: "", group: "VIEW", show: true, allowHide: false, order: 0, width: "40px" },
         { field: "no", title: "no", group: "VIEW", show: true, allowHide: false, order: 1, width: "50px" },
         { field: "model", title: "모델", group: "VIEW", show: true, allowHide: false, order: 2, width: "60px" },
-        { field: "qnum", title: "문번호", group: "VIEW", show: true, allowHide: false, order: 3, width: "80px", wrap: true },
+        { field: "qnum", title: "문번호", group: "VIEW", show: true, allowHide: false, order: 3, width: "100px", wrap: true },
 
         { field: "qnum_text", title: "문항번호", group: "VIEW", show: true, allowHide: false, order: 4, width: "65px", wrap: true },
         { field: "question_fin", title: "문항최종", group: "VIEW", show: true, allowHide: false, order: 5, wrap: true },
@@ -153,7 +153,7 @@ const ProList2 = () => {
         sessionStorage.setItem("qnum", merge_qnum || "");
         sessionStorage.setItem("project_lock", project_lock || "");
         sessionStorage.setItem("userPerm", userPerm);
-        navigate('/ai_open_analysis/option_setting_2');
+        navigate('/ai_open_analysis/option_setting');
     }, [navigate, userPerm]);
 
     // 권한 반영 컬럼 배열
@@ -414,7 +414,7 @@ const ProList2 = () => {
             renderItem={(props) =>
 
                 <>
-                    <ProList2GridRenderer {...props}
+                    <ProListGridRenderer {...props}
                         scrollTopRef={scrollTopRef}
                         mergeEditsById={mergeEditsById}
                         setMergeEditsById={setMergeEditsById}
@@ -465,4 +465,4 @@ const ProList2 = () => {
     );
 };
 
-export default ProList2;
+export default ProList;

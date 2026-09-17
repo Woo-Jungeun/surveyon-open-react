@@ -1,4 +1,4 @@
-﻿import React, { useRef, useMemo, useCallback, useEffect, useState } from "react";
+import React, { useRef, useMemo, useCallback, useEffect, useState } from "react";
 import { Button } from "@progress/kendo-react-buttons";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
@@ -849,7 +849,7 @@ const MergeHeaderCell = () => {
     );
 };
 
-const ProList2GridRenderer = (props) => {
+const ProListGridRenderer = (props) => {
     const [showRegisterPopup, setShowRegisterPopup] = useState(false);
     const [batchMergePopupShow, setBatchMergePopupShow] = useState(false);
     const [batchMergeRows, setBatchMergeRows] = useState([]);
@@ -2724,4 +2724,4 @@ const ProList2GridRenderer = (props) => {
     );
 };
 
-export default React.memo(ProList2GridRenderer);
+export default React.memo(ProListGridRenderer);

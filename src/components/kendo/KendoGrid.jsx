@@ -164,15 +164,15 @@ const KendoGrid = ({ parentProps, children }) => {
         };
 
         // 처음 로드이거나, 정렬/필터가 내용상 바뀐 경우 (Unpinned 대상)
-        // 또는 reorderable 속성이 true일 경우(드래그 앤 드롭 등 명시적인 순서 변경 지원)
-        if (!initializedRef.current || sortChanged || filterChanged || parentProps?.reorderable) {
+        // 또는 reorderable/disableInternalSort 속성이 true일 경우 (명시적 순서 전달)
+        if (!initializedRef.current || sortChanged || filterChanged || parentProps?.reorderable || parentProps?.disableInternalSort) {
             initializedRef.current = true;
             sortKeyRef.current = nextSortKey;
             filterKeyRef.current = nextFilterKey;
 
             let sortedUnpinned = [];
             if (Array.isArray(unpinned)) {
-                if (sort && sort.length) {
+                if (sort && sort.length && !parentProps?.disableInternalSort) {
                     // 정렬만 수행
                     try {
                         const sorted = process(unpinned, { sort });
