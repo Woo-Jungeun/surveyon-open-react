@@ -567,6 +567,10 @@ const STUB_INLINE_STYLE = `
 .stub-cell-selected {
     background-color: #e0f2fe !important;
 }
+.stub-cell-selected .dp-mini-dropdown,
+td.stub-cell-selected .dp-mini-dropdown {
+    background-color: #e0f2fe !important;
+}
 .dp-mini-dropdown-popup .k-list-item,
 .dp-mini-dropdown-popup .k-list-optionlabel {
     font-size: 12px !important;
