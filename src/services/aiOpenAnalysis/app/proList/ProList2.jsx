@@ -8,7 +8,7 @@ import "@/services/aiOpenAnalysis/app/AiCommonLayout.css";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import ProList2GridRenderer from "./ProList2GridRenderer";
-import { PERM, roleToPerm, hasPerm, GROUP_MIN_PERM, FIELD_MIN_PERM, natKey, NAT_FIELDS, addSortProxies } from "./ProListUtils";
+import { PERM, roleToPerm, hasPerm, GROUP_MIN_PERM, FIELD_MIN_PERM, natKey, NAT_FIELDS, addSortProxies, parseRows } from "./ProListUtils";
 import * as XLSX from "xlsx";
 
 /**
@@ -53,7 +53,24 @@ const ProList2 = () => {
     const [popupMode, setPopupMode] = useState("all");        // "all" | "single"
     const [popupRow, setPopupRow] = useState(null);           // 행 데이터
 
-    const { proListData, editMutation, excelDownloadMutation } = ProListApi();
+    const {
+        proListData,
+        fetchPidDiff,
+        toggleAnalysis,
+        toggleAllAnalysis,
+        toggleRowEdit,
+        toggleAllEdit,
+        allMerge,
+        batchEditQuestionFin,
+        bulkUpdate,
+        deleteQnums,
+        fetchFilterQnums,
+        importLbAllExcel,
+        importLbAllJson,
+        exportLbDevExcel,
+        exportLbDpTxt,
+        exportDataAllExcel
+    } = ProListApi();
 
     // 스크롤 위치 저장용 ref
     const scrollTopRef = useRef(0);
@@ -66,7 +83,7 @@ const ProList2 = () => {
 
     // mergeSavedBaseline, mergeEditsById 초기화 
     useEffect(() => {
-        const rows = proListData?.data?.resultjson ?? [];
+        const rows = parseRows(proListData?.data?.resultjson);
         if (!rows.length) return;
 
         setMergeSavedBaseline(new Map(rows.map(r => [r.id, r.merge_qnum || ""])));
@@ -86,7 +103,7 @@ const ProList2 = () => {
 
     // 초기화: API 데이터 들어올 때 한 번 세팅
     useEffect(() => {
-        const rows = proListData?.data?.resultjson ?? [];
+        const rows = parseRows(proListData?.data?.resultjson);
         const m = new Map();
         const l = new Map();
         rows.forEach((row) => {
@@ -161,7 +178,6 @@ const ProList2 = () => {
         return columns.map((c) => {
             const need = (FIELD_MIN_PERM[c.field] ?? GROUP_MIN_PERM[c.group || "VIEW"] ?? PERM.READ);
             const canSee = hasPerm(userPerm, need);
-            // merge_qnum은 관리자(MANAGE)만 수정 가능
             let editable = c.editable;
             if (c.field === 'merge_qnum') {
                 editable = hasPerm(userPerm, PERM.MANAGE);
@@ -175,7 +191,7 @@ const ProList2 = () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = filename; // 고정 파일명
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -187,10 +203,9 @@ const ProList2 = () => {
         try {
             const payload = {
                 user: auth?.user?.userId || "",
-                projectnum,
-                gb: "export_lb_excel"
+                projectnum
             };
-            const res = await excelDownloadMutation.mutateAsync(payload);
+            const res = await exportLbDevExcel.mutateAsync(payload);
 
             if (String(res?.success) === '720') {
                 modal.showErrorAlert("알림", res.message || "분석된 보기가 없습니다.");
@@ -225,17 +240,16 @@ const ProList2 = () => {
             console.error(err);
             modal.showErrorAlert("오류", "보기 추출 중 오류가 발생했습니다.");
         }
-    }, [auth?.user?.userId, projectnum, excelDownloadMutation, modal, saveBlobWithName]);
+    }, [auth?.user?.userId, projectnum, exportLbDevExcel, modal, saveBlobWithName]);
 
     // 보기추출(DP용) 엑셀 다운로드 이벤트
     const handleExportExcelDP = useCallback(async () => {
         try {
             const payload = {
                 user: auth?.user?.userId || "",
-                projectnum,
-                gb: "export_lb_dp"
+                projectnum
             };
-            const res = await excelDownloadMutation.mutateAsync(payload);
+            const res = await exportLbDpTxt.mutateAsync(payload);
 
             if (String(res?.success) === '720') {
                 modal.showErrorAlert("알림", res.message || "분석된 보기가 없습니다.");
@@ -270,7 +284,7 @@ const ProList2 = () => {
             console.error(err);
             modal.showErrorAlert("오류", "보기 추출 중 오류가 발생했습니다.");
         }
-    }, [auth?.user?.userId, projectnum, excelDownloadMutation, modal, saveBlobWithName]);
+    }, [auth?.user?.userId, projectnum, exportLbDpTxt, modal, saveBlobWithName]);
 
     // 보기등록(ALL) 엑셀 업로드 이벤트
     const handleImportExcel = useCallback(async (e) => {
@@ -279,54 +293,12 @@ const ProList2 = () => {
 
         try {
             loadingSpinner.show();
-            const data = await file.arrayBuffer();
-            const workbook = XLSX.read(data);
-            const sheetName = workbook.SheetNames[0];
-            const sheet = workbook.Sheets[sheetName];
-            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            const formData = new FormData();
+            formData.append("user", auth?.user?.userId || "");
+            formData.append("projectnum", projectnum);
+            formData.append("excel_file", file);
 
-            // 3번째 행(인덱스 2)이 노란색 헤더이므로, 데이터는 인덱스 3부터 시작
-            let startIdx = 3;
-            const dataLbObj = {};
-
-            for (let i = startIdx; i < rows.length; i++) {
-                const row = rows[i];
-                if (!row || !row[0]) continue; // 변수명이 없으면 skip
-
-                const varName = row[0]; // A (변수명)
-                const lv123code = row[3] ?? ""; // D
-                const lv3 = row[4] ?? ""; // E
-                const lv2code = row[5] ?? ""; // F
-                const lv2 = row[6] ?? ""; // G
-                const lv1code = row[7] ?? ""; // H
-                const lv1 = row[8] ?? ""; // I
-
-                if (!dataLbObj[varName]) {
-                    dataLbObj[varName] = [];
-                }
-
-                dataLbObj[varName].push({
-                    lv3: String(lv3),
-                    lv123code: String(lv123code),
-                    lv2code: String(lv2code),
-                    lv2: String(lv2),
-                    lv1code: String(lv1code),
-                    lv1: String(lv1)
-                });
-            }
-
-            const data_lb = Object.keys(dataLbObj).map(key => ({
-                [key]: dataLbObj[key]
-            }));
-
-            const payload = {
-                user: auth?.user?.userId || "",
-                projectnum,
-                gb: "import_lb_all",
-                data_lb
-            };
-
-            const res = await editMutation.mutateAsync(payload);
+            const res = await importLbAllExcel.mutateAsync(formData);
             if (String(res?.success) === '777') {
                 modal.showConfirm("알림", "보기 등록이 완료되었습니다.", {
                     btns: [
@@ -348,19 +320,18 @@ const ProList2 = () => {
             modal.showErrorAlert("오류", "보기 등록 파일 처리 중 오류가 발생했습니다.");
         } finally {
             loadingSpinner.hide();
-            e.target.value = null; // 초기화
+            e.target.value = null;
         }
-    }, [auth?.user?.userId, projectnum, editMutation, modal, loadingSpinner]);
+    }, [auth?.user?.userId, projectnum, importLbAllExcel, modal, loadingSpinner]);
 
     // 응답추출(ALL) 엑셀 다운로드 이벤트
     const handleExportRaw = useCallback(async () => {
         try {
             const payload = {
                 user: auth?.user?.userId || "",
-                projectnum,
-                gb: "export_data_all"
+                projectnum
             };
-            const res = await excelDownloadMutation.mutateAsync(payload);
+            const res = await exportDataAllExcel.mutateAsync(payload);
 
             if (String(res?.success) === '720') {
                 modal.showErrorAlert("알림", res.message || "추출할 응답 데이터가 없습니다.");
@@ -395,7 +366,7 @@ const ProList2 = () => {
             console.error(err);
             modal.showErrorAlert("오류", "응답 추출 중 오류가 발생했습니다.");
         }
-    }, [auth?.user?.userId, projectnum, excelDownloadMutation, modal, saveBlobWithName]);
+    }, [auth?.user?.userId, projectnum, exportDataAllExcel, modal, saveBlobWithName]);
 
     return (
         <GridData
@@ -408,7 +379,7 @@ const ProList2 = () => {
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",
                 projectnum: projectnum || "",
-                gb: "select",
+                search_text: "",
                 _ts: timeStamp, // 캐시 버스터
             }}
             renderItem={(props) =>
@@ -429,7 +400,17 @@ const ProList2 = () => {
                         userPerm={userPerm}
                         modal={modal}
                         navigate={navigate}
-                        editMutation={editMutation}
+                        proListApiResponse={proListData?.data}
+                        fetchPidDiff={fetchPidDiff}
+                        toggleAnalysis={toggleAnalysis}
+                        toggleAllAnalysis={toggleAllAnalysis}
+                        toggleRowEdit={toggleRowEdit}
+                        toggleAllEdit={toggleAllEdit}
+                        allMerge={allMerge}
+                        batchEditQuestionFin={batchEditQuestionFin}
+                        bulkUpdate={bulkUpdate}
+                        deleteQnums={deleteQnums}
+                        fetchFilterQnums={fetchFilterQnums}
                         columns={columns}
                         setColumns={setColumns}
                         columnsForPerm={columnsForPerm}

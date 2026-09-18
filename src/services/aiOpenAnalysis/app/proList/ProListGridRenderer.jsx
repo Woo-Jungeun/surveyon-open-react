@@ -14,7 +14,7 @@ import { PERM, hasPerm, addSortProxies, GROUP_MIN_PERM, FIELD_MIN_PERM } from ".
 import GridDataCount from "@/components/common/grid/GridDataCount";
 import "./ProList.css";
 import { process } from "@progress/kendo-data-query";
-import { ChevronDown, ChevronRight, Link, Unlink, Layers, Search, X, Trash2, Plus, Minus, Edit3 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Link, Unlink, Layers, Search, X, Trash2, Plus, Minus, Edit3, Users, List, CheckCircle2, Check, Copy, AlertTriangle } from 'lucide-react';
 
 const DropdownMenu = ({ label, items, isPrimary }) => {
     const [open, setOpen] = useState(false);
@@ -774,7 +774,9 @@ const MergeDisplayCell = (cellProps) => {
     }
 
     if (isMergedChild || isMerged) {
-        const masterQnum = row.__masterItem ? (row.__masterItem.qnum_text || row.__masterItem.qnum) : (cur || origQnum);
+        const masterQnum = row.__masterItem
+            ? (ctx?.getMergeVal ? ctx.getMergeVal(row.__masterItem) : (row.__masterItem.merge_qnum || row.__masterItem.qnum_text || row.__masterItem.qnum))
+            : (cur || origQnum);
         const fullTitle = `↳ ${masterQnum}로 통합\n(클릭 시 통합 해제)`;
         return (
             <td ref={tdRef} style={{ textAlign: 'center', padding: '4px 2px', overflow: 'hidden' }} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
@@ -883,6 +885,19 @@ const ProListGridRenderer = (props) => {
     const {
         selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField, handleSearch,
         auth, projectnum, userPerm, modal, navigate,
+        toggleAnalysis = props.updateSingleYn,
+        toggleAllAnalysis,
+        toggleRowEdit,
+        toggleAllEdit,
+        unmergeGroup: unmergeGroupMutation,
+        saveMergeQnum,
+        allMerge = saveMergeQnum || props.allMerge,
+        batchEditQuestionFin,
+        bulkUpdate,
+        deleteQnums,
+        fetchFilterQnums,
+        fetchPidDiff,
+        proListApiResponse,
         editMutation,
         scrollTopRef,
         mergeEditsById, setMergeEditsById,
@@ -907,6 +922,29 @@ const ProListGridRenderer = (props) => {
 
     const [selectedRowIds, setSelectedRowIds] = useState(new Set());
     const [linkingMasterRow, setLinkingMasterRow] = useState(null);
+    const [showPidDiffModal, setShowPidDiffModal] = useState(false);
+    const [pidDiffData, setPidDiffData] = useState(null);
+    const [pidDiffTab, setPidDiffTab] = useState(0);
+
+    const handleOpenPidDiffModal = useCallback(async () => {
+        try {
+            const payload = {
+                user: auth?.user?.userId || "",
+                projectnum
+            };
+            const res = await fetchPidDiff?.mutateAsync(payload);
+            if (String(res?.success) === '777' || res?.diff_count !== undefined || res?.unregistered_open || res?.diff_list) {
+                setPidDiffData(res);
+                setPidDiffTab(0);
+                setShowPidDiffModal(true);
+            } else {
+                modal.showErrorAlert("에러", res?.message || "차이 내역 조회 중 오류가 발생했습니다.");
+            }
+        } catch (e) {
+            console.error(e);
+            modal.showErrorAlert("에러", "차이 내역 조회 중 오류가 발생했습니다.");
+        }
+    }, [auth?.user?.userId, projectnum, fetchPidDiff, modal]);
 
     const toggleRowSelect = useCallback((id, checked) => {
         setSelectedRowIds(prev => {
@@ -946,7 +984,10 @@ const ProListGridRenderer = (props) => {
         const restOfGroup = new Set();
         for (const [key, arr] of map) {
             if (arr.length >= 2) {
-                let master = arr.find(r => norm(r.qnum_text || r.qnum) === key);
+                let master = arr.find(r => norm(getMergeVal(r)) === key || norm(r.merge_qnum) === key);
+                if (!master) {
+                    master = arr.find(r => norm(r.qnum_text || r.qnum) === key);
+                }
                 if (!master) {
                     master = arr.find(r => String(r?.useYN ?? '').trim() === '분석');
                 }
@@ -1244,15 +1285,21 @@ const ProListGridRenderer = (props) => {
         setBatchEditQuestionPopupShow(true);
     }, [displayData, dataState?.data, selectedRowIds, modal]);
 
-    const handleBatchEditQuestionConfirm = useCallback(async (editedMap) => {
+    const handleBatchEditQuestionConfirm = useCallback(async (update_list) => {
         try {
+            const dataObj = {};
+            (update_list || []).forEach(item => {
+                if (item?.id != null) {
+                    dataObj[String(item.id)] = item.question_fin ?? item.value ?? "";
+                }
+            });
             const payload = {
                 user: auth?.user?.userId || "",
                 projectnum,
-                gb: "update_question_fin",
-                val: editedMap
+                data: dataObj,
+                update_list
             };
-            const res = await editMutation.mutateAsync(payload);
+            const res = await batchEditQuestionFin?.mutateAsync(payload);
             if (String(res?.success) === '777') {
                 setBatchEditQuestionPopupShow(false);
                 setBatchEditQuestionRows([]);
@@ -1265,47 +1312,81 @@ const ProListGridRenderer = (props) => {
             console.error(e);
             modal.showErrorAlert("에러", "문항 수정 중 오류가 발생했습니다.");
         }
-    }, [auth?.user?.userId, projectnum, editMutation, handleSearch, modal]);
+    }, [auth?.user?.userId, projectnum, batchEditQuestionFin, handleSearch, modal]);
 
-    const handleBulkSetUseYn = useCallback((shouldExclude) => {
+    const handleBulkSetUseYn = useCallback(async (shouldExclude) => {
         const rows = displayData ?? dataState?.data ?? [];
         const targetRows = rows.filter(r => selectedRowIds.has(r.id ?? r.no));
         if (targetRows.length === 0) return;
 
-        setExcludedById(prev => {
-            const next = new Map(prev);
+        try {
+            const ids = [];
             targetRows.forEach(r => {
                 const list = (r.__isGroupMaster && r.__groupList) ? r.__groupList : [r];
                 list.forEach(item => {
                     const rId = item.id ?? item.no;
-                    if (!locksById.get(rId)) {
-                        next.set(rId, shouldExclude);
-                    }
+                    if (!locksById.get(rId)) ids.push(rId);
                 });
             });
-            return next;
-        });
-        setSelectedRowIds(new Set());
-    }, [displayData, dataState?.data, selectedRowIds, locksById, setExcludedById]);
 
-    const handleBulkSetLockSelected = useCallback((shouldLock) => {
+            if (ids.length > 0) {
+                const payload = {
+                    user: auth?.user?.userId || "",
+                    projectnum,
+                    column: "useYN",
+                    value: shouldExclude ? "0" : "1",
+                    ids
+                };
+                const res = await bulkUpdate?.mutateAsync(payload);
+                if (String(res?.success) === '777') {
+                    setSelectedRowIds(new Set());
+                    handleSearch?.();
+                } else {
+                    modal.showErrorAlert("에러", res?.message || "일괄 변경 중 오류가 발생했습니다.");
+                }
+            }
+        } catch (e) {
+            console.error(e);
+            modal.showErrorAlert("에러", "일괄 변경 중 오류가 발생했습니다.");
+        }
+    }, [displayData, dataState?.data, selectedRowIds, locksById, auth?.user?.userId, projectnum, bulkUpdate, handleSearch, modal]);
+
+    const handleBulkSetLockSelected = useCallback(async (shouldLock) => {
         const rows = displayData ?? dataState?.data ?? [];
         const targetRows = rows.filter(r => selectedRowIds.has(r.id ?? r.no));
         if (targetRows.length === 0) return;
 
-        setLocksById(prev => {
-            const next = new Map(prev);
+        try {
+            const ids = [];
             targetRows.forEach(r => {
                 const list = (r.__isGroupMaster && r.__groupList) ? r.__groupList : [r];
                 list.forEach(item => {
                     const rId = item.id ?? item.no;
-                    next.set(rId, shouldLock);
+                    ids.push(rId);
                 });
             });
-            return next;
-        });
-        setSelectedRowIds(new Set());
-    }, [displayData, dataState?.data, selectedRowIds, setLocksById]);
+
+            if (ids.length > 0) {
+                const payload = {
+                    user: auth?.user?.userId || "",
+                    projectnum,
+                    column: "project_lock",
+                    value: shouldLock ? "0" : "1",
+                    ids
+                };
+                const res = await bulkUpdate?.mutateAsync(payload);
+                if (String(res?.success) === '777') {
+                    setSelectedRowIds(new Set());
+                    handleSearch?.();
+                } else {
+                    modal.showErrorAlert("에러", res?.message || "일괄 잠금 중 오류가 발생했습니다.");
+                }
+            }
+        } catch (e) {
+            console.error(e);
+            modal.showErrorAlert("에러", "일괄 잠금 중 오류가 발생했습니다.");
+        }
+    }, [displayData, dataState?.data, selectedRowIds, auth?.user?.userId, projectnum, bulkUpdate, handleSearch, modal]);
 
     const handleDeleteSelected = useCallback(async () => {
         const rows = displayData ?? dataState?.data ?? [];
@@ -1326,10 +1407,9 @@ const ProListGridRenderer = (props) => {
                             const payload = {
                                 user: auth?.user?.userId || "",
                                 projectnum,
-                                gb: "delete",
-                                qid_list: ids
+                                ids
                             };
-                            const res = await editMutation.mutateAsync(payload);
+                            const res = await deleteQnums?.mutateAsync(payload);
                             if (String(res?.success) === '777') {
                                 setSelectedRowIds(new Set());
                                 handleSearch?.();
@@ -1344,7 +1424,7 @@ const ProListGridRenderer = (props) => {
                 }
             ]
         });
-    }, [displayData, dataState?.data, selectedRowIds, modal, auth?.user?.userId, projectnum, editMutation, handleSearch]);
+    }, [displayData, dataState?.data, selectedRowIds, modal, auth?.user?.userId, projectnum, deleteQnums, handleSearch]);
 
     const sendMergeAll = async (overrideEditsMap = null) => {
         const activeEdits = overrideEditsMap || mergeEditsById;
@@ -1369,100 +1449,26 @@ const ProListGridRenderer = (props) => {
             return;
         }
 
-        const idToNo = new Map(rows.map(r => [String(r.id), r.no]));
-        const blankIds = [...changedIds].filter((qid) => norm(changesObj[qid]) === "");
-        if (blankIds.length > 0) {
-            const blankNos = blankIds.map((qid) => idToNo.get(String(qid))).filter(Boolean);
-            modal.showErrorAlert("알림", `[행: ${blankNos.join(", ")}] 분석을 위해 '문항통합'란을 입력해 주세요.`);
-            setMergeEditsById(beforeEdits);
-            return;
-        }
-
-        const buildGroups = (items, getter) => {
-            const m = new Map();
-            items.forEach(r => {
-                const key = norm(getter(r));
-                if (!key) return;
-                if (!m.has(key)) m.set(key, []);
-                m.get(key).push(r);
-            });
-            return m;
-        };
-        const serverGroups = buildGroups(rows, r => r.merge_qnum);
-        const uiGroups = buildGroups(rows, r => getVal(r));
-
-        const toCall = new Map();
-
-        for (const id of changedIds) {
-            const r = rows.find(x => Number(x.id) === id);
-            if (!r) continue;
-            if (String(r?.useYN ?? "").trim() === "제외") continue;
-            const key = norm(getVal(r));
-            const g = uiGroups.get(key) || [];
-            const target = (g.length >= 2 && g[0]?.id !== r.id) ? "머지" : "분석";
-            toCall.set(r.id, target);
-        }
-
-        const affectedIds = new Set();
-        for (const id of changedIds) {
-            const r = rows.find(x => Number(x.id) === id);
-            if (!r) continue;
-            const oldKey = norm(r.merge_qnum);
-            const newKey = norm(getVal(r));
-            (serverGroups.get(oldKey) || []).forEach(x => affectedIds.add(Number(x.id)));
-            (uiGroups.get(newKey) || []).forEach(x => affectedIds.add(Number(x.id)));
-        }
-
-        for (const r of rows) {
-            if (!affectedIds.has(Number(r.id))) continue;
-            if (String(r?.useYN ?? "").trim() === "제외") continue;
-            if (isLocked(r)) continue;
-
-            const key = norm(getVal(r));
-            const g = uiGroups.get(key) || [];
-            const target = (g.length >= 2 && g[0]?.id !== r.id) ? "머지" : "분석";
-
-            if (normalizeUseYN(r) !== target) {
-                toCall.set(r.id, target);
-            }
-        }
-
         try {
             const payload = {
                 user: auth?.user?.userId || "",
                 projectnum,
-                gb: "allmerge",
-                val: changesObj,
+                data: changesObj
             };
-            const res = await editMutation.mutateAsync(payload);
-            if (String(res?.success) !== '777') throw new Error("merge 저장 실패");
-            pendingFlushRef.current = true;
-            setLinkingMasterRow(null);
-            setMergeSavedBaseline(new Map(
-                rows.map(r => [r.id, getVal(r)])
-            ));
-            setMergeEditsById(new Map());
-            requestAnimationFrame(() => {
-                const grid = document.getElementById("grid_01");
-                if (grid) {
-                    grid.querySelectorAll(".cell-merge-diff").forEach(el => {
-                        el.classList.remove("cell-merge-diff");
-                    });
-                }
-            });
-            for (const r of rows) {
-                if (!affectedIds.has(Number(r.id))) continue;
-                if (String(r?.useYN ?? "").trim() === "제외") continue;
-                if (isLocked(r)) continue;
-                await sendAnalysis({ scope: "row", id: r.id, excluded: false, refresh: false });
+            const res = await allMerge?.mutateAsync(payload);
+            if (String(res?.success) !== '777') {
+                throw new Error(res?.message || "문항 통합 저장 실패");
             }
 
+            pendingFlushRef.current = true;
+            setLinkingMasterRow(null);
+            setMergeSavedBaseline(new Map(rows.map(r => [r.id, getVal(r)])));
+            setMergeEditsById(new Map());
             setSelectedRowIds(new Set());
             handleSearch?.();
-            pendingFlushRef.current = true;
         } catch (e) {
             console.error(e);
-            modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다.");
+            modal.showErrorAlert("에러", e?.message || "저장 중 오류가 발생했습니다.");
         }
     };
     sendMergeAllRef.current = sendMergeAll;
@@ -1470,18 +1476,37 @@ const ProListGridRenderer = (props) => {
     const setExcluded = (row, excluded) =>
         setExcludedById(m => { const n = new Map(m); n.set(row.id, excluded); return n; });
 
-    const sendAnalysis = async ({ scope, id, excluded, refresh = true }) => {
-        const payload = {
-            user: auth?.user?.userId || "",
-            projectnum,
-            gb: scope === "row" ? "analysis" : "allanalysis",
-            columnname: "useyn",
-            val: excluded ? "제외" : "분석",
-            ...(scope === "row" ? { qid: id } : {}),
-        };
+    const sendAnalysis = async ({ scope, id, qid, qnum, merge_qnum, excluded }) => {
         rememberScroll();
-        const res = await editMutation.mutateAsync(payload);
-        if (String(res?.success) !== '777') {
+        try {
+            if (scope === "row") {
+                const payload = {
+                    user: auth?.user?.userId || "",
+                    projectnum,
+                    ...(qid || id ? { qid: String(qid || id), id: String(qid || id) } : {}),
+                    ...(qnum && { qnum }),
+                    ...(merge_qnum && { merge_qnum }),
+                    column: "useYN",
+                    value: excluded ? "0" : "1"
+                };
+                const res = await toggleAnalysis?.mutateAsync(payload);
+                if (String(res?.success) !== '777') {
+                    modal.showErrorAlert("에러", res?.message || "오류가 발생했습니다.");
+                }
+            } else {
+                const payload = {
+                    user: auth?.user?.userId || "",
+                    projectnum,
+                    column: "useYN",
+                    value: excluded ? "0" : "1"
+                };
+                const res = await toggleAllAnalysis?.mutateAsync(payload);
+                if (String(res?.success) !== '777') {
+                    modal.showErrorAlert("에러", res?.message || "오류가 발생했습니다.");
+                }
+            }
+        } catch (e) {
+            console.error(e);
             modal.showErrorAlert("에러", "오류가 발생했습니다.");
         }
     };
@@ -1496,7 +1521,7 @@ const ProListGridRenderer = (props) => {
         const prev = isExcluded(row);
         setExcluded(row, !prev);
         try {
-            await sendAnalysis({ scope: "row", excluded: !prev, id: row?.id });
+            await sendAnalysis({ scope: "row", excluded: !prev, id: row?.id, qid: row?.id, qnum: row?.qnum });
         } catch (e) {
             setExcluded(row, prev);
             console.error(e);
@@ -1553,25 +1578,44 @@ const ProListGridRenderer = (props) => {
         return () => clearTimeout(timer);
     }, [dataState?.data]);
 
-    const sendLock = async (gbVal, lockVal, id) => {
-        const payload = {
-            user: auth?.user?.userId || "",
-            projectnum,
-            gb: gbVal,
-            columnname: "project_lock",
-            val: lockVal,
-            ...(gbVal === "rowEdit" ? { qid: id } : {}),
-        };
+    const sendLock = async (gbVal, lockVal, id, row) => {
         rememberScroll();
-        const res = await editMutation.mutateAsync(payload);
-        if (String(res?.success) !== '777') {
+        try {
+            if (gbVal === "rowEdit") {
+                const payload = {
+                    user: auth?.user?.userId || "",
+                    projectnum,
+                    qid: String(id || row?.id || ""),
+                    id: String(id || row?.id || ""),
+                    ...(row?.qnum && { qnum: row.qnum }),
+                    column: "project_lock",
+                    value: lockVal === "수정불가" ? "0" : "1"
+                };
+                const res = await toggleRowEdit?.mutateAsync(payload);
+                if (String(res?.success) !== '777') {
+                    modal.showErrorAlert("에러", res?.message || "오류가 발생했습니다.");
+                }
+            } else {
+                const payload = {
+                    user: auth?.user?.userId || "",
+                    projectnum,
+                    column: "project_lock",
+                    value: lockVal === "수정불가" ? "0" : "1"
+                };
+                const res = await toggleAllEdit?.mutateAsync(payload);
+                if (String(res?.success) !== '777') {
+                    modal.showErrorAlert("에러", res?.message || "오류가 발생했습니다.");
+                }
+            }
+        } catch (e) {
+            console.error(e);
             modal.showErrorAlert("에러", "오류가 발생했습니다.");
         }
     };
 
     const lockApi = {
-        lockOne: (id) => sendLock("rowEdit", "수정불가", id),
-        unlockOne: (id) => sendLock("rowEdit", "수정", id),
+        lockOne: (id, row) => sendLock("rowEdit", "수정불가", id, row),
+        unlockOne: (id, row) => sendLock("rowEdit", "수정", id, row),
         lockAll: () => sendLock("allEdit", "수정불가"),
         unlockAll: () => sendLock("allEdit", "수정"),
     };
@@ -1582,7 +1626,7 @@ const ProListGridRenderer = (props) => {
         const prev = isLocked(row);
         setRowLocked(row, !prev);
         try {
-            await (prev ? lockApi.unlockOne(row?.id) : lockApi.lockOne(row?.id));
+            await (prev ? lockApi.unlockOne(row?.id, row) : lockApi.lockOne(row?.id, row));
         } catch (e) {
             setRowLocked(row, prev);
             console.error(e);
@@ -1605,33 +1649,57 @@ const ProListGridRenderer = (props) => {
 
     const toggleGroupExcluded = useCallback(async (groupList, shouldExclude) => {
         if (blockWhenDirty()) return;
-        for (const r of groupList) {
-            if (!isLocked(r)) {
-                setExcluded(r, shouldExclude);
-                try {
-                    await sendAnalysis({ scope: "row", excluded: shouldExclude, id: r?.id, refresh: false });
-                } catch (e) {
-                    console.error(e);
-                }
+        const targetRows = (groupList || []).filter(r => !isLocked(r));
+        const ids = targetRows.map(r => r?.id ?? r?.no).filter(Boolean);
+        if (ids.length === 0) return;
+
+        targetRows.forEach(r => setExcluded(r, shouldExclude));
+        try {
+            const payload = {
+                user: auth?.user?.userId || "",
+                projectnum,
+                column: "useYN",
+                value: shouldExclude ? "0" : "1",
+                ids
+            };
+            const res = await bulkUpdate?.mutateAsync(payload);
+            if (String(res?.success) !== '777') {
+                modal?.showErrorAlert?.("에러", res?.message || "분석문항 설정 변경 중 오류가 발생했습니다.");
+                handleSearch?.();
             }
+        } catch (e) {
+            console.error(e);
+            modal?.showErrorAlert?.("에러", "분석문항 설정 변경 중 오류가 발생했습니다.");
+            handleSearch?.();
         }
-    }, [blockWhenDirty, isLocked, sendAnalysis, setExcluded]);
+    }, [blockWhenDirty, isLocked, setExcluded, auth?.user?.userId, projectnum, bulkUpdate, modal, handleSearch]);
 
     const toggleGroupLock = useCallback(async (groupList, shouldLock) => {
         if (blockWhenDirty()) return;
-        for (const r of groupList) {
-            if (!isExcluded(r)) {
-                const prev = isLocked(r);
-                setRowLocked(r, shouldLock);
-                try {
-                    await (shouldLock ? lockApi.lockOne(r?.id) : lockApi.unlockOne(r?.id));
-                } catch (e) {
-                    setRowLocked(r, prev);
-                    console.error(e);
-                }
+        const targetRows = (groupList || []).filter(r => !isExcluded(r));
+        const ids = targetRows.map(r => r?.id ?? r?.no).filter(Boolean);
+        if (ids.length === 0) return;
+
+        targetRows.forEach(r => setRowLocked(r, shouldLock));
+        try {
+            const payload = {
+                user: auth?.user?.userId || "",
+                projectnum,
+                column: "project_lock",
+                value: shouldLock ? "0" : "1",
+                ids
+            };
+            const res = await bulkUpdate?.mutateAsync(payload);
+            if (String(res?.success) !== '777') {
+                modal?.showErrorAlert?.("에러", res?.message || "수정 잠금 변경 중 오류가 발생했습니다.");
+                handleSearch?.();
             }
+        } catch (e) {
+            console.error(e);
+            modal?.showErrorAlert?.("에러", "수정 잠금 변경 중 오류가 발생했습니다.");
+            handleSearch?.();
         }
-    }, [blockWhenDirty, isExcluded, isLocked, lockApi, setRowLocked]);
+    }, [blockWhenDirty, isExcluded, setRowLocked, auth?.user?.userId, projectnum, bulkUpdate, modal, handleSearch]);
 
     const latestActionsRef = useRef({ sendMergeAll, bulkSetExcluded, bulkSetLock, blockWhenDirty, userPerm });
     latestActionsRef.current = { sendMergeAll, bulkSetExcluded, bulkSetLock, blockWhenDirty, userPerm };
@@ -2163,6 +2231,20 @@ const ProListGridRenderer = (props) => {
                         box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
                     }
                 }
+
+                .badge-diff-pulse {
+                    animation: badgeDiffPulse 2s ease-in-out infinite !important;
+                }
+                @keyframes badgeDiffPulse {
+                    0%, 100% {
+                        box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.35);
+                        border-color: #fecdd3;
+                    }
+                    50% {
+                        box-shadow: 0 0 0 4px rgba(225, 29, 72, 0);
+                        border-color: #f43f5e;
+                    }
+                }
             `}</style>
             <AiDataHeader
                 title="문항 목록"
@@ -2198,9 +2280,131 @@ const ProListGridRenderer = (props) => {
             </AiDataHeader>
 
             <div className="pro-list-content" style={{ paddingBottom: selectedRowIds.size > 0 ? '48px' : '20px', transition: 'padding-bottom 0.2s ease' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <GridDataCount total={filteredCount} />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', flexWrap: 'wrap', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                        {(() => {
+                            const parseStatsObj = (res) => {
+                                if (!res) return { cStats: {}, sStats: {} };
+                                let c = res.completed_stats;
+                                let s = res.summary;
+
+                                if (!c && res.resultjson) {
+                                    let rj = res.resultjson;
+                                    if (typeof rj === 'string') {
+                                        try { rj = JSON.parse(rj); } catch (e) { rj = null; }
+                                    }
+                                    if (rj && typeof rj === 'object' && !Array.isArray(rj)) {
+                                        c = rj.completed_stats || (rj.qm_completed !== undefined ? rj : null);
+                                        s = rj.summary || s;
+                                    }
+                                }
+
+                                if (!c && res.data) {
+                                    let d = res.data;
+                                    c = d.completed_stats || d.resultjson?.completed_stats;
+                                    s = d.summary || d.resultjson?.summary;
+                                }
+
+                                return { cStats: c || {}, sStats: s || {} };
+                            };
+
+                            const { cStats, sStats } = parseStatsObj(proListApiResponse);
+
+                            const qmCount = Number(cStats.qm_completed ?? cStats.survey_count ?? cStats.qm_count ?? 0);
+                            const surveyonCount = Number(cStats.surveyon_completed ?? cStats.surveyon_count ?? 0);
+                            const openRegisteredCount = Number(cStats.open_registered ?? cStats.open_registered_count ?? 0);
+                            const diffCount = Number(cStats.diff_count ?? 0);
+                            const hasDiff = cStats.has_diff ?? (diffCount > 0);
+
+                            const totalQuestions = Number(sStats.total_questions ?? sStats.total_qnum_count ?? (dataState?.data?.length || 0));
+                            const completedQuestions = Number(sStats.completed_questions ?? sStats.completed_qnum_count ?? 0);
+                            const progressPct = totalQuestions > 0 ? Math.round((completedQuestions / totalQuestions) * 100) : 0;
+
+                            return (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12.5px', flexWrap: 'wrap' }}>
+                                    {/* 총 완료자수 현황 */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <Users size={14} style={{ color: '#64748b' }} />
+                                        <span style={{ color: '#334155', fontWeight: 700 }}>총 완료자수</span>
+                                        <span style={{ color: '#475569' }}>큐마DB <b style={{ color: '#0f172a', fontWeight: 800 }}>{qmCount.toLocaleString()}명</b></span>
+                                        <span style={{ color: '#cbd5e1' }}>·</span>
+                                        <span style={{ color: '#475569' }}>설문온DB <b style={{ color: '#0f172a', fontWeight: 800 }}>{surveyonCount.toLocaleString()}명</b></span>
+                                        <span style={{ color: '#cbd5e1' }}>·</span>
+                                        <span style={{ color: '#475569' }}>오픈등록수 <b style={{ color: '#0f172a', fontWeight: 800 }}>{openRegisteredCount.toLocaleString()}명</b></span>
+
+                                        <button
+                                            type="button"
+                                            onClick={handleOpenPidDiffModal}
+                                            className={hasDiff ? "badge-diff-pulse" : ""}
+                                            style={hasDiff ? {
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                backgroundColor: '#fff1f2',
+                                                border: '1px solid #fecdd3',
+                                                color: '#e11d48',
+                                                fontSize: '11px',
+                                                fontWeight: 700,
+                                                padding: '2px 8px',
+                                                borderRadius: '12px',
+                                                cursor: 'pointer',
+                                                boxShadow: '0 1px 3px rgba(225, 29, 72, 0.12)',
+                                                marginLeft: '2px'
+                                            } : {
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                backgroundColor: '#f0fdf4',
+                                                border: '1px solid #bbf7d0',
+                                                color: '#15803d',
+                                                fontSize: '11px',
+                                                fontWeight: 700,
+                                                padding: '2px 8px',
+                                                borderRadius: '12px',
+                                                cursor: 'pointer',
+                                                boxShadow: '0 1px 2px rgba(21, 128, 61, 0.08)',
+                                                marginLeft: '2px'
+                                            }}
+                                            title="완료자 PID 비교분석 상세 모달 열기"
+                                        >
+                                            {hasDiff ? (
+                                                <>
+                                                    <AlertTriangle size={12} style={{ color: '#e11d48' }} />
+                                                    <span>차이</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Check size={11} strokeWidth={3} style={{ color: '#16a34a' }} />
+                                                    <span>일치</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+
+                                    <div style={{ width: '1px', height: '14px', backgroundColor: '#e2e8f0' }} />
+
+                                    {/* 총 문항수 */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        <List size={14} style={{ color: '#64748b' }} />
+                                        <span style={{ color: '#475569', fontWeight: 600 }}>총 문항수</span>
+                                        <b style={{ color: '#0f172a', fontWeight: 800 }}>{totalQuestions}개</b>
+                                    </div>
+
+                                    <div style={{ width: '1px', height: '14px', backgroundColor: '#e2e8f0' }} />
+
+                                    {/* 완료 문항수 및 프로그레스 바 */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <CheckCircle2 size={14} style={{ color: '#64748b' }} />
+                                        <span style={{ color: '#475569', fontWeight: 600 }}>완료 문항수</span>
+                                        <b style={{ color: '#0f172a', fontWeight: 800 }}>{completedQuestions} / {totalQuestions}개</b>
+                                        <div style={{ width: '60px', height: '6px', backgroundColor: '#f1f5f9', borderRadius: '3px', overflow: 'hidden', border: '1px solid #cbd5e1' }}>
+                                            <div style={{ width: `${progressPct}%`, backgroundColor: '#ea580c', height: '100%', borderRadius: '3px', transition: 'width 0.3s ease' }} />
+                                        </div>
+                                        <span style={{ color: '#64748b', fontSize: '11px', fontWeight: 600 }}>{progressPct}%</span>
+                                    </div>
+                                </div>
+                            );
+                        })()}
                     </div>
 
                     {/* 오른쪽 컨트롤: 토글 버튼 + 실시간 검색창 */}
@@ -2482,6 +2686,269 @@ const ProListGridRenderer = (props) => {
                 />
             )}
 
+            {/* 완료자 PID 비교분석 모달 */}
+            {showPidDiffModal && (() => {
+                const parsePidDiff = (res) => {
+                    if (!res) return {};
+                    let target = res;
+                    if (res.resultjson) {
+                        let rj = res.resultjson;
+                        if (typeof rj === 'string') {
+                            try { rj = JSON.parse(rj); } catch (e) { rj = null; }
+                        }
+                        if (rj && typeof rj === 'object' && !Array.isArray(rj)) {
+                            target = { ...res, ...rj };
+                        }
+                    }
+                    if (res.data) {
+                        let d = res.data;
+                        let rj = d.resultjson;
+                        if (typeof rj === 'string') {
+                            try { rj = JSON.parse(rj); } catch (e) { rj = null; }
+                        }
+                        if (rj && typeof rj === 'object' && !Array.isArray(rj)) {
+                            target = { ...res, ...d, ...rj };
+                        } else {
+                            target = { ...res, ...d };
+                        }
+                    }
+                    return target;
+                };
+
+                const dObj = parsePidDiff(pidDiffData);
+
+                const surveyCount = Number(dObj?.survey_count ?? dObj?.qm_completed ?? 0);
+                const surveyonCount = Number(dObj?.surveyon_count ?? dObj?.surveyon_completed ?? 0);
+                const openRegisteredCount = Number(dObj?.open_registered_count ?? dObj?.open_registered ?? 0);
+                const diffCount = Number(dObj?.diff_count ?? 0);
+
+                const unregisteredOpen = dObj?.unregistered_open || dObj?.diff_list || [];
+                const onlyInSurvey = dObj?.only_in_survey || [];
+                const onlyInSurveyon = dObj?.only_in_surveyon || [];
+                const onlyInOpen = dObj?.only_in_open || [];
+
+                const tabs = [
+                    { label: "오픈 미등록", list: unregisteredOpen, emptyMsg: "오픈 미등록 PID가 없습니다. (등록 완료)" },
+                    { label: "큐마DB 전용", list: onlyInSurvey, emptyMsg: "큐마DB 전용 PID가 없습니다. (설문온DB와 일치)" },
+                    { label: "설문온DB 전용", list: onlyInSurveyon, emptyMsg: "설문온DB 전용 PID가 없습니다." },
+                    { label: "오픈 전용", list: onlyInOpen, emptyMsg: "오픈 전용 PID가 없습니다." }
+                ];
+                const currentTab = tabs[pidDiffTab] || tabs[0];
+
+                return (
+                    <div
+                        style={{
+                            position: 'fixed',
+                            top: 0, left: 0, right: 0, bottom: 0,
+                            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                            zIndex: 999999,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '20px'
+                        }}
+                        onClick={() => setShowPidDiffModal(false)}
+                    >
+                        <div
+                            style={{
+                                backgroundColor: '#ffffff',
+                                borderRadius: '16px',
+                                width: '640px',
+                                maxWidth: '95vw',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.18)',
+                                overflow: 'hidden'
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* 모달 헤더 */}
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '18px 24px',
+                                borderBottom: '1px solid #f1f5f9'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div style={{
+                                        width: '32px',
+                                        height: '32px',
+                                        borderRadius: '50%',
+                                        backgroundColor: '#eff6ff',
+                                        border: '1px solid #bfdbfe',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: '#2563eb'
+                                    }}>
+                                        <Search size={16} strokeWidth={2.5} />
+                                    </div>
+                                    <div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>완료자 PID 비교분석</span>
+                                        </div>
+                                        <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>[{projectnum}]</span>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowPidDiffModal(false)}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '4px', borderRadius: '4px' }}
+                                    onMouseOver={e => e.currentTarget.style.color = '#0f172a'}
+                                    onMouseOut={e => e.currentTarget.style.color = '#94a3b8'}
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* 상단 완료자수 통계 요약 박스 */}
+                            <div style={{
+                                backgroundColor: '#f8fafc',
+                                border: '1px solid #f1f5f9',
+                                borderRadius: '10px',
+                                padding: '12px 18px',
+                                margin: '16px 24px 0 24px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                fontSize: '13px',
+                                color: '#334155'
+                            }}>
+                                <span>큐마DB 완료: <b style={{ color: '#0f172a', fontWeight: 800 }}>{surveyCount.toLocaleString()}명</b></span>
+                                <span style={{ color: '#cbd5e1' }}>|</span>
+                                <span>설문온DB 완료: <b style={{ color: '#0f172a', fontWeight: 800 }}>{surveyonCount.toLocaleString()}명</b></span>
+                                <span style={{ color: '#cbd5e1' }}>|</span>
+                                <span>오픈등록수: <b style={{ color: '#0f172a', fontWeight: 800 }}>{openRegisteredCount.toLocaleString()}명</b></span>
+                                <span style={{ color: '#cbd5e1' }}>|</span>
+                                <span>차이 건수: <b style={{ color: diffCount > 0 ? '#dc2626' : '#16a34a', fontWeight: 800 }}>{diffCount.toLocaleString()}건</b></span>
+                            </div>
+
+                            {/* 탭 바 */}
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                padding: '0 24px',
+                                marginTop: '16px',
+                                borderBottom: '1px solid #e2e8f0',
+                                gap: '20px'
+                            }}>
+                                {tabs.map((t, idx) => {
+                                    const isActive = pidDiffTab === idx;
+                                    return (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => setPidDiffTab(idx)}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                padding: '10px 4px',
+                                                fontSize: '13.5px',
+                                                fontWeight: isActive ? 700 : 500,
+                                                color: isActive ? '#ea580c' : '#64748b',
+                                                borderBottom: isActive ? '2.5px solid #ea580c' : '2.5px solid transparent',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.15s ease',
+                                                marginBottom: '-1px'
+                                            }}
+                                        >
+                                            {t.label} ({t.list.length})
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* 탭 내 콘텐츠 박스 */}
+                            <div style={{ padding: '20px 24px', flex: 1, minHeight: '200px', maxHeight: '300px', overflowY: 'auto' }}>
+                                {currentTab.list.length === 0 ? (
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        height: '160px',
+                                        color: '#94a3b8',
+                                        fontSize: '13.5px',
+                                        fontWeight: 500
+                                    }}>
+                                        {currentTab.emptyMsg}
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                            <span style={{ fontSize: '12.5px', color: '#64748b', fontWeight: 600 }}>
+                                                총 {currentTab.list.length}개의 PID 항목이 발견되었습니다.
+                                            </span>
+                                        </div>
+                                        <div style={{
+                                            display: 'flex',
+                                            flexWrap: 'wrap',
+                                            gap: '8px',
+                                            padding: '14px',
+                                            backgroundColor: '#f8fafc',
+                                            borderRadius: '8px',
+                                            border: '1px solid #f1f5f9',
+                                            maxHeight: '220px',
+                                            overflowY: 'auto'
+                                        }}>
+                                            {currentTab.list.map((pid, pIdx) => (
+                                                <span
+                                                    key={pIdx}
+                                                    style={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        padding: '4px 10px',
+                                                        backgroundColor: '#ffffff',
+                                                        border: '1px solid #e2e8f0',
+                                                        borderRadius: '6px',
+                                                        fontSize: '12px',
+                                                        fontFamily: 'monospace',
+                                                        fontWeight: 600,
+                                                        color: '#1e293b',
+                                                        boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+                                                    }}
+                                                >
+                                                    {pid}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* 모달 하단 푸터 */}
+                            <div style={{
+                                padding: '14px 24px',
+                                borderTop: '1px solid #f1f5f9',
+                                backgroundColor: '#ffffff',
+                                display: 'flex',
+                                justifyContent: 'flex-end'
+                            }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPidDiffModal(false)}
+                                    style={{
+                                        backgroundColor: '#ea580c',
+                                        color: '#ffffff',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        padding: '8px 24px',
+                                        fontSize: '13px',
+                                        fontWeight: 700,
+                                        cursor: 'pointer',
+                                        boxShadow: '0 2px 6px rgba(234, 88, 12, 0.3)',
+                                        transition: 'all 0.15s ease'
+                                    }}
+                                    onMouseOver={e => e.currentTarget.style.backgroundColor = '#c2410c'}
+                                    onMouseOut={e => e.currentTarget.style.backgroundColor = '#ea580c'}
+                                >
+                                    닫기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
+
             {/* 하단 마우스 오버 / 누름(Active) 절제된 미세 피드백 스타일 */}
             <style>{`
                 .bulk-dock-btn {
@@ -2494,6 +2961,11 @@ const ProListGridRenderer = (props) => {
                     transform: scale(0.98) !important;
                 }
 
+                .bulk-dock-btn-edit:not(:disabled):hover {
+                    background-color: #c2410c !important;
+                    color: #ffffff !important;
+                    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4) !important;
+                }
                 .bulk-dock-btn-analysis:hover {
                     background-color: #f0f9ff !important;
                     border-color: #0284c7 !important;
@@ -2564,7 +3036,7 @@ const ProListGridRenderer = (props) => {
                                     {/* ✏️ 문항 수정 (Primary Filled Accent) */}
                                     <button
                                         type="button"
-                                        className="bulk-dock-btn bulk-dock-btn-merge"
+                                        className="bulk-dock-btn bulk-dock-btn-edit"
                                         onClick={handleBatchEditQuestionFromBar}
                                         disabled={selectedRowIds.size < 1}
                                         style={{

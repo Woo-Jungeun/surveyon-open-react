@@ -6,6 +6,7 @@ import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { Button } from "@progress/kendo-react-buttons";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { ProListApi } from "./ProListApi.js";
+import { parseRows } from "./ProListUtils";
 import { process } from "@progress/kendo-data-query";
 
 /**
@@ -20,7 +21,7 @@ const ProListPopup = (parentProps) => {
 
   const auth = useSelector((store) => store.auth);
   const projectnum = sessionStorage.getItem("projectnum");
-  const { editMutation } = ProListApi();
+  const { editMutation, filterUpdateSingle, filterUpdateAll } = ProListApi();
   const modal = useContext(modalContext);
   const loadingSpinner = useContext(loadingSpinnerContext);
 
@@ -43,9 +44,7 @@ const ProListPopup = (parentProps) => {
     loadingSpinner.show();
     setIsDataLoaded(false);
     try {
-      const qnumVal = popupMode === "single"
-        ? (popupRow?.merge_qnum || "")
-        : (firstQnum || "");
+      const qnumVal = popupMode === "single" ? (popupRow?.merge_qnum || popupRow?.qnum || "") : "";
 
       const res = await editMutation.mutateAsync({
         user: auth?.user?.userId || "",
@@ -53,10 +52,11 @@ const ProListPopup = (parentProps) => {
         gb: "filter_select_qnum",
         qnum: qnumVal,
       });
-      if (String(res?.success) === '777' && res?.resultjson) {
-        setGridData(res.resultjson);
+      const rows = parseRows(res?.resultjson);
+      if (String(res?.success) === '777' && rows.length > 0) {
+        setGridData(rows);
         const newSelectedState = {};
-        res.resultjson.forEach(item => {
+        rows.forEach(item => {
           if (String(item.qnum_db).toLowerCase() === "true") {
             newSelectedState[item.qnum_id] = true;
           }
@@ -142,29 +142,21 @@ const ProListPopup = (parentProps) => {
   };
 
   const handleComplete = async () => {
-    // if (selectedItems.length === 0) {
-    //   modal.showErrorAlert("알림", "선택된 문항이 없습니다.");
-    //   return;
-    // }
-
-    const gb = popupMode === "single" ? "filter_update_single" : "filter_update_all";
+    const selectedVars = selectedItems.map(item => item.qnum_variable || item.qnum_id);
+    const selectedObjs = selectedItems.map(item => ({ qnum_variable: item.qnum_variable || item.qnum_id }));
 
     const payload = {
       user: auth?.user?.userId || "",
       projectnum,
-      gb: gb,
-      ...(popupMode === "single" && { qnum: popupRow?.merge_qnum || "" }),
-      data: selectedItems.map(item => ({
-        qnum_id: item.qnum_id,
-        qnum_question: item.qnum_question,
-        qnum_variable: item.qnum_variable,
-        qnum_type: item.qnum_type
-      }))
+      ...(popupMode === "single" && { qnum: popupRow?.merge_qnum || popupRow?.qnum || "" }),
+      data: { selected: selectedVars },
+      datajson: JSON.stringify(selectedObjs)
     };
 
     loadingSpinner.show();
     try {
-      const res = await editMutation.mutateAsync(payload);
+      const targetMutation = popupMode === "single" ? filterUpdateSingle : filterUpdateAll;
+      const res = await targetMutation.mutateAsync(payload);
       if (String(res?.success) === '777') {
         modal.showConfirm("알림", "필터 선택이 완료되었습니다.", {
           btns: [

@@ -98,7 +98,11 @@ const ProListBatchQuestionEditPopup = ({ show, onClose, selectedRows = [], onCon
 
     // 저장 확정
     const handleSave = () => {
-        onConfirm(editedMap);
+        const update_list = Object.keys(editedMap).map(id => ({
+            id: String(id),
+            question_fin: editedMap[id]
+        }));
+        onConfirm(update_list);
     };
 
     return (
