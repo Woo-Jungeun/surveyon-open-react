@@ -1396,7 +1396,7 @@ const ProList2GridRenderer = (props) => {
             return;
         }
 
-        modal.showConfirm("문항 삭제", `선택한 ${targetRows.length}개 문항을 삭제하시겠습니까?`, {
+        modal.showConfirm("문항 삭제", `선택한 ${targetRows.length}개 문항을 삭제하시겠습니까?\n\n※ 삭제 시 해당 문항의 기본 정보 및 이미 등록된 응답자 오픈 데이터가 영구히 삭제되며 복구할 수 없습니다.`, {
             btns: [
                 { title: "취소" },
                 {
