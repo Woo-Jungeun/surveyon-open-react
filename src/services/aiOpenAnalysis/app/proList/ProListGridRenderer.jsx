@@ -2530,16 +2530,16 @@ const ProListGridRenderer = (props) => {
                         className="floating-bulk-dock-container"
                         style={{
                             position: 'fixed',
-                            bottom: '32px',
+                            bottom: '48px',
                             left: '50%',
                             transform: 'translateX(-50%)',
                             zIndex: 100,
                             backgroundColor: '#ffffff',
-                            border: '2px solid #ea580c',
+                            border: '1.5px solid #ea580c',
                             color: '#0f172a',
-                            padding: '9px 18px',
-                            borderRadius: '16px',
-                            boxShadow: '0 12px 32px -4px rgba(234, 88, 12, 0.35), 0 4px 16px rgba(0, 0, 0, 0.08)',
+                            padding: '8px 18px',
+                            borderRadius: '20px',
+                            boxShadow: '0 16px 36px -4px rgba(234, 88, 12, 0.28), 0 4px 14px rgba(0, 0, 0, 0.06)',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '8px',
@@ -2550,14 +2550,82 @@ const ProListGridRenderer = (props) => {
                         }}
                     >
                         {/* 0. 선택 갯수 안내 */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '10px', borderRight: (canWrite || canManage) ? '1.5px solid #fed7aa' : 'none', height: '32px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '10px', borderRight: (canWrite || canManage) ? '1.5px solid #cbd5e1' : 'none', height: '32px' }}>
                             <span style={{ backgroundColor: '#ea580c', color: '#ffffff', borderRadius: '12px', padding: '3px 9px', fontSize: '12px', fontWeight: 800, boxShadow: '0 2px 6px rgba(234, 88, 12, 0.35)' }}>
                                 {selectedRowIds.size}
                             </span>
-                            <span style={{ color: '#ea580c', fontWeight: 800, fontSize: '13px', letterSpacing: '-0.3px' }}>개 선택됨</span>
+                            <span style={{ color: '#0f172a', fontWeight: 800, fontSize: '13px', letterSpacing: '-0.3px' }}>개 선택됨</span>
                         </div>
 
-                        {/* 1. ADMIN 그룹: 분석 지정 & 제외 지정 (WRITE 이상) */}
+                        {/* 1. 핵심 편집 그룹: 문항수정 & 문항통합 (MANAGE 이상) */}
+                        {canManage && (
+                            <>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    {/* ✏️ 문항 수정 (Primary Filled Accent) */}
+                                    <button
+                                        type="button"
+                                        className="bulk-dock-btn bulk-dock-btn-merge"
+                                        onClick={handleBatchEditQuestionFromBar}
+                                        disabled={selectedRowIds.size < 1}
+                                        style={{
+                                            height: '32px',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '6px',
+                                            backgroundColor: selectedRowIds.size >= 1 ? '#ea580c' : '#f1f5f9',
+                                            color: selectedRowIds.size >= 1 ? '#ffffff' : '#94a3b8',
+                                            border: selectedRowIds.size >= 1 ? 'none' : '1.5px solid #cbd5e1',
+                                            padding: '0 14px',
+                                            borderRadius: '10px',
+                                            fontSize: '12px',
+                                            fontWeight: 700,
+                                            cursor: selectedRowIds.size >= 1 ? 'pointer' : 'not-allowed',
+                                            boxShadow: selectedRowIds.size >= 1 ? '0 3px 10px rgba(234, 88, 12, 0.35)' : 'none',
+                                            boxSizing: 'border-box'
+                                        }}
+                                        title={selectedRowIds.size < 1 ? '수정할 문항을 선택해 주세요.' : '선택한 문항의 문항최종 일괄 수정'}
+                                    >
+                                        <Edit3 size={13} style={{ color: selectedRowIds.size >= 1 ? '#ffffff' : '#94a3b8' }} />
+                                        <span>문항 수정</span>
+                                    </button>
+
+                                    {/* 🔗 선택문항 통합 (Soft Warm Tint + Accent Border) */}
+                                    <button
+                                        type="button"
+                                        className="bulk-dock-btn bulk-dock-btn-merge"
+                                        onClick={handleMergeSelectedFromBar}
+                                        disabled={selectedRowIds.size < 2}
+                                        style={{
+                                            height: '32px',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '6px',
+                                            backgroundColor: selectedRowIds.size >= 2 ? '#fff7ed' : '#f1f5f9',
+                                            color: selectedRowIds.size >= 2 ? '#c2410c' : '#94a3b8',
+                                            border: selectedRowIds.size >= 2 ? '1.5px solid #fdba74' : '1.5px solid #cbd5e1',
+                                            padding: '0 14px',
+                                            borderRadius: '10px',
+                                            fontSize: '12px',
+                                            fontWeight: 700,
+                                            cursor: selectedRowIds.size >= 2 ? 'pointer' : 'not-allowed',
+                                            boxShadow: selectedRowIds.size >= 2 ? '0 2px 6px rgba(234, 88, 12, 0.12)' : 'none',
+                                            boxSizing: 'border-box'
+                                        }}
+                                        title={selectedRowIds.size < 2 ? '2개 이상의 문항을 선택하면 통합할 수 있습니다.' : '선택한 문항들을 하나의 그룹으로 통합'}
+                                    >
+                                        <Link size={13} style={{ color: selectedRowIds.size >= 2 ? '#ea580c' : '#94a3b8' }} />
+                                        <span>선택문항 통합</span>
+                                    </button>
+                                </div>
+
+                                {/* 구분 세로선 1 */}
+                                <div style={{ width: '1px', height: '16px', backgroundColor: '#cbd5e1', margin: '0 3px' }} />
+                            </>
+                        )}
+
+                        {/* 2. 상태 지정 그룹: 분석 지정 & 제외 지정 (WRITE 이상) */}
                         {canWrite && (
                             <>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -2573,10 +2641,10 @@ const ProListGridRenderer = (props) => {
                                             justifyContent: 'center',
                                             gap: '5px',
                                             backgroundColor: '#f0f9ff',
-                                            border: '1.5px solid #0284c7',
+                                            border: '1.5px solid #38bdf8',
                                             color: '#0284c7',
-                                            padding: '0 12px',
-                                            borderRadius: '8px',
+                                            padding: '0 13px',
+                                            borderRadius: '10px',
                                             fontSize: '12px',
                                             fontWeight: 700,
                                             cursor: 'pointer',
@@ -2603,10 +2671,10 @@ const ProListGridRenderer = (props) => {
                                             justifyContent: 'center',
                                             gap: '5px',
                                             backgroundColor: '#fef2f2',
-                                            border: '1.5px solid #dc2626',
+                                            border: '1.5px solid #fca5a5',
                                             color: '#dc2626',
-                                            padding: '0 12px',
-                                            borderRadius: '8px',
+                                            padding: '0 13px',
+                                            borderRadius: '10px',
                                             fontSize: '12px',
                                             fontWeight: 700,
                                             cursor: 'pointer',
@@ -2622,82 +2690,16 @@ const ProListGridRenderer = (props) => {
                                     </button>
                                 </div>
 
-                                {/* 구분 세로선 1 */}
-                                <div style={{ width: '1px', height: '18px', backgroundColor: '#fed7aa', margin: '0 3px' }} />
-                            </>
-                        )}
-
-                        {/* 2. 문항통합 & 문항수정 그룹 (MANAGE 이상) */}
-                        {canManage && (
-                            <>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <button
-                                        type="button"
-                                        className="bulk-dock-btn bulk-dock-btn-merge"
-                                        onClick={handleMergeSelectedFromBar}
-                                        disabled={selectedRowIds.size < 2}
-                                        style={{
-                                            height: '32px',
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '6px',
-                                            backgroundColor: selectedRowIds.size >= 2 ? '#fff7ed' : '#f8fafc',
-                                            color: selectedRowIds.size >= 2 ? '#ea580c' : '#94a3b8',
-                                            border: selectedRowIds.size >= 2 ? '2px solid #ea580c' : '1px solid #cbd5e1',
-                                            padding: '0 14px',
-                                            borderRadius: '8px',
-                                            fontSize: '12px',
-                                            fontWeight: 700,
-                                            cursor: selectedRowIds.size >= 2 ? 'pointer' : 'not-allowed',
-                                            boxShadow: selectedRowIds.size >= 2 ? '0 2px 8px rgba(234, 88, 12, 0.25)' : 'none',
-                                            boxSizing: 'border-box'
-                                        }}
-                                        title={selectedRowIds.size < 2 ? '2개 이상의 문항을 선택하면 통합(묶기)할 수 있습니다.' : '선택한 문항들을 하나의 그룹으로 통합(묶기)'}
-                                    >
-                                        <Link size={13} style={{ color: selectedRowIds.size >= 2 ? '#ea580c' : '#94a3b8' }} />
-                                        <span>선택문항 통합 (묶기)</span>
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        className="bulk-dock-btn bulk-dock-btn-merge"
-                                        onClick={handleBatchEditQuestionFromBar}
-                                        disabled={selectedRowIds.size < 1}
-                                        style={{
-                                            height: '32px',
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '6px',
-                                            backgroundColor: selectedRowIds.size >= 1 ? '#ffffff' : '#f8fafc',
-                                            color: selectedRowIds.size >= 1 ? '#ea580c' : '#94a3b8',
-                                            border: selectedRowIds.size >= 1 ? '1.5px solid #ea580c' : '1px solid #cbd5e1',
-                                            padding: '0 13px',
-                                            borderRadius: '8px',
-                                            fontSize: '12px',
-                                            fontWeight: 700,
-                                            cursor: selectedRowIds.size >= 1 ? 'pointer' : 'not-allowed',
-                                            boxShadow: selectedRowIds.size >= 1 ? '0 2px 8px rgba(234, 88, 12, 0.15)' : 'none',
-                                            boxSizing: 'border-box'
-                                        }}
-                                        title={selectedRowIds.size < 1 ? '수정할 문항을 선택해 주세요.' : '선택한 문항의 문항최종 일괄 수정'}
-                                    >
-                                        <Edit3 size={13} style={{ color: selectedRowIds.size >= 1 ? '#ea580c' : '#94a3b8' }} />
-                                        <span>문항 수정</span>
-                                    </button>
-                                </div>
-
                                 {/* 구분 세로선 2 */}
-                                <div style={{ width: '1px', height: '18px', backgroundColor: '#fed7aa', margin: '0 3px' }} />
+                                <div style={{ width: '1px', height: '16px', backgroundColor: '#cbd5e1', margin: '0 3px' }} />
                             </>
                         )}
 
-                        {/* 3. 수정 그룹: 잠금 & 해제 (MANAGE 이상) */}
+                        {/* 3. 유틸리티 그룹: 잠금 & 해제 (MANAGE 이상) */}
                         {canManage && (
                             <>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    {/* 🔒 일괄 잠금 */}
+                                    {/* 🔒 잠금 */}
                                     <button
                                         type="button"
                                         className="bulk-dock-btn bulk-dock-btn-lock"
@@ -2708,13 +2710,13 @@ const ProListGridRenderer = (props) => {
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             gap: '5px',
-                                            backgroundColor: '#ffffff',
-                                            border: '1.5px solid #475569',
-                                            color: '#334155',
-                                            padding: '0 11px',
-                                            borderRadius: '8px',
+                                            backgroundColor: '#f8fafc',
+                                            border: '1.5px solid #94a3b8',
+                                            color: '#1e293b',
+                                            padding: '0 12px',
+                                            borderRadius: '10px',
                                             fontSize: '12px',
-                                            fontWeight: 600,
+                                            fontWeight: 700,
                                             cursor: 'pointer',
                                             boxSizing: 'border-box'
                                         }}
@@ -2727,7 +2729,7 @@ const ProListGridRenderer = (props) => {
                                         <span>잠금</span>
                                     </button>
 
-                                    {/* 🔓 일괄 잠금 해제 */}
+                                    {/* 🔓 해제 */}
                                     <button
                                         type="button"
                                         className="bulk-dock-btn bulk-dock-btn-lock"
@@ -2738,13 +2740,13 @@ const ProListGridRenderer = (props) => {
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             gap: '5px',
-                                            backgroundColor: '#ffffff',
-                                            border: '1.5px solid #475569',
-                                            color: '#334155',
-                                            padding: '0 11px',
-                                            borderRadius: '8px',
+                                            backgroundColor: '#f8fafc',
+                                            border: '1.5px solid #94a3b8',
+                                            color: '#1e293b',
+                                            padding: '0 12px',
+                                            borderRadius: '10px',
                                             fontSize: '12px',
-                                            fontWeight: 600,
+                                            fontWeight: 700,
                                             cursor: 'pointer',
                                             boxSizing: 'border-box'
                                         }}
@@ -2759,11 +2761,11 @@ const ProListGridRenderer = (props) => {
                                 </div>
 
                                 {/* 구분 세로선 3 */}
-                                <div style={{ width: '1px', height: '18px', backgroundColor: '#fed7aa', margin: '0 3px' }} />
+                                <div style={{ width: '1px', height: '16px', backgroundColor: '#cbd5e1', margin: '0 3px' }} />
                             </>
                         )}
 
-                        {/* 4. 일괄 삭제 (MANAGE 이상) */}
+                        {/* 4. 위험 그룹: 삭제 (MANAGE 이상) */}
                         {canManage && (
                             <>
                                 <button
@@ -2777,12 +2779,12 @@ const ProListGridRenderer = (props) => {
                                         justifyContent: 'center',
                                         gap: '5px',
                                         backgroundColor: '#fff1f2',
-                                        border: '1.5px solid #f43f5e',
+                                        border: '1.5px solid #fda4af',
                                         color: '#e11d48',
-                                        padding: '0 11px',
-                                        borderRadius: '8px',
+                                        padding: '0 12px',
+                                        borderRadius: '10px',
                                         fontSize: '12px',
-                                        fontWeight: 600,
+                                        fontWeight: 700,
                                         cursor: 'pointer',
                                         boxSizing: 'border-box'
                                     }}
@@ -2793,11 +2795,11 @@ const ProListGridRenderer = (props) => {
                                 </button>
 
                                 {/* 구분 세로선 4 */}
-                                <div style={{ width: '1px', height: '18px', backgroundColor: '#fed7aa', margin: '0 1px 0 3px' }} />
+                                <div style={{ width: '1px', height: '16px', backgroundColor: '#cbd5e1', margin: '0 3px' }} />
                             </>
                         )}
 
-                        {/* 5. 선택 해제 */}
+                        {/* 5. 선택 해제 / 닫기 */}
                         <button
                             type="button"
                             className="bulk-dock-btn bulk-dock-btn-close"
@@ -2806,8 +2808,8 @@ const ProListGridRenderer = (props) => {
                                 height: '32px',
                                 width: '32px',
                                 background: '#f1f5f9',
-                                border: '1px solid #cbd5e1',
-                                color: '#475569',
+                                border: '1.5px solid #94a3b8',
+                                color: '#0f172a',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
