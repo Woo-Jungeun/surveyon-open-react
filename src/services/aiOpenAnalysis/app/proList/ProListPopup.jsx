@@ -21,7 +21,7 @@ const ProListPopup = (parentProps) => {
 
   const auth = useSelector((store) => store.auth);
   const projectnum = sessionStorage.getItem("projectnum");
-  const { editMutation, filterUpdateSingle, filterUpdateAll } = ProListApi();
+  const { fetchFilterQnums, filterUpdateSingle, filterUpdateAll } = ProListApi();
   const modal = useContext(modalContext);
   const loadingSpinner = useContext(loadingSpinnerContext);
 
@@ -46,18 +46,26 @@ const ProListPopup = (parentProps) => {
     try {
       const qnumVal = popupMode === "single" ? (popupRow?.merge_qnum || popupRow?.qnum || "") : "";
 
-      const res = await editMutation.mutateAsync({
+      const res = await fetchFilterQnums.mutateAsync({
         user: auth?.user?.userId || "",
         projectnum,
-        gb: "filter_select_qnum",
         qnum: qnumVal,
       });
-      const rows = parseRows(res?.resultjson);
-      if (String(res?.success) === '777' && rows.length > 0) {
-        setGridData(rows);
+
+      const rawRows = parseRows(res?.resultjson ?? res?.data?.resultjson ?? res?.data ?? res);
+      const rows = Array.isArray(rawRows) ? rawRows : [];
+
+      if (String(res?.success) === '777' || rows.length > 0) {
+        const mappedRows = rows.map(item => ({
+          ...item,
+          qnum_id: item.qnum_id || item.qnum_variable,
+          qnum_question: item.qnum_question || item.qnum_text || item.qnum_variable || ""
+        }));
+        setGridData(mappedRows);
+
         const newSelectedState = {};
-        rows.forEach(item => {
-          if (String(item.qnum_db).toLowerCase() === "true") {
+        mappedRows.forEach(item => {
+          if (String(item.qnum_db).toLowerCase() === "true" || item.qnum_db === true) {
             newSelectedState[item.qnum_id] = true;
           }
         });
