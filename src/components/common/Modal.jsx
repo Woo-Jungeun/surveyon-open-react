@@ -66,7 +66,7 @@ function ModalProvider(props) {
             width: 400,
             visibleOn: options?.visibleOn ?? null,
             autoCloseOnRouteChange: options?.autoCloseOnRouteChange ?? true,
-            zIndex: options?.zIndex ?? undefined,
+            zIndex: options?.zIndex ?? 10000000,
             themeClass: options?.themeClass ?? undefined
         }));
     }
@@ -93,7 +93,7 @@ function ModalProvider(props) {
             code: status,
             visibleOn: options?.visibleOn ?? null,
             autoCloseOnRouteChange: options?.autoCloseOnRouteChange ?? true,
-            zIndex: options?.zIndex ?? undefined,
+            zIndex: options?.zIndex ?? 10000000,
             themeClass: options?.themeClass ?? undefined
         }));
     }
@@ -147,7 +147,7 @@ function ModalProvider(props) {
             width: 400,
             visibleOn: options?.visibleOn ?? null,
             autoCloseOnRouteChange: options?.autoCloseOnRouteChange ?? true,
-            zIndex: options?.zIndex ?? undefined,
+            zIndex: options?.zIndex ?? 10000000,
             themeClass: options?.themeClass ?? undefined
         }));
     }
@@ -187,7 +187,7 @@ function ModalProvider(props) {
                 width: 400,
                 visibleOn: options?.visibleOn ?? null,
                 autoCloseOnRouteChange: options?.autoCloseOnRouteChange ?? true,
-                zIndex: options?.zIndex ?? undefined,
+                zIndex: options?.zIndex ?? 10000000,
                 themeClass: options?.themeClass ?? undefined
             }));
         else
@@ -202,7 +202,7 @@ function ModalProvider(props) {
                 width: 400,
                 visibleOn: options?.visibleOn ?? null,
                 autoCloseOnRouteChange: options?.autoCloseOnRouteChange ?? true,
-                zIndex: options?.zIndex ?? undefined,
+                zIndex: options?.zIndex ?? 10000000,
                 themeClass: options?.themeClass ?? undefined
             }));
     }
@@ -226,7 +226,7 @@ function ModalProvider(props) {
             width: 400,
             visibleOn: options.visibleOn ?? btnOptions.visibleOn ?? null,
             autoCloseOnRouteChange: options.autoCloseOnRouteChange ?? btnOptions.autoCloseOnRouteChange ?? true,
-            zIndex: options.zIndex ?? btnOptions.zIndex ?? undefined,
+            zIndex: options.zIndex ?? btnOptions.zIndex ?? 10000000,
             themeClass: options.themeClass ?? btnOptions.themeClass ?? undefined
         }));
     }
