@@ -8,10 +8,10 @@ import ProRegisterGrid from "./ProRegisterGrid.jsx";
 import { ProRegisterApi } from "./ProRegisterApi.js";
 
 /**
- * 문항 등록 > DB
+ * 문항 등록 > DB (Tab 1)
  *
  * @author jewoo
- * @since 2025-09-29<br />
+ * @since 2026-09-18
  */
 const ProRegisterTab1 = (props) => {
     const auth = useSelector((store) => store.auth);
@@ -19,11 +19,15 @@ const ProRegisterTab1 = (props) => {
     const navigate = useNavigate();
     const projectnum = sessionStorage.getItem("projectnum");
     const projectname = sessionStorage.getItem("projectname");
-    const { proRegisterMutation } = ProRegisterApi();
+    const pof = sessionStorage.getItem("pof") || sessionStorage.getItem("projectpof") || "";
+    const server = sessionStorage.getItem("servername") || "rps";
+
+    const { enterRegisterDb } = ProRegisterApi();
 
     const [loading, setLoading] = useState(false);
     const [gridData, setGridData] = useState([]);
     const [hasData, setHasData] = useState(true);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (loading) return;
@@ -32,18 +36,19 @@ const ProRegisterTab1 = (props) => {
             setLoading(true);
 
             const payload = {
-                params: {
-                    gb: "db_enter",
-                    user: auth?.user?.userId || "",
-                    projectnum
-                }
+                projectnum: projectnum || "",
+                server: server || "rps",
+                pof: pof || "",
+                proname: projectname || "",
+                user: auth?.user?.userId || ""
             };
-
-            const res = await proRegisterMutation.mutateAsync(payload);
+            const res = await enterRegisterDb.mutateAsync(payload);
             if (String(res?.success) === '777') {
-                modal.showConfirm("알림", "문항이 등록되었습니다.", {
+                const msg = res?.resultjson?.message || res?.message || "오픈데이터가 성공적으로 등록되었습니다.";
+                modal.showConfirm("알림", msg, {
                     btns: [{
-                        title: "확인", click: () => {
+                        title: "확인",
+                        click: () => {
                             if (props.onSuccess) {
                                 props.onSuccess();
                             } else {
@@ -53,9 +58,10 @@ const ProRegisterTab1 = (props) => {
                     }],
                 });
             } else {
-                modal.showErrorAlert("에러", "등록 중 오류가 발생했습니다.");
+                modal.showErrorAlert("에러", res?.message || "등록 중 오류가 발생했습니다.");
             }
         } catch (err) {
+            console.error(err);
             modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다.");
         } finally {
             setLoading(false);
@@ -68,12 +74,12 @@ const ProRegisterTab1 = (props) => {
                 <ProRegisterGrid data={gridData} setData={setGridData} onDataLength={(cnt) => setHasData(cnt > 0)} />
             </div>
 
-            {/* 폼 영역: 고정 높이 (내용만큼) */}
+            {/* 폼 영역: 고정 높이 */}
             <div style={{ flex: "0 0 auto" }}>
                 <form onSubmit={handleSubmit}>
                     <div className="pro-register-form-wrap" style={{
                         maxWidth: "800px",
-                        margin: "0 auto", // 중앙 정렬
+                        margin: "0 auto",
                         border: "1px solid #bbb",
                         borderRadius: "8px",
                         padding: "24px",
@@ -149,4 +155,5 @@ const ProRegisterTab1 = (props) => {
         </div>
     );
 };
+
 export default ProRegisterTab1;

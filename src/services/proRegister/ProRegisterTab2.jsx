@@ -7,25 +7,25 @@ import { Input } from "@progress/kendo-react-inputs";
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import ProRegisterPopup from "./ProRegisterPopup";
 import { ProRegisterApi } from "./ProRegisterApi.js";
-import { getExcelGuideHTML } from "./ExcelGuideHTML.js";
 import "@/services/aiOpenAnalysis/app/proList/ProRegisterPopup.css";
 import moment from "moment";
 import * as XLSX from "xlsx";
 
 /**
- * 문항 등록 > Excel
+ * 문항 등록 > Excel (Tab 2)
  *
  * @author jewoo
- * @since 2025-10-15<br />
+ * @since 2026-09-18
  */
 const ProRegisterTab2 = (props) => {
   const auth = useSelector((store) => store.auth);
   const modal = useContext(modalContext);
   const navigate = useNavigate();
-  const { proRegisterMutation, sampleDownloadData } = ProRegisterApi();
+  const { getExcelSample, parseExcelRegister, enterExcelRegister } = ProRegisterApi();
 
   const projectnum = sessionStorage.getItem("projectnum");
   const projectname = sessionStorage.getItem("projectname");
+  const projectpof = sessionStorage.getItem("pof") || sessionStorage.getItem("projectpof") || "";
 
   const [analysisModel, setAnalysisModel] = useState("설문온");
   const [file, setFile] = useState(null);
@@ -37,9 +37,9 @@ const ProRegisterTab2 = (props) => {
   const [selectData, setSelectData] = useState([]);
   const fileInputRef = useRef(null);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const f = e.target.files?.[0];
-    setSelectData([]); // 파일 변경 시 선택된 문항 초기화
+    setSelectData([]);
     if (!f) {
       setFile(null);
       setIdList([]);
@@ -49,8 +49,33 @@ const ProRegisterTab2 = (props) => {
     }
 
     setFile(f);
-    const reader = new FileReader();
 
+    // [1] FILE /pro_register/excel_parse API 호출 시도
+    try {
+      const formData = new FormData();
+      formData.append("file", f);
+      const parseRes = await parseExcelRegister.mutateAsync(formData);
+
+      const parsedJson = parseRes?.resultjson || parseRes?.data?.resultjson || parseRes?.data || parseRes;
+      if (String(parseRes?.success) === '777' && parsedJson?.columns) {
+        const cols = parsedJson.columns || [];
+        const mappedData = cols.map(c => ({
+          question: c.qnum_text || c.question || c.qnum,
+          column: c.qnum || c.column
+        }));
+        setPopupData(mappedData);
+
+        const detectedIdCol = parsedJson.id_column || "pid";
+        setIdList([detectedIdCol, ...cols.map(c => c.qnum)]);
+        setIdColumn(detectedIdCol);
+        return;
+      }
+    } catch (e) {
+      console.warn("Server excel_parse warning, fallback to client-side XLSX parse:", e);
+    }
+
+    // [2] Client-side XLSX parse fallback
+    const reader = new FileReader();
     reader.onload = (evt) => {
       try {
         const data = new Uint8Array(evt.target.result);
@@ -101,13 +126,7 @@ const ProRegisterTab2 = (props) => {
 
   const handleSampleClick = useCallback(async () => {
     try {
-      const payload = {
-        gb: "excel_sample",
-        user: auth?.user?.userId || "",
-        projectnum
-      };
-
-      const res = await sampleDownloadData.mutateAsync(payload);
+      const res = await getExcelSample.mutateAsync();
       const blob = res?.data instanceof Blob ? res.data : (res instanceof Blob ? res : null);
 
       if (!blob) {
@@ -115,49 +134,64 @@ const ProRegisterTab2 = (props) => {
         return;
       }
 
-      if (blob.type?.includes("application/json")) {
-        modal.showErrorAlert("에러", "샘플 다운로드 요청이 거부되었습니다.");
-        return;
-      }
-
       saveBlobWithName(blob, `문항 등록 엑셀_샘플_` + moment().format("YYYYMMDDHHmmss") + `.xlsx`);
     } catch (err) {
+      console.error(err);
       modal.showErrorAlert("에러", "샘플 다운로드 중 오류가 발생했습니다.");
     }
-  }, []);
+  }, [getExcelSample, modal]);
 
   const buildJsonData = (workbook, selectData) => {
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-    const questionRow = json[0];
-    const headers = json[1];
+    if (!json || json.length < 2) return [];
+
+    const questionRow = json[0] || [];
+    const headers = json[1] || [];
     const rows = json.slice(2);
 
-    // idColumn은 첫 번째 행(questionRow)에서 선택되므로 거기서 인덱스를 찾아야 함
-    const idIndex = questionRow.indexOf(idColumn);
+    const normStr = (s) => String(s ?? "").trim().toLowerCase();
+    const targetId = normStr(idColumn);
+
+    let idIndex = questionRow.findIndex(cell => normStr(cell) === targetId);
+    if (idIndex === -1) {
+      idIndex = headers.findIndex(cell => normStr(cell) === targetId);
+    }
+    if (idIndex === -1) {
+      idIndex = 0; // Fallback
+    }
 
     const result = [];
 
     selectData.forEach((sel) => {
       const qnum = sel.column;
       const qnumText = sel.question;
-      const colIndex = headers.indexOf(qnum);
+      const targetCol = normStr(qnum);
+      const targetQText = normStr(qnumText);
+
+      let colIndex = headers.findIndex(cell => normStr(cell) === targetCol);
+      if (colIndex === -1) {
+        colIndex = questionRow.findIndex(cell => normStr(cell) === targetCol);
+      }
+      if (colIndex === -1 && targetQText) {
+        colIndex = questionRow.findIndex(cell => normStr(cell) === targetQText);
+      }
 
       if (colIndex === -1) return;
+
       rows.forEach((row) => {
         const pid = row[idIndex];
         let answer = row[colIndex];
         if (answer === undefined || answer === null) {
           answer = "";
         }
-        if (pid != null) {
+        if (pid != null && String(pid).trim() !== "") {
           result.push({
-            pid,
+            pid: String(pid).trim(),
             qnum,
             qnum_text: qnumText,
             answer: typeof answer === "string" ? answer : String(answer),
-            contents: "",
           });
         }
       });
@@ -188,74 +222,55 @@ const ProRegisterTab2 = (props) => {
 
     try {
       setLoading(true);
-      const reader = new FileReader();
-      reader.onload = async (evt) => {
-        const data = new Uint8Array(evt.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const jsonData = buildJsonData(workbook, selectData);
 
-        if (jsonData.length === 0) {
-          modal.showErrorAlert(
-            "알림",
-            "엑셀에 등록할 응답 데이터가 없거나, \n엑셀 형식이 가이드와 일치하지 않습니다."
-          );
-          return;
-        }
-        const cleanModel = analysisModel.replace(/\(.*\)/g, "").trim();
+      const buffer = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (evt) => resolve(evt.target.result);
+        reader.onerror = (err) => reject(err);
+        reader.readAsArrayBuffer(file);
+      });
 
-        const payload = {
-          params: {
-            gb: "excel_enter",
-            user: auth?.user?.userId || "",
-            projectnum,
-            data: jsonData,
-            model: cleanModel
-          },
-        };
-        const res = await proRegisterMutation.mutateAsync(payload);
-        if (String(res?.success) === '777') {
-          modal.showConfirm("알림", "문항이 등록되었습니다.", {
-            btns: [{
-              title: "확인", click: () => {
-                if (props.onSuccess) {
-                  props.onSuccess();
-                } else {
-                  navigate("/ai_open_analysis/pro_list");
-                }
-              }
-            }],
-          });
-        } else if (String(res?.success) === '768' || String(res?.success) === '769') {
-          let dupJson = res?.resultjson || {};
+      const data = new Uint8Array(buffer);
+      const workbook = XLSX.read(data, { type: "array" });
+      const jsonData = buildJsonData(workbook, selectData);
 
-          try {
-            if (typeof dupJson === "string") {
-              dupJson = JSON.parse(dupJson);
-            }
-          } catch (err) {
-            console.error("dupJson parse error:", err);
-            dupJson = {};
-          }
+      if (jsonData.length === 0) {
+        modal.showErrorAlert(
+          "알림",
+          "엑셀에 등록할 응답 데이터가 없거나, \n엑셀 형식이 가이드와 일치하지 않습니다."
+        );
+        return;
+      }
+      const cleanModel = analysisModel.replace(/\(.*\)/g, "").trim();
 
-          const isIdDup = String(res?.success) === '769';
-          const dupList = Object.entries(dupJson || {})
-            .map(([k, v]) => {
-              if (Array.isArray(v)) return `${k}: ${v.join(", ")}`;
-              return `${k}: ${v}`;
-            })
-            .join("\n");
-
-          modal.showErrorAlert(
-            "에러",
-            `${isIdDup ? "중복된 아이디가 발견되었습니다." : "중복된 문항이 발견되었습니다."}\n\n${dupList || "(중복 항목 없음)"}`
-          );
-        }
-        else {
-          modal.showErrorAlert("에러", "등록 중 오류가 발생했습니다.");
-        }
+      const payload = {
+        projectnum: projectnum || "",
+        projectname: projectname || "",
+        projectpof: projectpof || "",
+        model: cleanModel || "설문온",
+        user: auth?.user?.userId || "",
+        data: jsonData
       };
-      reader.readAsArrayBuffer(file);
+
+      const res = await enterExcelRegister.mutateAsync(payload);
+      if (String(res?.success) === '777') {
+        const msg = res?.resultjson?.message || res?.message || "엑셀 데이터가 성공적으로 등록되었습니다.";
+        modal.showConfirm("알림", msg, {
+          btns: [{
+            title: "확인", click: () => {
+              if (props.onSuccess) {
+                props.onSuccess();
+              } else {
+                navigate("/ai_open_analysis/pro_list");
+              }
+            }
+          }],
+        });
+      } else {
+        modal.showErrorAlert("에러", res?.message || "등록 중 오류가 발생했습니다.");
+      }
     } catch (err) {
+      console.error(err);
       modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다.");
     } finally {
       setLoading(false);

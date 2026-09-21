@@ -53,7 +53,7 @@ export function ProListApi() {
 
     // [B-샘플] 엑셀 업로드 샘플 파일 다운로드 (GET /pro_register/excel_sample)
     const getExcelSample = useMutation(
-        async () => await api.get({}, "/pro_register/excel_sample", "API_BASE_URL_OPENAI")
+        async () => await api.fileGet("/pro_register/excel_sample", {}, "API_BASE_URL_OPENAI")
     );
 
     // [B-12] 엑셀 파일 파싱 (FILE /pro_register/excel_parse)
