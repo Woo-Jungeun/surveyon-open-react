@@ -43,7 +43,8 @@ const ProRegisterTab1 = (props) => {
                 user: auth?.user?.userId || ""
             };
             const res = await enterRegisterDb.mutateAsync(payload);
-            if (String(res?.success) === '777') {
+            const isSuccess = String(res?.success) === '200' || String(res?.success) === '777';
+            if (isSuccess) {
                 const msg = res?.resultjson?.message || res?.message || "오픈데이터가 성공적으로 등록되었습니다.";
                 modal.showConfirm("알림", msg, {
                     btns: [{
@@ -58,7 +59,8 @@ const ProRegisterTab1 = (props) => {
                     }],
                 });
             } else {
-                modal.showErrorAlert("에러", res?.message || "등록 중 오류가 발생했습니다.");
+                const errorMsg = res?.resultjson?.message || res?.message || "등록 중 오류가 발생했습니다.";
+                modal.showErrorAlert("알림", errorMsg);
             }
         } catch (err) {
             console.error(err);

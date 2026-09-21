@@ -40,9 +40,9 @@ export function ProRegisterApi() {
         }
     );
 
-    // [3] 엑셀 업로드용 표준 템플릿 파일 다운로드 (GET /pro_register/excel_sample)
+    // [3] 엑셀 업로드용 표준 템플릿 파일 다운로드 (POST /pro_register/excel_sample)
     const getExcelSample = useMutation(
-        async () => await api.fileGet("/pro_register/excel_sample", {}, "API_BASE_URL_OPENAI")
+        async (payload) => await api.file(payload || {}, "/pro_register/excel_sample", "API_BASE_URL_OPENAI")
     );
 
     // [4] 엑셀 파일 업로드 및 컬럼/문항 파싱 (FILE /pro_register/excel_parse)
