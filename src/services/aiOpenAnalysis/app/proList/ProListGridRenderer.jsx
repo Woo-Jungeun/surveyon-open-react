@@ -1403,7 +1403,17 @@ const ProListGridRenderer = (props) => {
                     title: "삭제",
                     click: async () => {
                         try {
-                            const ids = targetRows.map(r => r.id ?? r.no);
+                            const ids = [];
+                            targetRows.forEach(r => {
+                                const list = (r.__isGroupMaster && r.__groupList) ? r.__groupList : [r];
+                                list.forEach(item => {
+                                    const idVal = item.id ?? item.no;
+                                    if (idVal != null && !ids.includes(idVal)) {
+                                        ids.push(idVal);
+                                    }
+                                });
+                            });
+
                             const payload = {
                                 user: auth?.user?.userId || "",
                                 projectnum,
