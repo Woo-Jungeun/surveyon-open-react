@@ -22,6 +22,8 @@ export const GROUP_MIN_PERM = {
     VIEW: PERM.READ,
     ADMIN: PERM.WRITE,
     EDIT: PERM.MANAGE,
+    관리: PERM.WRITE,
+    설정: PERM.MANAGE,
 };
 
 export const FIELD_MIN_PERM = {
@@ -40,7 +42,7 @@ export const natKey = (v) => {
 };
 
 // 정렬용 프록시를 붙일 대상 필드
-export const NAT_FIELDS = ["status_cnt", "status_cnt_duplicated", "status_cnt_fin", "tokens_text"];
+export const NAT_FIELDS = ["status_cnt", "status_cnt_total", "status_cnt_target_fin", "status_cnt_duplicated", "status_cnt_fin", "tokens_text"];
 
 // API resultjson 파싱 헬퍼 (JSON 문자열/객체/배열 안전 변환)
 export const parseRows = (raw) => {
