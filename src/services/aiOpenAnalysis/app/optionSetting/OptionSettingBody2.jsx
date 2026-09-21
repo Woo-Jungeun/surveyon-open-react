@@ -119,11 +119,11 @@ const OptionSettingBody2 = () => {
 
   const navigate = useNavigate();
 
-  // 문항 번호(qnum)가 없으면 문항 목록2로 튕겨냄
+  // 문항 번호(qnum)가 없으면 문항 목록으로 튕겨냄
   useEffect(() => {
     if (!qnum) {
       modal.showAlert("알림", "분석할 문항을 먼저 선택해 주세요.");
-      navigate("/ai_open_analysis/pro_list_2");
+      navigate("/ai_open_analysis/pro_list");
     }
   }, [qnum, navigate, modal]);
 
