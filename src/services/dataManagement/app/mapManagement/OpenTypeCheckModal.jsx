@@ -128,7 +128,7 @@ const OpenTypeCheckModal = ({ isOpen, onClose, refreshData }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="variable-modal-overlay" style={{ zIndex: 1050, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="variable-modal-overlay" style={{ zIndex: 1060, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="variable-modal-content" style={{ width: '860px', maxWidth: '95vw', padding: 0, borderRadius: '12px', overflow: 'hidden', background: '#fff', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
 
                 {/* 헤더 */}

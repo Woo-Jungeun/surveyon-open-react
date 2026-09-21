@@ -984,6 +984,7 @@ const MapManagementPage = () => {
                     variables={variables}
                     hasChanges={hasChanges}
                     refreshData={() => setRefreshKey(prev => prev + 1)}
+                    openOpenTypeCheckModal={() => setOpenTypeCheckModalOpen(true)}
                 />
 
                 {/* 오픈 유형 검사 및 교정 모달 */}

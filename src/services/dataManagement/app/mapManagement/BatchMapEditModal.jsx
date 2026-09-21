@@ -6,7 +6,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import { MapManagementPageApi } from './MapManagementPageApi';
 import './MapManagementPage.css';
 
-const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = false, refreshData }) => {
+const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = false, refreshData, openOpenTypeCheckModal }) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const fileInputRef = useRef(null);
@@ -176,6 +176,9 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                     setXmlState('applied');
                     if (refreshData) refreshData();
                     fetchVersionsList();
+                    if (openOpenTypeCheckModal) {
+                        openOpenTypeCheckModal();
+                    }
                 } else {
                     setXmlState('no_change');
                 }
@@ -1625,6 +1628,20 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                         <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
                                             <button
                                                 type="button"
+                                                onClick={() => {
+                                                    if (openOpenTypeCheckModal) openOpenTypeCheckModal();
+                                                }}
+                                                style={{
+                                                    height: '36px', padding: '0 16px', border: 'none', borderRadius: '6px',
+                                                    background: '#16a34a', color: '#ffffff', fontSize: '13px', fontWeight: '700', cursor: 'pointer',
+                                                    display: 'inline-flex', alignItems: 'center', gap: '6px'
+                                                }}
+                                            >
+                                                <FileCheck size={14} />
+                                                <span>오픈검증 팝업 열기</span>
+                                            </button>
+                                            <button
+                                                type="button"
                                                 onClick={() => setActiveTab(3)}
                                                 style={{
                                                     height: '36px', padding: '0 16px', border: '1px solid #16a34a', borderRadius: '6px',
@@ -1639,6 +1656,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                     </div>
                                 </div>
                             )}
+
 
                             {/* STATE 7: 바뀐 것 없음 (no_change) */}
                             {xmlState === 'no_change' && (
