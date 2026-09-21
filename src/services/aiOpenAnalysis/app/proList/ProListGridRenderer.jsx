@@ -1129,6 +1129,13 @@ const ProListGridRenderer = (props) => {
 
     const norm = useCallback((s) => String(s ?? "").trim(), []);
 
+    const rememberScroll = useCallback(() => {
+        const grid = document.querySelector("#grid_01 .k-grid-content");
+        if (grid && grid.scrollTop > 0) {
+            scrollTopRef.current = grid.scrollTop;
+        }
+    }, [scrollTopRef]);
+
     const getUnmergedQnum = useCallback((row, allRows = []) => {
         if (!row) return "";
         const base = norm(row.qnum_text || row.qnum);
@@ -1234,31 +1241,35 @@ const ProListGridRenderer = (props) => {
 
     // 1번: 그룹 모두 펼치기 / 접기 토글
     const expandAllGroups = useCallback(() => {
+        rememberScroll();
         if (dupGroups?.map) {
             setExpandedGroupKeys(new Set(dupGroups.map.keys()));
         }
-    }, [dupGroups]);
+    }, [dupGroups, rememberScroll]);
 
     const collapseAllGroups = useCallback(() => {
+        rememberScroll();
         setExpandedGroupKeys(new Set());
-    }, []);
+    }, [rememberScroll]);
 
     const toggleAllGroups = useCallback(() => {
+        rememberScroll();
         if (expandedGroupKeys.size > 0) {
             setExpandedGroupKeys(new Set());
         } else if (dupGroups?.map) {
             setExpandedGroupKeys(new Set(dupGroups.map.keys()));
         }
-    }, [dupGroups, expandedGroupKeys.size]);
+    }, [dupGroups, expandedGroupKeys.size, rememberScroll]);
 
     const toggleGroupExpand = useCallback((groupKey) => {
+        rememberScroll();
         setExpandedGroupKeys(prev => {
             const next = new Set(prev);
             if (next.has(groupKey)) next.delete(groupKey);
             else next.add(groupKey);
             return next;
         });
-    }, []);
+    }, [rememberScroll]);
 
     const toggleGroupSelect = useCallback((groupIds, checked) => {
         setSelectedRowIds(prev => {
@@ -1769,12 +1780,28 @@ const ProListGridRenderer = (props) => {
         });
 
 
-    const rememberScroll = () => {
-        const grid = document.querySelector("#grid_01 .k-grid-content");
-        if (grid) {
-            scrollTopRef.current = grid.scrollTop;
-        }
-    };
+    useLayoutEffect(() => {
+        const saved = scrollTopRef.current;
+        if (!saved || saved <= 0) return;
+
+        const restore = () => {
+            const grid = document.querySelector("#grid_01 .k-grid-content");
+            if (grid) {
+                grid.scrollTop = saved;
+            }
+        };
+
+        restore();
+        const t1 = setTimeout(restore, 0);
+        const t2 = setTimeout(restore, 30);
+        const t3 = setTimeout(restore, 80);
+
+        return () => {
+            clearTimeout(t1);
+            clearTimeout(t2);
+            clearTimeout(t3);
+        };
+    }, [expandedGroupKeys]);
 
     useEffect(() => {
         if (!dataState?.data?.length) return;
@@ -2769,7 +2796,7 @@ const ProListGridRenderer = (props) => {
                                         sort: mappedSort,
                                         filter: filter,
                                         columnVirtualization: false,
-                                        scrollable: "virtual",
+                                        scrollable: "scrollable",
                                         rowHeight: 45,
                                         pageSize: 50,
                                         skip: gridSkip,
