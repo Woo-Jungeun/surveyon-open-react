@@ -1,19 +1,18 @@
 export const PERM = { READ: 0, WRITE: 1, MANAGE: 2 };
 
 export function roleToPerm(usergroup) {
-    switch (usergroup) {
-        case "관리자(관리,읽기,쓰기)":
-        case "제작자(관리,읽기,쓰기)":
-        case "오픈팀(관리,읽기,쓰기)":
-            return PERM.MANAGE;
-        case "연구원(읽기,쓰기)":
-            return PERM.WRITE;
-        case "일반(읽기)":
-        case "고객(읽기)":
-            return PERM.READ;
-        default:
-            return PERM.READ;
+    if (!usergroup) return PERM.READ;
+    const ug = String(usergroup).trim();
+    if (ug.includes("관리자") || ug.includes("제작자") || ug.includes("오픈팀")) {
+        return PERM.MANAGE;
     }
+    if (ug.includes("연구원")) {
+        return PERM.WRITE;
+    }
+    if (ug.includes("일반") || ug.includes("고객")) {
+        return PERM.READ;
+    }
+    return PERM.READ;
 }
 
 export const hasPerm = (userPerm, need) => userPerm >= need;
@@ -21,16 +20,19 @@ export const hasPerm = (userPerm, need) => userPerm >= need;
 export const GROUP_MIN_PERM = {
     VIEW: PERM.READ,
     ADMIN: PERM.WRITE,
-    EDIT: PERM.MANAGE,
-    관리: PERM.WRITE,
-    설정: PERM.MANAGE,
+    EDIT: PERM.WRITE,
+    관리: PERM.READ,
+    설정: PERM.WRITE,
 };
 
 export const FIELD_MIN_PERM = {
+    chk: PERM.WRITE,
     tokens_text: PERM.READ,
     filterSetting: PERM.WRITE,
-    project_lock: PERM.MANAGE,
-    qnum_text: PERM.WRITE,
+    useYN: PERM.WRITE,
+    exclude: PERM.READ,
+    project_lock: PERM.WRITE,
+    qnum_text: PERM.READ,
     merge_qnum: PERM.WRITE,
 };
 

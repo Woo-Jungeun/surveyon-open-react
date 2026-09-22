@@ -2002,12 +2002,12 @@ const ProListGridRenderer = (props) => {
                 <Column
                     key={c.field}
                     field={c.field}
-                    title=""
+                    title={hasEditPerm ? "" : "분석보기"}
                     width={c.width ?? '90px'}
                     sortable={false}
                     filterable={false}
                     columnMenu={undefined}
-                    headerCell={EmptyHeaderCell}
+                    headerCell={hasEditPerm ? EmptyHeaderCell : undefined}
                     cell={ExcludeCell}
                 />
             );
