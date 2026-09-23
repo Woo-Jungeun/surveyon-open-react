@@ -805,30 +805,34 @@ const MapManagementPage = () => {
                                 <FileCheck size={16} />
                                 오픈 유형 검사
                             </button>
-                            {/* 세로 구분선 1 */}
-                            <div style={{
-                                width: '1px',
-                                height: '16px',
-                                backgroundColor: '#cbd5e1',
-                                margin: '0 4px',
-                                alignSelf: 'center'
-                            }}></div>
-                            <button
-                                className="data-header-btn"
-                                onClick={() => setDataUpdateModalOpen(true)}
-                                style={{
-                                    height: '32px',
-                                    padding: '0 12px',
-                                    border: '1px solid #16a34a',
-                                    background: '#fff',
-                                    color: '#16a34a',
-                                }}
-                                onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
-                            >
-                                <Upload size={16} />
-                                데이터 등록
-                            </button>
+                            {/* 세로 구분선 1 및 데이터 등록 버튼 (servername이 NEW가 아닐 경우만 표출) */}
+                            {(sessionStorage.getItem("servername") || sessionStorage.getItem("serverName") || "").toUpperCase() !== "NEW" && (
+                                <>
+                                    <div style={{
+                                        width: '1px',
+                                        height: '16px',
+                                        backgroundColor: '#cbd5e1',
+                                        margin: '0 4px',
+                                        alignSelf: 'center'
+                                    }}></div>
+                                    <button
+                                        className="data-header-btn"
+                                        onClick={() => setDataUpdateModalOpen(true)}
+                                        style={{
+                                            height: '32px',
+                                            padding: '0 12px',
+                                            border: '1px solid #16a34a',
+                                            background: '#fff',
+                                            color: '#16a34a',
+                                        }}
+                                        onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                                    >
+                                        <Upload size={16} />
+                                        데이터 등록
+                                    </button>
+                                </>
+                            )}
                             <button
                                 className="data-header-btn"
                                 onClick={() => setDownloadModalOpen(true)}
