@@ -95,7 +95,7 @@ const LineStylePicker = ({ value, onChange, color }) => {
 const ConditionHeaderCell = (props) => {
     const handleOpenHelp = (e) => {
         e.stopPropagation();
-        const helpWin = window.open('', '_blank', 'width=800,height=700,scrollbars=yes,resizable=yes');
+        const helpWin = window.open('', '_blank', 'width=850,height=850,scrollbars=yes,resizable=yes');
         if (helpWin) {
             helpWin.document.write(`
                 <!DOCTYPE html>
@@ -181,6 +181,10 @@ const ConditionHeaderCell = (props) => {
                             border-color: #e0f2fe;
                             background-color: #f0f9ff;
                         }
+                        .section-cond {
+                            border-color: #c7d2fe;
+                            background-color: #f5f3ff;
+                        }
 
                         .section-header {
                             display: flex;
@@ -201,6 +205,7 @@ const ConditionHeaderCell = (props) => {
                         .badge-range { background-color: #fef3c7; color: #d97706; border: 1px solid #fde68a; }
                         .badge-group { background-color: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
                         .badge-rank { background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+                        .badge-cond { background-color: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
 
                         .section-desc {
                             font-size: 11px;
@@ -281,7 +286,54 @@ const ConditionHeaderCell = (props) => {
                             word-break: break-all;
                         }
 
-
+                        .cond-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            font-size: 11.5px;
+                            background-color: #ffffff;
+                            border-radius: 6px;
+                            overflow: hidden;
+                            border: 1px solid #c7d2fe;
+                        }
+                        .cond-table th {
+                            background-color: #e0e7ff;
+                            color: #3730a3;
+                            padding: 6px 10px;
+                            font-weight: 700;
+                            font-family: 'Pretendard', -apple-system, sans-serif;
+                            font-size: 11.5px;
+                            text-align: left;
+                            border-bottom: 1px solid #c7d2fe;
+                        }
+                        .cond-table td {
+                            padding: 6px 10px;
+                            border-bottom: 1px solid #f3f0ff;
+                            color: #334155;
+                            font-size: 11.5px;
+                            font-family: 'Pretendard', -apple-system, sans-serif;
+                        }
+                        .cond-table tr:last-child td {
+                            border-bottom: none;
+                        }
+                        .code-tag {
+                            font-family: Consolas, Monaco, monospace;
+                            font-size: 11px;
+                            font-weight: 600;
+                            color: #0f172a;
+                            background-color: #f1f5f9;
+                            padding: 1px 5px;
+                            border-radius: 4px;
+                            display: inline-block;
+                            word-break: break-all;
+                        }
+                        .cond-table .code-tag {
+                            background-color: transparent;
+                            border: none;
+                            padding: 0;
+                            font-weight: 500;
+                            color: #1e293b;
+                            font-size: 11.5px;
+                        }
                     </style>
                 </head>
                 <body>
@@ -290,7 +342,6 @@ const ConditionHeaderCell = (props) => {
                             <div class="header-icon">?</div>
                             <div class="header-title">연산자 도움말</div>
                         </div>
-
                     </div>
 
                     <div class="content">
@@ -454,9 +505,104 @@ const ConditionHeaderCell = (props) => {
                                 </div>
                             </div>
                         </div>
+
+                        <!-- 조건문 (if, elif, else, elseall) -->
+                        <div class="section-container section-cond">
+                            <div class="section-header">
+                                <span class="section-badge badge-cond">조건문</span>
+                                <span class="section-desc">if, elif, else, elseall 조건 분기 및 자동 처리</span>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <!-- 구문 설명 카드 -->
+                                <div style="background-color: #ffffff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 10px 12px;">
+                                    <div style="font-size: 12px; font-weight: 700; color: #4338ca; margin-bottom: 8px; font-family: 'Pretendard', sans-serif;">조건식 구문 설명</div>
+                                    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: #334155; line-height: 1.5; font-family: 'Pretendard', sans-serif;">
+                                        <div><span style="font-weight: 600; color: #1e1b4b;">1. 첫 조건 (if):</span> <code class="code-tag">AGE &lt; 20</code> <span style="color: #64748b; font-size: 11px;">(또는 if AGE &lt; 20)</span></div>
+                                        <div><span style="font-weight: 600; color: #1e1b4b;">2~4. 분기 조건 (elif):</span> <code class="code-tag">elif: AGE &lt; 30</code> <span style="color: #64748b; font-size: 11px;">(elif 생략가능)</span></div>
+                                        <div><span style="font-weight: 600; color: #1e1b4b;">5. 잔여 조건 (else / 기타):</span> 이전 조건들을 제외한 나머지 응답 대상</div>
+                                        <div style="padding-left: 12px; color: #64748b; font-size: 11.5px; display: flex; flex-direction: column; gap: 3px;">
+                                            <div>• 컬럼 1개(q1): <code class="code-tag">q1 is not null and not (cond1) and not (cond2) ...</code></div>
+                                            <div>• 컬럼 복수개(q1, q2): <code class="code-tag">(q1 is not null or q2 is not null) and not (cond1) and not (cond2) ...</code></div>
+                                        </div>
+                                        <div><span style="font-weight: 600; color: #1e1b4b;">6. 전체 응답자 기준 기타 (elseall / 기타전체):</span> 문항별 null 체크 없이 전체 표본 대상 잔여 base</div>
+                                        <div style="padding-left: 12px; color: #64748b; font-size: 11.5px;">
+                                            <div>• 표본 전체: <code class="code-tag">(ALLBASE and not (cond1) and not (cond2) ...)</code></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 예시 1 -->
+                                <div>
+                                    <div style="font-size: 12px; font-weight: 700; color: #4338ca; margin-bottom: 5px; font-family: 'Pretendard', sans-serif;">적용 예시 1: else (문항 응답자 대상 잔여)</div>
+                                    <table class="cond-table">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 65px; text-align: center;">할당 값</th>
+                                                <th style="width: 95px;">보기 라벨</th>
+                                                <th style="width: 155px;">입력 조건</th>
+                                                <th>내부 자동 변환식</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td style="text-align: center; font-weight: 600;">1</td>
+                                                <td>주 1회 이상</td>
+                                                <td><span class="code-tag">q2150_r1 in [1, 2, 3]</span></td>
+                                                <td><span class="code-tag">q2150_r1 in [1, 2, 3]</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td style="text-align: center; font-weight: 600;">2</td>
+                                                <td>월 1~4회</td>
+                                                <td><span class="code-tag">elif q2150_r1 in [4, 5]</span></td>
+                                                <td><span class="code-tag">q2150_r1 in [4, 5]</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td style="text-align: center; font-weight: 600;">3</td>
+                                                <td>월 1회 미만</td>
+                                                <td><span style="color: #dc2626; font-weight: 700; font-family: 'Pretendard', sans-serif;">else</span></td>
+                                                <td><span class="code-tag">q2150_r1 is not null and not(q2150_r1 in [1, 2, 3]) and not(q2150_r1 in [4, 5])</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- 예시 2 -->
+                                <div>
+                                    <div style="font-size: 12px; font-weight: 700; color: #4338ca; margin-bottom: 5px; font-family: 'Pretendard', sans-serif;">적용 예시 2: elseall (전체 응답자 대상 잔여)</div>
+                                    <table class="cond-table">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 65px; text-align: center;">할당 값</th>
+                                                <th style="width: 95px;">보기 라벨</th>
+                                                <th style="width: 155px;">입력 조건</th>
+                                                <th>내부 자동 변환식</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td style="text-align: center; font-weight: 600;">1</td>
+                                                <td>주 1회 이상</td>
+                                                <td><span class="code-tag">q2150_r1 in [1, 2, 3]</span></td>
+                                                <td><span class="code-tag">q2150_r1 in [1, 2, 3]</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td style="text-align: center; font-weight: 600;">2</td>
+                                                <td>월 1~4회</td>
+                                                <td><span class="code-tag">elif q2150_r1 in [4, 5]</span></td>
+                                                <td><span class="code-tag">q2150_r1 in [4, 5]</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td style="text-align: center; font-weight: 600;">3</td>
+                                                <td>월 1회 미만</td>
+                                                <td><span style="color: #dc2626; font-weight: 700; font-family: 'Pretendard', sans-serif;">elseall</span></td>
+                                                <td><span class="code-tag">전체응답자 and not(q2150_r1 in [1, 2, 3]) and not(q2150_r1 in [4, 5])</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
-
                 </body>
                 </html>
             `);
