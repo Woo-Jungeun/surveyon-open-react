@@ -258,7 +258,7 @@ const SurveyTestPage = () => {
                                     className={`tab-btn ${viewMode === 'qa' ? 'active' : ''}`}
                                     onClick={() => setViewMode('qa')}
                                 >
-                                    교차 검증 (AI 오류 분석)
+                                    교차 검증
                                 </button>
                                 <button
                                     type="button"
@@ -267,7 +267,7 @@ const SurveyTestPage = () => {
                                         setViewMode('wording');
                                     }}
                                 >
-                                    문구 비교 (텍스트 대조)
+                                    문구 비교
                                 </button>
                             </div>
 
@@ -289,9 +289,10 @@ const SurveyTestPage = () => {
                                     className="st-btn-action compact-btn st-btn-wording"
                                     onClick={handleCompareWording}
                                     disabled={isWordingLoading || analyzeAll.isLoading}
+                                    style={{ height: '32px', padding: '0 16px', fontSize: '13px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                                 >
                                     <FileSearch size={13} className="btn-icon-spin" />
-                                    <span>문구 대조 재실행</span>
+                                    문구 대조 재실행
                                 </button>
                             ) : null)}
                         </div>

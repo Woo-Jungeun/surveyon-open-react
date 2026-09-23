@@ -416,13 +416,24 @@
 }
 
 .st-btn-action.st-btn-wording.compact-btn {
-    height: 32px;
-    padding: 0 14px;
-    font-size: 13px;
+    height: 32px !important;
+    padding: 0 16px !important;
+    font-size: 13px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     min-width: auto;
     box-shadow: none;
     border-radius: 6px;
     gap: 6px;
+    line-height: 1 !important;
+}
+
+.st-btn-action.st-btn-wording.compact-btn span {
+    font-size: 13px !important;
+    height: auto !important;
+    padding: 0 !important;
+    line-height: 1 !important;
 }
 
 .st-btn-action.st-btn-wording:hover {
