@@ -16,26 +16,52 @@
   table-layout: fixed !important;
 }
 
-/* Ensure the main grid container shrinks to fit content */
-#grid_01 .k-grid {
+#grid_01 {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
   min-height: 0 !important;
-  /* Allow shrinking */
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Ensure the main grid container shrinks/expands dynamically to fit available viewport height */
+#grid_01 .k-grid {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+}
+
+#grid_01 .k-grid-ariaRoot {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+#grid_01 .k-grid-header {
+  flex-shrink: 0 !important;
 }
 
 /* Add padding to lift the scrollbar and prevent it from covering content */
 #grid_01 .k-grid-content {
   padding-bottom: 0 !important;
-  /* Remove extra padding */
-  max-height: 650px !important;
-  /* Limit height for large data */
-  height: auto !important;
-  /* Allow shrinking for small data */
+  flex: 1 !important;
   min-height: 0 !important;
-  /* Allow shrinking */
-  overflow-y: scroll !important;
-  /* Always show scrollbar track to match header padding */
+  height: 100% !important;
+  max-height: none !important;
+  overflow-y: auto !important;
   overflow-x: auto !important;
-  /* Ensure horizontal scroll works */
+}
+
+#grid_01 .k-pager {
+  flex-shrink: 0 !important;
 }
 
 /* Custom Scrollbar Styling for better visibility */
@@ -996,6 +1022,10 @@
 
 
 
+.tab-action-container {
+  flex-shrink: 0 !important;
+}
+
 /* Header Layout */
 .meta-header-layout {
   display: flex;
@@ -1004,6 +1034,7 @@
   padding: 0 8px;
   width: 100%;
   margin-bottom: 4px !important;
+  flex-shrink: 0 !important;
 }
 
 .meta-header-left {
