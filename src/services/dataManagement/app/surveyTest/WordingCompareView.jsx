@@ -83,11 +83,14 @@ const WordingCompareView = ({ data, topMessage, onResetQnumFilter }) => {
 
     const contentBodyRef = useRef(null);
 
-    // 탭 변경 시 리스트 스크롤을 항상 최상단(0)으로 리셋
+    // 탭 변경 시 리스트 스크롤 최상단 리셋 및 검색어/필터 초기화 (각 탭 독립적 동작)
     useEffect(() => {
         if (contentBodyRef.current) {
             contentBodyRef.current.scrollTop = 0;
         }
+        setSearchQuery('');
+        setMajorOnly(false);
+        setSelectedQnumFilter(null);
     }, [activeTab]);
 
     const resultjson = data || {};
@@ -103,6 +106,14 @@ const WordingCompareView = ({ data, topMessage, onResetQnumFilter }) => {
         sourceMatchedQnums = [],
         sameQnumElsewhere = []
     } = resultjson;
+
+    // 현재 탭의 원본 항목 개수 (리스트가 0개일 때 검색창 숨김용)
+    const currentTabRawCount = useMemo(() => {
+        if (activeTab === 'questions') return (questions || []).length;
+        if (activeTab === 'options') return (options || []).length;
+        if (activeTab === 'emphasis') return (emphasisDiffs || []).length;
+        return 0;
+    }, [activeTab, questions, options, emphasisDiffs]);
 
     // ── 안내 항목 리스트 수집 (배열/단일문자열 대응) ──
     const noticeItems = useMemo(() => {
@@ -347,43 +358,45 @@ const WordingCompareView = ({ data, topMessage, onResetQnumFilter }) => {
                     {activeTab === 'emphasis' && '문구는 동일하나 굵게·밑줄 등 서식 강조가 한쪽에만 적용된 문항입니다.'}
                 </div>
 
-                <div className="wording-search-box">
-                    <div className="wording-input-wrap">
-                        <Search size={14} className="search-icon" />
-                        <input
-                            type="text"
-                            className="wording-search-input"
-                            placeholder="문항, 변수, 문구 검색..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                        {searchQuery && (
-                            <button className="clear-btn" onClick={() => setSearchQuery('')}>×</button>
+                {currentTabRawCount > 0 && (
+                    <div className="wording-search-box">
+                        <div className="wording-input-wrap">
+                            <Search size={14} className="search-icon" />
+                            <input
+                                type="text"
+                                className="wording-search-input"
+                                placeholder="문항, 변수, 문구 검색..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                            {searchQuery && (
+                                <button className="clear-btn" onClick={() => setSearchQuery('')}>×</button>
+                            )}
+                        </div>
+
+                        {activeTab === 'questions' && (
+                            <button
+                                type="button"
+                                className={`wording-checkbox-btn ${majorOnly ? 'active' : ''}`}
+                                onClick={() => setMajorOnly(!majorOnly)}
+                            >
+                                <span className={`custom-checkbox-box ${majorOnly ? 'checked' : ''}`}>
+                                    {majorOnly && <Check size={11} strokeWidth={3.5} />}
+                                </span>
+                                <span>차이 큰 문항만</span>
+                            </button>
+                        )}
+
+                        {selectedQnumFilter && (
+                            <div className="wording-focused-qnum-badge">
+                                <span>선택 문항: <b>{selectedQnumFilter}</b></span>
+                                <button onClick={handleResetFilter} className="btn-reset-qnum">
+                                    필터 해제
+                                </button>
+                            </div>
                         )}
                     </div>
-
-                    {activeTab === 'questions' && (
-                        <button
-                            type="button"
-                            className={`wording-checkbox-btn ${majorOnly ? 'active' : ''}`}
-                            onClick={() => setMajorOnly(!majorOnly)}
-                        >
-                            <span className={`custom-checkbox-box ${majorOnly ? 'checked' : ''}`}>
-                                {majorOnly && <Check size={11} strokeWidth={3.5} />}
-                            </span>
-                            <span>차이 큰 문항만</span>
-                        </button>
-                    )}
-
-                    {selectedQnumFilter && (
-                        <div className="wording-focused-qnum-badge">
-                            <span>선택 문항: <b>{selectedQnumFilter}</b></span>
-                            <button onClick={handleResetFilter} className="btn-reset-qnum">
-                                필터 해제
-                            </button>
-                        </div>
-                    )}
-                </div>
+                )}
             </div>
 
             {/* ── 6. 탭 컨텐츠 영역 ──────────────────────────────────── */}
