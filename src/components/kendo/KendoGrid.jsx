@@ -596,7 +596,7 @@ const KendoGrid = ({ parentProps, children }) => {
         >
             <GridNoRecords>
                 <div style={{ textAlign: "center", padding: "20px 0" }}>
-                    조회된 데이터가 없습니다.
+                    {parentProps?.noRecordsMessage || "조회된 데이터가 없습니다."}
                     {parentProps?.noRecordsExtra && (
                         <div style={{ marginTop: "10px" }}>
                             {parentProps.noRecordsExtra}

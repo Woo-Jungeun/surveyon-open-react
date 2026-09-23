@@ -7,7 +7,7 @@ import "./ProRegisterPopup.css";
 
 const ProRegisterPopup = ({ popupShow, setPopupShow, onRefresh }) => {
     const servername = sessionStorage.getItem("servername");
-    const [tab, setTab] = useState(servername === "NEW" ? "Excel" : "DB");
+    const [tab, setTab] = useState("DB");
 
     if (!popupShow) return null;
 
@@ -25,19 +25,17 @@ const ProRegisterPopup = ({ popupShow, setPopupShow, onRefresh }) => {
                 </div>
 
                 <div className="pr-tabs-menu">
-                    {servername !== 'NEW' && (
-                        <button
-                            className={`pro-reg-tab-btn ${tab === 'DB' ? 'active' : ''}`}
-                            onClick={() => setTab('DB')}
-                        >
-                            <Database size={16} />
-                            <span>DB</span>
-                            <span
-                                className="info-icon"
-                                data-tooltip={`DB|조사(Qmaster)에 연동된 프로젝트를 불러옵니다.`}
-                            ></span>
-                        </button>
-                    )}
+                    <button
+                        className={`pro-reg-tab-btn ${tab === 'DB' ? 'active' : ''}`}
+                        onClick={() => setTab('DB')}
+                    >
+                        <Database size={16} />
+                        <span>DB</span>
+                        <span
+                            className="info-icon"
+                            data-tooltip={`DB|조사(Qmaster)에 연동된 프로젝트를 불러옵니다.`}
+                        ></span>
+                    </button>
                     <button
                         className={`pro-reg-tab-btn ${tab === 'Excel' ? 'active' : ''}`}
                         onClick={() => setTab('Excel')}

@@ -21,6 +21,7 @@ const ProRegisterTab1 = (props) => {
     const projectname = sessionStorage.getItem("projectname");
     const pof = sessionStorage.getItem("pof") || sessionStorage.getItem("projectpof") || "";
     const server = sessionStorage.getItem("servername") || "rps";
+    const isNewServer = (server || "").toUpperCase() === "NEW";
 
     const { enterRegisterDb } = ProRegisterApi();
 
@@ -129,7 +130,7 @@ const ProRegisterTab1 = (props) => {
                                 type="submit"
                                 className="btnL"
                                 themeColor="primary"
-                                disabled={loading || !hasData}
+                                disabled={loading || (!isNewServer && !hasData)}
                                 style={{
                                     minWidth: "180px",
                                     height: "44px",
@@ -142,12 +143,12 @@ const ProRegisterTab1 = (props) => {
 
                             <div style={{
                                 marginTop: "12px",
-                                color: hasData ? "#666" : "#ff4646",
+                                color: (isNewServer || hasData) ? "#666" : "#ff4646",
                                 fontSize: "13px",
                                 lineHeight: "1.4"
                             }}>
-                                {hasData
-                                    ? "문항추가, 응답자 데이터 추가를 자동으로 등록합니다."
+                                {(isNewServer || hasData)
+                                    ? "문항추가, 응답자 데이터 추가는 자동으로 등록합니다."
                                     : "데이터맵이 등록되지 않았습니다. 웹 제작 담당자에게 문의 및 데이터맵을 저장해 주세요."}
                             </div>
                         </div>
