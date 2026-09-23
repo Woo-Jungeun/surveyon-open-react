@@ -393,6 +393,65 @@
 }
 
 /* ─────────────────────────────────────────────────── */
+/* 원본 문구 비교 버튼 + 애니메이션                     */
+/* ─────────────────────────────────────────────────── */
+.st-btn-action.st-btn-wording {
+    width: auto !important;
+    min-width: auto;
+    height: 44px;
+    padding: 0 28px;
+    border-radius: 10px;
+    background: #ffffff;
+    border: 1.5px solid var(--dm-primary, #16a34a);
+    color: var(--dm-primary, #16a34a);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.12);
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.st-btn-action.st-btn-wording.compact-btn {
+    height: 32px;
+    padding: 0 14px;
+    font-size: 13px;
+    min-width: auto;
+    box-shadow: none;
+    border-radius: 6px;
+    gap: 6px;
+}
+
+.st-btn-action.st-btn-wording:hover {
+    background: #f0fdf4;
+    border-color: #15803d;
+    color: #15803d;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.15);
+}
+
+.st-btn-action.st-btn-wording:hover .btn-icon-spin {
+    transform: rotate(180deg);
+}
+
+.st-btn-action.st-btn-wording:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.st-btn-action.st-btn-wording:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #ffffff;
+}
+
+.btn-icon-spin {
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─────────────────────────────────────────────────── */
 /* QA 리포트                                            */
 /* ─────────────────────────────────────────────────── */
 .qa-report-wrapper {

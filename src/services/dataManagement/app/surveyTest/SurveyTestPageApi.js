@@ -9,11 +9,12 @@ export function SurveyTestPageApi() {
     /** 통합 QA 분석 - multipart/form-data (Pn, DocumentFile, User) */
     const analyzeAll = useMutation(
         async (data) => await api.post(data, "/QA/analyze-all", "API_BASE_URL_DATAMANAGEMENT"),
-        // {
-        //     onMutate: () => loadingSpinner.show(),
-        //     onSettled: () => loadingSpinner.hide(),
-        // }
     );
 
-    return { analyzeAll };
+    /** 문구 비교 - JSON (pn, user) */
+    const compareWording = useMutation(
+        async (data) => await api.post(data, "/qa/compare-wording", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    return { analyzeAll, compareWording };
 }
