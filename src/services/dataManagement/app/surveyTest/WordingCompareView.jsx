@@ -104,6 +104,27 @@ const WordingCompareView = ({ data, topMessage, onResetQnumFilter }) => {
         sameQnumElsewhere = []
     } = resultjson;
 
+    // ── 안내 항목 리스트 수집 (배열/단일문자열 대응) ──
+    const noticeItems = useMemo(() => {
+        const list = [];
+        const addMsg = (msg) => {
+            if (!msg) return;
+            if (Array.isArray(msg)) {
+                msg.forEach(m => m && list.push(String(m)));
+            } else {
+                list.push(String(msg));
+            }
+        };
+
+        addMsg(source?.message);
+        if (emphasis?.message && (emphasis.available === false || emphasis.sameFile === false)) {
+            addMsg(emphasis.message);
+        }
+        addMsg(resultjson.notices);
+
+        return list;
+    }, [source, emphasis, resultjson]);
+
     // ── 검색 및 탭별 필터링 데이터 계산 ─────────────────────
     const filteredQuestions = useMemo(() => {
         let list = questions || [];
@@ -200,18 +221,24 @@ const WordingCompareView = ({ data, topMessage, onResetQnumFilter }) => {
                         </div>
                     )}
 
-                    {/* ── 2. 원문 & 강조 안내 (source.message, emphasis.message) ──── */}
-                    {source?.message && (
-                        <div className={`wording-notice-banner ${source.available === false ? 'yellow' : 'blue'}`}>
-                            <span className="notice-emoji-icon">📁</span>
-                            <span>{renderFormattedMessage(source.message)}</span>
-                        </div>
-                    )}
-
-                    {emphasis?.message && (emphasis.available === false || emphasis.sameFile === false) && (
-                        <div className="wording-notice-banner yellow">
-                            <span className="notice-emoji-icon">✏️</span>
-                            <span>{renderFormattedMessage(emphasis.message)}</span>
+                    {/* ── 2. 원문 & 강조 안내 (최대 3개 노출 후 스크롤 고정) ──── */}
+                    {noticeItems.length > 0 && (
+                        <div className="wording-combined-notice-banner">
+                            <div className="notice-banner-header">
+                                <Info size={14} className="notice-banner-info-icon" />
+                                <span className="notice-banner-title">대조 안내 및 참고사항</span>
+                                {noticeItems.length > 3 && (
+                                    <span className="notice-banner-count">({noticeItems.length}개)</span>
+                                )}
+                            </div>
+                            <div className="notice-banner-list">
+                                {noticeItems.map((msg, idx) => (
+                                    <div key={idx} className="notice-banner-item">
+                                        <span className="notice-bullet-icon">•</span>
+                                        <span>{renderFormattedMessage(msg)}</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
 

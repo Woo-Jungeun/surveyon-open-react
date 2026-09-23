@@ -61,7 +61,90 @@
     font-weight: 600;
 }
 
-/* 노란색 일반 안내 배너 */
+/* 노란색 통합 안내 배너 (여러 안내 메시지를 한 박스로 묶음) */
+.wording-combined-notice-banner {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #92400e;
+    box-shadow: 0 1px 3px rgba(245, 158, 11, 0.05);
+}
+
+.notice-banner-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #fef3c7;
+}
+
+.notice-banner-info-icon {
+    color: #d97706;
+    flex-shrink: 0;
+}
+
+.notice-banner-title,
+.notice-banner-title span {
+    font-size: 12.5px !important;
+    font-weight: 800;
+    color: #b45309;
+    letter-spacing: -0.2px;
+}
+
+.notice-banner-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: #d97706;
+    margin-left: 2px;
+}
+
+.notice-banner-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-height: 74px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* 3개 초과 시 출력되는 슬림 커스텀 스크롤바 */
+.notice-banner-list::-webkit-scrollbar {
+    width: 4px;
+}
+.notice-banner-list::-webkit-scrollbar-track {
+    background: #fef3c7;
+    border-radius: 4px;
+}
+.notice-banner-list::-webkit-scrollbar-thumb {
+    background: #f59e0b;
+    border-radius: 4px;
+}
+
+.notice-banner-item,
+.notice-banner-item span {
+    font-size: 12.5px !important;
+    line-height: 1.45;
+    color: #78350f;
+}
+
+.notice-banner-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.notice-bullet-icon {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    color: #d97706 !important;
+    line-height: 1.45;
+    flex-shrink: 0;
+}
+
 .wording-notice-banner {
     display: flex;
     align-items: center;
@@ -87,6 +170,7 @@
 .notice-emoji-icon {
     font-size: 13px;
     flex-shrink: 0;
+    margin-top: 1px;
 }
 
 .wording-error-banner-card {
