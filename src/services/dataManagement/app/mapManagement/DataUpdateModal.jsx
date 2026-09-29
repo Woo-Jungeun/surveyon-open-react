@@ -94,6 +94,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
     const handleFileChange = (e) => {
         if (e.target.files && e.target.files[0]) {
             setSelectedFile(e.target.files[0]);
+            setProjectName(sessionStorage.getItem('projectname') || '');
         }
     };
 
@@ -115,6 +116,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
         setIsDragging(false);
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
             setSelectedFile(e.dataTransfer.files[0]);
+            setProjectName(sessionStorage.getItem('projectname') || '');
             if (fileInputRef.current) {
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(e.dataTransfer.files[0]);
@@ -133,6 +135,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
     const handleClearFile = (e) => {
         if (e) e.stopPropagation();
         setSelectedFile(null);
+        setProjectName(sessionStorage.getItem('projectname') || '');
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
@@ -397,8 +400,8 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
 
 
             <div
-                className="variable-modal-content download-modal-content upload-modal-content"
-                style={{ width: step === 2 ? '940px' : '640px', maxWidth: '95vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', transition: 'width 0.3s', position: 'relative' }}
+                className="variable-modal-content upload-modal-content"
+                style={{ width: step === 2 ? '800px' : '700px', maxWidth: '95vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', transition: 'width 0.3s', position: 'relative' }}
             >
                 {/* Header */}
                 <div className="variable-modal-header" style={{ padding: '20px 24px 16px 24px', flexShrink: 0 }}>
@@ -455,7 +458,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                     fontSize: '12px',
                                     fontWeight: '500',
                                 }}>
-                                    전체 새로
+                                    새로 만들기
                                 </span>
                             </button>
                             <button
@@ -669,8 +672,8 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                                         )}
                                                     </span>
                                                     <span style={{
-                                                        background: activeTab === 'new' ? '#dcfce7' : '#fee2e2',
-                                                        color: activeTab === 'new' ? '#15803d' : '#dc2626',
+                                                        background: '#dcfce7',
+                                                        color: '#15803d',
                                                         padding: '2px 8px',
                                                         borderRadius: '12px',
                                                         fontSize: '11px',
@@ -678,7 +681,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                                         flexShrink: 0,
                                                         marginLeft: '8px'
                                                     }}>
-                                                        {activeTab === 'new' ? '전체 새로' : 'SAV 기준'}
+                                                        {activeTab === 'new' ? '신규 생성' : 'SAV 기준'}
                                                     </span>
                                                 </div>
                                             </td>
@@ -707,8 +710,8 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                                         )}
                                                     </span>
                                                     <span style={{
-                                                        background: '#fee2e2',
-                                                        color: '#dc2626',
+                                                        background: activeTab === 'new' ? '#dbeafe' : '#f1f5f9',
+                                                        color: activeTab === 'new' ? '#1d4ed8' : '#475569',
                                                         padding: '2px 8px',
                                                         borderRadius: '12px',
                                                         fontSize: '11px',
@@ -787,8 +790,8 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                             <span style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>{selectedFile.name}</span>
                                             <span style={{ fontSize: '12.5px', color: '#94a3b8', fontWeight: '600' }}>
-                                                {selectedFile.size >= 1048576 
-                                                    ? `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB` 
+                                                {selectedFile.size >= 1048576
+                                                    ? `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB`
                                                     : `${(selectedFile.size / 1024).toFixed(0)} KB`}
                                             </span>
                                         </div>
@@ -796,7 +799,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                     <button
                                         type="button"
                                         onClick={handleClearFile}
-                                        style={{ height: '32px', padding: '0 14px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#475569', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s' }}
+                                        style={{ height: '32px', padding: '0 14px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', color: '#475569', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap', flexShrink: 0 }}
                                         onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
                                         onMouseOut={e => e.currentTarget.style.background = '#ffffff'}
                                     >
@@ -913,24 +916,38 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
 
                                                     return (
                                                         <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                            <label style={{
-                                                                display: 'flex',
-                                                                alignItems: 'flex-start',
-                                                                gap: '8px',
-                                                                fontSize: '13px',
-                                                                color: '#334155',
-                                                                cursor: 'pointer',
-                                                                lineHeight: '1.4'
-                                                            }}>
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={isChecked}
-                                                                    onChange={(e) => {
-                                                                        setConfirmChecks(prev => ({ ...prev, [key]: e.target.checked }));
+                                                            <label
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    setConfirmChecks(prev => ({ ...prev, [key]: !prev[key] }));
+                                                                }}
+                                                                style={{
+                                                                    display: 'flex',
+                                                                    alignItems: 'flex-start',
+                                                                    gap: '8px',
+                                                                    fontSize: '13px',
+                                                                    color: '#334155',
+                                                                    cursor: 'pointer',
+                                                                    lineHeight: '1.4'
+                                                                }}>
+                                                                <div
+                                                                    style={{
+                                                                        marginTop: '1px',
+                                                                        width: '18px',
+                                                                        height: '18px',
+                                                                        border: `2px solid ${isChecked ? '#ea580c' : '#fb923c'}`,
+                                                                        background: isChecked ? '#ea580c' : '#fff',
+                                                                        borderRadius: '4px',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'center',
+                                                                        flexShrink: 0,
+                                                                        transition: 'all 0.15s ease'
                                                                     }}
-                                                                    style={{ marginTop: '2px', accentColor: '#16a34a', cursor: 'pointer' }}
-                                                                />
-                                                                <span style={{ fontWeight: isChecked ? '600' : 'normal', flex: 1 }}>{label}</span>
+                                                                >
+                                                                    {isChecked && <Check size={14} color="#fff" strokeWidth={3.5} />}
+                                                                </div>
+                                                                <span style={{ fontWeight: isChecked ? '600' : '500', color: isChecked ? '#9a3412' : '#431407', flex: 1, fontSize: '13.5px' }}>{label}</span>
 
                                                                 {/* 빠지는 응답자 PID 보기 토글 */}
                                                                 {key === 'respondentsRemoved' && removedPidsList.length > 0 && (
@@ -1007,7 +1024,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                             {resData.messages.map((msgItem, idx) => {
                                                 const msgText = typeof msgItem === 'string' ? msgItem : (msgItem.text || msgItem.message || '');
                                                 return (
-                                                    <div key={idx} style={{ lineHeight: '1.4' }}>
+                                                    <div key={idx} style={{ lineHeight: '1.4', fontSize: '13px', fontWeight: '500' }}>
                                                         {msgText}
                                                     </div>
                                                 );
@@ -1029,16 +1046,16 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                                     ? `신규 변수 ${resData.summary.added}개 ― 변수 유형 자동 판정`
                                                     : '변수 유형 자동 판정 결과'}
                                             </strong>
-                                            <span style={{ fontSize: '12.5px', color: '#64748b' }}>※ 세부 유형 변경은 적용 완료 후 [맵 엑셀 편집]에서 가능합니다</span>
+                                            <span style={{ fontSize: '11.5px', color: '#64748b' }}>※ 세부 유형 변경은 적용 완료 후 [맵 엑셀 편집]에서 가능합니다</span>
                                         </div>
 
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 10px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 8px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                                <span style={{ color: '#334155', fontWeight: '600' }}>
+                                                <span style={{ color: '#334155', fontWeight: '500', fontSize: '13px' }}>
                                                     {getAutoTypesSummaryText() || '자동 분석된 변수 유형이 표시됩니다'}
                                                 </span>
                                                 {rankNamesText && (
-                                                    <span style={{ color: '#64748b', fontSize: '12.5px' }}>
+                                                    <span style={{ color: '#64748b', fontSize: '13px' }}>
                                                         ({rankNamesText})
                                                     </span>
                                                 )}
@@ -1052,9 +1069,9 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                                         background: showAutoTypes ? '#dbeafe' : '#eff6ff',
                                                         border: '1px solid #bfdbfe',
                                                         color: '#1d4ed8',
-                                                        fontSize: '12.5px',
+                                                        fontSize: '13px',
                                                         cursor: 'pointer',
-                                                        padding: '3px 8px',
+                                                        padding: '2px 6px',
                                                         borderRadius: '6px',
                                                         display: 'inline-flex',
                                                         alignItems: 'center',
@@ -1064,7 +1081,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                                         transition: 'all 0.15s'
                                                     }}
                                                 >
-                                                    <span>전체 목록 보기 (읽기만)</span>
+                                                    <span>전체 목록 보기</span>
                                                     {showAutoTypes ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                                                 </button>
                                             )}
@@ -1072,12 +1089,12 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
 
                                         {showAutoTypes && resData.autoTypes && (
                                             <div style={{ marginTop: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', overflow: 'hidden', background: '#ffffff', maxHeight: '160px', overflowY: 'auto' }}>
-                                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px' }}>
+                                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                                                     <thead>
                                                         <tr style={{ background: '#f1f5f9', color: '#475569', textAlign: 'left', borderBottom: '1px solid #cbd5e1' }}>
-                                                            <th style={{ padding: '5px 8px', width: '100px' }}>변수명</th>
-                                                            <th style={{ padding: '5px 8px' }}>변수 설명 (라벨)</th>
-                                                            <th style={{ padding: '5px 8px', width: '90px' }}>판정 유형</th>
+                                                            <th style={{ padding: '5px 8px', width: '110px', fontSize: '13px' }}>변수명</th>
+                                                            <th style={{ padding: '5px 8px', fontSize: '13px' }}>변수 설명 (라벨)</th>
+                                                            <th style={{ padding: '5px 8px', width: '120px', whiteSpace: 'nowrap', fontSize: '13px' }}>판정 유형</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -1087,10 +1104,10 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
 
                                                             return (
                                                                 <tr key={aIdx} style={{ borderBottom: '1px solid #f1f5f9', background: aIdx % 2 === 1 ? '#f8fafc' : '#ffffff' }}>
-                                                                    <td style={{ padding: '5px 8px', fontWeight: '600', color: '#1e293b' }}>{vName}</td>
-                                                                    <td style={{ padding: '5px 8px', color: '#475569' }}>{vLabel || '-'}</td>
-                                                                    <td style={{ padding: '5px 8px' }}>
-                                                                        <span style={{ background: '#e2e8f0', color: '#334155', padding: '1px 5px', borderRadius: '4px', fontWeight: '500' }}>
+                                                                    <td style={{ padding: '5px 8px', fontWeight: '600', color: '#1e293b', fontSize: '13px' }}>{vName}</td>
+                                                                    <td style={{ padding: '5px 8px', color: '#475569', fontSize: '13px' }}>{vLabel || '-'}</td>
+                                                                    <td style={{ padding: '5px 8px', fontSize: '13px' }}>
+                                                                        <span style={{ background: '#e2e8f0', color: '#334155', padding: '1px 5px', borderRadius: '4px', fontWeight: '500', whiteSpace: 'nowrap' }}>
                                                                             {item.type}
                                                                         </span>
                                                                     </td>
@@ -1111,68 +1128,70 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                             borderRadius: '8px',
                                             padding: '12px 14px',
                                         }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '8px' }}>
-                                                <strong style={{ color: '#854d0e', fontSize: '14px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                                <strong style={{ color: '#854d0e', fontSize: '13px', fontWeight: '700' }}>
                                                     유형 확인이 필요한 변수 {resData.review.length}개
                                                 </strong>
-                                                <span style={{ fontSize: '12.5px', color: '#a16207' }}>
+                                                <span style={{ fontSize: '11.5px', color: '#a16207' }}>
                                                     ※ 별도로 수정하지 않으면 자동 판단된 유형으로 등록됩니다
                                                 </span>
                                             </div>
 
-                                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                                                <thead>
-                                                    <tr style={{ borderBottom: '1px solid #fef08a', color: '#854d0e', textAlign: 'left' }}>
-                                                        <th style={{ padding: '5px 6px', width: '70px' }}>변수명</th>
-                                                        <th style={{ padding: '5px 6px' }}>변수 설명(라벨)</th>
-                                                        <th style={{ padding: '5px 6px', width: '100px' }}>유형 선택</th>
-                                                        <th style={{ padding: '5px 6px' }}>자동 판정 사유</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {resData.review.map((item, rIdx) => {
-                                                        const vName = item.variable || item.varName;
-                                                        const vLabel = item.label || item.varLabel;
-                                                        const reasonText = item.reviewReason || item.reason || '';
+                                            <div style={{ marginTop: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', overflow: 'hidden', background: '#ffffff', maxHeight: '180px', overflowY: 'auto' }}>
+                                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                                                    <thead>
+                                                        <tr style={{ background: '#f1f5f9', color: '#475569', textAlign: 'left', borderBottom: '1px solid #cbd5e1' }}>
+                                                            <th style={{ padding: '5px 8px', width: '70px', fontSize: '13px' }}>변수명</th>
+                                                            <th style={{ padding: '5px 8px', fontSize: '13px' }}>변수 설명(라벨)</th>
+                                                            <th style={{ padding: '5px 8px', width: '120px', fontSize: '13px' }}>유형 선택</th>
+                                                            <th style={{ padding: '5px 8px', fontSize: '13px' }}>자동 판정 사유</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {resData.review.map((item, rIdx) => {
+                                                            const vName = item.variable || item.varName;
+                                                            const vLabel = item.label || item.varLabel;
+                                                            const reasonText = item.reviewReason || item.reason || '';
 
-                                                        const rawOpts = item.options || ['single', 'multi', 'open', 'number', 'rank', 'scale'];
-                                                        const normOpts = rawOpts.map(o => typeof o === 'string' ? { value: o, label: TYPE_LABELS[o] || o } : o);
+                                                            const rawOpts = item.options || ['single', 'multi', 'open', 'number', 'rank', 'scale'];
+                                                            const normOpts = rawOpts.map(o => typeof o === 'string' ? { value: o, label: TYPE_LABELS[o] || o } : o);
 
-                                                        return (
-                                                            <tr key={rIdx} style={{ borderBottom: '1px solid #fef9c3' }}>
-                                                                <td style={{ padding: '5px 6px', fontWeight: '600', color: '#1e293b' }}>{vName}</td>
-                                                                <td style={{ padding: '5px 6px', color: '#475569' }}>{vLabel}</td>
-                                                                <td style={{ padding: '5px 6px' }}>
-                                                                    <select
-                                                                        value={typeOverrides[vName] || item.type || item.suggestedType || ''}
-                                                                        onChange={(e) => {
-                                                                            const val = e.target.value;
-                                                                            setTypeOverrides(prev => ({ ...prev, [vName]: val }));
-                                                                        }}
-                                                                        style={{
-                                                                            width: '100%',
-                                                                            padding: '2px 4px',
-                                                                            borderRadius: '4px',
-                                                                            border: '1px solid #cbd5e1',
-                                                                            fontSize: '13px',
-                                                                            color: '#1e293b',
-                                                                            background: '#ffffff',
-                                                                            cursor: 'pointer'
-                                                                        }}
-                                                                    >
-                                                                        {normOpts.map((opt, oIdx) => (
-                                                                            <option key={oIdx} value={opt.value}>{opt.label}</option>
-                                                                        ))}
-                                                                    </select>
-                                                                </td>
-                                                                <td style={{ padding: '5px 6px', color: '#64748b', fontSize: '12.5px' }}>
-                                                                    {reasonText}
-                                                                </td>
-                                                            </tr>
-                                                        );
-                                                    })}
-                                                </tbody>
-                                            </table>
+                                                            return (
+                                                                <tr key={rIdx} style={{ borderBottom: '1px solid #f1f5f9', background: rIdx % 2 === 1 ? '#f8fafc' : '#ffffff' }}>
+                                                                    <td style={{ padding: '5px 8px', fontWeight: '600', color: '#1e293b', fontSize: '13px' }}>{vName}</td>
+                                                                    <td style={{ padding: '5px 8px', color: '#475569', fontSize: '13px' }}>{vLabel}</td>
+                                                                    <td style={{ padding: '5px 8px', fontSize: '13px' }}>
+                                                                        <select
+                                                                            value={typeOverrides[vName] || item.type || item.suggestedType || ''}
+                                                                            onChange={(e) => {
+                                                                                const val = e.target.value;
+                                                                                setTypeOverrides(prev => ({ ...prev, [vName]: val }));
+                                                                            }}
+                                                                            style={{
+                                                                                width: '100%',
+                                                                                padding: '2px 4px',
+                                                                                borderRadius: '4px',
+                                                                                border: '1px solid #cbd5e1',
+                                                                                fontSize: '13px',
+                                                                                color: '#1e293b',
+                                                                                background: '#ffffff',
+                                                                                cursor: 'pointer'
+                                                                            }}
+                                                                        >
+                                                                            {normOpts.map((opt, oIdx) => (
+                                                                                <option key={oIdx} value={opt.value}>{opt.label}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </td>
+                                                                    <td style={{ padding: '5px 8px', color: '#64748b', fontSize: '13px' }}>
+                                                                        {reasonText}
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     )}
 
@@ -1215,14 +1234,26 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                                             cursor: 'pointer'
                                                         }}>
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={isChecked}
-                                                                    onChange={(e) => {
-                                                                        setDeleteVarChecks(prev => ({ ...prev, [vName]: e.target.checked }));
+                                                                <div
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        setDeleteVarChecks(prev => ({ ...prev, [vName]: !prev[vName] }));
                                                                     }}
-                                                                    style={{ accentColor: '#dc2626', cursor: 'pointer' }}
-                                                                />
+                                                                    style={{
+                                                                        width: '16px',
+                                                                        height: '16px',
+                                                                        border: `1px solid ${isChecked ? '#dc2626' : '#cbd5e1'}`,
+                                                                        background: isChecked ? '#dc2626' : '#fff',
+                                                                        borderRadius: '3px',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'center',
+                                                                        flexShrink: 0,
+                                                                        cursor: 'pointer'
+                                                                    }}
+                                                                >
+                                                                    {isChecked && <Check size={12} color="#fff" strokeWidth={3} />}
+                                                                </div>
                                                                 <strong style={{ color: '#1e293b', width: '60px' }}>{vName}</strong>
                                                                 <span style={{ color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                     {vLabel}
@@ -1288,14 +1319,26 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                                                     cursor: 'pointer'
                                                                 }}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            checked={isChecked}
-                                                                            onChange={(e) => {
-                                                                                setLabelFromSavChecks(prev => ({ ...prev, [vName]: e.target.checked }));
+                                                                        <div
+                                                                            onClick={(e) => {
+                                                                                e.preventDefault();
+                                                                                setLabelFromSavChecks(prev => ({ ...prev, [vName]: !prev[vName] }));
                                                                             }}
-                                                                            style={{ accentColor: '#16a34a' }}
-                                                                        />
+                                                                            style={{
+                                                                                width: '16px',
+                                                                                height: '16px',
+                                                                                border: `1px solid ${isChecked ? '#16a34a' : '#cbd5e1'}`,
+                                                                                background: isChecked ? '#16a34a' : '#fff',
+                                                                                borderRadius: '3px',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                flexShrink: 0,
+                                                                                cursor: 'pointer'
+                                                                            }}
+                                                                        >
+                                                                            {isChecked && <Check size={12} color="#fff" strokeWidth={3} />}
+                                                                        </div>
                                                                         <span>
                                                                             <strong>{vName}</strong> 라벨 차이 발생 ― 맵 「{diffList.map(d => d.map).join(',')}」 ➔ SAV 「{diffList.map(d => d.sav).join(',')}」 (체크 시 SAV 라벨 적용)
                                                                         </span>
@@ -1418,7 +1461,6 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                     background: '#f8fafc',
                                     borderColor: '#cbd5e1',
                                     color: '#334155',
-                                    fontWeight: '600',
                                     flexShrink: 0
                                 }}
                             >
