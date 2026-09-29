@@ -344,6 +344,7 @@ const QaPage = () => {
     const [isSaved, setIsSaved] = useState(false); // 저장 완료 토스트 알림 상태
     const [isRightCollapsed, setIsRightCollapsed] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isInitLoading, setIsInitLoading] = useState(true);
 
     // 분석 데이터 상태 (초기 상태는 비어 있음)
     const [questions, setQuestions] = useState([]); // 문항 리스트
@@ -391,9 +392,16 @@ const QaPage = () => {
     const { analyzeAll, getParsedDocument, validateDocument, saveParsedDocument, applyPartialParse } = QaPageApi();
 
     useEffect(() => {
+        const fetchInit = async () => {
+            setIsInitLoading(true);
+            await handleLoadExistingSurvey(true);
+            setIsInitLoading(false);
+        };
+        fetchInit();
         return () => {
             if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // ── 드래그앤드롭 이벤트 핸들러 ──
@@ -1013,12 +1021,12 @@ const QaPage = () => {
     };
 
     // 기존 구조화된 설문 가져오기 핸들러
-    const handleLoadExistingSurvey = async () => {
+    const handleLoadExistingSurvey = async (isInit = false) => {
         const pn = sessionStorage.getItem('projectnum') || '';
         const user = auth?.user?.userId || '';
 
         if (!pn) {
-            modal.showAlert('알림', '프로젝트 정보(PN)가 존재하지 않습니다.');
+            if (!isInit) modal.showAlert('알림', '프로젝트 정보(PN)가 존재하지 않습니다.');
             return;
         }
 
@@ -1072,13 +1080,13 @@ const QaPage = () => {
                     }
                 }
                 setApiErrors(parsedErrors);
-                modal.showAlert('완료', '기존 구조화 설문 데이터를 성공적으로 가져왔습니다.');
+                if (!isInit) modal.showAlert('완료', '기존 구조화 설문 데이터를 성공적으로 가져왔습니다.');
             } else {
-                modal.showAlert('오류', res?.message || '구조화 데이터를 가져오는 데 실패했습니다.');
+                if (!isInit) modal.showAlert('오류', res?.message || '구조화 데이터를 가져오는 데 실패했습니다.');
             }
         } catch (e) {
             console.error("Load Existing Survey Error:", e);
-            modal.showAlert('오류', '서버 통신 중 오류가 발생했습니다.');
+            if (!isInit) modal.showAlert('오류', '서버 통신 중 오류가 발생했습니다.');
         }
     };
 
@@ -2098,6 +2106,16 @@ const QaPage = () => {
                                     ))}
                                 </div>
                             </>
+                        ) : isInitLoading ? (
+                            <div className="qa-empty-viewer" style={{ padding: '80px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', fontSize: '15px', fontWeight: 600, color: '#64748b' }}>
+                                    <span style={{
+                                        display: 'inline-block', width: 20, height: 20, border: '2.5px solid #cbd5e1',
+                                        borderTopColor: 'var(--dm-primary, #16a34a)', borderRadius: '50%', animation: 'spin 0.8s linear infinite'
+                                    }} />
+                                    초기 데이터 조회 중...
+                                </div>
+                            </div>
                         ) : (
                             <div className="qa-empty-viewer">
                                 <FileText size={48} strokeWidth={1.5} />

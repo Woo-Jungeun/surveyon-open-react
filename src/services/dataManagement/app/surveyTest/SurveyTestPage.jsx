@@ -1,4 +1,4 @@
-import { useState, useRef, useContext } from 'react';
+import { useState, useRef, useContext, useEffect } from 'react';
 import DataHeader from '@/services/dataStatus/components/DataHeader';
 import { modalContext } from "@/components/common/Modal.jsx";
 import { CheckCircle, AlertTriangle, ChevronLeft, ChevronRight, FileText, Search, GitCompare, RotateCw, FileSearch } from 'lucide-react';
@@ -47,6 +47,7 @@ const SurveyTestPage = () => {
     const [activeSection, setActiveSection] = useState('syntax');
     const [resultJson, setResultJson] = useState(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isInitLoading, setIsInitLoading] = useState(true);
 
     // ── 메인 뷰 모드 ('qa' | 'wording') ──
     const [viewMode, setViewMode] = useState('qa');
@@ -81,16 +82,32 @@ const SurveyTestPage = () => {
         pendingResponseRef.current = null;
     };
 
+    useEffect(() => {
+        const fetchInit = async () => {
+            setIsInitLoading(true);
+            await Promise.all([
+                handleAnalyze(true),
+                handleCompareWording(true)
+            ]);
+            setIsInitLoading(false);
+        };
+        fetchInit();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+
     // 탭을 다시 누르면 전체 보기 모드(null)로 돌아가는 토글 기능 부활
     const handleSectionClick = (key) => setActiveSection(prev => prev === key ? null : key);
 
     // ── AI 교차 검증 시작 ──
-    const handleAnalyze = async () => {
+    const handleAnalyze = async (isInit = false) => {
         // 로딩바 초기화 및 모달 띄우기
-        setProgressPercentage(0);
-        setProgressMessage('연결 준비 중...');
-        setIsProgressComplete(false);
-        setIsProgressModalOpen(true);
+        if (!isInit) {
+            setProgressPercentage(0);
+            setProgressMessage('연결 준비 중...');
+            setIsProgressComplete(false);
+            setIsProgressModalOpen(true);
+        }
 
         const pn = sessionStorage.getItem('projectnum') || '';
         const user = auth?.user?.userId || '';
@@ -156,16 +173,24 @@ const SurveyTestPage = () => {
 
         try {
             const res = await analyzeAll.mutateAsync(fd);
-            pendingResponseRef.current = res;
-
-            // 응답 완료 시 100% 로깅
-            setProgressPercentage(100);
-            setProgressMessage('교차 검증이 완벽하게 끝났습니다!');
-            setTimeout(() => setIsProgressComplete(true), 500);
+            
+            if (isInit) {
+                if (String(res?.success) === '777') {
+                    setResultJson(res.resultjson);
+                }
+            } else {
+                pendingResponseRef.current = res;
+                // 응답 완료 시 100% 로깅
+                setProgressPercentage(100);
+                setProgressMessage('교차 검증이 완벽하게 끝났습니다!');
+                setTimeout(() => setIsProgressComplete(true), 500);
+            }
         } catch (e) {
             console.error("analyzeAll error:", e);
-            setIsProgressModalOpen(false);
-            modal.showErrorAlert("에러", e.response?.data?.message || e.message || "교차 검증 중 오류가 발생했습니다.");
+            if (!isInit) {
+                setIsProgressModalOpen(false);
+                modal.showErrorAlert("에러", e.response?.data?.message || e.message || "교차 검증 중 오류가 발생했습니다.");
+            }
         } finally {
             if (connection) {
                 connection.stop();
@@ -174,16 +199,16 @@ const SurveyTestPage = () => {
     };
 
     // ── 문구 비교 (Compare Wording) 실행 ──
-    const handleCompareWording = async () => {
+    const handleCompareWording = async (isInit = false) => {
         const pn = sessionStorage.getItem('projectnum') || '';
         const user = auth?.user?.userId || '';
 
         if (!pn) {
-            modal.showErrorAlert("알림", "설문번호(pn)를 찾지 못했습니다. 프로젝트를 먼저 선택해주세요.");
+            if (!isInit) modal.showErrorAlert("알림", "설문번호(pn)를 찾지 못했습니다. 프로젝트를 먼저 선택해주세요.");
             return;
         }
 
-        setIsWordingLoading(true);
+        if (!isInit) setIsWordingLoading(true);
         const requestedPn = pn;
 
         try {
@@ -199,20 +224,20 @@ const SurveyTestPage = () => {
             if (String(res?.success) === '777') {
                 setWordingResultJson(res.resultjson || {});
                 setWordingTopMessage(res.message || '');
-                setViewMode('wording');
+                if (!isInit) setViewMode('wording');
             } else if (res?.success === '900' || res?.success === '909') {
                 const errMsg = res.resultjson?.errorcontent || res.message || "문구 비교를 진행할 수 없습니다.";
-                modal.showErrorAlert("알림", errMsg);
+                if (!isInit) modal.showErrorAlert("알림", errMsg);
             } else {
                 const errMsg = res?.resultjson?.errorcontent || res?.message || "문구 비교를 하지 못했습니다. 잠시 후 다시 시도해주세요.";
-                modal.showErrorAlert("알림", errMsg);
+                if (!isInit) modal.showErrorAlert("알림", errMsg);
             }
         } catch (e) {
             console.error("compareWording error:", e);
             const errMsg = e.response?.data?.message || e.message || "문구 비교를 하지 못했습니다. 잠시 후 다시 시도해주세요.";
-            modal.showErrorAlert("에러", errMsg);
+            if (!isInit) modal.showErrorAlert("에러", errMsg);
         } finally {
-            setIsWordingLoading(false);
+            if (!isInit) setIsWordingLoading(false);
         }
     };
 
@@ -317,14 +342,14 @@ const SurveyTestPage = () => {
                     </div>
                     {viewMode === 'wording' ? (
                         <div className="survey-test-tab-content" style={{ padding: '0', overflowY: 'auto' }}>
-                            {isWordingLoading ? (
+                            {isWordingLoading || isInitLoading ? (
                                 <div className="st-empty-viewer" style={{ padding: '80px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', fontSize: '15px', fontWeight: 600, color: '#64748b' }}>
                                         <span style={{
                                             display: 'inline-block', width: 20, height: 20, border: '2.5px solid #cbd5e1',
                                             borderTopColor: 'var(--dm-primary, #16a34a)', borderRadius: '50%', animation: 'spin 0.8s linear infinite'
                                         }} />
-                                        설문 문구 대조 분석 중...
+                                        {isInitLoading ? '초기 데이터 조회 중...' : '설문 문구 대조 분석 중...'}
                                     </div>
                                 </div>
                             ) : wordingResultJson ? (
@@ -553,6 +578,16 @@ const SurveyTestPage = () => {
                                                 );
                                             })}
                                         </div>
+                                    </div>
+                                </div>
+                            ) : isInitLoading ? (
+                                <div className="st-empty-viewer" style={{ padding: '80px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', fontSize: '15px', fontWeight: 600, color: '#64748b' }}>
+                                        <span style={{
+                                            display: 'inline-block', width: 20, height: 20, border: '2.5px solid #cbd5e1',
+                                            borderTopColor: 'var(--dm-primary, #16a34a)', borderRadius: '50%', animation: 'spin 0.8s linear infinite'
+                                        }} />
+                                        초기 데이터 조회 중...
                                     </div>
                                 </div>
                             ) : (
