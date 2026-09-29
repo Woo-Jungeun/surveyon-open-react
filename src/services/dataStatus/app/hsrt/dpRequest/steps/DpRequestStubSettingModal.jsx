@@ -383,7 +383,7 @@ const ConditionHeaderCell = (props) => {
                         <div class="section-container section-include">
                             <div class="section-header">
                                 <span class="section-badge badge-include">포함</span>
-                                <span class="section-desc">리스트 안 값의 포함 여부</span>
+                                <span class="section-desc">리스트 안 값의 포함 여부 <span style="font-weight: 700; color: #7c3aed;">(복수문항 필수 조건식)</span></span>
                             </div>
                             <div class="grid-2">
                                 <div class="box box-vertical">
@@ -1312,7 +1312,7 @@ const openTemplateGuide = () => {
                 <div style="border-radius: 6px; padding: 8px 12px; border: 1px solid #f3e8ff; background-color: #faf5ff;">
                     <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
                         <span style="display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; background-color: #f3e8ff; color: #7c3aed; border: 1px solid #e9d5ff;">포함</span>
-                        <span style="font-size: 11px; color: #64748b; font-weight: 500;">리스트 안 값의 포함 여부</span>
+                        <span style="font-size: 11px; color: #64748b; font-weight: 500;">리스트 안 값의 포함 여부 <span style="font-weight: 700; color: #7c3aed;">(복수문항 필수 조건식)</span></span>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
                         <div style="background-color: #ffffff; border: 1px solid #e9d5ff; border-radius: 6px; padding: 6px 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;">

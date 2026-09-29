@@ -418,7 +418,7 @@ const ConditionHeaderCell = (props) => {
                         <div class="section-container section-include">
                             <div class="section-header">
                                 <span class="section-badge badge-include">포함</span>
-                                <span class="section-desc">리스트 안 값의 포함 여부</span>
+                                <span class="section-desc">리스트 안 값의 포함 여부 <span style="font-weight: 700; color: #7c3aed;">(복수문항 필수 조건식)</span></span>
                             </div>
                             <div class="grid-2">
                                 <div class="box box-vertical">
