@@ -2365,6 +2365,28 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
 
                 {/* ── 푸터 ── */}
                 <div className="variable-modal-footer" style={{ borderTop: 'none', padding: '8px 24px 16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    {/* 좌측 안내 문구 영역 */}
+                    <div>
+                        {activeTab === 2 && (
+                            <>
+                                {xmlState === 'success' && (
+                                    <span style={{ fontSize: '12.5px', color: '#64748b' }}>
+                                        {/* 삭제되는 문항은 없습니다. <strong style={{ color: '#0f172a', fontSize: 'inherit' }}>[적용]</strong> 을 눌러야 저장됩니다. */}
+                                    </span>
+                                )}
+                                {xmlState === 'deleted' && (
+                                    <span style={{ fontSize: '12.5px', color: '#dc2626', fontWeight: '600' }}>
+                                        {/* 5개 문항이 삭제됩니다. <strong style={{ color: '#0f172a', fontSize: 'inherit' }}>[적용]</strong> 을 눌러야 저장됩니다. */}
+                                    </span>
+                                )}
+                                {xmlState === 'applied' && (
+                                    <span style={{ fontSize: '12.5px', color: '#64748b', fontWeight: '500' }}>
+                                        {/* 217개 반영 완료 · 복원 지점 v13 생성 */}
+                                    </span>
+                                )}
+                            </>
+                        )}
+                    </div>
                     {/* 우측 버튼 영역 */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <button
