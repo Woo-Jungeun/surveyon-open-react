@@ -739,7 +739,7 @@ const MapManagementPage = () => {
                                 <Tags size={16} />
                                 Re_Label
                             </button> */}
-                            <button
+                            {/* <button
                                 className="data-header-btn"
                                 onClick={handleUpdateMap}
                                 title="큐마의 최신맵으로 대체됩니다."
@@ -758,7 +758,7 @@ const MapManagementPage = () => {
                             >
                                 <RefreshCw size={16} />
                                 맵 새로고침
-                            </button>
+                            </button> */}
                             <button
                                 className="data-header-btn"
                                 onClick={() => setBatchMapEditModalOpen(true)}
