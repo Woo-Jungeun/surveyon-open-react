@@ -226,10 +226,10 @@ export function MapManagementPageApi() {
     /** SAV 등록/업데이트 적용 (2단계) */
     const applySav = useMutation(
         async (data) => await api.post(data, "/data/sav/apply", "API_BASE_URL_DATAMANAGEMENT"),
-        {
-            onMutate: () => loadingSpinner.show(),
-            onSettled: () => loadingSpinner.hide(),
-        }
+        // {
+        //     onMutate: () => loadingSpinner.show(),
+        //     onSettled: () => loadingSpinner.hide(),
+        // }
     );
 
     return {
