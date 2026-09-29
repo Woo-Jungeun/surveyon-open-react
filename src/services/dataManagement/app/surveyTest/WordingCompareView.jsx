@@ -80,6 +80,7 @@ const WordingCompareView = ({ data, topMessage, onResetQnumFilter }) => {
     const [majorOnly, setMajorOnly] = useState(false);
     const [selectedQnumFilter, setSelectedQnumFilter] = useState(null);
     const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(false);
+    const [showHelp, setShowHelp] = useState(false);
 
     const contentBodyRef = useRef(null);
 
@@ -232,9 +233,43 @@ const WordingCompareView = ({ data, topMessage, onResetQnumFilter }) => {
                         </div>
                     )}
 
+                </>
+            )}
+
+            {/* ── 3. 결과 한 줄 (message) 및 기준 (basis) 정보 (초슬림 헤더 스트립) ───────────────── */}
+            <div className="wording-header-strip" style={{ marginBottom: showHelp ? '4px' : '10px' }}>
+                <div className="wording-strip-left">
+                    <FileText size={14} className="wording-header-icon" />
+                    <span className="wording-header-message">
+                        {showHelp ? (topMessage || resultjson.message || "설문지 원문과 큐마 스크립트 대조 분석 결과입니다.") : "문구 대조 분석 결과"}
+                    </span>
+                    <button 
+                        type="button"
+                        onClick={() => setShowHelp(!showHelp)}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', marginLeft: '6px',
+                            background: showHelp ? '#fffbeb' : '#f1f5f9', border: showHelp ? '1px solid #fde68a' : '1px solid #e2e8f0',
+                            borderRadius: '12px', cursor: 'pointer', color: showHelp ? '#d97706' : '#64748b', outline: 'none'
+                        }}
+                    >
+                        <Info size={13} />
+                        <span style={{ fontSize: '11px', fontWeight: 700 }}>{showHelp ? '대조 안내 닫기' : '대조 안내 및 참고사항'}</span>
+                    </button>
+                </div>
+                {basis && (
+                    <div className="wording-basis-info">
+                        대조 기준: 설문지 {basis.documentVersion ? `${basis.documentVersion}차 판` : ''}
+                        {basis.documentUpdatedAt ? ` (${new Date(basis.documentUpdatedAt).toLocaleDateString()})` : ''}
+                        {basis.scriptFetchedAt ? ` · 동기화 ${new Date(basis.scriptFetchedAt).toLocaleTimeString()}` : ''}
+                    </div>
+                )}
+            </div>
+
+            {!resultjson.errorcontent && (
+                <>
                     {/* ── 2. 원문 & 강조 안내 (최대 3개 노출 후 스크롤 고정) ──── */}
-                    {noticeItems.length > 0 && (
-                        <div className="wording-combined-notice-banner">
+                    {showHelp && noticeItems.length > 0 && (
+                        <div className="wording-combined-notice-banner" style={{ marginBottom: '8px' }}>
                             <div className="notice-banner-header">
                                 <Info size={14} className="notice-banner-info-icon" />
                                 <span className="notice-banner-title">대조 안내 및 참고사항</span>
@@ -255,7 +290,7 @@ const WordingCompareView = ({ data, topMessage, onResetQnumFilter }) => {
 
                     {/* 정상 강조 정보 표시 (작게) */}
                     {emphasis?.available === true && emphasis?.sameFile === true && (
-                        <div className="wording-info-meta">
+                        <div className="wording-info-meta" style={{ marginBottom: '8px' }}>
                             <span className="wording-meta-badge">강조 대조 완료</span>
                             <span className="wording-meta-text">
                                 {emphasis?.fileName ? `파일명: ${emphasis.fileName}` : ''}
@@ -266,21 +301,6 @@ const WordingCompareView = ({ data, topMessage, onResetQnumFilter }) => {
                 </>
             )}
 
-            {/* ── 3. 결과 한 줄 (message) 및 기준 (basis) 정보 (초슬림 헤더 스트립) ───────────────── */}
-            <div className="wording-header-strip">
-                <div className="wording-strip-left">
-                    <FileText size={14} className="wording-header-icon" />
-                    <span className="wording-header-message">{topMessage || resultjson.message || "설문지 원문과 큐마 스크립트 대조 분석 결과입니다."}</span>
-                </div>
-                {basis && (
-                    <div className="wording-basis-info">
-                        대조 기준: 설문지 {basis.documentVersion ? `${basis.documentVersion}차 판` : ''}
-                        {basis.documentUpdatedAt ? ` (${new Date(basis.documentUpdatedAt).toLocaleDateString()})` : ''}
-                        {basis.scriptFetchedAt ? ` · 동기화 ${new Date(basis.scriptFetchedAt).toLocaleTimeString()}` : ''}
-                    </div>
-                )}
-            </div>
-
             {/* ── 4. 요약 탭 카드 및 통계 영역 (탭 3개 + 구분선 + 참고 통계 배지) ───────────────── */}
             <div className="wording-summary-wrapper">
                 <div className="wording-tabs-group">
@@ -290,10 +310,12 @@ const WordingCompareView = ({ data, topMessage, onResetQnumFilter }) => {
                         onClick={() => setActiveTab('questions')}
                     >
                         <div className="wording-card-left">
-                            <span className="wording-card-title">질문 문구 차이</span>
-                            <div className="wording-card-sub">
-                                질문 문장 불일치 (차이 큼 {summary?.questionMajor ?? 0}건)
-                            </div>
+                            <span className="wording-card-title">
+                                질문 문구 차이
+                                <span title={`질문 문장 불일치 (차이 큼 ${summary?.questionMajor ?? 0}건)`} style={{ cursor: 'pointer', display: 'inline-flex' }}>
+                                    <Info size={14} style={{ marginLeft: 6, color: '#94a3b8', verticalAlign: 'middle' }} />
+                                </span>
+                            </span>
                         </div>
                         <span className="wording-card-val rose">
                             {summary?.questionDiff ?? (questions?.length || 0)}
@@ -306,10 +328,12 @@ const WordingCompareView = ({ data, topMessage, onResetQnumFilter }) => {
                         onClick={() => setActiveTab('options')}
                     >
                         <div className="wording-card-left">
-                            <span className="wording-card-title">보기·척도 차이</span>
-                            <div className="wording-card-sub">
-                                한쪽에만 존재하는 보기 항목
-                            </div>
+                            <span className="wording-card-title">
+                                보기·척도 차이
+                                <span title="한쪽에만 존재하는 보기 항목" style={{ cursor: 'pointer', display: 'inline-flex' }}>
+                                    <Info size={14} style={{ marginLeft: 6, color: '#94a3b8', verticalAlign: 'middle' }} />
+                                </span>
+                            </span>
                         </div>
                         <span className="wording-card-val purple">
                             {summary?.optionDiff ?? (options?.length || 0)}
@@ -322,10 +346,12 @@ const WordingCompareView = ({ data, topMessage, onResetQnumFilter }) => {
                         onClick={() => setActiveTab('emphasis')}
                     >
                         <div className="wording-card-left">
-                            <span className="wording-card-title">서식 강조 차이</span>
-                            <div className="wording-card-sub">
-                                굵게·색상 등 서식 강조 불일치
-                            </div>
+                            <span className="wording-card-title">
+                                서식 강조 차이
+                                <span title="굵게·색상 등 서식 강조 불일치" style={{ cursor: 'pointer', display: 'inline-flex' }}>
+                                    <Info size={14} style={{ marginLeft: 6, color: '#94a3b8', verticalAlign: 'middle' }} />
+                                </span>
+                            </span>
                         </div>
                         <span className="wording-card-val pink">
                             {summary?.emphasisDiff ?? (emphasisDiffs?.length || 0)}
@@ -338,11 +364,13 @@ const WordingCompareView = ({ data, topMessage, onResetQnumFilter }) => {
                 {/* 참고 통계 (클릭 탭이 아닌 안내 정보 박스) */}
                 <div className="wording-stat-box">
                     <div className="wording-card-left">
-                        <span className="wording-card-title">원문 대조 동일 문항</span>
-                        <div className="wording-card-sub">
-                            <span className="info-tag-pill">참고 통계</span>
-                            <span className="stat-sub-text">원문 평문 대조 동일 항목</span>
-                        </div>
+                        <span className="wording-card-title">
+                            <span className="info-tag-pill" style={{ marginRight: '6px' }}>참고 통계</span>
+                            원문 대조 동일 문항
+                            <span title="원문 평문 대조 동일 항목" style={{ cursor: 'pointer', display: 'inline-flex' }}>
+                                <Info size={14} style={{ marginLeft: 6, color: '#94a3b8', verticalAlign: 'middle' }} />
+                            </span>
+                        </span>
                     </div>
                     <span className="wording-card-val green">
                         {summary?.sourceMatched ?? (sourceMatchedQnums?.length || 0)}

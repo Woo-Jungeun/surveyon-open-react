@@ -254,12 +254,10 @@
 }
 
 .wording-header-message {
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 700;
     color: #1e293b;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.5;
 }
 
 .wording-basis-info {
@@ -439,6 +437,8 @@
     font-size: 12px;
     font-weight: 700;
     color: #334155;
+    display: inline-flex;
+    align-items: center;
 }
 
 .wording-card-val {
