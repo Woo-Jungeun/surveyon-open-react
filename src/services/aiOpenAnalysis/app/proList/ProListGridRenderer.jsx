@@ -536,7 +536,7 @@ const ExcludeCell = (cellProps) => {
     return (
         <td style={{ textAlign: 'center' }} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
             {!excluded && (
-                <Button className="btnM" themeColor="primary" onClick={() => { if (!ctx.blockWhenDirty()) ctx.goOpenSetting(merge_qnum || row.__groupKey, targetItem.project_lock); }}>
+                <Button className="btnM" themeColor="primary" onClick={() => { if (!ctx.blockWhenDirty()) ctx.goOpenSetting(merge_qnum || row.__groupKey, ctx.isLocked(targetItem) ? '수정불가' : '수정'); }}>
                     분석보기
                 </Button>
             )}
