@@ -160,6 +160,9 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
             const pages = pageRes.resultjson || [];
             if (pages.length === 1) {
               handlePageSelect(pages[0]);
+            } else if (pages.length > 1) {
+              setPageListData(pages);
+              setIsPageListPopupOpen(true);
             }
           }
         } catch (e) {
