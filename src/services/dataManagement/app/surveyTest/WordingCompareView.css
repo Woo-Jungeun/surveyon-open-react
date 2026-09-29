@@ -765,13 +765,7 @@
     font-weight: 800;
     padding: 2px 8px;
     border-radius: 6px;
-    cursor: pointer;
     transition: all 0.15s;
-}
-
-.qnum-btn:hover, .qnum-btn.active {
-    background: var(--dm-primary, #16a34a);
-    color: #ffffff;
 }
 
 .script-var-tag {

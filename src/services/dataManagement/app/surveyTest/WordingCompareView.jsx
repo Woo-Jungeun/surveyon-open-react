@@ -412,14 +412,9 @@ const WordingCompareView = ({ data, topMessage, onResetQnumFilter }) => {
                                     <div key={idx} className={`wording-item-card ${isMajor ? 'grade-major' : 'grade-minor'}`}>
                                         <div className="wording-item-header">
                                             <div className="wording-item-tags">
-                                                <button
-                                                    type="button"
-                                                    className={`qnum-btn ${selectedQnumFilter === item.qnum ? 'active' : ''}`}
-                                                    onClick={() => handleQnumClick(item.qnum)}
-                                                    title="이 문항만 전체 탭 필터링"
-                                                >
+                                                <span className="qnum-btn">
                                                     {item.qnum}
-                                                </button>
+                                                </span>
                                                 <span className="script-var-tag">{item.scriptVar}</span>
                                                 <span className={`grade-badge ${isMajor ? 'major' : 'minor'}`}>
                                                     {isMajor ? '차이 큼' : '차이 작음'}
@@ -486,13 +481,9 @@ const WordingCompareView = ({ data, topMessage, onResetQnumFilter }) => {
                                     <div key={idx} className="wording-option-card">
                                         <div className="wording-item-header">
                                             <div className="wording-item-tags">
-                                                <button
-                                                    type="button"
-                                                    className={`qnum-btn ${selectedQnumFilter === item.qnum ? 'active' : ''}`}
-                                                    onClick={() => handleQnumClick(item.qnum)}
-                                                >
+                                                <span className="qnum-btn">
                                                     {item.qnum}
-                                                </button>
+                                                </span>
                                                 <span className="script-var-tag">{item.scriptVar}</span>
                                             </div>
                                         </div>
@@ -565,13 +556,9 @@ const WordingCompareView = ({ data, topMessage, onResetQnumFilter }) => {
                                     <div key={idx} className="wording-emphasis-card">
                                         <div className="wording-item-header">
                                             <div className="wording-item-tags">
-                                                <button
-                                                    type="button"
-                                                    className={`qnum-btn ${selectedQnumFilter === item.qnum ? 'active' : ''}`}
-                                                    onClick={() => handleQnumClick(item.qnum)}
-                                                >
+                                                <span className="qnum-btn">
                                                     {item.qnum}
-                                                </button>
+                                                </span>
                                                 <span className="script-var-tag">{item.scriptVar}</span>
                                             </div>
                                         </div>
