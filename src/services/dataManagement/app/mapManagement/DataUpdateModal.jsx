@@ -1553,7 +1553,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                         fontWeight: '500'
                                     }}
                                 >
-                                    맵 엑셀로 유형 고치기 →
+                                    {/* 맵 엑셀로 유형 고치기 → */}
                                 </button>
                                 <button
                                     className="upload-submit-btn"
