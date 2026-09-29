@@ -1293,7 +1293,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                         )}
 
                                         {/* 서버 무시 알림 카트 (ignored) */}
-                                        {xmlValidationResult?.ignored && xmlValidationResult.ignored.length > 0 && (
+                                        {/* {xmlValidationResult?.ignored && xmlValidationResult.ignored.length > 0 && (
                                             <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 {xmlValidationResult.ignored.map((ign, idx) => (
                                                     <span key={idx} style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.45' }}>
@@ -1301,7 +1301,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                     </span>
                                                 ))}
                                             </div>
-                                        )}
+                                        )} */}
 
                                         {/* 메인 통계 카운터 카드 (4개 개수 크게 표시) */}
                                         {(() => {
