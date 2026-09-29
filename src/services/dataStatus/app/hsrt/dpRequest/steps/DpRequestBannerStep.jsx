@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, memo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Save, Trash2, ChevronDown, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, Info, RotateCcw } from 'lucide-react';
+import { Save, Trash2, ChevronDown, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, Info, RotateCcw, Sparkles } from 'lucide-react';
 import { Popup } from '@progress/kendo-react-popup';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV3, { GridColumn as Column } from "@/components/kendo/KendoGridV3";
@@ -9,6 +9,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
 import Toast from "@/components/common/Toast";
 import BulkEditSubcategoriesModal from "./BulkEditSubcategoriesModal";
+import AiAutoBannerModal from "./AiAutoBannerModal";
 
 // --- 커스텀 헤더 셀 (조건 아이콘) ---
 const ConditionHeaderCell = (props) => {
@@ -942,6 +943,97 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     const [toast, setToast] = useState({ show: false, message: '' });
     const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
+    const [isAiAutoBannerModalOpen, setIsAiAutoBannerModalOpen] = useState(false);
+
+    const handleApplyAiBannerToCurrent = async (selectedItems) => {
+        const activeBanner = banners.find(b => b.id === selectedBanner);
+        if (!activeBanner) {
+            modal.showConfirm('알림', '선택된 배너가 없습니다. 새 배너로 생성하시겠습니까?', {}, {
+                btns: [
+                    {
+                        title: "취소",
+                        click: () => {}
+                    },
+                    {
+                        title: "새 배너로 생성",
+                        click: () => {
+                            handleCreateNewAiBanner(selectedItems);
+                        }
+                    }
+                ]
+            });
+            return;
+        }
+
+        const currentInfo = activeBanner.info || [];
+        const newItemsMapped = selectedItems.map((item, idx) => ({
+            index: currentInfo.length + idx + 1,
+            label3: item.label3 || '',
+            label2: item.label2 || '',
+            label: item.label || '',
+            logic: item.logic || '',
+            type: '빈도',
+            value: null
+        }));
+
+        const updatedInfo = [...currentInfo, ...newItemsMapped];
+        const nextBanners = banners.map(b => b.id === selectedBanner ? { ...b, info: updatedInfo, isDirty: true } : b);
+        setBanners(nextBanners);
+        setIsAiAutoBannerModalOpen(false);
+        setToast({ show: true, message: `현재 배너에 ${selectedItems.length}개 항목이 추가되었습니다.` });
+
+        // 자동 저장 실행
+        await handleSaveBanner(nextBanners);
+    };
+
+    const handleCreateNewAiBanner = async (selectedItems, customName = '') => {
+        // 기존 배너 목록 기반 자동 채번 (banner_01 -> banner_02 ...)
+        let nextNum = 1;
+        banners.forEach(b => {
+            const match = String(b.id || '').match(/banner_(\d+)/i);
+            if (match) {
+                const num = parseInt(match[1], 10);
+                if (num >= nextNum) nextNum = num + 1;
+            }
+        });
+        if (nextNum === 1 && banners.length > 0) {
+            nextNum = banners.length + 1;
+        }
+
+        const seqStr = String(nextNum).padStart(2, '0');
+        const newBannerId = `banner_${seqStr}`;
+        const newLabel = (typeof customName === 'string' && customName.trim()) ? customName.trim() : `통배너 ${seqStr}`;
+
+        const newBannerObj = {
+            id: newBannerId,
+            label: newLabel,
+            type: 'single',
+            recoded_type: 'recoded',
+            info: [
+                { index: 1, label: '전체', label2: '', label3: '', logic: '', type: '빈도', value: null },
+                ...selectedItems.map((item, idx) => ({
+                    index: idx + 2,
+                    label3: item.label3 || '',
+                    label2: item.label2 || '',
+                    label: item.label || '',
+                    logic: item.logic || '',
+                    type: '빈도',
+                    value: null
+                }))
+            ],
+            isDirty: true
+        };
+
+        const nextBanners = [...banners, newBannerObj];
+        setBanners(nextBanners);
+        setSelectedBanner(newBannerId);
+        setCurrentLabel(newLabel);
+        setIsAiAutoBannerModalOpen(false);
+
+        // 자동 저장 실행
+        await handleSaveBanner(nextBanners);
+        modal.showAlert('알림', `신규 배너(${newLabel})가 생성되었습니다.`);
+    };
 
     const handleCopyGrid = async () => {
         try {
@@ -2018,12 +2110,13 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         return () => window.removeEventListener("pageSelected", handlePageUpdate);
     }, [auth?.user?.userId]);
 
-    const handleSaveBanner = async () => {
+    const handleSaveBanner = async (overrideBanners = null) => {
         const pageId = sessionStorage.getItem('pageId');
         if (!pageId) return;
 
+        const bannersList = overrideBanners || banners;
         // 1. 저장할 대상 배너(신규 또는 수정된 배너)들을 모두 찾는다 (단, 삭제 예정 제외).
-        const bannersToSave = banners.filter(b => (b.isNew || b.isDirty) && !deletedBannerIds.includes(b.id));
+        const bannersToSave = bannersList.filter(b => (b.isNew || b.isDirty) && !deletedBannerIds.includes(b.id));
         if (bannersToSave.length === 0 && deletedBannerIds.length === 0) {
             if (onUnsavedChange) onUnsavedChange(false);
             return true;
@@ -2059,7 +2152,6 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             const result = await saveBannerDetail.mutateAsync(requestData);
             if (String(result?.success) === '777') {
                 setDeletedBannerIds([]);
-                modal.showAlert('알림', '배너 정보가 저장되었습니다.');
                 if (onUnsavedChange) onUnsavedChange(false); // 저장 성공 시 더티 해제
                 await fetchBannerData();
                 return true;
@@ -2639,6 +2731,30 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 </span>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <button
+                                        onClick={() => setIsAiAutoBannerModalOpen(true)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            height: '28px',
+                                            padding: '0 12px',
+                                            borderRadius: '6px',
+                                            border: 'none',
+                                            color: '#FFFFFF',
+                                            background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                                            fontSize: '12px',
+                                            fontWeight: 700,
+                                            cursor: 'pointer',
+                                            boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)',
+                                            transition: 'all 0.15s',
+                                            boxSizing: 'border-box'
+                                        }}
+                                        onMouseOver={(e) => { e.currentTarget.style.opacity = '0.9'; }}
+                                        onMouseOut={(e) => { e.currentTarget.style.opacity = '1'; }}
+                                    >
+                                        <Sparkles size={13} /> 자동배너생성
+                                    </button>
+                                    <button
                                         onClick={() => setIsBulkEditModalOpen(true)}
                                         style={{
                                             display: 'flex',
@@ -2780,6 +2896,13 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             });
                             updateBannerInfo(updatedInfo);
                         }}
+                    />
+                    <AiAutoBannerModal
+                        isOpen={isAiAutoBannerModalOpen}
+                        onClose={() => setIsAiAutoBannerModalOpen(false)}
+                        onApplyToCurrent={handleApplyAiBannerToCurrent}
+                        onCreateNewBanner={handleCreateNewAiBanner}
+                        currentBannerLabel={currentLabel}
                     />
                     <Toast
                         show={toast.show}

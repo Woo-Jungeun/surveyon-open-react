@@ -298,7 +298,25 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/variables/ai/models", "API_BASE_URL_DATASTATUS")
     );
 
+    /** AI 비동기 배너 자동 생성 요청 API */
+    const autoGenerateBannerAsync = useMutation(
+        async (data) => await api.post(data, "/variables/ai/auto-generate-banner-async", "API_BASE_URL_DATASTATUS")
+    );
 
+    /** AI 배너 자동 생성 작업 상태 조회 API (GET) */
+    const getBannerJobStatus = useMutation(
+        async (data) => {
+            const jobId = typeof data === 'string' ? data : data?.jobId;
+            const user = typeof data === 'object' ? data?.user : undefined;
+            const queryParams = user ? { user } : {};
+            return await api.getWithParams(`/variables/ai/banner-job-status/${jobId}`, queryParams, "API_BASE_URL_DATASTATUS");
+        }
+    );
+
+    /** AI 배너 N수 재계산 API */
+    const recalculateBannerCounts = useMutation(
+        async (data) => await api.post(data, "/variables/ai/recalculate-banner-counts", "API_BASE_URL_DATASTATUS")
+    );
 
     /** DP 의뢰서 - 설정 재적용 (source_based 부모 스터브만 가능) */
     const reapplyPreset = useMutation(
@@ -360,5 +378,8 @@ export function DpRequestPageApi() {
         saveWeightSetPid,
         autoGenerateLogic,
         getAiModels,
+        autoGenerateBannerAsync,
+        getBannerJobStatus,
+        recalculateBannerCounts,
     };
 }
