@@ -1711,12 +1711,6 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                     } else {
                         formatted = recodes
                             .filter(v => String(v.id || '').toLowerCase().startsWith("banner"))
-                            .sort((a, b) => {
-                                const orderA = typeof a.recoded_order === 'number' ? a.recoded_order : 999999;
-                                const orderB = typeof b.recoded_order === 'number' ? b.recoded_order : 999999;
-                                if (orderA !== orderB) return orderA - orderB;
-                                return String(a.id || '').localeCompare(String(b.id || ''));
-                            })
                             .map((v, i) => ({
                                 ...v,
                                 id: v.id || `var_${i}`,
