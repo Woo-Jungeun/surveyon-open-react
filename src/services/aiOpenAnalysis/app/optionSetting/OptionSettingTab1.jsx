@@ -1134,9 +1134,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         useEffect(() => { onSavedRef.current = onSaved; }, [onSaved]);
 
         /* 저장: API 호출 */
-        const saveChanges = useCallback(async (skipReload) => {
+        const saveChanges = useCallback(async (skipReload, overrideRows) => {
+            const targetRows = overrideRows || rows;
             // selected → recheckyn 반영 + 페이로드 생성
-            const payload = buildSavePayload(rows.filter(r => r.__pendingDelete !== true), {   // 실제 저장 데이터만
+            const payload = buildSavePayload(targetRows.filter(r => r.__pendingDelete !== true), {   // 실제 저장 데이터만
                 user: auth?.user?.userId || "",
                 projectnum: projectnum,
                 qnum: qnum,
@@ -1146,7 +1147,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             // 저장 API 호출
             try {
-                const res = await optionSaveData.mutateAsync(payload);
+                const res = await optionSaveData.mutateAsync({
+                    ...payload,
+                    skipSpinner: skipReload === true
+                });
                 if (String(res?.success) === '777') {
                     // modal.showAlert("알림", "저장되었습니다."); // 성공 팝업 표출
                     onSaved?.();

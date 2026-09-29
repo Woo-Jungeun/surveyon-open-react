@@ -128,30 +128,26 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                     {
                         title: "확인",
                         click: async () => {
-                            // 1. 먼저 대상 탭으로 화면 이동하여 해당 탭 컴포넌트(tab1Ref / tab2Ref) 마운트
-                            if (nextTabRef.current) {
-                                onNavigateTab?.(nextTabRef.current);
-                                nextTabRef.current = null;
-                                // 탭 컴포넌트 마운트 및 ref 연결 대기
-                                await sleep(80);
-                            }
-
                             const curType = activeTypeRef.current;
                             if (curType === "response" || curType === "recallResponse") {
                                 try {
-                                    // 1. in 조회
-                                    await onFetchIn?.();
+                                    // 1. in 조회 (서버의 최신 분석결과 반영 데이터)
+                                    const resIn = await optionEditData.mutateAsync({
+                                        params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "in", skipSpinner: true }
+                                    });
+                                    const freshInRows = resIn?.resultjson || [];
 
-                                    // 2. popupcheck 조회
+
+                                    // 3. popupcheck 조회
                                     await optionEditData.mutateAsync({
-                                        params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "popupcheck", checkyn: 1 }
+                                        params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "popupcheck", checkyn: 1, skipSpinner: true }
                                     });
 
-                                    // 3. lb 조회
-                                    await fetchLv3Options?.();
+                                    // 4. lb 조회
+                                    await fetchLv3Options?.(true);
 
-                                    // 4. 앞의 조회가 모두 성공하면 in 저장 (재조회 스킵 true)
-                                    await onSaveIn?.(true);
+                                    // 5. 앞의 조회가 모두 성공하면 최신 데이터(freshInRows)를 사용하여 in 저장 (재조회 스킵 true)
+                                    await onSaveIn?.(true, freshInRows);
                                 } catch (e) {
                                     console.error("[OptionSettingInfo] 분석 완료 후 프로세스 에러:", e);
                                     // 하나라도 실패하면 저장을 진행하지 않거나 별도 처리가 가능
@@ -189,34 +185,38 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                                             qnum: sessionStorage.getItem("qnum") || qnum || "",
                                             gb: "lb",
                                             data: cleaned,
-                                            lvcode: "1" // 기본값 설정
+                                            lvcode: "1", // 기본값 설정
+                                            skipSpinner: true
                                         });
 
-                                        // 1. in 조회
-                                        await onFetchIn?.();
 
                                         // 2. popupcheck 조회
                                         await optionEditData.mutateAsync({
-                                            params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "popupcheck", checkyn: 1 }
+                                            params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "popupcheck", checkyn: 1, skipSpinner: true }
                                         });
 
                                         // 3. fetchLv3Options 는 freshRows를 넘겨주어 또 조회하지 않도록 함 (조회 횟수 단축)
                                         await fetchLv3Options?.(true, freshRows);
                                     } else {
-                                        // 1. in 조회
-                                        await onFetchIn?.();
 
                                         // 2. popupcheck 조회
                                         await optionEditData.mutateAsync({
-                                            params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "popupcheck", checkyn: 1 }
+                                            params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "popupcheck", checkyn: 1, skipSpinner: true }
                                         });
 
                                         // 3. lb 조회
-                                        await fetchLv3Options?.();
+                                        await fetchLv3Options?.(true);
                                     }
                                 } catch (e) {
                                     console.error("[OptionSettingInfo] 분석 완료 후 프로세스 에러:", e);
                                 }
+                            }
+
+                            // 모든 백그라운드 저장 및 데이터 처리 완료 후 최종적으로 UI를 업데이트하기 위해 탭 이동(및 리로드) 실행
+                            if (nextTabRef.current) {
+                                onNavigateTab?.(nextTabRef.current);
+                                nextTabRef.current = null;
+                                await sleep(80);
                             }
                         },
                     },

@@ -641,8 +641,11 @@ const OptionSettingBody = () => {
     // 항상 최신 상태로 비교되도록 콜백화
     setTabDivision((prev) => {
       if (prev === nextTab) {
-        if (nextTab === "1") tab1Ref.current?.reload?.();
-        else if (nextTab === "2") tab2Ref.current?.reload?.();
+        // 사이드 이펙트는 렌더링 사이클 밖(setTimeout)에서 실행하여 React 렌더링 충돌(Warning) 방지
+        setTimeout(() => {
+          if (nextTab === "1") tab1Ref.current?.reload?.();
+          else if (nextTab === "2") tab2Ref.current?.reload?.();
+        }, 0);
         return prev; // 유지
       }
       return nextTab;
@@ -723,10 +726,10 @@ const OptionSettingBody = () => {
                   await ref?.reload?.();
                 } catch (e) { }
               }}
-              onSaveIn={async (skipReload) => {
+              onSaveIn={async (skipReload, freshRows) => {
                 try {
                   const ref = await waitForRef(() => tab1Ref.current);
-                  await ref?.saveChanges?.(skipReload);
+                  await ref?.saveChanges?.(skipReload, freshRows);
                 } catch (e) { }
               }}
               onSaveLb={async () => {
