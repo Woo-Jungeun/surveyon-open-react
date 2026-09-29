@@ -783,6 +783,10 @@
     background: #fee2e2;
 }
 
+.dp-banner-delete svg {
+    pointer-events: none;
+}
+
 /* Content Area */
 .dp-content {
     flex: 1;

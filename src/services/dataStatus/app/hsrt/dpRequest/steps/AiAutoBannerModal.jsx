@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import * as XLSX from 'xlsx';
-import { X, Sparkles, Upload, RotateCw, Plus, Trash2, CheckSquare, Square, FileText } from 'lucide-react';
+import { X, Sparkles, Upload, RotateCw, Plus, Trash2, FileText } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 
 const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanner, currentBannerLabel }) => {
@@ -23,10 +23,40 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
     const timerRef = useRef(null);
     const pollIntervalRef = useRef(null);
 
-    // 1. 모달 오픈 시 AI 모델 목록 불러오기
+    // 1. 모달 오픈/클로즈 상태 변경 시 기존 데이터 전면 초기화 및 AI 모델 목록 로드
     useEffect(() => {
-        if (!isOpen) return;
-        setNewBannerName('');
+        const clearTimers = () => {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+            }
+            if (pollIntervalRef.current) {
+                clearInterval(pollIntervalRef.current);
+                pollIntervalRef.current = null;
+            }
+        };
+
+        const resetAllData = () => {
+            setUserInput('');
+            setItems([]);
+            setNewBannerName('');
+            setIsAnalyzing(false);
+            setElapsedSeconds(0);
+            setJobId(null);
+            setIsRecalculating(false);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+            clearTimers();
+        };
+
+        if (!isOpen) {
+            resetAllData();
+            return;
+        }
+
+        // 모달이 새로 열릴 때 기존 입력값 및 분석 결과 완전 초기화
+        resetAllData();
 
         const fetchModels = async () => {
             const pageId = sessionStorage.getItem('pageId') || '';
@@ -64,6 +94,11 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
         const file = e.target.files && e.target.files[0];
         if (!file) return;
 
+        // 신규 파일 업로드 시 기존 결과 프리뷰 및 배너명 초기화
+        setItems([]);
+        setNewBannerName('');
+        setJobId(null);
+
         const reader = new FileReader();
 
         if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
@@ -78,12 +113,15 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                 } catch (err) {
                     console.error("Excel parse error:", err);
                     alert("엑셀 파일을 읽는 중 오류가 발생했습니다.");
+                } finally {
+                    if (fileInputRef.current) fileInputRef.current.value = '';
                 }
             };
             reader.readAsArrayBuffer(file);
         } else {
             reader.onload = (evt) => {
                 setUserInput(evt.target.result || '');
+                if (fileInputRef.current) fileInputRef.current.value = '';
             };
             reader.readAsText(file, 'UTF-8');
         }
@@ -321,15 +359,14 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                 }}>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{
-                                width: '28px', height: '28px', borderRadius: '8px',
-                                background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                color: '#ffffff'
-                            }}>
-                                <Sparkles size={16} />
-                            </div>
-                            <span style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>AI 자동배너생성</span>
+                            <span style={{
+                                display: 'inline-block',
+                                width: '3.5px',
+                                height: '16px',
+                                backgroundColor: '#2563eb',
+                                borderRadius: '2px'
+                            }} />
+                            <span style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>AI 자동 배너생성</span>
                         </div>
                         <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
                             엑셀 파일이나 텍스트를 입력하면 내부 AI가 설문 문항을 분석하여 대/중/소분류와 조건식을 자동으로 구성합니다.
@@ -367,7 +404,9 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                         border: '1px solid #e2e8f0',
                         borderRadius: '10px',
                         padding: '14px',
-                        gap: '10px'
+                        gap: '10px',
+                        minHeight: 0,
+                        overflow: 'hidden'
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
@@ -402,6 +441,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                             style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}
                         >
                             <textarea
+                                wrap="off"
                                 value={userInput}
                                 onChange={(e) => setUserInput(e.target.value)}
                                 placeholder={`엑셀 파일을 끌어다 놓거나, 배너 정의 텍스트를 직접 붙여넣으세요.
@@ -427,7 +467,10 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                                     color: '#1e293b',
                                     backgroundColor: '#fafafa',
                                     outline: 'none',
-                                    boxSizing: 'border-box'
+                                    boxSizing: 'border-box',
+                                    whiteSpace: 'pre',
+                                    overflowX: 'auto',
+                                    overflowY: 'auto'
                                 }}
                             />
                         </div>
@@ -443,7 +486,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                                     borderRadius: '6px',
                                     background: isAnalyzing
                                         ? '#94a3b8'
-                                        : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                                        : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                                     color: '#ffffff',
                                     border: 'none',
                                     fontSize: '13px',
@@ -453,12 +496,12 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     gap: '6px',
-                                    boxShadow: '0 2px 4px rgba(79, 70, 229, 0.25)',
+                                    boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)',
                                     transition: 'all 0.15s'
                                 }}
                             >
                                 <Sparkles size={15} />
-                                {isAnalyzing ? `분석 진행 중... (${elapsedSeconds}초)` : (items.length > 0 ? '다시 분석하기 (Ctrl+Enter)' : 'AI 분석 시작')}
+                                {isAnalyzing ? `분석 진행 중... (${elapsedSeconds}초)` : (items.length > 0 ? '다시 분석하기' : 'AI 분석 시작')}
                             </button>
                         </div>
                     </div>
@@ -471,7 +514,9 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                         border: '1px solid #e2e8f0',
                         borderRadius: '10px',
                         padding: '14px',
-                        gap: '10px'
+                        gap: '10px',
+                        minHeight: 0,
+                        overflow: 'hidden'
                     }}>
                         {/* Right Panel Header Bar */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -480,7 +525,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                                     2. 생성 결과 검토 & 프리뷰
                                 </span>
                                 <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 600 }}>
-                                    선택: <strong style={{ color: '#4f46e5' }}>{selectedCount}</strong> / {items.length}건
+                                    선택: <strong style={{ color: '#2563eb' }}>{selectedCount}</strong> / {items.length}건
                                 </span>
                             </div>
 
@@ -525,8 +570,9 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                         </div>
 
                         {/* Preview Table Grid */}
-                        <div style={{
+                        <div className="custom-scrollbar" style={{
                             flex: 1,
+                            minHeight: 0,
                             overflowY: 'auto',
                             border: '1px solid #e2e8f0',
                             borderRadius: '8px',
@@ -549,97 +595,109 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
                                     <thead style={{ position: 'sticky', top: 0, backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', zIndex: 5 }}>
                                         <tr>
-                                            <th style={{ width: '32px', padding: '6px 4px', textAlign: 'center' }}>
-                                                <div style={{ cursor: 'pointer', display: 'flex', justifyContent: 'center' }} onClick={toggleSelectAll}>
-                                                    {isAllSelected ? <CheckSquare size={15} color="#4f46e5" /> : <Square size={15} color="#94a3b8" />}
-                                                </div>
+                                            <th style={{ width: '32px', padding: '6px 4px', textAlign: 'center', verticalAlign: 'middle' }}>
+                                                <label className="dp-checkbox-label" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', verticalAlign: 'middle' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        className="dp-checkbox-input"
+                                                        checked={isAllSelected}
+                                                        onChange={toggleSelectAll}
+                                                    />
+                                                    <span className="dp-checkbox-box" />
+                                                </label>
                                             </th>
-                                            <th style={{ width: '28px', padding: '6px 2px', textAlign: 'center', color: '#475569', fontWeight: 700, fontSize: '11px', whiteSpace: 'nowrap' }} title="아래에 행 추가">+</th>
-                                            <th style={{ width: '85px', padding: '6px 4px', textAlign: 'left', color: '#475569', fontWeight: 700, fontSize: '11px', whiteSpace: 'nowrap' }}>대분류</th>
-                                            <th style={{ width: '95px', padding: '6px 4px', textAlign: 'left', color: '#475569', fontWeight: 700, fontSize: '11px', whiteSpace: 'nowrap' }}>중분류</th>
-                                            <th style={{ width: '115px', padding: '6px 4px', textAlign: 'left', color: '#475569', fontWeight: 700, fontSize: '11px', whiteSpace: 'nowrap' }}>소분류(항목명)</th>
-                                            <th style={{ padding: '6px 4px', textAlign: 'left', color: '#475569', fontWeight: 700, fontSize: '11px', whiteSpace: 'nowrap' }}>문항 조건식 (logic)</th>
-                                            <th style={{ width: '68px', padding: '6px 4px', textAlign: 'right', color: '#475569', fontWeight: 700, fontSize: '11px', whiteSpace: 'nowrap' }}>빈도(N)</th>
-                                            <th style={{ width: '28px', padding: '6px 2px', textAlign: 'center' }}></th>
+                                            <th style={{ width: '28px', padding: '6px 2px', textAlign: 'center', color: '#475569', fontWeight: 700, fontSize: '11px', whiteSpace: 'nowrap', verticalAlign: 'middle' }} title="아래에 행 추가">+</th>
+                                            <th style={{ width: '85px', padding: '6px 4px', textAlign: 'left', color: '#475569', fontWeight: 700, fontSize: '11px', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>대분류</th>
+                                            <th style={{ width: '95px', padding: '6px 4px', textAlign: 'left', color: '#475569', fontWeight: 700, fontSize: '11px', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>중분류</th>
+                                            <th style={{ width: '115px', padding: '6px 4px', textAlign: 'left', color: '#475569', fontWeight: 700, fontSize: '11px', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>소분류(항목명)</th>
+                                            <th style={{ padding: '6px 4px', textAlign: 'left', color: '#475569', fontWeight: 700, fontSize: '11px', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>문항 조건식 (logic)</th>
+                                            <th style={{ width: '75px', padding: '6px 14px 6px 4px', textAlign: 'right', color: '#475569', fontWeight: 700, fontSize: '11px', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>빈도(N)</th>
+                                            <th style={{ width: '36px', padding: '6px 4px', textAlign: 'center', verticalAlign: 'middle' }}></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {items.map((item, idx) => (
                                             <tr key={item.id || idx} style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: item.selected ? '#ffffff' : '#f8fafc' }}>
-                                                <td style={{ textAlign: 'center', padding: '6px' }}>
-                                                    <div style={{ cursor: 'pointer', display: 'flex', justifyContent: 'center' }} onClick={() => toggleSelectRow(idx)}>
-                                                        {item.selected ? <CheckSquare size={15} color="#4f46e5" /> : <Square size={15} color="#cbd5e1" />}
-                                                    </div>
+                                                <td style={{ textAlign: 'center', padding: '6px', verticalAlign: 'middle' }}>
+                                                    <label className="dp-checkbox-label" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', verticalAlign: 'middle' }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            className="dp-checkbox-input"
+                                                            checked={item.selected}
+                                                            onChange={() => toggleSelectRow(idx)}
+                                                        />
+                                                        <span className="dp-checkbox-box" />
+                                                    </label>
                                                 </td>
-                                                <td style={{ textAlign: 'center', padding: '4px' }}>
+                                                <td style={{ textAlign: 'center', padding: '4px', verticalAlign: 'middle' }}>
                                                     <button
+                                                        className="dp-ai-plus-btn"
                                                         onClick={() => handleInsertRowBelow(idx)}
                                                         title="아래에 행 추가"
-                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px', borderRadius: '4px' }}
-                                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#eff6ff'}
-                                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                                     >
                                                         <Plus size={14} />
                                                     </button>
                                                 </td>
-                                                <td style={{ padding: '4px 6px' }}>
+                                                <td style={{ padding: '4px 6px', verticalAlign: 'middle' }}>
                                                     <input
                                                         type="text"
                                                         value={item.label3}
                                                         placeholder="대분류"
                                                         onChange={(e) => handleItemChange(idx, 'label3', e.target.value)}
                                                         style={{
-                                                            width: '100%', padding: '4px 6px', fontSize: '11.5px',
-                                                            border: '1px solid #e2e8f0', borderRadius: '4px', outline: 'none'
+                                                            width: '100%', height: '28px', padding: '0 6px', fontSize: '11.5px',
+                                                            border: '1px solid #e2e8f0', borderRadius: '4px', outline: 'none',
+                                                            boxSizing: 'border-box'
                                                         }}
                                                     />
                                                 </td>
-                                                <td style={{ padding: '4px 6px' }}>
+                                                <td style={{ padding: '4px 6px', verticalAlign: 'middle' }}>
                                                     <input
                                                         type="text"
                                                         value={item.label2}
                                                         placeholder="중분류"
                                                         onChange={(e) => handleItemChange(idx, 'label2', e.target.value)}
                                                         style={{
-                                                            width: '100%', padding: '4px 6px', fontSize: '11.5px',
-                                                            border: '1px solid #e2e8f0', borderRadius: '4px', outline: 'none'
+                                                            width: '100%', height: '28px', padding: '0 6px', fontSize: '11.5px',
+                                                            border: '1px solid #e2e8f0', borderRadius: '4px', outline: 'none',
+                                                            boxSizing: 'border-box'
                                                         }}
                                                     />
                                                 </td>
-                                                <td style={{ padding: '4px 6px' }}>
+                                                <td style={{ padding: '4px 6px', verticalAlign: 'middle' }}>
                                                     <input
                                                         type="text"
                                                         value={item.label}
                                                         placeholder="소분류 항목명"
                                                         onChange={(e) => handleItemChange(idx, 'label', e.target.value)}
                                                         style={{
-                                                            width: '100%', padding: '4px 6px', fontSize: '11.5px', fontWeight: 600,
-                                                            border: '1px solid #cbd5e1', borderRadius: '4px', outline: 'none'
+                                                            width: '100%', height: '28px', padding: '0 6px', fontSize: '11.5px', fontWeight: 600,
+                                                            border: '1px solid #cbd5e1', borderRadius: '4px', outline: 'none',
+                                                            boxSizing: 'border-box'
                                                         }}
                                                     />
                                                 </td>
-                                                <td style={{ padding: '4px 6px' }}>
+                                                <td style={{ padding: '4px 6px', verticalAlign: 'middle' }}>
                                                     <input
                                                         type="text"
                                                         value={item.logic}
                                                         placeholder="조건식 (예: q100 == 1)"
                                                         onChange={(e) => handleItemChange(idx, 'logic', e.target.value)}
                                                         style={{
-                                                            width: '100%', padding: '4px 6px', fontSize: '11px', fontFamily: 'monospace',
-                                                            border: '1px solid #cbd5e1', borderRadius: '4px', outline: 'none', color: '#1e293b'
+                                                            width: '100%', height: '28px', padding: '0 6px', fontSize: '11px', fontFamily: 'monospace',
+                                                            border: '1px solid #cbd5e1', borderRadius: '4px', outline: 'none', color: '#1e293b',
+                                                            boxSizing: 'border-box'
                                                         }}
                                                     />
                                                 </td>
-                                                <td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 700, color: '#334155' }}>
+                                                <td style={{ padding: '4px 14px 4px 6px', textAlign: 'right', fontWeight: 700, color: '#334155', verticalAlign: 'middle' }}>
                                                     {item.count !== undefined && item.count !== null ? Number(item.count).toLocaleString() : 0}
                                                 </td>
-                                                <td style={{ textAlign: 'center', padding: '4px' }}>
+                                                <td style={{ textAlign: 'center', padding: '4px 6px', verticalAlign: 'middle' }}>
                                                     <button
+                                                        className="dp-ai-trash-btn"
                                                         onClick={() => handleDeleteRow(idx)}
                                                         title="행 삭제"
-                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px', borderRadius: '4px' }}
-                                                        onMouseOver={(e) => e.currentTarget.style.color = '#ef4444'}
-                                                        onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
                                                     >
                                                         <Trash2 size={14} />
                                                     </button>
@@ -681,7 +739,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                             disabled={selectedCount === 0}
                             style={{
                                 padding: '8px 16px', fontSize: '13px', fontWeight: 700,
-                                color: '#3b82f6', backgroundColor: '#eff6ff',
+                                color: '#2563eb', backgroundColor: '#eff6ff',
                                 border: '1px solid #93c5fd', borderRadius: '6px', cursor: selectedCount === 0 ? 'not-allowed' : 'pointer'
                             }}
                         >
@@ -692,9 +750,9 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                             disabled={selectedCount === 0}
                             style={{
                                 padding: '8px 18px', fontSize: '13px', fontWeight: 700,
-                                color: '#ffffff', backgroundColor: '#4f46e5',
+                                color: '#ffffff', backgroundColor: '#2563eb',
                                 border: 'none', borderRadius: '6px', cursor: selectedCount === 0 ? 'not-allowed' : 'pointer',
-                                boxShadow: '0 2px 4px rgba(79, 70, 229, 0.25)'
+                                boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)'
                             }}
                         >
                             새 배너로 생성
@@ -706,6 +764,63 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                 .dp-ai-model-popup,
                 .k-animation-container {
                     z-index: 1000000 !important;
+                }
+                .dp-ai-trash-btn {
+                    background: transparent !important;
+                    border: none !important;
+                    cursor: pointer !important;
+                    color: #94a3b8 !important;
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    padding: 4px !important;
+                    border-radius: 4px !important;
+                    vertical-align: middle !important;
+                    transition: color 0.15s ease, background-color 0.15s ease !important;
+                }
+                .dp-ai-trash-btn:hover {
+                    color: #ef4444 !important;
+                    background-color: #fef2f2 !important;
+                }
+                .dp-ai-trash-btn svg {
+                    pointer-events: none;
+                    display: block;
+                }
+                .dp-ai-plus-btn {
+                    background: transparent !important;
+                    border: none !important;
+                    cursor: pointer !important;
+                    color: #3b82f6 !important;
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    padding: 4px !important;
+                    border-radius: 4px !important;
+                    vertical-align: middle !important;
+                    transition: color 0.15s ease, background-color 0.15s ease !important;
+                }
+                .dp-ai-plus-btn:hover {
+                    color: #1d4ed8 !important;
+                    background-color: #eff6ff !important;
+                }
+                .dp-ai-plus-btn svg {
+                    pointer-events: none;
+                    display: block;
+                }
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                    height: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: #f1f5f9;
+                    border-radius: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: #cbd5e1;
+                    border-radius: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: #94a3b8;
                 }
             `}</style>
         </div>

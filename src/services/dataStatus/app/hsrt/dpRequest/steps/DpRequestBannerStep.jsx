@@ -952,7 +952,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                 btns: [
                     {
                         title: "취소",
-                        click: () => {}
+                        click: () => { }
                     },
                     {
                         title: "새 배너로 생성",
@@ -1000,7 +1000,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             nextNum = banners.length + 1;
         }
 
-        const seqStr = String(nextNum).padStart(2, '0');
+        const seqStr = String(nextNum).padStart(3, '0');
         const newBannerId = `banner_${seqStr}`;
         const newLabel = (typeof customName === 'string' && customName.trim()) ? customName.trim() : `통배너 ${seqStr}`;
 
@@ -1367,7 +1367,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                 if (num > maxNum) maxNum = num;
             }
         });
-        const newId = `banner_${String(maxNum + 1).padStart(2, '0')}`;
+        const newId = `banner_${String(maxNum + 1).padStart(3, '0')}`;
 
         const newBanner = {
             id: newId,
@@ -1406,7 +1406,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                 if (num > maxNum) maxNum = num;
             }
         });
-        const newId = `banner_${String(maxNum + 1).padStart(2, '0')}`;
+        const newId = `banner_${String(maxNum + 1).padStart(3, '0')}`;
 
         const baseLabel = target.label || '';
         let copyNum = 1;
@@ -2741,18 +2741,18 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             borderRadius: '6px',
                                             border: 'none',
                                             color: '#FFFFFF',
-                                            background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                                            background: '#4f80ff',
                                             fontSize: '12px',
                                             fontWeight: 700,
                                             cursor: 'pointer',
-                                            boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)',
+                                            boxShadow: '0 2px 4px rgba(79, 128, 255, 0.3)',
                                             transition: 'all 0.15s',
                                             boxSizing: 'border-box'
                                         }}
                                         onMouseOver={(e) => { e.currentTarget.style.opacity = '0.9'; }}
                                         onMouseOut={(e) => { e.currentTarget.style.opacity = '1'; }}
                                     >
-                                        <Sparkles size={13} /> 자동배너생성
+                                        <Sparkles size={13} /> 자동 배너생성
                                     </button>
                                     <button
                                         onClick={() => setIsBulkEditModalOpen(true)}
