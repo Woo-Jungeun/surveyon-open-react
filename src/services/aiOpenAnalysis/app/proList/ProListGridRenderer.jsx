@@ -611,9 +611,7 @@ const FilterSettingCell = (cellProps) => {
     if (!row || row.__isGroupChild) return <td></td>;
 
     const targetItem = row.__isGroupMaster ? (row.__masterItem || row) : row;
-    const joinCnt = (row.__isGroupMaster && row.__groupList)
-        ? row.__groupList.reduce((sum, r) => sum + (Number(r.qnum_join_cnt) || 0), 0)
-        : Number(targetItem?.qnum_join_cnt || 0);
+    const joinCnt = Number(targetItem?.qnum_join_cnt || 0);
 
     const hasFilter = joinCnt > 0;
 
