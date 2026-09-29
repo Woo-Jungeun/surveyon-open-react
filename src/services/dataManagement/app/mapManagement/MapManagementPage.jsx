@@ -805,8 +805,8 @@ const MapManagementPage = () => {
                                 <FileCheck size={16} />
                                 오픈 유형 검사
                             </button>
-                            {/* 세로 구분선 1 및 데이터 등록 버튼 (servername이 NEW가 아닐 경우만 표출) */}
-                            {(sessionStorage.getItem("servername") || sessionStorage.getItem("serverName") || "").toUpperCase() !== "NEW" && (
+                            {/* 세로 구분선 1 및 데이터 등록 버튼 (servername이 NEW일 경우에만 표출) */}
+                            {(sessionStorage.getItem("servername") || sessionStorage.getItem("serverName") || "").toUpperCase() === "NEW" && (
                                 <>
                                     <div style={{
                                         width: '1px',
