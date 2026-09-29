@@ -1664,6 +1664,7 @@ input:checked+.slider:before {
     border-radius: 6px;
     font-weight: 500;
     cursor: pointer;
+    white-space: nowrap;
     transition: background-color 0.2s;
 }
 
@@ -1680,6 +1681,7 @@ input:checked+.slider:before {
     border-radius: 6px;
     font-weight: 500;
     cursor: pointer;
+    white-space: nowrap;
     transition: background-color 0.2s;
 }
 
@@ -1984,3 +1986,20 @@ input:checked+.slider:before {
 .cmn_grid table tr.dm-drag-over-bottom td {
     border-bottom: 2px solid #16a34a !important;
 }
+
+/* 데이터 등록 모달 폰트 축소 및 글로벌 14px Reset CSS 오버라이드 */
+.upload-modal-content,
+.upload-modal-content span,
+.upload-modal-content strong,
+.upload-modal-content td,
+.upload-modal-content th,
+.upload-modal-content label,
+.upload-modal-content p,
+.upload-modal-content select,
+.upload-modal-content button,
+.upload-modal-content input {
+    font-size: inherit;
+}
+.upload-modal-content {
+    font-size: 13px;
+}

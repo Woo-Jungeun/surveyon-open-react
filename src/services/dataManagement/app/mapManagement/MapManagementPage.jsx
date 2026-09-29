@@ -972,6 +972,7 @@ const MapManagementPage = () => {
                     isOpen={dataUpdateModalOpen}
                     onClose={() => setDataUpdateModalOpen(false)}
                     refreshData={() => setRefreshKey(prev => prev + 1)}
+                    onOpenBatchMapEdit={() => setBatchMapEditModalOpen(true)}
                 />
 
                 {/* Re_Label 모달 (데이터업데이트 구조 완전복붙형) */}

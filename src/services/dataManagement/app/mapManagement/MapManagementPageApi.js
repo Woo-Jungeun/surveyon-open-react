@@ -214,6 +214,24 @@ export function MapManagementPageApi() {
         }
     );
 
+    /** SAV 등록/업데이트 검사 (1단계) */
+    const validateSav = useMutation(
+        async (formData) => await api.form(formData, "/data/sav/validate", {}, "API_BASE_URL_DATAMANAGEMENT"),
+        // {
+        //     onMutate: () => loadingSpinner.show(),
+        //     onSettled: () => loadingSpinner.hide(),
+        // }
+    );
+
+    /** SAV 등록/업데이트 적용 (2단계) */
+    const applySav = useMutation(
+        async (data) => await api.post(data, "/data/sav/apply", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
     return {
         getMapVariables,
         srtTransfer,
@@ -227,6 +245,8 @@ export function MapManagementPageApi() {
         resetExportSupplyTool,
         uploadSpss,
         updateDataFromSav,
+        validateSav,
+        applySav,
         generateRelabels,
         syncMap,
         updateMap,
