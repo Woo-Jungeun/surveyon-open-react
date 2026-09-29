@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { X, Sparkles, Upload, RotateCw, Plus, Trash2, FileText } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 
-const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanner, currentBannerLabel }) => {
+const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanner, currentBannerLabel, defaultNewBannerName }) => {
     const auth = useSelector((store) => store.auth);
     const user = auth?.user?.userId || '';
     const { getAiModels, autoGenerateBannerAsync, getBannerJobStatus, recalculateBannerCounts } = DpRequestPageApi();
@@ -17,8 +17,9 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
     const [elapsedSeconds, setElapsedSeconds] = useState(0);
     const [jobId, setJobId] = useState(null);
     const [items, setItems] = useState([]);
-    const [newBannerName, setNewBannerName] = useState('');
     const [isRecalculating, setIsRecalculating] = useState(false);
+    const [showNameModal, setShowNameModal] = useState(false);
+    const [newBannerNameInput, setNewBannerNameInput] = useState('');
     const fileInputRef = useRef(null);
     const timerRef = useRef(null);
     const pollIntervalRef = useRef(null);
@@ -39,11 +40,12 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
         const resetAllData = () => {
             setUserInput('');
             setItems([]);
-            setNewBannerName('');
             setIsAnalyzing(false);
             setElapsedSeconds(0);
             setJobId(null);
             setIsRecalculating(false);
+            setShowNameModal(false);
+            setNewBannerNameInput('');
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';
             }
@@ -96,7 +98,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
 
         // 신규 파일 업로드 시 기존 결과 프리뷰 및 배너명 초기화
         setItems([]);
-        setNewBannerName('');
+        setNewBannerNameInput('');
         setJobId(null);
 
         const reader = new FileReader();
@@ -317,13 +319,24 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
         onApplyToCurrent(selectedItems);
     };
 
-    const handleCreateNew = () => {
+    const handleOpenCreateNewModal = () => {
         const selectedItems = items.filter(i => i.selected);
         if (selectedItems.length === 0) {
             alert("등록할 배너 항목을 선택해주세요.");
             return;
         }
-        onCreateNewBanner(selectedItems, newBannerName);
+        setNewBannerNameInput(defaultNewBannerName || 'banner_001');
+        setShowNameModal(true);
+    };
+
+    const handleConfirmCreateNew = () => {
+        const selectedItems = items.filter(i => i.selected);
+        if (selectedItems.length === 0) {
+            alert("등록할 배너 항목을 선택해주세요.");
+            return;
+        }
+        onCreateNewBanner(selectedItems, newBannerNameInput);
+        setShowNameModal(false);
     };
 
     return (
@@ -531,29 +544,6 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
 
                             {/* Top Right Buttons inside Panel 2 */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginRight: '4px' }}>
-                                    <span style={{ fontSize: '11.5px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>
-                                        신규 배너명
-                                    </span>
-                                    <input
-                                        type="text"
-                                        value={newBannerName}
-                                        onChange={(e) => setNewBannerName(e.target.value)}
-                                        placeholder="신규 배너명을 입력하세요"
-                                        style={{
-                                            height: '26px',
-                                            width: '150px',
-                                            padding: '0 8px',
-                                            fontSize: '11.5px',
-                                            border: '1px solid #cbd5e1',
-                                            borderRadius: '6px',
-                                            outline: 'none',
-                                            color: '#1e293b',
-                                            backgroundColor: '#ffffff',
-                                            boxSizing: 'border-box'
-                                        }}
-                                    />
-                                </div>
                                 <button
                                     onClick={handleRecalculate}
                                     disabled={isRecalculating || items.length === 0}
@@ -746,7 +736,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                             현재 배너에 추가
                         </button>
                         <button
-                            onClick={handleCreateNew}
+                            onClick={handleOpenCreateNewModal}
                             disabled={selectedCount === 0}
                             style={{
                                 padding: '8px 18px', fontSize: '13px', fontWeight: 700,
@@ -759,6 +749,101 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                         </button>
                     </div>
                 </div>
+
+                {/* 새 배너명 입력 미니 팝업 (포포버) */}
+                {showNameModal && (
+                    <div style={{
+                        position: 'fixed',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(15, 23, 42, 0.15)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 100005
+                    }}>
+                        <div style={{
+                            width: '380px',
+                            backgroundColor: '#ffffff',
+                            borderRadius: '12px',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                            padding: '20px 24px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '16px',
+                            fontFamily: "'Pretendard', sans-serif"
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Sparkles size={18} color="#2563eb" />
+                                    <span style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>새 배너 생성</span>
+                                </div>
+                                <button
+                                    onClick={() => setShowNameModal(false)}
+                                    style={{
+                                        background: 'none', border: 'none', cursor: 'pointer',
+                                        color: '#64748b', padding: '4px', borderRadius: '4px',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                    }}
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>
+                                    생성할 신규 배너 명칭을 입력하세요
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newBannerNameInput}
+                                    onChange={(e) => setNewBannerNameInput(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleConfirmCreateNew();
+                                        if (e.key === 'Escape') setShowNameModal(false);
+                                    }}
+                                    autoFocus
+                                    placeholder="예: banner_004 또는 2026_상반기_배너"
+                                    style={{
+                                        height: '36px',
+                                        padding: '0 12px',
+                                        fontSize: '13px',
+                                        border: '1.5px solid #2563eb',
+                                        borderRadius: '6px',
+                                        outline: 'none',
+                                        color: '#0f172a',
+                                        backgroundColor: '#ffffff',
+                                        fontWeight: 600,
+                                        boxSizing: 'border-box'
+                                    }}
+                                />
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', marginTop: '4px' }}>
+                                <button
+                                    onClick={() => setShowNameModal(false)}
+                                    style={{
+                                        padding: '7px 14px', fontSize: '12.5px', fontWeight: 600,
+                                        color: '#64748b', backgroundColor: '#ffffff',
+                                        border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer'
+                                    }}
+                                >
+                                    취소
+                                </button>
+                                <button
+                                    onClick={handleConfirmCreateNew}
+                                    style={{
+                                        padding: '7px 18px', fontSize: '12.5px', fontWeight: 700,
+                                        color: '#ffffff', backgroundColor: '#2563eb',
+                                        border: 'none', borderRadius: '6px', cursor: 'pointer',
+                                        boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)'
+                                    }}
+                                >
+                                    생성 완료
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
             <style>{`
                 .dp-ai-model-popup,

@@ -2903,6 +2903,20 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                         onApplyToCurrent={handleApplyAiBannerToCurrent}
                         onCreateNewBanner={handleCreateNewAiBanner}
                         currentBannerLabel={currentLabel}
+                        defaultNewBannerName={(() => {
+                            let nextNum = 1;
+                            (banners || []).forEach(b => {
+                                const match = String(b.id || '').match(/banner_(\d+)/i);
+                                if (match) {
+                                    const num = parseInt(match[1], 10);
+                                    if (num >= nextNum) nextNum = num + 1;
+                                }
+                            });
+                            if (nextNum === 1 && (banners || []).length > 0) {
+                                nextNum = (banners || []).length + 1;
+                            }
+                            return `banner_${String(nextNum).padStart(3, '0')}`;
+                        })()}
                     />
                     <Toast
                         show={toast.show}
