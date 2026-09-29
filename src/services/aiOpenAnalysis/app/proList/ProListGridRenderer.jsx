@@ -142,7 +142,7 @@ const WrapCellComponent = (cellProps) => {
             const groupKey = row.__groupKey;
             const count = row.__groupCount;
             return (
-                <td className="cell-wrap" style={{ padding: '0 10px', verticalAlign: 'middle', maxWidth: '350px' }}>
+                <td className="cell-wrap" style={{ padding: '0 10px', verticalAlign: 'middle' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', overflow: 'hidden' }}>
                         <button
                             type="button"
@@ -216,7 +216,7 @@ const WrapCellComponent = (cellProps) => {
 
         if (row.__isGroupChild) {
             return (
-                <td className="cell-wrap" style={{ padding: '0 10px', verticalAlign: 'middle', maxWidth: '350px' }}>
+                <td className="cell-wrap" style={{ padding: '0 10px', verticalAlign: 'middle' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', overflow: 'hidden' }}>
                         <span style={{
                             color: '#ea580c',
@@ -251,7 +251,7 @@ const WrapCellComponent = (cellProps) => {
         }
 
         return (
-            <td className="cell-wrap" style={{ padding: '0 10px', verticalAlign: 'middle', maxWidth: '350px' }}>
+            <td className="cell-wrap" style={{ padding: '0 10px', verticalAlign: 'middle' }}>
                 <div style={{ display: 'flex', alignItems: 'center', width: '100%', overflow: 'hidden' }}>
                     <span
                         title={row.question_fin}
@@ -427,21 +427,21 @@ const TargetFinCell = (cellProps) => {
 };
 
 const StatusCntHeaderCell = () => (
-    <div style={{ textAlign: 'center', padding: '2px 0', lineHeight: 1.25 }}>
+    <div style={{ textAlign: 'center', padding: '2px 0', lineHeight: 1.25, whiteSpace: 'nowrap' }}>
         <div style={{ fontWeight: 600, color: '#334155', fontSize: '12px' }}>응답자수</div>
         <div style={{ fontWeight: 400, color: '#94a3b8', fontSize: '10px', marginTop: '1px' }}>PID · 명</div>
     </div>
 );
 
 const TotalStatusCntHeaderCell = () => (
-    <div style={{ textAlign: 'center', padding: '2px 0', lineHeight: 1.25 }}>
+    <div style={{ textAlign: 'center', padding: '2px 0', lineHeight: 1.25, whiteSpace: 'nowrap' }}>
         <div style={{ fontWeight: 600, color: '#334155', fontSize: '12px' }}>총 응답자수</div>
         <div style={{ fontWeight: 400, color: '#94a3b8', fontSize: '10px', marginTop: '1px' }}>합산 · 명</div>
     </div>
 );
 
 const TargetFinHeaderCell = () => (
-    <div style={{ textAlign: 'center', padding: '2px 0', lineHeight: 1.25 }}>
+    <div style={{ textAlign: 'center', padding: '2px 0', lineHeight: 1.25, whiteSpace: 'nowrap' }}>
         <div style={{ fontWeight: 600, color: '#334155', fontSize: '12px' }}>분석 대상/완료 수</div>
         <div style={{ fontWeight: 400, color: '#94a3b8', fontSize: '10px', marginTop: '1px' }}>중복제거 · 건</div>
     </div>

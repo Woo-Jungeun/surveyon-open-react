@@ -150,9 +150,9 @@ const ProList = () => {
         { field: "qnum_text", title: "문항번호", show: true, allowHide: false, order: 4, width: "65px", wrap: true },
         { field: "question_fin", title: "문항최종", show: true, allowHide: false, order: 5, wrap: true },
 
-        { field: "status_cnt", title: "응답자수", group: "응답 및 분석 현황", show: true, allowHide: false, order: 5, width: "80px" },
-        { field: "status_cnt_total", title: "총 응답자수", group: "응답 및 분석 현황", show: true, allowHide: false, order: 6, width: "90px" },
-        { field: "status_cnt_target_fin", title: "분석\n대상 수/완료 수", group: "응답 및 분석 현황", show: true, allowHide: false, order: 7, width: "115px" },
+        { field: "status_cnt", title: "응답자수", group: "응답 및 분석 현황", show: true, allowHide: false, order: 5, width: "90px" },
+        { field: "status_cnt_total", title: "총 응답자수", group: "응답 및 분석 현황", show: true, allowHide: false, order: 6, width: "100px" },
+        { field: "status_cnt_target_fin", title: "분석\n대상 수/완료 수", group: "응답 및 분석 현황", show: true, allowHide: false, order: 7, width: "130px" },
         { field: "status_text", title: "진행상황", show: true, allowHide: false, order: 8, width: "80px" },
         { field: "filterSetting", title: "필터문항\n설정", show: true, editable: false, allowHide: true, order: 9, width: "90px" },
         // { field: "tokens_text", title: "예상비용", show: true, allowHide: false, order: 10, width: "80px" },
@@ -163,7 +163,7 @@ const ProList = () => {
 
         // ----- EDIT -> 설정 -----
         { field: "merge_qnum", title: "문항통합", group: "설정", show: true, allowHide: false, order: 1, width: "125px" },
-        { field: "project_lock", title: "수정", group: "설정", show: true, allowHide: false, order: 2 },
+        { field: "project_lock", title: "수정", group: "설정", show: true, allowHide: false, order: 2, width: "80px" },
     ]);
 
     const goOpenSetting = useCallback((merge_qnum, project_lock) => {

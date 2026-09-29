@@ -1009,9 +1009,8 @@
   }
 }
 
-/* Force header padding to match custom scrollbar width (12px) to fix misalignment */
+/* Let Kendo grid calculate header padding automatically to prevent flex column misalignment */
 #grid_01 .k-grid-header {
-  padding-right: 12px !important;
   background-color: #f8f9fa !important;
   border-right: 1px solid #e0e0e0;
 }

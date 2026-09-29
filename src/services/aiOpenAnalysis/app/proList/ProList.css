@@ -90,3 +90,8 @@
 #grid_01 .k-grid-content td div {
     font-size: 12px !important;
 }
+
+/* Force vertical scrollbar always visible to fix Kendo header padding calculation bug */
+#grid_01 .k-grid-content {
+    overflow-y: scroll !important;
+}
