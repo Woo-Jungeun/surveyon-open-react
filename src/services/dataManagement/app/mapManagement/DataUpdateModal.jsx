@@ -1203,11 +1203,11 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                             borderRadius: '8px',
                                             padding: '10px 12px',
                                         }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '6px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '8px' }}>
                                                 <strong style={{ color: '#991b1b', fontSize: '14px' }}>
                                                     SAV 파일에 없는 기존 변수 {resData.missingInSavList.length}개
                                                 </strong>
-                                                <span style={{ fontSize: '12.5px', color: '#dc2626' }}>
+                                                <span style={{ fontSize: '12px', color: '#dc2626' }}>
                                                     ※ 기본값은 변수 유지(응답값 초기화)이며, 체크 시 해당 변수가 영구 삭제됩니다
                                                 </span>
                                             </div>
@@ -1229,7 +1229,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                                             background: '#ffffff',
                                                             border: `1px solid ${isChecked ? '#fca5a5' : '#fee2e2'}`,
                                                             borderRadius: '6px',
-                                                            padding: '5px 8px',
+                                                            padding: '8px 8px',
                                                             fontSize: '13px',
                                                             cursor: 'pointer'
                                                         }}>
@@ -1254,8 +1254,8 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                                                 >
                                                                     {isChecked && <Check size={12} color="#fff" strokeWidth={3} />}
                                                                 </div>
-                                                                <strong style={{ color: '#1e293b', width: '60px' }}>{vName}</strong>
-                                                                <span style={{ color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                <strong style={{ color: '#1e293b', width: '80px', fontSize: '13px' }}>{vName}</strong>
+                                                                <span style={{ color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '13px' }}>
                                                                     {vLabel}
                                                                 </span>
                                                             </div>
