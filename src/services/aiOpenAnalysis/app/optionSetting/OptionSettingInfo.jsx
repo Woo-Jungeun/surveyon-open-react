@@ -10,7 +10,8 @@ import "@/services/aiOpenAnalysis/app/optionSetting/OptionSetting.css";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useWorkerLogSignalR from "@/hooks/useWorkerLogSignalR";
 import { HUB_URL, HUB_NAME } from "@/config/signalr/signalr.js";
-import { loadingSpinnerContext } from "@/components/common/AnalysisLoadingSpinner.jsx";
+import { loadingSpinnerContext as analysisSpinnerContext } from "@/components/common/AnalysisLoadingSpinner.jsx";
+import { loadingSpinnerContext as standardSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { useSelector } from "react-redux";
 /**
  * 분석 > 정보 영역
@@ -70,7 +71,8 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
 const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount, fetchLv3Options, onQidLoaded, onDuplicateRemoveDateLoaded, project_lock, onAnalysisComplete, onFetchIn, onSaveIn, onSaveLb }) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
-    const loadingSpinner = useContext(loadingSpinnerContext);
+    const loadingSpinner = useContext(analysisSpinnerContext);
+    const standardSpinner = useContext(standardSpinnerContext);
     const navigate = useNavigate();
     const completedOnceRef = useRef(false); // 분석 결과 끝난 ref
     const logTextRef = useRef("");   // 최신 로그 문자열 저장용
@@ -128,9 +130,11 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                     {
                         title: "확인",
                         click: async () => {
-                            const curType = activeTypeRef.current;
-                            if (curType === "response" || curType === "recallResponse") {
-                                try {
+                            standardSpinner?.show();
+                            try {
+                                const curType = activeTypeRef.current;
+                                if (curType === "response" || curType === "recallResponse") {
+                                    try {
                                     // 1. in 조회 (서버의 최신 분석결과 반영 데이터)
                                     const resIn = await optionEditData.mutateAsync({
                                         params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "in", skipSpinner: true }
@@ -217,6 +221,9 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                                 onNavigateTab?.(nextTabRef.current);
                                 nextTabRef.current = null;
                                 await sleep(80);
+                            }
+                            } finally {
+                                standardSpinner?.hide();
                             }
                         },
                     },
