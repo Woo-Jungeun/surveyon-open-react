@@ -1148,9 +1148,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             // 저장 API 호출
             try {
+                loadingSpinner?.show();
                 const res = await optionSaveData.mutateAsync({
                     ...payload,
-                    skipSpinner: skipReload === true
+                    skipSpinner: true
                 });
                 if (String(res?.success) === '777') {
                     // modal.showAlert("알림", "저장되었습니다."); // 성공 팝업 표출
@@ -1171,7 +1172,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         return { ...prev, data: kept };
                     });
                     if (skipReload !== true) {
-                        await handleSearch();                              // 재조회 대기 (in 조회 완료)
+                        await handleSearch({ skipSpinner: true });                              // 재조회 대기 (in 조회 완료)
                     }
                     return true;
                 } else if (String(res?.success) === '763') {
@@ -1185,6 +1186,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 console.error(err);
                 modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다.");
                 return false;
+            } finally {
+                setTimeout(() => {
+                    loadingSpinner?.hide();
+                }, 500);
             }
         }, [rows, getKey, setSelectedStateGuarded]);
 
@@ -1312,10 +1317,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             onProcessedDataUpdate: (arr) => {
                                 // Grid의 처리 결과 대신 우리가 처리한 데이터 사용
                                 setProcessedMirror(filteredSortedData);
-                                if (filteredSortedData && filteredSortedData.length > 0) {
-                                    // Kendo가 실제 화면 데이터 계산 완료 → 로딩 닫기
-                                    loadingSpinner.hide();
-                                }
                             },
                             dataItemKey: DATA_ITEM_KEY,
                             editField,

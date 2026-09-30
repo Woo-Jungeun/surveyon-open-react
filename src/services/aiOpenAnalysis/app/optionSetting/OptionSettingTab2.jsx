@@ -806,6 +806,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
             // 3) 저장 API 호출
             try {
+                loadingSpinner?.show();
                 const payload = buildSavePayload(normalized, qnum);
                 const res = await optionSaveData.mutateAsync({ ...payload, skipSpinner: true });
                 if (String(res?.success) === '777') {
@@ -815,20 +816,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     onUnsavedChange?.(false);                // 미저장 해제
                     onHasEditLogChange?.(false);
                     baselineAfterReloadRef.current = true;   // 재조회 후 베이스라인 재설정
-                    handleSearch({ skipSpinner: true }); // 재조회
-
-                    // const analysisPayload = {
-                    //     user: auth?.user?.userId || "",
-                    //     projectnum,
-                    //     qid,
-                    //     opencodeResponse: "Y",
-                    //     action: "start",
-                    // };
-                    // const analysisRes = await optionAnalysisStart.mutateAsync(analysisPayload);
-                    // if (String(analysisRes?.success) === '777') {
-                    //     modal.showErrorAlert("에러", "오류가 발생했습니다.");
-                    //     return false;
-                    // }
+                    await handleSearch({ skipSpinner: true }); // 재조회
 
                     return true;  //성공
                 } else if (String(res?.success) === '762') {
@@ -841,6 +829,10 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             } catch (err) {
                 modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
                 return false;   // 실패 시 그리드 상태 변경 안 함
+            } finally {
+                setTimeout(() => {
+                    loadingSpinner?.hide();
+                }, 500);
             }
 
         }, [qnum]);
@@ -1186,10 +1178,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             dataItemKey: "__rowKey",
                             idGetter: (r) => r.__rowKey,
                             onProcessedDataUpdate: (arr) => {
-                                if (arr && arr.length > 0) {
-                                    // Kendo가 실제 화면 데이터 계산 완료 → 로딩 닫기
-                                    loadingSpinner.hide();
-                                }
+                                // 
                             },
                             editField,
                             onItemChange,
