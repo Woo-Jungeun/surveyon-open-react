@@ -1346,7 +1346,7 @@ const MapConfigTab = ({
                         pageable={true}
                         total={variables.length}
                         skip={skip}
-                        pageSize={pageSize}
+                        take={pageSize}
                         onPageChange={handlePageChange}
                         onRowClick={(e) => setEditingRowId(e.dataItem.id)}
                         reorderable={false}

@@ -142,6 +142,7 @@ const MapManagementPage = () => {
 
                 setVariables(finalData);
                 setOriginalVariables(JSON.parse(JSON.stringify(finalData)));
+                setSkip(prev => prev >= finalData.length ? 0 : prev);
             } else if (String(result?.success) !== '777') {
                 const errorMsg = result?.errortext || result?.errorcontent || result?.message || "프로젝트 매핑 정보를 조회할 수 없습니다.";
                 modal.showErrorAlert("에러", errorMsg);
@@ -177,6 +178,7 @@ const MapManagementPage = () => {
         const handlePageSelected = () => {
             setActiveTab('mapping');
             setRefreshKey(prev => prev + 1);
+            setSkip(0);
         };
         const handleOpenUpload = () => setUploadModalOpen(true);
         window.addEventListener("pageSelected", handlePageSelected);
