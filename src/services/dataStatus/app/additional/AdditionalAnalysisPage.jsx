@@ -1266,7 +1266,7 @@ const AdditionalAnalysisPage = () => {
                                     const payload = {
                                         user: auth.user.userId,
                                         pageid: currentPid,
-                                        variables: variablesMap,
+                                        // variables: variablesMap, // 임시 주석 처리
                                         weight_col: weightCol === "없음" ? "" : weightCol,
                                         filter_expression: filterExpr,
                                         include_stats: ALL_STATS,
@@ -1626,7 +1626,7 @@ const AdditionalAnalysisPage = () => {
                         let runPayload = {
                             user: auth.user.userId,
                             pageid: currentPageId,
-                            variables: variablesMap,
+                            // variables: variablesMap, // 임시 주석 처리
                             weight_col: weightId,
                             filter_expression: filterExpr,
                             include_stats: ALL_STATS,
@@ -2287,7 +2287,7 @@ const AdditionalAnalysisPage = () => {
                 let runPayload = {
                     user: auth.user.userId,
                     pageid: currentPageId,
-                    variables: variablesMap,
+                    // variables: variablesMap, // 임시 주석 처리
                     weight_col: weightId,
                     filter_expression: filterExpression || derivedFilterExpression || "",
                     include_stats: (displayPolicy?.sig_type && displayPolicy.sig_type !== 'none') ? [...ALL_STATS, displayPolicy.sig_type] : ALL_STATS,
@@ -2433,7 +2433,7 @@ const AdditionalAnalysisPage = () => {
         let payload = {
             user: auth.user.userId,
             pageid: currentPageId,
-            variables: variablesMap,
+            // variables: variablesMap, // 임시 주석 처리
             weight_col: weightId,
             filter_expression: currentFilter,
             include_stats: includeStatsList,
