@@ -888,125 +888,6 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                 </div>
                             ) : (
                                 <>
-                                    {/* 1. ConfirmRequired: 되돌릴 수 없는 것에 대한 확인 체크박스 경고 상자 (목업 4, 10 상단 노란 상자 대응) */}
-                                    {resData.confirmRequired && resData.confirmRequired.length > 0 && (
-                                        <div style={{
-                                            background: '#fefce8',
-                                            border: '1px solid #fef08a',
-                                            borderRadius: '10px',
-                                            padding: '12px 14px',
-                                        }}>
-                                            <div style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '6px',
-                                                fontSize: '14px',
-                                                fontWeight: '700',
-                                                color: '#854d0e',
-                                                marginBottom: '8px'
-                                            }}>
-                                                <AlertTriangle size={15} />
-                                                <span>필수 확인 사항 ― 아래 동의 항목을 모두 체크해야 적용할 수 있습니다</span>
-                                            </div>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                {resData.confirmRequired.map(item => {
-                                                    const key = typeof item === 'string' ? item : item.key;
-                                                    const label = typeof item === 'object' && item.message ? item.message : (CONFIRM_LABELS[key] || key);
-                                                    const isChecked = !!confirmChecks[key];
-
-                                                    return (
-                                                        <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                            <label
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    setConfirmChecks(prev => ({ ...prev, [key]: !prev[key] }));
-                                                                }}
-                                                                style={{
-                                                                    display: 'flex',
-                                                                    alignItems: 'flex-start',
-                                                                    gap: '8px',
-                                                                    fontSize: '13px',
-                                                                    color: '#334155',
-                                                                    cursor: 'pointer',
-                                                                    lineHeight: '1.4'
-                                                                }}>
-                                                                <div
-                                                                    style={{
-                                                                        marginTop: '1px',
-                                                                        width: '18px',
-                                                                        height: '18px',
-                                                                        border: `2px solid ${isChecked ? '#ea580c' : '#fb923c'}`,
-                                                                        background: isChecked ? '#ea580c' : '#fff',
-                                                                        borderRadius: '4px',
-                                                                        display: 'flex',
-                                                                        alignItems: 'center',
-                                                                        justifyContent: 'center',
-                                                                        flexShrink: 0,
-                                                                        transition: 'all 0.15s ease'
-                                                                    }}
-                                                                >
-                                                                    {isChecked && <Check size={14} color="#fff" strokeWidth={3.5} />}
-                                                                </div>
-                                                                <span style={{ fontWeight: isChecked ? '600' : '500', color: isChecked ? '#9a3412' : '#431407', flex: 1, fontSize: '13.5px' }}>{label}</span>
-
-                                                                {/* 빠지는 응답자 PID 보기 토글 */}
-                                                                {key === 'respondentsRemoved' && removedPidsList.length > 0 && (
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={(e) => {
-                                                                            e.preventDefault();
-                                                                            setShowRemovedPids(!showRemovedPids);
-                                                                        }}
-                                                                        style={{
-                                                                            border: '1px solid #cbd5e1',
-                                                                            background: '#ffffff',
-                                                                            color: '#2563eb',
-                                                                            padding: '2px 6px',
-                                                                            borderRadius: '4px',
-                                                                            fontSize: '12.5px',
-                                                                            cursor: 'pointer',
-                                                                            display: 'flex',
-                                                                            alignItems: 'center',
-                                                                            gap: '4px',
-                                                                            fontWeight: '500'
-                                                                        }}
-                                                                    >
-                                                                        <span>[제외 PID 목록 보기]</span>
-                                                                        {showRemovedPids ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                                                                    </button>
-                                                                )}
-                                                            </label>
-
-                                                            {/* 빠지는 PID 접기/펼치기 박스 */}
-                                                            {key === 'respondentsRemoved' && showRemovedPids && removedPidsList.length > 0 && (
-                                                                <div style={{
-                                                                    background: '#ffffff',
-                                                                    border: '1px solid #fecaca',
-                                                                    borderRadius: '6px',
-                                                                    padding: '6px 10px',
-                                                                    fontSize: '12.5px',
-                                                                    color: '#991b1b',
-                                                                    maxHeight: '100px',
-                                                                    overflowY: 'auto',
-                                                                    display: 'flex',
-                                                                    flexWrap: 'wrap',
-                                                                    gap: '4px',
-                                                                    marginTop: '4px'
-                                                                }}>
-                                                                    <div style={{ width: '100%', fontWeight: '600', marginBottom: '2px' }}>제외 대상 PID 목록:</div>
-                                                                    {removedPidsList.map((pid, pIdx) => (
-                                                                        <span key={pIdx} style={{ background: '#fee2e2', padding: '1px 5px', borderRadius: '3px' }}>
-                                                                            {pid}
-                                                                        </span>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
 
                                     {/* 2. 서버 완성 메시지 카드 (Blue Message Cards - 목업 3, 4, 10, 12 파란 상자 대응) */}
                                     {resData.messages && resData.messages.length > 0 && (
@@ -1433,6 +1314,92 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                     )}
 
                 </div>
+
+                {/* ConfirmRequired (하단 고정 컴팩트 영역) */}
+                {step === 2 && resData?.confirmRequired && resData.confirmRequired.length > 0 && (
+                    <div style={{
+                        padding: '12px 24px',
+                        background: '#fef2f2',
+                        borderTop: '1px solid #fca5a5',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '700', color: '#b91c1c' }}>
+                            <AlertTriangle size={14} />
+                            <span>필수 확인 사항 ― 아래 동의 항목을 모두 체크해야 적용할 수 있습니다</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {resData.confirmRequired.map(item => {
+                                const key = typeof item === 'string' ? item : item.key;
+                                const label = typeof item === 'object' && item.message ? item.message : (CONFIRM_LABELS[key] || key);
+                                const isChecked = !!confirmChecks[key];
+
+                                return (
+                                    <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                        <label
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                setConfirmChecks(prev => ({ ...prev, [key]: !prev[key] }));
+                                            }}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'flex-start',
+                                                gap: '8px',
+                                                fontSize: '12.5px',
+                                                color: '#334155',
+                                                cursor: 'pointer',
+                                                lineHeight: '1.4'
+                                            }}>
+                                            <div
+                                                style={{
+                                                    marginTop: '1px',
+                                                    width: '15px',
+                                                    height: '15px',
+                                                    border: `1.5px solid ${isChecked ? '#ef4444' : '#fca5a5'}`,
+                                                    background: isChecked ? '#ef4444' : '#fff',
+                                                    borderRadius: '3px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    flexShrink: 0,
+                                                    transition: 'all 0.15s ease'
+                                                }}
+                                            >
+                                                {isChecked && <Check size={12} color="#fff" strokeWidth={3.5} />}
+                                            </div>
+                                            <span style={{ fontWeight: isChecked ? '600' : '500', color: isChecked ? '#991b1b' : '#431407', flex: 1 }}>{label}</span>
+                                            
+                                            {/* 빠지는 응답자 PID 보기 토글 */}
+                                            {key === 'respondentsRemoved' && removedPidsList.length > 0 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setShowRemovedPids(!showRemovedPids);
+                                                    }}
+                                                    style={{ border: '1px solid #cbd5e1', background: '#ffffff', color: '#2563eb', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: '500' }}
+                                                >
+                                                    [제외 PID 목록 보기] {showRemovedPids ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                                </button>
+                                            )}
+                                        </label>
+
+                                        {/* 빠지는 PID 접기/펼치기 박스 */}
+                                        {key === 'respondentsRemoved' && showRemovedPids && removedPidsList.length > 0 && (
+                                            <div style={{ background: '#ffffff', border: '1px solid #fecaca', borderRadius: '4px', padding: '4px 8px', fontSize: '11.5px', color: '#991b1b', maxHeight: '80px', overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: '3px', marginLeft: '23px', marginTop: '2px' }}>
+                                                {removedPidsList.map((pid, pIdx) => (
+                                                    <span key={pIdx} style={{ background: '#fee2e2', padding: '1px 4px', borderRadius: '3px' }}>{pid}</span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 {/* Footer Actions */}
                 <div className="variable-modal-footer" style={{ borderTop: '1px solid #f1f5f9', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
