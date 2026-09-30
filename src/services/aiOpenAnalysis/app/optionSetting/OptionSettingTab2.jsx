@@ -627,6 +627,9 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 });
                 // 타이핑 중엔 중복마킹/히스토리 지연
                 scheduleFlush();
+                // 저장 버튼은 즉각 활성화 (사용자 버벅임 체감 방지)
+                onUnsavedChange?.(true);
+                onHasEditLogChange?.(true);
                 return { ...prev, data };
             });
         }, [
