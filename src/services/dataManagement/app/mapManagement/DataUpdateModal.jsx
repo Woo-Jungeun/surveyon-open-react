@@ -969,7 +969,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                         </div>
 
                                         {showAutoTypes && resData.autoTypes && (
-                                            <div style={{ marginTop: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', overflow: 'hidden', background: '#ffffff', maxHeight: '160px', overflowY: 'auto' }}>
+                                            <div style={{ marginTop: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', overflow: 'hidden', background: '#ffffff' }}>
                                                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                                                     <thead>
                                                         <tr style={{ background: '#f1f5f9', color: '#475569', textAlign: 'left', borderBottom: '1px solid #cbd5e1' }}>
@@ -1018,7 +1018,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                                 </span>
                                             </div>
 
-                                            <div style={{ marginTop: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', overflow: 'hidden', background: '#ffffff', maxHeight: '180px', overflowY: 'auto' }}>
+                                            <div style={{ marginTop: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', overflow: 'hidden', background: '#ffffff' }}>
                                                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                                                     <thead>
                                                         <tr style={{ background: '#f1f5f9', color: '#475569', textAlign: 'left', borderBottom: '1px solid #cbd5e1' }}>
@@ -1093,7 +1093,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                                 </span>
                                             </div>
 
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '140px', overflowY: 'auto' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 {resData.missingInSavList.map((item, mIdx) => {
                                                     const vName = item.variable || item.varName;
                                                     const vLabel = item.label || item.varLabel;
@@ -1308,26 +1308,28 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                 textAlign: 'left',
                                 lineHeight: '1.5'
                             }}>
-                                {applyResult?.message || resData.message || "SAV 파일 적용이 완료되었습니다."}
                             </div>
                         </div>
                     )}
 
                 </div>
 
-                {/* ConfirmRequired (하단 고정 컴팩트 영역) */}
-                {step === 2 && resData?.confirmRequired && resData.confirmRequired.length > 0 && (
-                    <div style={{
-                        padding: '12px 24px',
-                        background: '#fef2f2',
-                        borderTop: '1px solid #fca5a5',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '6px'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '700', color: '#b91c1c' }}>
+                <div className="variable-modal-footer" style={{ borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', background: '#fff', borderBottomLeftRadius: 'inherit', borderBottomRightRadius: 'inherit', padding: 0 }}>
+                    {/* ConfirmRequired (푸터와 일체형으로 고정) */}
+                    {step === 2 && resData?.confirmRequired && resData.confirmRequired.length > 0 && (
+                        <div style={{ padding: '12px 24px 0 24px', width: '100%' }}>
+                            <div style={{
+                                padding: '10px 16px',
+                                background: '#fef2f2',
+                                border: '1px solid #fecaca',
+                                borderRadius: '8px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '4px'
+                            }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '500', color: '#b91c1c' }}>
                             <AlertTriangle size={14} />
-                            <span>필수 확인 사항 ― 아래 동의 항목을 모두 체크해야 적용할 수 있습니다</span>
+                            <span>필수 확인 사항 ― 아래 동의 항목을 <strong style={{ fontWeight: '800' }}>모두 체크해야</strong> 적용할 수 있습니다</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             {resData.confirmRequired.map(item => {
@@ -1388,7 +1390,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
 
                                         {/* 빠지는 PID 접기/펼치기 박스 */}
                                         {key === 'respondentsRemoved' && showRemovedPids && removedPidsList.length > 0 && (
-                                            <div style={{ background: '#ffffff', border: '1px solid #fecaca', borderRadius: '4px', padding: '4px 8px', fontSize: '11.5px', color: '#991b1b', maxHeight: '80px', overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: '3px', marginLeft: '23px', marginTop: '2px' }}>
+                                            <div style={{ background: '#ffffff', border: '1px solid #fecaca', borderRadius: '4px', padding: '4px 8px', fontSize: '11.5px', color: '#991b1b', display: 'flex', flexWrap: 'wrap', gap: '3px', marginLeft: '23px', marginTop: '2px' }}>
                                                 {removedPidsList.map((pid, pIdx) => (
                                                     <span key={pIdx} style={{ background: '#fee2e2', padding: '1px 4px', borderRadius: '3px' }}>{pid}</span>
                                                 ))}
@@ -1398,11 +1400,12 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                 );
                             })}
                         </div>
-                    </div>
-                )}
+                            </div>
+                        </div>
+                    )}
 
-                {/* Footer Actions */}
-                <div className="variable-modal-footer" style={{ borderTop: '1px solid #f1f5f9', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    {/* Footer Actions */}
+                    <div style={{ padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
 
                     {/* 좌측 영역: 이전 단계 동작(파일 재선택) 또는 안내문 */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, paddingRight: '16px', minWidth: 0 }}>
@@ -1532,6 +1535,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                             </>
                         )}
                     </div>
+                </div>
                 </div>
             </div>
         </div>
