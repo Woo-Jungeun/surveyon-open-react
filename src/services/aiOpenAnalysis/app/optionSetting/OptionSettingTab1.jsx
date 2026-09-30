@@ -125,7 +125,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
     // 부모(OptionSettingBody.jsx) 에게 노출
     useImperativeHandle(ref, () => ({
-        saveChanges: (skipReload) => saveChangesRef.current(skipReload),   // 부모 저장 버튼이 호출
+        saveChanges: (skipReload, overrideRows) => saveChangesRef.current(skipReload, overrideRows),   // 부모 저장 버튼이 호출
         reload: async () => {
             gridRef.current?.resetAutoSelection?.(); // 재조회 시 선택 로직 초기화
             if (latestCtxRef.current?.handleSearch) {
@@ -1103,6 +1103,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const data = (rows ?? []).map(r => {
                 const isChecked = !!selectedState[getKey(r)]; //  현재 체크박스 상태를 맵에서 직접 확인
                 return {
+                    ...r,
                     cid: Number(r.cid) || 0,
                     lv3: r.lv3 ?? "",
                     fixed_key: r.fixed_key ?? "",
