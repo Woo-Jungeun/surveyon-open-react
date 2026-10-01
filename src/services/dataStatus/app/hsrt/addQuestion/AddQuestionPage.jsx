@@ -722,6 +722,23 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [toast, setToast] = useState({ show: false, message: '' });
     const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
 
+    const [showTitleTooltip, setShowTitleTooltip] = useState(false);
+    const titleTooltipRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (titleTooltipRef.current && !titleTooltipRef.current.contains(event.target)) {
+                setShowTitleTooltip(false);
+            }
+        };
+        if (showTitleTooltip) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [showTitleTooltip]);
+
     const handleCopyGrid = async () => {
         try {
             if (!currentInfo || currentInfo.length === 0) {
@@ -1340,10 +1357,63 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         currentInfoRef.current = currentInfoRef.current.map(it => ({ ...it, inEdit: false }));
     }, []);
 
+    const titleNode = (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: 800 }}>
+            문항추가
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }} ref={titleTooltipRef}>
+                <button
+                    onClick={(e) => { e.stopPropagation(); setShowTitleTooltip(!showTitleTooltip); }}
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#64748b', display: 'flex', outline: 'none' }}
+                    title="도움말 보기"
+                >
+                    <Info size={18} />
+                </button>
+                {showTitleTooltip && (
+                    <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: '-12px',
+                        marginTop: '10px',
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '8px',
+                        padding: '12px 14px',
+                        width: 'max-content',
+                        maxWidth: '350px',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        zIndex: 1000,
+                        fontSize: '13px',
+                        color: '#334155',
+                        lineHeight: '1.5',
+                        fontWeight: 400,
+                        whiteSpace: 'normal',
+                        wordBreak: 'keep-all',
+                        letterSpacing: '-0.3px'
+                    }}>
+                        <div style={{
+                            position: 'absolute',
+                            top: '-6px',
+                            left: '17px',
+                            width: '10px',
+                            height: '10px',
+                            backgroundColor: '#ffffff',
+                            borderTop: '1px solid #cbd5e1',
+                            borderLeft: '1px solid #cbd5e1',
+                            transform: 'rotate(45deg)'
+                        }} />
+                        <div style={{ position: 'relative', zIndex: 2 }}>
+                            기존 보기를 재구성(리코딩)하거나, 여러 문항을 합쳐서 분석에 딱 맞는 새로운 문항을 생성합니다.
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+
     return (
         <>
             <style>{`.dp-add-question-dropdown .k-input-value-text { font-weight: 400 !important; }`}</style>
-            <DataHeader title="문항추가" onSave={handleSaveBanner}>
+            <DataHeader title={titleNode} onSave={handleSaveBanner}>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <Button
                         onClick={() => setIsAiModalOpen(true)}
