@@ -1331,7 +1331,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                             <AlertTriangle size={14} />
                             <span>필수 확인 사항 ― 아래 동의 항목을 <strong style={{ fontWeight: '800' }}>모두 체크해야</strong> 적용할 수 있습니다</span>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '110px', overflowY: 'auto', paddingRight: '4px' }}>
                             {resData.confirmRequired.map(item => {
                                 const key = typeof item === 'string' ? item : item.key;
                                 const label = typeof item === 'object' && item.message ? item.message : (CONFIRM_LABELS[key] || key);
@@ -1370,22 +1370,24 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                             >
                                                 {isChecked && <Check size={12} color="#fff" strokeWidth={3.5} />}
                                             </div>
-                                            <span style={{ fontWeight: isChecked ? '600' : '500', color: isChecked ? '#991b1b' : '#431407', flex: 1 }}>{label}</span>
-                                            
-                                            {/* 빠지는 응답자 PID 보기 토글 */}
-                                            {key === 'respondentsRemoved' && removedPidsList.length > 0 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        setShowRemovedPids(!showRemovedPids);
-                                                    }}
-                                                    style={{ border: '1px solid #cbd5e1', background: '#ffffff', color: '#2563eb', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: '500' }}
-                                                >
-                                                    [제외 PID 목록 보기] {showRemovedPids ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                                                </button>
-                                            )}
+                                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+                                                <span style={{ fontWeight: isChecked ? '600' : '500', color: isChecked ? '#991b1b' : '#431407' }}>{label}</span>
+                                                
+                                                {/* 빠지는 응답자 PID 보기 토글 */}
+                                                {key === 'respondentsRemoved' && removedPidsList.length > 0 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            setShowRemovedPids(!showRemovedPids);
+                                                        }}
+                                                        style={{ border: '1px solid #cbd5e1', background: '#ffffff', color: '#2563eb', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: '500', marginTop: '2px' }}
+                                                    >
+                                                        [제외 PID 목록 보기] {showRemovedPids ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                                    </button>
+                                                )}
+                                            </div>
                                         </label>
 
                                         {/* 빠지는 PID 접기/펼치기 박스 */}
