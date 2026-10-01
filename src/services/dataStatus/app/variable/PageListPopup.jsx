@@ -416,9 +416,11 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
                             <span style={{ fontSize: "20px" }}>대시보드 목록</span>
                         </div>
                         <div className="pl-header-actions">
-                            <button onClick={handleAddRow} className="pl-action-btn primary" title="대시보드 추가">
-                                <Plus size={14} /> 추가
-                            </button>
+                            {localData.length > 0 && (
+                                <button onClick={handleAddRow} className="pl-action-btn primary" title="대시보드 추가">
+                                    <Plus size={14} /> 추가
+                                </button>
+                            )}
                         </div>
                     </div>
                     <button className="pl-close-btn" onClick={onClose}>
@@ -427,7 +429,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
                 </div>
                 <div className="pl-modal-content">
                     <div className="pl-content-wrapper">
-                        <div className="cmn_grid singlehead" style={{ height: "100%" }}>
+                        <div className="cmn_grid singlehead" style={{ height: "100%", position: 'relative' }}>
                             <KendoGrid
                                 parentProps={parentProps}
                             >
@@ -442,6 +444,33 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
                                     />
                                 ))}
                             </KendoGrid>
+
+                            {localData.length === 0 && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '40px',
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: 'white',
+                                    zIndex: 10
+                                }}>
+                                    <div style={{ color: '#64748b', marginBottom: '16px', fontSize: '14px' }}>
+                                        생성된 대시보드가 없습니다. 새로운 대시보드를 만들어보세요!
+                                    </div>
+                                    <button 
+                                        onClick={handleAddRow}
+                                        className="pl-action-btn primary"
+                                        style={{ padding: '8px 24px', fontSize: '14px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                    >
+                                        <Plus size={16} /> 새 대시보드 만들기
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -160,7 +160,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
             const pages = pageRes.resultjson || [];
             if (pages.length === 1) {
               handlePageSelect(pages[0]);
-            } else if (pages.length > 1) {
+            } else {
               setPageListData(pages);
               setIsPageListPopupOpen(true);
             }
@@ -302,8 +302,8 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         if (pages.length === 1) {
           // 한 개일 때 바로 선택 (자동 저장)
           handlePageSelect(pages[0]);
-        } else if (pages.length > 1) {
-          // 여러 개일 때 팝업
+        } else {
+          // 여러 개이거나 아예 없을 때 팝업
           setPageListData(pages);
           setIsPageListPopupOpen(true);
         }
