@@ -108,8 +108,19 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                 try {
                     const data = new Uint8Array(evt.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // 시트 이름이 'banner', '배너', '베너'인 것을 찾음 (대소문자 무시)
+                    let targetSheetName = workbook.SheetNames.find(name => {
+                        const lowerName = name.toLowerCase();
+                        return lowerName === 'banner' || lowerName === '배너' || lowerName === '베너';
+                    });
+
+                    // 해당 시트가 없으면 첫 번째 시트 사용
+                    if (!targetSheetName) {
+                        targetSheetName = workbook.SheetNames[0];
+                    }
+
+                    const worksheet = workbook.Sheets[targetSheetName];
                     const tsvText = XLSX.utils.sheet_to_csv(worksheet, { FS: '\t' });
                     setUserInput(tsvText);
                 } catch (err) {
