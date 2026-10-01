@@ -1,0 +1,574 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { ChatPanel } from './ChatPanel';
+import './SurveyonAssistant.css';
+
+export const SurveyonAssistant = ({
+  apiBase: propApiBase,
+  defaultOpen = false,
+  userId: propUserId,
+}) => {
+  // 1. API_BASE 자동 결정
+  const resolveApiBase = () => {
+    // 1순위: Props로 명시적으로 전달받은 경우
+    if (propApiBase) return propApiBase.replace(/\/+$/, '');
+
+    // 2순위: 소스코드 수정 없이 .env 설정만으로 쉽게 띄울 수 있도록 자동 인식
+    // (Vite 환경)
+    const viteEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_SURVEYON_API_BASE : undefined;
+    if (viteEnv) return viteEnv.replace(/\/+$/, '');
+
+    // (Create React App 환경)
+    const reactAppEnv = typeof process !== 'undefined' && process.env ? process.env.REACT_APP_SURVEYON_API_BASE : undefined;
+    if (reactAppEnv) return reactAppEnv.replace(/\/+$/, '');
+
+    // 3순위: 전역 window 변수 (바닐라 JS 호환용)
+    if (typeof window !== 'undefined' && window.__SURVEYON_API_BASE__) {
+      return window.__SURVEYON_API_BASE__.replace(/\/+$/, '');
+    }
+
+    // 4순위: 설정이 없을 경우 환경에 따른 기본값 (운영: /APIs/m, 로컬 개발: 상대경로 빈 문자열)
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.PROD) {
+      return '/APIs/m';
+    }
+    return '';
+  };
+
+  const API_BASE = resolveApiBase();
+  // tutorial_engine.js 등 외부 스크립트에서도 동일한 API_BASE를 참조할 수 있도록 window 전역 동기화
+  if (typeof window !== 'undefined') {
+    window.__SURVEYON_API_BASE__ = API_BASE;
+  }
+
+  // 1-1. USER_ID 안전 추출 헬퍼 (JSON 문자열 파싱 방어)
+  const extractUserFromRaw = (raw) => {
+    if (!raw || !raw.trim()) return null;
+    const trimmed = raw.trim();
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (parsed && typeof parsed === 'object') {
+          const val = parsed.username || parsed.userId || parsed.id || parsed.name || parsed.empNo || parsed.email;
+          if (val) return String(val).trim();
+        }
+      } catch (_) { }
+    }
+    return trimmed;
+  };
+
+  // USER_ID 자동 결정 (Props -> localStorage -> sessionStorage -> window 전역 -> 쿠키 -> 익명 사용자)
+  const resolveUserId = () => {
+    // 1순위: Props로 명시적으로 전달받은 경우
+    if (propUserId && propUserId.trim()) return propUserId.trim();
+
+    // 2순위: localStorage (WebUI 대시보드 로그인 계정)
+    try {
+      const u = extractUserFromRaw(localStorage.getItem('username'))
+        || extractUserFromRaw(localStorage.getItem('userId'))
+        || extractUserFromRaw(localStorage.getItem('user'));
+      if (u) return u;
+    } catch (e) { }
+
+    // 3순위: sessionStorage
+    try {
+      const u = extractUserFromRaw(sessionStorage.getItem('username'))
+        || extractUserFromRaw(sessionStorage.getItem('userId'))
+        || extractUserFromRaw(sessionStorage.getItem('user'));
+      if (u) return u;
+    } catch (e) { }
+
+    // 4순위: 전역 window 변수 (바닐라 JS 및 설문온 사이트 임베딩 호환용)
+    if (typeof window !== 'undefined') {
+      const win = window;
+      const winUser = win.__SURVEYON_USER__ || win.__SURVEYON_USER_ID__ || win.surveyonUser || win.currentUser;
+      if (winUser) {
+        if (typeof winUser === 'string') {
+          const u = extractUserFromRaw(winUser);
+          if (u) return u;
+        } else if (typeof winUser === 'object') {
+          const val = winUser.username || winUser.userId || winUser.id || winUser.name || winUser.empNo;
+          if (val) return String(val).trim();
+        }
+      }
+    }
+
+    // 5순위: 브라우저 쿠키 (설문온 등 레거시 도메인 쿠키 파싱)
+    try {
+      const cookieMatch = document.cookie.match(/(?:^|;\s*)(?:user|userId|loginId|hrc_user|empNo)=([^;]+)/i);
+      if (cookieMatch && cookieMatch[1]) {
+        const u = extractUserFromRaw(decodeURIComponent(cookieMatch[1]));
+        if (u) return u;
+      }
+    } catch (e) { }
+
+    // 6순위: 미인증/미지정 기본값
+    return '익명 사용자';
+  };
+
+  // 2. 세션 ID 관리 (새 대화 시작 시 변경 가능하도록 setSessionId 지원)
+  const [sessionId, setSessionId] = useState(() => {
+    try {
+      let s = sessionStorage.getItem('__surveyon_assistant_session_id__');
+      if (!s) {
+        s = 'so_sess_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+        sessionStorage.setItem('__surveyon_assistant_session_id__', s);
+      }
+      return s;
+    } catch (e) {
+      return 'so_sess_' + Date.now();
+    }
+  });
+
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [isLoading, setIsLoading] = useState(false);
+  const [resumeSession, setResumeSession] = useState(null);
+
+  // 신고 관련 상태
+  const [reportMessageId, setReportMessageId] = useState(null);
+  const [reportReasonType, setReportReasonType] = useState('부정확한 답변');
+  const [reportReasonText, setReportReasonText] = useState('');
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+
+  // 기본 웰컴 메시지 정의
+  const welcomeMessage = {
+    id: 'welcome',
+    sender: 'ai',
+    text: `안녕하세요! 설문온 AI 어시스턴트입니다.<br>궁금한 기능이나 막히는 화면을 물어보시면, <b>실제 화면에서 버튼을 짚어주는 맞춤 가이드</b>를 제공해 드립니다.`,
+    options: [
+      { featureId: 'node_1_2_4_1_1_1', title: '척도 문항 요약표 어떻게 만들어?' },
+      { featureId: 'node_1_1_1', title: '그리드 복사는 어디에 있어?' },
+      { featureId: 'node_1_1_4_1', title: 'AI 조건식 자동생성 어떻게 해?' },
+    ],
+    timestamp: Date.now(),
+  };
+
+  // 초기 메시지 목록
+  const [messages, setMessages] = useState([welcomeMessage]);
+
+  // 4. 과거 대화 내역(히스토리) 관리 상태
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [userSessions, setUserSessions] = useState([]);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+
+  const currentUserId = resolveUserId();
+  const isLoggedInUser = Boolean(currentUserId && currentUserId !== '익명 사용자' && currentUserId.trim().length > 0);
+
+  const loadUserSessions = useCallback(async () => {
+    const u = resolveUserId();
+    if (!u || u === '익명 사용자') {
+      setUserSessions([]);
+      return;
+    }
+    setIsLoadingSessions(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/chat/sessions?userId=${encodeURIComponent(u)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setUserSessions(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.warn('[ChatAssistant] 대화 세션 목록 조회 실패:', err);
+    } finally {
+      setIsLoadingSessions(false);
+    }
+  }, [API_BASE]);
+
+  const handleToggleHistory = () => {
+    const next = !isHistoryOpen;
+    setIsHistoryOpen(next);
+    if (next) {
+      loadUserSessions();
+    }
+  };
+
+  const handleSelectSession = (targetSessionId) => {
+    if (targetSessionId === sessionId) {
+      setIsHistoryOpen(false);
+      return;
+    }
+    try {
+      sessionStorage.setItem('__surveyon_assistant_session_id__', targetSessionId);
+    } catch (e) { }
+    setSessionId(targetSessionId);
+    setIsHistoryOpen(false);
+  };
+
+  // 새 대화 시작 (새로운 세션 발급 및 화면 초기화)
+  const startNewChat = () => {
+    const newSessId = 'so_sess_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+    try {
+      sessionStorage.setItem('__surveyon_assistant_session_id__', newSessId);
+    } catch (e) { }
+    setSessionId(newSessId);
+    setMessages([welcomeMessage]);
+    setIsHistoryOpen(false);
+  };
+
+  // 세션 대화 복원 (새로고침 시 기존 대화 자동 복원)
+  useEffect(() => {
+    let isCancelled = false;
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/chat/history/${sessionId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!isCancelled && Array.isArray(data) && data.length > 0) {
+          const restored = data.map((item) => ({
+            id: item.id || `msg_${item.messageId}`,
+            messageId: item.messageId,
+            sender: item.sender === 'user' ? 'user' : 'ai',
+            text: item.text,
+            featureId: item.featureId,
+            featureName: item.featureName,
+            step: item.step || 1,
+            timestamp: item.timestamp || Date.now(),
+          }));
+          setMessages([welcomeMessage, ...restored]);
+        }
+      } catch (e) {
+        console.warn('대화 이력 복원 실패:', e);
+      }
+    };
+
+    fetchHistory();
+    return () => {
+      isCancelled = true;
+    };
+  }, [sessionId, API_BASE]);
+
+  // 3. 이전 가이드 진행 세션 복구 검사
+  const checkPreviousSession = useCallback(() => {
+    try {
+      const saved = sessionStorage.getItem('__surveyon_active_tutorial__');
+      if (!saved) return;
+      const parsed = JSON.parse(saved);
+      if (!parsed || !parsed.featureId) return;
+
+      // 2시간 이상 지난 세션은 자동 만료
+      if (parsed.timestamp && Date.now() - parsed.timestamp > 2 * 60 * 60 * 1000) {
+        sessionStorage.removeItem('__surveyon_active_tutorial__');
+        return;
+      }
+      setResumeSession(parsed);
+    } catch (e) { }
+  }, []);
+
+  useEffect(() => {
+    checkPreviousSession();
+  }, [checkPreviousSession]);
+
+  // 4. 가이드 엔진 동적 로드 및 실행
+  const handleRunGuide = useCallback(
+    (featureId, step = 1, featureName) => {
+      const startIndex = step > 0 ? step - 1 : 0;
+      const fName = featureName || '';
+
+      try {
+        sessionStorage.setItem(
+          '__surveyon_active_tutorial__',
+          JSON.stringify({
+            featureId,
+            featureName: fName,
+            startIndex,
+            timestamp: Date.now(),
+          })
+        );
+      } catch (e) { }
+
+      setResumeSession(null);
+
+      const win = window;
+      if (win.TutorialEngine) {
+        win.TutorialEngine.startByFeatureId(featureId, { startIndex, featureName: fName });
+      } else {
+        const script = document.createElement('script');
+        script.src = `${API_BASE}/tutorial_engine.js?t=${Date.now()}`;
+        script.onload = () => {
+          if (win.TutorialEngine) {
+            win.TutorialEngine.startByFeatureId(featureId, { startIndex, featureName: fName });
+          }
+        };
+        script.onerror = () => {
+          console.warn('⚠️ [SurveyonAssistant] 1차 tutorial_engine.js 로드 실패, 대체 경로(/UI/ 및 루트) 시도');
+          const fallbackScript = document.createElement('script');
+          fallbackScript.src = `${API_BASE}/UI/tutorial_engine.js?t=${Date.now()}`;
+          fallbackScript.onload = () => {
+            if (win.TutorialEngine) {
+              win.TutorialEngine.startByFeatureId(featureId, { startIndex, featureName: fName });
+            }
+          };
+          fallbackScript.onerror = () => {
+            const rootScript = document.createElement('script');
+            rootScript.src = `/tutorial_engine.js?t=${Date.now()}`;
+            rootScript.onload = () => {
+              if (win.TutorialEngine) {
+                win.TutorialEngine.startByFeatureId(featureId, { startIndex, featureName: fName });
+              }
+            };
+            document.head.appendChild(rootScript);
+          };
+          document.head.appendChild(fallbackScript);
+        };
+        document.head.appendChild(script);
+      }
+    },
+    [API_BASE]
+  );
+
+  // 5. 이전 가이드 이어하기 승인/취소
+  const handleConfirmResume = () => {
+    if (resumeSession) {
+      handleRunGuide(
+        resumeSession.featureId,
+        resumeSession.startIndex + 1,
+        resumeSession.featureName
+      );
+    }
+  };
+
+  const handleDismissResume = () => {
+    try {
+      sessionStorage.removeItem('__surveyon_active_tutorial__');
+    } catch (e) { }
+    setResumeSession(null);
+  };
+
+  // 6. 질문 전송 및 VLM 화면 분석
+  const handleSend = async (userMsg, shouldCapture) => {
+    const userMsgId = 'msg_' + Date.now();
+    const newUserMessage = {
+      id: userMsgId,
+      sender: 'user',
+      text: userMsg,
+      timestamp: Date.now(),
+    };
+
+    const loadingMsgId = 'loading_' + Date.now();
+    const loadingMessage = {
+      id: loadingMsgId,
+      sender: 'ai',
+      isLoading: true,
+      timestamp: Date.now(),
+    };
+
+    setMessages((prev) => [...prev, newUserMessage, loadingMessage]);
+    setIsLoading(true);
+
+    let screenshotBase64 = null;
+
+    // VLM 화면 캡처 분석
+    if (shouldCapture) {
+      try {
+        const html2canvas = (await import('html2canvas')).default;
+        const canvas = await html2canvas(document.body, {
+          scale: 0.8,
+          useCORS: true,
+          allowTaint: true,
+          windowWidth: window.innerWidth,
+          windowHeight: window.innerHeight,
+          scrollX: window.scrollX,
+          scrollY: window.scrollY,
+          ignoreElements: (el) => {
+            return (
+              el.id === 'surveyon-assistant-root' ||
+              el.closest('#surveyon-assistant-root') !== null ||
+              el.id === 'tutorial-spotlight' ||
+              el.id === 'tutorial-tooltip' ||
+              el.id === 'tutorial-fake-cursor'
+            );
+          },
+          onclone: (clonedDoc) => {
+            // 복제된 DOM에서 모든 CSS 애니메이션/트랜지션을 즉시 멈추고 불투명도 100% 강제 (화면 백화 방지)
+            try {
+              const style = clonedDoc.createElement('style');
+              style.innerHTML = `
+                *, *::before, *::after {
+                  animation: none !important;
+                  transition: none !important;
+                  opacity: 1 !important;
+                }
+              `;
+              clonedDoc.head.appendChild(style);
+            } catch (e) { }
+          },
+        });
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        screenshotBase64 = dataUrl.split(',')[1];
+      } catch (err) {
+        console.warn('[설문온 어시스턴트] 화면 캡처 실패:', err);
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/chat/ask`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          userId: resolveUserId(),
+          userMessage: userMsg,
+          currentUrl: window.location.href,
+          screenshotBase64,
+        }),
+      });
+
+      const data = await res.json();
+
+      setMessages((prev) =>
+        prev
+          .filter((m) => m.id !== loadingMsgId)
+          .concat({
+            id: 'ai_' + Date.now(),
+            messageId: data.messageId,
+            sender: 'ai',
+            text: data.answer || '안내를 불러오지 못했습니다.',
+            detectedTarget: data.detectedTarget,
+            options: data.options,
+            featureId: data.featureId,
+            featureName: data.featureName,
+            step: data.step || 1,
+            timestamp: Date.now(),
+          })
+      );
+    } catch (err) {
+      setMessages((prev) =>
+        prev
+          .filter((m) => m.id !== loadingMsgId)
+          .concat({
+            id: 'ai_err_' + Date.now(),
+            sender: 'ai',
+            text: `❌ 서버 통신 오류가 발생했습니다: ${err.message}`,
+            timestamp: Date.now(),
+          })
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 옵션 선택 시 질문 전송
+  const handleSelectOption = (featureId, title) => {
+    // 빠른 가이드/추천 칩 클릭 시에도 현재 화면을 백그라운드 캡처하여 VLM 시각 분석 및 기록에 활용합니다.
+    handleSend(title, true);
+  };
+
+  return (
+    <div id="surveyon-assistant-root">
+      {/* ── 우측 하단 플로팅 토글 버튼 ── */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="so-btn-toggle"
+          title="설문온 AI 가이드 어시스턴트 열기"
+        >
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z" />
+            <path d="M9.5 9h.01" />
+            <path d="M14.5 9h.01" />
+            <path d="M9.5 13a3.5 3.5 0 0 0 5 0" />
+          </svg>
+          {/* 🌟 이전 가이드 이어하기 대기 알림 Dot */}
+          {resumeSession && (
+            <span
+              className="so-toggle-dot"
+              title={`이전 가이드 [${resumeSession.featureName || resumeSession.featureId}] 이어하기 대기 중`}
+            />
+          )}
+        </button>
+      )}
+
+      {/* ── 사이드 챗봇 패널 ── */}
+      <ChatPanel
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        messages={messages}
+        resumeSession={resumeSession}
+        onSend={handleSend}
+        onSelectOption={handleSelectOption}
+        onRunGuide={handleRunGuide}
+        onConfirmResume={handleConfirmResume}
+        onDismissResume={handleDismissResume}
+        onReport={(messageId) => setReportMessageId(messageId)}
+        isLoading={isLoading}
+        onNewChat={startNewChat}
+        currentSessionId={sessionId}
+        userSessions={userSessions}
+        isLoadingSessions={isLoadingSessions}
+        isHistoryOpen={isHistoryOpen}
+        onToggleHistory={handleToggleHistory}
+        onSelectSession={handleSelectSession}
+        isLoggedInUser={isLoggedInUser}
+      />
+
+      {/* ⚠️ 오류 제보 모달 */}
+      {reportMessageId && (
+        <div className="so-modal-overlay" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'auto' }}>
+          <div className="so-modal-content" style={{ background: '#fff', padding: '20px', borderRadius: '8px', width: '90%', maxWidth: '300px', pointerEvents: 'auto' }}>
+            <h4 style={{ margin: '0 0 15px 0' }}>⚠️ 챗봇 답변 오류 제보</h4>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>제보 유형</label>
+              <select
+                value={reportReasonType}
+                onChange={(e) => setReportReasonType(e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+              >
+                <option value="부정확한 답변">부정확한 답변 (할루시네이션)</option>
+                <option value="엉뚱한 화면 매칭">엉뚱한 화면 매칭</option>
+                <option value="불쾌한 표현">불쾌하거나 부적절한 표현</option>
+                <option value="기타">기타 사유</option>
+              </select>
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>상세 사유 (선택)</label>
+              <textarea
+                value={reportReasonText}
+                onChange={(e) => setReportReasonText(e.target.value)}
+                placeholder="답변의 어떤 점이 문제인지 자세히 적어주세요."
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', minHeight: '60px', resize: 'vertical' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setReportMessageId(null)}
+                style={{ padding: '8px 12px', borderRadius: '4px', background: '#f1f5f9', border: 'none', cursor: 'pointer' }}
+                disabled={isSubmittingReport}
+              >
+                취소
+              </button>
+              <button
+                onClick={async () => {
+                  setIsSubmittingReport(true);
+                  try {
+                    const res = await fetch(`${API_BASE}/api/chat/messages/${reportMessageId}/report`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ reasonType: reportReasonType, reasonText: reportReasonText }),
+                    });
+
+                    if (!res.ok) {
+                      const errJson = await res.json().catch(() => null);
+                      throw new Error(errJson?.message || `서버 오류 (HTTP ${res.status})`);
+                    }
+
+                    alert('오류 제보가 정상적으로 접수되었습니다. 소중한 의견 감사합니다.');
+                    setReportMessageId(null);
+                    setReportReasonText('');
+                  } catch (e) {
+                    alert(`오류 제보 접수 중 문제가 발생했습니다: ${e.message || '네트워크 연결을 확인해 주세요.'}`);
+                  } finally {
+                    setIsSubmittingReport(false);
+                  }
+                }}
+                style={{ padding: '8px 12px', borderRadius: '4px', background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer' }}
+                disabled={isSubmittingReport}
+              >
+                {isSubmittingReport ? '제출 중...' : '제보하기'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default SurveyonAssistant;
