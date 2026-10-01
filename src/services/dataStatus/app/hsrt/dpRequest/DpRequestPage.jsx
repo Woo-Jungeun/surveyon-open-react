@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
-import { Save, ChevronRight, Check, RotateCcw } from 'lucide-react';
+import { Save, ChevronRight, Check, RotateCcw, Info } from 'lucide-react';
 import DataHeader from "@/services/dataStatus/components/DataHeader";
 import { DpRequestPageApi } from './DpRequestPageApi';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -50,11 +50,10 @@ const DpRequestPage = () => {
 
     // 명세서 기반 5단계 워크플로우 정의
     const steps = [
-        { key: 'table', label: '표 설정', desc: '[표 설정] 가중치 변수, 숫자 표시 정책, 테마 색상과 프리셋을 구성하고 저장합니다.' },
-        { key: 'banner', label: '배너', desc: '[배너] 분석 테이블 상단에 기준이 되는 배너를 설정합니다.' },
-        { key: 'recoded', label: '스터브', desc: '[스터브] DP 표 생성을 위한 recoded 메타데이터 설정. 이 화면에서 설정한 내용이 저장 시 실제 recoded 변수 및 필터로 생성됩니다.' },
-        { key: 'summary', label: '요약표', desc: '[요약표] 같은 척도끼리 묶어서 빈도/통계 요약표를 구성하고, 저장 시 summary stub으로 반영합니다.' },
-        // { key: 'order', label: '표 순서', desc: '[표 순서] DP 결과 테이블에 표출될 스터브와 요약표의 순서를 조정하고, 필요한 항목은 마지막 단계에서 상세 편집합니다.' },
+        { key: 'table', label: '표 설정', desc: '공통으로 적용될 프리셋(척도/그룹/순위)과 표 디자인, 가중치를 설정합니다.' },
+        { key: 'banner', label: '배너', desc: '교차분석 시 테이블의 가로축(헤더) 기준이 될 배너 문항들을 설정합니다. (자동 배너 포함)' },
+        { key: 'recoded', label: '스터브', desc: '문항들이 표에 나타날 순서와 보기의 세부 설정을 관리합니다. (추가된 문항, 배너, 요약표 모두 포함)' },
+        { key: 'summary', label: '요약표', desc: '척도 문항이나 오픈 문항의 요약 데이터를 어떻게 보여줄지 설정합니다. (자동 생성 포함)' },
     ];
 
     // URL 파라미터 (dp_view)를 기준으로 현재 단계 결정
@@ -63,6 +62,26 @@ const DpRequestPage = () => {
         const idx = steps.findIndex(s => s.key === viewParam);
         return idx !== -1 ? idx : 0; // 명세대로 기본은 table(0)로 시작
     };
+
+    const [activeTooltip, setActiveTooltip] = useState(null);
+    const tooltipRefs = useRef([]);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (activeTooltip !== null) {
+                const activeRef = tooltipRefs.current[activeTooltip];
+                if (activeRef && !activeRef.contains(event.target)) {
+                    setActiveTooltip(null);
+                }
+            }
+        };
+        if (activeTooltip !== null) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [activeTooltip]);
 
     const [currentStep, setCurrentStep] = useState(getInitialStep());
     const [contextData, setContextData] = useState(null);
@@ -188,16 +207,68 @@ const DpRequestPage = () => {
                                         }
                                         handleStepChange(idx);
                                     }}
-                                    style={{ cursor: isDisabled ? 'not-allowed' : 'pointer', opacity: isDisabled ? 0.4 : 1 }}
-                                    title={isDisabled ? '스터브 최초 저장 후 이용 가능합니다.' : step.desc}
+                                    style={{ cursor: isDisabled ? 'not-allowed' : 'pointer' }}
+                                    title={isDisabled ? '스터브 최초 저장 후 이용 가능합니다.' : undefined}
                                 >
                                     <div className="dp-step-num-compact" style={{ background: isDisabled ? '#cbd5e1' : undefined }}>
                                         {isCompleted && !isActive ? <Check size={12} strokeWidth={3} /> : idx + 1}
                                     </div>
-                                    <div className="dp-step-label-group">
+                                    <div className="dp-step-label-group" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                         <span className="dp-step-text" style={{ color: isDisabled ? '#94a3b8' : undefined }}>{step.label}</span>
-                                        {/* 개수 표출 임시 숨김 처리 */}
-                                        {/* {count > 0 && <span className="dp-step-count">{count}</span>} */}
+                                        <div style={{ position: 'relative', display: 'flex' }} ref={el => tooltipRefs.current[idx] = el}>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setActiveTooltip(activeTooltip === idx ? null : idx);
+                                                }}
+                                                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: isDisabled ? '#94a3b8' : '#64748b', display: 'flex', outline: 'none' }}
+                                                title="도움말 보기"
+                                            >
+                                                <Info size={14} />
+                                            </button>
+                                            {activeTooltip === idx && (
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    top: '100%',
+                                                    left: '50%',
+                                                    transform: 'translateX(-50%)',
+                                                    marginTop: '8px',
+                                                    backgroundColor: '#ffffff',
+                                                    border: '1px solid #cbd5e1',
+                                                    borderRadius: '8px',
+                                                    padding: '10px 14px',
+                                                    width: 'max-content',
+                                                    maxWidth: '280px',
+                                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                                                    zIndex: 1000,
+                                                    fontSize: '12px',
+                                                    color: '#334155',
+                                                    lineHeight: '1.5',
+                                                    fontWeight: 400,
+                                                    whiteSpace: 'normal',
+                                                    wordBreak: 'keep-all',
+                                                    letterSpacing: '-0.3px',
+                                                    textAlign: 'left',
+                                                    cursor: 'default'
+                                                }} onClick={(e) => e.stopPropagation()}>
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: '-6px',
+                                                        left: '50%',
+                                                        marginLeft: '-5px',
+                                                        width: '10px',
+                                                        height: '10px',
+                                                        backgroundColor: '#ffffff',
+                                                        borderTop: '1px solid #cbd5e1',
+                                                        borderLeft: '1px solid #cbd5e1',
+                                                        transform: 'rotate(45deg)'
+                                                    }} />
+                                                    <div style={{ position: 'relative', zIndex: 2 }}>
+                                                        {step.desc}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                                 {idx < steps.length - 1 && (
