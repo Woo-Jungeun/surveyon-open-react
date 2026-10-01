@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect, useContext } from "react";
 import ReactDOM from 'react-dom';
-import { X, Layout, Plus, Trash2 } from 'lucide-react';
+import { X, Layout, Plus, Trash2, Info, Settings, Copy, Layers } from 'lucide-react';
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { useSelector } from "react-redux";
@@ -99,6 +99,23 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
 
     const draftTitleRef = React.useRef("");
     const [editingRowId, setEditingRowId] = useState(null);
+    const [showTooltip, setShowTooltip] = useState(false);
+    const tooltipRef = React.useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+                setShowTooltip(false);
+            }
+        };
+        if (showTooltip) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [showTooltip]);
+
     const [localData, setLocalData] = useState(() => {
         return (data || []).map(item => {
             const mPn = item.merge_pn || item.pn || sessionStorage.getItem("merge_pn") || "";
@@ -413,7 +430,69 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
                     <div className="pl-header-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <Layout size={20} className="pl-header-icon" />
-                            <span style={{ fontSize: "20px" }}>대시보드 목록</span>
+                            <span style={{ fontSize: "20px", fontWeight: 700 }}>대시보드 목록</span>
+                            <div style={{ position: 'relative' }} ref={tooltipRef}>
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); setShowTooltip(!showTooltip); }}
+                                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#64748b', display: 'flex', outline: 'none' }}
+                                    title="도움말 보기"
+                                >
+                                    <Info size={18} />
+                                </button>
+
+                                {showTooltip && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '100%',
+                                        left: '-20px',
+                                        marginTop: '10px',
+                                        backgroundColor: '#ffffff',
+                                        border: '1px solid #cbd5e1',
+                                        borderRadius: '8px',
+                                        padding: '14px',
+                                        width: '450px',
+                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                                        zIndex: 1000,
+                                        fontSize: '13px',
+                                        color: '#334155',
+                                        lineHeight: '1.6',
+                                        fontWeight: 500
+                                    }}>
+                                        {/* 말풍선 꼬리 */}
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '-6px',
+                                            left: '24px',
+                                            width: '10px',
+                                            height: '10px',
+                                            backgroundColor: '#ffffff',
+                                            borderTop: '1px solid #cbd5e1',
+                                            borderLeft: '1px solid #cbd5e1',
+                                            transform: 'rotate(45deg)'
+                                        }} />
+                                    <div style={{ position: 'relative', zIndex: 2 }}>
+                                        <div style={{ marginBottom: '10px' }}>
+                                            <strong style={{ color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                                                <Settings size={14} color="#64748b" /> 필수 초기 설정
+                                            </strong> 
+                                            <span style={{ color: '#334155' }}>최초 1개의 대시보드 추가 후</span> <span style={{ color: '#16a34a' }}>[데이터관리] &gt; [맵관리] &gt; [변수 유형]</span> 메뉴 확인이 필수입니다. 각 변수의 유형에 맞게 분석 환경이 자동으로 세팅됩니다.
+                                        </div>
+                                        <div style={{ marginBottom: '10px' }}>
+                                            <strong style={{ color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                                                <Copy size={14} color="#64748b" /> 대시보드 복사
+                                            </strong>
+                                            기존 대시보드의 배너와 스터브 설정을 그대로 유지한 채, 새로운 대시보드를 쉽게 추가할 수 있습니다.
+                                        </div>
+                                        <div>
+                                            <strong style={{ color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                                                <Layers size={14} color="#64748b" /> 용도별 버전 관리
+                                            </strong>
+                                            테스트용, 고객 제공용 등 목적에 맞춰 여러 개의 대시보드를 생성하고 설정을 다르게 관리해 보세요.
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            </div>
                         </div>
                         <div className="pl-header-actions">
                             {localData.length > 0 && (
