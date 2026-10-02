@@ -41,9 +41,9 @@
     width: 14px;
     height: 14px;
     border-radius: 7px;
-    background: #f59e0b;
+    background: #f43f5e;
     border: 2px solid white;
-    box-shadow: 0 0 8px rgba(245, 158, 11, 0.9);
+    box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
     animation: so-pulse 1.8s infinite;
 }
 
@@ -271,15 +271,16 @@
 .so-quick-btn {
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    color: #1e293b;
-    padding: 7px 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    text-align: left;
+    color: #334155;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 500;
+    text-align: center;
     cursor: pointer;
     transition: all 0.15s;
     margin: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
 }
 
 .so-quick-btn:hover {
@@ -311,6 +312,7 @@
     padding: 11px 15px;
     border-radius: 16px;
     font-size: 13.5px;
+    font-weight: 400; /* 명시적으로 기본 글씨체 두께를 얇게(Normal) 고정 */
     line-height: 1.55;
     word-break: break-word;
     overflow-wrap: break-word;
@@ -324,6 +326,13 @@
     box-shadow: 0 2px 10px rgba(110, 98, 255, 0.22);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+}
+
+/* AI 말풍선 내의 텍스트에서 너무 굵고 까만 볼드체를 부드러운 브랜드 컬러로 중화하되 두께 대비는 줌 */
+.so-bubble.ai b,
+.so-bubble.ai strong {
+    font-weight: 700; /* 일반 글씨가 400이므로 볼드는 700으로 하여 확실히 대비되게 함 */
+    color: #4f46e5; /* 세련된 인디고/보라색 틴트 */
 }
 
 .so-bubble.ai {
@@ -346,6 +355,12 @@
     margin-top: 4px;
     margin-bottom: 4px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.so-bubble.ai.error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
 }
 
 .so-bubble.ai.welcome .so-quick-btn {
@@ -422,26 +437,55 @@
 }
 
 .so-exec-btn {
-    display: inline-block;
-    margin-top: 8px;
-    background: #6E62FF;
-    color: white;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 12.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    background: #ffffff;
+    color: #6E62FF;
+    border: 1.5px solid #6E62FF;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
     font-weight: 700;
     cursor: pointer;
-    transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
-    box-shadow: 0 2px 8px rgba(110, 98, 255, 0.25);
+    transition: all 0.15s;
+    box-shadow: 0 2px 8px rgba(110, 98, 255, 0.15);
 }
 
 .so-exec-btn:hover {
-    background: #5A4BFF;
-    box-shadow: 0 4px 12px rgba(110, 98, 255, 0.35);
+    background: #F5F3FF;
+    color: #5A4BFF;
+    border-color: #5A4BFF;
+    box-shadow: 0 4px 12px rgba(110, 98, 255, 0.25);
 }
 
 .so-exec-btn:active {
+    transform: scale(0.98);
+}
+
+.so-nav-btn {
+    display: inline-block;
+    margin-top: 10px;
+    background: #ffffff;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.so-nav-btn:hover {
+    background: #f8fafc;
+    color: #0f172a;
+    border-color: #94a3b8;
+}
+
+.so-nav-btn:active {
     transform: scale(0.98);
 }
 
@@ -453,25 +497,25 @@
     background: #5A4BFF;
 }
 
-/* 이전 가이드 이어하기 안내 카드 */
+/* 이전 가이드 이어하기 안내 카드 (앰버/오렌지 액센트 보더 테마) */
 .so-resume-card {
-    background: #f0f9ff;
-    border: 1.5px solid #7dd3fc;
-    border-radius: 12px;
-    padding: 12px 14px;
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+    background: #ffffff;
+    border: 2px solid #f59e0b; /* Amber 500 */
+    border-radius: 16px;
+    padding: 14px 16px;
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.15); /* Amber Glow */
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    animation: so-fade-in 0.25s ease-out;
+    gap: 12px;
+    animation: so-fade-in-up 0.25s ease-out;
+    margin-bottom: 8px;
 }
 
-@keyframes so-fade-in {
+@keyframes so-fade-in-up {
     from {
         opacity: 0;
-        transform: translateY(-6px);
+        transform: translateY(6px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -485,13 +529,13 @@
 }
 
 .so-resume-badge {
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 700;
-    color: #0369a1;
-    background: #e0f2fe;
-    padding: 3px 8px;
-    border-radius: 6px;
-    border: 1px solid #bae6fd;
+    color: #d97706; /* Amber 600 */
+    background: #fffbeb; /* Amber 50 */
+    border: 1px solid #fcd34d; /* Amber 300 Border */
+    padding: 4px 10px;
+    border-radius: 20px;
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -501,26 +545,26 @@
     background: none;
     border: none;
     color: #94a3b8;
-    font-size: 15px;
+    font-size: 16px;
     cursor: pointer;
     padding: 0 4px;
     line-height: 1;
 }
 
 .so-resume-close:hover {
-    color: #334155;
+    color: #475569;
 }
 
 .so-resume-body {
     font-size: 12.5px;
-    color: #0f172a;
+    color: #334155;
     line-height: 1.5;
 }
 
 .so-resume-feature {
     margin: 4px 0;
     font-size: 13px;
-    color: #0284c7;
+    color: #d97706;
     font-weight: 700;
 }
 
@@ -532,10 +576,10 @@
 
 .so-resume-btn {
     flex: 1;
-    padding: 7px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 700;
+    padding: 9px 12px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.15s;
     border: none;
@@ -543,23 +587,42 @@
 }
 
 .so-resume-btn.confirm {
-    background: #0284c7;
+    background: #f59e0b;
     color: white;
 }
 
 .so-resume-btn.confirm:hover {
-    background: #0369a1;
+    background: #d97706;
 }
 
 .so-resume-btn.cancel {
-    background: white;
+    background: #ffffff;
     border: 1px solid #cbd5e1;
     color: #64748b;
 }
 
 .so-resume-btn.cancel:hover {
-    background: #f1f5f9;
+    background: #f8fafc;
     color: #334155;
+}
+
+/* 오류 제보 버튼 (명시적 UI) */
+.so-report-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 11.5px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s;
+}
+
+.so-report-btn:hover {
+    color: #f43f5e; /* Rose 500 */
 }
 
 
@@ -587,7 +650,7 @@
     gap: 8px;
     align-items: center;
     background: #ffffff;
-    border: 1.5px solid #DDD6FE;
+    border: 1px solid #e2e8f0;
     border-radius: 24px;
     padding: 4px 6px 4px 14px;
     transition: border-color 0.15s, box-shadow 0.15s;
@@ -809,12 +872,38 @@
 }
 
 .so-history-empty {
-    padding: 36px 16px;
+    margin: 32px auto;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 32px 24px;
     text-align: center;
+    max-width: 90%;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+}
+
+.so-history-empty-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    line-height: 1;
+}
+
+.so-history-empty-title {
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 6px;
+    font-size: 14.5px;
+}
+
+.so-history-empty-desc {
+    font-size: 12.5px;
+    color: #64748b;
+    line-height: 1.55;
+    word-break: keep-all;
 }
 
 .so-history-spinner {
@@ -830,4 +919,76 @@
     to {
         transform: rotate(360deg);
     }
+}
+
+/* ── Kendo UI DropDownList 커스텀 덮어쓰기 (설문온 퍼플 테마) ── */
+.so-kendo-dropdown,
+.so-kendo-popup-high-z {
+    /* Kendo v7 최신 CSS 변수 덮어쓰기 (테마 주황색 -> 보라색 강제 변경) */
+    --kendo-color-primary: #6E62FF !important;
+    --kendo-focus-outline-color: rgba(110, 98, 255, 0.15) !important;
+}
+
+/* Kendo 기본 인라인 Z-index 무력화 (팝업이 모달 뒤에 숨는 현상 원천 차단) */
+.k-animation-container {
+    z-index: 9999999 !important;
+}
+
+/* 드롭다운 자체 디자인 다듬기 */
+.so-kendo-dropdown {
+    border-radius: 8px !important;
+    border-color: #cbd5e1 !important;
+    transition: all 0.2s ease !important;
+    /* Kendo 테마 변수 강제 주입 */
+    --kendo-color-primary: #6E62FF !important;
+    --kendo-button-text: #6E62FF !important;
+    --kendo-icon-color: #6E62FF !important;
+}
+.so-kendo-dropdown.k-focus,
+.so-kendo-dropdown:focus-within,
+.so-kendo-dropdown.k-state-focused {
+    outline: none !important;
+    border-color: #6E62FF !important;
+    box-shadow: 0 0 0 2px rgba(110, 98, 255, 0.15) !important;
+}
+
+/* 드롭다운 화살표(mask 이미지) 색상 강제 지정 (글로벌 style 덮어쓰기) */
+/* 전역 CSS에서 button에 mask와 background-color: var(--primary-color)를 쓰고 있으므로 background-color를 덮어써야 합니다. */
+.so-kendo-dropdown .k-input-button {
+    background-color: #64748b !important;
+}
+
+/* 포커스 및 열림 상태일 때 보라색 */
+.so-kendo-dropdown.k-focus .k-input-button,
+.so-kendo-dropdown:focus-within .k-input-button,
+.so-kendo-dropdown.k-state-focused .k-input-button {
+    background-color: #6E62FF !important;
+}
+
+/* 팝업(목록) 디자인 다듬기 */
+/* 컨테이너에는 테두리와 그림자를 없애고 (애니메이션 겹침 방지), 알맹이에만 줍니다 */
+.so-kendo-popup-high-z.k-animation-container {
+    border: none !important;
+    box-shadow: none !important;
+}
+.so-kendo-popup-high-z.k-popup,
+.so-kendo-popup-high-z .k-popup {
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+    overflow: hidden !important;
+}
+.so-kendo-popup-high-z .k-list-item {
+    transition: background-color 0.1s !important;
+    padding: 8px 12px !important;
+}
+.so-kendo-popup-high-z .k-list-item:hover,
+.so-kendo-popup-high-z .k-list-item.k-hover {
+    background-color: #f8fafc !important;
+}
+.so-kendo-popup-high-z .k-list-item.k-selected,
+.so-kendo-popup-high-z .k-list-item.k-focus {
+    background-color: #f3f0ff !important;
+    color: #6E62FF !important;
+    font-weight: 600 !important;
 }

@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
+import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { ChatPanel } from './ChatPanel';
 import { chatApi, getChatBaseUrl } from './ChatApi';
+import { modalContext } from "@/components/common/Modal.jsx";
 import './SurveyonAssistant.css';
 
 export const SurveyonAssistant = ({
@@ -8,6 +10,9 @@ export const SurveyonAssistant = ({
   defaultOpen = false,
   userId: propUserId,
 }) => {
+  // 공통 모달(Alert) 컨텍스트
+  const modal = useContext(modalContext);
+
   // 1. API_BASE 자동 결정 (chatApi 표준 헬퍼 활용)
   const API_BASE = getChatBaseUrl(propApiBase);
   // tutorial_engine.js 등 외부 스크립트에서도 동일한 API_BASE를 참조할 수 있도록 window 전역 동기화
@@ -100,15 +105,16 @@ export const SurveyonAssistant = ({
 
   // 신고 관련 상태
   const [reportMessageId, setReportMessageId] = useState(null);
-  const [reportReasonType, setReportReasonType] = useState('부정확한 답변');
+  const [reportReasonType, setReportReasonType] = useState('부정확한 답변 (할루시네이션)');
   const [reportReasonText, setReportReasonText] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [modalElement, setModalElement] = useState(null);
 
   // 기본 웰컴 메시지 정의
   const welcomeMessage = {
     id: 'welcome',
     sender: 'ai',
-    text: `안녕하세요! 설문온 AI 어시스턴트입니다.<br>궁금한 기능이나 막히는 화면을 물어보시면, <b>실제 화면에서 버튼을 짚어주는 맞춤 가이드</b>를 제공해 드립니다.`,
+    text: `<div style="font-weight: 700; font-size: 14.5px; color: #1e293b; margin-bottom: 6px;">안녕하세요! 설문온 AI 어시스턴트입니다.</div><div style="font-weight: 400; color: #64748b; font-size: 13px; line-height: 1.55;">설문 중 막히는 부분을 편하게 물어보세요!<br><b style="color: #6E62FF; font-weight: 600;">화면에서 직접 버튼을 짚어가며</b> 쉽게 안내해 드릴게요.</div>`,
     options: [
       { featureId: 'node_1_2_4_1_1_1', title: '척도 문항 요약표 어떻게 만들어?' },
       { featureId: 'node_1_1_1', title: '그리드 복사는 어디에 있어?' },
@@ -191,6 +197,7 @@ export const SurveyonAssistant = ({
             featureId: item.featureId,
             featureName: item.featureName,
             step: item.step || 1,
+            entryUrl: item.entryUrl,
             timestamp: item.timestamp || Date.now(),
           }));
           setMessages([welcomeMessage, ...restored]);
@@ -394,6 +401,7 @@ export const SurveyonAssistant = ({
             featureId: data.featureId,
             featureName: data.featureName,
             step: data.step || 1,
+            entryUrl: data.entryUrl,
             timestamp: Date.now(),
           })
       );
@@ -469,35 +477,62 @@ export const SurveyonAssistant = ({
 
       {/* ⚠️ 오류 제보 모달 */}
       {reportMessageId && (
-        <div className="so-modal-overlay" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'auto' }}>
-          <div className="so-modal-content" style={{ background: '#fff', padding: '20px', borderRadius: '8px', width: '90%', maxWidth: '300px', pointerEvents: 'auto' }}>
-            <h4 style={{ margin: '0 0 15px 0' }}>⚠️ 챗봇 답변 오류 제보</h4>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>제보 유형</label>
-              <select
-                value={reportReasonType}
-                onChange={(e) => setReportReasonType(e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              >
-                <option value="부정확한 답변">부정확한 답변 (할루시네이션)</option>
-                <option value="엉뚱한 화면 매칭">엉뚱한 화면 매칭</option>
-                <option value="불쾌한 표현">불쾌하거나 부적절한 표현</option>
-                <option value="기타">기타 사유</option>
-              </select>
+        <div className="so-modal-overlay" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'auto' }}>
+          <div ref={setModalElement} className="so-modal-content" style={{ background: '#fff', padding: '28px', borderRadius: '16px', width: '92%', maxWidth: '420px', pointerEvents: 'auto', boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}>
+            <h4 style={{ margin: '0 0 16px 0', fontSize: '18px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              챗봇 답변 오류 제보
+            </h4>
+            <hr style={{ margin: '0 -28px 20px -28px', border: 'none', borderTop: '1px solid #e2e8f0' }} />
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '12.5px', fontWeight: '600', color: '#475569' }}>제보 유형</label>
+              {modalElement && (
+                <DropDownList
+                  data={[
+                    "부정확한 답변 (할루시네이션)",
+                    "엉뚱한 화면 매칭",
+                    "불쾌하거나 부적절한 표현",
+                    "기타 사유"
+                  ]}
+                  value={reportReasonType}
+                  onChange={(e) => setReportReasonType(e.value)}
+                  style={{ width: '100%' }}
+                  className="so-kendo-dropdown"
+                  popupSettings={{ 
+                    className: 'so-kendo-popup-high-z',
+                    appendTo: modalElement
+                  }}
+                />
+              )}
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>상세 사유 (선택)</label>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '12.5px', fontWeight: '600', color: '#475569' }}>상세 사유 (선택)</label>
               <textarea
                 value={reportReasonText}
                 onChange={(e) => setReportReasonText(e.target.value)}
                 placeholder="답변의 어떤 점이 문제인지 자세히 적어주세요."
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', minHeight: '60px', resize: 'vertical' }}
+                style={{ 
+                  width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', 
+                  minHeight: '120px', resize: 'vertical', fontSize: '13.5px', color: '#334155', fontFamily: 'inherit',
+                  outline: 'none', transition: 'border-color 0.2s', lineHeight: '1.5'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#6E62FF'}
+                onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
               />
             </div>
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setReportMessageId(null)}
-                style={{ padding: '8px 12px', borderRadius: '4px', background: '#f1f5f9', border: 'none', cursor: 'pointer' }}
+                style={{ 
+                  padding: '9px 16px', borderRadius: '8px', background: '#f1f5f9', color: '#475569',
+                  border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '600', transition: 'background 0.2s'
+                }}
+                onMouseOver={(e) => e.target.style.background = '#e2e8f0'}
+                onMouseOut={(e) => e.target.style.background = '#f1f5f9'}
                 disabled={isSubmittingReport}
               >
                 취소
@@ -515,16 +550,30 @@ export const SurveyonAssistant = ({
                       propApiBase
                     );
 
-                    alert('오류 제보가 정상적으로 접수되었습니다. 소중한 의견 감사합니다.');
+                    if (modal && modal.showAlert) {
+                      modal.showAlert('알림', '오류 제보가 정상적으로 접수되었습니다.\n소중한 의견 감사합니다.');
+                    } else {
+                      alert('오류 제보가 정상적으로 접수되었습니다.\n소중한 의견 감사합니다.');
+                    }
                     setReportMessageId(null);
                     setReportReasonText('');
                   } catch (e) {
-                    alert(`오류 제보 접수 중 문제가 발생했습니다: ${e.message || '네트워크 연결을 확인해 주세요.'}`);
+                    if (modal && modal.showErrorAlert) {
+                      modal.showErrorAlert('에러', `오류 제보 접수 중 문제가 발생했습니다.\n${e.message || '네트워크 연결을 확인해 주세요.'}`);
+                    } else {
+                      alert(`오류 제보 접수 중 문제가 발생했습니다: ${e.message || '네트워크 연결을 확인해 주세요.'}`);
+                    }
                   } finally {
                     setIsSubmittingReport(false);
                   }
                 }}
-                style={{ padding: '8px 12px', borderRadius: '4px', background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer' }}
+                style={{ 
+                  padding: '9px 16px', borderRadius: '8px', background: '#6E62FF', color: '#fff',
+                  border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '600', transition: 'background 0.2s',
+                  boxShadow: '0 2px 8px rgba(110, 98, 255, 0.25)'
+                }}
+                onMouseOver={(e) => e.target.style.background = '#5A4BFF'}
+                onMouseOut={(e) => e.target.style.background = '#6E62FF'}
                 disabled={isSubmittingReport}
               >
                 {isSubmittingReport ? '제출 중...' : '제보하기'}

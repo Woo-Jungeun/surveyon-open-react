@@ -77,11 +77,16 @@ const sanitizeHtml = (rawHtml) => {
 
 /**
  * 기능명 추출 헬퍼 (시스템 내부 ID 노출 차단 및 주 기능명-버튼 텍스트 일치화)
- * 1) 본문 첫 줄 주 기능명(<b>[주 기능명]</b> 기능 안내입니다)을 최우선 추출하여 "AI 조건식 자동생성 따라하기"처럼 일치화
- * 2) 본문에 패턴이 없는 경우 msg.featureName 활용
+ * 1) API에서 명시적으로 전달받은 msg.featureName 최우선 사용
+ * 2) 없는 경우에만 본문(text) 첫 줄에서 기능명을 파싱하여 백업으로 사용
  */
 const resolveFeatureTitle = (msg) => {
-  // 1순위: msg.text 본문의 첫 머리에서 실제 주 기능명 추출 (예: "<b>AI 조건식 자동생성</b> 기능 안내입니다")
+  // 1순위: 백엔드 API에서 명시적으로 기능명(featureName)을 내려주는 경우 최우선 적용
+  if (msg.featureName && typeof msg.featureName === 'string' && !msg.featureName.startsWith('node_') && msg.featureName.trim().length > 0) {
+    return msg.featureName.trim();
+  }
+
+  // 2순위: (구버전 호환용) 본문의 첫 머리에서 실제 주 기능명 파싱 추출 (예: "<b>AI 조건식 자동생성</b> 기능 안내입니다")
   if (msg.text) {
     const match = msg.text.match(/(?:<b>)?\s*([^<\n\r]+?)\s*(?:<\/b>)?\s*(?:기능\s*안내|가이드)/i);
     if (match && match[1]) {
@@ -90,11 +95,6 @@ const resolveFeatureTitle = (msg) => {
         return extracted;
       }
     }
-  }
-
-  // 2순위: msg.featureName이 있고 node_ 가 아닌 유의미한 이름인 경우 백업 사용
-  if (msg.featureName && !msg.featureName.startsWith('node_') && msg.featureName.trim().length > 0) {
-    return msg.featureName.trim();
   }
 
   return '';
@@ -115,7 +115,7 @@ export const ChatMessages = ({
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, resumeSession]);
+  }, [messages]);
 
   const handleContextMenu = (e, msg) => {
     if (msg.messageId && onReport) {
@@ -130,57 +130,19 @@ export const ChatMessages = ({
       className="so-chat-body"
       id="so-messages"
     >
-      {/* 🔄 이전 가이드 이어하기 안내 카드 */}
-      {resumeSession && (
-        <div className="so-resume-card" id="so-resume-card">
-          <div className="so-resume-top">
-            <span className="so-resume-badge">
-              이전 가이드 이어하기
-            </span>
-            <button
-              onClick={onDismissResume}
-              className="so-resume-close"
-              title="닫기"
-            >
-              ✕
-            </button>
-          </div>
-          <div className="so-resume-body">
-            이전에 진행 중이던 가이드가 있습니다.
-            <div className="so-resume-feature">
-              [{resumeSession.featureName || resumeSession.featureId}] ({resumeSession.startIndex + 1}단계 진행 중)
-            </div>
-            이어서 화면에서 계속 진행하시겠습니까?
-          </div>
-          <div className="so-resume-actions">
-            <button
-              onClick={onConfirmResume}
-              className="so-resume-btn confirm"
-            >
-              이어서 진행
-            </button>
-            <button
-              onClick={onDismissResume}
-              className="so-resume-btn cancel"
-            >
-              취소
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* 대화 메시지 목록 */}
       {messages.map((msg, index) => {
         const isWelcome = msg.id === 'welcome' || (index === 0 && msg.sender === 'ai');
         const featureTitle = resolveFeatureTitle(msg);
-        const actionLabel = featureTitle ? `${featureTitle} 따라하기` : '화면에서 따라하기';
+        const actionLabel = featureTitle ? `${featureTitle} 따라하기` : '가이드 따라하기';
 
         let formattedText = msg.text || '';
         if (formattedText) {
           // 본문 내 [화면에서 따라하기] 문구를 실제 기능명이 명시된 [${actionLabel}]로 100% 일치 치환
           formattedText = formattedText
-            .replace(/\[?👉?\s*화면에서\s*따라하기\]?/g, `[${actionLabel}]`)
-            .replace(/화면에서\s*따라하기\s*버튼/g, `[${actionLabel}] 버튼`);
+            .replace(/\[?👉?\s*화면에서\s*(직접\s*)?따라하기\]?/g, `[${actionLabel}]`)
+            .replace(/화면에서\s*(직접\s*)?따라하기\s*버튼/g, `[${actionLabel}] 버튼`);
           // 잔여 👉 이모지 정돈
           formattedText = formattedText.replace(/👉\s*/g, '');
         }
@@ -193,9 +155,7 @@ export const ChatMessages = ({
               </div>
             ) : (
               <div
-                className={`so-bubble ai ${isWelcome ? 'welcome' : ''}`}
-                onContextMenu={(e) => handleContextMenu(e, msg)}
-                title={msg.messageId ? "우클릭하여 오류 제보" : ""}
+                className={`so-bubble ai ${isWelcome ? 'welcome' : ''} ${msg.id.startsWith('ai_err_') ? 'error' : ''}`}
               >
                 {msg.isLoading ? (
                   <div className="so-typing-indicator">
@@ -208,6 +168,24 @@ export const ChatMessages = ({
                   </div>
                 ) : (
                   <>
+                    {/* 웰컴 메시지 전용 커스텀 아이콘 */}
+                    {isWelcome && (
+                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px', marginTop: '4px' }}>
+                        <div style={{
+                          width: '50px', height: '50px', borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #8b5cf6, #6E62FF)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          boxShadow: '0 6px 16px rgba(110, 98, 255, 0.28)'
+                        }}>
+                          <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4.5 10.5C4.5 7.186 7.186 4.5 10.5 4.5H15.5C18.814 4.5 21.5 7.186 21.5 10.5V14.5C21.5 17.814 18.814 20.5 15.5 20.5H12L6.5 23V19.2C5.2 18 4.5 16.4 4.5 14.5V10.5Z" stroke="white" strokeWidth="2.4" strokeLinejoin="round"/>
+                            <circle cx="10" cy="12" r="1.6" fill="white"/>
+                            <circle cx="16" cy="12" r="1.6" fill="white"/>
+                            <path d="M10.5 16C11.5 17.2 14.5 17.2 15.5 16" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+                          </svg>
+                        </div>
+                      </div>
+                    )}
                     {/* AI 본문 답변 */}
                     {formattedText && (
                       <div
@@ -233,7 +211,7 @@ export const ChatMessages = ({
                             onClick={() => onSelectOption(opt.featureId, opt.title)}
                             className="so-quick-btn"
                           >
-                            <b>{opt.title}</b>
+                            {opt.title}
                             {opt.description && (
                               <div style={{ fontSize: '11px', opacity: 0.8, marginTop: '2px' }}>
                                 {opt.description}
@@ -244,14 +222,45 @@ export const ChatMessages = ({
                       </div>
                     )}
 
-                    {/* [기능명] 따라하기 버튼 (시스템 ID 노출 원천 차단) */}
-                    {msg.featureId && (
-                      <div style={{ marginTop: '10px' }}>
-                        <button
-                          onClick={() => onRunGuide(msg.featureId, msg.step, featureTitle || msg.featureName)}
-                          className="so-exec-btn"
+                    {/* [기능명] 따라하기 버튼 및 해당 메뉴로 이동 버튼 (시스템 ID 노출 원천 차단) */}
+                    {(msg.featureId || msg.entryUrl) && (
+                      <div style={{ marginTop: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        {msg.featureId && (
+                          <button
+                            onClick={() => onRunGuide(msg.featureId, msg.step, featureTitle || msg.featureName)}
+                            className="so-exec-btn"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            {actionLabel}{msg.step && msg.step > 1 ? ` (${msg.step}단계)` : ''}
+                          </button>
+                        )}
+                        {msg.entryUrl && (
+                          <button
+                            onClick={() => { window.location.href = msg.entryUrl; }}
+                            className="so-nav-btn"
+                          >
+                            해당 메뉴로 이동
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* 답변 오류 제보 버튼 (명시적 UI) */}
+                    {msg.messageId && !isWelcome && (
+                      <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
+                        <button 
+                          onClick={() => onReport && onReport(msg.messageId)}
+                          className="so-report-btn"
+                          title="AI 답변이 이상하거나 오류가 있다면 제보해 주세요."
                         >
-                          {actionLabel}{msg.step && msg.step > 1 ? ` (${msg.step}단계)` : ''}
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                          </svg>
+                          오류 제보
                         </button>
                       </div>
                     )}

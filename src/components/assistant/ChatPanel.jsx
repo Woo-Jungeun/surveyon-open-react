@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { X, History, Plus, MessageSquare, Clock, ArrowLeft } from 'lucide-react';
+import { X, History, Plus, MessageSquare, Clock, ArrowLeft, Lock } from 'lucide-react';
 import { ChatMessages } from './ChatMessages';
 import { ChatInput } from './ChatInput';
 
@@ -368,22 +368,26 @@ export const ChatPanel = ({
                     <div className="so-history-list">
                         {!isLoggedInUser ? (
                             <div className="so-history-empty">
-                                <div style={{ fontSize: '26px', marginBottom: '8px' }}>🔒</div>
-                                <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: '4px', fontSize: '13px' }}>로그인이 필요합니다</div>
-                                <div style={{ fontSize: '11.5px', color: '#64748b', lineHeight: 1.5 }}>
-                                    로그인하시면 과거에 나눈 대화 기록이 계정에 안전하게 보관되어 언제든 다시 이어서 대화할 수 있습니다.
+                                <div className="so-history-empty-icon">
+                                    <Lock size={32} strokeWidth={1.5} color="#8b5cf6" />
+                                </div>
+                                <div className="so-history-empty-title">로그인이 필요합니다</div>
+                                <div className="so-history-empty-desc">
+                                    로그인하면 이전 대화 기록이 보관되어<br />언제든 다시 이어서 질문할 수 있어요.
                                 </div>
                             </div>
                         ) : isLoadingSessions ? (
                             <div className="so-history-empty">
                                 <div className="so-history-spinner" />
-                                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '10px' }}>대화 목록을 불러오는 중...</div>
+                                <div className="so-history-empty-desc" style={{ marginTop: '14px' }}>대화 목록을 불러오는 중...</div>
                             </div>
                         ) : userSessions.length === 0 ? (
                             <div className="so-history-empty">
-                                <div style={{ fontSize: '26px', marginBottom: '8px' }}>💬</div>
-                                <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: '4px', fontSize: '13px' }}>저장된 과거 대화가 없습니다</div>
-                                <div style={{ fontSize: '11.5px', color: '#64748b' }}>
+                                <div className="so-history-empty-icon">
+                                    <MessageSquare size={32} strokeWidth={1.5} color="#8b5cf6" />
+                                </div>
+                                <div className="so-history-empty-title">저장된 과거 대화가 없습니다</div>
+                                <div className="so-history-empty-desc">
                                     설문온 AI에게 궁금한 점을 질문해 보세요!
                                 </div>
                             </div>
@@ -428,6 +432,47 @@ export const ChatPanel = ({
                 onDismissResume={onDismissResume}
                 onReport={onReport}
             />
+
+            {/* 🔄 이전 가이드 이어하기 안내 카드 (스크롤에 밀리지 않게 고정 위치로 이동) */}
+            {resumeSession && (
+                <div style={{ padding: '0 16px 8px 16px', background: '#ffffff', zIndex: 10, borderTop: '1px solid #f1f5f9' }}>
+                    <div className="so-resume-card" id="so-resume-card" style={{ marginBottom: 0, marginTop: '8px' }}>
+                        <div className="so-resume-top">
+                            <span className="so-resume-badge">
+                                이전 가이드 이어하기
+                            </span>
+                            <button
+                                onClick={onDismissResume}
+                                className="so-resume-close"
+                                title="닫기"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <div className="so-resume-body">
+                            이전에 진행 중이던 가이드가 있습니다.
+                            <div className="so-resume-feature">
+                                [{resumeSession.featureName || resumeSession.featureId}] ({resumeSession.startIndex + 1}단계 진행 중)
+                            </div>
+                            이어서 화면에서 계속 진행하시겠습니까?
+                        </div>
+                        <div className="so-resume-actions">
+                            <button
+                                onClick={onConfirmResume}
+                                className="so-resume-btn confirm"
+                            >
+                                이어서 진행
+                            </button>
+                            <button
+                                onClick={onDismissResume}
+                                className="so-resume-btn cancel"
+                            >
+                                취소
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ── 하단 입력창 ── */}
             <ChatInput onSend={onSend} isLoading={isLoading} />
