@@ -2248,6 +2248,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 stubItems.push({
                     source_var_id: effSourceId,
                     recoded_var_id: effRecodedId,
+                    label: stub.var_label || '',
                     scale_preset_id: stub.scale_preset_name || null,
                     rank_preset_id: stub.rank_preset_name || null,
                     group_preset_id: stub.group_preset_name || null,
