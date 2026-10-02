@@ -194,6 +194,8 @@ export const SurveyonAssistant = ({
             messageId: item.messageId,
             sender: item.sender === 'user' ? 'user' : 'ai',
             text: item.text,
+            detectedTarget: item.detectedTarget,
+            options: item.options,
             featureId: item.featureId,
             featureName: item.featureName,
             step: item.step || 1,
