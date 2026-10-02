@@ -136,7 +136,7 @@ const InfoSection = () => {
                 <div className="hp-admin-dropdown">
                   <button 
                     className="hp-dd-item" 
-                    onClick={() => window.open("https://stest.hrc.kr/", "_blank")}
+                    onClick={() => window.open("/manual/admin", "_blank")}
                   >
                     <ClipboardList size={18} />
                     <span>매뉴얼 정보 관리</span>
