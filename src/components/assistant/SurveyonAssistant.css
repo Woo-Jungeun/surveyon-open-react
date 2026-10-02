@@ -992,3 +992,158 @@
     color: #6E62FF !important;
     font-weight: 600 !important;
 }
+
+/* ===============================
+   🔹 Tutorial Engine Override (Custom #tutorial-tooltip)
+   챗봇 테마(보라색)에 맞게 스텝 가이드 디자인 강제 오버라이드
+=============================== */
+
+/* 1. 팝오버 배경을 보라색(#6E62FF)에서 프리미엄 딥 퍼플(#4F46E5)로 변경 */
+#tutorial-tooltip {
+    background: #4F46E5 !important; /* 그라데이션 등 모든 배경 요소 완벽히 덮어쓰기 위해 background 사용 */
+    background-color: #4F46E5 !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 400 !important; /* 전체 기본 굵기를 명확하게 얇게 강제 */
+    box-shadow: 0 10px 30px rgba(79, 70, 229, 0.3) !important; /* 보라색 글로우 그림자 추가 */
+}
+
+/* 2. 타이틀, 설명 텍스트 등 내부 모든 텍스트 흰색 처리 및 기본 굵기(Normal) 적용 */
+#tutorial-tooltip h1,
+#tutorial-tooltip h2,
+#tutorial-tooltip h3,
+#tutorial-tooltip h4,
+#tutorial-tooltip p,
+#tutorial-tooltip span,
+#tutorial-tooltip div {
+    color: #ffffff !important;
+    font-weight: 400 !important;
+    line-height: 1.6 !important;
+    letter-spacing: -0.2px;
+}
+
+/* STEP 타이틀 (보조 텍스트) 살짝 투명하게 해서 메인 텍스트 강조 */
+#tutorial-tooltip .title,
+#tutorial-tooltip h3,
+#tutorial-tooltip h4 {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px !important;
+}
+
+/* <b> 태그 등 핵심 단어는 확실하게 볼드(700) 처리 */
+#tutorial-tooltip b,
+#tutorial-tooltip strong {
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+#tutorial-tooltip .so-b-parsed {
+    font-weight: 400 !important;
+}
+
+/* 3. 기본 버튼 스타일 (하단 닫기/완료 버튼 등) - 확실한 버튼 형태로! */
+#tutorial-tooltip button.so-action-btn {
+    background-color: #ffffff !important;
+    color: #4F46E5 !important;
+    border: none !important;
+    font-weight: 700 !important;
+    border-radius: 6px !important;
+    padding: 8px 24px !important; /* 클릭하기 좋게 영역 확장 */
+    margin-top: 12px !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    transition: 0.2s !important;
+}
+
+#tutorial-tooltip button.so-action-btn:hover {
+    background-color: #f1f5f9 !important;
+    transform: translateY(-1px) !important;
+}
+
+/* 4. 예외: 우측 상단 X 닫기 버튼은 무조건 투명하게 유지 */
+#tutorial-tooltip button:not(.so-action-btn),
+#tutorial-tooltip .so-close-btn,
+#tutorial-tooltip svg {
+    background-color: transparent !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #ffffff !important;
+    fill: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-width: 0 !important;
+}
+
+#tutorial-tooltip button:not(.so-action-btn):hover,
+#tutorial-tooltip .so-close-btn:hover {
+    background: transparent !important;
+    opacity: 0.7 !important;
+    transform: none !important;
+}
+
+/* 5. 불필요한 아이콘(이미지) 숨김 처리 및 세련된 프리미엄 아이콘 대체 */
+#tutorial-tooltip img,
+#tutorial-tooltip .icon,
+#tutorial-tooltip [class*="icon"]:not(.premium-check-icon) {
+    display: none !important;
+}
+
+#tutorial-tooltip .premium-check-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 16px auto;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 0 0 1.5px rgba(255, 255, 255, 0.3);
+}
+
+#tutorial-tooltip .premium-check-icon svg {
+    width: 26px;
+    height: 26px;
+    color: #ffffff !important;
+    fill: none !important;
+    background: transparent !important;
+    opacity: 1 !important;
+}
+
+/* 5. 말풍선 꼬리(화살표) 색상 강제 오버라이드 
+   가상 요소나 화살표 클래스 이름이 무엇이든 border 색상을 덮어씌움 */
+#tutorial-tooltip::before,
+#tutorial-tooltip::after,
+#tutorial-tooltip [class*="arrow"] {
+    border-color: transparent transparent #4F46E5 transparent !important;
+}
+
+#tutorial-tooltip[data-popper-placement^="top"] [class*="arrow"]::before,
+#tutorial-tooltip[data-popper-placement^="top"] [class*="arrow"]::after {
+    border-top-color: #4F46E5 !important;
+    border-bottom-color: transparent !important;
+}
+
+#tutorial-tooltip[data-popper-placement^="bottom"] [class*="arrow"]::before,
+#tutorial-tooltip[data-popper-placement^="bottom"] [class*="arrow"]::after {
+    border-bottom-color: #4F46E5 !important;
+    border-top-color: transparent !important;
+}
+
+#tutorial-tooltip[data-popper-placement^="left"] [class*="arrow"]::before,
+#tutorial-tooltip[data-popper-placement^="left"] [class*="arrow"]::after {
+    border-left-color: #4F46E5 !important;
+    border-right-color: transparent !important;
+}
+
+#tutorial-tooltip[data-popper-placement^="right"] [class*="arrow"]::before,
+#tutorial-tooltip[data-popper-placement^="right"] [class*="arrow"]::after {
+    border-right-color: #4F46E5 !important;
+    border-left-color: transparent !important;
+}

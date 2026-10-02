@@ -213,6 +213,73 @@ export const SurveyonAssistant = ({
     };
   }, [sessionId, propApiBase]);
 
+  // 튜토리얼 툴팁 내 <b> 태그가 raw text로 노출되는 현상 방지용 옵저버 (안전한 TextNode 치환 방식)
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    
+    const replaceBtagsInTextNodes = (rootElement) => {
+      if (!rootElement) return;
+      const walker = document.createTreeWalker(rootElement, NodeFilter.SHOW_TEXT, null, false);
+      let node;
+      const nodesToReplace = [];
+      while ((node = walker.nextNode())) {
+        // 이미 치환된 노드이거나 스크립트/스타일 안의 텍스트는 무시
+        if (node.parentElement && (node.parentElement.tagName === 'SCRIPT' || node.parentElement.tagName === 'STYLE')) continue;
+        if (node.nodeValue.includes('&lt;b&gt;') || node.nodeValue.includes('&lt;/b&gt;') || 
+            node.nodeValue.includes('<b>') || node.nodeValue.includes('</b>') ||
+            node.nodeValue.includes('🎉')) {
+          nodesToReplace.push(node);
+        }
+      }
+      
+      nodesToReplace.forEach(textNode => {
+        const span = document.createElement('span');
+        span.className = 'so-b-parsed';
+        // raw 문자열을 HTML 태그로 치환
+        let parsed = textNode.nodeValue
+          .replace(/&lt;b&gt;/g, '<b>').replace(/&lt;\/b&gt;/g, '</b>')
+          .replace(/&lt;br&gt;/g, '<br>').replace(/&lt;\/br&gt;/g, '')
+          .replace(/&lt;br\s*\/&gt;/g, '<br>')
+          .replace(/&lt;strong&gt;/g, '<strong>').replace(/&lt;\/strong&gt;/g, '</strong>');
+          
+        if (parsed.includes('🎉')) {
+          const premiumCheckIcon = `<div class="premium-check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>`;
+          parsed = parsed.replace(/🎉/g, premiumCheckIcon);
+        }
+
+        span.innerHTML = parsed;
+        textNode.parentNode.replaceChild(span, textNode);
+      });
+    };
+
+    const observer = new MutationObserver(() => {
+      const tooltip = document.getElementById('tutorial-tooltip');
+      if (tooltip) {
+        replaceBtagsInTextNodes(tooltip);
+        
+        // 버튼 자동 태깅 (완료/닫기 vs 우측 상단 X버튼 명확히 구분)
+        const buttons = tooltip.querySelectorAll('button');
+        buttons.forEach(btn => {
+          const text = btn.textContent.trim();
+          if (text.includes('닫기') || text.includes('완료') || text.includes('다음') || text.includes('이전') || text.includes('시작')) {
+            btn.classList.add('so-action-btn');
+            btn.classList.remove('so-close-btn');
+          } else {
+            btn.classList.add('so-close-btn');
+            btn.classList.remove('so-action-btn');
+          }
+        });
+        
+        // 특정 상황에서 튜토리얼 엔진이 인라인 스타일로 배경색을 강제하는 경우 방어
+        tooltip.style.setProperty('background', '#4F46E5', 'important');
+        tooltip.style.setProperty('background-color', '#4F46E5', 'important');
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
+  }, []);
+
   // 3. 이전 가이드 진행 세션 복구 검사
   const checkPreviousSession = useCallback(() => {
     try {
