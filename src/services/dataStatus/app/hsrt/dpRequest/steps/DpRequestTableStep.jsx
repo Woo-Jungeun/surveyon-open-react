@@ -1811,7 +1811,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                         return sid;
                     })(),
                     recoded_var_id: item.recoded_var_id,
-                    var_label: item.label || '',
+                    var_label: item.label || item.var_label || v.label || '',
                     var_type: parentType,
                     condition: item.filter_expression || item.condition || '',
                     x_info: (() => {
