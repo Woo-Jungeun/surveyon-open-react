@@ -274,8 +274,8 @@ export const ChatPanel = ({
                 className="so-chat-header"
                 title="드래그하여 이동 / 더블클릭 시 기본 위치 복귀"
             >
-                <h3>
-                    설문온 가이드 AI
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '15px', color: '#1e293b', fontWeight: '700', margin: 0 }}>
+                    설문온 가이드 <span style={{ color: '#4F46E5', marginLeft: '1px' }}>AI</span>
                 </h3>
 
                 <div className="so-header-actions">
