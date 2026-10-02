@@ -721,7 +721,7 @@
 /* ── 과거 대화 기록 서랍 (History Drawer) ── */
 .so-history-drawer {
     position: absolute;
-    top: 48px;
+    top: 61px;
     left: 0;
     right: 0;
     bottom: 0;
@@ -745,8 +745,8 @@
 }
 
 .so-history-header {
-    padding: 10px 14px;
-    background: #f8fafc;
+    padding: 14px 18px;
+    background: #ffffff;
     border-bottom: 1px solid #e2e8f0;
     display: flex;
     align-items: center;

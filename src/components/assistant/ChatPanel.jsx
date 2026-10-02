@@ -298,7 +298,7 @@ export const ChatPanel = ({
                             }}
                         >
                             <History size={12} />
-                            <span>대화 기록</span>
+                            <span>{isHistoryOpen ? '대화기록 닫기' : '대화기록 열기'}</span>
                         </button>
                     )}
                     {onNewChat && (
@@ -337,33 +337,7 @@ export const ChatPanel = ({
             {/* ── 과거 대화 기록 서랍 (Drawer Overlay) ── */}
             {isHistoryOpen && (
                 <div className="so-history-drawer">
-                    <div className="so-history-header">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <button
-                                onClick={onToggleHistory}
-                                className="so-history-back"
-                                title="대화창으로 돌아가기"
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    padding: '4px',
-                                    background: 'transparent',
-                                    color: '#475569',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    transition: 'color 0.15s',
-                                }}
-                            >
-                                <ArrowLeft size={16} />
-                            </button>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '13px', color: '#1e293b' }}>
-                                <History size={15} style={{ color: '#4f46e5' }} />
-                                <span>대화 기록 목록</span>
-                            </div>
-                        </div>
-                    </div>
+
 
                     <div className="so-history-list">
                         {!isLoggedInUser ? (
