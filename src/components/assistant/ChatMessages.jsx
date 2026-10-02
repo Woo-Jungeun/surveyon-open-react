@@ -76,14 +76,12 @@ const sanitizeHtml = (rawHtml) => {
 };
 
 /**
- * 기능명 추출 헬퍼 (시스템 내부 ID 노출 차단 및 본문 추출 백업)
+ * 기능명 추출 헬퍼 (시스템 내부 ID 노출 차단 및 주 기능명-버튼 텍스트 일치화)
+ * 1) 본문 첫 줄 주 기능명(<b>[주 기능명]</b> 기능 안내입니다)을 최우선 추출하여 "AI 조건식 자동생성 따라하기"처럼 일치화
+ * 2) 본문에 패턴이 없는 경우 msg.featureName 활용
  */
 const resolveFeatureTitle = (msg) => {
-  // 1) msg.featureName이 있고 node_ 로 시작하지 않는 유의미한 한글/영문 이름인 경우 우선 사용
-  if (msg.featureName && !msg.featureName.startsWith('node_') && msg.featureName.trim().length > 0) {
-    return msg.featureName.trim();
-  }
-  // 2) msg.text 본문의 첫 줄에서 실제 기능명 추출 (예: "척도 문항 요약표 생성 기능 안내입니다", "<b>AI 조건식 자동생성</b> 기능 안내입니다")
+  // 1순위: msg.text 본문의 첫 머리에서 실제 주 기능명 추출 (예: "<b>AI 조건식 자동생성</b> 기능 안내입니다")
   if (msg.text) {
     const match = msg.text.match(/(?:<b>)?\s*([^<\n\r]+?)\s*(?:<\/b>)?\s*(?:기능\s*안내|가이드)/i);
     if (match && match[1]) {
@@ -93,6 +91,12 @@ const resolveFeatureTitle = (msg) => {
       }
     }
   }
+
+  // 2순위: msg.featureName이 있고 node_ 가 아닌 유의미한 이름인 경우 백업 사용
+  if (msg.featureName && !msg.featureName.startsWith('node_') && msg.featureName.trim().length > 0) {
+    return msg.featureName.trim();
+  }
+
   return '';
 };
 

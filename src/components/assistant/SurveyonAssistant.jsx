@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ChatPanel } from './ChatPanel';
+import { chatApi, getChatBaseUrl } from './ChatApi';
 import './SurveyonAssistant.css';
 
 export const SurveyonAssistant = ({
@@ -7,33 +8,8 @@ export const SurveyonAssistant = ({
   defaultOpen = false,
   userId: propUserId,
 }) => {
-  // 1. API_BASE 자동 결정
-  const resolveApiBase = () => {
-    // 1순위: Props로 명시적으로 전달받은 경우
-    if (propApiBase) return propApiBase.replace(/\/+$/, '');
-
-    // 2순위: 소스코드 수정 없이 .env 설정만으로 쉽게 띄울 수 있도록 자동 인식
-    // (Vite 환경)
-    const viteEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_SURVEYON_API_BASE : undefined;
-    if (viteEnv) return viteEnv.replace(/\/+$/, '');
-
-    // (Create React App 환경)
-    const reactAppEnv = typeof process !== 'undefined' && process.env ? process.env.REACT_APP_SURVEYON_API_BASE : undefined;
-    if (reactAppEnv) return reactAppEnv.replace(/\/+$/, '');
-
-    // 3순위: 전역 window 변수 (바닐라 JS 호환용)
-    if (typeof window !== 'undefined' && window.__SURVEYON_API_BASE__) {
-      return window.__SURVEYON_API_BASE__.replace(/\/+$/, '');
-    }
-
-    // 4순위: 설정이 없을 경우 환경에 따른 기본값 (운영: /APIs/m, 로컬 개발: 상대경로 빈 문자열)
-    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.PROD) {
-      return '/APIs/m';
-    }
-    return '';
-  };
-
-  const API_BASE = resolveApiBase();
+  // 1. API_BASE 자동 결정 (chatApi 표준 헬퍼 활용)
+  const API_BASE = getChatBaseUrl(propApiBase);
   // tutorial_engine.js 등 외부 스크립트에서도 동일한 API_BASE를 참조할 수 있도록 window 전역 동기화
   if (typeof window !== 'undefined') {
     window.__SURVEYON_API_BASE__ = API_BASE;
@@ -160,17 +136,14 @@ export const SurveyonAssistant = ({
     }
     setIsLoadingSessions(true);
     try {
-      const res = await fetch(`${API_BASE}/api/chat/sessions?userId=${encodeURIComponent(u)}`);
-      if (res.ok) {
-        const data = await res.json();
-        setUserSessions(Array.isArray(data) ? data : []);
-      }
+      const sessions = await chatApi.getSessionList(u, propApiBase);
+      setUserSessions(sessions);
     } catch (err) {
       console.warn('[ChatAssistant] 대화 세션 목록 조회 실패:', err);
     } finally {
       setIsLoadingSessions(false);
     }
-  }, [API_BASE]);
+  }, [propApiBase]);
 
   const handleToggleHistory = () => {
     const next = !isHistoryOpen;
@@ -208,11 +181,9 @@ export const SurveyonAssistant = ({
     let isCancelled = false;
     const fetchHistory = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/chat/history/${sessionId}`);
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!isCancelled && Array.isArray(data) && data.length > 0) {
-          const restored = data.map((item) => ({
+        const rawList = await chatApi.getMessageList(sessionId, propApiBase);
+        if (!isCancelled && Array.isArray(rawList) && rawList.length > 0) {
+          const restored = rawList.map((item) => ({
             id: item.id || `msg_${item.messageId}`,
             messageId: item.messageId,
             sender: item.sender === 'user' ? 'user' : 'ai',
@@ -225,7 +196,7 @@ export const SurveyonAssistant = ({
           setMessages([welcomeMessage, ...restored]);
         }
       } catch (e) {
-        console.warn('대화 이력 복원 실패:', e);
+        console.warn('[ChatAssistant] 대화 이력 복원 실패:', e);
       }
     };
 
@@ -233,7 +204,7 @@ export const SurveyonAssistant = ({
     return () => {
       isCancelled = true;
     };
-  }, [sessionId, API_BASE]);
+  }, [sessionId, propApiBase]);
 
   // 3. 이전 가이드 진행 세션 복구 검사
   const checkPreviousSession = useCallback(() => {
@@ -399,19 +370,16 @@ export const SurveyonAssistant = ({
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/chat/ask`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const data = await chatApi.ask(
+        {
           sessionId,
           userId: resolveUserId(),
           userMessage: userMsg,
           currentUrl: window.location.href,
           screenshotBase64,
-        }),
-      });
-
-      const data = await res.json();
+        },
+        propApiBase
+      );
 
       setMessages((prev) =>
         prev
@@ -538,16 +506,14 @@ export const SurveyonAssistant = ({
                 onClick={async () => {
                   setIsSubmittingReport(true);
                   try {
-                    const res = await fetch(`${API_BASE}/api/chat/messages/${reportMessageId}/report`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ reasonType: reportReasonType, reasonText: reportReasonText }),
-                    });
-
-                    if (!res.ok) {
-                      const errJson = await res.json().catch(() => null);
-                      throw new Error(errJson?.message || `서버 오류 (HTTP ${res.status})`);
-                    }
+                    await chatApi.report(
+                      {
+                        messageId: reportMessageId,
+                        reasonType: reportReasonType,
+                        reasonText: reportReasonText,
+                      },
+                      propApiBase
+                    );
 
                     alert('오류 제보가 정상적으로 접수되었습니다. 소중한 의견 감사합니다.');
                     setReportMessageId(null);

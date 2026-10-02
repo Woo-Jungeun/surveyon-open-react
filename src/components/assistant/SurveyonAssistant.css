@@ -66,7 +66,9 @@
     top: 24px;
     right: 28px;
     bottom: 28px;
-    width: 26vw;
+    /* 최소 380px ~ 최대 500px 범위 내에서 창 너비에 따라 부드럽게 연속 비례 (가로 요동침 원천 차단) */
+    width: clamp(380px, 30vw, 500px);
+    /* 기본 높이: 원래의 시원한 상·하단 전체 높이 100% 복원 */
     height: calc(100vh - 56px);
     max-width: 900px;
     min-width: 320px;
@@ -81,24 +83,6 @@
     box-sizing: border-box;
     pointer-events: auto;
     transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s;
-}
-
-@media (min-width: 2200px) {
-    .so-chat-panel {
-        width: 20vw;
-    }
-}
-
-@media (max-width: 2199px) and (min-width: 1200px) {
-    .so-chat-panel {
-        width: 26vw;
-    }
-}
-
-@media (max-width: 1199px) and (min-width: 768px) {
-    .so-chat-panel {
-        width: 38vw;
-    }
 }
 
 @media (max-width: 767px) {
@@ -117,6 +101,7 @@
     }
 }
 
+.so-chat-panel.moving,
 .so-chat-panel.resizing {
     transition: none !important;
     user-select: none !important;
@@ -158,6 +143,22 @@
     border-top: 2px solid #6E62FF;
 }
 
+.so-resize-handle-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 10px;
+    cursor: ns-resize;
+    z-index: 40;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.so-resize-handle-bottom:hover {
+    background: rgba(110, 98, 255, 0.15);
+    border-bottom: 2px solid #6E62FF;
+}
+
 .so-resize-handle-corner {
     position: absolute;
     top: 0;
@@ -165,11 +166,17 @@
     width: 14px;
     height: 14px;
     cursor: nwse-resize;
-    z-index: 26;
+    z-index: 42;
 }
 
-.so-resize-handle-corner::after {
-    display: none !important;
+.so-resize-handle-bottom-left {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 14px;
+    height: 14px;
+    cursor: nesw-resize;
+    z-index: 42;
 }
 
 .so-chat-header {

@@ -1,7 +1,34 @@
-import React, { useState, useRef } from 'react';
-import { X, History, Plus, MessageSquare, Clock } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { X, History, Plus, MessageSquare, Clock, ArrowLeft } from 'lucide-react';
 import { ChatMessages } from './ChatMessages';
 import { ChatInput } from './ChatInput';
+
+/**
+ * 뷰포트 우측 기준 자동 보정 헬퍼 (Right-Anchored Auto-Clamping Engine)
+ * - 챗봇 패널이 기본적으로 우측 정렬(Right-docked) 패널이므로,
+ *   화면 오른쪽(Right)과 위쪽(Top)을 기준으로 좌표를 관리하여
+ *   창을 줄였다가 전체화면으로 최대화해도 항상 우측 자리를 자연스럽게 따라가도록 보장합니다.
+ */
+const clampPanelRightBounds = (right, top, width, height) => {
+    const pad = 12; // 뷰포트 최소 안전 여백 (12px)
+    const winW = typeof window !== 'undefined' ? window.innerWidth : 1920;
+    const winH = typeof window !== 'undefined' ? window.innerHeight : 1080;
+
+    const clampedW = Math.max(320, Math.min(width, Math.max(320, winW - pad * 2)));
+    const clampedH = Math.max(350, Math.min(height, Math.max(350, winH - pad * 2)));
+
+    const maxRight = Math.max(pad, winW - clampedW - pad);
+    const maxTop = Math.max(pad, winH - clampedH - pad);
+    const clampedRight = Math.max(pad, Math.min(right, maxRight));
+    const clampedTop = Math.max(pad, Math.min(top, maxTop));
+
+    return {
+        right: clampedRight,
+        top: clampedTop,
+        width: clampedW,
+        height: clampedH,
+    };
+};
 
 export const ChatPanel = ({
     isOpen,
@@ -28,7 +55,25 @@ export const ChatPanel = ({
     const [isMoving, setIsMoving] = useState(false);
     const [isResizing, setIsResizing] = useState(false);
     const [customStyle, setCustomStyle] = useState(null);
+    const [, setResizeTick] = useState(0);
 
+    // ── 창 크기 변경 감지: 브라우저 창을 최대화/축소할 때 비례 갱신 트리거 ──
+    useEffect(() => {
+        const handleWindowResize = () => {
+            setResizeTick((t) => t + 1);
+        };
+
+        window.addEventListener('resize', handleWindowResize);
+        return () => window.removeEventListener('resize', handleWindowResize);
+    }, []);
+
+    // ── 헤더 더블클릭 시 기본 위치 및 기본 전체 높이 복귀 ──
+    const handleHeaderDoubleClick = (e) => {
+        if (e.target.closest('button')) return;
+        setCustomStyle(null);
+    };
+
+    // ── 헤더 드래그 이동 (창 크기 비례 비율 저장 + 우측 벽 자석 스냅) ──
     const handleHeaderMouseDown = (e) => {
         if (e.target.closest('button')) return;
         e.preventDefault();
@@ -41,23 +86,35 @@ export const ChatPanel = ({
         setIsMoving(true);
 
         const onMouseMove = (moveEvent) => {
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const pad = 12;
             const pW = rect.width;
             const pH = rect.height;
-            const maxLeft = Math.max(0, window.innerWidth - pW);
-            const maxTop = Math.max(0, window.innerHeight - pH);
 
-            let newLeft = moveEvent.clientX - shiftX;
-            let newTop = moveEvent.clientY - shiftY;
+            const rawLeft = moveEvent.clientX - shiftX;
+            const rawTop = moveEvent.clientY - shiftY;
 
-            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-            newTop = Math.max(0, Math.min(newTop, maxTop));
+            const maxLeft = Math.max(pad, winW - pW - pad);
+            const maxTop = Math.max(pad, winH - pH - pad);
+            const clampedLeft = Math.max(pad, Math.min(rawLeft, maxLeft));
+            const clampedTop = Math.max(pad, Math.min(rawTop, maxTop));
 
+            const rightOffset = Math.max(pad, winW - (clampedLeft + pW));
+
+            // 우측 벽 자석 스냅: 우측 끝 48px 이내 & 상단 36px 이내로 끌어오면 기본 독(Dock) 위치로 찰칵 복귀
+            if (rightOffset <= 48 && clampedTop <= 36) {
+                setCustomStyle(null);
+                return;
+            }
+
+            // 창 크기 대비 비율(Ratio)로 보관하여 창 최대화 시에도 완벽 비례 유지
             setCustomStyle((prev) => ({
-                ...prev,
-                left: newLeft,
-                top: newTop,
-                width: pW,
-                height: pH,
+                rightRatio: rightOffset / winW,
+                topRatio: clampedTop / winH,
+                widthRatio: prev?.hasCustomSize ? prev.widthRatio : (pW / winW),
+                heightRatio: prev?.hasCustomSize ? prev.heightRatio : (pH / winH),
+                hasCustomSize: Boolean(prev?.hasCustomSize),
             }));
         };
 
@@ -71,6 +128,7 @@ export const ChatPanel = ({
         document.addEventListener('mouseup', onMouseUp);
     };
 
+    // ── 패널 리사이즈 (창 크기 비례 비율 저장 + 상/하/좌/대각선 전방향 지원) ──
     const handleResizeMouseDown = (e, direction) => {
         e.preventDefault();
         e.stopPropagation();
@@ -86,33 +144,48 @@ export const ChatPanel = ({
             const deltaX = moveEvent.clientX - startX;
             const deltaY = moveEvent.clientY - startY;
 
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const pad = 12;
+
             const minW = 320;
-            const maxW = Math.max(900, Math.floor(window.innerWidth * 0.85));
+            const maxW = Math.max(minW, winW - pad * 2);
             const minH = 350;
-            const maxH = window.innerHeight - 30;
+            const maxH = Math.max(minH, winH - pad * 2);
 
             let newW = startRect.width;
             let newH = startRect.height;
-            let newLeft = startRect.left;
             let newTop = startRect.top;
 
-            if (direction === 'left' || direction === 'corner') {
+            // 좌측 너비 조절
+            if (direction === 'left' || direction === 'corner' || direction === 'corner-bottom') {
                 const potentialW = startRect.width - deltaX;
                 newW = Math.max(minW, Math.min(maxW, potentialW));
-                newLeft = startRect.right - newW;
             }
 
+            // 상단 높이 조절 (위로 늘리기 / 아래로 줄이기)
             if (direction === 'top' || direction === 'corner') {
                 const potentialH = startRect.height - deltaY;
                 newH = Math.max(minH, Math.min(maxH, potentialH));
-                newTop = startRect.bottom - newH;
+                newTop = Math.max(pad, startRect.bottom - newH);
             }
 
+            // 하단 높이 조절 (아래로 늘리기 / 위로 줄이기)
+            if (direction === 'bottom' || direction === 'corner-bottom') {
+                const potentialH = startRect.height + deltaY;
+                newH = Math.max(minH, Math.min(maxH, potentialH));
+            }
+
+            const rightOffset = Math.max(pad, winW - startRect.right);
+
+            // 픽셀(px)이 아니라 창 크기 대비 비율(Ratio)로 저장!
+            // 이렇게 해야 창을 최대화했을 때 높이와 너비가 창 크기에 비례하여 자동으로 함께 커집니다.
             setCustomStyle({
-                left: newLeft,
-                top: newTop,
-                width: newW,
-                height: newH,
+                rightRatio: rightOffset / winW,
+                topRatio: Math.max(pad, newTop) / winH,
+                widthRatio: newW / winW,
+                heightRatio: newH / winH,
+                hasCustomSize: true, // 사용자가 직접 크기를 조절함
             });
         };
 
@@ -143,26 +216,23 @@ export const ChatPanel = ({
 
     if (!isOpen) return null;
 
+    // 창 크기 대비 비율(vh / vw)로 인라인 스타일 적용!
+    // 창을 작게 줄였다가 최대화하면, 창의 비율(vh/vw)에 따라 높이와 너비가 100% 정비례하여 자동으로 늘어나고 줄어듭니다!
     const inlineStyle = customStyle
         ? {
             position: 'fixed',
-            left: `${customStyle.left}px`,
-            top: `${customStyle.top}px`,
-            width: `${customStyle.width}px`,
-            height: `${customStyle.height}px`,
-            maxWidth: 'none',
-            right: 'auto',
-            bottom: 'auto',
+            right: `${(customStyle.rightRatio * 100).toFixed(3)}vw`,
+            left: 'auto',
+            top: `${(customStyle.topRatio * 100).toFixed(3)}vh`,
+            width: customStyle.hasCustomSize ? `${(customStyle.widthRatio * 100).toFixed(3)}vw` : undefined,
+            height: customStyle.hasCustomSize ? `${(customStyle.heightRatio * 100).toFixed(3)}vh` : undefined,
+            maxWidth: customStyle.hasCustomSize ? 'calc(100vw - 24px)' : undefined,
+            maxHeight: customStyle.hasCustomSize ? 'calc(100vh - 24px)' : undefined,
+            minWidth: '320px',
+            minHeight: '350px',
+            bottom: customStyle.hasCustomSize ? 'auto' : undefined,
         }
-        : {
-            position: undefined,
-            left: undefined,
-            top: undefined,
-            width: undefined,
-            height: undefined,
-            right: undefined,
-            bottom: undefined,
-        };
+        : undefined;
 
     return (
         <div
@@ -170,7 +240,7 @@ export const ChatPanel = ({
             style={inlineStyle}
             className={`so-chat-panel ${isMoving ? 'moving' : ''} ${isResizing ? 'resizing' : ''}`}
         >
-            {/* ── 리사이즈 핸들 ── */}
+            {/* ── 리사이즈 핸들 (상·하·좌·대각선 전방향 지원) ── */}
             <div
                 onMouseDown={(e) => handleResizeMouseDown(e, 'left')}
                 className="so-resize-handle-left"
@@ -179,18 +249,30 @@ export const ChatPanel = ({
             <div
                 onMouseDown={(e) => handleResizeMouseDown(e, 'top')}
                 className="so-resize-handle-top"
-                title="세로 크기 조절"
+                title="상단 세로 크기 조절"
+            />
+            <div
+                onMouseDown={(e) => handleResizeMouseDown(e, 'bottom')}
+                className="so-resize-handle-bottom"
+                title="하단 세로 크기 조절"
             />
             <div
                 onMouseDown={(e) => handleResizeMouseDown(e, 'corner')}
                 className="so-resize-handle-corner"
-                title="대각선 크기 동시 조절"
+                title="좌상단 대각선 크기 조절"
+            />
+            <div
+                onMouseDown={(e) => handleResizeMouseDown(e, 'corner-bottom')}
+                className="so-resize-handle-bottom-left"
+                title="좌하단 대각선 크기 조절"
             />
 
             {/* ── 상단 헤더 ── */}
             <div
                 onMouseDown={handleHeaderMouseDown}
+                onDoubleClick={handleHeaderDoubleClick}
                 className="so-chat-header"
+                title="드래그하여 이동 / 더블클릭 시 기본 위치 복귀"
             >
                 <h3>
                     설문온 가이드 AI
@@ -256,31 +338,30 @@ export const ChatPanel = ({
             {isHistoryOpen && (
                 <div className="so-history-drawer">
                     <div className="so-history-header">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '13px', color: '#1e293b' }}>
-                            <History size={15} style={{ color: '#4f46e5' }} />
-                            <span>대화 기록 목록</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            {onNewChat && (
-                                <button
-                                    onClick={() => {
-                                        onNewChat();
-                                        if (onToggleHistory) onToggleHistory();
-                                    }}
-                                    className="so-history-btn-new"
-                                    title="새 대화 시작"
-                                >
-                                    <Plus size={13} />
-                                    <span>새 대화</span>
-                                </button>
-                            )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <button
                                 onClick={onToggleHistory}
-                                className="so-history-close"
-                                title="목록 닫기"
+                                className="so-history-back"
+                                title="대화창으로 돌아가기"
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '4px',
+                                    background: 'transparent',
+                                    color: '#475569',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    transition: 'color 0.15s',
+                                }}
                             >
-                                <X size={15} />
+                                <ArrowLeft size={16} />
                             </button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '13px', color: '#1e293b' }}>
+                                <History size={15} style={{ color: '#4f46e5' }} />
+                                <span>대화 기록 목록</span>
+                            </div>
                         </div>
                     </div>
 
