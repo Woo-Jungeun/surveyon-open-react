@@ -792,6 +792,7 @@
   color: #333;
   background: none;
   border: none;
+  white-space: nowrap;
 
   cursor: pointer;
   transition: 0.2s;
@@ -800,6 +801,36 @@
 .hp-dd-item:hover {
   background: #f5f5ff;
   color: #4338CA;
+}
+
+/* ===============================
+   🔹 Admin Dropdown (with caret)
+=============================== */
+.hp-admin-dropdown {
+  position: absolute;
+  top: 48px;
+  right: -8px;
+  background: white;
+  border-radius: 12px;
+  padding: 8px 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  animation: fadeDown 0.18s ease-out;
+  z-index: 50;
+  min-width: 170px;
+}
+
+/* 뾰족한 화살표(말풍선 꼬리) */
+.hp-admin-dropdown::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  right: 18px;
+  width: 14px;
+  height: 14px;
+  background: white;
+  transform: rotate(45deg);
+  box-shadow: -3px -3px 8px rgba(0,0,0,0.04);
+  border-top-left-radius: 2px;
 }
 
 /* ===================================================

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogIn, User, LogOut, Sparkles, BrainCircuit, Zap, BarChart3, FileText, Database, Users, ClipboardList } from "lucide-react";
+import { LogIn, User, LogOut, Sparkles, BrainCircuit, Zap, BarChart3, FileText, Database, Users, ClipboardList, Settings } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { useCookies } from "react-cookie";
 import { persistor } from "@/common/redux/store/StorePersist.jsx";
@@ -23,6 +23,9 @@ const InfoSection = () => {
 
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  const [adminOpen, setAdminOpen] = useState(false);
+  const adminDropdownRef = useRef(null);
 
   const { logoutMutation } = LoginApi();
 
@@ -66,6 +69,9 @@ const InfoSection = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setOpen(false);
       }
+      if (adminDropdownRef.current && !adminDropdownRef.current.contains(e.target)) {
+        setAdminOpen(false);
+      }
     };
     document.addEventListener("click", handleClose);
     return () => document.removeEventListener("click", handleClose);
@@ -89,7 +95,9 @@ const InfoSection = () => {
             로그인
           </button>
         ) : (
-          <div className="hp-user-wrap" ref={dropdownRef}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+            <div className="hp-user-wrap" ref={dropdownRef}>
             {/* 사용자 버튼 */}
             <button
               type="button"
@@ -110,6 +118,34 @@ const InfoSection = () => {
               </div>
             )}
           </div>
+
+          {/* AI솔루션팀 전용 관리자 메뉴 */}
+          {auth?.user?.userGroup === "AI솔루션팀" && (
+            <div className="hp-user-wrap" ref={adminDropdownRef}>
+              <button 
+                type="button"
+                className="hp-user-btn"
+                onClick={() => setAdminOpen((v) => !v)}
+                title="관리자 메뉴"
+                style={{ padding: '8px' }}
+              >
+                <Settings className="hp-user-icon" style={{ width: '18px', height: '18px' }} />
+              </button>
+
+              {adminOpen && (
+                <div className="hp-admin-dropdown">
+                  <button 
+                    className="hp-dd-item" 
+                    onClick={() => window.open("https://stest.hrc.kr/", "_blank")}
+                  >
+                    <ClipboardList size={18} />
+                    <span>매뉴얼 정보 관리</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         )}
       </div>
 
