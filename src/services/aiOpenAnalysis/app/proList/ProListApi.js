@@ -63,7 +63,7 @@ export function ProListApi() {
 
     // [B-13] 엑셀 오픈데이터 최종 저장 (POST /pro_register/excel_enter)
     const enterExcelRegister = useMutation(
-        async (payload) => await api.post(payload, "/pro_register/excel_enter", "API_BASE_URL_OPENAI")
+        async (formData) => await api.form(formData, "/pro_register/excel_enter", {}, "API_BASE_URL_OPENAI")
     );
 
     // [B-14] 보기등록 엑셀 파일 파싱 (FILE /pro_list/import_lb_all_excel)

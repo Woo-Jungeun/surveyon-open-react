@@ -223,36 +223,21 @@ const ProRegisterTab2 = (props) => {
     try {
       setLoading(true);
 
-      const buffer = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (evt) => resolve(evt.target.result);
-        reader.onerror = (err) => reject(err);
-        reader.readAsArrayBuffer(file);
-      });
-
-      const data = new Uint8Array(buffer);
-      const workbook = XLSX.read(data, { type: "array" });
-      const jsonData = buildJsonData(workbook, selectData);
-
-      if (jsonData.length === 0) {
-        modal.showErrorAlert(
-          "알림",
-          "엑셀에 등록할 응답 데이터가 없거나, \n엑셀 형식이 가이드와 일치하지 않습니다."
-        );
-        return;
-      }
       const cleanModel = analysisModel.replace(/\(.*\)/g, "").trim();
 
-      const payload = {
-        projectnum: projectnum || "",
-        projectname: projectname || "",
-        projectpof: projectpof || "",
-        model: cleanModel || "설문온",
-        user: auth?.user?.userId || "",
-        data: jsonData
-      };
+      const formData = new FormData();
+      formData.append("projectnum", projectnum || "");
+      formData.append("projectname", projectname || "");
+      formData.append("projectpof", projectpof || "");
+      formData.append("model", cleanModel || "설문온");
+      formData.append("user", auth?.user?.userId || "");
+      formData.append("id_column", idColumn || "");
+      
+      const selectedQnums = selectData.map(d => ({ qnum: d.column, qnum_text: d.question }));
+      formData.append("selected_qnums", JSON.stringify(selectedQnums));
+      formData.append("file", file);
 
-      const res = await enterExcelRegister.mutateAsync(payload);
+      const res = await enterExcelRegister.mutateAsync(formData);
       if (String(res?.success) === '777') {
         const msg = res?.resultjson?.message || res?.message || "엑셀 데이터가 성공적으로 등록되었습니다.";
         modal.showConfirm("알림", msg, {

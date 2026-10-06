@@ -52,7 +52,7 @@ export function ProRegisterApi() {
 
     // [5] 파싱된 엑셀 오픈데이터 최종 등록 (POST /pro_register/excel_enter)
     const enterExcelRegister = useMutation(
-        async (payload) => await api.post(payload, "/pro_register/excel_enter", "API_BASE_URL_OPENAI"),
+        async (formData) => await api.form(formData, "/pro_register/excel_enter", {}, "API_BASE_URL_OPENAI"),
         {
             onMutate: () => {
                 loadingSpinner?.show?.({
