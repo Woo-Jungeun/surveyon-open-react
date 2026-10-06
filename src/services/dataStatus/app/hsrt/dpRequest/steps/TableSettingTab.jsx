@@ -943,16 +943,9 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                             <iframe
                                 ref={exampleIframeRef}
                                 srcDoc={INITIAL_IFRAME_DOC}
-                                style={{ width: '100%', flex: 1, minHeight: 0, border: 'none', opacity: loadingExamples ? 0.3 : 1, transition: 'opacity 0.2s' }}
+                                style={{ width: '100%', flex: 1, minHeight: 0, border: 'none' }}
                                 title="example-preview"
                             />
-                            {loadingExamples && (
-                                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255, 255, 255, 0.4)', zIndex: 10 }}>
-                                    <div style={{ padding: '8px 16px', background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600, color: '#3B82F6' }}>
-                                        <span className="loading-pulse-dot" style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }}></span> 로딩 중
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </>
                 </div>
@@ -1155,7 +1148,6 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             };
                                             setSettings(newSettings);
                                             if (onUnsavedChange) onUnsavedChange(true);
-                                            modal.showAlert("알림", "통계 문구를 기본값(영문)으로 초기화했습니다.");
                                         }}
                                         style={{ fontSize: '11px', color: '#3B82F6', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}
                                     >
