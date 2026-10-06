@@ -1,0 +1,280 @@
+import { useMutation } from "react-query";
+import api from "@/common/queries/Api.js";
+import { useContext } from "react";
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+import axios from "axios";
+
+export function MapManagementPageApi() {
+
+    const loadingSpinner = useContext(loadingSpinnerContext);
+
+    /** 맵 관리 조회 */
+    const getMapVariables = useMutation(
+        async (data) => await api.post(data, "/read", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: (vars) => {
+                // loadingSpinner.show();
+            }
+        }
+    );
+
+    /** H-SRT 이관 */
+    const srtTransfer = useMutation(
+        async (data) => await api.file(data, "/map/variables/bake-parquet", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
+    /** 맵 관리 신규 행 생성 */
+    const createMapVariables = useMutation(
+        async (data) => await api.post(data, "/map/variables/create", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
+    /** 맵 관리 저장 (수정/삭제) */
+    const updateMapVariables = useMutation(
+        async (data) => await api.post(data, "/map/variables/update", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
+    /** 보기 레이블 저장 (수정/삭제) */
+    const updateMapLabels = useMutation(
+        async (data) => await api.post(data, "/map/labels/update", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
+    /** 보기 레이블 신규 생성 */
+    const createMapLabels = useMutation(
+        async (data) => await api.post(data, "/map/labels/create", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
+    /** 데이터 추출 (SPS/CRD) */
+    const exportData = useMutation(
+        async (args) => {
+            try {
+                if (args && args.data && args.config) {
+                    return await api.file(args.data, "/export", "API_BASE_URL_DATAMANAGEMENT", args.config);
+                }
+                return await api.file(args, "/export", "API_BASE_URL_DATAMANAGEMENT");
+            } catch (err) {
+                if (axios.isCancel(err) || err?.name === 'CanceledError' || err?.name === 'AbortError' || err?.code === 'ERR_CANCELED') {
+                    return null;
+                }
+                throw err;
+            }
+        }
+    );
+
+    /** 데이터 추출 예상 (Estimate) */
+    const exportEstimate = useMutation(
+        async (data) => await api.post(data, "/export/estimate", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 컨택상황(응답 상태) 목록 API */
+    const exportStates = useMutation(
+        async (data) => await api.post(data, "/export/states", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** export PC 도구용 티켓 발급 */
+    const exportSupplyTicket = useMutation(
+        async (data) => await api.post(data, "/export/supply/ticket", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** export PC 도구 구동 확인 */
+    const exportSupplyToolStatus = useMutation(
+        async (data) => await api.post(data, "/export/supply/tool/status", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** SPS 파일 업로드 */
+    const uploadSpss = useMutation(
+        async (data) => await api.post(data, "/upload", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
+    /** 데이터 불러오기 (SAV) */
+    const updateDataFromSav = useMutation(
+        async (data) => await api.post(data, "/data/update-from-sav", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
+    /** Re-Label 자동 생성 */
+    const generateRelabels = useMutation(
+        async (data) => await api.post(data, "/generate-relabels", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
+    /** 데이터 맵 새로고침 (저장 후 싱크용) */
+    const syncMap = useMutation(
+        async (data) => await api.post(data, "/data/sync", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
+    /** 맵 새로고침 (큐마스터 연동) */
+    const updateMap = useMutation(
+        async (data) => await api.post(data, "/update-map", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
+    /** 엑셀 일괄수정 - 엑셀 내보내기 */
+    const exportExcel = useMutation(
+        async (data) => await api.file(data, "/map/excel/export", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 엑셀 일괄수정 - 검사 (저장 안함) */
+    const validateExcel = useMutation(
+        async (formData) => await api.form(formData, "/map/excel/validate", {}, "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 엑셀 일괄수정 - 적용 (저장) */
+    const applyExcel = useMutation(
+        async (formData) => await api.form(formData, "/map/excel/apply", {}, "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** export PC 도구 상태 리셋 */
+    const resetExportSupplyTool = useMutation(
+        async (data) => await api.post(data, "/export/supply/tool/reset", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 엑셀 일괄수정 - 복원지점 목록 */
+    const getExcelVersions = useMutation(
+        async (data) => await api.post(data, "/map/history", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 엑셀 일괄수정 - 복원 실행 */
+    const restoreExcelVersion = useMutation(
+        async (data) => await api.post(data, "/map/history/restore", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 복원 지점 수동 생성 */
+    const createExcelVersion = useMutation(
+        async (data) => await api.post(data, "/map/history/create", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 복원 지점 이름 변경 */
+    const renameMapVersion = useMutation(
+        async (data) => await api.post(data, "/map/history/rename", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 복원 미리보기 */
+    const previewMapRestore = useMutation(
+        async (data) => await api.post(data, "/map/history/preview", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** XML 맵 가져오기 - 검사 (저장 안함) */
+    const validateXml = useMutation(
+        async (formData) => await api.form(formData, "/map/xml/validate", {}, "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** XML 맵 가져오기 - 적용 (저장) */
+    const applyXml = useMutation(
+        async (formData) => await api.form(formData, "/map/xml/apply", {}, "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 보기 레이블 검사 (timeout 6분) */
+    const checkMapLabels = useMutation(
+        async (data) => await api.post(
+            data,
+            "/map/labels/check",
+            "API_BASE_URL_DATAMANAGEMENT",
+            { timeout: 360000 }
+        )
+    );
+
+    /** 오픈 문항 유형 검사 (저장 안함) */
+    const checkOpenType = useMutation(
+        async (data) => await api.post(data, "/map/open-type/check", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 오픈 문항 유형 교정 (적용) */
+    const fixOpenType = useMutation(
+        async (data) => await api.post(data, "/map/open-type/fix", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
+    /** SAV 등록/업데이트 검사 (1단계) */
+    const validateSav = useMutation(
+        async (formData) => await api.form(formData, "/data/sav/validate", {}, "API_BASE_URL_DATAMANAGEMENT"),
+        // {
+        //     onMutate: () => loadingSpinner.show(),
+        //     onSettled: () => loadingSpinner.hide(),
+        // }
+    );
+
+    /** SAV 등록/업데이트 적용 (2단계) */
+    const applySav = useMutation(
+        async (data) => await api.post(data, "/data/sav/apply", "API_BASE_URL_DATAMANAGEMENT"),
+        // {
+        //     onMutate: () => loadingSpinner.show(),
+        //     onSettled: () => loadingSpinner.hide(),
+        // }
+    );
+
+    return {
+        getMapVariables,
+        srtTransfer,
+        createMapVariables,
+        updateMapVariables,
+        updateMapLabels,
+        createMapLabels,
+        exportData,
+        exportEstimate,
+        exportStates,
+        exportSupplyTicket,
+        exportSupplyToolStatus,
+        resetExportSupplyTool,
+        uploadSpss,
+        updateDataFromSav,
+        validateSav,
+        applySav,
+        generateRelabels,
+        syncMap,
+        updateMap,
+        exportExcel,
+        validateExcel,
+        applyExcel,
+        validateXml,
+        applyXml,
+        getExcelVersions,
+        restoreExcelVersion,
+        createExcelVersion,
+        renameMapVersion,
+        previewMapRestore,
+        checkMapLabels,
+        checkOpenType,
+        fixOpenType
+    };
+}
+
