@@ -1723,26 +1723,25 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 ...optionEditData,
                 mutateAsync: async (params) => {
                     loadingSpinner.show();
-                    const res = await optionEditData.mutateAsync({ ...params, skipSpinner: true });
+                    try {
+                        const res = await optionEditData.mutateAsync({ ...params, skipSpinner: true });
 
-                    // Body 초기 lvcode 전달 (Interceptor)
-                    if (!reportedLvcodeRef.current && onInitLvCode) {
-                        const fetchedLv = String(res?.lvcode ?? res?.resultjson?.[0]?.lvcode ?? "").trim();
-                        if (["1", "2", "3"].includes(fetchedLv)) {
-                            onInitLvCode(fetchedLv);
-                            reportedLvcodeRef.current = true;
+                        // Body 초기 lvcode 전달 (Interceptor)
+                        if (!reportedLvcodeRef.current && onInitLvCode) {
+                            const fetchedLv = String(res?.lvcode ?? res?.resultjson?.[0]?.lvcode ?? "").trim();
+                            if (["1", "2", "3"].includes(fetchedLv)) {
+                                onInitLvCode(fetchedLv);
+                                reportedLvcodeRef.current = true;
+                            }
                         }
-                    }
 
-                    // resultjson이 빈 배열일 경우 로딩바 닫기
-                    if (Array.isArray(res?.resultjson) && res.resultjson.length === 0) {
+                        if (res?.duplicateRemoveDate) {
+                            onDuplicateRemoveDateLoaded?.(res.duplicateRemoveDate);
+                        }
+                        return res;
+                    } finally {
                         loadingSpinner.hide();
                     }
-
-                    if (res?.duplicateRemoveDate) {
-                        onDuplicateRemoveDateLoaded?.(res.duplicateRemoveDate);
-                    }
-                    return res;
                 },
             }}
             selectedField={SELECTED_FIELD}
