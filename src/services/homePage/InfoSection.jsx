@@ -9,6 +9,7 @@ import logoImg from "@/assets/images/logo_red.png";
 import { motion } from "framer-motion";
 import { logout } from "@/common/redux/action/AuthAction";
 import { LoginApi } from "@/services/login/LoginApi.js";
+import { AES256 } from "@/common/utils/AES256";
 
 const InfoSection = () => {
   const navigate = useNavigate();
@@ -136,7 +137,24 @@ const InfoSection = () => {
                   <div className="hp-admin-dropdown">
                     <button
                       className="hp-dd-item"
-                      onClick={() => window.open("/APIs/m/UI/index", "_blank")}
+                      onClick={() => {
+                        const getCookie = (name) => {
+                          const matches = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"));
+                          return matches ? decodeURIComponent(matches[1]) : undefined;
+                        };
+                        const token = getCookie("TOKEN");
+                        const xAuthToken = getCookie("X-Auth-Token");
+                        const userId = auth?.user?.userId || sessionStorage.getItem("userId");
+                        
+                        if (token) sessionStorage.setItem("Authorization", `Bearer ${token}`);
+                        if (xAuthToken) sessionStorage.setItem("X-Auth-Token", xAuthToken);
+                        if (userId) {
+                          sessionStorage.setItem("X-User-Id", userId);
+                          sessionStorage.setItem("hrc", AES256.Crypto.encryptAES256(String(userId)));
+                        }
+                        
+                        window.open("/APIs/m/UI/index", "_blank");
+                      }}
                     >
                       <ClipboardList size={18} />
                       <span>매뉴얼 정보 관리</span>
