@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import { useSelector } from 'react-redux';
-import { Layout, Type, Palette, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import { Layout, Type, Palette, Eye, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import { TABLE_THEME_PRESETS } from './TableThemePresets';
+import { modalContext } from "@/components/common/Modal.jsx";
 
 const ColorInput = React.memo(({ value, onChange, width = '105px', textWidth = '65px', padding = '3px 6px', gap = '6px' }) => {
     const [localValue, setLocalValue] = useState(value || '');
@@ -130,6 +131,7 @@ const borderNames = {
 };
 
 const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
+    const modal = useContext(modalContext);
     const [selectedBorder, setSelectedBorder] = useState(null);
     const [hoveredBorder, setHoveredBorder] = useState(null);
     const [activeTab, setActiveTab] = useState('policy'); // 'policy', 'fontColor', 'border'
@@ -1145,6 +1147,56 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                     <div style={{ width: '24px', textAlign: 'center', fontSize: '12px', fontWeight: 600 }}>{val}</div>
                                                     <button onClick={() => handleChange(`display.${item.field}`, Math.min(13, val + 1))} style={{ width: '22px', height: '22px', background: '#F8FAFC', border: 'none', borderLeft: '1px solid #CBD5E1', cursor: 'pointer', fontWeight: 'bold' }}>+</button>
                                                 </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E2E8F0', paddingBottom: '6px', marginBottom: '10px' }}>
+                                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>통계 문구 편집</div>
+                                    <button
+                                        onClick={() => {
+                                            const newSettings = { ...settings };
+                                            newSettings.display = {
+                                                ...newSettings.display,
+                                                stat_label_mean: 'Mean',
+                                                stat_label_median: 'Median',
+                                                stat_label_mode: 'Mode',
+                                                stat_label_std: 'Std'
+                                            };
+                                            setSettings(newSettings);
+                                            if (onUnsavedChange) onUnsavedChange(true);
+                                            modal.showAlert("알림", "통계 문구를 기본값(영문)으로 초기화했습니다.");
+                                        }}
+                                        style={{ fontSize: '11px', color: '#3B82F6', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}
+                                    >
+                                        <RotateCcw size={12} /> 기본값(영문) 복원
+                                    </button>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                    {[
+                                        { label: '평균', field: 'stat_label_mean', placeholder: 'Mean' },
+                                        { label: '중앙값', field: 'stat_label_median', placeholder: 'Median' },
+                                        { label: '최빈값', field: 'stat_label_mode', placeholder: 'Mode' },
+                                        { label: '표준편차', field: 'stat_label_std', placeholder: 'Std' }
+                                    ].map((item) => {
+                                        const val = settings.display[item.field] !== undefined ? settings.display[item.field] : item.placeholder;
+                                        return (
+                                            <div key={item.field} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: '#F1F5F9', borderRadius: '6px' }}>
+                                                <span style={{ fontSize: '12px', color: '#475569', fontWeight: 600 }}>{item.label}</span>
+                                                <input
+                                                    type="text"
+                                                    value={val}
+                                                    onChange={(e) => handleChange(`display.${item.field}`, e.target.value)}
+                                                    onBlur={(e) => {
+                                                        const finalVal = e.target.value.trim() || item.placeholder;
+                                                        handleChange(`display.${item.field}`, finalVal);
+                                                    }}
+                                                    placeholder={item.placeholder}
+                                                    style={{ width: '80px', padding: '4px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
+                                                />
                                             </div>
                                         );
                                     })}

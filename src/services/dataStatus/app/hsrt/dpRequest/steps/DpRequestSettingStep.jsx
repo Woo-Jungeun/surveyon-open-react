@@ -554,7 +554,11 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             hide_zero_base_columns: true,
             hide_zero_banners: true,
             hide_zero_stubs: true,
-            is_transpose: false
+            is_transpose: false,
+            stat_label_mean: 'Mean',
+            stat_label_median: 'Median',
+            stat_label_mode: 'Mode',
+            stat_label_std: 'Std'
         }
     });
 
@@ -637,6 +641,11 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 if (ui.is_transpose !== undefined && ui.is_transpose !== null) initDisplay.is_transpose = ui.is_transpose;
                 else if (ui.format_is_transpose !== undefined && ui.format_is_transpose !== null) initDisplay.is_transpose = ui.format_is_transpose;
                 else if (policy && policy.is_transpose !== undefined && policy.is_transpose !== null) initDisplay.is_transpose = policy.is_transpose;
+
+                initDisplay.stat_label_mean = ui.stat_label_mean ?? ui.stat_labels?.mean ?? 'Mean';
+                initDisplay.stat_label_median = ui.stat_label_median ?? ui.stat_labels?.median ?? 'Median';
+                initDisplay.stat_label_mode = ui.stat_label_mode ?? ui.stat_labels?.mode ?? 'Mode';
+                initDisplay.stat_label_std = ui.stat_label_std ?? ui.stat_labels?.std ?? 'Std';
 
                 // base_prefix / base_postfix 값에 따라 show_base_parenthesis 값 판별
                 if (policy && policy.base_prefix !== undefined && policy.base_prefix !== null) {
@@ -1248,6 +1257,16 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     format_show_n: settings.display.show_n,
                     format_show_percent: settings.display.show_percent,
                     format_n_round: settings.display.n_digits !== "" && settings.display.n_digits !== null && settings.display.n_digits !== undefined ? Number(settings.display.n_digits) : undefined,
+                    stat_label_mean: settings.display.stat_label_mean || 'Mean',
+                    stat_label_median: settings.display.stat_label_median || 'Median',
+                    stat_label_mode: settings.display.stat_label_mode || 'Mode',
+                    stat_label_std: settings.display.stat_label_std || 'Std',
+                    stat_labels: {
+                        mean: settings.display.stat_label_mean || 'Mean',
+                        median: settings.display.stat_label_median || 'Median',
+                        mode: settings.display.stat_label_mode || 'Mode',
+                        std: settings.display.stat_label_std || 'Std'
+                    },
                     format_percent_round: settings.display.percent_digits !== "" && settings.display.percent_digits !== null && settings.display.percent_digits !== undefined ? Number(settings.display.percent_digits) : undefined,
                     format_mean_round: settings.display.mean_digits !== "" && settings.display.mean_digits !== null && settings.display.mean_digits !== undefined ? Number(settings.display.mean_digits) : undefined,
                     format_std_round: settings.display.std_digits !== "" && settings.display.std_digits !== null && settings.display.std_digits !== undefined ? Number(settings.display.std_digits) : undefined,
