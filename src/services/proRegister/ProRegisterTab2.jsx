@@ -233,7 +233,7 @@ const ProRegisterTab2 = (props) => {
       formData.append("user", auth?.user?.userId || "");
       formData.append("id_column", idColumn || "");
       
-      const selectedQnums = selectData.map(d => ({ qnum: d.column, qnum_text: d.question }));
+      const selectedQnums = selectData.map(d => d.column);
       formData.append("selected_qnums", JSON.stringify(selectedQnums));
       formData.append("file", file);
 
