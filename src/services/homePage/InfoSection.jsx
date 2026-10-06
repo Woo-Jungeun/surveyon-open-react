@@ -98,54 +98,54 @@ const InfoSection = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
             <div className="hp-user-wrap" ref={dropdownRef}>
-            {/* 사용자 버튼 */}
-            <button
-              type="button"
-              className="hp-user-btn"
-              onClick={() => setOpen((v) => !v)}
-            >
-              <User className="hp-user-icon" />
-              <span>{userName}님</span>
-            </button>
-
-            {/* 드롭다운 */}
-            {open && (
-              <div className="hp-user-dropdown">
-                <button className="hp-dd-item" onClick={doLogout}>
-                  <LogOut size={18} />
-                  <span>로그아웃</span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* AI솔루션팀 전용 관리자 메뉴 */}
-          {auth?.user?.userGroup === "AI솔루션팀" && (
-            <div className="hp-user-wrap" ref={adminDropdownRef}>
-              <button 
+              {/* 사용자 버튼 */}
+              <button
                 type="button"
                 className="hp-user-btn"
-                onClick={() => setAdminOpen((v) => !v)}
-                title="관리자 메뉴"
-                style={{ padding: '8px' }}
+                onClick={() => setOpen((v) => !v)}
               >
-                <Settings className="hp-user-icon" style={{ width: '18px', height: '18px' }} />
+                <User className="hp-user-icon" />
+                <span>{userName}님</span>
               </button>
 
-              {adminOpen && (
-                <div className="hp-admin-dropdown">
-                  <button 
-                    className="hp-dd-item" 
-                    onClick={() => window.open("/manual/admin", "_blank")}
-                  >
-                    <ClipboardList size={18} />
-                    <span>매뉴얼 정보 관리</span>
+              {/* 드롭다운 */}
+              {open && (
+                <div className="hp-user-dropdown">
+                  <button className="hp-dd-item" onClick={doLogout}>
+                    <LogOut size={18} />
+                    <span>로그아웃</span>
                   </button>
                 </div>
               )}
             </div>
-          )}
-        </div>
+
+            {/* AI솔루션팀 전용 관리자 메뉴 */}
+            {auth?.user?.userGroup === "AI솔루션팀" && (
+              <div className="hp-user-wrap" ref={adminDropdownRef}>
+                <button
+                  type="button"
+                  className="hp-user-btn"
+                  onClick={() => setAdminOpen((v) => !v)}
+                  title="관리자 메뉴"
+                  style={{ padding: '8px' }}
+                >
+                  <Settings className="hp-user-icon" style={{ width: '18px', height: '18px' }} />
+                </button>
+
+                {adminOpen && (
+                  <div className="hp-admin-dropdown">
+                    <button
+                      className="hp-dd-item"
+                      onClick={() => window.open("/APIs/m/UI/index", "_blank")}
+                    >
+                      <ClipboardList size={18} />
+                      <span>매뉴얼 정보 관리</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
