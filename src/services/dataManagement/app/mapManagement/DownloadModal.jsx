@@ -10,20 +10,27 @@ import './MapManagementPage.css';
 
 const OTHER_FORMAT_OPTIONS = [
     { id: 'crd', token: 'crd', label: '.crd' },
-    { id: 'sps', token: 'sps', label: '.sps' },
-    { id: 'sps_open', token: 'sps-open', label: '.sps + 오픈', badge: '2개' },
+    { id: 'sps', token: 'sps', label: '.sps', desc: '정의 파일 · 건수 무관' },
+    { id: 'sps_open', token: 'sps-open', label: '.sps + 오픈', badge: '2개', desc: '2개 · 오픈 파일만 적용' },
     { id: 'open_excel', token: 'open-excel', label: '오픈만 (Excel)' },
-    { id: 'map_txt', token: 'map-txt', label: 'Map.txt' },
-    { id: 'stp', token: 'stp', label: '.stp', badge: '2개' }
+    { id: 'map_txt', token: 'map-txt', label: 'Map.txt', desc: '정의 파일 · 건수 무관' },
+    { id: 'stp', token: 'stp', label: '.stp', badge: '2개', desc: '정의 파일 · 건수 무관' }
 ];
 
 const DownloadModal = ({ isOpen, onClose }) => {
-    const { exportData, exportSupplyTicket, exportSupplyToolStatus, resetExportSupplyTool } = MapManagementPageApi();
+    const { exportData, exportSupplyTicket, exportSupplyToolStatus, resetExportSupplyTool, exportStates, exportEstimate } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
 
     const [isAccordionOpen, setIsAccordionOpen] = useState(false);
     const [selectedFormats, setSelectedFormats] = useState([]);
+
+    // 컨택상황(응답 상태)
+    const [isStateAccordionOpen, setIsStateAccordionOpen] = useState(false);
+    const [contactStates, setContactStates] = useState([]);
+    const [selectedStates, setSelectedStates] = useState([]);
+    const [excludedCount, setExcludedCount] = useState(0);
+    const [estimateInfo, setEstimateInfo] = useState({ totalCount: 0, useTool: false, loaded: false });
     const [downloading, setDownloading] = useState(false);
     const [downloadingSav, setDownloadingSav] = useState(false);
 
@@ -51,6 +58,11 @@ const DownloadModal = ({ isOpen, onClose }) => {
         if (!isOpen) {
             setSelectedFormats([]);
             setIsAccordionOpen(false);
+            setIsStateAccordionOpen(false);
+            setContactStates([]);
+            setSelectedStates([]);
+            setExcludedCount(0);
+            setEstimateInfo({ totalCount: 0, useTool: false, loaded: false });
             setCheckingTool(false);
             setDownloading(false);
             if (countdownTimerRef.current) {
@@ -66,8 +78,49 @@ const DownloadModal = ({ isOpen, onClose }) => {
                 fileBlob: null,
                 filename: ''
             });
+        } else {
+            // 열릴 때 컨택상황 API 호출
+            const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '';
+            const userId = auth?.user?.userId || sessionStorage.getItem('userId') || '';
+            if (pn) {
+                exportStates.mutateAsync({ pn, user: userId }).then(res => {
+                    if (String(res?.success) === '777') {
+                        const states = res.resultjson?.states || [];
+                        setContactStates(states);
+                        const defaults = res.resultjson?.defaultCodes || [4];
+                        setSelectedStates(defaults);
+                        setExcludedCount(res.resultjson?.excludedCount || 0);
+                    } else if (String(res?.success) === '909') {
+                        setContactStates([]);
+                        setSelectedStates([]);
+                        setExcludedCount(0);
+                    }
+                }).catch(console.error);
+            }
         }
     }, [isOpen]);
+
+    // 상태 변경 시마다 estimate 호출
+    useEffect(() => {
+        if (isOpen && selectedStates.length > 0) {
+            const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '';
+            const userId = auth?.user?.userId || sessionStorage.getItem('userId') || '';
+            const answerStateCode = selectedStates.join(',');
+
+            exportEstimate.mutateAsync({ pn, user: userId, answerStateCode, gb: 'sav' }).then(res => {
+                const data = res?.success === '777' ? res.resultjson : res;
+                if (data && data.track) {
+                    setEstimateInfo({
+                        totalCount: data.answerCount || 0,
+                        useTool: data.track === 'tool',
+                        loaded: true
+                    });
+                }
+            }).catch(console.error);
+        } else if (selectedStates.length === 0) {
+            setEstimateInfo({ totalCount: 0, useTool: false, loaded: true });
+        }
+    }, [isOpen, selectedStates]);
 
     const handleCloseModal = () => {
         setSelectedFormats([]);
@@ -82,6 +135,20 @@ const DownloadModal = ({ isOpen, onClose }) => {
             filename: ''
         });
         if (onClose) onClose();
+    };
+
+    const getStatesSummary = () => {
+        if (selectedStates.length === 0) return '선택 없음';
+        if (selectedStates.length === contactStates.length) return `모두 선택 ${contactStates.length}종`;
+        if (selectedStates.length === 1) {
+            const single = contactStates.find(s => s.code === selectedStates[0]);
+            return single ? single.name : '';
+        }
+        const hasComplete = selectedStates.includes(4);
+        if (hasComplete) {
+            return `완료 외 ${selectedStates.length - 1}종`;
+        }
+        return `${selectedStates.length}종 선택`;
     };
 
     const getFileListForGb = (gbParam) => {
@@ -380,7 +447,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
 
                 setDownloading(false);
                 if (signalrConn) {
-                    try { signalrConn.stop(); } catch (e) {}
+                    try { signalrConn.stop(); } catch (e) { }
                 }
                 return;
             }
@@ -401,7 +468,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                 });
                 setDownloading(false);
                 if (signalrConn) {
-                    try { signalrConn.stop(); } catch (e) {}
+                    try { signalrConn.stop(); } catch (e) { }
                 }
 
                 // 알림창 팝업 없이 바로 PC 도구 구동 실행
@@ -421,7 +488,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
             });
             setDownloading(false);
             if (signalrConn) {
-                try { signalrConn.stop(); } catch (e) {}
+                try { signalrConn.stop(); } catch (e) { }
             }
 
             const errorMsg = j?.resultjson?.errorcontent || j?.message || "내보내기 중 오류가 발생했습니다.";
@@ -439,7 +506,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
             });
             setDownloading(false);
             if (signalrConn) {
-                try { signalrConn.stop(); } catch (e) {}
+                try { signalrConn.stop(); } catch (e) { }
             }
 
             if (err?.name === 'AbortError' || err?.name === 'CanceledError') {
@@ -478,10 +545,10 @@ const DownloadModal = ({ isOpen, onClose }) => {
 
     /** SPSS (.sav) 단독 다운로드 */
     const handleDownloadSav = async () => {
-        if (downloadingSav || downloading) return;
+        if (downloadingSav || downloading || selectedStates.length === 0) return;
         setDownloadingSav(true);
         try {
-            await executeExport('sav');
+            await executeExport('sav', selectedStates.join(','));
         } finally {
             setDownloadingSav(false);
         }
@@ -489,7 +556,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
 
     /** 선택된 다른 형식들 다중 다운로드 (콤마 조인 토큰 전송: 예 "crd,sps") */
     const handleBulkDownload = async () => {
-        if (selectedFormats.length === 0 || downloading || downloadingSav) return;
+        if (selectedFormats.length === 0 || downloading || downloadingSav || selectedStates.length === 0) return;
 
         setDownloading(true);
         try {
@@ -499,7 +566,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                 .filter(Boolean);
 
             const gbParam = tokens.join(',');
-            await executeExport(gbParam);
+            await executeExport(gbParam, selectedStates.join(','));
         } finally {
             setDownloading(false);
         }
@@ -827,7 +894,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
 
     return (
         <div className="variable-modal-overlay">
-            <div className="variable-modal-content download-modal-content" style={{ width: '480px', position: 'relative', overflow: 'hidden' }}>
+            <div className="variable-modal-content download-modal-content" style={{ width: '640px', position: 'relative', overflow: 'hidden' }}>
                 {/* PC 도구 구동 상태 확인 글래스모피즘 전체 로딩 오버레이 */}
                 {checkingTool && (
                     <div style={{
@@ -909,25 +976,137 @@ const DownloadModal = ({ isOpen, onClose }) => {
                 )}
 
                 {/* 1. Standard Header */}
-                <div className="variable-modal-header">
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <div style={{
-                            width: '4px',
-                            height: '18px',
-                            backgroundColor: '#16a34a',
-                            borderRadius: '4px',
-                            marginRight: '8px'
-                        }}></div>
-                        <h3 className="variable-modal-title">다운로드</h3>
+                <div className="variable-modal-header" style={{ padding: '24px 32px 16px 32px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <div style={{
+                                width: '4px',
+                                height: '18px',
+                                backgroundColor: '#16a34a',
+                                borderRadius: '4px',
+                                marginRight: '8px'
+                            }}></div>
+                            <h3 className="variable-modal-title">다운로드</h3>
+                        </div>
+                        <p className="download-modal-desc" style={{ fontSize: '13px', color: '#64748b', margin: 0, paddingLeft: '12px' }}>
+                            원하는 형식의 파일을 선택하여 다운로드하세요.
+                        </p>
                     </div>
-                    <button onClick={handleCloseModal} className="variable-modal-close"><X size={20} /></button>
+                    <button onClick={handleCloseModal} className="variable-modal-close" style={{ alignSelf: 'flex-start' }}><X size={20} /></button>
                 </div>
 
                 {/* 2. Body */}
-                <div className="variable-modal-body" style={{ padding: '24px' }}>
-                    <p className="download-modal-desc" style={{ fontSize: '13px', color: '#64748b', marginTop: 0, marginBottom: '16px' }}>
-                        원하는 형식의 파일을 선택하여 다운로드하세요.
-                    </p>
+                <div className="variable-modal-body" style={{ padding: '24px 32px 10px 32px' }}>
+
+
+                    {/* 컨택상황 (응답 상태) */}
+                    {contactStates.length > 0 && (
+                        <div style={{ marginBottom: '16px' }}>
+                            <div
+                                onClick={() => setIsStateAccordionOpen(!isStateAccordionOpen)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    padding: '12px 16px',
+                                    backgroundColor: '#f8fafc',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: isStateAccordionOpen ? '8px 8px 0 0' : '8px',
+                                    cursor: 'pointer',
+                                    userSelect: 'none'
+                                }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {isStateAccordionOpen ? <ChevronUp size={16} color="#475569" /> : <ChevronDown size={16} color="#475569" />}
+                                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b' }}>
+                                        컨택상황
+                                    </span>
+                                    <span style={{ fontSize: '13px', color: '#64748b', marginLeft: '4px' }}>
+                                        {getStatesSummary()}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {isStateAccordionOpen && (
+                                <div style={{
+                                    border: '1px solid #e2e8f0',
+                                    borderTop: 'none',
+                                    borderRadius: '0 0 8px 8px',
+                                    padding: '16px',
+                                    backgroundColor: '#ffffff'
+                                }}>
+                                    <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedStates([4])}
+                                            style={{ padding: '4px 10px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '4px', background: '#fff', cursor: 'pointer' }}
+                                        >
+                                            완료만
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedStates(contactStates.map(s => s.code))}
+                                            style={{ padding: '4px 10px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '4px', background: '#fff', cursor: 'pointer' }}
+                                        >
+                                            모두 선택
+                                        </button>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                        {contactStates.map(state => {
+                                            const isChecked = selectedStates.includes(state.code);
+                                            return (
+                                                <div
+                                                    key={state.code}
+                                                    onClick={() => {
+                                                        if (isChecked) setSelectedStates(prev => prev.filter(c => c !== state.code));
+                                                        else setSelectedStates(prev => [...prev, state.code]);
+                                                    }}
+                                                    title={`코드 ${state.code}`}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        padding: '8px 12px',
+                                                        borderRadius: '6px',
+                                                        border: `1.5px solid ${isChecked ? '#16a34a' : '#e2e8f0'}`,
+                                                        backgroundColor: isChecked ? '#f0fdf4' : '#ffffff',
+                                                        cursor: 'pointer',
+                                                        userSelect: 'none'
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <div style={{
+                                                            width: '14px',
+                                                            height: '14px',
+                                                            borderRadius: '3px',
+                                                            border: `1.5px solid ${isChecked ? '#16a34a' : '#cbd5e1'}`,
+                                                            backgroundColor: isChecked ? '#16a34a' : '#ffffff',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center'
+                                                        }}>
+                                                            {isChecked && <Check size={10} color="#ffffff" strokeWidth={3} />}
+                                                        </div>
+                                                        <span style={{ fontSize: '12px', fontWeight: 600, color: isChecked ? '#15803d' : '#1e293b' }}>
+                                                            {state.name || `코드 ${state.code}`}
+                                                        </span>
+                                                    </div>
+                                                    <span style={{ fontSize: '12px', color: '#64748b' }}>
+                                                        {state.count.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    {excludedCount > 0 && (
+                                        <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '12px', textAlign: 'right' }}>
+                                            * 데이터 출력 기준에 해당하지 않는 컨택상황 {excludedCount.toLocaleString()}건은 제외되었습니다.
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* 3. Primary Top Highlight Card: SPSS 데이터 (.sav) */}
                     <div
@@ -941,7 +1120,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                             border: '1.5px solid #16a34a',
                             borderRadius: '12px',
                             padding: '14px 16px',
-                            cursor: (downloadingSav || downloading) ? 'wait' : 'pointer',
+                            cursor: (downloadingSav || downloading || selectedStates.length === 0) ? 'wait' : 'pointer',
                             marginBottom: '20px',
                             boxShadow: '0 2px 8px rgba(22, 163, 74, 0.08)'
                         }}
@@ -969,12 +1148,17 @@ const DownloadModal = ({ isOpen, onClose }) => {
                                 <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
                                     통계 분석용 표준 파일
                                 </div>
+                                {estimateInfo.loaded && selectedStates.length > 0 && (
+                                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#334155', marginTop: '4px' }}>
+                                        {getStatesSummary()} · {estimateInfo.totalCount.toLocaleString()}건
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <button
                             type="button"
                             className="dm-tactile-btn"
-                            disabled={downloadingSav || downloading}
+                            disabled={downloadingSav || downloading || selectedStates.length === 0}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleDownloadSav();
@@ -982,7 +1166,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                             style={{
                                 padding: '7px 14px',
                                 borderRadius: '8px',
-                                backgroundColor: (downloadingSav || downloading) ? '#cbd5e1' : '#16a34a',
+                                backgroundColor: (downloadingSav || downloading || selectedStates.length === 0) ? '#cbd5e1' : '#16a34a',
                                 border: 'none',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -990,11 +1174,11 @@ const DownloadModal = ({ isOpen, onClose }) => {
                                 color: '#ffffff',
                                 fontSize: '12px',
                                 fontWeight: 700,
-                                boxShadow: (downloadingSav || downloading) ? 'none' : '0 2px 6px rgba(22, 163, 74, 0.25)',
-                                cursor: (downloadingSav || downloading) ? 'wait' : 'pointer'
+                                boxShadow: (downloadingSav || downloading || selectedStates.length === 0) ? 'none' : '0 2px 6px rgba(22, 163, 74, 0.25)',
+                                cursor: (downloadingSav || downloading || selectedStates.length === 0) ? 'wait' : 'pointer'
                             }}
                         >
-                            <span>{downloadingSav ? '다운로드 중...' : '바로 받기'}</span>
+                            <span>{downloadingSav ? '다운로드 중...' : (estimateInfo.useTool ? '도구로 받기' : '바로 받기')}</span>
                             <Download size={13} />
                         </button>
                     </div>
@@ -1096,9 +1280,14 @@ const DownloadModal = ({ isOpen, onClose }) => {
                                                 }}>
                                                     {isChecked && <Check size={12} color="#ffffff" strokeWidth={3} />}
                                                 </div>
-                                                <span style={{ fontSize: '13px', fontWeight: 600, color: isChecked ? '#15803d' : '#1e293b' }}>
+                                                <span style={{ fontSize: '13px', fontWeight: 600, color: isChecked ? '#15803d' : '#1e293b', whiteSpace: 'nowrap' }}>
                                                     {item.label}
                                                 </span>
+                                                {item.desc && (
+                                                    <span style={{ fontSize: '11px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                                                        {item.desc}
+                                                    </span>
+                                                )}
                                             </div>
                                             {item.badge && (
                                                 <span style={{
@@ -1107,7 +1296,8 @@ const DownloadModal = ({ isOpen, onClose }) => {
                                                     color: '#64748b',
                                                     backgroundColor: '#f1f5f9',
                                                     borderRadius: '10px',
-                                                    padding: '1px 7px'
+                                                    padding: '1px 7px',
+                                                    whiteSpace: 'nowrap'
                                                 }}>
                                                     {item.badge}
                                                 </span>
