@@ -135,7 +135,6 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
     const [selectedBorder, setSelectedBorder] = useState(null);
     const [hoveredBorder, setHoveredBorder] = useState(null);
     const [activeTab, setActiveTab] = useState('policy'); // 'policy', 'fontColor', 'border'
-    const [isExampleCollapsed, setIsExampleCollapsed] = useState(false);
 
     useEffect(() => {
         if (activeTab === 'border') {
@@ -721,10 +720,8 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
     }, [realPreviewData, selectedBorder, hoveredBorder, activeTab]);
 
     useEffect(() => {
-        if (!isExampleCollapsed) {
-            updateIframeContent(exampleIframeRef, examplesPreviewData);
-        }
-    }, [examplesPreviewData, selectedBorder, hoveredBorder, isExampleCollapsed, activeTab]);
+        updateIframeContent(exampleIframeRef, examplesPreviewData);
+    }, [examplesPreviewData, selectedBorder, hoveredBorder, activeTab]);
 
     useEffect(() => {
         if (!pageId || !auth?.user?.userId) return;
@@ -899,75 +896,65 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 */}
 
                 {/* 카드 2: 스타일 예시 */}
-                {/* 카드 2: 스타일 예시 (접기/펼치기 아코디언 추가) */}
-                <div className="dp-setting-card" style={{ flex: isExampleCollapsed ? '0 0 auto' : 1, display: 'flex', flexDirection: 'column', minHeight: isExampleCollapsed ? 'auto' : 0, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                <div className="dp-setting-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                     <div
                         className="dp-setting-card-header"
-                        onClick={() => setIsExampleCollapsed(!isExampleCollapsed)}
-                        style={{ padding: '10px 16px', borderBottom: isExampleCollapsed ? 'none' : '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', fontSize: '13px', background: '#F8FAFC', borderRadius: isExampleCollapsed ? '8px' : '8px 8px 0 0', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
+                        style={{ padding: '10px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', fontSize: '13px', background: '#F8FAFC', borderRadius: '8px 8px 0 0', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', userSelect: 'none' }}
                     >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span>샘플 데이터 예시</span>
-                            <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 500 }}>{isExampleCollapsed ? '(클릭하여 펼치기)' : '(클릭하여 접기)'}</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {loadingExamples && (
-                                <span style={{ fontSize: '11px', color: '#3B82F6', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <span className="loading-pulse-dot" style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#3B82F6' }}></span> 업데이트 중...
-                                </span>
-                            )}
-                            {isExampleCollapsed ? (
-                                <ChevronDown size={16} style={{ color: '#64748B' }} />
-                            ) : (
-                                <ChevronUp size={16} style={{ color: '#64748B' }} />
-                            )}
                         </div>
                     </div>
 
-                    {!isExampleCollapsed && (
-                        <>
-                            {/* 예시 탭 버튼 바 (텍스트 링크 방식) */}
-                            <div style={{ display: 'flex', gap: '12px', padding: '8px 16px', borderBottom: '1px solid #F1F5F9', background: '#FFFFFF', flexWrap: 'wrap', flexShrink: 0 }}>
-                                {[
-                                    { id: 0, label: '① 교차표 (그룹·통계)' },
-                                    { id: 1, label: '② 단순 교차표' },
-                                    { id: 2, label: '③ 빈도표' }
-                                ].map((item, idx) => {
-                                    const isActive = activeExampleIdx === idx;
-                                    return (
-                                        <button
-                                            key={idx}
-                                            onClick={() => setActiveExampleIdx(idx)}
-                                            style={{
-                                                background: 'transparent',
-                                                border: 'none',
-                                                fontSize: '11px',
-                                                fontWeight: isActive ? 700 : 500,
-                                                color: isActive ? '#2563EB' : '#64748B',
-                                                cursor: 'pointer',
-                                                padding: '2px 4px',
-                                                borderBottom: isActive ? '2px solid #2563EB' : '2px solid transparent',
-                                                transition: 'all 0.15s ease',
-                                                outline: 'none',
-                                                userSelect: 'none'
-                                            }}
-                                        >
-                                            {item.label}
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                    <>
+                        {/* 예시 탭 버튼 바 (텍스트 링크 방식) */}
+                        <div style={{ display: 'flex', gap: '12px', padding: '8px 16px', borderBottom: '1px solid #F1F5F9', background: '#FFFFFF', flexWrap: 'wrap', flexShrink: 0 }}>
+                            {[
+                                { id: 0, label: '① 교차표 (그룹·통계)' },
+                                { id: 1, label: '② 단순 교차표' },
+                                { id: 2, label: '③ 빈도표' }
+                            ].map((item, idx) => {
+                                const isActive = activeExampleIdx === idx;
+                                return (
+                                    <button
+                                        key={idx}
+                                        onClick={() => setActiveExampleIdx(idx)}
+                                        style={{
+                                            background: 'transparent',
+                                            border: 'none',
+                                            fontSize: '11px',
+                                            fontWeight: isActive ? 700 : 500,
+                                            color: isActive ? '#2563EB' : '#64748B',
+                                            cursor: 'pointer',
+                                            padding: '2px 4px',
+                                            borderBottom: isActive ? '2px solid #2563EB' : '2px solid transparent',
+                                            transition: 'all 0.15s ease',
+                                            outline: 'none',
+                                            userSelect: 'none'
+                                        }}
+                                    >
+                                        {item.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
 
-                            <div className="dp-setting-card-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: '8px', overflowX: 'auto', background: settings.render.theme_bg || '#FFFFFF', borderRadius: '0 0 8px 8px', position: 'relative' }}>
-                                <iframe
-                                    ref={exampleIframeRef}
-                                    srcDoc={INITIAL_IFRAME_DOC}
-                                    style={{ width: '100%', flex: 1, minHeight: 0, border: 'none', opacity: loadingExamples ? 0.6 : 1, transition: 'opacity 0.2s' }}
-                                    title="example-preview"
-                                />
-                            </div>
-                        </>
-                    )}
+                        <div className="dp-setting-card-body" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: '8px', overflowX: 'auto', background: settings.render.theme_bg || '#FFFFFF', borderRadius: '0 0 8px 8px', position: 'relative' }}>
+                            <iframe
+                                ref={exampleIframeRef}
+                                srcDoc={INITIAL_IFRAME_DOC}
+                                style={{ width: '100%', flex: 1, minHeight: 0, border: 'none', opacity: loadingExamples ? 0.3 : 1, transition: 'opacity 0.2s' }}
+                                title="example-preview"
+                            />
+                            {loadingExamples && (
+                                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255, 255, 255, 0.4)', zIndex: 10 }}>
+                                    <div style={{ padding: '8px 16px', background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600, color: '#3B82F6' }}>
+                                        <span className="loading-pulse-dot" style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }}></span> 로딩 중
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </>
                 </div>
 
             </div>
