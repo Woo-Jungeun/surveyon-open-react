@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { X, History, Plus, MessageSquare, Clock, ArrowLeft, Lock } from 'lucide-react';
+import { X, History, Plus, MessageSquare, Clock, ArrowLeft, Lock, Search } from 'lucide-react';
 import { ChatMessages } from './ChatMessages';
 import { ChatInput } from './ChatInput';
 
@@ -56,6 +56,28 @@ export const ChatPanel = ({
     const [isResizing, setIsResizing] = useState(false);
     const [customStyle, setCustomStyle] = useState(null);
     const [, setResizeTick] = useState(0);
+    const [searchInput, setSearchInput] = useState('');
+    const [appliedSearchKeyword, setAppliedSearchKeyword] = useState('');
+
+    const filteredSessions = userSessions.filter(sess =>
+        (sess.title || '대화 세션').toLowerCase().includes(appliedSearchKeyword.toLowerCase())
+    );
+
+    const handleSearch = () => {
+        setAppliedSearchKeyword(searchInput);
+    };
+
+    const handleClearSearch = () => {
+        setSearchInput('');
+        setAppliedSearchKeyword('');
+    };
+
+    const handleSearchKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleSearch();
+        }
+    };
 
     // ── 창 크기 변경 감지: 브라우저 창을 최대화/축소할 때 비례 갱신 트리거 ──
     useEffect(() => {
@@ -301,7 +323,7 @@ export const ChatPanel = ({
                             <span>{isHistoryOpen ? '대화기록 닫기' : '대화기록 열기'}</span>
                         </button>
                     )}
-                    {onNewChat && (
+                    {onNewChat && !(isHistoryOpen && userSessions.length === 0) && (
                         <button
                             onClick={onNewChat}
                             className="so-header-btn"
@@ -337,7 +359,29 @@ export const ChatPanel = ({
             {/* ── 과거 대화 기록 서랍 (Drawer Overlay) ── */}
             {isHistoryOpen && (
                 <div className="so-history-drawer">
-
+                    {/* 검색바를 스크롤 영역 밖으로 분리 */}
+                    {isLoggedInUser && !isLoadingSessions && userSessions.length > 0 && (
+                        <div style={{ padding: '12px 14px 0 14px', background: '#f8fafc' }}>
+                            <div className="so-history-search" style={{ marginBottom: 0, position: 'relative', zIndex: 1 }}>
+                                <Search size={14} color="#94a3b8" />
+                                <input
+                                    type="text"
+                                    placeholder="대화 제목으로 검색하세요."
+                                    value={searchInput}
+                                    onChange={(e) => setSearchInput(e.target.value)}
+                                    onKeyDown={handleSearchKeyDown}
+                                />
+                                {searchInput && (
+                                    <button onClick={handleClearSearch} className="so-search-clear">
+                                        <X size={12} />
+                                    </button>
+                                )}
+                                <button onClick={handleSearch} className="so-search-submit">
+                                    검색
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="so-history-list">
                         {!isLoggedInUser ? (
@@ -364,9 +408,37 @@ export const ChatPanel = ({
                                 <div className="so-history-empty-desc">
                                     설문온 AI에게 궁금한 점을 질문해 보세요!
                                 </div>
+                                <button
+                                    onClick={onNewChat}
+                                    style={{
+                                        marginTop: '20px',
+                                        padding: '10px 18px',
+                                        background: '#4f46e5',
+                                        color: '#ffffff',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        fontWeight: '600',
+                                        fontSize: '13px',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        boxShadow: '0 2px 4px rgba(79, 70, 229, 0.2)'
+                                    }}
+                                >
+                                    <Plus size={16} strokeWidth={2.5} />
+                                    새 대화 시작하기
+                                </button>
+                            </div>
+                        ) : filteredSessions.length === 0 ? (
+                            <div className="so-history-empty" style={{ margin: '16px auto' }}>
+                                <div className="so-history-empty-icon">
+                                    <Search size={32} strokeWidth={1.5} color="#cbd5e1" />
+                                </div>
+                                <div className="so-history-empty-title" style={{ fontSize: '13.5px' }}>검색 결과가 없습니다</div>
                             </div>
                         ) : (
-                            userSessions.map((sess) => {
+                            filteredSessions.map((sess) => {
                                 const isCurrent = sess.sessionId === currentSessionId;
                                 return (
                                     <div

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
+import { useSelector } from 'react-redux';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { ChatPanel } from './ChatPanel';
 import { chatApi, getChatBaseUrl } from './ChatApi';
@@ -36,12 +37,19 @@ export const SurveyonAssistant = ({
     return trimmed;
   };
 
-  // USER_ID 자동 결정 (Props -> localStorage -> sessionStorage -> window 전역 -> 쿠키 -> 익명 사용자)
+  // Redux 전역 상태에서 auth 정보 가져오기 (원래 쓰는 방식)
+  const auth = useSelector((store) => store.auth);
+
+  // USER_ID 자동 결정 (Redux -> Props -> localStorage -> sessionStorage -> 익명 사용자)
   const resolveUserId = () => {
-    // 1순위: Props로 명시적으로 전달받은 경우
+    // 1순위: Redux에 저장된 로그인 유저 ID
+    const reduxUserId = auth?.user?.userId || auth?.user?.id || auth?.user?.username;
+    if (reduxUserId) return String(reduxUserId).trim();
+
+    // 2순위: Props로 명시적으로 전달받은 경우
     if (propUserId && propUserId.trim()) return propUserId.trim();
 
-    // 2순위: localStorage (WebUI 대시보드 로그인 계정)
+    // 3순위: localStorage (WebUI 대시보드 로그인 계정)
     try {
       const u = extractUserFromRaw(localStorage.getItem('username'))
         || extractUserFromRaw(localStorage.getItem('userId'))

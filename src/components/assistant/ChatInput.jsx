@@ -53,7 +53,7 @@ export const ChatInput = ({ onSend, isLoading }) => {
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="메시지를 입력하세요... (줄바꿈: Shift+Enter)"
+          placeholder="메시지를 입력하세요. (줄바꿈: Shift+Enter)"
           disabled={isLoading}
           rows={1}
         />
