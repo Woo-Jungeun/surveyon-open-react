@@ -51,14 +51,35 @@ export const ChatPanel = ({
     onSelectSession,
     isLoggedInUser = false,
     onDeleteSession,
+    onDeleteAllSessions,
 }) => {
     const panelRef = useRef(null);
     const [isMoving, setIsMoving] = useState(false);
     const [isResizing, setIsResizing] = useState(false);
     const [customStyle, setCustomStyle] = useState(null);
     const [, setResizeTick] = useState(0);
+
+    // 챗봇 내부 팝업 상태
+    const [internalPopup, setInternalPopup] = useState({ isOpen: false, type: '', targetId: null });
+
     const [searchInput, setSearchInput] = useState('');
     const [appliedSearchKeyword, setAppliedSearchKeyword] = useState('');
+
+    // 무한 스크롤 (Lazy Rendering) 상태
+    const [visibleCount, setVisibleCount] = useState(20);
+
+    // 검색어나 서랍이 열릴 때마다 렌더링 개수 초기화
+    useEffect(() => {
+        setVisibleCount(20);
+    }, [appliedSearchKeyword, isHistoryOpen]);
+
+    const handleScroll = (e) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.target;
+        // 스크롤이 바닥에 거의 닿았을 때 (50px 여유)
+        if (scrollHeight - scrollTop - clientHeight < 50) {
+            setVisibleCount(prev => prev + 20);
+        }
+    };
 
     const filteredSessions = userSessions.filter(sess =>
         (sess.title || '대화 세션').toLowerCase().includes(appliedSearchKeyword.toLowerCase())
@@ -301,34 +322,34 @@ export const ChatPanel = ({
                     설문온 가이드 <span style={{ color: '#4F46E5', marginLeft: '1px' }}>AI</span>
                 </h3>
 
-                <div className="so-header-actions">
-                    {onToggleHistory && (
+                <div className="so-header-actions" onMouseDown={e => e.stopPropagation()}>
+                    {isLoggedInUser && !isHistoryOpen && (
                         <button
                             onClick={onToggleHistory}
-                            className={`so-header-btn ${isHistoryOpen ? 'active' : ''}`}
-                            title="과거 대화 내역 조회 및 이어하기"
+                            className="so-header-btn"
+                            title="이전 대화 목록 보기"
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '4px',
+                                gap: '3px',
                                 padding: '4px 8px',
                                 fontSize: '11px',
-                                background: isHistoryOpen ? '#e0e7ff' : '#f1f5f9',
-                                color: isHistoryOpen ? '#4338ca' : '#475569',
+                                background: '#f1f5f9',
+                                color: '#475569',
                                 borderRadius: '6px',
                                 border: '1px solid #e2e8f0',
                                 fontWeight: 600,
                             }}
                         >
                             <History size={12} />
-                            <span>{isHistoryOpen ? '대화기록 닫기' : '대화기록 열기'}</span>
+                            <span>대화 기록</span>
                         </button>
                     )}
                     {onNewChat && !(isHistoryOpen && userSessions.length === 0) && (
                         <button
                             onClick={onNewChat}
                             className="so-header-btn"
-                            title="새 대화 시작 (상담 이력 분리 및 화면 초기화)"
+                            title="새 대화 시작"
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -360,10 +381,83 @@ export const ChatPanel = ({
             {/* ── 과거 대화 기록 서랍 (Drawer Overlay) ── */}
             {isHistoryOpen && (
                 <div className="so-history-drawer">
+                    {/* 챗봇 내부 자체 알림 팝업 (오버레이) */}
+                    {internalPopup.isOpen && (
+                        <div style={{
+                            position: 'absolute',
+                            top: 0, left: 0, right: 0, bottom: 0,
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            zIndex: 9999,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '24px' // 부모 패널의 라운드와 일치
+                        }}>
+                            <div style={{
+                                background: '#fff',
+                                borderRadius: '14px',
+                                padding: '24px 20px',
+                                width: '85%',
+                                maxWidth: '300px',
+                                boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                                textAlign: 'center'
+                            }}>
+                                <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+                                    <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: '#f3e8ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Trash2 size={20} color="#8b5cf6" />
+                                    </div>
+                                </div>
+                                <h4 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#1e293b', fontWeight: 700 }}>
+                                    {internalPopup.type === 'deleteAll' ? '모든 대화 기록 삭제' : '대화 기록 삭제'}
+                                </h4>
+                                <p style={{ margin: '0 0 24px 0', fontSize: '13px', color: '#64748b', lineHeight: '1.4', whiteSpace: 'pre-line' }}>
+                                    {internalPopup.type === 'deleteAll'
+                                        ? '모든 대화 기록을 삭제하시겠습니까?\n(이 작업은 되돌릴 수 없습니다.)'
+                                        : '정말 이 대화 기록을 삭제하시겠습니까?'}
+                                </p>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <button
+                                        style={{ flex: 1, padding: '10px 0', borderRadius: '8px', border: 'none', background: '#f1f5f9', color: '#64748b', fontWeight: 600, cursor: 'pointer', fontSize: '13.5px' }}
+                                        onClick={() => setInternalPopup({ isOpen: false, type: '', targetId: null })}
+                                    >취소</button>
+                                    <button
+                                        style={{ flex: 1, padding: '10px 0', borderRadius: '8px', border: 'none', background: '#8b5cf6', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '13.5px' }}
+                                        onClick={() => {
+                                            if (internalPopup.type === 'deleteAll') {
+                                                onDeleteAllSessions();
+                                            } else {
+                                                onDeleteSession(internalPopup.targetId, null);
+                                            }
+                                            setInternalPopup({ isOpen: false, type: '', targetId: null });
+                                        }}
+                                    >확인</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* 검색바를 스크롤 영역 밖으로 분리 */}
                     {isLoggedInUser && !isLoadingSessions && userSessions.length > 0 && (
-                        <div style={{ padding: '12px 14px 0 14px', background: '#f8fafc' }}>
-                            <div className="so-history-search" style={{ marginBottom: 0, position: 'relative', zIndex: 1 }}>
+                        <div style={{ padding: '14px 14px 4px 14px', background: '#f8fafc', display: 'flex', alignItems: 'stretch', gap: '8px' }}>
+                            <button
+                                onClick={onToggleHistory}
+                                className="so-header-btn"
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: '34px',
+                                    background: '#ffffff',
+                                    border: '1px solid #cbd5e1',
+                                    borderRadius: '10px',
+                                    color: '#475569',
+                                    flexShrink: 0,
+                                }}
+                                title="대화로 돌아가기"
+                            >
+                                <ArrowLeft size={18} strokeWidth={1.5} />
+                            </button>
+                            <div className="so-history-search" style={{ margin: 0, position: 'relative', zIndex: 1, flex: 1 }}>
                                 <Search size={14} color="#94a3b8" />
                                 <input
                                     type="text"
@@ -381,10 +475,11 @@ export const ChatPanel = ({
                                     검색
                                 </button>
                             </div>
+
                         </div>
                     )}
 
-                    <div className="so-history-list">
+                    <div className="so-history-list" onScroll={handleScroll}>
                         {!isLoggedInUser ? (
                             <div className="so-history-empty">
                                 <div className="so-history-empty-icon">
@@ -439,7 +534,7 @@ export const ChatPanel = ({
                                 <div className="so-history-empty-title" style={{ fontSize: '13.5px' }}>검색 결과가 없습니다</div>
                             </div>
                         ) : (
-                            filteredSessions.map((sess) => {
+                            filteredSessions.slice(0, visibleCount).map((sess) => {
                                 const isCurrent = sess.sessionId === currentSessionId;
                                 return (
                                     <div
@@ -452,12 +547,15 @@ export const ChatPanel = ({
                                                 <Clock size={11} />
                                                 <span>{formatSessionTime(sess.lastMessageTime || sess.startTime)}</span>
                                             </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                                                 {isCurrent && <span className="so-history-badge-active">대화 중</span>}
                                                 <span className="so-history-badge-count">{sess.messageCount}개</span>
-                                                <button 
+                                                <button
                                                     className="so-history-delete-btn"
-                                                    onClick={(e) => onDeleteSession && onDeleteSession(sess.sessionId, e)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setInternalPopup({ isOpen: true, type: 'deleteOne', targetId: sess.sessionId });
+                                                    }}
                                                     title="대화 삭제"
                                                 >
                                                     <Trash2 size={13} strokeWidth={2} />
@@ -466,13 +564,64 @@ export const ChatPanel = ({
                                         </div>
                                         <div className="so-history-item-title" title={sess.title}>
                                             <MessageSquare size={13} style={{ flexShrink: 0, opacity: 0.6 }} />
-                                            <span>{sess.title || '대화 세션'}</span>
+                                            <span style={{
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                                flex: 1
+                                            }}>
+                                                {sess.title || '대화 세션'}
+                                            </span>
                                         </div>
                                     </div>
                                 );
                             })
                         )}
                     </div>
+
+                    {/* 하단 전체 삭제 버튼 영역 (Footer) */}
+                    {isLoggedInUser && !isLoadingSessions && userSessions.length > 0 && (
+                        <div style={{
+                            padding: '12px 14px',
+                            background: '#ffffff',
+                            borderTop: '1px solid #e2e8f0',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            boxShadow: '0 -2px 10px rgba(0,0,0,0.02)'
+                        }}>
+                            <button
+                                onClick={() => setInternalPopup({ isOpen: true, type: 'deleteAll', targetId: null })}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: '100%',
+                                    gap: '6px',
+                                    background: '#fef2f2',
+                                    color: '#ef4444',
+                                    border: '1px solid #fecaca',
+                                    borderRadius: '8px',
+                                    padding: '10px 0',
+                                    fontSize: '13px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = '#fee2e2';
+                                    e.currentTarget.style.borderColor = '#f87171';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = '#fef2f2';
+                                    e.currentTarget.style.borderColor = '#fecaca';
+                                }}
+                            >
+                                <Trash2 size={15} />
+                                모든 대화 기록 삭제
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 
