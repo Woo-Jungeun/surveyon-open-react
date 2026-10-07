@@ -159,6 +159,28 @@ export const SurveyonAssistant = ({
     }
   }, [propApiBase]);
 
+  const handleDeleteSession = useCallback(async (sessionId, e) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    const confirmed = window.confirm('정말 이 대화 기록을 삭제하시겠습니까?');
+    if (!confirmed) return;
+
+    try {
+      await chatApi.deleteSessions([sessionId], propApiBase);
+      // 로컬 상태에서 즉각 제거 (Optimistic Update)
+      setUserSessions(prev => prev.filter(s => s.sessionId !== sessionId));
+      // 만약 현재 띄워져 있는 세션을 삭제했다면 새 대화로 전환
+      if (sessionId === resumeSession) {
+        setResumeSession(null);
+        setMessages([welcomeMessage]);
+        sessionStorage.removeItem('__surveyon_assistant_session_id__');
+      }
+    } catch (err) {
+      alert('대화 삭제 중 오류가 발생했습니다.');
+    }
+  }, [propApiBase, resumeSession]);
+
   const handleToggleHistory = () => {
     const next = !isHistoryOpen;
     setIsHistoryOpen(next);
@@ -550,6 +572,7 @@ export const SurveyonAssistant = ({
         onToggleHistory={handleToggleHistory}
         onSelectSession={handleSelectSession}
         isLoggedInUser={isLoggedInUser}
+        onDeleteSession={handleDeleteSession}
       />
 
       {/* ⚠️ 오류 제보 모달 */}

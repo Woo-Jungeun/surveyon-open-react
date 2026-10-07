@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { X, History, Plus, MessageSquare, Clock, ArrowLeft, Lock, Search } from 'lucide-react';
+import { X, History, Plus, MessageSquare, Clock, ArrowLeft, Lock, Search, Trash2 } from 'lucide-react';
 import { ChatMessages } from './ChatMessages';
 import { ChatInput } from './ChatInput';
 
@@ -50,6 +50,7 @@ export const ChatPanel = ({
     onToggleHistory,
     onSelectSession,
     isLoggedInUser = false,
+    onDeleteSession,
 }) => {
     const panelRef = useRef(null);
     const [isMoving, setIsMoving] = useState(false);
@@ -451,9 +452,16 @@ export const ChatPanel = ({
                                                 <Clock size={11} />
                                                 <span>{formatSessionTime(sess.lastMessageTime || sess.startTime)}</span>
                                             </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                 {isCurrent && <span className="so-history-badge-active">대화 중</span>}
                                                 <span className="so-history-badge-count">{sess.messageCount}개</span>
+                                                <button 
+                                                    className="so-history-delete-btn"
+                                                    onClick={(e) => onDeleteSession && onDeleteSession(sess.sessionId, e)}
+                                                    title="대화 삭제"
+                                                >
+                                                    <Trash2 size={13} strokeWidth={2} />
+                                                </button>
                                             </div>
                                         </div>
                                         <div className="so-history-item-title" title={sess.title}>

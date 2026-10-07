@@ -17,6 +17,7 @@
 export const CHAT_ENDPOINTS = Object.freeze({
   MESSAGES_LIST: '/chat/messages/list',
   SESSIONS_LIST: '/chat/sessions/list',
+  SESSIONS_DELETE: '/chat/sessions/delete',
   ASK: '/chat/ask',
   REPORT: '/chat/report',
 });
@@ -137,6 +138,23 @@ export const chatApi = {
     } catch (err) {
       console.warn('[chatApi] 세션 목록 조회 실패:', err.message);
       return [];
+    }
+  },
+
+  /**
+   * 사용자 대화 내역 삭제 (POST /chat/sessions/delete)
+   * @param {string[]} sessionIds
+   * @param {string} [customBase]
+   * @returns {Promise<Object>}
+   */
+  deleteSessions: async (sessionIds, customBase) => {
+    if (!sessionIds || sessionIds.length === 0) return { deleted: false };
+    try {
+      const result = await postJson(CHAT_ENDPOINTS.SESSIONS_DELETE, { sessionIds }, customBase);
+      return result || { deleted: true };
+    } catch (err) {
+      console.error('[chatApi] 대화 삭제 실패:', err.message);
+      throw err;
     }
   },
 

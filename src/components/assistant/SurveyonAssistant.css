@@ -961,6 +961,29 @@
     border: 1px solid #e2e8f0;
 }
 
+.so-history-delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: #cbd5e1;
+    border: none;
+    padding: 2px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0;
+}
+
+.so-history-item:hover .so-history-delete-btn {
+    opacity: 1;
+}
+
+.so-history-delete-btn:hover {
+    background: #ffe4e6;
+    color: #e11d48;
+}
+
 .so-history-empty {
     margin: 32px auto;
     background: #ffffff;
