@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Download, X, FileText, ChevronDown, ChevronUp, Check, RotateCcw, Monitor } from 'lucide-react';
+import { Download, X, FileText, ChevronDown, ChevronUp, Check, RotateCcw, Monitor, AlertCircle } from 'lucide-react';
 import { MapManagementPageApi } from './MapManagementPageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
 import moment from 'moment';
@@ -33,6 +33,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
     const [estimateInfo, setEstimateInfo] = useState({ totalCount: 0, useTool: false, loaded: false });
     const [downloading, setDownloading] = useState(false);
     const [downloadingSav, setDownloadingSav] = useState(false);
+    const [stateErrorMsg, setStateErrorMsg] = useState(null);
 
     // PC 도구 구동 확인 로딩 & 10초 카운트다운 상태
     const [checkingTool, setCheckingTool] = useState(false);
@@ -62,6 +63,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
             setContactStates([]);
             setSelectedStates([]);
             setExcludedCount(0);
+            setStateErrorMsg(null);
             setEstimateInfo({ totalCount: 0, useTool: false, loaded: false });
             setCheckingTool(false);
             setDownloading(false);
@@ -90,10 +92,12 @@ const DownloadModal = ({ isOpen, onClose }) => {
                         const defaults = res.resultjson?.defaultCodes || [4];
                         setSelectedStates(defaults);
                         setExcludedCount(res.resultjson?.excludedCount || 0);
+                        setStateErrorMsg(null);
                     } else if (String(res?.success) === '909') {
                         setContactStates([]);
                         setSelectedStates([]);
                         setExcludedCount(0);
+                        setStateErrorMsg(res.resultjson?.errorcontent || res.message || '데이터를 찾을 수 없습니다.');
                     }
                 }).catch(console.error);
             }
@@ -1108,6 +1112,28 @@ const DownloadModal = ({ isOpen, onClose }) => {
                         </div>
                     )}
 
+                    {/* 에러 메시지 텍스트 표출 */}
+                    {stateErrorMsg && (
+                        <div style={{
+                            color: '#b91c1c',
+                            backgroundColor: '#fef2f2',
+                            border: '1px solid #fecaca',
+                            borderRadius: '8px',
+                            padding: '12px 16px',
+                            fontSize: '13.5px',
+                            fontWeight: 600,
+                            marginBottom: '16px',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '8px'
+                        }}>
+                            <AlertCircle size={18} color="#ef4444" style={{ flexShrink: 0, marginTop: '1px' }} />
+                            <span style={{ wordBreak: 'keep-all', lineHeight: '1.5' }}>
+                                {stateErrorMsg}
+                            </span>
+                        </div>
+                    )}
+
                     {/* 3. Primary Top Highlight Card: SPSS 데이터 (.sav) */}
                     <div
                         className="dm-tactile-card"
@@ -1116,16 +1142,16 @@ const DownloadModal = ({ isOpen, onClose }) => {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            backgroundColor: '#f0faf5',
-                            border: '1.5px solid #16a34a',
+                            backgroundColor: (stateErrorMsg || selectedStates.length === 0) ? '#f8fafc' : '#f0faf5',
+                            border: `1.5px solid ${(stateErrorMsg || selectedStates.length === 0) ? '#cbd5e1' : '#16a34a'}`,
                             borderRadius: '12px',
                             padding: '14px 16px',
-                            cursor: (downloadingSav || downloading || selectedStates.length === 0) ? 'wait' : 'pointer',
+                            cursor: (downloadingSav || downloading) ? 'wait' : (selectedStates.length === 0) ? 'default' : 'pointer',
                             marginBottom: '20px',
-                            boxShadow: '0 2px 8px rgba(22, 163, 74, 0.08)'
+                            boxShadow: (stateErrorMsg || selectedStates.length === 0) ? 'none' : '0 2px 8px rgba(22, 163, 74, 0.08)'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e6f7ed'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f0faf5'}
+                        onMouseEnter={(e) => { if (!stateErrorMsg && selectedStates.length > 0) e.currentTarget.style.backgroundColor = '#e6f7ed'; }}
+                        onMouseLeave={(e) => { if (!stateErrorMsg && selectedStates.length > 0) e.currentTarget.style.backgroundColor = '#f0faf5'; }}
                     >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <div style={{
@@ -1133,19 +1159,19 @@ const DownloadModal = ({ isOpen, onClose }) => {
                                 height: '38px',
                                 borderRadius: '10px',
                                 backgroundColor: '#ffffff',
-                                border: '1px solid #bbf7d0',
+                                border: `1px solid ${(stateErrorMsg || selectedStates.length === 0) ? '#e2e8f0' : '#bbf7d0'}`,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                color: '#16a34a'
+                                color: (stateErrorMsg || selectedStates.length === 0) ? '#94a3b8' : '#16a34a'
                             }}>
                                 <FileText size={20} />
                             </div>
                             <div>
-                                <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>
+                                <div style={{ fontSize: '14px', fontWeight: 700, color: (stateErrorMsg || selectedStates.length === 0) ? '#64748b' : '#0f172a' }}>
                                     SPSS 데이터 (.sav)
                                 </div>
-                                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                                <div style={{ fontSize: '12px', color: (stateErrorMsg || selectedStates.length === 0) ? '#94a3b8' : '#64748b', marginTop: '2px' }}>
                                     통계 분석용 표준 파일
                                 </div>
                                 {estimateInfo.loaded && selectedStates.length > 0 && (
@@ -1175,7 +1201,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                                 fontSize: '12px',
                                 fontWeight: 700,
                                 boxShadow: (downloadingSav || downloading || selectedStates.length === 0) ? 'none' : '0 2px 6px rgba(22, 163, 74, 0.25)',
-                                cursor: (downloadingSav || downloading || selectedStates.length === 0) ? 'wait' : 'pointer'
+                                cursor: (downloadingSav || downloading) ? 'wait' : (selectedStates.length === 0) ? 'default' : 'pointer'
                             }}
                         >
                             <span>{downloadingSav ? '다운로드 중...' : (estimateInfo.useTool ? '도구로 받기' : '바로 받기')}</span>
@@ -1183,7 +1209,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                         </button>
                     </div>
 
-                    {/* 4. Accordion Toggle Header: 다른 형식으로 받기 + Reset Link + Green Badge Count */}
+                    {/* 4. Accordion Toggle Header: 다른 형식으로 받기 */}
                     <div
                         style={{
                             display: 'flex',
@@ -1194,11 +1220,22 @@ const DownloadModal = ({ isOpen, onClose }) => {
                         }}
                     >
                         <div
-                            onClick={() => setIsAccordionOpen(!isAccordionOpen)}
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: '#475569', cursor: 'pointer', flex: 1 }}
+                            onClick={() => {
+                                if (!stateErrorMsg) setIsAccordionOpen(!isAccordionOpen);
+                            }}
+                            style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '6px', 
+                                fontSize: '13px', 
+                                fontWeight: 600, 
+                                color: stateErrorMsg ? '#94a3b8' : '#475569', 
+                                cursor: stateErrorMsg ? 'default' : 'pointer', 
+                                flex: 1 
+                            }}
                         >
                             {isAccordionOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                            <span style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b' }}>
+                            <span style={{ fontSize: '14px', fontWeight: 700, color: stateErrorMsg ? '#cbd5e1' : '#1e293b' }}>
                                 다른 형식으로 받기 (다중 선택 가능)
                             </span>
                             {selectedFormats.length > 0 && (
