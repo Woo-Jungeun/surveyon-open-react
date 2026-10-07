@@ -349,6 +349,7 @@ export const SurveyonAssistant = ({
   // 4. 가이드 엔진 동적 로드 및 실행
   const handleRunGuide = useCallback(
     (featureId, step = 1, featureName) => {
+      setIsOpen(false); // 가이드 시작 시 화면을 가리지 않도록 챗봇을 즉시 숨깁니다.
       const startIndex = step > 0 ? step - 1 : 0;
       const fName = featureName || '';
 
@@ -412,6 +413,7 @@ export const SurveyonAssistant = ({
         resumeSession.startIndex + 1,
         resumeSession.featureName
       );
+      setIsOpen(false); // 가이드 시작 시 챗봇 화면 잠시 숨김
     }
   };
 
