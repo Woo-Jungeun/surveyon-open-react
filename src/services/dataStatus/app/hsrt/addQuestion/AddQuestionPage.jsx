@@ -1208,12 +1208,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 const delResult = await deleteBaseVariable.mutateAsync({ pageid: pageId, user, variables: deletedIds });
                 if (String(delResult?.success) !== '777') {
                     deleteSuccess = false;
-                    const errorMsg = delResult?.errortext || delResult?.errorcontent || delResult?.message;
-                    if (errorMsg?.includes("사용 중이라 삭제할 수 없습니다")) {
-                        modal.showErrorAlert("에러", "일부 문항이 다른 설정에서 사용 중이라 삭제할 수 없습니다.");
-                    } else {
-                        modal.showErrorAlert("에러", errorMsg || "삭제 처리 중 오류가 발생했습니다.");
-                    }
+                    modal.showErrorAlert("에러", delResult?.message || "삭제 처리 중 오류가 발생했습니다.");
                     loadingSpinner.hide();
                     return false;
                 }
