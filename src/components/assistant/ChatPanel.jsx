@@ -318,11 +318,11 @@ export const ChatPanel = ({
                 className="so-chat-header"
                 title="드래그하여 이동 / 더블클릭 시 기본 위치 복귀"
             >
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '15px', color: '#1e293b', fontWeight: '700', margin: 0 }}>
-                    설문온 가이드 <span style={{ color: '#4F46E5', marginLeft: '1px' }}>AI</span>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '15px', color: '#1e293b', fontWeight: '700', margin: 0, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                    설문온 가이드 <span style={{ color: '#8B5CF6', marginLeft: '1px' }}>AI</span>
                 </h3>
 
-                <div className="so-header-actions" onMouseDown={e => e.stopPropagation()}>
+                <div className="so-header-actions" onMouseDown={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                     {isLoggedInUser && !isHistoryOpen && (
                         <button
                             onClick={onToggleHistory}
@@ -339,6 +339,8 @@ export const ChatPanel = ({
                                 borderRadius: '6px',
                                 border: '1px solid #e2e8f0',
                                 fontWeight: 600,
+                                whiteSpace: 'nowrap',
+                                flexShrink: 0
                             }}
                         >
                             <History size={12} />
@@ -361,6 +363,8 @@ export const ChatPanel = ({
                                 borderRadius: '6px',
                                 border: '1px solid #e2e8f0',
                                 fontWeight: 600,
+                                whiteSpace: 'nowrap',
+                                flexShrink: 0
                             }}
                         >
                             <span style={{ fontSize: '12px', lineHeight: 1 }}>+</span>
