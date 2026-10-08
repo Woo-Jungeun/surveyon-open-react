@@ -647,8 +647,7 @@ let stubDragHasMoved = false;             // 단순 0.1초 클릭이 아니라, 
 const stubDragSelectedIds = new Set();    // 현재 하늘색으로 강조(하이라이트)된 모든 행 ID 보관
 let stubDragBaseSelectedIds = new Set();  // Ctrl 키를 누르고 추가 다중 선택 시, 기존에 이미 선택된 영역을 날리지 않고 보존하는 징검다리 셋
 let stubDragLastClickedId = null;         // Shift+클릭 시 범위 선택의 기준점이 되는 마지막 클릭 행 ID
-
-const TARGET_DRAG_FIELDS = ['x_info', 'sort_mode', 'group_preset_name', 'stat_summary', 'scale_preset_name', 'rank_preset_name'];
+const TARGET_DRAG_FIELDS = ['x_info', 'sort_mode', 'is_hidden', 'group_preset_name', 'stat_summary', 'scale_preset_name', 'rank_preset_name'];
 
 // 마우스를 뗐을 때 (드래그 종료) 처리하는 전역 이벤트
 const handleGlobalPointerUpStub = (e) => {
@@ -930,8 +929,8 @@ const handleStubPointerEnter = (e, rowId, field) => {
     }
 };
 
-const getStubDragClasses = (rowId) => {
-    return stubDragSelectedIds.has(String(rowId)) ? 'stub-cell-selected' : '';
+const getStubDragClasses = (rowId, field) => {
+    return (stubDragSelectedIds.has(String(rowId)) && stubDragLastEnteredField === field) ? 'stub-cell-selected' : '';
 };
 
 const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
@@ -1023,15 +1022,15 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
     return (
         <td
             data-field="stat_summary"
-            data-row-id={dataItem.source_var_id}
-            onPointerDownCapture={e => handleStubPointerDownCapture(e, dataItem.source_var_id, 'stat_summary')}
-            onPointerEnter={e => handleStubPointerEnter(e, dataItem.source_var_id, 'stat_summary')}
+            data-row-id={dataItem._row_id}
+            onPointerDownCapture={e => handleStubPointerDownCapture(e, dataItem._row_id, 'stat_summary')}
+            onPointerEnter={e => handleStubPointerEnter(e, dataItem._row_id, 'stat_summary')}
             onMouseDownCapture={preventCtrlEvent}
             onClickCapture={preventCtrlEvent}
             onMouseDown={e => e.stopPropagation()}
             draggable={true}
             onDragStart={e => { e.stopPropagation(); e.preventDefault(); }}
-            className={getStubDragClasses(dataItem.source_var_id)}
+            className={getStubDragClasses(dataItem._row_id, 'stat_summary')}
             style={{ padding: '1px 4px', verticalAlign: 'middle', userSelect: 'none' }}
         >
             <div
@@ -1212,15 +1211,15 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
     return (
         <td
             data-field={field}
-            data-row-id={dataItem.source_var_id}
-            onPointerDownCapture={isSelectable ? e => handleStubPointerDownCapture(e, dataItem.source_var_id, field) : undefined}
-            onPointerEnter={isSelectable ? e => handleStubPointerEnter(e, dataItem.source_var_id, field) : undefined}
+            data-row-id={dataItem._row_id}
+            onPointerDownCapture={isSelectable ? e => handleStubPointerDownCapture(e, dataItem._row_id, field) : undefined}
+            onPointerEnter={isSelectable ? e => handleStubPointerEnter(e, dataItem._row_id, field) : undefined}
             onMouseDownCapture={isSelectable ? preventCtrlEvent : undefined}
             onClickCapture={isSelectable ? preventCtrlEvent : undefined}
             onMouseDown={isSelectable ? e => { if (e.ctrlKey || e.metaKey || e.shiftKey) e.stopPropagation(); } : undefined}
             draggable={isSelectable ? true : undefined}
             onDragStart={isSelectable ? e => { e.stopPropagation(); e.preventDefault(); } : undefined}
-            className={isSelectable ? getStubDragClasses(dataItem.source_var_id) : ''}
+            className={isSelectable ? getStubDragClasses(dataItem._row_id, field) : ''}
             style={{ padding: '1px 4px', verticalAlign: 'middle', userSelect: 'none' }}
         >
             <div
@@ -1942,9 +1941,9 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         const targetId = item._row_id;
         const isPresetModified = PRESET_FIELDS.includes(field);
 
-        if (stubDragSelectedIds.size > 1 && stubDragSelectedIds.has(String(item.source_var_id))) {
+        if (stubDragSelectedIds.size > 1 && stubDragSelectedIds.has(String(item._row_id))) {
             setStubs(prev => prev.map(s => {
-                if (stubDragSelectedIds.has(String(s.source_var_id))) {
+                if (stubDragSelectedIds.has(String(s._row_id))) {
                     if (field === 'group_preset_name' && !canUseGroupPreset(s.var_type)) return s;
                     if (field === 'stat_summary' && !canUseStatPreset(s.var_type)) return s;
                     if (field === 'scale_preset_name' && !canUseScalePreset(s.var_type)) return s;
@@ -1988,13 +1987,6 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 return s;
             }));
         }
-
-        // 작업 후 선택 초기화
-        stubDragSelectedIds.clear();
-        stubDragBaseSelectedIds.clear();
-        stubDragStartId = null;
-        document.querySelectorAll('.stub-cell-selected').forEach(el => el.classList.remove('stub-cell-selected'));
-
         if (onUnsavedChange) onUnsavedChange(true);
     }, [onUnsavedChange]);
     const handleRowAdd = (insertAfterIdx) => {
@@ -2559,18 +2551,41 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                 onCopy={handleRowCopy}
                             >
                                 <Column title="표출" width="50px" headerClassName="k-text-center"
+                                    headerCell={MultiSelectHeaderCell}
                                     cell={(p) => {
                                         const isHidden = p.dataItem.is_hidden;
+                                        
+                                        const handleToggleVisibility = (e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleCellUpdate(p.dataItem, 'is_hidden', !isHidden);
+                                        };
+
                                         return (
-                                            <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRowToggleHide(p.dataItem); }}
-                                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '24px', padding: 0, border: 'none', background: 'transparent', cursor: 'pointer', color: isHidden ? '#94a3b8' : '#3b82f6' }}
-                                                    title={isHidden ? "숨김 해제" : "숨김 처리"}
-                                                >
+                                            <td
+                                                data-field="is_hidden"
+                                                data-row-id={p.dataItem._row_id}
+                                                onPointerDownCapture={e => handleStubPointerDownCapture(e, p.dataItem._row_id, 'is_hidden')}
+                                                onPointerEnter={e => handleStubPointerEnter(e, p.dataItem._row_id, 'is_hidden')}
+                                                onMouseDownCapture={preventCtrlEvent}
+                                                onClickCapture={preventCtrlEvent}
+                                                onMouseDown={e => e.stopPropagation()}
+                                                draggable={true}
+                                                onDragStart={e => { e.stopPropagation(); e.preventDefault(); }}
+                                                className={getStubDragClasses(p.dataItem._row_id, 'is_hidden')}
+                                                onClick={handleToggleVisibility}
+                                                style={{
+                                                    textAlign: 'center',
+                                                    verticalAlign: 'middle',
+                                                    cursor: 'pointer',
+                                                    userSelect: 'none',
+                                                    padding: '1px 4px'
+                                                }}
+                                                title={isHidden ? "숨김 해제" : "숨김 처리"}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '24px', color: isHidden ? '#94a3b8' : '#3b82f6' }}>
                                                     {isHidden ? <EyeOff size={16} /> : <Eye size={16} />}
-                                                </button>
+                                                </div>
                                             </td>
                                         );
                                     }}
@@ -2623,15 +2638,15 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                         return (
                                             <td
                                                 data-field="sort_mode"
-                                                data-row-id={p.dataItem.source_var_id}
-                                                onPointerDownCapture={e => handleStubPointerDownCapture(e, p.dataItem.source_var_id, 'sort_mode')}
-                                                onPointerEnter={e => handleStubPointerEnter(e, p.dataItem.source_var_id, 'sort_mode')}
+                                                data-row-id={p.dataItem._row_id}
+                                                onPointerDownCapture={e => handleStubPointerDownCapture(e, p.dataItem._row_id, 'sort_mode')}
+                                                onPointerEnter={e => handleStubPointerEnter(e, p.dataItem._row_id, 'sort_mode')}
                                                 onMouseDownCapture={preventCtrlEvent}
                                                 onClickCapture={preventCtrlEvent}
                                                 onMouseDown={e => e.stopPropagation()}
                                                 draggable={true}
                                                 onDragStart={e => { e.stopPropagation(); e.preventDefault(); }}
-                                                className={getStubDragClasses(p.dataItem.source_var_id)}
+                                                className={getStubDragClasses(p.dataItem._row_id, 'sort_mode')}
                                                 onClick={handleToggleSort}
                                                 style={{
                                                     textAlign: 'center',
