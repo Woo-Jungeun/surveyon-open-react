@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
-import { ChevronDown, Check, Search, X, Info, RotateCcw, ArrowDown, ArrowUp } from 'lucide-react';
+import { ChevronDown, Check, Search, X, Info, RotateCcw, ArrowDown, ArrowUp, Eye, EyeOff } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { Popup } from '@progress/kendo-react-popup';
 import { DropDownList, MultiSelect } from '@progress/kendo-react-dropdowns';
@@ -1704,6 +1704,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
             const orderIds = (resultData.order_ids && resultData.order_ids.length > 0)
                 ? resultData.order_ids
                 : (resultData.default_order_ids || []);
+            const hiddenIds = resultData.hidden_stub_base_var_ids || [];
 
             const variablesMap = resultData.variables || {};
 
@@ -1800,6 +1801,12 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     ...item,
                     _row_id: `row_${Date.now()}_${Math.random()}`,
                     _is_custom: item._is_custom || false,
+                    is_hidden: hiddenIds.includes(item.source_var_id || (() => {
+                        const vObj = variablesMap[item.recoded_var_id] || {};
+                        let sid = item.source_var_id || item.recoded_var_id;
+                        if (isRankParent && String(sid).endsWith('_stub')) return String(sid).replace(/_stub$/, '');
+                        return sid;
+                    })()),
                     source_var_id: (() => {
                         const vObj = variablesMap[item.recoded_var_id] || {};
                         if (item._is_custom || vObj.stub_kind === 'custom' || parentType === 'custom' || String(item.recoded_var_id).startsWith('custom_stub_')) return null;
@@ -2083,17 +2090,17 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         if (onUnsavedChange) onUnsavedChange(true);
     };
 
-    const handleRowDelete = (idx) => {
-        if (idx === undefined || idx === null) return;
+    const handleRowToggleHide = (targetItem) => {
+        if (!targetItem) return;
 
         const scrollPos = gridRef.current?.getScrollPosition?.();
         if (scrollPos) scrollPosToRestore.current = scrollPos;
 
-        setStubs(prev => {
-            const targetItem = filteredStubs[idx];
-            if (!targetItem) return prev;
-            return prev.filter(item => item._row_id !== targetItem._row_id);
-        });
+        setStubs(prev => prev.map(item => 
+            item._row_id === targetItem._row_id 
+                ? { ...item, is_hidden: !item.is_hidden }
+                : item
+        ));
 
         if (onUnsavedChange) onUnsavedChange(true);
     };
@@ -2307,17 +2314,14 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         }
 
         // 3. 삭제될 ID 추출 (원본에 있었지만 현재는 없는 recoded_var_id)
-        const currentRecodedIds = [];
-        Object.keys(variablesMap).forEach(k => currentRecodedIds.push(k));
-        summaryFolders.forEach(s => currentRecodedIds.push(s.stub_id));
-        const deletedIds = originalRecodedIds.filter(id => !currentRecodedIds.includes(id));
+        // -> 이젠 삭제 개념이 없고 숨김 처리로 관리하므로 delete_ids는 빈 배열로 전송
+        const deletedIds = [];
 
-        // 삭제된 스터브들의 source_var_id를 hidden_stub_base_var_ids로 수집
+        // 숨김 처리된 스터브들의 source_var_id를 hidden_stub_base_var_ids로 수집
         const hiddenStubBaseVarIds = [];
-        deletedIds.forEach(delId => {
-            const origItem = originalStubs.find(s => s.recoded_var_id === delId);
-            if (origItem && origItem.source_var_id) {
-                hiddenStubBaseVarIds.push(origItem.source_var_id);
+        stubs.forEach(s => {
+            if (s.is_hidden && s.source_var_id) {
+                hiddenStubBaseVarIds.push(s.source_var_id);
             }
         });
 
@@ -2548,19 +2552,35 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                 dataItemKey="_row_id"
                                 addable={true}
                                 copyable={true}
-                                deletable={true}
+                                deletable={false}
                                 reorderable={!searchTerm}
                                 deletePos="start"
                                 onAdd={handleRowAdd}
                                 onCopy={handleRowCopy}
-                                onDelete={handleRowDelete}
                             >
+                                <Column title="표출" width="50px" headerClassName="k-text-center"
+                                    cell={(p) => {
+                                        const isHidden = p.dataItem.is_hidden;
+                                        return (
+                                            <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRowToggleHide(p.dataItem); }}
+                                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '24px', padding: 0, border: 'none', background: 'transparent', cursor: 'pointer', color: isHidden ? '#94a3b8' : '#3b82f6' }}
+                                                    title={isHidden ? "숨김 해제" : "숨김 처리"}
+                                                >
+                                                    {isHidden ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                </button>
+                                            </td>
+                                        );
+                                    }}
+                                />
 
                                 <Column field="recoded_var_id" title="변수" width="115px" headerClassName="k-text-center"
-                                    cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" onUpdate={handleCellUpdate} placeholder="" />}
+                                    cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" onUpdate={handleCellUpdate} placeholder="" style={{ opacity: p.dataItem.is_hidden ? 0.5 : 1 }} />}
                                 />
                                 <Column field="var_label" title="라벨" width="210px" headerClassName="k-text-center"
-                                    cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} />}
+                                    cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} style={{ opacity: p.dataItem.is_hidden ? 0.5 : 1 }} />}
                                 />
                                 <Column title="상세 설정" width="60px" headerClassName="k-text-center"
                                     cell={(p) => (
