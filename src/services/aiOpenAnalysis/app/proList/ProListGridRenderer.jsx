@@ -2794,7 +2794,7 @@ const ProListGridRenderer = (props) => {
                                         sort: mappedSort,
                                         filter: filter,
                                         columnVirtualization: false,
-                                        scrollable: "scrollable",
+                                        scrollable: "virtual",
                                         rowHeight: 45,
                                         pageSize: 50,
                                         skip: gridSkip,
