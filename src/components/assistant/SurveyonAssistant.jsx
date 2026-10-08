@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useSelector } from 'react-redux';
+import { useLocation } from 'react-router-dom';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { ChatPanel } from './ChatPanel';
 import { chatApi, getChatBaseUrl } from './ChatApi';
@@ -13,6 +14,22 @@ export const SurveyonAssistant = ({
 }) => {
   // 공통 모달(Alert) 컨텍스트
   const modal = useContext(modalContext);
+
+  const location = useLocation();
+
+  // 팝업 창(새 탭/새 창)용 라우트 경로 목록 (챗봇 비노출 대상)
+  const popupRoutes = [
+    '/viewer',
+    '/manual',
+    '/excel_guide',
+    // '/dp_request_preview',
+    '/crosstab-single-view'
+  ];
+
+  // 현재 경로가 팝업 라우트 중 하나라도 포함하고 있다면 챗봇을 렌더링하지 않음
+  if (popupRoutes.some(route => location.pathname.includes(route))) {
+    return null;
+  }
 
   // 1. API_BASE 자동 결정 (chatApi 표준 헬퍼 활용)
   const API_BASE = getChatBaseUrl(propApiBase);
@@ -163,7 +180,7 @@ export const SurveyonAssistant = ({
     if (e) {
       e.stopPropagation();
     }
-    
+
     try {
       await chatApi.deleteSessions([sessionId], propApiBase);
       // 로컬 상태에서 즉각 제거 (Optimistic Update)
@@ -184,7 +201,7 @@ export const SurveyonAssistant = ({
       const allSessionIds = userSessions.map(s => s.sessionId);
       if (allSessionIds.length === 0) return;
       await chatApi.deleteSessions(allSessionIds, propApiBase);
-      
+
       setUserSessions([]);
       setResumeSession(null);
       setMessages([welcomeMessage]);
@@ -261,7 +278,7 @@ export const SurveyonAssistant = ({
   // 튜토리얼 툴팁 내 <b> 태그가 raw text로 노출되는 현상 방지용 옵저버 (안전한 TextNode 치환 방식)
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    
+
     const replaceBtagsInTextNodes = (rootElement) => {
       if (!rootElement) return;
       const walker = document.createTreeWalker(rootElement, NodeFilter.SHOW_TEXT, null, false);
@@ -270,13 +287,13 @@ export const SurveyonAssistant = ({
       while ((node = walker.nextNode())) {
         // 이미 치환된 노드이거나 스크립트/스타일 안의 텍스트는 무시
         if (node.parentElement && (node.parentElement.tagName === 'SCRIPT' || node.parentElement.tagName === 'STYLE')) continue;
-        if (node.nodeValue.includes('&lt;b&gt;') || node.nodeValue.includes('&lt;/b&gt;') || 
-            node.nodeValue.includes('<b>') || node.nodeValue.includes('</b>') ||
-            node.nodeValue.includes('🎉')) {
+        if (node.nodeValue.includes('&lt;b&gt;') || node.nodeValue.includes('&lt;/b&gt;') ||
+          node.nodeValue.includes('<b>') || node.nodeValue.includes('</b>') ||
+          node.nodeValue.includes('🎉')) {
           nodesToReplace.push(node);
         }
       }
-      
+
       nodesToReplace.forEach(textNode => {
         const span = document.createElement('span');
         span.className = 'so-b-parsed';
@@ -286,7 +303,7 @@ export const SurveyonAssistant = ({
           .replace(/&lt;br&gt;/g, '<br>').replace(/&lt;\/br&gt;/g, '')
           .replace(/&lt;br\s*\/&gt;/g, '<br>')
           .replace(/&lt;strong&gt;/g, '<strong>').replace(/&lt;\/strong&gt;/g, '</strong>');
-          
+
         if (parsed.includes('🎉')) {
           const premiumCheckIcon = `<div class="premium-check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>`;
           parsed = parsed.replace(/🎉/g, premiumCheckIcon);
@@ -301,7 +318,7 @@ export const SurveyonAssistant = ({
       const tooltip = document.getElementById('tutorial-tooltip');
       if (tooltip) {
         replaceBtagsInTextNodes(tooltip);
-        
+
         // 버튼 자동 태깅 (완료/닫기 vs 우측 상단 X버튼 명확히 구분)
         const buttons = tooltip.querySelectorAll('button');
         buttons.forEach(btn => {
@@ -314,7 +331,7 @@ export const SurveyonAssistant = ({
             btn.classList.remove('so-action-btn');
           }
         });
-        
+
         // 특정 상황에서 튜토리얼 엔진이 인라인 스타일로 배경색을 강제하는 경우 방어
         tooltip.style.setProperty('background', '#4F46E5', 'important');
         tooltip.style.setProperty('background-color', '#4F46E5', 'important');
@@ -597,9 +614,9 @@ export const SurveyonAssistant = ({
           <div ref={setModalElement} className="so-modal-content" style={{ background: '#fff', padding: '28px', borderRadius: '16px', width: '92%', maxWidth: '420px', pointerEvents: 'auto', boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}>
             <h4 style={{ margin: '0 0 16px 0', fontSize: '18px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
               챗봇 답변 오류 제보
             </h4>
@@ -618,7 +635,7 @@ export const SurveyonAssistant = ({
                   onChange={(e) => setReportReasonType(e.value)}
                   style={{ width: '100%' }}
                   className="so-kendo-dropdown"
-                  popupSettings={{ 
+                  popupSettings={{
                     className: 'so-kendo-popup-high-z',
                     appendTo: modalElement
                   }}
@@ -631,8 +648,8 @@ export const SurveyonAssistant = ({
                 value={reportReasonText}
                 onChange={(e) => setReportReasonText(e.target.value)}
                 placeholder="답변의 어떤 점이 문제인지 자세히 적어주세요."
-                style={{ 
-                  width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', 
+                style={{
+                  width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1',
                   minHeight: '120px', resize: 'vertical', fontSize: '13.5px', color: '#334155', fontFamily: 'inherit',
                   outline: 'none', transition: 'border-color 0.2s', lineHeight: '1.5'
                 }}
@@ -643,7 +660,7 @@ export const SurveyonAssistant = ({
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setReportMessageId(null)}
-                style={{ 
+                style={{
                   padding: '9px 16px', borderRadius: '8px', background: '#f1f5f9', color: '#475569',
                   border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '600', transition: 'background 0.2s'
                 }}
@@ -683,7 +700,7 @@ export const SurveyonAssistant = ({
                     setIsSubmittingReport(false);
                   }
                 }}
-                style={{ 
+                style={{
                   padding: '9px 16px', borderRadius: '8px', background: '#6E62FF', color: '#fff',
                   border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '600', transition: 'background 0.2s',
                   boxShadow: '0 2px 8px rgba(110, 98, 255, 0.25)'
