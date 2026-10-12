@@ -622,6 +622,70 @@ const MultiSelectHeaderCell = (props) => {
     );
 };
 
+const SortMultiSelectHeaderCell = (props) => {
+    const [isHovered, setIsHovered] = useState(false);
+    const anchorRef = useRef(null);
+    const { handleSortAllAsc, handleSortAllDesc, title } = props;
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', width: '100%', height: '100%', padding: '2px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                <span>{title}</span>
+                <div
+                    ref={anchorRef}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                    style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
+                >
+                    <Info size={13} color={isHovered ? "#2563eb" : "#94a3b8"} style={{ transition: 'color 0.15s' }} />
+                </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSortAllAsc(); }} title="전체 오름차순" style={{ cursor: 'pointer', display: 'flex', background: '#f1f5f9', padding: '2px', borderRadius: '4px' }}>
+                    <ArrowUp size={13} color="#475569" strokeWidth={2.5} />
+                </div>
+                <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSortAllDesc(); }} title="전체 내림차순" style={{ cursor: 'pointer', display: 'flex', background: '#f1f5f9', padding: '2px', borderRadius: '4px' }}>
+                    <ArrowDown size={13} color="#475569" strokeWidth={2.5} />
+                </div>
+            </div>
+
+            {isHovered && anchorRef.current && (
+                <Popup
+                    anchor={anchorRef.current}
+                    show={true}
+                    popupClass="dp-tooltip-clean-popup"
+                    animate={false}
+                >
+                    <div style={{
+                        width: '210px',
+                        padding: '14px 16px',
+                        background: '#ffffff',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '10px',
+                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                        zIndex: 99999,
+                        pointerEvents: 'none',
+                        marginTop: '6px',
+                        textAlign: 'left',
+                        whiteSpace: 'nowrap'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
+                            <span>💡</span>
+                            <span>다중 선택 팁</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', color: '#334155', fontWeight: 500, lineHeight: 1.4 }}>
+                            <div>• <b>Shift + 클릭</b>: 연속 범위 선택</div>
+                            <div>• <b>Ctrl + 클릭</b>: 개별 추가 / 해제</div>
+                            <div>• <b>마우스 드래그</b>: 연속 범위 선택</div>
+                        </div>
+                    </div>
+                </Popup>
+            )}
+        </div>
+    );
+};
+
 // ============================================================================
 // [커스텀 셀 다중 선택(드래그) 및 일괄 변경 제어 모듈]
 // React 상태(useState) 렌더링으로 인한 표(Grid) 전체 렉(Lag) 현상을 방지하기 위해,
@@ -1533,6 +1597,46 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
     const [toast, setToast] = useState({ show: false, message: '' });
     const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
 
+    const handleSortAllAsc = () => {
+        modal.showConfirm('알림', '전체 항목을 오름차순(기본)으로 일괄 정렬하시겠습니까?', {
+            btns: [
+                { title: '취소', click: () => { } },
+                {
+                    title: '확인', click: () => {
+                        const nextStubs = filteredStubs.map(stub => ({
+                            ...stub,
+                            sort_mode: 'none'
+                        }));
+                        setStubs(prev => prev.map(p => {
+                            const found = nextStubs.find(n => n._row_id === p._row_id);
+                            return found ? found : p;
+                        }));
+                    }
+                }
+            ]
+        });
+    };
+
+    const handleSortAllDesc = () => {
+        modal.showConfirm('알림', '전체 항목을 내림차순으로 일괄 정렬하시겠습니까?', {
+            btns: [
+                { title: '취소', click: () => { } },
+                {
+                    title: '확인', click: () => {
+                        const nextStubs = filteredStubs.map(stub => ({
+                            ...stub,
+                            sort_mode: 'n_desc'
+                        }));
+                        setStubs(prev => prev.map(p => {
+                            const found = nextStubs.find(n => n._row_id === p._row_id);
+                            return found ? found : p;
+                        }));
+                    }
+                }
+            ]
+        });
+    };
+
     const handleCopyGrid = async () => {
         try {
             if (!filteredStubs || filteredStubs.length === 0) {
@@ -2096,8 +2200,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         const scrollPos = gridRef.current?.getScrollPosition?.();
         if (scrollPos) scrollPosToRestore.current = scrollPos;
 
-        setStubs(prev => prev.map(item => 
-            item._row_id === targetItem._row_id 
+        setStubs(prev => prev.map(item =>
+            item._row_id === targetItem._row_id
                 ? { ...item, is_hidden: !item.is_hidden }
                 : item
         ));
@@ -2576,7 +2680,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                     headerCell={MultiSelectHeaderCell}
                                     cell={(p) => {
                                         const isHidden = p.dataItem.is_hidden;
-                                        
+
                                         const handleToggleVisibility = (e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
@@ -2644,8 +2748,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                         </td>
                                     )}
                                 />
-                                <Column field="sort_mode" title="정렬" width="45px" headerClassName="k-text-center"
-                                    headerCell={MultiSelectHeaderCell}
+                                <Column field="sort_mode" title="정렬" width="65px" headerClassName="k-text-center"
+                                    headerCell={(props) => <SortMultiSelectHeaderCell {...props} handleSortAllAsc={handleSortAllAsc} handleSortAllDesc={handleSortAllDesc} />}
                                     cell={(p) => {
                                         const sortMode = p.dataItem.sort_mode || 'none';
                                         const isDesc = sortMode === 'n_desc';
