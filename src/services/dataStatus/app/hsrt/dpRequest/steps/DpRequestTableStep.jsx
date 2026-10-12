@@ -273,6 +273,14 @@ const ConditionHeaderCell = (props) => {
                             color: #1e293b;
                             font-size: 11.5px;
                         }
+                        .dp-row-hidden,
+                        .dp-row-hidden > td {
+                            background-color: #f1f5f9 !important;
+                            color: #94a3b8 !important;
+                        }
+                        .dp-row-hidden * {
+                            color: #94a3b8 !important;
+                        }
                     </style>
                 </head>
                 <body>
@@ -2549,6 +2557,20 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                 deletePos="start"
                                 onAdd={handleRowAdd}
                                 onCopy={handleRowCopy}
+                                rowRender={(trElement, trProps) => {
+                                    if (trProps.dataItem?.is_hidden) {
+                                        return React.cloneElement(trElement, {
+                                            ...trElement.props,
+                                            className: `${trElement.props.className || ''} dp-row-hidden`.trim(),
+                                            style: {
+                                                ...trElement.props.style,
+                                                backgroundColor: '#f1f5f9',
+                                                color: '#94a3b8'
+                                            }
+                                        }, trElement.props.children);
+                                    }
+                                    return trElement;
+                                }}
                             >
                                 <Column title="표출" width="50px" headerClassName="k-text-center"
                                     headerCell={MultiSelectHeaderCell}

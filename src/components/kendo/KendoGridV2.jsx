@@ -179,14 +179,22 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
         onDataChange(newData);
     };
 
-    // --- 내부 Row 렌더러 (드래그앤드롭) ---
+    // --- 내부 Row 렌더러 (드래그앤드롭 및 외부 rowRender 조합) ---
     const internalRowRender = (trElement, trProps) => {
-        if (!reorderable) return trElement;
+        let currentElement = trElement;
+        
+        // 1. 외부에서 rowRender를 전달한 경우 먼저 적용
+        if (rest.rowRender) {
+            currentElement = rest.rowRender(currentElement, trProps);
+        }
+
+        // 2. 드래그앤드롭 기능이 꺼져있으면 그대로 반환
+        if (!reorderable) return currentElement;
 
         const realIndex = data.indexOf(trProps.dataItem);
         const index = realIndex !== -1 ? realIndex : trProps.dataIndex;
         const extendedProps = {
-            ...trElement.props,
+            ...currentElement.props,
             draggable: true,
             onMouseDown: (e) => {
                 const target = e.target;
@@ -195,8 +203,8 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
                     (target.closest && target.closest('.dp-grid-handle'))
                 );
                 dragHandleRef.current = isHandle;
-                if (trElement.props.onMouseDown) {
-                    trElement.props.onMouseDown(e);
+                if (currentElement.props.onMouseDown) {
+                    currentElement.props.onMouseDown(e);
                 }
             },
             onDragStart: (e) => {
@@ -208,16 +216,16 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
                 draggedItemIndexRef.current = index;
                 e.dataTransfer.effectAllowed = "move";
                 e.currentTarget.classList.add("dragging");
-                if (trElement.props.onDragStart) {
-                    trElement.props.onDragStart(e);
+                if (currentElement.props.onDragStart) {
+                    currentElement.props.onDragStart(e);
                 }
             },
             onDragEnd: (e) => {
                 e.currentTarget.classList.remove("dragging");
                 draggedItemIndexRef.current = null;
                 dragHandleRef.current = false;
-                if (trElement.props.onDragEnd) {
-                    trElement.props.onDragEnd(e);
+                if (currentElement.props.onDragEnd) {
+                    currentElement.props.onDragEnd(e);
                 }
             },
             onDragOver: (e) => {
@@ -246,15 +254,15 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
                     e.currentTarget.classList.add("drag-over-bottom");
                     e.currentTarget.classList.remove("drag-over-top");
                 }
-                if (trElement.props.onDragOver) {
-                    trElement.props.onDragOver(e);
+                if (currentElement.props.onDragOver) {
+                    currentElement.props.onDragOver(e);
                 }
             },
             onDragLeave: (e) => {
                 e.currentTarget.classList.remove("drag-over-top");
                 e.currentTarget.classList.remove("drag-over-bottom");
-                if (trElement.props.onDragLeave) {
-                    trElement.props.onDragLeave(e);
+                if (currentElement.props.onDragLeave) {
+                    currentElement.props.onDragLeave(e);
                 }
             },
             onDrop: (e) => {
@@ -283,12 +291,12 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
                         handleReorder(fromIndex, targetIndex);
                     }
                 }
-                if (trElement.props.onDrop) {
-                    trElement.props.onDrop(e);
+                if (currentElement.props.onDrop) {
+                    currentElement.props.onDrop(e);
                 }
             }
         };
-        return React.cloneElement(trElement, { ...extendedProps }, trElement.props.children);
+        return React.cloneElement(currentElement, { ...extendedProps }, currentElement.props.children);
     };
 
     const handleKeyDown = (e) => {
@@ -320,10 +328,10 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
                 onItemChange={onItemChange}
                 editField={editField}
                 onRowClick={onRowClick}
-                rowRender={internalRowRender}
                 resizable={true}
                 onColumnResize={handleColumnResize}
                 {...gridProps}
+                rowRender={internalRowRender}
             >
                 <GridNoRecords>
                     <div style={{ textAlign: "center", padding: "40px 0", color: "#94a3b8", fontSize: "14px" }}>
