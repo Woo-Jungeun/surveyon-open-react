@@ -264,6 +264,7 @@ const ProListPopup = (parentProps) => {
                 linkRowClickToSelection: false,
               }}
             >
+              <Column field="qnum_variable" title="문번호" width="120px" />
               <Column field="qnum_question" title="문항" width="auto" />
               <Column field="qnum_type" title="타입" width="180px" headerCell={(props) => (
                 <div onClick={props.onClick} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', lineHeight: '1.2' }}>
@@ -290,7 +291,13 @@ const ProListPopup = (parentProps) => {
                 ) : (
                   selectedItems.map(item => (
                     <div key={item.qnum_id} style={{ display: "flex", alignItems: "center", backgroundColor: "#fff7ed", color: "#ea580c", padding: "4px 10px", borderRadius: "16px", fontSize: "13px", border: "1px solid #fdba74" }}>
-                      <span style={{ wordBreak: "break-all" }}>{item.qnum_question}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ fontWeight: "700", color: "#c2410c", letterSpacing: "-0.3px", fontSize: "12.5px" }}>
+                          {item.qnum_variable}
+                        </span>
+                        <span style={{ color: "#fdba74", fontSize: "10px" }}>|</span>
+                        <span style={{ wordBreak: "break-all", fontSize: "12.5px" }}>{item.qnum_question}</span>
+                      </div>
                       <button onClick={() => handleRemoveItem(item.qnum_id)} style={{ marginLeft: "4px", background: "none", border: "none", cursor: "pointer", color: "#ea580c", padding: 0, display: "flex", outline: "none" }}>
                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                       </button>
