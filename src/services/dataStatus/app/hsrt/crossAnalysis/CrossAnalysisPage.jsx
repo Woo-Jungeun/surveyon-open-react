@@ -1262,7 +1262,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             {/* 차트 리모콘 */}
                             {isChartOpen && (
-                                <div className="view-options">
+                                <div className="chart-type-toolbar">
                                     <div className="download-menu-container" ref={downloadMenuRef}>
                                         <button className={`view-option-btn download-btn ${showDownloadMenu ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setShowDownloadMenu(!showDownloadMenu); }} title="차트 다운로드">
                                             <Download size={16} />
