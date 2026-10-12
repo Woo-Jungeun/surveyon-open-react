@@ -233,7 +233,8 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                     rawName: row.name,
                     pieValue: Number(row[targetField] || 0),
                     color: activePalette[index % activePalette.length]
-                }));
+                }))
+                .filter(item => visibleSeries[item.rawName] !== false);
             return (
                 <ChartSeriesItem
                     type={chartType}
@@ -334,7 +335,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                 rawName: item.name,
                 funnelValue: Number(item['total'] || 0),
                 color: activePalette[index % activePalette.length]
-            }));
+            })).filter(item => visibleSeries[item.rawName] !== false);
 
             return (
                 <ChartSeriesItem
@@ -677,7 +678,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                     name: String(row.name).replace(/\n/g, ' '),
                                     color: activePalette[index % activePalette.length],
                                     field: row.name,
-                                    canToggle: false
+                                    canToggle: true
                                 });
                             });
                         } else {

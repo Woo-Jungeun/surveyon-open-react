@@ -1305,10 +1305,10 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                         onClick={() => setShowLegend(!showLegend)}
                                         style={{
                                             display: 'flex', alignItems: 'center', gap: '6px',
-                                            padding: '4px 8px', border: `1px solid ${showLegend ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
+                                            padding: '0 10px', boxSizing: 'border-box', justifyContent: 'center', border: `1px solid ${showLegend ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
                                             background: showLegend ? '#eff6ff' : '#fff',
                                             color: showLegend ? '#2563eb' : '#64748b',
-                                            fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '100%'
+                                            fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '28px', alignSelf: 'center'
                                         }}
                                         title="범례 보기/숨기기"
                                     >
@@ -1319,15 +1319,15 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                     <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px', alignSelf: 'center' }} />
 
                                     {availableChartGroups.length > 0 && (
-                                        <div style={{ position: 'relative' }} ref={filterMenuRef}>
+                                        <div style={{ position: 'relative', alignSelf: 'center' }} ref={filterMenuRef}>
                                             <button
                                                 onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
                                                 style={{
                                                     display: 'flex', alignItems: 'center', gap: '6px',
-                                                    padding: '4px 8px', border: `1px solid ${(selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
+                                                    padding: '0 10px', boxSizing: 'border-box', justifyContent: 'center', border: `1px solid ${(selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
                                                     background: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#eff6ff' : '#fff',
                                                     color: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#2563eb' : '#64748b',
-                                                    fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '100%',
+                                                    fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '28px',
                                                     maxWidth: '220px'
                                                 }}
                                             >
@@ -1425,15 +1425,15 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                     <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px', alignSelf: 'center' }} />
 
                                     {/* Chart Options Menu */}
-                                    <div style={{ position: 'relative' }} ref={chartOptionsMenuRef}>
+                                    <div style={{ position: 'relative', alignSelf: 'center' }} ref={chartOptionsMenuRef}>
                                         <button
                                             onClick={() => setIsChartOptionsOpen(!isChartOptionsOpen)}
                                             style={{
                                                 display: 'flex', alignItems: 'center', gap: '6px',
-                                                padding: '4px 8px', border: `1px solid ${isChartOptionsOpen ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
+                                                padding: '0 10px', boxSizing: 'border-box', justifyContent: 'center', border: `1px solid ${isChartOptionsOpen ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
                                                 background: isChartOptionsOpen ? '#eff6ff' : '#fff',
                                                 color: isChartOptionsOpen ? '#2563eb' : '#64748b',
-                                                fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '100%'
+                                                fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '28px'
                                             }}
                                             title="차트 옵션"
                                         >
