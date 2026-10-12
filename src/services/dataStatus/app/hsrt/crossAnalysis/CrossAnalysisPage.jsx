@@ -2570,12 +2570,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         const targetKeyword = typeof overrideKeyword === 'string' ? overrideKeyword : bannerSearchInput;
         const keyword = targetKeyword.trim();
         setBannerSearch(keyword);
-        bannerSearchRef.current = keyword;
-        if (currentPage !== 1) {
-            setCurrentPage(1);
-        }
-        fetchCrossAnalysisData('normal', null, 1, filterExpression, null, undefined, keyword);
-    }, [bannerSearchInput, currentPage, filterExpression, fetchCrossAnalysisData]);
+    }, [bannerSearchInput]);
 
     const prevSearchRef = useRef(bannerSearch);
     const prevXInfoRef = useRef(selectedXInfo);
@@ -2602,17 +2597,19 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             const timer = setTimeout(() => {
                 bannerSearchRef.current = bannerSearch;
                 if (currentPage !== 1) {
-                    setCurrentPage(1);
+                    setCurrentPage(1); // currentPage의 useEffect에서 fetch를 처리하도록 위임
+                } else {
+                    fetchCrossAnalysisData('normal', null, 1, filterExpression, null, undefined, bannerSearch);
                 }
-                fetchCrossAnalysisData('normal', null, 1, filterExpression, null, undefined, bannerSearch);
             }, 300);
             return () => clearTimeout(timer);
         } else {
             bannerSearchRef.current = bannerSearch;
             if (currentPage !== 1) {
-                setCurrentPage(1);
+                setCurrentPage(1); // currentPage의 useEffect에서 fetch를 처리하도록 위임
+            } else {
+                fetchCrossAnalysisData('normal', null, 1, filterExpression, null, undefined, bannerSearch);
             }
-            fetchCrossAnalysisData('normal', null, 1, filterExpression, null, undefined, bannerSearch);
         }
     }, [bannerSearch, selectedXInfo, filterExpression, auth?.user?.userId]);
 
