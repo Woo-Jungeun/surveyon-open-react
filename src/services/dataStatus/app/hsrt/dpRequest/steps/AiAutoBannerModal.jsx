@@ -109,10 +109,10 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                     const data = new Uint8Array(evt.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
                     
-                    // 시트 이름이 'banner', '배너', '베너'인 것을 찾음 (대소문자 무시)
+                    // 시트 이름에 'banner', '배너', '베너'가 포함된 것을 찾음 (대소문자 무시)
                     let targetSheetName = workbook.SheetNames.find(name => {
                         const lowerName = name.toLowerCase();
-                        return lowerName === 'banner' || lowerName === '배너' || lowerName === '베너';
+                        return lowerName.includes('banner') || lowerName.includes('배너') || lowerName.includes('베너');
                     });
 
                     // 해당 시트가 없으면 첫 번째 시트 사용
