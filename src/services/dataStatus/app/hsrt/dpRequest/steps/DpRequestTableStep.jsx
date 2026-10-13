@@ -2033,13 +2033,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
     }, [stubs, searchTerm]);
 
     const scrollPosToRestore = useRef(null);
-
-    React.useLayoutEffect(() => {
-        if (scrollPosToRestore.current && gridRef.current?.setScrollPosition) {
-            gridRef.current.setScrollPosition(scrollPosToRestore.current);
-            scrollPosToRestore.current = null;
-        }
-    }, [stubs]);
+    // 스크롤 유지는 KendoGridV2 내부(virtual 모드)에서 처리합니다.
 
     // onDataChange는 행추가/삭제 시에만 호출됨 (텍스트 편집은 TextEditCell의 onBlur에서 처리)
     const handleDataChange = useCallback((newData) => {

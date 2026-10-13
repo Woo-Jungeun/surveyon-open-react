@@ -116,10 +116,34 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
         setTake(event.page.take);
     };
 
+    // [원인] Kendo Grid는 total(데이터 건수)이 바뀌면 reInitVirtualization에서 VirtualScroll 인스턴스를
+    //        새로 만들며 scrollTop=0, translateY=0 으로 리셋함.
+    // [해결] fixedScroll 로 scrollTop 리셋을 막고, 새 인스턴스의 translate/skip 을 현재 스크롤 위치에 맞게 직접 동기화.
+    const kendoGridRef = React.useRef(null);
+    React.useLayoutEffect(() => {
+        if (!isVirtual) return;
+        const vs = kendoGridRef.current?.vs;
+        const el = vs?.container;
+        if (!vs || !el) return;
+
+        const rowH = Number(rest.rowHeight) || 24;
+        const top = el.scrollTop;
+        const maxSkip = Math.max(0, data.length - 1);
+        const newSkip = Math.min(maxSkip, Math.max(0, Math.floor(top / rowH)));
+        const y = newSkip * rowH;
+
+        vs.translate(y, true);
+        vs.tableTransform = `translateY(${y}px)`;
+        vs.prevScrollPos = top;
+        vs.attendedSkip = newSkip - (vs.topCacheCount || 0);
+        vs.scrollSyncing = false;
+        if (newSkip !== skip) setSkip(newSkip);
+    }, [data.length, isVirtual]);
+
     // 가상 스크롤 사용 시 묶어줄 Grid Props
     const displayData = isVirtual ? data.slice(skip, skip + take) : data;
     const gridProps = isVirtual
-        ? { skip, take, total: data.length, onPageChange: handlePageChange, ...rest }
+        ? { skip, take, total: data.length, onPageChange: handlePageChange, fixedScroll: true, ...rest }
         : rest;
 
     // --- 내부 데이터 조작 로직 ---
@@ -322,6 +346,7 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
     return (
         <div ref={gridRef} style={{ display: 'contents' }} onKeyDownCapture={handleKeyDown}>
             <Grid
+                ref={kendoGridRef}
                 data={displayData}
                 className={`dp-excel-grid-v2 ${className} ${reorderable ? 'reorderable' : ''}`}
                 style={{ height }}
