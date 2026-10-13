@@ -2026,11 +2026,18 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         return () => window.removeEventListener("pageSelected", handlePageUpdate);
     }, [auth?.user?.userId]);
 
+    // 현재 검색 상태에서 추가/복사한 행은 검색어와 무관하게 표시 (검색어 바뀌면 초기화)
+    const [searchPinnedIds, setSearchPinnedIds] = useState(() => new Set());
+    useEffect(() => { setSearchPinnedIds(new Set()); }, [searchTerm]);
+    const pinIfSearching = (rowId) => {
+        if (searchTerm) setSearchPinnedIds(prev => new Set(prev).add(rowId));
+    };
+
     const filteredStubs = useMemo(() => {
         if (!searchTerm) return stubs;
         const q = searchTerm.toLowerCase();
-        return stubs.filter(s => s._is_new || s.recoded_var_id?.toLowerCase().includes(q) || s.var_label?.toLowerCase().includes(q));
-    }, [stubs, searchTerm]);
+        return stubs.filter(s => searchPinnedIds.has(s._row_id) || s.recoded_var_id?.toLowerCase().includes(q) || s.var_label?.toLowerCase().includes(q));
+    }, [stubs, searchTerm, searchPinnedIds]);
 
     const scrollPosToRestore = useRef(null);
     // 스크롤 유지는 KendoGridV2 내부(virtual 모드)에서 처리합니다.
@@ -2118,6 +2125,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
 
         const scrollPos = gridRef.current?.getScrollPosition?.();
         if (scrollPos) scrollPosToRestore.current = scrollPos;
+        pinIfSearching(newRow._row_id);
 
         setStubs(prev => {
             const next = [...prev];
@@ -2143,6 +2151,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
 
         const scrollPos = gridRef.current?.getScrollPosition?.();
         if (scrollPos) scrollPosToRestore.current = scrollPos;
+        const copiedRowId = `row_${Date.now()}_${Math.random()}`;
+        pinIfSearching(copiedRowId);
 
         setStubs(prev => {
             const targetItem = filteredStubs[idx];
@@ -2156,7 +2166,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
             const newRecodedId = `${target.recoded_var_id}_copy_${Math.floor(Math.random() * 1000)}`;
             const newRow = {
                 ...target,
-                _row_id: `row_${Date.now()}_${Math.random()}`,
+                _row_id: copiedRowId,
                 recoded_var_id: newRecodedId,
                 var_label: `${target.var_label}_copy`,
                 _origin: 'copied',
