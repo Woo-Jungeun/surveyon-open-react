@@ -44,7 +44,7 @@ const ProListPopup = (parentProps) => {
     loadingSpinner.show();
     setIsDataLoaded(false);
     try {
-      const qnumVal = popupMode === "single" ? (popupRow?.merge_qnum || popupRow?.qnum || "") : "";
+      const qnumVal = popupMode === "single" ? (popupRow?.id || "") : "";
 
       const res = await fetchFilterQnums.mutateAsync({
         user: auth?.user?.userId || "",
@@ -156,7 +156,7 @@ const ProListPopup = (parentProps) => {
     const payload = {
       user: auth?.user?.userId || "",
       projectnum,
-      ...(popupMode === "single" && { qnum: popupRow?.merge_qnum || popupRow?.qnum || "" }),
+      ...(popupMode === "single" && { qnum: popupRow?.id || "" }),
       data: { selected: selectedVars },
       datajson: JSON.stringify(selectedObjs)
     };
