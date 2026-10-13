@@ -21,6 +21,7 @@ export const CHAT_ENDPOINTS = Object.freeze({
   ASK: '/chat/ask',
   REPORT: '/chat/report',
   REPORT_REASONS: '/chat/report/reasons',
+  WELCOME: '/chat/welcome',
 });
 
 // 1. Base URL 해석 함수 (사내 표준 기본값: /APIs/m)
@@ -212,6 +213,20 @@ export const chatApi = {
       return [...list].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     } catch (err) {
       console.warn('[chatApi] 오류 제보 사유 목록 조회 실패:', err.message);
+      throw err;
+    }
+  },
+
+  /**
+   * 챗봇 웰컴 문구/추천 질문 조회 (POST /chat/welcome)
+   * @param {string} [customBase]
+   * @returns {Promise<{title:string, subTitle:string, questions:string[]}>}
+   */
+  getWelcome: async (customBase) => {
+    try {
+      return await postJson(CHAT_ENDPOINTS.WELCOME, {}, customBase);
+    } catch (err) {
+      console.warn('[chatApi] 웰컴 문구 조회 실패:', err.message);
       throw err;
     }
   },

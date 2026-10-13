@@ -161,21 +161,40 @@ export const SurveyonAssistant = ({
     return () => { cancelled = true; };
   }, [reportMessageId, propApiBase]);
 
-  // 기본 웰컴 메시지 정의
-  const welcomeMessage = {
+  // 웰컴 메시지 (API: /chat/welcome, 실패 시 아래 기본값 사용)
+  const DEFAULT_WELCOME = {
+    title: '안녕하세요! 설문온 AI 어시스턴트입니다.',
+    subTitle: '설문 중 막히는 부분을 편하게 물어보세요!\n<span style="color:#6366F1; font-weight:bold;">화면에서 직접 버튼을 짚어가며</span> 쉽게 안내해 드릴게요.',
+    questions: ['척도 문항 요약표 어떻게 만들어?', '그리드 복사는 어디에 있어?', 'AI 조건식 자동생성 어떻게 해?'],
+  };
+  const [welcomeData, setWelcomeData] = useState(DEFAULT_WELCOME);
+
+  const buildWelcomeMessage = (data) => ({
     id: 'welcome',
     sender: 'ai',
-    text: `<div style="font-weight: 700; font-size: 14.5px; color: #1e293b; margin-bottom: 6px;">안녕하세요! 설문온 AI 어시스턴트입니다.</div><div style="font-weight: 400; color: #64748b; font-size: 13px; line-height: 1.55;">설문 중 막히는 부분을 편하게 물어보세요!<br><b style="color: #6E62FF; font-weight: 600;">화면에서 직접 버튼을 짚어가며</b> 쉽게 안내해 드릴게요.</div>`,
-    options: [
-      { featureId: 'node_1_2_4_1_1_1', title: '척도 문항 요약표 어떻게 만들어?' },
-      { featureId: 'node_1_1_1', title: '그리드 복사는 어디에 있어?' },
-      { featureId: 'node_1_1_4_1', title: 'AI 조건식 자동생성 어떻게 해?' },
-    ],
+    text: `<div style="font-weight: 700; font-size: 14.5px; color: #1e293b; margin-bottom: 6px;">${data.title || ''}</div><div style="font-weight: 400; color: #64748b; font-size: 13px; line-height: 1.55;">${String(data.subTitle || '').replace(/\n/g, '<br>')}</div>`,
+    options: (data.questions || []).map((q, i) => ({ featureId: `welcome_q_${i}`, title: q })),
     timestamp: Date.now(),
-  };
+  });
+
+  const welcomeMessage = buildWelcomeMessage(welcomeData);
 
   // 초기 메시지 목록
   const [messages, setMessages] = useState([welcomeMessage]);
+
+  // 웰컴 문구 API 조회 → 화면의 웰컴 말풍선 교체
+  useEffect(() => {
+    let cancelled = false;
+    chatApi.getWelcome(propApiBase)
+      .then((data) => {
+        if (cancelled || !data || !data.title) return;
+        setWelcomeData(data);
+        const next = buildWelcomeMessage(data);
+        setMessages((prev) => prev.map((m) => (m.id === 'welcome' ? next : m)));
+      })
+      .catch(() => { /* 기본 문구 유지 */ });
+    return () => { cancelled = true; };
+  }, [propApiBase]);
 
   // 4. 과거 대화 내역(히스토리) 관리 상태
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
