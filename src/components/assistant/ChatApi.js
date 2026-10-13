@@ -20,6 +20,7 @@ export const CHAT_ENDPOINTS = Object.freeze({
   SESSIONS_DELETE: '/chat/sessions/delete',
   ASK: '/chat/ask',
   REPORT: '/chat/report',
+  REPORT_REASONS: '/chat/report/reasons',
 });
 
 // 1. Base URL 해석 함수 (사내 표준 기본값: /APIs/m)
@@ -184,7 +185,7 @@ export const chatApi = {
    * AI 답변 오류 제보 (POST /chat/report)
    * @param {Object} payload
    * @param {number|string} payload.messageId
-   * @param {string} payload.reasonType
+   * @param {number} payload.reasonId  사유 ID (/chat/report/reasons 조회 결과)
    * @param {string} [payload.reasonText]
    * @param {string} [customBase]
    * @returns {Promise<Object>}
@@ -195,6 +196,22 @@ export const chatApi = {
       return result || { reported: true };
     } catch (err) {
       console.error('[chatApi] 오류 제보 실패:', err.message);
+      throw err;
+    }
+  },
+
+  /**
+   * 오류 제보 사유 목록 조회 (POST /chat/report/reasons)
+   * @param {string} [customBase]
+   * @returns {Promise<Array<{reasonId:number,label:string,order:number}>>} order 오름차순 정렬
+   */
+  getReportReasons: async (customBase) => {
+    try {
+      const result = await postJson(CHAT_ENDPOINTS.REPORT_REASONS, {}, customBase);
+      const list = Array.isArray(result?.reasons) ? result.reasons : [];
+      return [...list].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    } catch (err) {
+      console.warn('[chatApi] 오류 제보 사유 목록 조회 실패:', err.message);
       throw err;
     }
   },

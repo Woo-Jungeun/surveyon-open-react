@@ -130,10 +130,36 @@ export const SurveyonAssistant = ({
 
   // 신고 관련 상태
   const [reportMessageId, setReportMessageId] = useState(null);
-  const [reportReasonType, setReportReasonType] = useState('부정확한 답변 (할루시네이션)');
+  const [reportReasons, setReportReasons] = useState([]); // API 조회 사유 목록 [{reasonId, label, order}]
+  const [reportReason, setReportReason] = useState(null); // 선택된 사유 객체
+  const [isLoadingReasons, setIsLoadingReasons] = useState(false);
   const [reportReasonText, setReportReasonText] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [modalElement, setModalElement] = useState(null);
+
+  // 제보 모달이 열릴 때 사유 목록 조회 (최초 1회, 실패 시 다음 오픈 때 재시도)
+  useEffect(() => {
+    if (!reportMessageId) return;
+    if (reportReasons.length > 0) {
+      setReportReason(reportReasons[0]);
+      return;
+    }
+    let cancelled = false;
+    setIsLoadingReasons(true);
+    chatApi.getReportReasons(propApiBase)
+      .then((list) => {
+        if (cancelled) return;
+        setReportReasons(list);
+        setReportReason(list[0] || null);
+      })
+      .catch(() => {
+        if (!cancelled) setReportReasons([]);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingReasons(false);
+      });
+    return () => { cancelled = true; };
+  }, [reportMessageId, propApiBase]);
 
   // 기본 웰컴 메시지 정의
   const welcomeMessage = {
@@ -625,14 +651,14 @@ export const SurveyonAssistant = ({
               <label style={{ display: 'block', marginBottom: '6px', fontSize: '12.5px', fontWeight: '600', color: '#475569' }}>제보 유형</label>
               {modalElement && (
                 <DropDownList
-                  data={[
-                    "부정확한 답변 (할루시네이션)",
-                    "엉뚱한 화면 매칭",
-                    "불쾌하거나 부적절한 표현",
-                    "기타 사유"
-                  ]}
-                  value={reportReasonType}
-                  onChange={(e) => setReportReasonType(e.value)}
+                  data={reportReasons}
+                  textField="label"
+                  dataItemKey="reasonId"
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.value)}
+                  loading={isLoadingReasons}
+                  disabled={isLoadingReasons || reportReasons.length === 0}
+                  defaultItem={reportReasons.length === 0 ? { reasonId: null, label: isLoadingReasons ? '불러오는 중...' : '사유 목록을 불러오지 못했습니다' } : undefined}
                   style={{ width: '100%' }}
                   className="so-kendo-dropdown"
                   popupSettings={{
@@ -672,19 +698,23 @@ export const SurveyonAssistant = ({
               </button>
               <button
                 onClick={async () => {
+                  if (!reportReason?.reasonId) {
+                    modal?.showAlert?.('알림', '제보 유형을 선택해 주세요.', { themeClass: 'purple-theme' });
+                    return;
+                  }
                   setIsSubmittingReport(true);
                   try {
                     await chatApi.report(
                       {
                         messageId: reportMessageId,
-                        reasonType: reportReasonType,
+                        reasonId: reportReason.reasonId,
                         reasonText: reportReasonText,
                       },
                       propApiBase
                     );
 
                     if (modal && modal.showAlert) {
-                      modal.showAlert('알림', '오류 제보가 정상적으로 접수되었습니다.\n소중한 의견 감사합니다.');
+                      modal.showAlert('알림', '오류 제보가 정상적으로 접수되었습니다.\n소중한 의견 감사합니다.', { themeClass: 'purple-theme' });
                     } else {
                       alert('오류 제보가 정상적으로 접수되었습니다.\n소중한 의견 감사합니다.');
                     }
@@ -692,7 +722,7 @@ export const SurveyonAssistant = ({
                     setReportReasonText('');
                   } catch (e) {
                     if (modal && modal.showErrorAlert) {
-                      modal.showErrorAlert('에러', `오류 제보 접수 중 문제가 발생했습니다.\n${e.message || '네트워크 연결을 확인해 주세요.'}`);
+                      modal.showErrorAlert('에러', `오류 제보 접수 중 문제가 발생했습니다.\n${e.message || '네트워크 연결을 확인해 주세요.'}`, { themeClass: 'purple-theme' });
                     } else {
                       alert(`오류 제보 접수 중 문제가 발생했습니다: ${e.message || '네트워크 연결을 확인해 주세요.'}`);
                     }
