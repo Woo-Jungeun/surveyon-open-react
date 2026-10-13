@@ -112,6 +112,36 @@ const AnalysisSettingTab = ({
             .filter(n => !isNaN(n) && n !== 0);
     };
 
+    // 그룹 값 파싱: "1 to 100", "1,2,3,5", "1 to 100, 999" 지원 (0 허용)
+    const parseGroupValues = (str) => {
+        if (!str) return [];
+        const out = [];
+        String(str).split(',').map(s => s.trim()).filter(Boolean).forEach(tok => {
+            const m = tok.match(/^(-?\d+(?:\.\d+)?)\s*to\s*(-?\d+(?:\.\d+)?)$/i);
+            if (m) {
+                let a = Number(m[1]), b = Number(m[2]);
+                if (a > b) [a, b] = [b, a];
+                for (let i = a; i <= b; i++) out.push(i);
+            } else {
+                const n = Number(tok);
+                if (!isNaN(n)) out.push(n);
+            }
+        });
+        return Array.from(new Set(out));
+    };
+
+    // 미리보기용: "1,3, 1to100" → ["1", "3", "1 to 100"]
+    const tokenizeGroupValues = (str) => String(str || '')
+        .split(',').map(s => s.trim()).filter(Boolean)
+        .map(s => s.replace(/\s*to\s*/i, ' to '));
+
+    const STT_POSITION_OPTIONS = [
+        { value: 'after_last', label: '그룹 종료 위치', desc: '각 그룹의 마지막 보기 바로 뒤에 배치' },
+        { value: 'before_first', label: '그룹 시작 위치', desc: '각 그룹의 첫 번째 보기 바로 앞에 배치' },
+        { value: 'top_all', label: '전체 보기 상단', desc: '모든 그룹 소계를 보기 목록 맨 위에 일괄 배치' },
+        { value: 'bottom_all', label: '전체 보기 하단', desc: '모든 그룹 소계를 보기 목록 맨 아래에 일괄 배치' }
+    ];
+
     // --- 단일형 척도 조작 ---
     const handleAddScalePreset = () => {
         const newPreset = {
@@ -238,6 +268,7 @@ const AnalysisSettingTab = ({
             name: '새 그룹 설정',
             min: 1,
             max: 7,
+            stt_position: 'bottom_all',
             groups: [
                 { label: '그룹 A', values: '' }
             ]
@@ -269,14 +300,17 @@ const AnalysisSettingTab = ({
         markUnsaved();
     };
 
-    const handleAddGroupRow = (presetId) => {
+    const handleAddGroupRow = (presetId, afterIdx) => {
         setGroupData(groupData.map(item => {
             if (item.id === presetId) {
-                const groups = item.groups || [];
+                const groups = [...(item.groups || [])];
                 const nextLabelIdx = groups.length + 1;
+                const newRow = { label: `그룹 ${String.fromCharCode(64 + nextLabelIdx)}`, values: '' };
+                const insertAt = (afterIdx === undefined || afterIdx === null) ? groups.length : afterIdx + 1;
+                groups.splice(insertAt, 0, newRow);
                 return {
                     ...item,
-                    groups: [...groups, { label: `그룹 ${String.fromCharCode(64 + nextLabelIdx)}`, values: '' }]
+                    groups
                 };
             }
             return item;
@@ -317,7 +351,7 @@ const AnalysisSettingTab = ({
             if (item.id === presetId) {
                 const groups = (item.groups || []).map((g, idx) => {
                     if (idx === groupIdx) {
-                        let vals = parseValues(g.values);
+                        let vals = parseGroupValues(g.values);
                         if (vals.includes(num)) {
                             vals = vals.filter(v => v !== num);
                         } else {
@@ -557,7 +591,7 @@ const AnalysisSettingTab = ({
                     </div>
 
                     {/* 우측 추가 버튼 */}
-                    {activeTab === 'scale' && (
+                    {activeTab === 'scale' && scaleData.length > 0 && (
                         <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
                             <button
                                 onClick={handleAddScalePreset}
@@ -581,7 +615,7 @@ const AnalysisSettingTab = ({
                             </button>
                         </div>
                     )}
-                    {activeTab === 'group' && (
+                    {activeTab === 'group' && groupData.length > 0 && (
                         <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
                             <button
                                 onClick={handleAddGroupPreset}
@@ -605,7 +639,7 @@ const AnalysisSettingTab = ({
                             </button>
                         </div>
                     )}
-                    {activeTab === 'rank' && (
+                    {activeTab === 'rank' && rankData.length > 0 && (
                         <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
                             <button
                                 onClick={handleAddRankPreset}
@@ -639,7 +673,13 @@ const AnalysisSettingTab = ({
                             {scaleData.length === 0 ? (
                                 <div style={{ flex: 1, textAlign: 'center', color: '#94A3B8', fontSize: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                                     <Info size={24} />
-                                    데이터가 없습니다. 우측 상단의 추가 버튼을 눌러 척도를 추가해주세요.
+                                    <span style={{ fontSize: '13px', color: '#94A3B8' }}>등록된 척도 프리셋이 없습니다.</span>
+                                    <button
+                                        onClick={handleAddScalePreset}
+                                        style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', border: '1px solid #2563EB', borderRadius: '6px', background: '#EFF6FF', color: '#2563EB', cursor: 'pointer' }}
+                                    >
+                                        <Plus size={14} /><span style={{ fontSize: '13px', fontWeight: 600 }}>척도 프리셋 추가</span>
+                                    </button>
                                 </div>
                             ) : scaleData.map((item) => {
                                 const isExpanded = expandedScaleId === item.id;
@@ -977,21 +1017,27 @@ const AnalysisSettingTab = ({
                             {groupData.length === 0 ? (
                                 <div style={{ flex: 1, textAlign: 'center', color: '#94A3B8', fontSize: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                                     <Info size={24} />
-                                    데이터가 없습니다. 우측 상단의 추가 버튼을 눌러 그룹을 추가해주세요.
+                                    <span style={{ fontSize: '13px', color: '#94A3B8' }}>등록된 그룹 프리셋이 없습니다.</span>
+                                    <button
+                                        onClick={handleAddGroupPreset}
+                                        style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', border: '1px solid #2563EB', borderRadius: '6px', background: '#EFF6FF', color: '#2563EB', cursor: 'pointer' }}
+                                    >
+                                        <Plus size={14} /><span style={{ fontSize: '13px', fontWeight: 600 }}>그룹 프리셋 추가</span>
+                                    </button>
                                 </div>
                             ) : groupData.map((item) => {
                                 const isExpanded = expandedGroupId === item.id;
                                 const totalChips = Array.from(
                                     new Set(
                                         (item.groups || [])
-                                            .flatMap(g => parseValues(g.values))
+                                            .flatMap(g => parseGroupValues(g.values))
                                     )
                                 ).sort((a, b) => a - b);
 
                                 const overallPainting = {};
                                 (item.groups || []).forEach((g, gIdx) => {
                                     const colorObj = GROUP_COLORS[gIdx % GROUP_COLORS.length];
-                                    parseValues(g.values).forEach(val => {
+                                    parseGroupValues(g.values).forEach(val => {
                                         overallPainting[val] = colorObj;
                                     });
                                 });
@@ -1043,11 +1089,46 @@ const AnalysisSettingTab = ({
                                         {isExpanded && (
                                             <div style={{ padding: '16px 20px', background: '#FAFAFA', display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
-                                                <div style={{ display: 'flex', fontSize: '11px', fontWeight: 700, color: '#64748B', paddingBottom: '4px', borderBottom: '1px solid #F1F5F9' }}>
-                                                    <div style={{ width: '150px' }}>그룹 라벨</div>
-                                                    <div style={{ width: '180px', paddingLeft: '10px' }}>값 (쉼표 구분)</div>
-                                                    <div style={{ flex: 1, paddingLeft: '10px' }}>미리보기</div>
-                                                    <div style={{ width: '30px' }}></div>
+                                                {/* 소계(STT) 위치 설정 */}
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+                                                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#64748B' }}>
+                                                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>소계(STT) 위치</span>
+                                                        <span style={{ fontSize: '12px', fontWeight: 400, color: '#94A3B8', marginLeft: '6px' }}>교차표에서 그룹 행이 배치될 위치</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                                        {STT_POSITION_OPTIONS.map(opt => {
+                                                            const selected = (item.stt_position || 'bottom_all') === opt.value;
+                                                            return (
+                                                                <button
+                                                                    key={opt.value}
+                                                                    type="button"
+                                                                    onClick={() => handleUpdateGroupPresetField(item.id, 'stt_position', opt.value)}
+                                                                    title={opt.desc}
+                                                                    style={{
+                                                                        padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textAlign: 'left',
+                                                                        border: selected ? '1px solid #2563EB' : '1px solid #E2E8F0',
+                                                                        background: selected ? '#EFF6FF' : '#FFFFFF',
+                                                                        display: 'flex', flexDirection: 'column', gap: '2px'
+                                                                    }}
+                                                                >
+                                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: selected ? 600 : 500, color: selected ? '#1D4ED8' : '#475569' }}>
+                                                                        <span style={{ width: '12px', height: '12px', borderRadius: '50%', boxSizing: 'border-box', border: selected ? '4px solid #2563EB' : '1px solid #CBD5E1', background: '#fff', flexShrink: 0 }} />
+                                                                        {opt.label}
+                                                                    </span>
+                                                                    <span style={{ fontSize: '12px', color: '#94A3B8', paddingLeft: '18px', whiteSpace: 'nowrap' }}>{opt.desc}</span>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+
+                                                <div style={{ border: '1px solid #E2E8F0', borderRadius: '6px', overflow: 'hidden', background: '#FFFFFF' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', height: '32px', padding: '0 12px', background: '#EFF6FF', borderBottom: '1px solid #BFDBFE' }}>
+                                                    <div style={{ width: '64px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>추가</span></div>
+                                                    <div style={{ width: '150px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>그룹 라벨</span></div>
+                                                    <div style={{ width: '180px', paddingLeft: '10px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>값</span></div>
+                                                    <div style={{ flex: 1, paddingLeft: '10px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>미리보기</span></div>
+                                                    <div style={{ width: '64px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>삭제</span></div>
                                                 </div>
 
                                                 {(item.groups || []).map((group, groupIdx) => {
@@ -1055,13 +1136,24 @@ const AnalysisSettingTab = ({
                                                     const displayStr = group.values || '';
 
                                                     return (
-                                                        <div key={groupIdx} style={{ display: 'flex', alignItems: 'center' }}>
+                                                        <div key={groupIdx} style={{ display: 'flex', alignItems: 'center', minHeight: '40px', padding: '6px 12px', borderBottom: '1px solid #F1F5F9', boxSizing: 'border-box' }}>
+                                                            <div style={{ width: '64px', display: 'flex', justifyContent: 'center' }}>
+                                                                <button
+                                                                    onClick={() => handleAddGroupRow(item.id, groupIdx)}
+                                                                    title="아래에 그룹 추가"
+                                                                    style={{ border: 'none', background: 'transparent', color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                                                    onMouseEnter={e => e.currentTarget.style.color = '#1D4ED8'}
+                                                                    onMouseLeave={e => e.currentTarget.style.color = '#2563EB'}
+                                                                >
+                                                                    <Plus size={16} />
+                                                                </button>
+                                                            </div>
                                                             <div style={{ width: '150px' }}>
                                                                 <input
                                                                     type="text"
                                                                     value={group.label}
                                                                     onChange={(e) => handleUpdateGroupRow(item.id, groupIdx, 'label', e.target.value)}
-                                                                    style={{ width: '135px', padding: '4px 8px', border: '1px solid #CBD5E1', borderRadius: '4px', fontSize: '12px', outline: 'none' }}
+                                                                    style={{ width: '135px', padding: '4px 8px', border: '1px solid #CBD5E1', borderRadius: '4px', fontSize: '13px', outline: 'none' }}
                                                                     placeholder="예: 브랜드 A"
                                                                 />
                                                             </div>
@@ -1076,105 +1168,50 @@ const AnalysisSettingTab = ({
                                                                         val = val.replace(/,+/g, ',').replace(/^,|,$/g, '');
                                                                         handleUpdateGroupRow(item.id, groupIdx, 'values', val);
                                                                     }}
-                                                                    style={{ width: '100%', padding: '4px 8px', border: '1px solid #CBD5E1', borderRadius: '4px', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }}
-                                                                    placeholder="예: 1,2"
+                                                                    style={{ width: '100%', padding: '4px 8px', border: '1px solid #CBD5E1', borderRadius: '4px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                                                                    placeholder="예: 1,3 / 1 to 5, 9"
                                                                 />
                                                             </div>
 
-                                                            <div style={{ flex: 1, paddingLeft: '10px', display: 'flex', flexWrap: 'wrap', gap: '6px', rowGap: '6px' }}>
-                                                                {totalChips.map(num => {
-                                                                    const isActive = parseValues(group.values).includes(num);
-                                                                    return (
-                                                                        <button
-                                                                            key={num}
-                                                                            onClick={() => handleToggleGroupChip(item.id, groupIdx, num)}
-                                                                            style={{
-                                                                                width: '26px',
-                                                                                height: '26px',
-                                                                                flexShrink: 0,
-                                                                                borderRadius: '50%',
-                                                                                border: '1px solid',
-                                                                                borderColor: isActive ? colorObj.border : '#CBD5E1',
-                                                                                background: isActive ? colorObj.bg : '#FFFFFF',
-                                                                                color: isActive ? colorObj.text : '#64748B',
-                                                                                fontSize: '11px',
-                                                                                fontWeight: 700,
-                                                                                cursor: 'pointer',
-                                                                                display: 'flex',
-                                                                                alignItems: 'center',
-                                                                                justifyContent: 'center',
-                                                                                transition: 'all 0.15s'
-                                                                            }}
-                                                                        >
-                                                                            {num}
-                                                                        </button>
-                                                                    );
-                                                                })}
+                                                            <div style={{ flex: 1, paddingLeft: '10px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                                                {tokenizeGroupValues(group.values).map((tok, tIdx) => (
+                                                                    <span key={tIdx} style={{ padding: '2px 10px', borderRadius: '999px', border: `1px solid ${colorObj.border}`, background: colorObj.bg, color: colorObj.text, fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                                                        {tok}
+                                                                    </span>
+                                                                ))}
                                                             </div>
 
-                                                            <div style={{ width: '30px', textAlign: 'right' }}>
+                                                            <div style={{ width: '64px', display: 'flex', justifyContent: 'center' }}>
+                                                                {(item.groups || []).length > 1 && (
                                                                 <button
                                                                     onClick={() => handleDeleteGroupRow(item.id, groupIdx)}
-                                                                    style={{ border: 'none', background: 'transparent', color: '#94A3B8', cursor: 'pointer' }}
+                                                                    title="그룹 삭제"
+                                                                    style={{ border: 'none', background: 'transparent', color: '#94A3B8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                                                                     onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
                                                                     onMouseLeave={e => e.currentTarget.style.color = '#94A3B8'}
                                                                 >
-                                                                    <X size={15} />
+                                                                    <Trash2 size={15} />
                                                                 </button>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     );
                                                 })}
+                                                </div>
 
-                                                <button
-                                                    onClick={() => handleAddGroupRow(item.id)}
-                                                    style={{
-                                                        alignSelf: 'flex-start',
-                                                        padding: '6px 12px',
-                                                        background: '#FFFFFF',
-                                                        border: '1px dashed #CBD5E1',
-                                                        borderRadius: '6px',
-                                                        fontSize: '12px',
-                                                        color: '#475569',
-                                                        fontWeight: 600,
-                                                        cursor: 'pointer',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '4px'
-                                                    }}
-                                                >
-                                                    <Plus size={14} /> 그룹 추가
-                                                </button>
-
-                                                <div style={{ marginTop: '10px', paddingTop: '12px', borderTop: '1px solid #E2E8F0' }}>
-                                                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
-                                                        전체 값 색칠 ({totalChips.length}개)
+                                                <div style={{ paddingTop: '4px' }}>
+                                                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
+                                                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>전체 값</span>
+                                                        <span style={{ fontSize: '12px', color: '#94A3B8', marginLeft: '6px' }}>{totalChips.length}개</span>
                                                     </div>
-                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', rowGap: '6px' }}>
-                                                        {totalChips.map(num => {
-                                                            const colorObj = overallPainting[num];
-                                                            return (
-                                                                <div
-                                                                    key={num}
-                                                                    style={{
-                                                                        width: '28px',
-                                                                        height: '28px',
-                                                                        flexShrink: 0,
-                                                                        borderRadius: '50%',
-                                                                        border: '1px solid',
-                                                                        borderColor: colorObj ? colorObj.border : '#CBD5E1',
-                                                                        background: colorObj ? colorObj.bg : '#FFFFFF',
-                                                                        color: colorObj ? colorObj.text : '#94A3B8',
-                                                                        fontSize: '11px',
-                                                                        fontWeight: 700,
-                                                                        display: 'flex',
-                                                                        alignItems: 'center',
-                                                                        justifyContent: 'center'
-                                                                    }}
-                                                                >
-                                                                    {num}
-                                                                </div>
-                                                            );
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                                        {(item.groups || []).flatMap((g, gIdx) => {
+                                                            const c = GROUP_COLORS[gIdx % GROUP_COLORS.length];
+                                                            return tokenizeGroupValues(g.values).map((tok, tIdx) => (
+                                                                <span key={`${gIdx}_${tIdx}`} title={g.label} style={{ padding: '2px 10px', borderRadius: '999px', border: `1px solid ${c.border}`, background: c.bg, color: c.text, fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                                                    {tok}
+                                                                </span>
+                                                            ));
                                                         })}
                                                     </div>
                                                 </div>
@@ -1193,7 +1230,13 @@ const AnalysisSettingTab = ({
                             {rankData.length === 0 ? (
                                 <div style={{ flex: 1, textAlign: 'center', color: '#94A3B8', fontSize: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                                     <Info size={24} />
-                                    데이터가 없습니다. 우측 상단의 추가 버튼을 눌러 순위를 추가해주세요.
+                                    <span style={{ fontSize: '13px', color: '#94A3B8' }}>등록된 순위 프리셋이 없습니다.</span>
+                                    <button
+                                        onClick={handleAddRankPreset}
+                                        style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', border: '1px solid #2563EB', borderRadius: '6px', background: '#EFF6FF', color: '#2563EB', cursor: 'pointer' }}
+                                    >
+                                        <Plus size={14} /><span style={{ fontSize: '13px', fontWeight: 600 }}>순위 프리셋 추가</span>
+                                    </button>
                                 </div>
                             ) : rankData.map((item) => {
                                 const isExpanded = expandedRankId === item.id;

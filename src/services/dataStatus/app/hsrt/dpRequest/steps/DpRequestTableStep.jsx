@@ -1198,7 +1198,6 @@ const canUseStatPreset = (type) => {
 const canUseGroupPreset = (type) => {
     const t = String(type || '').toLowerCase();
     if (t === 'summary' || t === 'custom') return false;
-    if (t === 'open(숫자)' || t === 'double' || t === 'open-num') return false;
     return true;
 };
 

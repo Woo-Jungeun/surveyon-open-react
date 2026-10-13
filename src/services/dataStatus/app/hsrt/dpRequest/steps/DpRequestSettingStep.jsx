@@ -801,12 +801,13 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                         if (Array.isArray(item.groups)) {
                             groups = item.groups.map(g => ({
                                 label: g.label || '',
-                                values: Array.isArray(g.values) ? g.values.join(',') : ''
+                                values: g.values_text ? String(g.values_text) : (Array.isArray(g.values) ? g.values.join(',') : '')
                             }));
                         }
                         return {
                             id: item.id,
                             name: item.name || '',
+                            stt_position: item.stt_position || 'bottom_all',
                             groups: groups
                         };
                     });
@@ -1061,6 +1062,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                         if (JSON.stringify(aCombos[i].values) !== JSON.stringify(bCombos[i].values)) return false;
                     }
                 } else if (type === 'group') {
+                    if ((a.stt_position || 'bottom_all') !== (b.stt_position || 'bottom_all')) return false;
                     const aGroups = a.groups || [];
                     const bGroups = b.groups || [];
                     if (aGroups.length !== bGroups.length) return false;
@@ -1168,13 +1170,38 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 };
             });
 
+            // 그룹 값 파싱: "1 to 100", "1,2,3,5", "1 to 100, 999"
+            const parseGroupValues = (str) => {
+                if (!str) return [];
+                const out = [];
+                String(str).split(',').map(s => s.trim()).filter(Boolean).forEach(tok => {
+                    const m = tok.match(/^(-?\d+(?:\.\d+)?)\s*to\s*(-?\d+(?:\.\d+)?)$/i);
+                    if (m) {
+                        let a = Number(m[1]), b = Number(m[2]);
+                        if (a > b) [a, b] = [b, a];
+                        for (let i = a; i <= b; i++) out.push(i);
+                    } else {
+                        const n = Number(tok);
+                        if (!isNaN(n)) out.push(n);
+                    }
+                });
+                return Array.from(new Set(out));
+            };
+            // "1to5" 등을 "1 to 5" 형태로 정규화
+            const normalizeValuesText = (str) => String(str || '')
+                .split(',').map(s => s.trim()).filter(Boolean)
+                .map(s => s.replace(/\s*to\s*/i, ' to '))
+                .join(', ');
+
             const groupDataPayload = groupData.map(item => {
                 return {
                     id: item.id || `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)} `,
                     name: item.name,
+                    stt_position: item.stt_position || 'bottom_all',
                     groups: (item.groups || []).map(g => ({
                         label: g.label || '',
-                        values: parseValues(g.values)
+                        values: parseGroupValues(g.values),
+                        values_text: normalizeValuesText(g.values)
                     }))
                 };
             });
