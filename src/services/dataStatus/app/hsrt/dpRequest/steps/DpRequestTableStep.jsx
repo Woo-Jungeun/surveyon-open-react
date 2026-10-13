@@ -2029,7 +2029,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
     const filteredStubs = useMemo(() => {
         if (!searchTerm) return stubs;
         const q = searchTerm.toLowerCase();
-        return stubs.filter(s => s.recoded_var_id?.toLowerCase().includes(q) || s.var_label?.toLowerCase().includes(q));
+        return stubs.filter(s => s._is_new || s.recoded_var_id?.toLowerCase().includes(q) || s.var_label?.toLowerCase().includes(q));
     }, [stubs, searchTerm]);
 
     const scrollPosToRestore = useRef(null);

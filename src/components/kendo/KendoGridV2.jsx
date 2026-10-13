@@ -116,34 +116,57 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
         setTake(event.page.take);
     };
 
-    // [원인] Kendo Grid는 total(데이터 건수)이 바뀌면 reInitVirtualization에서 VirtualScroll 인스턴스를
-    //        새로 만들며 scrollTop=0, translateY=0 으로 리셋함.
-    // [해결] fixedScroll 로 scrollTop 리셋을 막고, 새 인스턴스의 translate/skip 을 현재 스크롤 위치에 맞게 직접 동기화.
+    // [원인] Kendo Grid는 total(데이터 건수)이 바뀌면 가상스크롤 인스턴스를 새로 만들며 위치 상태를 0으로 리셋함.
+    // [해결] fixedScroll 로 scrollTop 리셋을 막고, 새 인스턴스에 Kendo 자체 scrollHandler 를 1회 호출시켜
+    //        현재 scrollTop 기준으로 Kendo가 직접 skip/translate 를 재계산하게 함 (내부 값 수동 조작 X).
     const kendoGridRef = React.useRef(null);
+
+    // 실제 행 높이 1회 측정 (rowHeight prop 과 실제 높이가 다르면 Kendo 위치 계산이 어긋남)
+    const [measuredRowHeight, setMeasuredRowHeight] = useState(null);
+    const effectiveRowHeight = isVirtual ? (measuredRowHeight || Number(rest.rowHeight) || 24) : rest.rowHeight;
+    React.useLayoutEffect(() => {
+        if (!isVirtual || measuredRowHeight || !gridRef.current) return;
+        const tr = gridRef.current.querySelector('.k-grid-content tbody tr');
+        if (!tr) return;
+        const h = tr.getBoundingClientRect().height;
+        if (h > 0 && Math.abs(h - (Number(rest.rowHeight) || 24)) > 0.1) {
+            setMeasuredRowHeight(h);
+        }
+    });
+
     React.useLayoutEffect(() => {
         if (!isVirtual) return;
         const vs = kendoGridRef.current?.vs;
         const el = vs?.container;
-        if (!vs || !el) return;
+        if (!vs || !el || typeof vs.scrollHandler !== 'function') return;
 
-        const rowH = Number(rest.rowHeight) || 24;
-        const top = el.scrollTop;
-        const maxSkip = Math.max(0, data.length - 1);
-        const newSkip = Math.min(maxSkip, Math.max(0, Math.floor(top / rowH)));
-        const y = newSkip * rowH;
+        // 스크롤이 맨 위(검색으로 건수가 줄어든 경우 등)면 이전 위치값이 남지 않도록 처음 상태로 리셋
+        if (el.scrollTop <= 0) {
+            vs.translate(0, true);
+            vs.tableTransform = 'translateY(0px)';
+            vs.firstLoaded = 0;
+            vs.lastLoaded = Math.min(take, data.length);
+            vs.lastScrollTop = 0;
+            if (skip !== 0) setSkip(0);
+            return;
+        }
 
-        vs.translate(y, true);
-        vs.tableTransform = `translateY(${y}px)`;
-        vs.prevScrollPos = top;
-        vs.attendedSkip = newSkip - (vs.topCacheCount || 0);
-        vs.scrollSyncing = false;
-        if (newSkip !== skip) setSkip(newSkip);
+        try {
+            vs.scrollSyncing = false;
+            vs.scrollHandler({ target: el, currentTarget: el, nativeEvent: null });
+            // React 18 에서는 translate 가 다음 렌더에 반영되므로, skip 이 그대로여서 재렌더가 없을 때를 대비해 즉시 반영
+            if (vs.table && vs.tableTransform) {
+                vs.table.style.transform = vs.tableTransform;
+            }
+        } catch (e) {
+            console.warn('[KendoGridV2] virtual scroll resync failed', e);
+        }
     }, [data.length, isVirtual]);
 
     // 가상 스크롤 사용 시 묶어줄 Grid Props
     const displayData = isVirtual ? data.slice(skip, skip + take) : data;
     const gridProps = isVirtual
-        ? { skip, take, total: data.length, onPageChange: handlePageChange, fixedScroll: true, ...rest }
+        ? { skip, take, total: data.length, onPageChange: handlePageChange, fixedScroll: true, ...rest, rowHeight: effectiveRowHeight }
         : rest;
 
     // --- 내부 데이터 조작 로직 ---
