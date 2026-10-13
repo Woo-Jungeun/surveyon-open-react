@@ -186,11 +186,13 @@ const AnalysisSettingTab = ({
         markUnsaved();
     };
 
-    const handleAddScaleBand = (presetId) => {
+    const handleAddScaleBand = (presetId, afterIdx) => {
         setScaleData(scaleData.map(item => {
             if (item.id === presetId) {
-                const bands = item.bands || [];
-                const nextBands = [...bands, { id: `band_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, label: 'Top', values: '' }];
+                const nextBands = [...(item.bands || [])];
+                const newBand = { id: `band_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, label: 'Top', values: '' };
+                const insertAt = (afterIdx === undefined || afterIdx === null) ? nextBands.length : afterIdx + 1;
+                nextBands.splice(insertAt, 0, newBand);
                 return {
                     ...item,
                     bands: nextBands
@@ -410,13 +412,15 @@ const AnalysisSettingTab = ({
         markUnsaved();
     };
 
-    const handleAddRankCombo = (presetId) => {
+    const handleAddRankCombo = (presetId, afterIdx) => {
         setRankData(rankData.map(item => {
             if (item.id === presetId) {
-                const combinations = item.combinations || [];
+                const combinations = [...(item.combinations || [])];
+                const insertAt = (afterIdx === undefined || afterIdx === null) ? combinations.length : afterIdx + 1;
+                combinations.splice(insertAt, 0, { label: '', values: [] });
                 return {
                     ...item,
-                    combinations: [...combinations, { label: '', values: [] }]
+                    combinations
                 };
             }
             return item;
@@ -814,21 +818,23 @@ const AnalysisSettingTab = ({
                                         {isExpanded && (
                                             <div style={{ padding: '16px 20px', background: '#FAFAFA', display: 'flex', flexDirection: 'column', gap: '10px' }}>
 
-                                                {/* 테이블 형태의 헤더 헤딩 */}
-                                                <div style={{ display: 'flex', fontSize: '11px', fontWeight: 700, color: '#64748B', paddingBottom: '4px', borderBottom: '1px solid #F1F5F9' }}>
-                                                    <div style={{ width: '24px' }}></div>
-                                                    <div style={{ width: '120px' }}>종류</div>
-                                                    <div style={{ width: '50px', textAlign: 'center' }}>N</div>
-                                                    <div style={{ width: '180px', paddingLeft: '10px' }}>값 (쉼표 구분)</div>
-                                                    <div style={{ flex: 1, paddingLeft: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                        <span>미리보기 ({minVal}~{maxVal})</span>
-                                                        <div style={{ display: 'inline-flex', gap: '8px', fontSize: '10px', color: '#64748B', fontWeight: 600, marginRight: '16px' }}>
-                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#BFDBFE', border: '1px solid #60A5FA', boxSizing: 'border-box' }} /> Top</span>
-                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#CBD5E1', border: '1px solid #94A3B8', boxSizing: 'border-box' }} /> Mid</span>
-                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FECACA', border: '1px solid #F87171', boxSizing: 'border-box' }} /> Bot</span>
+                                                {/* 표 헤더 */}
+                                                <div style={{ border: '1px solid #E2E8F0', borderRadius: '6px', overflow: 'hidden', background: '#FFFFFF' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', height: '32px', padding: '0 12px', background: '#EFF6FF', borderBottom: '1px solid #BFDBFE' }}>
+                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>추가</span></div>
+                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>순서</span></div>
+                                                    <div style={{ width: '120px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>종류</span></div>
+                                                    <div style={{ width: '50px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>N</span></div>
+                                                    <div style={{ width: '180px', paddingLeft: '10px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>값</span></div>
+                                                    <div style={{ flex: 1, paddingLeft: '10px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>미리보기 ({minVal}~{maxVal})</span>
+                                                        <div style={{ display: 'inline-flex', gap: '8px' }}>
+                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#64748B' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#BFDBFE', border: '1px solid #60A5FA', boxSizing: 'border-box' }} /> Top</span>
+                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#64748B' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FEF3C7', border: '1px solid #F59E0B', boxSizing: 'border-box' }} /> Mid</span>
+                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#64748B' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FECACA', border: '1px solid #F87171', boxSizing: 'border-box' }} /> Bot</span>
                                                         </div>
                                                     </div>
-                                                    <div style={{ width: '30px' }}></div>
+                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>삭제</span></div>
                                                 </div>
 
                                                 {(item.bands || []).map((band, bandIdx) => {
@@ -864,22 +870,37 @@ const AnalysisSettingTab = ({
                                                             style={{
                                                                 display: 'flex',
                                                                 alignItems: 'center',
-                                                                padding: '6px 0',
+                                                                minHeight: '40px',
+                                                                padding: '6px 12px',
+                                                                borderBottom: '1px solid #F1F5F9',
                                                                 borderTop: isDragOver ? '2px solid #3B82F6' : '2px solid transparent',
                                                                 transition: 'border-color 0.15s ease',
                                                                 boxSizing: 'border-box'
                                                             }}
                                                         >
+                                                            {/* 추가 */}
+                                                            <div style={{ width: '48px', display: 'flex', justifyContent: 'center' }}>
+                                                                <button
+                                                                    onClick={() => handleAddScaleBand(item.id, bandIdx)}
+                                                                    title="아래에 밴드 추가"
+                                                                    style={{ border: 'none', background: 'transparent', color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                                                    onMouseEnter={e => e.currentTarget.style.color = '#1D4ED8'}
+                                                                    onMouseLeave={e => e.currentTarget.style.color = '#2563EB'}
+                                                                >
+                                                                    <Plus size={16} />
+                                                                </button>
+                                                            </div>
                                                             {/* 이동 아이콘 */}
                                                             <div
                                                                 draggable
                                                                 onDragStart={(e) => handleDragStart(e, item.id, bandIdx)}
                                                                 onDragEnd={handleDragEnd}
+                                                                title="끌어서 순서 변경"
                                                                 style={{
                                                                     display: 'flex',
                                                                     alignItems: 'center',
                                                                     justifyContent: 'center',
-                                                                    width: '24px',
+                                                                    width: '48px',
                                                                     color: '#94A3B8',
                                                                     cursor: 'grab'
                                                                 }}
@@ -913,8 +934,8 @@ const AnalysisSettingTab = ({
                                                             </div>
 
                                                             {/* N 개수 */}
-                                                            <div style={{ width: '50px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#334155' }}>
-                                                                {parseValues(band.values).length}
+                                                            <div style={{ width: '50px', textAlign: 'center' }}>
+                                                                <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>{parseValues(band.values).length}</span>
                                                             </div>
 
                                                             {/* 값 문자열 인풋 */}
@@ -928,8 +949,7 @@ const AnalysisSettingTab = ({
                                                                         val = val.replace(/,+/g, ',').replace(/^,|,$/g, '');
                                                                         handleUpdateScaleBandById(item.id, band.id, 'values', val);
                                                                     }}
-                                                                    style={{ width: '100%', padding: '4px 8px', border: '1px solid #CBD5E1', borderRadius: '4px', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }}
-                                                                    placeholder="예: 4,5"
+                                                                    style={{ width: '100%', padding: '4px 8px', border: '1px solid #CBD5E1', borderRadius: '4px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
                                                                 />
                                                             </div>
 
@@ -966,41 +986,31 @@ const AnalysisSettingTab = ({
                                                             </div>
 
                                                             {/* 삭제 */}
-                                                            <div style={{ width: '30px', textAlign: 'right' }}>
+                                                            <div style={{ width: '48px', display: 'flex', justifyContent: 'center' }}>
+                                                                {(item.bands || []).length > 1 && (
                                                                 <button
                                                                     onClick={() => handleDeleteScaleBandById(item.id, band.id)}
-                                                                    style={{ border: 'none', background: 'transparent', color: '#94A3B8', cursor: 'pointer' }}
+                                                                    title="밴드 삭제"
+                                                                    style={{ border: 'none', background: 'transparent', color: '#94A3B8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                                                                     onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
                                                                     onMouseLeave={e => e.currentTarget.style.color = '#94A3B8'}
                                                                 >
-                                                                    <X size={15} />
+                                                                    <Trash2 size={15} />
                                                                 </button>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     );
                                                 })}
-
-                                                {/* 밴드 추가 버튼 */}
-                                                <button
-                                                    onClick={() => handleAddScaleBand(item.id)}
-                                                    style={{
-                                                        alignSelf: 'flex-start',
-                                                        marginTop: '6px',
-                                                        padding: '6px 12px',
-                                                        background: '#FFFFFF',
-                                                        border: '1px dashed #CBD5E1',
-                                                        borderRadius: '6px',
-                                                        fontSize: '12px',
-                                                        color: '#475569',
-                                                        fontWeight: 600,
-                                                        cursor: 'pointer',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '4px'
-                                                    }}
-                                                >
-                                                    <Plus size={14} /> 밴드 추가
-                                                </button>
+                                                {(item.bands || []).length === 0 && (
+                                                    <button
+                                                        onClick={() => handleAddScaleBand(item.id)}
+                                                        style={{ width: '100%', height: '36px', border: 'none', background: '#FFFFFF', color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                                                    >
+                                                        <Plus size={14} /><span style={{ fontSize: '13px', fontWeight: 600 }}>밴드 추가</span>
+                                                    </button>
+                                                )}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -1311,25 +1321,38 @@ const AnalysisSettingTab = ({
                                         {isExpanded && (
                                             <div style={{ padding: '16px 20px', background: '#FAFAFA', display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
-                                                <div style={{ fontSize: '11px', color: '#64748B', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
-                                                    <Info size={14} /> 소스 변수 max_rank = {maxVal} 가정. 비연속 조합(예: 1+3)도 칩 토글로 선언 가능합니다.
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+                                                    <Info size={14} color="#64748B" /><span style={{ fontSize: '12px', color: '#64748B' }}>소스 변수 max_rank = {maxVal} 가정. 비연속 조합(예: 1+3)도 칩 토글로 선언 가능합니다.</span>
                                                 </div>
 
-                                                <div style={{ display: 'flex', fontSize: '11px', fontWeight: 700, color: '#64748B', paddingBottom: '4px', borderBottom: '1px solid #F1F5F9' }}>
-                                                    <div style={{ width: '200px' }}>라벨 (비우면 자동 생성)</div>
-                                                    <div style={{ flex: 1, paddingLeft: '10px' }}>순위 토글</div>
-                                                    <div style={{ width: '30px' }}></div>
+                                                <div style={{ border: '1px solid #E2E8F0', borderRadius: '6px', overflow: 'hidden', background: '#FFFFFF' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', height: '32px', padding: '0 12px', background: '#EFF6FF', borderBottom: '1px solid #BFDBFE' }}>
+                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>추가</span></div>
+                                                    <div style={{ width: '200px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>라벨</span><span style={{ fontSize: '11px', color: '#64748B', marginLeft: '4px' }}>(비우면 자동 생성)</span></div>
+                                                    <div style={{ flex: 1, paddingLeft: '10px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>순위 선택</span></div>
+                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>삭제</span></div>
                                                 </div>
 
                                                 {(item.combinations || []).map((combo, comboIdx) => {
                                                     return (
-                                                        <div key={comboIdx} style={{ display: 'flex', alignItems: 'center' }}>
+                                                        <div key={comboIdx} style={{ display: 'flex', alignItems: 'center', minHeight: '40px', padding: '6px 12px', borderBottom: '1px solid #F1F5F9', boxSizing: 'border-box' }}>
+                                                            <div style={{ width: '48px', display: 'flex', justifyContent: 'center' }}>
+                                                                <button
+                                                                    onClick={() => handleAddRankCombo(item.id, comboIdx)}
+                                                                    title="아래에 조합 추가"
+                                                                    style={{ border: 'none', background: 'transparent', color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                                                    onMouseEnter={e => e.currentTarget.style.color = '#1D4ED8'}
+                                                                    onMouseLeave={e => e.currentTarget.style.color = '#2563EB'}
+                                                                >
+                                                                    <Plus size={16} />
+                                                                </button>
+                                                            </div>
                                                             <div style={{ width: '200px' }}>
                                                                 <input
                                                                     type="text"
                                                                     value={combo.label}
                                                                     onChange={(e) => handleUpdateRankCombo(item.id, comboIdx, 'label', e.target.value)}
-                                                                    style={{ width: '185px', padding: '4px 8px', border: '1px solid #CBD5E1', borderRadius: '4px', fontSize: '12px', outline: 'none' }}
+                                                                    style={{ width: '185px', padding: '4px 8px', border: '1px solid #CBD5E1', borderRadius: '4px', fontSize: '13px', outline: 'none' }}
                                                                     placeholder="예: 1순위 / Top2"
                                                                 />
                                                             </div>
@@ -1365,39 +1388,31 @@ const AnalysisSettingTab = ({
                                                                 })}
                                                             </div>
 
-                                                            <div style={{ width: '30px', textAlign: 'right' }}>
+                                                            <div style={{ width: '48px', display: 'flex', justifyContent: 'center' }}>
+                                                                {(item.combinations || []).length > 1 && (
                                                                 <button
                                                                     onClick={() => handleDeleteRankCombo(item.id, comboIdx)}
-                                                                    style={{ border: 'none', background: 'transparent', color: '#94A3B8', cursor: 'pointer' }}
+                                                                    title="조합 삭제"
+                                                                    style={{ border: 'none', background: 'transparent', color: '#94A3B8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                                                                     onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
                                                                     onMouseLeave={e => e.currentTarget.style.color = '#94A3B8'}
                                                                 >
-                                                                    <X size={15} />
+                                                                    <Trash2 size={15} />
                                                                 </button>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     );
                                                 })}
-
-                                                <button
-                                                    onClick={() => handleAddRankCombo(item.id)}
-                                                    style={{
-                                                        alignSelf: 'flex-start',
-                                                        padding: '6px 12px',
-                                                        background: '#FFFFFF',
-                                                        border: '1px dashed #CBD5E1',
-                                                        borderRadius: '6px',
-                                                        fontSize: '12px',
-                                                        color: '#475569',
-                                                        fontWeight: 600,
-                                                        cursor: 'pointer',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '4px'
-                                                    }}
-                                                >
-                                                    <Plus size={14} /> 조합 추가
-                                                </button>
+                                                {(item.combinations || []).length === 0 && (
+                                                    <button
+                                                        onClick={() => handleAddRankCombo(item.id)}
+                                                        style={{ width: '100%', height: '36px', border: 'none', background: '#FFFFFF', color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                                                    >
+                                                        <Plus size={14} /><span style={{ fontSize: '13px', fontWeight: 600 }}>조합 추가</span>
+                                                    </button>
+                                                )}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
