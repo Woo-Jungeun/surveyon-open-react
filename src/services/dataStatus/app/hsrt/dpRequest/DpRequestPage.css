@@ -918,18 +918,26 @@
     box-sizing: border-box;
 }
 
+/* 행 추가/복사로 새로 생긴 행 (저장 전) */
+.dp-excel-grid-v2.k-grid tr.dp-row-new td:not(.dp-cell-disabled) {
+    background-color: #fef9c3 !important;
+}
+
 /* 숨김 처리된 행 스타일 (회색 음영 및 비활성화) */
 .dp-excel-grid-v2.k-grid tr.dp-row-hidden td {
     background-color: #f1f5f9 !important;
     color: #94a3b8 !important;
 }
+
 .dp-excel-grid-v2.k-grid tr.dp-row-hidden td:not([data-field="is_hidden"]) {
     pointer-events: none !important;
     opacity: 0.7;
 }
+
 .dp-excel-grid-v2.k-grid tr.dp-row-hidden td:not([data-field="is_hidden"]) * {
     pointer-events: none !important;
 }
+
 .dp-excel-grid-v2.k-grid tr.dp-row-hidden td * {
     color: #94a3b8 !important;
     border-color: #cbd5e1 !important;

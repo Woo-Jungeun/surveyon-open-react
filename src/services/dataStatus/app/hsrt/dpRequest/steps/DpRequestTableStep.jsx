@@ -2105,6 +2105,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
             var_label: '새 스터브',
             var_type: 'custom',
             _is_custom: true,
+            _is_new: true,
             condition: '',
             x_info: banners.length > 0 ? banners[0].id : '',
             stat_summary: '',
@@ -2158,7 +2159,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 _row_id: `row_${Date.now()}_${Math.random()}`,
                 recoded_var_id: newRecodedId,
                 var_label: `${target.var_label}_copy`,
-                _origin: 'copied'
+                _origin: 'copied',
+                _is_new: true
             };
 
             // rank_outputs가 있다면 복사본에 맞게 recoded_var_id 변경
@@ -2667,6 +2669,12 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                             }
                                         }, trElement.props.children);
                                     }
+                                    if (trProps.dataItem?._is_new) {
+                                        return React.cloneElement(trElement, {
+                                            ...trElement.props,
+                                            className: `${trElement.props.className || ''} dp-row-new`.trim()
+                                        }, trElement.props.children);
+                                    }
                                     return trElement;
                                 }}
                             >
@@ -2799,7 +2807,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                     headerCell={MultiSelectHeaderCell}
                                     cell={(p) => {
                                         if (!canUseGroupPreset(p.dataItem.var_type)) {
-                                            return <td style={DISABLED_CELL_STYLE}>-</td>;
+                                            return <td className="dp-cell-disabled" style={DISABLED_CELL_STYLE}>-</td>;
                                         }
                                         return <PresetDropdownCell field="group_preset_name" dataItem={p.dataItem} presets={groupPresets} onChange={handleCellUpdate} />;
                                     }}
@@ -2808,7 +2816,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                     headerCell={MultiSelectHeaderCell}
                                     cell={(p) => {
                                         if (!canUseStatPreset(p.dataItem.var_type)) {
-                                            return <td style={DISABLED_CELL_STYLE}>-</td>;
+                                            return <td className="dp-cell-disabled" style={DISABLED_CELL_STYLE}>-</td>;
                                         }
                                         return <StatSettingCell dataItem={p.dataItem} selectedValues={p.dataItem.stat_summary} onUpdate={handleCellUpdate} />;
                                     }}
@@ -2817,7 +2825,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                     headerCell={MultiSelectHeaderCell}
                                     cell={(p) => {
                                         if (!canUseScalePreset(p.dataItem.var_type)) {
-                                            return <td style={DISABLED_CELL_STYLE}>-</td>;
+                                            return <td className="dp-cell-disabled" style={DISABLED_CELL_STYLE}>-</td>;
                                         }
                                         return <PresetDropdownCell field="scale_preset_name" dataItem={p.dataItem} presets={scalePresets} onChange={handleCellUpdate} />;
                                     }}
@@ -2826,7 +2834,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                     headerCell={MultiSelectHeaderCell}
                                     cell={(p) => {
                                         if (!canUseRankPreset(p.dataItem.var_type)) {
-                                            return <td style={DISABLED_CELL_STYLE}>-</td>;
+                                            return <td className="dp-cell-disabled" style={DISABLED_CELL_STYLE}>-</td>;
                                         }
                                         return <PresetDropdownCell field="rank_preset_name" dataItem={p.dataItem} presets={rankPresets} onChange={handleCellUpdate} />;
                                     }}
