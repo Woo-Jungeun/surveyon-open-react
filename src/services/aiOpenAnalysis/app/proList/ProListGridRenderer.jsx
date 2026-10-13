@@ -5,6 +5,7 @@ import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import ProListPopup from "@/services/aiOpenAnalysis/app/proList/ProListPopup";
 import ProRegisterPopup from "@/services/aiOpenAnalysis/app/proList/ProRegisterPopup";
+import { ProRegisterApi } from "@/services/proRegister/ProRegisterApi.js";
 import ProListBatchMergePopup from "./ProListBatchMergePopup";
 import ProListBatchQuestionEditPopup from "./ProListBatchQuestionEditPopup";
 import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
@@ -1105,6 +1106,34 @@ const ProListGridRenderer = (props) => {
             modal.showErrorAlert("에러", "차이 내역 조회 중 오류가 발생했습니다.");
         }
     }, [auth?.user?.userId, projectnum, fetchPidDiff, modal]);
+
+    // AI오픈대기 PID 등록 (데이터등록 > 문항등록 > DB '등록'과 동일: /pro_register/db_enter)
+    const { enterRegisterDb } = ProRegisterApi();
+    const handleRegisterAiWait = useCallback(async () => {
+        if (enterRegisterDb.isLoading) return;
+        try {
+            const payload = {
+                projectnum: projectnum || sessionStorage.getItem("projectnum") || "",
+                server: sessionStorage.getItem("servername") || "rps",
+                pof: sessionStorage.getItem("pof") || sessionStorage.getItem("projectpof") || "",
+                proname: sessionStorage.getItem("projectname") || "",
+                user: auth?.user?.userId || ""
+            };
+            const res = await enterRegisterDb.mutateAsync(payload);
+            const isSuccess = String(res?.success) === '200' || String(res?.success) === '777';
+            if (isSuccess) {
+                const msg = res?.resultjson?.message || res?.message || "오픈데이터가 성공적으로 등록되었습니다.";
+                modal.showConfirm("알림", msg, {
+                    btns: [{ title: "확인", click: () => handleSearch?.() }]
+                });
+            } else {
+                modal.showErrorAlert("알림", res?.resultjson?.message || res?.message || "등록 중 오류가 발생했습니다.");
+            }
+        } catch (e) {
+            console.error(e);
+            modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다.");
+        }
+    }, [enterRegisterDb, projectnum, auth?.user?.userId, modal, handleSearch]);
 
     const toggleRowSelect = useCallback((id, checked) => {
         setSelectedRowIds(prev => {
@@ -2546,7 +2575,7 @@ const ProListGridRenderer = (props) => {
             </AiDataHeader>
 
             <div className="pro-list-content" style={{ paddingBottom: selectedRowIds.size > 0 ? '48px' : '20px', transition: 'padding-bottom 0.2s ease' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', flexWrap: 'wrap', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', padding: '0 4px', flexWrap: 'wrap', gap: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                         {(() => {
                             const parseStatsObj = (res) => {
@@ -2579,6 +2608,7 @@ const ProListGridRenderer = (props) => {
                             const qmCount = Number(cStats.qm_completed ?? cStats.survey_count ?? cStats.qm_count ?? 0);
                             const surveyonCount = Number(cStats.surveyon_completed ?? cStats.surveyon_count ?? 0);
                             const openRegisteredCount = Number(cStats.open_registered ?? cStats.open_registered_count ?? 0);
+                            const aiWaitCount = Number(cStats.ai_wait_count ?? 0);
                             const diffCount = Number(cStats.diff_count ?? 0);
                             const hasDiff = cStats.has_diff ?? (diffCount > 0);
 
@@ -2587,16 +2617,44 @@ const ProListGridRenderer = (props) => {
                             const progressPct = totalQuestions > 0 ? Math.round((completedQuestions / totalQuestions) * 100) : 0;
 
                             return (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12.5px', flexWrap: 'wrap' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', flexWrap: 'wrap' }}>
                                     {/* 총 완료자수 현황 */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <Users size={14} style={{ color: '#64748b' }} />
                                         <span style={{ color: '#334155', fontWeight: 700 }}>총 완료자수</span>
                                         <span style={{ color: '#475569' }}>큐마DB <b style={{ color: '#0f172a', fontWeight: 800 }}>{qmCount.toLocaleString()}명</b></span>
-                                        <span style={{ color: '#cbd5e1' }}>·</span>
+                                        <span style={{ color: '#94a3b8' }}>·</span>
                                         <span style={{ color: '#475569' }}>설문온DB <b style={{ color: '#0f172a', fontWeight: 800 }}>{surveyonCount.toLocaleString()}명</b></span>
-                                        <span style={{ color: '#cbd5e1' }}>·</span>
-                                        <span style={{ color: '#475569' }}>오픈등록수 <b style={{ color: '#0f172a', fontWeight: 800 }}>{openRegisteredCount.toLocaleString()}명</b></span>
+                                        <span style={{ color: '#94a3b8' }}>·</span>
+                                        <span style={{ color: '#475569' }}>AI오픈등록수 <b style={{ color: '#0f172a', fontWeight: 800 }}>{openRegisteredCount.toLocaleString()}명</b></span>
+                                        <span style={{ color: '#94a3b8' }}>·</span>
+                                        <span style={{ color: aiWaitCount > 0 ? '#ea580c' : '#475569', fontWeight: aiWaitCount > 0 ? 700 : 400 }}>AI오픈대기수 <b style={{ color: aiWaitCount > 0 ? '#ea580c' : '#0f172a', fontWeight: 800 }}>{aiWaitCount.toLocaleString()}명</b></span>
+                                        {aiWaitCount > 0 && (!userAuth.includes("고객") && !userAuth.includes("일반")) && (
+                                            <button
+                                                type="button"
+                                                onClick={handleRegisterAiWait}
+                                                title="AI오픈 대기 PID 등록하기"
+                                                disabled={enterRegisterDb.isLoading}
+                                                style={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '3px',
+                                                    backgroundColor: '#ea580c',
+                                                    border: '1px solid #ea580c',
+                                                    color: '#ffffff',
+                                                    fontSize: '12px',
+                                                    fontWeight: 700,
+                                                    padding: '2px 9px',
+                                                    borderRadius: '12px',
+                                                    cursor: enterRegisterDb.isLoading ? 'wait' : 'pointer',
+                                                    boxShadow: '0 1px 3px rgba(234, 88, 12, 0.25)',
+                                                    opacity: enterRegisterDb.isLoading ? 0.7 : 1
+                                                }}
+                                                onMouseOver={e => e.currentTarget.style.backgroundColor = '#c2410c'}
+                                                onMouseOut={e => e.currentTarget.style.backgroundColor = '#ea580c'}
+                                            >
+                                                {enterRegisterDb.isLoading ? '등록 중...' : '등록하기'}
+                                            </button>
+                                        )}
 
                                         <button
                                             type="button"
@@ -2609,7 +2667,7 @@ const ProListGridRenderer = (props) => {
                                                 backgroundColor: '#fff1f2',
                                                 border: '1px solid #fecdd3',
                                                 color: '#e11d48',
-                                                fontSize: '11px',
+                                                fontSize: '12px',
                                                 fontWeight: 700,
                                                 padding: '2px 8px',
                                                 borderRadius: '12px',
@@ -2623,7 +2681,7 @@ const ProListGridRenderer = (props) => {
                                                 backgroundColor: '#f0fdf4',
                                                 border: '1px solid #bbf7d0',
                                                 color: '#15803d',
-                                                fontSize: '11px',
+                                                fontSize: '12px',
                                                 fontWeight: 700,
                                                 padding: '2px 8px',
                                                 borderRadius: '12px',
@@ -2637,6 +2695,7 @@ const ProListGridRenderer = (props) => {
                                                 <>
                                                     <AlertTriangle size={12} style={{ color: '#e11d48' }} />
                                                     <span>차이</span>
+                                                    <ChevronRight size={12} strokeWidth={2.5} style={{ marginRight: '-3px' }} />
                                                 </>
                                             ) : (
                                                 <>
@@ -2647,26 +2706,24 @@ const ProListGridRenderer = (props) => {
                                         </button>
                                     </div>
 
-                                    <div style={{ width: '1px', height: '14px', backgroundColor: '#e2e8f0' }} />
+                                    <div style={{ width: '1px', height: '14px', backgroundColor: '#94a3b8' }} />
 
                                     {/* 총 문항수 */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                        <List size={14} style={{ color: '#64748b' }} />
                                         <span style={{ color: '#475569', fontWeight: 600 }}>총 문항수</span>
                                         <b style={{ color: '#0f172a', fontWeight: 800 }}>{totalQuestions}개</b>
                                     </div>
 
-                                    <div style={{ width: '1px', height: '14px', backgroundColor: '#e2e8f0' }} />
+                                    <div style={{ width: '1px', height: '14px', backgroundColor: '#94a3b8' }} />
 
                                     {/* 완료 문항수 및 프로그레스 바 */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <CheckCircle2 size={14} style={{ color: '#64748b' }} />
                                         <span style={{ color: '#475569', fontWeight: 600 }}>완료 문항수</span>
                                         <b style={{ color: '#0f172a', fontWeight: 800 }}>{completedQuestions} / {totalQuestions}개</b>
                                         <div style={{ width: '60px', height: '6px', backgroundColor: '#f1f5f9', borderRadius: '3px', overflow: 'hidden', border: '1px solid #cbd5e1' }}>
                                             <div style={{ width: `${progressPct}%`, backgroundColor: '#ea580c', height: '100%', borderRadius: '3px', transition: 'width 0.3s ease' }} />
                                         </div>
-                                        <span style={{ color: '#64748b', fontSize: '11px', fontWeight: 600 }}>{progressPct}%</span>
+                                        <span style={{ color: '#334155', fontSize: '12px', fontWeight: 700 }}>{progressPct}%</span>
                                     </div>
                                 </div>
                             );
@@ -2685,7 +2742,7 @@ const ProListGridRenderer = (props) => {
                                     style={{
                                         height: '32px',
                                         padding: '0 10px',
-                                        fontSize: '11.5px',
+                                        fontSize: '12px',
                                         fontWeight: isExpanded ? 500 : 600,
                                         borderRadius: '6px',
                                         border: isExpanded ? '1px solid #cbd5e1' : '1px solid #fdba74',
@@ -2700,8 +2757,8 @@ const ProListGridRenderer = (props) => {
                                     }}
                                     title={isExpanded ? "모든 통합 문항 그룹 접기" : "모든 통합 문항 그룹 펼치기"}
                                 >
-                                    {isExpanded ? <Minus size={13} strokeWidth={2.5} /> : <Plus size={13} strokeWidth={2.5} />}
-                                    <span>{isExpanded ? "모두 접기" : "모두 펼치기"}</span>
+                                    {isExpanded ? <Minus size={12} strokeWidth={2.5} /> : <Plus size={12} strokeWidth={2.5} />}
+                                    <span style={{ fontSize: '12px' }}>{isExpanded ? "묶음 모두 접기" : "묶음 모두 펼치기"}</span>
                                 </button>
                             );
                         })()}
@@ -2994,7 +3051,7 @@ const ProListGridRenderer = (props) => {
                 const onlyInOpen = dObj?.only_in_open || [];
 
                 const tabs = [
-                    { label: "오픈 미등록", list: unregisteredOpen, emptyMsg: "오픈 미등록 PID가 없습니다. (등록 완료)" },
+                    { label: "AI오픈 대기 PID", list: unregisteredOpen, emptyMsg: "AI오픈 대기 PID가 없습니다. (등록 완료)" },
                     { label: "큐마DB 전용", list: onlyInSurvey, emptyMsg: "큐마DB 전용 PID가 없습니다. (설문온DB와 일치)" },
                     { label: "설문온DB 전용", list: onlyInSurveyon, emptyMsg: "설문온DB 전용 PID가 없습니다." },
                     { label: "오픈 전용", list: onlyInOpen, emptyMsg: "오픈 전용 PID가 없습니다." }
@@ -3084,7 +3141,7 @@ const ProListGridRenderer = (props) => {
                                 <span style={{ color: '#cbd5e1' }}>|</span>
                                 <span>설문온DB 완료: <b style={{ color: '#0f172a', fontWeight: 800 }}>{surveyonCount.toLocaleString()}명</b></span>
                                 <span style={{ color: '#cbd5e1' }}>|</span>
-                                <span>오픈등록수: <b style={{ color: '#0f172a', fontWeight: 800 }}>{openRegisteredCount.toLocaleString()}명</b></span>
+                                <span>AI오픈등록수: <b style={{ color: '#0f172a', fontWeight: 800 }}>{openRegisteredCount.toLocaleString()}명</b></span>
                                 <span style={{ color: '#cbd5e1' }}>|</span>
                                 <span>차이 건수: <b style={{ color: diffCount > 0 ? '#dc2626' : '#16a34a', fontWeight: 800 }}>{diffCount.toLocaleString()}건</b></span>
                             </div>
