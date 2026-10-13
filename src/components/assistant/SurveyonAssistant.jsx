@@ -676,8 +676,6 @@ export const SurveyonAssistant = ({
                   value={reportReason}
                   onChange={(e) => setReportReason(e.value)}
                   loading={isLoadingReasons}
-                  disabled={isLoadingReasons || reportReasons.length === 0}
-                  defaultItem={reportReasons.length === 0 ? { reasonId: null, label: isLoadingReasons ? '불러오는 중...' : '사유 목록을 불러오지 못했습니다' } : undefined}
                   style={{ width: '100%' }}
                   className="so-kendo-dropdown"
                   popupSettings={{
