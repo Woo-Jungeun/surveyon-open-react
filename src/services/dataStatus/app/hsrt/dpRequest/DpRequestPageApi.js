@@ -332,7 +332,13 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/weight/next-id", "API_BASE_URL_DATASTATUS")
     );
 
+    /** 표설정 - 범용 데이터 필터 완료집계수(빈도수) 미리보기 */
+    const previewFilter = useMutation(
+        async (data) => await api.post(data, "/analysis/evaluate/preview-filter", "API_BASE_URL_DATASTATUS")
+    );
+
     return {
+        previewFilter,
         getBannerDetail,
         getBaseVariableList,
         getNextBaseVariableId,

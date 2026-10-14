@@ -9,6 +9,7 @@ import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import AnalysisSettingTab from './AnalysisSettingTab';
 import TableSettingTab from './TableSettingTab';
+import DataFilterCard, { buildFilterExpression, toFilterVariables } from './DataFilterCard';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
@@ -131,7 +132,7 @@ const PidCell = (props) => {
 
 const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getTableRenderContext, getTableDetail, saveTableSettings, getBaseVariableList, getRecodedOverview, reapplyPreset, getRecodedPlain, getWeightPidList, getNextWeightId, deleteWeight, saveWeightSetPid } = DpRequestPageApi();
+    const { getTableRenderContext, getTableDetail, saveTableSettings, getBaseVariableList, getRecodedOverview, reapplyPreset, getRecodedPlain, getWeightPidList, getNextWeightId, deleteWeight, saveWeightSetPid, previewFilter, getOverviewContext } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -149,7 +150,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
         }
     }));
 
-    const [activeTab, setActiveTab] = useState(0); // 0: 분석, 1: 뷰 설정
+    const [activeTab, setActiveTab] = useState(0); // 0: 데이터 필터, 1: 분석, 2: 표 디자인, 3: 가중치
 
     // --- 가중치 설정 탭 상태 관리 ---
     const [isWeightSidebarOpen, setIsWeightSidebarOpen] = useState(true);
@@ -568,6 +569,17 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [groupData, setGroupData] = useState([]);
     const [contextData, setContextData] = useState(null);
 
+    // --- 범용 데이터 필터 ---
+    const [dataFilterBadges, setDataFilterBadges] = useState([]);
+    const [filterVariables, setFilterVariables] = useState([]);
+    const [isFilterValid, setIsFilterValid] = useState(true);
+    const [isFilterZero, setIsFilterZero] = useState(false);
+
+    const handleChangeFilterBadges = (next) => {
+        setDataFilterBadges(next);
+        if (onUnsavedChange) onUnsavedChange(true);
+    };
+
     // --- 데이터 fetch 로직 ---
     const fetchInitialData = async () => {
         const pageId = sessionStorage.getItem('pageId');
@@ -600,6 +612,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             let nextGroupData = groupData;
 
             let actualTableDetail = tableDetail?.resultjson || tableDetail;
+
+            // 범용 데이터 필터 배지 복원
+            setDataFilterBadges(Array.isArray(actualTableDetail?.data_filter_badges) ? actualTableDetail.data_filter_badges : []);
 
             if (actualTableDetail?.id || renderContext?.id) {
                 const ui = actualTableDetail?.ui_settings || {};
@@ -863,6 +878,13 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             }
 
             const actualVarList = varList?.resultjson || varList?.data?.resultjson || varList;
+            // 범용 필터 목록: 교차분석/추가분석과 동일하게 overview/context 의 base_variables 사용
+            getOverviewContext.mutateAsync({ pageid: pageId, user: auth.user.userId })
+                .then(ctxRes => {
+                    const ctx = ctxRes?.resultjson || ctxRes || {};
+                    setFilterVariables(toFilterVariables(ctx.base_variables));
+                })
+                .catch(e => console.error('Failed to load filter variables:', e));
             if (Array.isArray(actualVarList)) {
                 const weightOpt = ['없음', ...actualVarList.map(v => v.name || v.label)];
                 setWeightOptions(weightOpt);
@@ -966,6 +988,24 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
         if (!pageId || !auth?.user?.userId) {
             modal.showAlert("알림", "저장할 수 없습니다. 다시 로그인하거나 페이지를 새로고침 해주세요.");
             return false;
+        }
+
+        if (!isFilterValid && dataFilterBadges.length > 0) {
+            modal.showAlert("알림", "데이터 필터 조건식에 오류가 있어 저장할 수 없습니다.");
+            return false;
+        }
+
+        // 완료집계 0명 → 저장 전 확인 (스펙 6장: 실수로 저장하지 않도록 안내)
+        if (isFilterZero && dataFilterBadges.length > 0) {
+            const proceed = await new Promise((resolve) => {
+                modal.showConfirm('알림', '현재 데이터 필터 조건에 해당하는 완료 응답자가 0명입니다.\n저장하면 교차분석·추가분석·엑셀의 모든 표가 비게 됩니다.\n저장하시겠습니까?', {
+                    btns: [
+                        { title: "취소", click: () => resolve(false) },
+                        { title: "저장", click: () => resolve(true) },
+                    ],
+                });
+            });
+            if (!proceed) return false;
         }
 
         // Validation: check if any weight has an empty label
@@ -1334,7 +1374,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 scale_presets: scaleDataPayload,
                 rank_presets: rankDataPayload,
                 group_presets: groupDataPayload,
-                stat_presets: []
+                stat_presets: [],
+                data_filter_expression: buildFilterExpression(dataFilterBadges) || null,
+                data_filter_badges: dataFilterBadges
             };
 
             const result = await saveTableSettings.mutateAsync(payload);
@@ -1397,6 +1439,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     const tabs = [
+        { label: '데이터 필터', badge: dataFilterBadges.length },
         { label: '분석 설정' },
         { label: '표 디자인 설정' },
         { label: '가중치 설정' },
@@ -1404,12 +1447,27 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     const renderTabContent = () => {
         switch (activeTab) {
-            case 0: return renderAnalysisTab();
-            case 1: return renderTableSettingsTab();
-            case 2: return renderWeightSettingsTab();
+            case 0: return renderDataFilterTab();
+            case 1: return renderAnalysisTab();
+            case 2: return renderTableSettingsTab();
+            case 3: return renderWeightSettingsTab();
             default: return null;
         }
     };
+    // 0. 데이터 필터 탭 (범용 필터)
+    const renderDataFilterTab = () => (
+        <div className="dp-setting-section" style={{ padding: '20px 24px', background: '#F1F5F9', boxSizing: 'border-box', minHeight: '100%' }}>
+            <DataFilterCard
+                variables={filterVariables}
+                badges={dataFilterBadges}
+                onChangeBadges={handleChangeFilterBadges}
+                previewFilter={previewFilter}
+                onValidityChange={setIsFilterValid}
+                onZeroChange={setIsFilterZero}
+            />
+        </div>
+    );
+
     // 1. 분석 설정 탭
     const renderAnalysisTab = () => (
         <AnalysisSettingTab
@@ -1656,13 +1714,16 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 }}
                             >
                                 {tab.label}
+                                {tab.badge > 0 && (
+                                    <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 999, background: '#3B82F6', color: '#fff' }}>{tab.badge}</span>
+                                )}
                             </div>
                         );
                     })}
                 </div>
             </div>
 
-            <div style={(activeTab === 0 || activeTab === 2) ? { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' } : { flex: 1, overflowY: 'auto' }}>
+            <div style={(activeTab === 1 || activeTab === 3) ? { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' } : { flex: 1, overflowY: 'auto' }}>
                 {renderTabContent()}
             </div>
 

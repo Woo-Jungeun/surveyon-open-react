@@ -13,6 +13,7 @@ import CreateTablePopup from './CreateTablePopup';
 import './AdditionalAnalysisPage.css';
 import { AdditionalAnalysisPageApi } from './AdditionalAnalysisPageApi';
 import { DpRequestPageApi } from '../hsrt/dpRequest/DpRequestPageApi';
+import GlobalFilterBadge from '../common/GlobalFilterBadge';
 import { modalContext } from "@/components/common/Modal.jsx";
 import FullscreenModal from './FullscreenModal';
 import { VariablePageApi } from '../variable/VariablePageApi';
@@ -478,9 +479,10 @@ const AdditionalAnalysisPage = () => {
                 return infoList
                     .map((info, index) => {
                         const label = String(info?.label ?? "").trim();
-                        const rawValue = info?.value ?? info?.num ?? index + 1;
-                        const logic = String(info?.logic ?? `${variableId} == ${rawValue}`).trim();
-                        if (!label || label.toLowerCase() === 'base') return null;
+                        // 교차분석과 동일: 서버 logic이 비어 있으면("") 보기 제외
+                        const logic = String(info?.logic ?? "").trim();
+                        if (!label || !logic) return null;
+                        const rawValue = info?.value ?? index + 1;
                         return {
                             id: `${variableId}::${String(rawValue).trim() || String(index + 1)}::${index}`,
                             label,
@@ -1028,6 +1030,7 @@ const AdditionalAnalysisPage = () => {
                             type: displayType,
                             color: color,
                             info: item.info || [],
+                            recoded_type: item.recoded_type,
                             isBase: true
                         });
                     });
@@ -3318,6 +3321,9 @@ const AdditionalAnalysisPage = () => {
                 >
                     필터 추가
                 </button>
+
+                {/* 표설정 범용 데이터 필터 적용 힌트 (읽기 전용) */}
+                <GlobalFilterBadge />
 
                 {/* 적용된 필터 영역 */}
                 {activeFilterChips.length > 0 && (

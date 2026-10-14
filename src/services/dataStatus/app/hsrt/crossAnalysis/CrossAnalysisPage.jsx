@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { Settings, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Info, HelpCircle, Wand2, Plus, Copy, ChevronDown, ChevronUp, Sparkles, Table2, BarChart3, Cloud, BarChart2, BarChartHorizontal, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download, Check, LayoutList, Loader2 } from 'lucide-react';
 import { Popup } from '@progress/kendo-react-popup';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
+import GlobalFilterBadge from '../../common/GlobalFilterBadge';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import KendoChart from '../../../components/KendoChart';
 import '@/services/fieldManagement/app/fieldProgress/FieldProgressPage.css';
@@ -4228,6 +4229,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 >
                     필터 추가
                 </button>
+
+                {/* 표설정 범용 데이터 필터 적용 힌트 (읽기 전용) */}
+                <GlobalFilterBadge />
 
                 {/* 적용된 조건 조합 칩 리스트 */}
                 {(() => {
