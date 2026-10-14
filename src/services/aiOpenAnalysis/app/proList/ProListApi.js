@@ -38,7 +38,15 @@ export function ProListApi() {
 
     // [A-2] PID 수치 차이 모달 내역 조회 (POST /pro_list/pid_diff)
     const fetchPidDiff = useMutation(
-        async (payload) => await api.post(payload, "/pro_list/pid_diff", "API_BASE_URL_OPENAI")
+        async (payload) => await api.post(payload, "/pro_list/pid_diff", "API_BASE_URL_OPENAI"),
+        {
+            onMutate: () => {
+                loadingSpinner?.show?.();
+            },
+            onSettled: () => {
+                loadingSpinner?.hide?.();
+            }
+        }
     );
 
     // [B-10] DB 문항 목록 조회 (POST /pro_register/db_select)
