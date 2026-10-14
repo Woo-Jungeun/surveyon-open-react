@@ -226,7 +226,7 @@ const DataFilterCard = ({ variables, badges, onChangeBadges, previewFilter, onVa
                 )}
             </div>
             <p style={{ margin: '8px 0 0', paddingBottom: 20, marginBottom: 20, borderBottom: '1px solid #E2E8F0', fontSize: 13, color: '#64748B', lineHeight: 1.5 }}>
-                교차표·엑셀 다운로드·추가분석에 항상 적용되는 기본 필터입니다. 각 화면의 필터와는 <b>AND</b>로 결합됩니다.
+                교차분석·추가분석·엑셀 다운로드에 항상 적용되는 기본 필터입니다. 각 화면의 필터와는 <b>AND</b>로 결합됩니다.
             </p>
 
             {/* ② 조건 설정 */}

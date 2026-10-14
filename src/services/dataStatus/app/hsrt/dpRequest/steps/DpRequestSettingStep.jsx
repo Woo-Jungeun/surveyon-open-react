@@ -150,7 +150,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
         }
     }));
 
-    const [activeTab, setActiveTab] = useState(0); // 0: 데이터 필터, 1: 분석, 2: 표 디자인, 3: 가중치
+    const [activeTab, setActiveTab] = useState(0); // 0: 분석, 1: 표 디자인, 2: 가중치, 3: 데이터 필터
 
     // --- 가중치 설정 탭 상태 관리 ---
     const [isWeightSidebarOpen, setIsWeightSidebarOpen] = useState(true);
@@ -1439,18 +1439,18 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     const tabs = [
-        { label: '데이터 필터', badge: dataFilterBadges.length },
         { label: '분석 설정' },
         { label: '표 디자인 설정' },
         { label: '가중치 설정' },
+        { label: '데이터 필터', badge: dataFilterBadges.length },
     ];
 
     const renderTabContent = () => {
         switch (activeTab) {
-            case 0: return renderDataFilterTab();
-            case 1: return renderAnalysisTab();
-            case 2: return renderTableSettingsTab();
-            case 3: return renderWeightSettingsTab();
+            case 0: return renderAnalysisTab();
+            case 1: return renderTableSettingsTab();
+            case 2: return renderWeightSettingsTab();
+            case 3: return renderDataFilterTab();
             default: return null;
         }
     };
@@ -1723,7 +1723,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 </div>
             </div>
 
-            <div style={(activeTab === 1 || activeTab === 3) ? { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' } : { flex: 1, overflowY: 'auto' }}>
+            <div style={(activeTab === 0 || activeTab === 2) ? { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' } : { flex: 1, overflowY: 'auto' }}>
                 {renderTabContent()}
             </div>
 
