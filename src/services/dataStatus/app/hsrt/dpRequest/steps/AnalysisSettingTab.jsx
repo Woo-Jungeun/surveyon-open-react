@@ -136,8 +136,8 @@ const AnalysisSettingTab = ({
         .map(s => s.replace(/\s*to\s*/i, ' to '));
 
     const STT_POSITION_OPTIONS = [
-        { value: 'after_last', label: '그룹 종료 위치', desc: '각 그룹의 마지막 보기 바로 뒤에 배치' },
         { value: 'before_first', label: '그룹 시작 위치', desc: '각 그룹의 첫 번째 보기 바로 앞에 배치' },
+        { value: 'after_last', label: '그룹 종료 위치', desc: '각 그룹의 마지막 보기 바로 뒤에 배치' },
         { value: 'top_all', label: '전체 보기 상단', desc: '모든 그룹 소계를 보기 목록 맨 위에 일괄 배치' },
         { value: 'bottom_all', label: '전체 보기 하단', desc: '모든 그룹 소계를 보기 목록 맨 아래에 일괄 배치' }
     ];
