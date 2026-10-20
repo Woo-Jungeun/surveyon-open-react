@@ -7,6 +7,7 @@ import {
     Lightbulb, Search, Loader2, Copy,
 } from 'lucide-react';
 import { modalContext } from '@/components/common/Modal.jsx';
+import * as signalR from '@microsoft/signalr';
 import './LogicCheckTab.css';
 
 // ─── 색 상수 ───────────────────────────────────
@@ -34,7 +35,7 @@ const LEGEND_ITEMS = [
 // ─── 거르개 키 ──────────────────────────────────
 const FILTERS = [
     { key: 'all', label: '전체' },
-    { key: 'error', label: '오류만' },
+    { key: 'error', label: '확인 필요' },
     { key: 'noResponse', label: '응답 없음' },
     { key: 'noLogic', label: '로직 없음' },
 ];
@@ -42,7 +43,7 @@ const FILTERS = [
 // ─── 정렬 옵션 ──────────────────────────────────
 const SORT_OPTIONS = [
     { key: 'order', label: '문항 순서' },
-    { key: 'confirm', label: '확인할 사람 많은 순' },
+    { key: 'confirm', label: '확인할 응답자 많은 순' },
     { key: 'missing', label: '대상자 무응답 많은 순' },
     { key: 'unexpected', label: '비대상 응답 많은 순' },
     { key: 'base', label: '대상자 많은 순' },
@@ -73,15 +74,14 @@ function getStatusBadge(item, isUnreadable) {
 
 /** SignalR 연결 생성 */
 async function createSignalRConnection() {
-    if (!window.signalR) return null;
     try {
-        const baseUrl = window.API_CONFIG?.API_BASE_URL_DATAMANAGEMENT || '';
+        const baseUrl = window.API_CONFIG?.API_BASE_URL_DATAMANAGEMENT || window.API_CONFIG?.API_BASE_URL || window.location.origin;
         let hubUrl = baseUrl.replace(/\/+$/, '') + '/hubs/task-progress';
         if (!hubUrl.startsWith('http')) hubUrl = window.location.origin + hubUrl;
-        const conn = new window.signalR.HubConnectionBuilder()
+        const conn = new signalR.HubConnectionBuilder()
             .withUrl(hubUrl)
             .withAutomaticReconnect()
-            .configureLogging(window.signalR.LogLevel.None)
+            .configureLogging(signalR.LogLevel.None)
             .build();
         await conn.start();
         return conn;
@@ -91,17 +91,221 @@ async function createSignalRConnection() {
     }
 }
 
+/** 자동 채우기 방식 선택 창 (기획서 팝업) — 빈 칸만 / 전부 지우고 다시 */
+function AutoFillDialog({ initialRestart = false, logicCount = 0, totalCount = 0, onCancel, onStart }) {
+    const [restart, setRestart] = useState(!!initialRestart);
+    const n = Number(logicCount || 0).toLocaleString();
+    const empty = Math.max(0, Number(totalCount || 0) - Number(logicCount || 0)).toLocaleString();
+    const options = [
+        {
+            value: false,
+            title: '빈 칸만 채우기',
+            desc: `로직이 없는 문항 ${empty}개만 채웁니다. 입력된 로직 ${n}개는 그대로 둡니다.`,
+        },
+        {
+            value: true,
+            title: '전부 지우고 다시 채우기',
+            desc: `입력된 로직 ${n}개를 모두 지우고 처음부터 채웁니다. 직접 고친 로직도 지워집니다.`,
+        },
+    ];
+    return (
+        <div className="variable-modal-overlay" data-theme="data-management" onClick={onCancel}>
+            <div className="lc-dialog" role="dialog" aria-labelledby="lc-autofill-title" onClick={e => e.stopPropagation()}>
+                <div className="variable-modal-header">
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{ width: '4px', height: '18px', backgroundColor: 'var(--dm-primary)', borderRadius: '4px', marginRight: '8px' }}></div>
+                        <h3 id="lc-autofill-title" className="variable-modal-title">로직 자동 채우기</h3>
+                    </div>
+                    <button type="button" id="lc-autofill-close" onClick={onCancel} className="variable-modal-close">&times;</button>
+                </div>
+                <div className="lc-dialog-body">
+                <p className="lc-dialog-desc">AI가 설문지를 읽고 문항별 로직을 대신 입력해 드립니다. 채울 방식을 골라 주세요.</p>
+
+                <div className="lc-choice-list">
+                    {options.map(opt => (
+                        <label
+                            key={String(opt.value)}
+                            className={`lc-choice${restart === opt.value ? ' selected' : ''}`}
+                            onClick={() => setRestart(opt.value)}
+                        >
+                            <span className="lc-choice-radio" />
+                            <span className="lc-choice-text">
+                                <span className="lc-choice-title">{opt.title}</span>
+                                <span className="lc-choice-desc">{opt.desc}</span>
+                            </span>
+                        </label>
+                    ))}
+                </div>
+
+                <ul className="lc-dialog-notes">
+                    {restart
+                        ? <li>지우기 전에 지금 상태를 복원 지점으로 저장해 둡니다. 중간에 멈추면 남은 문항은 빈 칸으로 남습니다.</li>
+                        : <li>로직이 필요 없어 일부러 비워 둔 문항도 채워질 수 있습니다. 끝나면 새로 채워진 문항을 알려 드립니다.</li>}
+                    <li>10~20분 정도 걸립니다. 중간에 멈춰도 그때까지 채운 로직은 저장됩니다.</li>
+                </ul>
+                </div>
+
+                <div className="variable-modal-footer">
+                    <button type="button" id="lc-autofill-cancel" className="btn-cancel" onClick={onCancel}>취소</button>
+                    <button type="button" id="lc-autofill-start" className="btn-save" onClick={() => onStart(restart)}>채우기 시작</button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/** "변수: 내용" 문자열을 [앞, 뒤]로 나눔 (last=true 면 마지막 ": " 기준 — 건너뛰기 규칙용) */
+function splitPair(s, last = false) {
+    const str = String(s ?? '');
+    const i = last ? str.lastIndexOf(': ') : str.indexOf(': ');
+    return i < 0 ? [str, ''] : [str.slice(0, i), str.slice(i + 2)];
+}
+
+/** 자동 채우기 결과 창 (정의서 B) */
+function AutoFillResultDialog({ result, onClose, onRestore, onGoJudge }) {
+    const r = result || {};
+    const review = [...(r.needsReview || []), ...(r.undetermined || [])];
+    const newly = r.newlyFilled || [];
+    const skips = r.skipNotComputed || [];
+    const failed = r.failedVariables || [];
+    const newlyCount = r.newlyFilledCount ?? newly.length;
+    const reviewCount = (r.needsReviewCount ?? (r.needsReview || []).length) + (r.undeterminedCount ?? (r.undetermined || []).length);
+
+    const tabs = [
+        { key: 'newly', label: '새로 채워진 문항', count: newlyCount, rows: newly, cols: ['변수', '들어간 조건'], last: false,
+          empty: '비어 있던 칸에 새로 들어간 조건이 없습니다.',
+          hint: '비어 있던 칸에 조건이 들어간 문항입니다. 일부러 비워 두었던 문항이 있는지 확인해 주세요.' },
+        { key: 'review', label: '직접 확인할 문항', count: reviewCount, rows: review, cols: ['변수', '이유'], last: false,
+          empty: '직접 확인할 문항이 없습니다.',
+          hint: 'AI가 로직을 정하지 못해 비워 둔 문항입니다. 로직이 필요하면 맵에서 직접 넣어 주세요. 비어 있는 문항은 판정하지 않습니다.' },
+        { key: 'skip', label: '적용 못한 건너뛰기', count: r.skipNotComputedCount ?? skips.length, rows: skips, cols: ['건너뛰기 규칙', '이유'], last: true,
+          empty: '모든 건너뛰기 규칙을 적용했습니다.',
+          hint: '설문지의 건너뛰기 규칙 중 계산하지 못한 것입니다. 필요하면 시작 문항의 로직을 직접 확인해 주세요.' },
+    ];
+    if (failed.length) {
+        tabs.push({ key: 'failed', label: '채우지 못한 문항', count: failed.length, rows: failed, cols: ['변수', ''], last: false,
+            empty: '', hint: 'AI 요청이 실패해 바뀌지 않은 문항입니다. 다시 [자동 채우기]를 누르면 빈 칸부터 다시 채웁니다.' });
+    }
+    const [tab, setTab] = useState(newlyCount > 0 ? 'newly' : reviewCount > 0 ? 'review' : 'newly');
+    const [msgOpen, setMsgOpen] = useState(false);
+    const cur = tabs.find(t => t.key === tab) || tabs[0];
+    const fmtN = (n) => Number(n || 0).toLocaleString();
+
+    const stats = [
+        { label: '전체 문항', value: r.totalVariables ?? r.processedCount },
+        r.restarted
+            ? { label: '지우고 다시 채움', value: r.clearedCount }
+            : { label: '기존 로직 유지', value: r.alreadyFilledCount },
+        { label: '새로 채워짐', value: newlyCount, tone: 'green' },
+        { label: '직접 확인', value: reviewCount, tone: reviewCount ? 'red' : '' },
+        { label: '건너뛰기 적용', value: r.skipVariablesChanged, suffix: '문항' },
+    ];
+
+    return (
+        <div className="variable-modal-overlay" data-theme="data-management">
+            <div className="lc-dialog lc-result-dialog" role="dialog" aria-labelledby="lc-result-title" onClick={e => e.stopPropagation()}>
+                <div className="variable-modal-header">
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{ width: '4px', height: '18px', backgroundColor: 'var(--dm-primary)', borderRadius: '4px', marginRight: '8px' }}></div>
+                        <h3 id="lc-result-title" className="variable-modal-title">로직 자동 채우기 결과</h3>
+                    </div>
+                    <button type="button" id="lc-result-close" onClick={onClose} className="variable-modal-close">&times;</button>
+                </div>
+
+                <div className="lc-dialog-body">
+                    {/* 요약 숫자 */}
+                    <div className="lc-result-stats">
+                        {stats.map(s => (
+                            <div key={s.label} className={`lc-result-stat${s.tone ? ` ${s.tone}` : ''}`}>
+                                <span className="lc-result-stat-value">{fmtN(s.value)}{s.suffix ? <small>{s.suffix}</small> : null}</span>
+                                <span className="lc-result-stat-label">{s.label}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* 경고 */}
+                    {r.usedPaidFallback && (
+                        <div className="lc-result-warn">일부 문항은 보조 모델로 채웠습니다. 반복 문항의 조건을 한 번 더 확인해 주세요.</div>
+                    )}
+
+                    {/* 서버 안내 문장 (그대로) */}
+                    {r.message && (
+                        <div className={`lc-result-msg${msgOpen ? ' open' : ''}`}>
+                            <p>{r.message}</p>
+                            <button type="button" className="lc-result-msg-toggle" onClick={() => setMsgOpen(o => !o)}>
+                                {msgOpen ? '접기' : '자세히 보기'}
+                            </button>
+                        </div>
+                    )}
+
+                    {/* 목록 */}
+                    <div className="lc-result-tabs" role="tablist">
+                        {tabs.map(t => (
+                            <button
+                                key={t.key}
+                                type="button"
+                                role="tab"
+                                id={`lc-result-tab-${t.key}`}
+                                aria-selected={tab === t.key}
+                                className={`lc-result-tab${tab === t.key ? ' active' : ''}`}
+                                onClick={() => setTab(t.key)}
+                            >
+                                {t.label} <span className="lc-result-tab-count">{fmtN(t.count)}</span>
+                            </button>
+                        ))}
+                    </div>
+                    {cur.hint && cur.rows.length > 0 && <p className="lc-result-hint">{cur.hint}</p>}
+                    <div className="lc-result-list">
+                        {cur.rows.length === 0 ? (
+                            <div className="lc-result-empty">{cur.empty}</div>
+                        ) : cur.rows.map((row, i) => {
+                            const [a, b] = splitPair(row, cur.last);
+                            return (
+                                <div key={i} className="lc-result-row">
+                                    <span className="lc-result-key" title={a}>{a}</span>
+                                    <span className="lc-result-val">{b}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    {cur.key === 'newly' && newlyCount > newly.length && (
+                        <p className="lc-result-hint">최대 {fmtN(newly.length)}개까지만 보입니다 (전체 {fmtN(newlyCount)}개).</p>
+                    )}
+                </div>
+
+                <div className="variable-modal-footer lc-result-footer">
+                    {r.safetyVersionId ? (
+                        <button type="button" id="lc-result-restore" className="btn-cancel lc-result-restore" onClick={() => onRestore(r.safetyVersionId)}>
+                            자동 채우기 전으로 되돌리기
+                        </button>
+                    ) : <span />}
+                    <div style={{ display: 'flex', gap: 8 }}>
+                        <button type="button" id="lc-result-ok" className="btn-cancel" onClick={onClose}>닫기</button>
+                        <button type="button" id="lc-result-judge" className="btn-save" onClick={onGoJudge}>로직 판정하러 가기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 /** 진행 모달 */
 function ProgressModal({ title, message, percent, onAbort, canClose = false }) {
+    // 진행률은 묶음(30문항)마다 와서 그 사이엔 숫자가 멈춰 있다 → 흐르는 막대·스피너로 '돌고 있음'을 보여 줌 (퍼센트는 서버 값 그대로)
+    const pct = Math.min(100, percent || 0);
+
     return (
-        <div className="lc-overlay" onClick={canClose ? undefined : (e) => e.stopPropagation()}>
+        <div className="variable-modal-overlay" data-theme="data-management" onClick={canClose ? undefined : (e) => e.stopPropagation()}>
             <div className="lc-progress-modal" onClick={e => e.stopPropagation()}>
                 <div className="lc-progress-title">{title}</div>
-                <div className="lc-progress-msg">{message || '처리 중...'}</div>
-                <div className="lc-progress-bar-wrap">
-                    <div className="lc-progress-bar" style={{ width: `${Math.min(100, percent || 0)}%` }} />
+                <div className="lc-progress-msg">
+                    <Loader2 size={13} className="lc-spin" />
+                    <span>{message || '처리 중...'}</span>
                 </div>
-                <div className="lc-progress-pct">{Math.round(percent || 0)}%</div>
+                <div className="lc-progress-bar-wrap lc-progress-live">
+                    <div className="lc-progress-bar" style={{ width: `${pct}%` }} />
+                </div>
+                <div className="lc-progress-pct">{Math.round(pct)}%</div>
                 {onAbort && (
                     <button type="button" className="lc-btn-outline lc-progress-abort" onClick={onAbort}>
                         중지
@@ -155,16 +359,16 @@ const VarRow = React.memo(function VarRow({ item, isActive, isUnreadable, checke
         >
             <div className="lc-vr-top">
                 <span className="lc-vr-name">{item.variable || item.sysName}</span>
-                {(item.hints?.length > 0) && <span className="lc-vr-icon" title="힌트 있음">💡</span>}
-                {isUnreadable && <span className="lc-vr-icon err-icon" title="로직을 읽지 못했습니다">!</span>}
-                {item._fixed && <span className="lc-vr-icon" title="로직을 고쳐 다시 판정했습니다">✎</span>}
+                {(item.hints?.length > 0) && <span className="lc-vr-icon" title="확인 팁 있음"><Lightbulb size={11} /></span>}
+                {isUnreadable && <span className="lc-vr-icon err-icon" title="로직을 해석하지 못했습니다">!</span>}
+                {item._fixed && <span className="lc-vr-icon" title="로직을 고쳐 다시 판정했습니다"><Edit2 size={11} /></span>}
             </div>
             <div className="lc-vr-label" title={item.title || item.label || ''}>
                 {item.title || item.label || ''}
             </div>
             {noData ? (
                 <div className="lc-vr-nodata">
-                    {isUnreadable ? '로직 못 읽음' : !item.hasLogic ? '로직 없음' : item.status === 'noResponse' ? '응답 없음' : '미판정'}
+                    {isUnreadable ? '로직 해석 불가' : !item.hasLogic ? '로직 없음' : item.status === 'noResponse' ? '응답 없음' : '판정 전'}
                 </div>
             ) : (
                 <>
@@ -262,7 +466,7 @@ const LogicCheckTab = ({
     runCheckLogic,
     fetchCheckLogicDetail,
     getCheckLogicFixForm,
-    // restoreExcelVersion, // 복원 지점 되돌리기용 - 향후 사용
+    restoreExcelVersion, // 복원 지점 되돌리기 (자동 채우기 결과 창)
     onMapReload,
 }) => {
     const modal = useContext(modalContext);
@@ -311,10 +515,21 @@ const LogicCheckTab = ({
         return () => document.removeEventListener('mousedown', h);
     }, [isMenuOpen]);
 
+    // ─── 진행 중 요청 — 화면을 떠나면 끊는다 (정의서: 창을 닫으면 멈춤 · 채운 만큼은 맵에 남음) ───
+    const activeAbortRef = useRef(null);
+    const unmountedRef = useRef(false);
+    useEffect(() => {
+        unmountedRef.current = false;
+        return () => {
+            unmountedRef.current = true;
+            activeAbortRef.current?.abort();
+        };
+    }, []);
+
     // ─── SignalR 진행 공통 ───
     const runWithProgress = useCallback(async (title, apiFn, onDone, onStop) => {
         setIsProgressing(true);
-        setProgressData({ title, message: '준비 중...', percent: 0 });
+        setProgressData({ title, message: '준비하고 있습니다…', percent: 0 });
 
         let conn = null;
         let aborted = false;
@@ -334,86 +549,113 @@ const LogicCheckTab = ({
                 });
             }
 
-            // abort 함수 등록
-            let abortController = null;
+            // abort 함수 등록 — 요청 자체를 끊는다 (별도 중지 API 없음)
+            const abortController = new AbortController();
+            activeAbortRef.current = abortController;
             setAbortFn(() => () => {
                 aborted = true;
-                abortController?.abort();
+                abortController.abort();
             });
 
-            const res = await apiFn(connId);
-            if (aborted) { onStop?.(); return; }
+            const res = await apiFn(connId, abortController.signal);
+            if (unmountedRef.current) return;
+            if (aborted || res?.canceled) { onStop?.(); return; }
 
             if (String(res?.success) === '777') {
                 await onDone(res);
             } else {
-                const msg = res?.resultjson?.errorcontent || res?.errorcontent || res?.message || '오류가 발생했습니다.';
+                const msg = res?.resultjson?.errorcontent || res?.errorcontent || res?.message || '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.';
                 modal?.showErrorAlert?.('오류', msg);
             }
         } catch (err) {
-            if (!aborted) {
+            if (unmountedRef.current) return;
+            if (aborted) {
+                onStop?.();
+            } else {
                 console.error(err);
-                modal?.showErrorAlert?.('오류', err?.message || '처리 중 오류가 발생했습니다.');
+                const msg = err?.response?.data?.resultjson?.errorcontent || err?.response?.data?.message || err?.message || '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+                modal?.showErrorAlert?.('오류', msg);
             }
-            onStop?.();
         } finally {
-            setIsProgressing(false);
-            setAbortFn(null);
+            activeAbortRef.current = null;
             if (conn) { try { conn.stop(); } catch { /* ignore */ } }
+            if (!unmountedRef.current) {
+                setIsProgressing(false);
+                setAbortFn(null);
+            }
         }
     }, [modal]);
 
     // ─── A. 자동 채우기 ───
-    const handleAutoFill = useCallback(async (restart = false) => {
+    const [autoFillDialog, setAutoFillDialog] = useState(null); // null | { restart }
+    const handleAutoFill = useCallback((restart = false) => {
+        setAutoFillDialog({ restart });
+    }, []);
+
+    const runAutoFill = useCallback(async (restart = false) => {
         const doFill = async () => {
             await runWithProgress(
                 '로직 자동 채우기',
-                async (connId) => {
-                    const payload = { pn, user: userId, connectionId: connId };
+                async (connId, signal) => {
+                    const payload = { pn, user: userId, connectionId: connId, signal };
                     if (restart) payload.restart = true;
                     return generateLogicChecks?.mutateAsync(payload);
                 },
                 async (res) => {
                     const rj = res?.resultjson || {};
-                    const newlyFilled = rj.newlyFilled || [];
-                    const undetermined = rj.undetermined || [];
-                    const msg = [
-                        rj.message || '자동 채우기가 완료되었습니다.',
-                        newlyFilled.length ? `채운 문항 ${rj.newlyFilledCount ?? newlyFilled.length}개` : '',
-                        undetermined.length ? `확인 필요 ${undetermined.length}개` : '',
-                    ].filter(Boolean).join(' · ');
-                    modal?.showAlert?.('완료', msg);
+                    // message 는 응답 최상위에 옴 (resultjson 안이 아님)
+                    setFillResult({ ...rj, message: res?.message || rj.message || '' });
                     onMapReload?.();
-                    setJudgeResult(null); // 판정 결과 초기화
+                    setJudgeResult(null); // 판정 결과 초기화 — 로직이 바뀌었으니 다시 판정
                 },
                 () => {
-                    modal?.showAlert?.('알림', '멈췄습니다. 지금까지 채운 문항은 맵에 남아 있습니다.\n다시 누르면 남은 문항부터 이어집니다.');
+                    modal?.showAlert?.('알림', restart
+                        ? '멈췄습니다. 아직 채우지 않은 문항은 빈 칸으로 남아 있습니다.\n다시 [자동 채우기]를 눌러 마저 채우거나, 복원 지점으로 되돌려 주세요.'
+                        : '멈췄습니다. 지금까지 채운 문항은 맵에 남아 있습니다.\n다시 누르면 남은 문항부터 이어서 채웁니다.');
                     onMapReload?.();
                 }
             );
         };
 
-        // 확인 창
-        await new Promise((resolve) => {
-            modal?.showConfirm?.('로직 자동 채우기', [
-                '구조화된 설문지를 AI가 읽어 로직을 채웁니다.',
-                '• 로직이 비어 있는 문항만 채웁니다.',
-                '• 10~20분 소요됩니다. 중지하면 채운 만큼 저장됩니다.',
-                restart ? '• ⚠ 싹 지우고 다시 채웁니다.' : '',
-            ].filter(Boolean).join('\n'), {
-                btns: [
-                    { title: '취소', click: () => resolve(false) },
-                    { title: restart ? '싹 지우고 채우기 시작' : '채우기 시작', click: () => resolve(true) },
-                ]
-            });
-        }).then((go) => { if (go) doFill(); });
+        await doFill();
     }, [pn, userId, generateLogicChecks, modal, onMapReload, runWithProgress]);
+
+    // ─── B. 채움 결과 창 ───
+    const [fillResult, setFillResult] = useState(null);
+
+    // 복원 지점으로 되돌리기 — POST /map/history/restore { pn, user, versionId }
+    const handleRestore = useCallback((versionId) => {
+        modal?.showConfirm?.('자동 채우기 전으로 되돌리기',
+            '맵을 자동 채우기 전 상태(복원 지점 「로직 자동 채움 전」)로 되돌립니다.\n이번에 채운 로직은 모두 사라집니다.', {
+            btns: [
+                { title: '취소', click: () => {} },
+                {
+                    title: '되돌리기',
+                    click: async () => {
+                        try {
+                            const res = await restoreExcelVersion?.mutateAsync({ pn, user: userId, versionId });
+                            if (String(res?.success) === '777') {
+                                setFillResult(null);
+                                onMapReload?.();
+                                modal?.showAlert?.('알림', '자동 채우기 전으로 되돌렸습니다.');
+                            } else {
+                                modal?.showErrorAlert?.('오류', res?.resultjson?.errorcontent || res?.message || '되돌리지 못했습니다. 맵 관리의 변경 이력에서 다시 시도해 주세요.');
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            modal?.showErrorAlert?.('오류', err?.response?.data?.resultjson?.errorcontent || '되돌리지 못했습니다. 잠시 후 다시 시도해 주세요.');
+                        }
+                    }
+                },
+            ]
+        });
+    }, [modal, restoreExcelVersion, pn, userId, onMapReload]);
 
     // ─── C. 판정 ───
     const handleJudge = useCallback(async () => {
         await runWithProgress(
-            '판정',
-            async (connId) => runCheckLogic?.mutateAsync({ pn, user: userId, connectionId: connId }),
+            '로직 판정',
+            async (connId, signal) => runCheckLogic?.mutateAsync({ pn, user: userId, connectionId: connId, signal }),
             async (res) => {
                 const rj = res?.resultjson || {};
                 setJudgeResult({
@@ -427,7 +669,8 @@ const LogicCheckTab = ({
                 setSortKey('order');
                 setSelectedVar(null);
                 setDetail(null);
-                if (rj.message) modal?.showAlert?.('판정 완료', rj.message);
+                const judgeMsg = res?.message || rj.message;
+                if (judgeMsg) modal?.showAlert?.('판정 완료', judgeMsg);
             },
             null
         );
@@ -507,13 +750,13 @@ const LogicCheckTab = ({
             if (String(res?.success) === '777') {
                 setDetail({ ...res.resultjson, _kind: kind, _item: item });
             } else {
-                const msg = res?.resultjson?.errorcontent || res?.errorcontent || '상세 조회에 실패했습니다.';
+                const msg = res?.resultjson?.errorcontent || res?.errorcontent || '문항 상세를 불러오지 못했습니다.';
                 modal?.showErrorAlert?.('오류', msg);
                 setDetail(null);
             }
         } catch (err) {
             if (err.name !== 'AbortError') {
-                modal?.showErrorAlert?.('오류', '상세 조회 중 오류가 발생했습니다.');
+                modal?.showErrorAlert?.('오류', '문항 상세를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
             }
             setDetail(null);
         } finally {
@@ -552,7 +795,7 @@ const LogicCheckTab = ({
             const contentType = res?.headers?.['content-type'] || '';
             if (contentType.includes('application/json')) {
                 const text = await res?.data?.text?.();
-                let msg = '수정 양식 다운로드에 실패했습니다.';
+                let msg = '수정 양식을 내려받지 못했습니다.';
                 try { const j = JSON.parse(text); msg = j.errorcontent || j.message || msg; } catch (_e) { /* ignore */ }
                 modal?.showErrorAlert?.('오류', msg);
                 return;
@@ -567,7 +810,7 @@ const LogicCheckTab = ({
             a.href = url; a.download = filename; document.body.appendChild(a); a.click();
             setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 500);
         } catch (err) {
-            modal?.showErrorAlert?.('오류', '수정 양식 다운로드 중 오류가 발생했습니다.');
+            modal?.showErrorAlert?.('오류', '수정 양식을 내려받지 못했습니다. 잠시 후 다시 시도해 주세요.');
         }
     }, [pn, userId, getCheckLogicFixForm, modal]);
 
@@ -586,9 +829,9 @@ const LogicCheckTab = ({
                 const body = rows.map(r => r.join('\t')).join('\n');
                 await navigator.clipboard.writeText(header + '\n' + body);
             }
-            modal?.showAlert?.('복사 완료', `${rows.length}명 복사했습니다.`);
+            modal?.showAlert?.('복사 완료', `응답자 ${fmt(rows.length)}명을 복사했습니다.`);
         } catch {
-            modal?.showErrorAlert?.('오류', '클립보드 복사에 실패했습니다.');
+            modal?.showErrorAlert?.('오류', '복사하지 못했습니다. 브라우저의 클립보드 권한을 확인해 주세요.');
         }
     }, [detail, modal]);
 
@@ -688,7 +931,7 @@ const LogicCheckTab = ({
                     </tbody>
                 </table>
                 {dist.truncated && (
-                    <div className="lc-dist-note">외 {dist.allDistinct - entries.length}종 더 있습니다</div>
+                    <div className="lc-dist-note">이 밖에 응답값 {fmt(dist.allDistinct - entries.length)}개는 표시하지 않았습니다</div>
                 )}
             </div>
         );
@@ -765,10 +1008,10 @@ const LogicCheckTab = ({
                     </table>
                 </div>
                 {total > 5000 && (
-                    <div className="lc-resp-note">앞 5,000명만 보입니다 — 복사는 {fmt(total)}명 전부</div>
+                    <div className="lc-resp-note">전체 {fmt(total)}명 중 앞의 5,000명만 보여 드립니다 (복사도 보이는 응답자만 됩니다)</div>
                 )}
                 {rows.length === 0 && (
-                    <div className="lc-resp-empty">데이터가 없습니다.</div>
+                    <div className="lc-resp-empty">해당하는 응답자가 없습니다.</div>
                 )}
             </div>
         );
@@ -784,17 +1027,17 @@ const LogicCheckTab = ({
             ? judgeResult.unreadable?.find(u => u.variable === item.variable)
             : null;
 
-        if (isUnreadable) return { text: `로직을 읽지 못해 판정하지 못했습니다${unreadableItem?.reason ? ` — ${unreadableItem.reason}` : ''}`, color: C.orange };
+        if (isUnreadable) return { text: `로직을 해석하지 못해 판정하지 않았습니다${unreadableItem?.reason ? ` — ${unreadableItem.reason}` : ''}`, color: C.orange };
         if (!item.hasLogic) return { text: '로직이 없어 판정하지 않았습니다', color: '#64748b' };
-        if (item.status === 'noResponse') return { text: '응답이 하나도 없습니다', color: '#64748b' };
+        if (item.status === 'noResponse') return { text: '이 문항에는 응답이 하나도 없습니다', color: '#64748b' };
         if (item._fixed) return { text: '로직을 고쳐 이 문항만 다시 판정했습니다', color: C.blue };
-        if (item.status === 'ok') return { text: '문제 없습니다', color: C.green };
+        if (item.status === 'ok') return { text: '모든 응답이 로직대로 들어왔습니다', color: C.green };
 
         const parts = [];
-        if (item.missing > 0) parts.push(`대상자 ${fmt(item.base)}명 중 ${fmt(item.missing)}명이 무응답입니다`);
-        if (item.unexpected > 0) parts.push(`비대상 ${fmt(Math.max(0, (judgeResult.checkedResponses || 0) - item.base))}명이 응답했습니다`);
-        if (parts.length === 2) return { text: `대상자 무응답 ${fmt(item.missing)}명 · 비대상 응답 ${fmt(item.unexpected)}명`, color: C.red };
-        return { text: parts[0] || '확인 필요', color: C.red };
+        if (item.missing > 0) parts.push(`대상자 ${fmt(item.base)}명 중 ${fmt(item.missing)}명이 응답하지 않았습니다`);
+        if (item.unexpected > 0) parts.push(`건너뛰어야 할 비대상 중 ${fmt(item.unexpected)}명이 응답했습니다`);
+        if (parts.length === 2) return { text: `대상자 무응답 ${fmt(item.missing)}명 · 비대상 응답 ${fmt(item.unexpected)}명을 확인해 주세요`, color: C.red };
+        return { text: parts[0] || '확인이 필요합니다', color: C.red };
     }, [selectedVar, judgeResult]);
 
     // ───────────────────────────────────────────────────────────────────────
@@ -810,6 +1053,25 @@ const LogicCheckTab = ({
                     message={progressData.message}
                     percent={progressData.percent}
                     onAbort={abortFn}
+                />
+            )}
+
+            {/* ── 자동 채우기 방식 선택 ── */}
+            {fillResult && (
+                <AutoFillResultDialog
+                    result={fillResult}
+                    onClose={() => setFillResult(null)}
+                    onRestore={handleRestore}
+                    onGoJudge={() => { setFillResult(null); handleJudge(); }}
+                />
+            )}
+            {autoFillDialog && (
+                <AutoFillDialog
+                    initialRestart={autoFillDialog.restart}
+                    logicCount={logicCount}
+                    totalCount={totalCount}
+                    onCancel={() => setAutoFillDialog(null)}
+                    onStart={(restart) => { setAutoFillDialog(null); runAutoFill(restart); }}
                 />
             )}
 
@@ -857,9 +1119,6 @@ const LogicCheckTab = ({
                             <button type="button" className="lc-menu-item" onClick={() => { setIsMenuOpen(false); handleAutoFill(false); }}>
                                 <Wand2 size={14} /> 로직 자동 채우기
                             </button>
-                            <button type="button" className="lc-menu-item" onClick={() => { setIsMenuOpen(false); handleAutoFill(true); }}>
-                                <RotateCcw size={14} /> 싹 지우고 다시 채우기
-                            </button>
                             <div className="lc-menu-sep" />
                             <button
                                 type="button"
@@ -867,7 +1126,7 @@ const LogicCheckTab = ({
                                 disabled={!isJudged}
                                 onClick={() => { setIsMenuOpen(false); setJudgeResult(null); setSelectedVar(null); setDetail(null); }}
                             >
-                                <RotateCcw size={14} /> 판정 결과 초기화
+                                <RotateCcw size={14} /> 판정 결과 지우기
                             </button>
                         </div>
                     )}
@@ -881,7 +1140,7 @@ const LogicCheckTab = ({
                     <div className="lc-main">
                         <div className="lc-panel" style={{ animation: 'lc-rise 0.25s ease-out' }}>
                             <h2 className="lc-title">응답이 설문 로직대로 들어왔는지 확인합니다</h2>
-                            <p className="lc-subtitle">두 단계면 됩니다. 지금 할 일은 <strong>초록 칸</strong>입니다.</p>
+                            <p className="lc-subtitle">아래 두 단계를 차례대로 진행해 주세요.</p>
 
                             {/* 1단계 */}
                             <div className={`lc-step${isLogicReady ? ' done' : ' active'}`}>
@@ -892,8 +1151,8 @@ const LogicCheckTab = ({
                                     <span className="lc-step-title">로직 준비</span>
                                     <span className="lc-step-desc">
                                         {isLogicReady
-                                            ? <><strong>{fmt(totalCount)}</strong>개 문항 중 <strong>{fmt(logicCount)}</strong>개에 로직이 있습니다 · 나머지는 판정하지 않습니다</>
-                                            : <>아직 로직이 설정된 문항이 없습니다 · 자동 채우기로 로직을 준비해 주세요</>
+                                            ? <>전체 <strong>{fmt(totalCount)}</strong>개 문항 중 <strong>{fmt(logicCount)}</strong>개에 로직이 있습니다.<br />로직이 없는 문항은 판정에서 빠집니다.<span className="lc-step-hint">다시 채우고 싶은 문항은 맵에서 로직을 지운 뒤 [자동 채우기]를 누르세요.</span></>
+                                            : <>아직 로직이 있는 문항이 없습니다. 자동 채우기로 로직을 먼저 준비해 주세요.</>
                                         }
                                     </span>
                                 </div>
@@ -913,7 +1172,7 @@ const LogicCheckTab = ({
                                 <span className="lc-step-badge">2</span>
                                 <div className="lc-step-text">
                                     <span className="lc-step-title">판정</span>
-                                    <span className="lc-step-desc">완료 응답을 로직과 맞춰 봅니다 · 2~10분</span>
+                                    <span className="lc-step-desc">완료된 응답이 로직대로 들어왔는지 확인합니다. 2~10분 정도 걸립니다.</span>
                                 </div>
                                 <button
                                     id="lc-judge-btn"
@@ -928,9 +1187,11 @@ const LogicCheckTab = ({
 
                             {/* 안내 */}
                             <div className="lc-guide">
-                                판정하면 문항마다 응답자를 네 칸으로 나눠 <strong>베이스</strong>를 보여 줍니다 —{' '}
-                                <strong>대상자</strong>(로직 조건에 맞아 답해야 하는 사람) · <strong>비대상</strong>(건너뛰어야 하는 사람) × 응답 · 무응답.
-                                이 중 <strong>대상자 무응답</strong>과 <strong>비대상 응답</strong>이 확인할 것입니다.
+                                <div className="lc-guide-title">판정 결과 보는 법</div>
+                                <ul className="lc-guide-list">
+                                    <li>문항마다 응답자를 <strong>대상자</strong>(로직 조건에 맞아 답해야 하는 사람)와 <strong>비대상</strong>(건너뛰어야 하는 사람)으로 나눠 보여 드립니다.</li>
+                                    <li>이 중 <strong>대상자 무응답</strong>과 <strong>비대상 응답</strong>이 확인이 필요한 응답입니다.</li>
+                                </ul>
                                 <div className="lc-legend">
                                     {LEGEND_ITEMS.map(item => (
                                         <span key={item.key} className="lc-legend-item">
@@ -992,7 +1253,7 @@ const LogicCheckTab = ({
                         {/* 목록 */}
                         <div className="lc-var-list">
                             {listItems.length === 0 ? (
-                                <div className="lc-var-empty">표시할 문항이 없습니다.</div>
+                                <div className="lc-var-empty">조건에 맞는 문항이 없습니다.</div>
                             ) : (
                                 listItems.map(item => (
                                     <VarRow
@@ -1018,7 +1279,7 @@ const LogicCheckTab = ({
                     <div className="lc-right">
                         {!selectedVar ? (
                             <div className="lc-right-empty">
-                                <div>베이스 칸이나 분포의 비대상 응답 숫자를 누르면<br />그 사람들이 여기 나옵니다</div>
+                                <div>왼쪽 목록에서 문항을 선택하면<br />판정 결과를 자세히 볼 수 있습니다</div>
                             </div>
                         ) : (
                             <div className="lc-detail">
@@ -1107,14 +1368,14 @@ const LogicCheckTab = ({
                                 {/* ③ 분포 + ④ 응답자 */}
                                 {detailLoading ? (
                                     <div className="lc-detail-loading">
-                                        <Loader2 size={20} className="lc-spin" /> 데이터를 불러오는 중...
+                                        <Loader2 size={20} className="lc-spin" /> 불러오는 중입니다…
                                     </div>
                                 ) : (
                                     <div className="lc-detail-tables">
                                         {DistTable}
                                         {RespTable || (
                                             <div className="lc-resp-placeholder">
-                                                베이스 칸이나 분포의 비대상 응답 숫자를 누르면 그 사람들이 여기 나옵니다
+                                                위의 칸이나 분포표의 숫자를 누르면 해당 응답자 목록이 여기에 나옵니다
                                             </div>
                                         )}
                                     </div>

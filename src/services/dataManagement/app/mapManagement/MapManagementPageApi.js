@@ -210,24 +210,41 @@ export function MapManagementPageApi() {
         )
     );
 
-    /** 로직 자동 채우기 (timeout 30분) */
+    /** 요청을 [중지]로 끊은 경우 — 오류로 던지지 않고 표시만 (react-query 가 콘솔에 오류로 찍지 않도록) */
+    const isCanceled = (err) => err?.name === 'CanceledError' || err?.code === 'ERR_CANCELED';
+
+    /** 로직 자동 채우기 (timeout 30분) — signal 로 요청을 끊으면 서버도 다음 묶음으로 넘어가지 않음 */
     const generateLogicChecks = useMutation(
-        async (data) => await api.post(
-            data,
-            "/generate-logic-checks",
-            "API_BASE_URL_DATAMANAGEMENT",
-            { timeout: 1800000 }
-        )
+        async ({ signal, ...data }) => {
+            try {
+                return await api.post(
+                    data,
+                    "/generate-logic-checks",
+                    "API_BASE_URL_DATAMANAGEMENT",
+                    { timeout: 1800000, signal }
+                );
+            } catch (err) {
+                if (isCanceled(err)) return { canceled: true };
+                throw err;
+            }
+        }
     );
 
     /** 로직 판정 (timeout 30분) */
     const runCheckLogic = useMutation(
-        async (data) => await api.post(
-            data,
-            "/check-logic",
-            "API_BASE_URL_DATAMANAGEMENT",
-            { timeout: 1800000 }
-        )
+        async ({ signal, ...data }) => {
+            try {
+                return await api.post(
+                    data,
+                    "/check-logic",
+                    "API_BASE_URL_DATAMANAGEMENT",
+                    { timeout: 1800000, signal }
+                );
+            } catch (err) {
+                if (isCanceled(err)) return { canceled: true };
+                throw err;
+            }
+        }
     );
 
     /** 로직 판정 상세 조회 — AbortController 지원 (직접 fetch) */
