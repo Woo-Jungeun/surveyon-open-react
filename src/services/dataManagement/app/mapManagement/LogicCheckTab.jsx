@@ -27,6 +27,8 @@ const C = {
     green: 'var(--dm-primary)',
     greenLight: 'var(--dm-primary-light)',
 };
+// 분포 막대 전용 — 연한 톤
+const BAR = { blue: '#7ba3f5', red: '#fb7185', orange: '#fdab5e' };
 
 // ─── 판정 결과 범례 ─────────────────────────────
 const LEGEND_ITEMS = [
@@ -631,9 +633,9 @@ const VarRow = React.memo(function VarRow({ item, isActive, isUnreadable, checke
             ) : (
                 <>
                     <div className="lc-vr-bar">
-                        <div style={{ width: `${bAnswered}%`, background: C.blue }} />
-                        <div style={{ width: `${bMissing}%`, background: C.red }} />
-                        <div style={{ width: `${bUnexpected}%`, background: C.orange }} />
+                        <div style={{ width: `${bAnswered}%`, background: BAR.blue }} />
+                        <div style={{ width: `${bMissing}%`, background: BAR.red }} />
+                        <div style={{ width: `${bUnexpected}%`, background: BAR.orange }} />
                         <div style={{ width: `${bRest}%`, background: C.gray }} />
                     </div>
                     <div className="lc-vr-nums">
@@ -1045,7 +1047,8 @@ const LogicCheckTab = ({
             }
             setDetail(null);
         } finally {
-            setDetailLoading(false);
+            // 취소된 이전 요청이 새 요청의 로딩 표시를 끄지 않게
+            if (detailAbortRef.current === ac) setDetailLoading(false);
         }
     }, [pn, userId, fetchCheckLogicDetail, modal]);
 
@@ -1350,7 +1353,7 @@ const LogicCheckTab = ({
         const shown = entries.length;
         const cut = (dist.allDistinct || 0) > shown + (blank ? 1 : 0) ? dist.allDistinct - shown - (blank ? 1 : 0) : 0;
 
-        const Bar = ({ inT, outT, inColor = '#a3bbea', outColor = '#fdba74' }) => (
+        const Bar = ({ inT, outT, inColor = BAR.blue, outColor = BAR.orange }) => (
             <div className="lc-dist-track">
                 <div style={{ width: `${(inT / maxCount) * 100}%`, background: inColor }} />
                 <div style={{ width: `${(outT / maxCount) * 100}%`, background: outColor }} />
@@ -1439,7 +1442,7 @@ const LogicCheckTab = ({
                                 <td />
                                 <td>무응답</td>
                                 <td>
-                                    {!isValues && <Bar inT={missingIn} outT={missingOut} inColor="#fda4af" outColor="#e2e8f0" />}
+                                    {!isValues && <Bar inT={missingIn} outT={missingOut} inColor={BAR.red} outColor="#e2e8f0" />}
                                 </td>
                                 {isValues ? <td className="num">{fmt(blank)}</td> : <>
                                     <td className="num">
@@ -1497,8 +1500,14 @@ const LogicCheckTab = ({
                                     <Copy size={12} /> PID 복사 <ChevronDown size={11} />
                                 </button>
                                 <div className="lc-dropdown-menu">
-                                    <button type="button" onClick={() => { setCopyMenuOpen(false); handleCopyPids('excel'); }}>엑셀에 붙일 표</button>
-                                    <button type="button" onClick={() => { setCopyMenuOpen(false); handleCopyPids('comma'); }}>쉼표로 이은 PID</button>
+                                    <button type="button" className="lc-copy-opt" onClick={() => { setCopyMenuOpen(false); handleCopyPids('excel'); }}>
+                                        <span className="lc-copy-opt-title">표로 복사 (엑셀용)</span>
+                                        <span className="lc-copy-opt-sub">PID · 응답값 열 그대로 · {fmt(count)}명</span>
+                                    </button>
+                                    <button type="button" className="lc-copy-opt" onClick={() => { setCopyMenuOpen(false); handleCopyPids('comma'); }}>
+                                        <span className="lc-copy-opt-title">PID만 쉼표로 이어서</span>
+                                        <span className="lc-copy-opt-sub">{(rows.slice(0, 2).map(r => r.pid).join(',') || '14556021,16444025')},… · {fmt(count)}명</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1906,9 +1915,9 @@ const LogicCheckTab = ({
                                                         const u = (selectedVar.unexpected / total) * 100;
                                                         const r = Math.max(0, 100 - a - m - u);
                                                         return <>
-                                                            <div style={{ width: `${a}%`, background: C.blue }} />
-                                                            <div style={{ width: `${m}%`, background: C.red }} />
-                                                            <div style={{ width: `${u}%`, background: C.orange }} />
+                                                            <div style={{ width: `${a}%`, background: BAR.blue }} />
+                                                            <div style={{ width: `${m}%`, background: BAR.red }} />
+                                                            <div style={{ width: `${u}%`, background: BAR.orange }} />
                                                             <div style={{ width: `${r}%`, background: C.gray }} />
                                                         </>;
                                                     })()}
@@ -1935,6 +1944,14 @@ const LogicCheckTab = ({
                                     <div className="lc-detail-tables">
                                         {DistTable}
                                         {(() => {
+                                            // detail 호출 중이면 항상 로딩 아이콘
+                                            if (detailLoading) {
+                                                return (
+                                                    <div className="lc-resp-placeholder">
+                                                        <Loader2 size={18} className="lc-spin" />&nbsp;응답자를 불러오는 중입니다…
+                                                    </div>
+                                                );
+                                            }
                                             const isValuesVar = detail?._distKind === 'values'
                                                 || !selectedVar.hasLogic || selectedVar._unreadable || selectedVar.status === 'noResponse';
                                             if (isValuesVar) {
