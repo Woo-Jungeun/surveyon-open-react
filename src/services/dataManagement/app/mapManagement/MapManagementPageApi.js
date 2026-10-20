@@ -210,6 +210,54 @@ export function MapManagementPageApi() {
         )
     );
 
+    /** 로직 자동 채우기 (timeout 30분) */
+    const generateLogicChecks = useMutation(
+        async (data) => await api.post(
+            data,
+            "/generate-logic-checks",
+            "API_BASE_URL_DATAMANAGEMENT",
+            { timeout: 1800000 }
+        )
+    );
+
+    /** 로직 판정 (timeout 30분) */
+    const runCheckLogic = useMutation(
+        async (data) => await api.post(
+            data,
+            "/check-logic",
+            "API_BASE_URL_DATAMANAGEMENT",
+            { timeout: 1800000 }
+        )
+    );
+
+    /** 로직 판정 상세 조회 — AbortController 지원 (직접 fetch) */
+    const fetchCheckLogicDetail = (data, abortSignal) => {
+        const base = window.API_CONFIG?.API_BASE_URL_DATAMANAGEMENT || "";
+        let url = base.replace(/\/+$/, '') + '/check-logic/detail';
+        if (import.meta.env.DEV && url.startsWith('http')) {
+            try { const u = new URL(url); url = u.pathname; } catch (e) { /* ignore */ }
+        }
+        return fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+            signal: abortSignal,
+        }).then(async (res) => {
+            const text = await res.text();
+            try { return JSON.parse(text); } catch { return { success: '0', errorcontent: text }; }
+        });
+    };
+
+    /** 수정 양식 받기 — 파일 다운로드 */
+    const getCheckLogicFixForm = useMutation(
+        async (data) => await api.file(data, "/check-logic/fix-form", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 변수 목록 창 — 전체 변수 제목 조회 */
+    const getVariableTitles = useMutation(
+        async (data) => await api.post(data, "/map/variables/titles", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
     /** 오픈 문항 유형 검사 (저장 안함) */
     const checkOpenType = useMutation(
         async (data) => await api.post(data, "/map/open-type/check", "API_BASE_URL_DATAMANAGEMENT")
@@ -274,7 +322,12 @@ export function MapManagementPageApi() {
         previewMapRestore,
         checkMapLabels,
         checkOpenType,
-        fixOpenType
+        fixOpenType,
+        generateLogicChecks,
+        runCheckLogic,
+        fetchCheckLogicDetail,
+        getCheckLogicFixForm,
+        getVariableTitles,
     };
 }
 

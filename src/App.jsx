@@ -23,6 +23,7 @@ import InquiryDetail from "@/services/inquiry/InquiryDetail";
 import InquiryWrite from "@/services/inquiry/InquiryWrite";
 import DpRequestPreviewPopup from "@/services/dataStatus/app/hsrt/dpRequest/steps/DpRequestPreviewPopup";
 import SingleCrosstabViewerPage from "@/services/dataStatus/app/hsrt/aiReport/SingleCrosstabViewerPage";
+import VariableListPage from "@/services/dataManagement/app/mapManagement/VariableListPage";
 import SurveyonAssistant from "@/components/assistant";
 
 function App() {
@@ -103,6 +104,7 @@ function App() {
         <Route path="/excel_guide" element={<ExcelGuidePage />} />
         <Route path="/dp_request_preview" element={<DpRequestPreviewPopup />} />
         <Route path="/crosstab-single-view" element={<SingleCrosstabViewerPage />} />
+        <Route path="/variable_list" element={isLoggedIn ? <VariableListPage /> : <Navigate to="/login" replace />} />
 
         {/* 404 처리 (모든 라우트의 최하단에 위치해야 상위 팝업/독립 페이지 라우트가 낚이지 않음) */}
         <Route path="*" element={<MainLayout><PageNotFound /></MainLayout>} />

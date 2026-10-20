@@ -8,6 +8,7 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { MapManagementContext, EDITABLE_FIELDS, recalcVariables } from './MapManagementUtils';
 import MapConfigTab from './MapConfigTab';
 import ViewLabelTab from './ViewLabelTab';
+import LogicCheckTab from './LogicCheckTab';
 import AddLabelPopup from './AddLabelPopup';
 import LogicEditPopup from './LogicEditPopup';
 import MapConfigFilterPopup from '../../../../components/common/popup/MapConfigFilterPopup';
@@ -26,7 +27,7 @@ import './MapManagementPage.css';
 // 메인 컴포넌트
 // ─────────────────────────────────────────────
 const MapManagementPage = () => {
-    const { getMapVariables, srtTransfer, createMapVariables, updateMapVariables, updateMapLabels, createMapLabels, syncMap, updateMap, checkMapLabels } = MapManagementPageApi();
+    const { getMapVariables, srtTransfer, createMapVariables, updateMapVariables, updateMapLabels, createMapLabels, syncMap, updateMap, checkMapLabels, generateLogicChecks, runCheckLogic, fetchCheckLogicDetail, getCheckLogicFixForm, getVariableTitles, restoreExcelVersion } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
     const modal = React.useContext(modalContext);
     const loadingSpinner = React.useContext(loadingSpinnerContext);
@@ -38,7 +39,7 @@ const MapManagementPage = () => {
     const [isDataLoaded, setIsDataLoaded] = useState(false);  // 초기 데이터 로드 완료 여부
     const [refreshKey, setRefreshKey] = useState(0);          // 재조회 트리거
 
-    const [activeTab, setActiveTab] = useState('mapping');    // 'mapping' | 'category'
+    const [activeTab, setActiveTab] = useState('mapping');    // 'mapping' | 'category' | 'logic'
     const [isDetailed, setIsDetailed] = useState(false);      // 상세 설정 토글
     const [selectedVariableId, setSelectedVariableId] = useState(null); // 보기 레이블 탭에서 선택된 변수 id
     const [selectedVariableIds, setSelectedVariableIds] = useState([]); // 보기 레이블 탭에서 다중 선택된 변수 id 목록
@@ -879,9 +880,28 @@ const MapManagementPage = () => {
                         >
                             보기 레이블
                         </button>
+                        <button
+                            id="map-tab-logic-check"
+                            className={`tab-btn ${activeTab === 'logic' ? 'active' : ''}`}
+                            onClick={() => handleTabChange('logic')}
+                        >
+                            로직 체크
+                        </button>
                     </div>
 
-                    {activeTab === 'mapping' ? (
+                    {activeTab === 'logic' ? (
+                        <LogicCheckTab
+                            variables={variables}
+                            auth={auth}
+                            generateLogicChecks={generateLogicChecks}
+                            runCheckLogic={runCheckLogic}
+                            fetchCheckLogicDetail={fetchCheckLogicDetail}
+                            getCheckLogicFixForm={getCheckLogicFixForm}
+                            getVariableTitles={getVariableTitles}
+                            restoreExcelVersion={restoreExcelVersion}
+                            onMapReload={loadData}
+                        />
+                    ) : activeTab === 'mapping' ? (
                         <MapConfigTab
                             variables={filteredMappingVariables}
                             isDetailed={isDetailed}

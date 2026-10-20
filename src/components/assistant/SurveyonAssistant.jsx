@@ -23,7 +23,8 @@ export const SurveyonAssistant = ({
     '/manual',
     '/excel_guide',
     // '/dp_request_preview',
-    '/crosstab-single-view'
+    '/crosstab-single-view',
+    '/variable_list'
   ];
 
   // 현재 경로가 팝업 라우트 중 하나라도 포함하고 있다면 챗봇을 렌더링하지 않음
