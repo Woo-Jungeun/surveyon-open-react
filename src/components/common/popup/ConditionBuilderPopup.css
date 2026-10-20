@@ -852,3 +852,10 @@
     background: #3b82f6;
     border-color: #3b82f6;
 }
+/* 만들어지는 식 미리보기 (로직 편집용) */
+.filter-popup-footer-cbp { gap: 12px; }
+.logic-preview-cbp { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; }
+.logic-preview-label-cbp { flex-shrink: 0; color: #94a3b8; }
+.logic-preview-code-cbp { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: Consolas, 'D2Coding', monospace; color: #1e293b; }
+.logic-preview-empty-cbp { color: #cbd5e1; }
+.filter-popup-footer-cbp .footer-right-cbp { flex-shrink: 0; margin-left: auto; }

@@ -27,7 +27,7 @@ import './MapManagementPage.css';
 // 메인 컴포넌트
 // ─────────────────────────────────────────────
 const MapManagementPage = () => {
-    const { getMapVariables, srtTransfer, createMapVariables, updateMapVariables, updateMapLabels, createMapLabels, syncMap, updateMap, checkMapLabels, generateLogicChecks, runCheckLogic, fetchCheckLogicDetail, getCheckLogicFixForm, getVariableTitles, restoreExcelVersion } = MapManagementPageApi();
+    const { getMapVariables, srtTransfer, createMapVariables, updateMapVariables, updateMapLabels, createMapLabels, syncMap, updateMap, checkMapLabels, generateLogicChecks, runCheckLogic, fetchCheckLogicDetail, getCheckLogicFixForm, checkLogicOne, getCheckLogicSyntax, getVariableTitles, restoreExcelVersion } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
     const modal = React.useContext(modalContext);
     const loadingSpinner = React.useContext(loadingSpinnerContext);
@@ -251,6 +251,13 @@ const MapManagementPage = () => {
     const handleLogicSave = (id, newLogicStr, info) => {
         setVariables(variables.map(v => v.id === id ? { ...v, logic: newLogicStr, logicInfo: info } : v));
         setEditingLogicPopupOpen(null);
+    };
+
+    // 로직 체크 탭 — check-logic/one 으로 서버에 저장된 뒤 화면 맵 상태만 맞춤 (저장 안 된 변경으로 잡히지 않게 원본도 같이)
+    const applyLogicFromCheck = (id, newLogicStr, info) => {
+        const patch = x => x.id === id ? { ...x, logic: newLogicStr, ...(info !== undefined ? { logicInfo: info } : {}) } : x;
+        setVariables(prev => prev.map(patch));
+        setOriginalVariables(prev => prev.map(patch));
     };
 
     const handleAddValueSave = (newLabels) => {
@@ -916,6 +923,9 @@ const MapManagementPage = () => {
                             restoreExcelVersion={restoreExcelVersion}
                             onMapReload={loadData}
                             onGoToVariable={goToVariableFromLogic}
+                            onLogicSaved={applyLogicFromCheck}
+                            checkLogicOne={checkLogicOne}
+                            getCheckLogicSyntax={getCheckLogicSyntax}
                         />
                     ) : activeTab === 'mapping' ? (
                         <MapConfigTab

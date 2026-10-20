@@ -6,22 +6,23 @@ import { DropDownList } from '@progress/kendo-react-dropdowns';
 import {
     Check, List, MoreHorizontal, RotateCcw, Wand2, PlayCircle, X,
     RefreshCw, ChevronDown, Edit2, FileDown,
-    Lightbulb, Search, Loader2, Copy,
+    Lightbulb, Search, Loader2, Copy, Trash2,
 } from 'lucide-react';
 import { modalContext } from '@/components/common/Modal.jsx';
 import { loadingSpinnerContext } from '@/components/common/LoadingSpinner.jsx';
 import * as signalR from '@microsoft/signalr';
 import './LogicCheckTab.css';
+import MapConfigFilterPopup from '../../../../components/common/popup/MapConfigFilterPopup';
 
 // ─── 색 상수 ───────────────────────────────────
 const C = {
-    blue: '#3b82f6',
-    blueLight: '#eff6ff',
-    red: '#ef4444',
-    redLight: '#fef2f2',
-    orange: '#f59e0b',
+    blue: '#3d8bfd',
+    blueLight: '#ebf3ff',
+    red: '#f43f5e',
+    redLight: '#fff1f2',
+    orange: '#fb923c',
     orangeLight: '#fffbeb',
-    gray: '#cbd5e1',
+    gray: '#e2e8f0',
     grayLight: '#f8fafc',
     green: 'var(--dm-primary)',
     greenLight: 'var(--dm-primary-light)',
@@ -113,6 +114,227 @@ async function createSignalRConnection() {
         console.error('SignalR 연결 오류:', e);
         return null;
     }
+}
+
+/** 문법표 응답 { groups[{ group, items[] }], legacy[] } → [{ title, rows }] (서버 한 곳에서 관리 — 프론트는 베끼지 않음) */
+function normalizeSyntax(res) {
+    const rj = res?.resultjson || {};
+    const groups = (rj.groups || []).map(g => ({ title: g.group || '', rows: g.items || [] }));
+    if (rj.legacy?.length) {
+        groups.push({ title: '옛 글자 — 읽기는 되지만 새로 쓰지 마세요', rows: rj.legacy.map(r => ({ ...r, legacy: true })) });
+    }
+    return groups.filter(g => g.rows.length > 0);
+}
+let syntaxCache = null; // 고정표 — 한 번만 받기
+
+const LOGIC_WORDS = new Set(['and', 'or', 'not', 'in', 'is', 'null', 'all', 'like']);
+/** 식에 쓴 변수 → 맵 변수 (쓴 순서 · 중복 제거) */
+function findLogicVars(text, variables) {
+    const byName = new Map();
+    (variables || []).forEach(v => {
+        if (v.name) byName.set(String(v.name).toLowerCase(), v);
+        if (v.sysName && !byName.has(String(v.sysName).toLowerCase())) byName.set(String(v.sysName).toLowerCase(), v);
+    });
+    const out = [];
+    const seen = new Set();
+    for (const m of String(text || '').matchAll(/[A-Za-z_][A-Za-z0-9_]*/g)) {
+        const key = m[0].toLowerCase();
+        if (LOGIC_WORDS.has(key) || seen.has(key)) continue;
+        const v = byName.get(key);
+        if (v) { seen.add(key); out.push(v); }
+    }
+    return out;
+}
+
+/** 로직 넣기 / 수정 창 (기획서 팝업) */
+function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCancel, onSave }) {
+    const varName = item.variable || item.sysName;
+    const isEdit = !!item.hasLogic;
+    const [text, setText] = useState(mapVar?.logic || item.logic || '');
+    const [info, setInfo] = useState(mapVar?.logicInfo);
+    const [helpOpen, setHelpOpen] = useState(false);
+    const [syntax, setSyntax] = useState(syntaxCache);
+    const [syntaxError, setSyntaxError] = useState(false);
+    const [builderOpen, setBuilderOpen] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState('');
+    const current = String(mapVar?.logic || item.logic || '').trim();
+
+    useEffect(() => {
+        if (!helpOpen || syntax || !loadSyntax) return;
+        let alive = true;
+        setSyntaxError(false);
+        loadSyntax()
+            .then(res => { if (!alive) return; const g = normalizeSyntax(res); if (!g.length) { setSyntaxError(true); return; } syntaxCache = g; setSyntax(g); })
+            .catch(() => { if (alive) setSyntaxError(true); });
+        return () => { alive = false; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [helpOpen, syntax]);
+
+    const handleSave = async () => {
+        if (saving) return;
+        setSaving(true);
+        setError('');
+        try {
+            const r = await onSave(text, info);
+            if (r?.logic !== undefined) setText(r.logic);   // 서버가 바꾼(표준화·한 줄) 모양 그대로
+            if (r?.error) setError(r.error);
+        } finally { setSaving(false); }
+    };
+
+    return (
+        <div className="variable-modal-overlay" data-theme="data-management" onClick={onCancel}>
+            <div className="lc-dialog lc-logic-dialog" role="dialog" aria-labelledby="lc-logic-title" onClick={e => e.stopPropagation()}>
+                <div className="variable-modal-header">
+                    <div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+                        <div style={{ width: '4px', height: '18px', backgroundColor: 'var(--dm-primary)', borderRadius: '4px', marginRight: '8px', flexShrink: 0 }}></div>
+                        <h3 id="lc-logic-title" className="variable-modal-title">
+                            {isEdit ? '로직 수정' : '로직 넣기'} - {varName}
+                        </h3>
+                        {(item.title || item.label) && (
+                            <span className="lc-logic-dialog-sub" title={item.title || item.label}>{item.title || item.label}</span>
+                        )}
+                    </div>
+                    <button type="button" id="lc-logic-close" onClick={onCancel} className="variable-modal-close">&times;</button>
+                </div>
+
+                <div className="lc-dialog-body">
+                    <div className={`lc-logic-now${
+                        !current || !item.hasLogic || item.status === 'noResponse' ? ''
+                            : item._unreadable ? ' tone-warn'
+                                : item.missing > 0 ? ' tone-error'
+                                    : item.unexpected > 0 ? ' tone-warn'
+                                        : ' tone-ok'}`}>
+                        <div className="lc-logic-now-row">
+                            <span className="lc-logic-now-label">상태</span>
+                            {!current || !item.hasLogic ? (
+                                <span>로직이 없어 판정하지 않았습니다</span>
+                            ) : item._unreadable ? (
+                                <span style={{ color: C.orange }}>식을 읽지 못해 판정하지 않았습니다</span>
+                            ) : item.status === 'noResponse' ? (
+                                <span>응답이 없어 판정하지 않았습니다</span>
+                            ) : (
+                                <span>
+                                    대상자 <b>{fmt(item.base ?? ((item.answered || 0) + (item.missing || 0)))}</b>명
+                                    {' · '}대상자 무응답 <b style={{ color: item.missing > 0 ? C.red : undefined }}>{fmt(item.missing || 0)}</b>명
+                                    {' · '}비대상 응답 <b style={{ color: item.unexpected > 0 ? C.orange : undefined }}>{fmt(item.unexpected || 0)}</b>명
+                                </span>
+                            )}
+                        </div>
+                        <div className="lc-logic-now-row">
+                            <span className="lc-logic-now-label">현재 식</span>
+                            {current
+                                ? <code className="lc-logic-code">{current}</code>
+                                : <span className="lc-logic-now-empty">없음</span>}
+                        </div>
+                    </div>
+
+                    <div className="lc-logic-field-head">
+                        <span className="lc-logic-field-label">수정 식</span>
+                        <span className="lc-logic-field-note">Enter로 줄바꿈 가능합니다</span>
+                        <button type="button" id="lc-logic-help-toggle" className={`lc-logic-help-toggle${helpOpen ? ' open' : ''}`}
+                            onClick={() => setHelpOpen(o => !o)}>
+                            문법 도움말 <ChevronDown size={12} />
+                        </button>
+                    </div>
+
+                    {helpOpen && (
+                        syntax ? (
+                            <table className="lc-logic-help">
+                                {syntax.map((g, gi) => (
+                                    <tbody key={gi}>
+                                        {g.title && syntax.length > 1 && (
+                                            <tr className="grp"><td colSpan={3}>{g.title}</td></tr>
+                                        )}
+                                        {g.rows.map((r, ri) => (
+                                            <tr key={ri} className={r.legacy ? 'legacy' : ''} title={r.note || undefined}>
+                                                <td className="op">{r.token}</td>
+                                                <td>
+                                                    {r.meaning}
+                                                    {r.legacy && r.instead && <span className="instead"> → 대신 <code>{r.instead}</code></span>}
+                                                </td>
+                                                <td className="ex">{r.example}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                ))}
+                            </table>
+                        ) : (
+                            <div className="lc-logic-help lc-logic-help-msg">
+                                {syntaxError ? '문법 도움말을 불러오지 못했습니다.' : <><Loader2 size={12} className="lc-spin" /> 불러오는 중…</>}
+                            </div>
+                        )
+                    )}
+
+                    <textarea
+                        id="lc-logic-input"
+                        className={`lc-logic-textarea${error ? ' has-error' : ''}`}
+                        value={text}
+                        autoFocus
+                        spellCheck={false}
+                        placeholder="예) q5 in [1, 2]"
+                        onChange={e => { setText(e.target.value); if (error) setError(''); }}
+                    />
+                    {(() => {
+                        const refs = findLogicVars(text, variables);
+                        if (!refs.length) return null;
+                        return (
+                            <ul className="lc-logic-refs">
+                                {refs.map(v => {
+                                    const labels = v.labels || [];
+                                    return (
+                                        <li key={v.id ?? v.name}>
+                                            <span className="ref-name">{v.name || v.sysName}</span>
+                                            {v.type && <span className="ref-type">{String(v.type).toLowerCase()}</span>}
+                                            <span className="ref-label" title={v.label || ''}>{v.label || ''}</span>
+                                            {labels.length > 0 && (
+                                                <span className="ref-opts">
+                                                    {labels.slice(0, 12).map(l => (
+                                                        <span key={l.code} className="ref-opt"><b>{l.code}</b> {l.label}</span>
+                                                    ))}
+                                                    {labels.length > 12 && <span className="ref-more">외 {labels.length - 12}개</span>}
+                                                </span>
+                                            )}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        );
+                    })()}
+                    {error && <div className="lc-logic-error">{error}</div>}
+                </div>
+
+                <div className="variable-modal-footer lc-logic-footer">
+                    <button type="button" id="lc-logic-builder" className="btn-cancel lc-btn-green-outline" onClick={() => setBuilderOpen(true)}>조건으로 만들기</button>
+                    <div style={{ flex: 1 }} />
+                    <button type="button" id="lc-logic-cancel" className="btn-cancel" onClick={onCancel}>취소</button>
+                    <button type="button" id="lc-logic-save" className="btn-save" disabled={saving} onClick={handleSave}>
+                        {saving ? '저장 중…' : '저장 후 재확인'}
+                    </button>
+                </div>
+            </div>
+
+            {builderOpen && (
+                <div onClick={e => e.stopPropagation()}>
+                    <MapConfigFilterPopup
+                        auth={auth}
+                        pageId={pn}
+                        initialVariables={[]}
+                        variablesList={variables}
+                        initialLogic={text.replace(/\s*\n\s*/g, ' ').trim()}
+                        initialInfo={info}
+                        title={`로직 검수 설정 - ${varName}`}
+                        onClose={() => setBuilderOpen(false)}
+                        onSave={(_id, logicStr, _label, newInfo) => {
+                            setText(logicStr || '');
+                            setInfo(newInfo);
+                            setBuilderOpen(false);
+                        }}
+                    />
+                </div>
+            )}
+        </div>
+    );
 }
 
 /** 자동 채우기 방식 선택 창 (기획서 팝업) — 빈 칸만 / 전부 지우고 다시 */
@@ -228,7 +450,7 @@ function AutoFillResultDialog({ result, onClose, onRestore, onGoJudge, onGoTo })
             : { label: '기존 로직 유지', value: r.alreadyFilledCount },
         { label: '새로 채워짐', value: newlyCount, tone: 'green' },
         { label: '직접 확인', value: reviewCount, tone: reviewCount ? 'red' : '' },
-        { label: '건너뛰기 적용', value: r.skipVariablesChanged, suffix: '문항' },
+        { label: '건너뛰기 적용', value: r.skipVariablesChanged },
     ];
 
     return (
@@ -246,7 +468,7 @@ function AutoFillResultDialog({ result, onClose, onRestore, onGoJudge, onGoTo })
                     {/* 요약 숫자 */}
                     <div className="lc-result-stats">
                         {stats.map(s => (
-                            <div key={s.label} className={`lc-result-stat${s.tone ? ` ${s.tone}` : ''}`}>
+                            <div key={s.label} className={`lc-result-stat${s.tone && Number(s.value) ? ` ${s.tone}` : ''}${!Number(s.value) ? ' is-zero' : ''}`}>
                                 <span className="lc-result-stat-value">{fmtN(s.value)}{s.suffix ? <small>{s.suffix}</small> : null}</span>
                                 <span className="lc-result-stat-label">{s.label}</span>
                             </div>
@@ -296,7 +518,7 @@ function AutoFillResultDialog({ result, onClose, onRestore, onGoJudge, onGoTo })
                                         title="맵에서 이 문항 열기"
                                         onClick={() => onGoTo?.(target, row.skip)}>
                                         <span className="lc-result-key" title={a}>{a}</span>
-                                        <span className="lc-result-val">{b}</span>
+                                        <span className="lc-result-val" title={b}>{String(b ?? '').replace(/\s*\(0개\)\s*$/, '')}</span>
                                         {row.tag && <span className="lc-result-tag">{row.tag}</span>}
                                     </button>
                                 );
@@ -388,8 +610,9 @@ const VarRow = React.memo(function VarRow({ item, isActive, isUnreadable, checke
 
     return (
         <div
-            className={`lc-var-row${isActive ? ' active' : ''}${item.status === 'error' ? ' err' : ''}`}
+            className={`lc-var-row${isActive ? ' active' : ''}${item.status === 'error' ? ` err ${item.missing > 0 ? 'err-missing' : 'err-unexpected'}` : ''}`}
             onClick={onClick}
+            data-var={item.variable || item.sysName}
             title={item.label || item.title || ''}
         >
             <div className="lc-vr-top">
@@ -429,7 +652,7 @@ const VarRow = React.memo(function VarRow({ item, isActive, isUnreadable, checke
 // ─────────────────────────────────────────────────────────────────────────────
 function BaseQuad({ item, checkedResponses, selectedKind, onSelectKind }) {
     // 선택 칸 테두리 — 그 칸 색의 진한 색
-    const DARK = { [C.blue]: '#1d4ed8', [C.red]: '#b91c1c', [C.orange]: '#b45309', '#64748b': '#334155' };
+    const DARK = { [C.blue]: '#1f6fe5', [C.red]: '#be123c', [C.orange]: '#b45309', '#64748b': '#334155' };
     const base = item?.base ?? 0;
     const answered = item?.answered ?? 0;
     const missing = item?.missing ?? 0;
@@ -506,6 +729,9 @@ const LogicCheckTab = ({
     restoreExcelVersion, // 복원 지점 되돌리기 (자동 채우기 결과 창)
     onMapReload,
     onGoToVariable, // 맵 그 문항 줄로 이동 + 로직 편집
+    onLogicSaved,   // (mapId, logic, info) — 서버 저장 끝난 뒤 부모 맵 상태 맞춤
+    checkLogicOne,  // POST /check-logic/one
+    getCheckLogicSyntax, // GET /check-logic/syntax
 }) => {
     const modal = useContext(modalContext);
     const loadingSpinner = useContext(loadingSpinnerContext);
@@ -521,6 +747,7 @@ const LogicCheckTab = ({
     // ── 왼쪽 목록 상태 ──
     const [filter, setFilter] = useState('error');          // 거르개
     const [copyMenuOpen, setCopyMenuOpen] = useState(false);
+    const [hintsOpen, setHintsOpen] = useState(false);
     const copyMenuRef = useRef(null);
     useEffect(() => {
         if (!copyMenuOpen) return;
@@ -531,6 +758,8 @@ const LogicCheckTab = ({
     const [sortKey, setSortKey] = useState('order');        // 정렬
     const [listSearch, setListSearch] = useState('');       // 찾기
     const [selectedVar, setSelectedVar] = useState(null);   // 선택된 item
+    useEffect(() => { setHintsOpen(false); }, [selectedVar?.variable]);
+    const [logicEditOpen, setLogicEditOpen] = useState(false);
 
     // ── 오른쪽 상세 상태 ──
     const [detail, setDetail] = useState(null);              // API 응답
@@ -843,8 +1072,82 @@ const LogicCheckTab = ({
         }, 80);
     }, [loadDetail]);
 
+    // ─── 재검사 후 왼쪽 목록에서 그 문항으로 이동 ───
+    const pendingScrollRef = useRef(null);
+    useEffect(() => {
+        const name = pendingScrollRef.current;
+        if (!name) return;
+        if (!listItems.some(x => (x.variable || x.sysName) === name)) {
+            // 지금 거르개·찾기에서 빠졌으면 전체로 바꿔 보여 줌
+            if (filter !== 'all' || listSearch) { setFilter('all'); setListSearch(''); }
+            else pendingScrollRef.current = null;
+            return;
+        }
+        pendingScrollRef.current = null;
+        requestAnimationFrame(() => {
+            const el = document.querySelector(`.lc-var-row[data-var="${CSS.escape(name)}"]`);
+            el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        });
+    }, [listItems, filter, listSearch]);
+
+    // ─── 로직 고치기 — 그 문항만 다시 판정하고 저장 (check-logic/one) ───
+    // 돌려주는 값: { logic? (입력칸에 다시 넣을 식), error? (창 안에 보여 줄 이유) }
+    const handleSaveLogicOne = useCallback(async (item, mapVar, text, info) => {
+        const variable = item.variable || item.sysName;
+        const current = String(mapVar?.logic || item.logic || '').trim();
+        const isClear = String(text || '').trim() === '';
+        if (isClear && !current) return { error: '식을 입력해 주세요.' };
+        if (isClear) {
+            const ok = await new Promise(resolve => modal?.showConfirm?.('알림', '로직을 지울까요?\n지우면 이 문항은 판정에서 빠지고 응답값만 보게 됩니다.', {
+                btns: [
+                    { title: '취소', click: () => resolve(false) },
+                    { title: '지우기', click: () => resolve(true) },
+                ],
+            }));
+            if (!ok) return {};
+        }
+
+        let res;
+        try {
+            res = await checkLogicOne?.({ pn, user: userId, variable, logic: isClear ? '' : text, save: true });
+        } catch {
+            return { error: '저장하지 못했습니다. 잠시 후 다시 시도해 주세요.' };
+        }
+        const rj = res?.resultjson || {};
+        if (String(res?.success) !== '777') {
+            return { error: rj.errorcontent || res?.errorcontent || res?.message || '저장하지 못했습니다.' };
+        }
+
+        const savedLogic = rj.logic ?? (isClear ? '' : text);
+        if (rj.saved !== false && mapVar) onLogicSaved?.(mapVar.id, savedLogic, isClear ? null : info);
+
+        // 판정 결과에서 그 문항 한 줄만 바꿔 끼우기
+        const same = (x) => (x?.variable || x?.sysName) === variable;
+        const newItem = rj.item
+            ? { ...rj.item }
+            : { ...item, _unreadable: false, hasLogic: !isClear, logic: savedLogic, status: isClear ? undefined : item.status };
+        delete newItem._unreadable;
+        setJudgeResult(prev => {
+            if (!prev) return prev;
+            const inItems = prev.items.some(same);
+            return {
+                ...prev,
+                items: inItems ? prev.items.map(x => same(x) ? newItem : x) : [...prev.items, newItem],
+                unreadable: (prev.unreadable || []).filter(x => !same(x)),
+            };
+        });
+        setLogicEditOpen(false);
+        pendingScrollRef.current = variable;
+        setSelectedVar(newItem);
+        setSelectedKind(null);
+        setDetail(null);
+        loadDetail(newItem);
+        return { logic: savedLogic };
+    }, [pn, userId, checkLogicOne, onLogicSaved, modal, loadDetail]);
+
     // ─── 수정 양식 받기 ───
     const handleFixForm = useCallback(async (variable) => {
+        loadingSpinner?.show?.();
         try {
             const res = await getCheckLogicFixForm?.mutateAsync({ pn, user: userId, variable });
             // Content-Type이 json이면 오류
@@ -867,8 +1170,10 @@ const LogicCheckTab = ({
             setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 500);
         } catch (err) {
             modal?.showErrorAlert?.('오류', '수정 양식을 내려받지 못했습니다. 잠시 후 다시 시도해 주세요.');
+        } finally {
+            loadingSpinner?.hide?.();
         }
-    }, [pn, userId, getCheckLogicFixForm, modal]);
+    }, [pn, userId, getCheckLogicFixForm, modal, loadingSpinner]);
 
     // ─── 코드 → 보기 이름 (분포 all 에서) ───
     const labelMap = useMemo(() => {
@@ -1320,7 +1625,49 @@ const LogicCheckTab = ({
                     )}
                 </span>
 
-                <div className="lc-subheader-actions" ref={menuRef}>
+                <div className="lc-subheader-actions">
+                    <span className="lc-tool-group" ref={menuRef}>
+                        {isJudged && (
+                            <button
+                                id="lc-rejudge-btn"
+                                type="button"
+                                className="lc-rejudge-icon"
+                                onClick={handleJudge}
+                                disabled={isProgressing}
+                                title="다시 판정"
+                                aria-label="다시 판정"
+                            >
+                                <RefreshCw size={13} />
+                            </button>
+                        )}
+                        <button
+                            id="lc-more-btn"
+                            type="button"
+                            className={`lc-btn-icon${isMenuOpen ? ' active' : ''}`}
+                            onClick={() => setIsMenuOpen(p => !p)}
+                            title="더보기"
+                        >
+                            <MoreHorizontal size={16} />
+                        </button>
+
+                        {isMenuOpen && (
+                            <div className="lc-menu">
+                                <button type="button" className="lc-menu-item" onClick={() => { setIsMenuOpen(false); handleAutoFill(false); }}>
+                                    <Wand2 size={14} /> 로직 자동 채우기
+                                </button>
+                                <div className="lc-menu-sep" />
+                                <button
+                                    type="button"
+                                    className="lc-menu-item danger"
+                                    disabled={!isJudged}
+                                    onClick={() => { setIsMenuOpen(false); setJudgeResult(null); setSelectedVar(null); setDetail(null); }}
+                                >
+                                    <Trash2 size={14} /> 판정 결과 지우기
+                                </button>
+                            </div>
+                        )}
+                    </span>
+                    <span className="lc-tool-divider" />
                     <button
                         id="lc-varlist-btn"
                         type="button"
@@ -1329,43 +1676,6 @@ const LogicCheckTab = ({
                     >
                         <List size={14} /> 변수 목록
                     </button>
-                    {isJudged && (
-                        <button
-                            id="lc-rejudge-btn"
-                            type="button"
-                            className="lc-btn-outline"
-                            onClick={handleJudge}
-                            disabled={isProgressing}
-                        >
-                            <RefreshCw size={13} /> 다시 판정
-                        </button>
-                    )}
-                    <button
-                        id="lc-more-btn"
-                        type="button"
-                        className={`lc-btn-icon${isMenuOpen ? ' active' : ''}`}
-                        onClick={() => setIsMenuOpen(p => !p)}
-                        title="더보기"
-                    >
-                        <MoreHorizontal size={16} />
-                    </button>
-
-                    {isMenuOpen && (
-                        <div className="lc-menu">
-                            <button type="button" className="lc-menu-item" onClick={() => { setIsMenuOpen(false); handleAutoFill(false); }}>
-                                <Wand2 size={14} /> 로직 자동 채우기
-                            </button>
-                            <div className="lc-menu-sep" />
-                            <button
-                                type="button"
-                                className="lc-menu-item"
-                                disabled={!isJudged}
-                                onClick={() => { setIsMenuOpen(false); setJudgeResult(null); setSelectedVar(null); setDetail(null); }}
-                            >
-                                <RotateCcw size={14} /> 판정 결과 지우기
-                            </button>
-                        </div>
-                    )}
                 </div>
             </div>)}
 
@@ -1538,23 +1848,27 @@ const LogicCheckTab = ({
                                             <span className="lc-detail-summary" style={{
                                                 color: summaryText.color,
                                                 background: summaryText.color === C.green ? 'var(--dm-primary-light)' : summaryText.color === C.red ? C.redLight : '#f8fafc',
-                                                borderColor: summaryText.color === C.green ? 'var(--dm-primary-border)' : summaryText.color === C.red ? '#fecaca' : 'var(--dm-border)',
+                                                borderColor: summaryText.color === C.green ? 'var(--dm-primary-border)' : summaryText.color === C.red ? '#fecdd3' : 'var(--dm-border)',
                                             }} title={summaryText.text}>
                                                 {summaryText.text}
                                             </span>
                                         )}
-                                        {selectedVar.hints?.map((h, i) => (
-                                            <span key={`hint-${i}`} className="lc-detail-summary" style={{
-                                                color: '#b45309', background: '#fffbeb', borderColor: '#fde68a',
-                                                display: 'inline-flex', alignItems: 'center', gap: 4,
-                                            }} title={h}>
-                                                <Lightbulb size={11} style={{ flexShrink: 0 }} />{h}
+                                        {selectedVar.hints?.length > 0 && (
+                                            <span className="lc-detail-summary lc-hint-pill" title={selectedVar.hints[0]}>
+                                                <Lightbulb size={11} style={{ flexShrink: 0 }} />
+                                                <span className="lc-hint-pill-text">{selectedVar.hints[0]}</span>
                                             </span>
-                                        ))}
+                                        )}
+                                        {selectedVar.hints?.length > 1 && (
+                                            <button type="button" className={`lc-hint-more${hintsOpen ? ' open' : ''}`}
+                                                onClick={() => setHintsOpen(o => !o)}>
+                                                {hintsOpen ? '접기' : `외 ${selectedVar.hints.length - 1}개`} <ChevronDown size={11} />
+                                            </button>
+                                        )}
                                     </div>
                                     <div className="lc-detail-head-actions">
                                         <button type="button" className="lc-btn-outline"
-                                            onClick={() => {/* 로직 편집 팝업 — 맵관리 탭으로 이동 또는 팝업 */ }}>
+                                            onClick={() => setLogicEditOpen(true)}>
                                             <Edit2 size={12} />
                                             {selectedVar.hasLogic ? '로직 수정' : '로직 넣기'}
                                         </button>
@@ -1564,11 +1878,19 @@ const LogicCheckTab = ({
                                                 className={`lc-btn-primary${selectedVar.hints?.length > 0 ? '' : ''}`}
                                                 onClick={() => handleFixForm(selectedVar.variable || selectedVar.sysName)}
                                             >
-                                                <FileDown size={12} /> 수정 양식 받기
+                                                <FileDown size={12} /> 수정 양식 다운로드
                                             </button>
                                         )}
                                     </div>
                                 </div>
+
+                                {hintsOpen && selectedVar.hints?.length > 1 && (
+                                    <ul className="lc-hint-list">
+                                        {selectedVar.hints.map((h, i) => (
+                                            <li key={i}><Lightbulb size={12} style={{ flexShrink: 0, marginTop: 2 }} /><span>{h}</span></li>
+                                        ))}
+                                    </ul>
+                                )}
 
                                 {/* 로직 + 베이스 현황 — 카드 하나 */}
                                 {selectedVar.hasLogic && (
@@ -1624,7 +1946,7 @@ const LogicCheckTab = ({
                                                 </div>
                                             ) : (RespTable || (
                                                 <div className="lc-resp-placeholder">
-                                                    베이스 칸이나 분포의 비대상 응답 숫자를 누르면 그 사람들이 여기 나옵니다
+                                                    위 대상자·비대상 칸이나 분포표의 숫자를 누르면 해당 응답자 목록이 여기에 표시됩니다.
                                                 </div>
                                             ))
                                         )}
@@ -1635,6 +1957,22 @@ const LogicCheckTab = ({
                     </div>
                 </div>
             )}
+            {logicEditOpen && selectedVar && (() => {
+                const name = selectedVar.variable || selectedVar.sysName;
+                const mapVar = variables.find(v => v.name === name || v.sysName === name);
+                return (
+                    <LogicEditDialog
+                        item={selectedVar}
+                        mapVar={mapVar}
+                        variables={variables}
+                        auth={auth}
+                        pn={pn}
+                        loadSyntax={getCheckLogicSyntax}
+                        onCancel={() => setLogicEditOpen(false)}
+                        onSave={(text, info) => handleSaveLogicOne(selectedVar, mapVar, text, info)}
+                    />
+                );
+            })()}
         </div>
     );
 };

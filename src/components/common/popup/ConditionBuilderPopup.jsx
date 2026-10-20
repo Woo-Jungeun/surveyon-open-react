@@ -535,55 +535,8 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
         }
     };
 
-    const handleSave = async () => {
-        if (saveMode === 'api' && !varLabel.trim()) {
-            modal.showAlert("알림", "필터명을 입력해 주세요.");
-            return;
-        }
-
-        const missingCatLabel = categories.some(cat => !cat.label.trim());
-        if (missingCatLabel) {
-            modal.showAlert("알림", "모든 그룹명을 입력해 주세요.");
-            return;
-        }
-
-        let currentVarName = varName;
-        if (saveMode === 'api' && !currentVarName.trim()) {
-            currentVarName = `var_${Date.now()}`;
-            setVarName(currentVarName);
-        }
-
-        const hasValidCondition = categories.some(cat =>
-            cat.conditionSets.some(set =>
-                set.conditions.some(c => c.varName && (c.value || c.operator.toLowerCase().includes('null')))
-            )
-        );
-        if (!hasValidCondition) {
-            if (saveMode === 'callback') {
-                modal.showConfirm("알림", "설정된 조건이 없습니다.\n로직을 초기화(삭제)하시겠습니까?", {
-                    btns: [
-                        { title: "취소", click: () => { } },
-                        { title: "확인", click: () => { if (onSave) onSave('filter', '', varLabel); } }
-                    ]
-                });
-                return;
-            } else {
-                modal.showAlert("알림", "설정된 조건이 없습니다.");
-                return;
-            }
-        }
-
-        const fullId = `overview_${currentVarName.trim()}`;
-
-        const payload = {
-            user: auth.user.userId,
-            pageid: pageId,
-            variables: {
-                [fullId]: {
-                    id: fullId,
-                    label: varLabel,
-                    type: "categorical",
-                    info: categories.map((cat, idx) => {
+    // 그룹 하나 → info 항목 (식 만들기)
+    const catToInfo = (cat, idx) => {
                         let categoryLogic = '';
                         cat.conditionSets.forEach((set, setIndex) => {
                             const validConds = set.conditions
@@ -668,7 +621,60 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                             logic: finalLogic,
                             type: "categorical"
                         };
-                    })
+    };
+
+    // 지금 만들어지는 전체 식 (미리보기·저장 공용)
+    const buildTotalLogic = () => categories.map(catToInfo).map(i => i.logic).filter(l => l !== '').map(l => `(${l})`).join(` ${categoryLogicOp.toLowerCase()} `);
+
+    const handleSave = async () => {
+        if (saveMode === 'api' && !varLabel.trim()) {
+            modal.showAlert("알림", "필터명을 입력해 주세요.");
+            return;
+        }
+
+        const missingCatLabel = categories.some(cat => !cat.label.trim());
+        if (missingCatLabel) {
+            modal.showAlert("알림", "모든 그룹명을 입력해 주세요.");
+            return;
+        }
+
+        let currentVarName = varName;
+        if (saveMode === 'api' && !currentVarName.trim()) {
+            currentVarName = `var_${Date.now()}`;
+            setVarName(currentVarName);
+        }
+
+        const hasValidCondition = categories.some(cat =>
+            cat.conditionSets.some(set =>
+                set.conditions.some(c => c.varName && (c.value || c.operator.toLowerCase().includes('null')))
+            )
+        );
+        if (!hasValidCondition) {
+            if (saveMode === 'callback') {
+                modal.showConfirm("알림", "설정된 조건이 없습니다.\n로직을 초기화(삭제)하시겠습니까?", {
+                    btns: [
+                        { title: "취소", click: () => { } },
+                        { title: "확인", click: () => { if (onSave) onSave('filter', '', varLabel); } }
+                    ]
+                });
+                return;
+            } else {
+                modal.showAlert("알림", "설정된 조건이 없습니다.");
+                return;
+            }
+        }
+
+        const fullId = `overview_${currentVarName.trim()}`;
+
+        const payload = {
+            user: auth.user.userId,
+            pageid: pageId,
+            variables: {
+                [fullId]: {
+                    id: fullId,
+                    label: varLabel,
+                    type: "categorical",
+                    info: categories.map(catToInfo)
                 }
             }
         };
@@ -1176,6 +1182,17 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
 
                 <div className="filter-popup-footer-cbp">
                     {/* <button className="btn-delete-all-cbp" onClick={() => selectedVarId && handleDeleteVariable(selectedVarId)}>전체 삭제</button> */}
+                    {saveMode === 'callback' && (() => {
+                        const preview = buildTotalLogic();
+                        return (
+                            <div className="logic-preview-cbp" title={preview}>
+                                <span className="logic-preview-label-cbp">만들어지는 식</span>
+                                {preview
+                                    ? <code className="logic-preview-code-cbp">{preview}</code>
+                                    : <span className="logic-preview-empty-cbp">조건을 고르면 여기에 식이 보입니다</span>}
+                            </div>
+                        );
+                    })()}
                     <div className="footer-right-cbp">
                         <button className="btn-cancel-cbp" onClick={onClose}>취소</button>
                         <button className="btn-apply-cbp" onClick={handleSave}>저장</button>

@@ -267,6 +267,28 @@ export function MapManagementPageApi() {
         }
     };
 
+    /** 한 문항만 다시 판정 (+ save:true 면 저장 · logic:"" + save:true 면 지우기) — 904/909 도 본문으로 돌려줌 */
+    const checkLogicOne = async (data) => {
+        try {
+            const res = await api.post(data, "/check-logic/one", "API_BASE_URL_DATAMANAGEMENT");
+            if (typeof res === 'string') {
+                try { return JSON.parse(res); } catch { return { success: '0', errorcontent: res }; }
+            }
+            return res;
+        } catch (err) {
+            const body = err?.response?.data;
+            if (typeof body === 'string') {
+                try { return JSON.parse(body); } catch { return { success: '0', errorcontent: body }; }
+            }
+            if (body) return body;
+            throw err;
+        }
+    };
+
+    /** 로직 문법표 (고정표 · pn 불필요) */
+    const getCheckLogicSyntax = async () =>
+        await api.get({}, "/check-logic/syntax", "API_BASE_URL_DATAMANAGEMENT");
+
     /** 수정 양식 받기 — 파일 다운로드 */
     const getCheckLogicFixForm = useMutation(
         async (data) => await api.file(data, "/check-logic/fix-form", "API_BASE_URL_DATAMANAGEMENT")
@@ -346,6 +368,8 @@ export function MapManagementPageApi() {
         runCheckLogic,
         fetchCheckLogicDetail,
         getCheckLogicFixForm,
+        checkLogicOne,
+        getCheckLogicSyntax,
         getVariableTitles,
     };
 }

@@ -509,7 +509,7 @@ button.lc-btn-primary {
 }
 
 .lc-filter-count.red {
-    color: #dc2626;
+    color: #e11d48;
 }
 
 /* 검색 + 정렬 */
@@ -588,30 +588,36 @@ button.lc-btn-primary {
 }
 
 .lc-var-row {
-    padding: 10px 14px 10px 12px;
-    border-left: 3px solid transparent;
-    border-bottom: 1px solid #f1f5f9;
+    padding: 10px 12px;
+    margin: 0 10px 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
     background: #fff;
     cursor: pointer;
-    transition: background 0.12s, border-color 0.12s;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
+.lc-var-row:first-child { margin-top: 8px; }
+
 .lc-var-row:hover {
-    background: #f8fafc;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
 }
 
 .lc-var-row.active {
-    border-left-color: var(--dm-primary);
     background: var(--dm-primary-light);
-}
-
-.lc-var-row.err {
-    border-left-color: #fca5a5;
+    border-color: var(--dm-primary);
+    box-shadow: none;
 }
 
 .lc-var-row.err.active {
-    border-left-color: #dc2626;
-    background: #fef2f2;
+    background: #fff1f2;
+    border-color: #fda4af;
+}
+
+.lc-var-row.err-unexpected.active {
+    background: #fff7ed;
+    border-color: #fdba74;
 }
 
 .lc-vr-top {
@@ -633,7 +639,7 @@ button.lc-btn-primary {
 }
 
 .lc-vr-icon.err-icon {
-    color: #ef4444;
+    color: #f43f5e;
     font-weight: 900;
 }
 
@@ -681,11 +687,11 @@ button.lc-btn-primary {
 }
 
 .lc-vr-num.red {
-    color: #ef4444;
+    color: #f43f5e;
 }
 
 .lc-vr-num.orange {
-    color: #f59e0b;
+    color: #fb923c;
 }
 
 .lc-vr-num.zero {
@@ -792,7 +798,7 @@ button.lc-btn-primary {
 
 .lc-detail-type:empty { display: none; }
 .lc-detail-type.t-single { background: #fff7ed; border-color: #fed7aa; color: #c2410c; }
-.lc-detail-type.t-multi { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+.lc-detail-type.t-multi { background: #ebf3ff; border-color: #c4dbff; color: #1f6fe5; }
 .lc-detail-type.t-scale { background: var(--dm-primary-light); border-color: var(--dm-primary-border); color: #15803d; }
 .lc-detail-type.t-rank { background: #f5f3ff; border-color: #ddd6fe; color: #6d28d9; }
 
@@ -940,7 +946,7 @@ button.lc-btn-primary {
 
 .lc-bq-cell.problem {
     background: #fff5f5;
-    border-color: #fca5a5;
+    border-color: #fda4af;
 }
 
 .lc-bq-cell.zero {
@@ -1048,7 +1054,7 @@ button.lc-btn-primary {
 .lc-dist-bar-bg {
     height: 10px;
     border-radius: 5px;
-    background: #bfdbfe;
+    background: #c4dbff;
     max-width: 120px;
     position: relative;
     overflow: hidden;
@@ -1060,7 +1066,7 @@ button.lc-btn-primary {
     left: 0;
     top: 0;
     height: 100%;
-    background: #3b82f6;
+    background: #3d8bfd;
     border-radius: 5px;
 }
 
@@ -1325,12 +1331,12 @@ button.lc-btn-primary {
 .lc-progress-abort {
     align-self: center;
     margin-top: 4px;
-    border-color: #ef4444;
-    color: #ef4444;
+    border-color: #f43f5e;
+    color: #f43f5e;
 }
 
 .lc-progress-abort:hover {
-    background: #fef2f2;
+    background: #fff1f2;
 }
 
 /* ── 스피너 ── */
@@ -1554,12 +1560,12 @@ button.lc-btn-ghost {
 }
 
 .lc-result-stat.red {
-    background: #fef2f2;
-    border-color: #fee2e2;
+    background: #fff1f2;
+    border-color: #ffe4e6;
 }
 
 .lc-result-stat.red .lc-result-stat-value {
-    color: #dc2626;
+    color: #e11d48;
 }
 
 .lc-result-warn {
@@ -1724,7 +1730,7 @@ button.lc-result-restore {
 .lc-dist-track > div { height: 100%; }
 .lc-dist-table th.num, .lc-dist-table td.num { text-align: right; }
 .lc-dist-table td.code { font-family: 'Menlo', 'Consolas', monospace; font-size: 12px; color: var(--dm-text-sub); }
-.lc-dist-table tr.nolabel td { color: #dc2626; }
+.lc-dist-table tr.nolabel td { color: #e11d48; }
 .lc-dist-table tr.sum td { font-weight: 700; border-top: 1px solid var(--dm-border); background: #f8fafc; }
 .lc-dist-table tr.blank td { color: var(--dm-text-sub); }
 .lc-dist-num-btn { text-decoration: underline dotted; font-weight: 700; }
@@ -1792,3 +1798,165 @@ button.lc-result-restore {
 .lc-list-toolbar .lc-sort-ddl { height: 32px !important; min-height: 32px !important; max-height: 32px !important; box-sizing: border-box !important; padding: 0 !important; border: 1px solid var(--dm-border) !important; border-radius: 6px !important; box-shadow: none !important; align-items: center; }
 .lc-list-toolbar .lc-sort-ddl .k-input-inner, .lc-list-toolbar .lc-sort-ddl .k-input-button { height: 30px !important; min-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; line-height: 30px !important; }
 
+
+/* 모던 톤 — 막대·범례 */
+.lc-dist-track { height: 8px !important; border-radius: 999px !important; background: #f1f5f9 !important; }
+.lc-dist-track > div:first-child { border-radius: 999px 0 0 999px; }
+.lc-dist-track > div:last-child { border-radius: 0 999px 999px 0; }
+.lc-legend-dot, [class*='legend'] [class*='dot'] { border-radius: 4px !important; }
+
+
+/* 결과창 정리 */
+.lc-result-row.clickable { display: flex !important; align-items: center !important; gap: 12px; flex-wrap: nowrap !important; background: #fff !important; padding: 10px 14px; border-bottom: 1px solid #f1f5f9; }
+.lc-result-row.clickable:last-child { border-bottom: none; }
+.lc-result-row.clickable:hover { background: var(--dm-primary-light) !important; }
+.lc-result-row .lc-result-key { flex: 0 0 auto; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.lc-result-row .lc-result-val { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: #94a3b8; font-weight: 500; }
+.lc-result-row .lc-result-tag { flex: 0 0 auto; margin-left: auto; }
+.lc-result-stat.is-zero .lc-result-stat-value { color: #cbd5e1 !important; }
+.lc-result-stat.is-zero { background: #fff !important; border-color: #f1f5f9 !important; }
+
+
+/* 되돌리기 버튼 — 초록 테두리·글씨 */
+.lc-result-footer .btn-cancel.lc-result-restore { background: #fff !important; border: 1px solid var(--dm-primary) !important; color: var(--dm-primary) !important; font-weight: 700; }
+.lc-result-footer .btn-cancel.lc-result-restore:hover { background: var(--dm-primary-light) !important; }
+
+
+/* 확인 팁 — 첫 줄 + 외 N개 토글 */
+.lc-hint-pill { display: inline-flex !important; align-items: center; gap: 4px; color: #b45309 !important; background: #fffbeb !important; border-color: #fde68a !important; flex: 0 1 auto; min-width: 0; }
+.lc-hint-pill-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.lc-hint-more { flex-shrink: 0; display: inline-flex; align-items: center; gap: 2px; height: 26px; padding: 0 8px; border: 1px solid #fde68a; border-radius: 6px; background: #fff; color: #b45309; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.lc-hint-more:hover { background: #fffbeb; }
+.lc-hint-more svg { transition: transform .15s; }
+.lc-hint-more.open svg { transform: rotate(180deg); }
+.lc-hint-list { list-style: none; margin: 0 0 10px; padding: 10px 14px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; display: flex; flex-direction: column; gap: 6px; }
+.lc-hint-list li { display: flex; gap: 6px; font-size: 12.5px; color: #92400e; line-height: 1.5; }
+
+
+/* 다시 판정 — 판정 시각 옆 아이콘 */
+.lc-status { display: inline-flex; align-items: center; gap: 6px; }
+.lc-rejudge-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; margin-left: 2px; padding: 0; border: 1px solid transparent; border-radius: 6px; background: transparent; color: #64748b; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+.lc-rejudge-icon:hover:not(:disabled) { background: var(--dm-primary-light); border-color: var(--dm-primary-border, #bbf7d0); color: var(--dm-primary); }
+.lc-rejudge-icon:hover:not(:disabled) svg { transform: rotate(90deg); }
+.lc-rejudge-icon svg { transition: transform .25s; }
+.lc-rejudge-icon:disabled { opacity: .4; cursor: not-allowed; }
+.lc-rejudge-icon::after { content: attr(data-tip); position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); padding: 4px 8px; border-radius: 6px; background: #1e293b; color: #fff; font-size: 11.5px; font-weight: 600; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .12s; z-index: 50; }
+.lc-rejudge-icon:hover::after { opacity: 1; }
+
+
+/* 알약 글씨 크기 통일 */
+.lc-detail-head .lc-detail-summary, .lc-detail-head .lc-detail-summary *, .lc-hint-more { font-size: 12px !important; line-height: 1.4 !important; }
+.lc-detail-head .lc-detail-summary { padding: 4px 10px !important; }
+
+
+/* ↻ ⋯ | 변수 목록 */
+.lc-tool-group { position: relative; display: inline-flex; align-items: center; gap: 2px; }
+.lc-tool-group .lc-rejudge-icon { width: 30px; height: 30px; margin: 0; }
+.lc-tool-divider { width: 1px; height: 18px; background: var(--dm-border, #e2e8f0); margin: 0 6px; flex-shrink: 0; }
+
+
+.lc-rejudge-icon::after { display: none !important; }
+.lc-menu-item.danger { color: #e11d48 !important; }
+.lc-menu-item.danger:hover:not(:disabled) { background: #fff1f2 !important; }
+.lc-menu-item.danger:disabled { color: #fda4af !important; }
+
+
+/* ── 로직 넣기/수정 창 ── */
+.lc-dialog.lc-logic-dialog { width: 760px; max-width: calc(100vw - 48px); }
+.lc-logic-dialog .variable-modal-title { white-space: nowrap; }
+.lc-logic-dialog-sub { margin-left: 10px; font-size: 13px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lc-logic-now { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--dm-border, #e2e8f0); border-radius: 8px; font-size: 13px; color: #334155; margin-bottom: 14px; }
+.lc-logic-now-label { color: #94a3b8; font-size: 12px; flex-shrink: 0; }
+.lc-logic-field-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+.lc-logic-field-label { font-size: 13px; font-weight: 600; color: #1e293b; }
+.lc-logic-field-note { font-size: 12px; color: #94a3b8; }
+.lc-logic-help-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: 2px; border: 0; background: none; padding: 0; font-size: 12px; color: var(--dm-primary); cursor: pointer; }
+.lc-logic-help-toggle svg { transition: transform .15s; }
+.lc-logic-help-toggle.open svg { transform: rotate(180deg); }
+.lc-logic-textarea { width: 100%; min-height: 110px; resize: vertical; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--dm-border, #e2e8f0); border-radius: 8px; font-family: Consolas, 'D2Coding', monospace; font-size: 13px; line-height: 1.6; color: #1e293b; outline: none; transition: border-color .15s, box-shadow .15s; }
+.lc-logic-textarea:focus { border-color: var(--dm-primary); box-shadow: 0 0 0 3px var(--dm-primary-light); }
+.lc-logic-help { width: 100%; margin-top: 12px; border-collapse: separate; border-spacing: 0; border: 1px solid var(--dm-border, #e2e8f0); border-radius: 8px; overflow: hidden; font-size: 12px; }
+.lc-logic-help td { padding: 7px 14px; color: #475569; border-bottom: 1px solid #f1f5f9; }
+.lc-logic-help tr:last-child td { border-bottom: 0; }
+.lc-logic-help td.op, .lc-logic-help td.ex { font-family: Consolas, 'D2Coding', monospace; }
+.lc-logic-help td.op { color: #1e293b; width: 32%; }
+.lc-logic-help td.ex { color: #64748b; }
+.lc-logic-footer { display: flex; align-items: center; gap: 8px; }
+.lc-logic-footer .btn-save:disabled { opacity: .6; cursor: default; }
+.lc-logic-help { margin-top: 0 !important; margin-bottom: 8px; }
+
+/* 문법 도움말 — 입력칸과 구분되는 회색 안내 패널 */
+.lc-logic-help { background: #f8fafc !important; border: 0 !important; border-radius: 8px; padding: 6px 4px; font-size: 12px !important; }
+.lc-logic-help td { padding: 4px 10px !important; border-bottom: 0 !important; line-height: 1.5; }
+.lc-logic-help td:nth-child(2) { color: #64748b !important; font-weight: 400 !important; }
+.lc-logic-help td.op { width: 30%; }
+.lc-logic-help td.op span, .lc-logic-help td.op { color: var(--dm-primary) !important; font-size: 11.5px; font-weight: 600; }
+.lc-logic-help td.ex { color: #94a3b8 !important; font-size: 11.5px; }
+.lc-logic-help td:nth-child(2) { font-size: 12px !important; }
+.lc-logic-footer .lc-btn-green-outline { border: 1px solid var(--dm-primary) !important; color: var(--dm-primary) !important; background: #fff !important; }
+.lc-logic-footer .lc-btn-green-outline:hover { background: var(--dm-primary-light) !important; }
+/* 로직 창 바닥 버튼 크기 통일 */
+.lc-logic-footer .btn-cancel, .lc-logic-footer .btn-save { height: 36px !important; min-height: 36px !important; padding: 0 16px !important; font-size: 13px !important; line-height: 1 !important; box-sizing: border-box !important; display: inline-flex !important; align-items: center; justify-content: center; border-radius: 6px !important; }
+.lc-logic-footer .btn-save { border: 1px solid var(--dm-primary) !important; }
+/* 문법표 (서버) — 묶음 제목 · 옛 글자 · 오류 */
+.lc-logic-help tr.grp td { padding-top: 8px !important; font-size: 11px !important; font-weight: 600; color: #94a3b8 !important; font-family: inherit !important; }
+.lc-logic-help tr.legacy td.op { color: #94a3b8 !important; text-decoration: line-through; }
+.lc-logic-help .instead { color: #64748b; }
+.lc-logic-help .instead code { font-family: Consolas, 'D2Coding', monospace; color: var(--dm-primary); }
+.lc-logic-help .note { color: #94a3b8; }
+.lc-logic-help-msg { display: flex; align-items: center; gap: 6px; padding: 10px 14px !important; color: #94a3b8; }
+.lc-logic-textarea.has-error { border-color: #f43f5e !important; box-shadow: 0 0 0 3px #fff1f2 !important; }
+.lc-logic-error { margin-top: 6px; font-size: 12px; color: #f43f5e; white-space: pre-line; }
+/* 문법표 — 높이 제한 + 줄바꿈 정리 */
+table.lc-logic-help { display: block; max-height: 240px; overflow-y: auto; table-layout: fixed; }
+table.lc-logic-help tbody { display: table; width: 100%; table-layout: fixed; }
+.lc-logic-help td.op { width: 26% !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-logic-help td:nth-child(2) { width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lc-logic-help td.ex { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-logic-help tr.grp td { white-space: nowrap; }
+.lc-logic-help tr[title]:hover td { background: #f1f5f9; }
+/* 문법표 묶음 제목 — 눈에 띄게 */
+.lc-logic-help tr.grp td { padding: 10px 10px 4px !important; font-size: 12px !important; font-weight: 700 !important; color: #334155 !important; letter-spacing: -0.01em; }
+.lc-logic-help tbody + tbody tr.grp td { border-top: 1px solid #e2e8f0 !important; padding-top: 10px !important; }
+.lc-logic-help tr.grp td::before { content: ''; display: inline-block; width: 3px; height: 11px; margin-right: 6px; border-radius: 2px; background: var(--dm-primary); vertical-align: -1px; }
+/* 식에 쓴 변수 — 문항·보기 */
+.lc-logic-refs { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.lc-logic-refs li { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 12px; color: #475569; line-height: 1.6; }
+.lc-logic-refs .ref-name { font-family: Consolas, 'D2Coding', monospace; font-weight: 700; color: var(--dm-primary); }
+.lc-logic-refs .ref-type { padding: 0 6px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 11px; color: #64748b; background: #fff; }
+.lc-logic-refs .ref-label { color: #334155; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lc-logic-refs .ref-opt { color: #475569; white-space: nowrap; }
+.lc-logic-refs .ref-opt b { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; padding: 0 4px; margin-right: 2px; border-radius: 4px; background: #f1f5f9; font-size: 11px; font-weight: 600; color: #475569; }
+.lc-logic-refs .ref-more { color: #94a3b8; }
+/* 식에 쓴 변수 — 정돈 */
+.lc-logic-refs { margin-top: 8px !important; padding: 8px 12px; border: 1px dashed #e2e8f0; border-radius: 8px; background: #fff; }
+.lc-logic-refs li { font-weight: 400 !important; }
+.lc-logic-refs .ref-label { color: #64748b !important; font-weight: 400 !important; max-width: 300px !important; }
+.lc-logic-refs .ref-label::after { content: ''; display: inline-block; width: 1px; height: 10px; margin-left: 8px; background: #e2e8f0; vertical-align: -1px; }
+.lc-logic-refs .ref-opt { color: #334155 !important; font-weight: 400 !important; }
+/* 보기 = 문항 줄 아래 따로, 칩 모양 */
+.lc-logic-refs .ref-label { max-width: none !important; flex: 1; min-width: 0; }
+.lc-logic-refs .ref-label::after { display: none !important; }
+.lc-logic-refs .ref-opts { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px 6px; padding-left: 2px; }
+.lc-logic-refs .ref-opt { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px 1px 2px; border: 1px solid #eef2f6; border-radius: 6px; background: #f8fafc; }
+.lc-logic-refs .ref-opt b { margin-right: 0 !important; background: #fff !important; border: 1px solid #e2e8f0; }
+.lc-logic-refs li + li { padding-top: 6px; border-top: 1px solid #f1f5f9; }
+/* 현재 식 + 상태 두 줄 */
+.lc-logic-now { flex-direction: column; align-items: stretch !important; gap: 6px !important; }
+.lc-logic-now-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.lc-logic-now-row .lc-logic-now-label { width: 44px; }
+.lc-logic-now-row b { font-weight: 700; color: #1e293b; }
+.lc-logic-now-empty { color: #94a3b8; }
+/* 식에 쓴 변수 — 네 줄 넘으면 스크롤 */
+.lc-logic-refs { max-height: 128px; overflow-y: auto; }
+/* A. 상태 칸 — 결과에 따라 물들이기 */
+.lc-logic-now.tone-error { background: #fff1f2 !important; border-color: #fecdd3 !important; }
+.lc-logic-now.tone-warn { background: #fff7ed !important; border-color: #fed7aa !important; }
+.lc-logic-now.tone-ok { background: var(--dm-primary-light) !important; border-color: var(--dm-primary-border) !important; }
+.lc-logic-now.tone-error .lc-logic-code, .lc-logic-now.tone-warn .lc-logic-code, .lc-logic-now.tone-ok .lc-logic-code { background: rgba(255,255,255,.75); }
+
+/* B. 입력칸이 주인공 */
+.lc-logic-textarea { border: 1.5px solid #cbd5e1 !important; background: #fff !important; }
+.lc-logic-textarea:hover { border-color: #94a3b8 !important; }
+.lc-logic-textarea:focus { border-color: var(--dm-primary) !important; box-shadow: 0 0 0 3px var(--dm-primary-light) !important; }
+.lc-logic-textarea.has-error { border-color: #f43f5e !important; box-shadow: 0 0 0 3px #fff1f2 !important; }
