@@ -215,7 +215,7 @@ const InputCell = (props) => {
                     padding: '2px 4px',
                     width: '100%',
                     boxSizing: 'border-box',
-                    textAlign: (field === 'memo') ? 'left' : 'center'
+                    textAlign: (field === 'memo' || field === 'label') ? 'left' : 'center'
                 }}>
                     {dataItem[field]}
                 </div>
@@ -242,6 +242,7 @@ const InputCell = (props) => {
                 onKeyDown={handleKeyDown}
                 onFocus={handleFocus}
                 autoFocus={shouldAutoFocus}
+                style={{ textAlign: (field === 'label') ? 'left' : (field === 'memo' ? 'left' : 'center') }}
             />
         </td>
     );
