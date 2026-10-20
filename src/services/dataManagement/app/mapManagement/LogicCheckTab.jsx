@@ -1033,7 +1033,7 @@ const LogicCheckTab = ({
                 // 네 칸을 눌러 다시 부른 경우 분포는 처음 받은 것 그대로
                 setDetail(prev => (kindOverride && prev?.distribution)
                     ? { ...rj, distribution: prev.distribution, _distKind: prev._distKind, _kind: kind, _item: item }
-                    : { ...rj, _distKind: kind, _kind: kind, _item: item });
+                    : { ...rj, _distKind: rj.kind || kind, _kind: rj.kind || kind, _item: item });
             } else {
                 const msg = res?.resultjson?.errorcontent || res?.errorcontent || '문항 상세를 불러오지 못했습니다.';
                 modal?.showErrorAlert?.('오류', msg);
@@ -1350,7 +1350,7 @@ const LogicCheckTab = ({
         const shown = entries.length;
         const cut = (dist.allDistinct || 0) > shown + (blank ? 1 : 0) ? dist.allDistinct - shown - (blank ? 1 : 0) : 0;
 
-        const Bar = ({ inT, outT, inColor = C.blue, outColor = C.orange }) => (
+        const Bar = ({ inT, outT, inColor = '#a3bbea', outColor = '#fdba74' }) => (
             <div className="lc-dist-track">
                 <div style={{ width: `${(inT / maxCount) * 100}%`, background: inColor }} />
                 <div style={{ width: `${(outT / maxCount) * 100}%`, background: outColor }} />
@@ -1439,7 +1439,7 @@ const LogicCheckTab = ({
                                 <td />
                                 <td>무응답</td>
                                 <td>
-                                    {!isValues && <Bar inT={missingIn} outT={missingOut} inColor={C.red} outColor="#e2e8f0" />}
+                                    {!isValues && <Bar inT={missingIn} outT={missingOut} inColor="#fda4af" outColor="#e2e8f0" />}
                                 </td>
                                 {isValues ? <td className="num">{fmt(blank)}</td> : <>
                                     <td className="num">
@@ -1853,12 +1853,12 @@ const LogicCheckTab = ({
                                                 {summaryText.text}
                                             </span>
                                         )}
-                                        {selectedVar.hints?.length > 0 && (
-                                            <span className="lc-detail-summary lc-hint-pill" title={selectedVar.hints[0]}>
+                                        {(hintsOpen ? (selectedVar.hints || []) : (selectedVar.hints || []).slice(0, 1)).map((h, i) => (
+                                            <span key={i} className={`lc-detail-summary lc-hint-pill${hintsOpen ? ' expanded' : ''}`} title={h}>
                                                 <Lightbulb size={11} style={{ flexShrink: 0 }} />
-                                                <span className="lc-hint-pill-text">{selectedVar.hints[0]}</span>
+                                                <span className="lc-hint-pill-text">{h}</span>
                                             </span>
-                                        )}
+                                        ))}
                                         {selectedVar.hints?.length > 1 && (
                                             <button type="button" className={`lc-hint-more${hintsOpen ? ' open' : ''}`}
                                                 onClick={() => setHintsOpen(o => !o)}>
@@ -1884,13 +1884,6 @@ const LogicCheckTab = ({
                                     </div>
                                 </div>
 
-                                {hintsOpen && selectedVar.hints?.length > 1 && (
-                                    <ul className="lc-hint-list">
-                                        {selectedVar.hints.map((h, i) => (
-                                            <li key={i}><Lightbulb size={12} style={{ flexShrink: 0, marginTop: 2 }} /><span>{h}</span></li>
-                                        ))}
-                                    </ul>
-                                )}
 
                                 {/* 로직 + 베이스 현황 — 카드 하나 */}
                                 {selectedVar.hasLogic && (
@@ -1934,13 +1927,24 @@ const LogicCheckTab = ({
                                 {/* ③ 분포 + ④ 응답자 */}
                                 {detailLoading && !detail?.distribution ? (
                                     <div className="lc-detail-loading">
-                                        <Loader2 size={20} className="lc-spin" /> 응답자 명단을 불러오고 있습니다... 응답자가 많으면 조금 더 걸릴 수 있습니다.
+                                        <Loader2 size={20} className="lc-spin" /> {(!selectedVar.hasLogic || selectedVar._unreadable || selectedVar.status === 'noResponse')
+                                            ? '응답값을 불러오고 있습니다...'
+                                            : '응답자 명단을 불러오고 있습니다... 응답자가 많으면 조금 더 걸릴 수 있습니다.'}
                                     </div>
                                 ) : (
                                     <div className="lc-detail-tables">
                                         {DistTable}
-                                        {detail?._distKind !== 'values' && (
-                                            detailLoading ? (
+                                        {(() => {
+                                            const isValuesVar = detail?._distKind === 'values'
+                                                || !selectedVar.hasLogic || selectedVar._unreadable || selectedVar.status === 'noResponse';
+                                            if (isValuesVar) {
+                                                return DistTable ? null : (
+                                                    <div className="lc-resp-placeholder">
+                                                        {detail ? '이 문항은 응답값이 없습니다.' : '응답값 분포를 불러오지 못했습니다.'}
+                                                    </div>
+                                                );
+                                            }
+                                            return detailLoading ? (
                                                 <div className="lc-resp-placeholder">
                                                     <Loader2 size={18} className="lc-spin" />&nbsp;응답자를 불러오는 중입니다…
                                                 </div>
@@ -1948,8 +1952,8 @@ const LogicCheckTab = ({
                                                 <div className="lc-resp-placeholder">
                                                     위 대상자·비대상 칸이나 분포표의 숫자를 누르면 해당 응답자 목록이 여기에 표시됩니다.
                                                 </div>
-                                            ))
-                                        )}
+                                            ));
+                                        })()}
                                     </div>
                                 )}
                             </div>

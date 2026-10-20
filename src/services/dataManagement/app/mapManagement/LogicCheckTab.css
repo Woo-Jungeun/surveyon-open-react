@@ -1960,3 +1960,9 @@ table.lc-logic-help tbody { display: table; width: 100%; table-layout: fixed; }
 .lc-logic-textarea:hover { border-color: #94a3b8 !important; }
 .lc-logic-textarea:focus { border-color: var(--dm-primary) !important; box-shadow: 0 0 0 3px var(--dm-primary-light) !important; }
 .lc-logic-textarea.has-error { border-color: #f43f5e !important; box-shadow: 0 0 0 3px #fff1f2 !important; }
+/* 상세 로딩 — 가운데 */
+.lc-detail-loading { flex: 1 1 auto; min-height: 240px; display: flex !important; align-items: center !important; justify-content: center !important; gap: 8px; }
+/* 힌트 펼침: 헤더 안에서 알약으로 줄바꿈 */
+.lc-detail-head-left { flex-wrap: wrap !important; row-gap: 6px !important; min-width: 0; }
+.lc-hint-pill.expanded { max-width: 100% !important; }
+.lc-hint-pill.expanded .lc-hint-pill-text { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; }
