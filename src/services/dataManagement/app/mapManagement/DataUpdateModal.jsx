@@ -1327,81 +1327,81 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                 flexDirection: 'column',
                                 gap: '4px'
                             }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '500', color: '#b91c1c' }}>
-                            <AlertTriangle size={14} />
-                            <span>필수 확인 사항 ― 아래 동의 항목을 <strong style={{ fontWeight: '800' }}>모두 체크해야</strong> 적용할 수 있습니다</span>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '110px', overflowY: 'auto', paddingRight: '4px' }}>
-                            {resData.confirmRequired.map(item => {
-                                const key = typeof item === 'string' ? item : item.key;
-                                const label = typeof item === 'object' && item.message ? item.message : (CONFIRM_LABELS[key] || key);
-                                const isChecked = !!confirmChecks[key];
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '500', color: '#b91c1c' }}>
+                                    <AlertTriangle size={14} />
+                                    <span>필수 확인 사항 ― 아래 동의 항목을 <strong style={{ fontWeight: '800' }}>모두 체크해야</strong> 적용할 수 있습니다</span>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '110px', overflowY: 'auto', paddingRight: '4px' }}>
+                                    {resData.confirmRequired.map(item => {
+                                        const key = typeof item === 'string' ? item : item.key;
+                                        const label = typeof item === 'object' && item.message ? item.message : (CONFIRM_LABELS[key] || key);
+                                        const isChecked = !!confirmChecks[key];
 
-                                return (
-                                    <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                        <label
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setConfirmChecks(prev => ({ ...prev, [key]: !prev[key] }));
-                                            }}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'flex-start',
-                                                gap: '8px',
-                                                fontSize: '12.5px',
-                                                color: '#334155',
-                                                cursor: 'pointer',
-                                                lineHeight: '1.4'
-                                            }}>
-                                            <div
-                                                style={{
-                                                    marginTop: '1px',
-                                                    width: '15px',
-                                                    height: '15px',
-                                                    border: `1.5px solid ${isChecked ? '#ef4444' : '#fca5a5'}`,
-                                                    background: isChecked ? '#ef4444' : '#fff',
-                                                    borderRadius: '3px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    flexShrink: 0,
-                                                    transition: 'all 0.15s ease'
-                                                }}
-                                            >
-                                                {isChecked && <Check size={12} color="#fff" strokeWidth={3.5} />}
-                                            </div>
-                                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-                                                <span style={{ fontWeight: isChecked ? '600' : '500', color: isChecked ? '#991b1b' : '#431407' }}>{label}</span>
-                                                
-                                                {/* 빠지는 응답자 PID 보기 토글 */}
-                                                {key === 'respondentsRemoved' && removedPidsList.length > 0 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                            setShowRemovedPids(!showRemovedPids);
+                                        return (
+                                            <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                <label
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        setConfirmChecks(prev => ({ ...prev, [key]: !prev[key] }));
+                                                    }}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'flex-start',
+                                                        gap: '8px',
+                                                        fontSize: '12.5px',
+                                                        color: '#334155',
+                                                        cursor: 'pointer',
+                                                        lineHeight: '1.4'
+                                                    }}>
+                                                    <div
+                                                        style={{
+                                                            marginTop: '1px',
+                                                            width: '15px',
+                                                            height: '15px',
+                                                            border: `1.5px solid ${isChecked ? '#ef4444' : '#fca5a5'}`,
+                                                            background: isChecked ? '#ef4444' : '#fff',
+                                                            borderRadius: '3px',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            flexShrink: 0,
+                                                            transition: 'all 0.15s ease'
                                                         }}
-                                                        style={{ border: '1px solid #cbd5e1', background: '#ffffff', color: '#2563eb', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: '500', marginTop: '2px' }}
                                                     >
-                                                        [제외 PID 목록 보기] {showRemovedPids ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                                                    </button>
+                                                        {isChecked && <Check size={12} color="#fff" strokeWidth={3.5} />}
+                                                    </div>
+                                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+                                                        <span style={{ fontWeight: isChecked ? '600' : '500', color: isChecked ? '#991b1b' : '#431407' }}>{label}</span>
+
+                                                        {/* 빠지는 응답자 PID 보기 토글 */}
+                                                        {key === 'respondentsRemoved' && removedPidsList.length > 0 && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    setShowRemovedPids(!showRemovedPids);
+                                                                }}
+                                                                style={{ border: '1px solid #cbd5e1', background: '#ffffff', color: '#2563eb', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: '500', marginTop: '2px' }}
+                                                            >
+                                                                [제외 PID 목록 보기] {showRemovedPids ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </label>
+
+                                                {/* 빠지는 PID 접기/펼치기 박스 */}
+                                                {key === 'respondentsRemoved' && showRemovedPids && removedPidsList.length > 0 && (
+                                                    <div style={{ background: '#ffffff', border: '1px solid #fecaca', borderRadius: '4px', padding: '4px 8px', fontSize: '11.5px', color: '#991b1b', display: 'flex', flexWrap: 'wrap', gap: '3px', marginLeft: '23px', marginTop: '2px' }}>
+                                                        {removedPidsList.map((pid, pIdx) => (
+                                                            <span key={pIdx} style={{ background: '#fee2e2', padding: '1px 4px', borderRadius: '3px' }}>{pid}</span>
+                                                        ))}
+                                                    </div>
                                                 )}
                                             </div>
-                                        </label>
-
-                                        {/* 빠지는 PID 접기/펼치기 박스 */}
-                                        {key === 'respondentsRemoved' && showRemovedPids && removedPidsList.length > 0 && (
-                                            <div style={{ background: '#ffffff', border: '1px solid #fecaca', borderRadius: '4px', padding: '4px 8px', fontSize: '11.5px', color: '#991b1b', display: 'flex', flexWrap: 'wrap', gap: '3px', marginLeft: '23px', marginTop: '2px' }}>
-                                                {removedPidsList.map((pid, pIdx) => (
-                                                    <span key={pIdx} style={{ background: '#fee2e2', padding: '1px 4px', borderRadius: '3px' }}>{pid}</span>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -1409,135 +1409,135 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                     {/* Footer Actions */}
                     <div style={{ padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
 
-                    {/* 좌측 영역: 이전 단계 동작(파일 재선택) 또는 안내문 */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, paddingRight: '16px', minWidth: 0 }}>
-                        {step === 1 && (
-                            <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-                                ※ 검사 단계에서는 데이터가 변경되거나 저장되지 않습니다.
-                            </div>
-                        )}
+                        {/* 좌측 영역: 이전 단계 동작(파일 재선택) 또는 안내문 */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, paddingRight: '16px', minWidth: 0 }}>
+                            {step === 1 && (
+                                <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+                                    ※ 검사 단계에서는 데이터가 변경되거나 저장되지 않습니다.
+                                </div>
+                            )}
 
-                        {step === 2 && (
-                            <button
-                                className="upload-cancel-btn"
-                                onClick={(e) => {
-                                    handleClearFile(e);
-                                    setStep(1);
-                                }}
-                                style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                    padding: '8px 14px',
-                                    fontSize: '14px',
-                                    background: '#f8fafc',
-                                    borderColor: '#cbd5e1',
-                                    color: '#334155',
-                                    flexShrink: 0
-                                }}
-                            >
-                                파일 재선택
-                            </button>
-                        )}
-
-                        {step === 2.5 && (
-                            <div style={{ fontSize: '12px', color: '#64748b' }}>
-                                ※ 작업 처리 중 창을 닫으셔도 서버에서 정상적으로 처리가 이어집니다.
-                            </div>
-                        )}
-
-                        {step === 3 && (
-                            <div></div>
-                        )}
-                    </div>
-
-                    {/* 우측 영역: 주요 실행/닫기 버튼들 (취소 + 적용) */}
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginLeft: 'auto', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                        {step === 1 && (
-                            <>
-                                <button className="upload-cancel-btn" onClick={handleModalClose}>
-                                    취소
-                                </button>
+                            {step === 2 && (
                                 <button
-                                    className="upload-submit-btn"
-                                    onClick={handleStartValidate}
-                                    disabled={!selectedFile}
+                                    className="upload-cancel-btn"
+                                    onClick={(e) => {
+                                        handleClearFile(e);
+                                        setStep(1);
+                                    }}
                                     style={{
-                                        backgroundColor: !selectedFile ? '#cbd5e1' : '#16a34a',
-                                        cursor: !selectedFile ? 'not-allowed' : 'pointer',
-                                        opacity: !selectedFile ? 0.6 : 1,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        padding: '8px 14px',
+                                        fontSize: '14px',
+                                        background: '#f8fafc',
+                                        borderColor: '#cbd5e1',
+                                        color: '#334155',
+                                        flexShrink: 0
                                     }}
                                 >
-                                    검사하기
+                                    파일 재선택
                                 </button>
-                            </>
-                        )}
+                            )}
 
-                        {step === 1.5 && (
-                            <button className="upload-cancel-btn" onClick={() => setStep(1)}>
-                                취소
-                            </button>
-                        )}
+                            {step === 2.5 && (
+                                <div style={{ fontSize: '12px', color: '#64748b' }}>
+                                    ※ 작업 처리 중 창을 닫으셔도 서버에서 정상적으로 처리가 이어집니다.
+                                </div>
+                            )}
 
-                        {step === 2 && (
-                            <>
-                                <button className="upload-cancel-btn" onClick={handleModalClose}>
-                                    {resData.canApply === false ? '닫기' : '취소'}
-                                </button>
-                                {resData.canApply !== false && (
+                            {step === 3 && (
+                                <div></div>
+                            )}
+                        </div>
+
+                        {/* 우측 영역: 주요 실행/닫기 버튼들 (취소 + 적용) */}
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginLeft: 'auto', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                            {step === 1 && (
+                                <>
+                                    <button className="upload-cancel-btn" onClick={handleModalClose}>
+                                        취소
+                                    </button>
                                     <button
                                         className="upload-submit-btn"
-                                        onClick={handleStartApply}
-                                        disabled={isApplyDisabled()}
+                                        onClick={handleStartValidate}
+                                        disabled={!selectedFile}
                                         style={{
-                                            backgroundColor: isApplyDisabled() ? '#cbd5e1' : '#16a34a',
-                                            cursor: isApplyDisabled() ? 'not-allowed' : 'pointer',
-                                            opacity: isApplyDisabled() ? 0.6 : 1,
+                                            backgroundColor: !selectedFile ? '#cbd5e1' : '#16a34a',
+                                            cursor: !selectedFile ? 'not-allowed' : 'pointer',
+                                            opacity: !selectedFile ? 0.6 : 1,
                                         }}
                                     >
-                                        {activeTab === 'new' ? '신규등록 적용' : '업데이트 적용'}
+                                        등록하기
                                     </button>
-                                )}
-                            </>
-                        )}
+                                </>
+                            )}
 
-                        {step === 2.5 && (
-                            <button className="upload-cancel-btn" onClick={handleModalClose}>
-                                닫기
-                            </button>
-                        )}
-
-                        {step === 3 && (
-                            <>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        handleFinishClose();
-                                        if (onOpenBatchMapEdit) onOpenBatchMapEdit();
-                                    }}
-                                    style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        color: '#2563eb',
-                                        fontSize: '14px',
-                                        cursor: 'pointer',
-                                        marginRight: '8px',
-                                        fontWeight: '500'
-                                    }}
-                                >
-                                    {/* 맵 엑셀로 유형 고치기 → */}
+                            {step === 1.5 && (
+                                <button className="upload-cancel-btn" onClick={() => setStep(1)}>
+                                    취소
                                 </button>
-                                <button
-                                    className="upload-submit-btn"
-                                    onClick={handleFinishClose}
-                                    style={{ backgroundColor: '#16a34a', cursor: 'pointer' }}
-                                >
+                            )}
+
+                            {step === 2 && (
+                                <>
+                                    <button className="upload-cancel-btn" onClick={handleModalClose}>
+                                        {resData.canApply === false ? '닫기' : '취소'}
+                                    </button>
+                                    {resData.canApply !== false && (
+                                        <button
+                                            className="upload-submit-btn"
+                                            onClick={handleStartApply}
+                                            disabled={isApplyDisabled()}
+                                            style={{
+                                                backgroundColor: isApplyDisabled() ? '#cbd5e1' : '#16a34a',
+                                                cursor: isApplyDisabled() ? 'not-allowed' : 'pointer',
+                                                opacity: isApplyDisabled() ? 0.6 : 1,
+                                            }}
+                                        >
+                                            {activeTab === 'new' ? '신규등록 적용' : '업데이트 적용'}
+                                        </button>
+                                    )}
+                                </>
+                            )}
+
+                            {step === 2.5 && (
+                                <button className="upload-cancel-btn" onClick={handleModalClose}>
                                     닫기
                                 </button>
-                            </>
-                        )}
+                            )}
+
+                            {step === 3 && (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            handleFinishClose();
+                                            if (onOpenBatchMapEdit) onOpenBatchMapEdit();
+                                        }}
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            color: '#2563eb',
+                                            fontSize: '14px',
+                                            cursor: 'pointer',
+                                            marginRight: '8px',
+                                            fontWeight: '500'
+                                        }}
+                                    >
+                                        {/* 맵 엑셀로 유형 고치기 → */}
+                                    </button>
+                                    <button
+                                        className="upload-submit-btn"
+                                        onClick={handleFinishClose}
+                                        style={{ backgroundColor: '#16a34a', cursor: 'pointer' }}
+                                    >
+                                        닫기
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
-                </div>
                 </div>
             </div>
         </div>
