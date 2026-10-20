@@ -1,12 +1,15 @@
 import React, {
     useState, useMemo, useEffect, useRef, useContext, useCallback
 } from 'react';
+import { createPortal } from 'react-dom';
+import { DropDownList } from '@progress/kendo-react-dropdowns';
 import {
     Check, List, MoreHorizontal, RotateCcw, Wand2, PlayCircle, X,
     RefreshCw, ChevronDown, Edit2, FileDown,
     Lightbulb, Search, Loader2, Copy,
 } from 'lucide-react';
 import { modalContext } from '@/components/common/Modal.jsx';
+import { loadingSpinnerContext } from '@/components/common/LoadingSpinner.jsx';
 import * as signalR from '@microsoft/signalr';
 import './LogicCheckTab.css';
 
@@ -41,6 +44,27 @@ const FILTERS = [
 ];
 
 // ─── 정렬 옵션 ──────────────────────────────────
+// 동기 복사 — copy 이벤트로 글자 + 표를 같이 넣기 (클릭 핸들러 안에서 불러야 함)
+const copySync = (text, html) => {
+    const onCopy = (ev) => {
+        ev.preventDefault();
+        ev.clipboardData.setData('text/plain', text);
+        if (html) ev.clipboardData.setData('text/html', html);
+    };
+    const ta = document.createElement('textarea');
+    ta.value = ' ';
+    ta.style.cssText = 'position:fixed;top:-1000px;opacity:0;';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.addEventListener('copy', onCopy);
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch { ok = false; }
+    document.removeEventListener('copy', onCopy);
+    ta.remove();
+    return ok;
+};
+
 const SORT_OPTIONS = [
     { key: 'order', label: '문항 순서' },
     { key: 'confirm', label: '확인할 응답자 많은 순' },
@@ -119,30 +143,30 @@ function AutoFillDialog({ initialRestart = false, logicCount = 0, totalCount = 0
                     <button type="button" id="lc-autofill-close" onClick={onCancel} className="variable-modal-close">&times;</button>
                 </div>
                 <div className="lc-dialog-body">
-                <p className="lc-dialog-desc">AI가 설문지를 읽고 문항별 로직을 대신 입력해 드립니다. 채울 방식을 골라 주세요.</p>
+                    <p className="lc-dialog-desc">AI가 설문지를 읽고 문항별 로직을 대신 입력해 드립니다. 채울 방식을 골라 주세요.</p>
 
-                <div className="lc-choice-list">
-                    {options.map(opt => (
-                        <label
-                            key={String(opt.value)}
-                            className={`lc-choice${restart === opt.value ? ' selected' : ''}`}
-                            onClick={() => setRestart(opt.value)}
-                        >
-                            <span className="lc-choice-radio" />
-                            <span className="lc-choice-text">
-                                <span className="lc-choice-title">{opt.title}</span>
-                                <span className="lc-choice-desc">{opt.desc}</span>
-                            </span>
-                        </label>
-                    ))}
-                </div>
+                    <div className="lc-choice-list">
+                        {options.map(opt => (
+                            <label
+                                key={String(opt.value)}
+                                className={`lc-choice${restart === opt.value ? ' selected' : ''}`}
+                                onClick={() => setRestart(opt.value)}
+                            >
+                                <span className="lc-choice-radio" />
+                                <span className="lc-choice-text">
+                                    <span className="lc-choice-title">{opt.title}</span>
+                                    <span className="lc-choice-desc">{opt.desc}</span>
+                                </span>
+                            </label>
+                        ))}
+                    </div>
 
-                <ul className="lc-dialog-notes">
-                    {restart
-                        ? <li>지우기 전에 지금 상태를 복원 지점으로 저장해 둡니다. 중간에 멈추면 남은 문항은 빈 칸으로 남습니다.</li>
-                        : <li>로직이 필요 없어 일부러 비워 둔 문항도 채워질 수 있습니다. 끝나면 새로 채워진 문항을 알려 드립니다.</li>}
-                    <li>10~20분 정도 걸립니다. 중간에 멈춰도 그때까지 채운 로직은 저장됩니다.</li>
-                </ul>
+                    <ul className="lc-dialog-notes">
+                        {restart
+                            ? <li>지우기 전에 지금 상태를 복원 지점으로 저장해 둡니다. 중간에 멈추면 남은 문항은 빈 칸으로 남습니다.</li>
+                            : <li>로직이 필요 없어 일부러 비워 둔 문항도 채워질 수 있습니다. 끝나면 새로 채워진 문항을 알려 드립니다.</li>}
+                        <li>10~20분 정도 걸립니다. 중간에 멈춰도 그때까지 채운 로직은 저장됩니다.</li>
+                    </ul>
                 </div>
 
                 <div className="variable-modal-footer">
@@ -162,31 +186,37 @@ function splitPair(s, last = false) {
 }
 
 /** 자동 채우기 결과 창 (정의서 B) */
-function AutoFillResultDialog({ result, onClose, onRestore, onGoJudge }) {
+function AutoFillResultDialog({ result, onClose, onRestore, onGoJudge, onGoTo }) {
     const r = result || {};
-    const review = [...(r.needsReview || []), ...(r.undetermined || [])];
     const newly = r.newlyFilled || [];
     const skips = r.skipNotComputed || [];
     const failed = r.failedVariables || [];
     const newlyCount = r.newlyFilledCount ?? newly.length;
-    const reviewCount = (r.needsReviewCount ?? (r.needsReview || []).length) + (r.undeterminedCount ?? (r.undetermined || []).length);
+    // 직접 확인할 문항 = undetermined · needsReview · skipNotComputed (원인만 다름 → 꼬리표)
+    const review = [
+        ...(r.undetermined || []).map(s => ({ s, tag: '비워 둠', last: false })),
+        ...(r.needsReview || []).map(s => ({ s, tag: '맵에 없는 변수', last: false })),
+        ...skips.map(s => ({ s, tag: '건너뛰기 확인', last: true, skip: true })),
+    ];
+    const reviewCount = (r.undeterminedCount ?? (r.undetermined || []).length)
+        + (r.needsReviewCount ?? (r.needsReview || []).length)
+        + (r.skipNotComputedCount ?? skips.length);
 
     const tabs = [
-        { key: 'newly', label: '새로 채워진 문항', count: newlyCount, rows: newly, cols: ['변수', '들어간 조건'], last: false,
-          empty: '비어 있던 칸에 새로 들어간 조건이 없습니다.',
-          hint: '비어 있던 칸에 조건이 들어간 문항입니다. 일부러 비워 두었던 문항이 있는지 확인해 주세요.' },
-        { key: 'review', label: '직접 확인할 문항', count: reviewCount, rows: review, cols: ['변수', '이유'], last: false,
-          empty: '직접 확인할 문항이 없습니다.',
-          hint: 'AI가 로직을 정하지 못해 비워 둔 문항입니다. 로직이 필요하면 맵에서 직접 넣어 주세요. 비어 있는 문항은 판정하지 않습니다.' },
-        { key: 'skip', label: '적용 못한 건너뛰기', count: r.skipNotComputedCount ?? skips.length, rows: skips, cols: ['건너뛰기 규칙', '이유'], last: true,
-          empty: '모든 건너뛰기 규칙을 적용했습니다.',
-          hint: '설문지의 건너뛰기 규칙 중 계산하지 못한 것입니다. 필요하면 시작 문항의 로직을 직접 확인해 주세요.' },
-    ];
-    if (failed.length) {
-        tabs.push({ key: 'failed', label: '채우지 못한 문항', count: failed.length, rows: failed, cols: ['변수', ''], last: false,
-            empty: '', hint: 'AI 요청이 실패해 바뀌지 않은 문항입니다. 다시 [자동 채우기]를 누르면 빈 칸부터 다시 채웁니다.' });
-    }
-    const [tab, setTab] = useState(newlyCount > 0 ? 'newly' : reviewCount > 0 ? 'review' : 'newly');
+        {
+            key: 'review', label: '직접 확인할 문항', count: reviewCount, rows: review, cols: ['문항', '이유'],
+            hint: '로직이 비어 있는 문항은 판정하지 않습니다. 줄을 누르면 맵의 그 문항으로 이동해 로직을 넣을 수 있습니다.'
+        },
+        {
+            key: 'newly', label: '새로 채워진 문항', count: newlyCount, rows: newly.map(s => ({ s, last: false })), cols: ['문항', '들어간 조건'],
+            hint: '비어 있던 칸에 조건이 들어간 문항입니다. 일부러 비워 두었던 문항이면 맵에서 그 문항만 다시 비우면 됩니다.'
+        },
+        {
+            key: 'failed', label: '채우지 못한 문항', count: failed.length, rows: failed.map(s => ({ s, last: false })), cols: ['문항', ''],
+            hint: 'AI 답을 받지 못해 바꾸지 않은 문항입니다(기존 로직 그대로). 다시 [자동 채우기]를 누르면 다시 묻습니다.'
+        },
+    ].filter(t => t.rows.length > 0); // 비어 있으면 숨김
+    const [tab, setTab] = useState(tabs[0]?.key || null);
     const [msgOpen, setMsgOpen] = useState(false);
     const cur = tabs.find(t => t.key === tab) || tabs[0];
     const fmtN = (n) => Number(n || 0).toLocaleString();
@@ -225,7 +255,7 @@ function AutoFillResultDialog({ result, onClose, onRestore, onGoJudge }) {
 
                     {/* 경고 */}
                     {r.usedPaidFallback && (
-                        <div className="lc-result-warn">일부 문항은 보조 모델로 채웠습니다. 반복 문항의 조건을 한 번 더 확인해 주세요.</div>
+                        <div className="lc-result-warn">설문지가 커서 유료 AI로 채웠습니다. 반복 문항(_r1·_r2 …)의 조건이 다른 문항으로 잡혔을 수 있으니 맵에서 한 번 더 확인해 주세요.</div>
                     )}
 
                     {/* 서버 안내 문장 (그대로) */}
@@ -238,39 +268,44 @@ function AutoFillResultDialog({ result, onClose, onRestore, onGoJudge }) {
                         </div>
                     )}
 
-                    {/* 목록 */}
-                    <div className="lc-result-tabs" role="tablist">
-                        {tabs.map(t => (
-                            <button
-                                key={t.key}
-                                type="button"
-                                role="tab"
-                                id={`lc-result-tab-${t.key}`}
-                                aria-selected={tab === t.key}
-                                className={`lc-result-tab${tab === t.key ? ' active' : ''}`}
-                                onClick={() => setTab(t.key)}
-                            >
-                                {t.label} <span className="lc-result-tab-count">{fmtN(t.count)}</span>
-                            </button>
-                        ))}
-                    </div>
-                    {cur.hint && cur.rows.length > 0 && <p className="lc-result-hint">{cur.hint}</p>}
-                    <div className="lc-result-list">
-                        {cur.rows.length === 0 ? (
-                            <div className="lc-result-empty">{cur.empty}</div>
-                        ) : cur.rows.map((row, i) => {
-                            const [a, b] = splitPair(row, cur.last);
-                            return (
-                                <div key={i} className="lc-result-row">
-                                    <span className="lc-result-key" title={a}>{a}</span>
-                                    <span className="lc-result-val">{b}</span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    {cur.key === 'newly' && newlyCount > newly.length && (
-                        <p className="lc-result-hint">최대 {fmtN(newly.length)}개까지만 보입니다 (전체 {fmtN(newlyCount)}개).</p>
-                    )}
+                    {/* 목록 (비어 있으면 숨김) */}
+                    {cur && (<>
+                        <div className="lc-result-tabs" role="tablist">
+                            {tabs.map(t => (
+                                <button
+                                    key={t.key}
+                                    type="button"
+                                    role="tab"
+                                    id={`lc-result-tab-${t.key}`}
+                                    aria-selected={cur.key === t.key}
+                                    className={`lc-result-tab${cur.key === t.key ? ' active' : ''}`}
+                                    onClick={() => setTab(t.key)}
+                                >
+                                    {t.label} <span className="lc-result-tab-count">{fmtN(t.count)}</span>
+                                </button>
+                            ))}
+                        </div>
+                        {cur.hint && <p className="lc-result-hint">{cur.hint}</p>}
+                        <div className="lc-result-list">
+                            {cur.rows.map((row, i) => {
+                                const [a, b] = splitPair(row.s, row.last);
+                                // 건너뛰기 줄은 시작 문항 기준 ("문A → 문C (조건)")
+                                const target = row.skip ? a.split('→')[0].trim() : a.trim();
+                                return (
+                                    <button type="button" key={i} className="lc-result-row clickable"
+                                        title="맵에서 이 문항 열기"
+                                        onClick={() => onGoTo?.(target, row.skip)}>
+                                        <span className="lc-result-key" title={a}>{a}</span>
+                                        <span className="lc-result-val">{b}</span>
+                                        {row.tag && <span className="lc-result-tag">{row.tag}</span>}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        {cur.count > cur.rows.length && (
+                            <p className="lc-result-hint">최대 {fmtN(cur.rows.length)}개까지만 보입니다 (전체 {fmtN(cur.count)}개).</p>
+                        )}
+                    </>)}
                 </div>
 
                 <div className="variable-modal-footer lc-result-footer">
@@ -368,7 +403,7 @@ const VarRow = React.memo(function VarRow({ item, isActive, isUnreadable, checke
             </div>
             {noData ? (
                 <div className="lc-vr-nodata">
-                    {isUnreadable ? '로직 해석 불가' : !item.hasLogic ? '로직 없음' : item.status === 'noResponse' ? '응답 없음' : '판정 전'}
+                    {isUnreadable ? '로직 해석 불가' : !item.hasLogic ? '로직 없음 · 판정 안 함' : item.status === 'noResponse' ? '응답 없음' : '판정 전'}
                 </div>
             ) : (
                 <>
@@ -393,6 +428,8 @@ const VarRow = React.memo(function VarRow({ item, isActive, isUnreadable, checke
 // 오른쪽 상세 — 베이스 칸 (4칸)
 // ─────────────────────────────────────────────────────────────────────────────
 function BaseQuad({ item, checkedResponses, selectedKind, onSelectKind }) {
+    // 선택 칸 테두리 — 그 칸 색의 진한 색
+    const DARK = { [C.blue]: '#1d4ed8', [C.red]: '#b91c1c', [C.orange]: '#b45309', '#64748b': '#334155' };
     const base = item?.base ?? 0;
     const answered = item?.answered ?? 0;
     const missing = item?.missing ?? 0;
@@ -426,7 +463,7 @@ function BaseQuad({ item, checkedResponses, selectedKind, onSelectKind }) {
                     <button
                         type="button"
                         className={`lc-bq-cell head${selectedKind === group.key ? ' selected' : ''}`}
-                        style={selectedKind === group.key ? { borderColor: group.color, background: group.bgColor } : {}}
+                        style={selectedKind === group.key ? { '--sel': DARK[group.color] || group.color, background: group.bgColor } : {}}
                         onClick={() => onSelectKind?.(group.key)}
                         disabled={group.clickable === false}
                     >
@@ -439,7 +476,7 @@ function BaseQuad({ item, checkedResponses, selectedKind, onSelectKind }) {
                                 key={c.key}
                                 type="button"
                                 className={`lc-bq-cell sub${c.isProblem ? ' problem' : ''}${selectedKind === c.key ? ' selected' : ''}${c.value === 0 ? ' zero' : ''}`}
-                                style={selectedKind === c.key ? { borderColor: c.color, background: c.bgColor } : {}}
+                                style={selectedKind === c.key ? { '--sel': DARK[c.color] || c.color, background: c.bgColor } : {}}
                                 onClick={() => c.value > 0 && c.clickable !== false && onSelectKind?.(c.key)}
                                 disabled={c.clickable === false || c.value === 0}
                             >
@@ -468,8 +505,10 @@ const LogicCheckTab = ({
     getCheckLogicFixForm,
     restoreExcelVersion, // 복원 지점 되돌리기 (자동 채우기 결과 창)
     onMapReload,
+    onGoToVariable, // 맵 그 문항 줄로 이동 + 로직 편집
 }) => {
     const modal = useContext(modalContext);
+    const loadingSpinner = useContext(loadingSpinnerContext);
     const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '';
     const userId = auth?.user?.userId || '';
 
@@ -481,6 +520,14 @@ const LogicCheckTab = ({
 
     // ── 왼쪽 목록 상태 ──
     const [filter, setFilter] = useState('error');          // 거르개
+    const [copyMenuOpen, setCopyMenuOpen] = useState(false);
+    const copyMenuRef = useRef(null);
+    useEffect(() => {
+        if (!copyMenuOpen) return;
+        const onDown = (e) => { if (!copyMenuRef.current?.contains(e.target)) setCopyMenuOpen(false); };
+        document.addEventListener('mousedown', onDown);
+        return () => document.removeEventListener('mousedown', onDown);
+    }, [copyMenuOpen]);
     const [sortKey, setSortKey] = useState('order');        // 정렬
     const [listSearch, setListSearch] = useState('');       // 찾기
     const [selectedVar, setSelectedVar] = useState(null);   // 선택된 item
@@ -497,6 +544,11 @@ const LogicCheckTab = ({
     // ── ··· 메뉴 ──
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef(null);
+
+    // ── 판정 정보·버튼 줄은 맵 관리 탭 줄 오른쪽(#map-tab-extra)에 그린다 ──
+    const [tabBarSlot, setTabBarSlot] = useState(null);
+    useEffect(() => { setTabBarSlot(document.getElementById('map-tab-extra')); }, []);
+    const renderInTabBar = (node) => (tabBarSlot ? createPortal(node, tabBarSlot) : node);
 
     // ─── 로직 보유 현황 (준비 화면용) ───
     const totalCount = variables.length;
@@ -628,7 +680,7 @@ const LogicCheckTab = ({
         modal?.showConfirm?.('자동 채우기 전으로 되돌리기',
             '맵을 자동 채우기 전 상태(복원 지점 「로직 자동 채움 전」)로 되돌립니다.\n이번에 채운 로직은 모두 사라집니다.', {
             btns: [
-                { title: '취소', click: () => {} },
+                { title: '취소', click: () => { } },
                 {
                     title: '되돌리기',
                     click: async () => {
@@ -748,7 +800,11 @@ const LogicCheckTab = ({
             );
             if (res?.resultjson?.canceled || ac.signal.aborted) return;
             if (String(res?.success) === '777') {
-                setDetail({ ...res.resultjson, _kind: kind, _item: item });
+                const rj = res.resultjson || {};
+                // 네 칸을 눌러 다시 부른 경우 분포는 처음 받은 것 그대로
+                setDetail(prev => (kindOverride && prev?.distribution)
+                    ? { ...rj, distribution: prev.distribution, _distKind: prev._distKind, _kind: kind, _item: item }
+                    : { ...rj, _distKind: kind, _kind: kind, _item: item });
             } else {
                 const msg = res?.resultjson?.errorcontent || res?.errorcontent || '문항 상세를 불러오지 못했습니다.';
                 modal?.showErrorAlert?.('오류', msg);
@@ -814,209 +870,372 @@ const LogicCheckTab = ({
         }
     }, [pn, userId, getCheckLogicFixForm, modal]);
 
-    // ─── PID 복사 ───
-    const handleCopyPids = useCallback(async (mode) => {
-        if (!detail?.rows) return;
-        const rows = detail.rows;
-        try {
-            if (mode === 'comma') {
-                const pids = rows.map(r => r[0]).join(',');
-                await navigator.clipboard.writeText(pids);
-            } else {
-                // 엑셀 붙일 표 (TSV)
-                const cols = detail.columns || [];
-                const header = cols.map(c => c.title || c).join('\t');
-                const body = rows.map(r => r.join('\t')).join('\n');
-                await navigator.clipboard.writeText(header + '\n' + body);
-            }
-            modal?.showAlert?.('복사 완료', `응답자 ${fmt(rows.length)}명을 복사했습니다.`);
-        } catch {
-            modal?.showErrorAlert?.('오류', '복사하지 못했습니다. 브라우저의 클립보드 권한을 확인해 주세요.');
+    // ─── 코드 → 보기 이름 (분포 all 에서) ───
+    const labelMap = useMemo(() => {
+        const m = new Map();
+        (detail?.distribution?.all || []).forEach(e => { if (e.code !== '' && e.label != null) m.set(String(e.code), e.label); });
+        return m;
+    }, [detail]);
+
+    // 값 「1 가족」 — 멀티는 코드마다 이어서
+    const renderValue = useCallback((val, isCond) => {
+        if (val === '' || val == null) {
+            return <span style={{ color: isCond ? '#94a3b8' : C.red, fontSize: '12px' }}>무응답</span>;
         }
-    }, [detail, modal]);
+        if (isCond) return <span style={{ color: '#94a3b8' }}>{String(val)}</span>;
+        const codes = String(val).split(',');
+        return codes.map((c, i) => {
+            const lb = labelMap.get(c.trim());
+            return (
+                <span key={i}>
+                    {i > 0 && ', '}
+                    <b>{c.trim()}</b>{lb ? ` ${lb}` : ''}
+                </span>
+            );
+        });
+    }, [labelMap]);
+
+    // 코드 거르기 적용한 rows (이미 받은 rows 안에서)
+    const filteredRows = useMemo(() => {
+        const rows = detail?.rows || [];
+        if (!codeFilter) return rows;
+        const target = String(codeFilter.code);
+        return rows.filter(r => String(r.value ?? '').split(',').map(s => s.trim()).includes(target));
+    }, [detail, codeFilter]);
+
+    // ─── PID 복사 ───
+    // 서버에서 받은 복사 데이터 캐시 — 포커스 문제로 실패해도 다시 누르면 서버 안 부르고 바로 복사
+    const copyCacheRef = useRef({});
+    const writeClipboard = useCallback(async (text, html) => {
+        try {
+            if (html && window.ClipboardItem) {
+                await navigator.clipboard.write([new ClipboardItem({
+                    'text/plain': new Blob([text], { type: 'text/plain' }),
+                    'text/html': new Blob([html], { type: 'text/html' }),
+                })]);
+            } else {
+                await navigator.clipboard.writeText(text);
+            }
+            return true;
+        } catch {
+            return copySync(text, html);
+        }
+    }, []);
+
+    // 글자 복사가 막히면(포커스 등) → [확인] 클릭 순간에 복사 (다시 버튼 누를 필요 없음)
+    const copyOrConfirm = useCallback(async (text, html, count) => {
+        if (await writeClipboard(text, html)) {
+            modal?.showAlert?.('알림', `${fmt(count)}개를 복사했습니다.\n필요한 곳에 붙여넣기 하세요.`);
+            return;
+        }
+        modal?.showAlert?.('알림', `${fmt(count)}개를 복사할 준비가 됐습니다.\n[확인]을 누르면 복사됩니다.`, null, () => {
+            const ok = copySync(text, html);
+            // 모달이 닫힌 뒤 결과 알림
+            setTimeout(() => {
+                if (ok) modal?.showAlert?.('알림', `${fmt(count)}개를 복사했습니다.\n필요한 곳에 붙여넣기 하세요.`);
+                else modal?.showErrorAlert?.('오류', '복사하지 못했습니다. 브라우저의 클립보드 권한을 확인해 주세요.');
+            }, 0);
+        });
+    }, [writeClipboard, modal]);
+
+    const handleCopyPids = useCallback(async (mode) => {
+        if (!detail || !selectedVar) return;
+        const variable = detail.variable || selectedVar.variable || selectedVar.sysName;
+        const condVars = detail.conditionVariables || [];
+        const total = detail.total ?? (detail.rows || []).length;
+        const useLocal = codeFilter || total <= 5000;
+        try {
+            const cacheKey = `${pn}|${variable}|${detailKind}|${mode}`;
+            if (mode === 'comma') {
+                let pids;
+                if (useLocal) {
+                    pids = filteredRows.map(r => r.pid);
+                } else if (copyCacheRef.current[cacheKey]) {
+                    pids = copyCacheRef.current[cacheKey];
+                } else {
+                    loadingSpinner?.show?.();
+                    let res;
+                    try { res = await fetchCheckLogicDetail?.({ pn, user: userId, variable, kind: detailKind, pidsOnly: true }); }
+                    finally { loadingSpinner?.hide?.(); }
+                    if (String(res?.success) !== '777') throw new Error(res?.resultjson?.errorcontent || res?.errorcontent || '');
+                    pids = res.resultjson?.pids || [];
+                    copyCacheRef.current[cacheKey] = pids;
+                }
+                await copyOrConfirm(pids.join(','), null, pids.length);
+                return;
+            }
+            // 엑셀에 붙일 표
+            let columns, rows;
+            if (useLocal) {
+                columns = ['PID', variable, ...condVars];
+                rows = filteredRows.map(r => [r.pid, r.value ?? '', ...condVars.map(c => r.conditions?.[c] ?? '')]);
+            } else if (copyCacheRef.current[cacheKey]) {
+                ({ columns, rows } = copyCacheRef.current[cacheKey]);
+            } else {
+                loadingSpinner?.show?.();
+                let res;
+                try { res = await fetchCheckLogicDetail?.({ pn, user: userId, variable, kind: detailKind, copyRows: true }); }
+                finally { loadingSpinner?.hide?.(); }
+                if (String(res?.success) !== '777') throw new Error(res?.resultjson?.errorcontent || res?.errorcontent || '');
+                columns = res.resultjson?.columns || [];
+                rows = res.resultjson?.rows || [];
+                copyCacheRef.current[cacheKey] = { columns, rows };
+            }
+            const tsv = [columns, ...rows].map(r => r.map(v => String(v ?? '')).join('\t')).join('\n');
+            const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const html = '<table>' + [columns, ...rows].map(r =>
+                '<tr>' + r.map(v => `<td style="mso-number-format:'\\@'">${esc(v)}</td>`).join('') + '</tr>'
+            ).join('') + '</table>';
+            await copyOrConfirm(tsv, html, rows.length);
+        } catch (err) {
+            modal?.showErrorAlert?.('오류', err?.message || '복사하지 못했습니다. 브라우저의 클립보드 권한을 확인해 주세요.');
+        }
+    }, [detail, selectedVar, codeFilter, filteredRows, detailKind, fetchCheckLogicDetail, pn, userId, modal, copyOrConfirm, loadingSpinner]);
 
     // ─── 분포 표 렌더 ───
+    // 분포는 문항을 열 때 받은 것(distKind 기준)을 그대로 둔다
     const DistTable = useMemo(() => {
-        if (!detail?.distribution) return null;
-        const dist = detail.distribution || {};
-        const entries = dist.entries || [];
-        const allRespondents = dist.allRespondents || 1;
-        const maxCount = Math.max(...entries.map(e => e.total || 0), 1);
+        const dist = detail?.distribution;
+        if (!dist || !selectedVar) return null;
+        const distKind = detail._distKind;
+        const isValues = distKind === 'values';
+        const byCode = !!dist.byCode;
 
-        return (
-            <div className="lc-dist-wrap">
-                <div className="lc-dist-title">응답값 분포</div>
-                <table className="lc-dist-table">
-                    <colgroup>
-                        <col style={{ width: '70px' }} />
-                        <col style={{ width: '160px' }} />
-                        <col />
-                        <col style={{ width: '70px' }} />
-                        <col style={{ width: '70px' }} />
-                        <col style={{ width: '70px' }} />
-                    </colgroup>
-                    <thead>
-                        <tr>
-                            <th>코드</th>
-                            <th>보기</th>
-                            <th>분포</th>
-                            <th style={{ color: C.blue }}>대상자</th>
-                            <th style={{ color: C.orange }}>비대상</th>
-                            <th>계</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {entries.map((e, i) => {
-                            const isNoLabel = e.label == null;
-                            const pct = allRespondents ? ((e.inTarget || 0) / allRespondents * 100).toFixed(1) : '0.0';
-                            const barW = maxCount ? ((e.total || 0) / maxCount * 100) : 0;
-                            const inBarW = maxCount ? ((e.inTarget || 0) / maxCount * 100) : 0;
-                            return (
-                                <tr key={i} style={isNoLabel ? { color: C.red } : {}}>
-                                    <td style={{ fontFamily: 'monospace', fontSize: '12px' }}>{e.code ?? ''}</td>
-                                    <td title={e.label || '보기에 없는 코드'} style={isNoLabel ? { color: C.red } : {}}>
-                                        {e.label ?? <span style={{ color: C.red }}>보기에 없는 코드</span>}
-                                    </td>
-                                    <td>
-                                        <div className="lc-dist-bar-wrap">
-                                            <div className="lc-dist-bar-bg" style={{ width: `${barW}%` }}>
-                                                <div className="lc-dist-bar-in" style={{ width: `${inBarW ? (inBarW / barW * 100) : 0}%` }} />
-                                            </div>
-                                            <span className="lc-dist-pct">{pct}%</span>
-                                        </div>
-                                    </td>
-                                    <td style={{ color: C.blue }}>{fmt(e.inTarget)}</td>
-                                    <td>
-                                        <button
-                                            type="button"
-                                            className="lc-dist-num-btn"
-                                            style={(e.outTarget || 0) > 0 ? { color: C.orange, fontWeight: 700 } : { color: '#94a3b8' }}
-                                            disabled={!e.outTarget}
-                                            onClick={() => e.outTarget > 0 && setCodeFilter({ code: e.code, label: e.label })}
-                                        >
-                                            {fmt(e.outTarget)}
-                                        </button>
-                                    </td>
-                                    <td>{fmt(e.total)}</td>
-                                </tr>
-                            );
-                        })}
-                        {/* 응답 계 줄 */}
-                        {dist.totalAnswered != null && (
-                            <tr style={{ fontWeight: 700, borderTop: '2px solid #e2e8f0' }}>
-                                <td colSpan={2} style={{ color: '#475569' }}>응답 계</td>
-                                <td />
-                                <td style={{ color: C.blue }}>{fmt(dist.totalInTarget)}</td>
-                                <td style={{ color: C.orange }}>{fmt(dist.totalOutTarget)}</td>
-                                <td>{fmt(dist.totalAnswered)}</td>
-                            </tr>
-                        )}
-                        {/* 무응답 줄 */}
-                        <tr>
-                            <td style={{ color: '#94a3b8', fontStyle: 'italic' }}></td>
-                            <td style={{ color: '#94a3b8', fontStyle: 'italic' }}>무응답</td>
-                            <td />
-                            <td>
-                                <button type="button" className="lc-dist-num-btn"
-                                    style={selectedVar?.missing > 0 ? { color: C.red, fontWeight: 700 } : { color: '#94a3b8' }}
-                                    disabled={!(selectedVar?.missing > 0)}
-                                    onClick={() => selectedVar?.missing > 0 && handleKindSelect('missing')}
-                                >
-                                    {fmt(selectedVar?.missing)}
-                                </button>
-                            </td>
-                            <td style={{ color: '#94a3b8' }}>{fmt(Math.max(0, (selectedVar?.base ?? 0) - (selectedVar?.answered ?? 0) - (selectedVar?.missing ?? 0)))}</td>
-                            <td />
-                        </tr>
-                    </tbody>
-                </table>
-                {dist.truncated && (
-                    <div className="lc-dist-note">이 밖에 응답값 {fmt(dist.allDistinct - entries.length)}개는 표시하지 않았습니다</div>
-                )}
+        const allMap = new Map();
+        (dist.all || []).forEach(e => allMap.set(String(e.code), e));
+        const matchedMap = new Map();
+        (dist.matched || []).forEach(e => matchedMap.set(String(e.code), e.count || 0));
+
+        // 무응답("") 줄은 따로
+        const blank = allMap.get('')?.count || 0;
+        const mkEntry = (code, label, e) => {
+            const total = e?.count || 0;
+            const out = distKind === 'unexpected' ? (matchedMap.get(String(code)) || 0) : 0;
+            return { code, label, total, inT: total - out, outT: out };
+        };
+        // 맵 보기(/read labels) — 있으면 그 차례대로, 0건 보기도 0줄
+        const varName = detail.variable || selectedVar.variable || selectedVar.sysName;
+        const mapVar = variables.find(v => v.name === varName || v.sysName === varName);
+        const mapLabels = mapVar?.labels || [];
+        const hasAnyLabel = mapLabels.length > 0;
+        const entries = [];
+        if (hasAnyLabel) {
+            const seen = new Set();
+            mapLabels.forEach(l => {
+                const code = String(l.code);
+                seen.add(code);
+                entries.push(mkEntry(l.code, l.label, allMap.get(code)));
+            });
+            // 맵 보기에 없는 코드 → 맨 아래
+            allMap.forEach((e, code) => {
+                if (code === '' || seen.has(code)) return;
+                entries.push(mkEntry(e.code, null, e));
+            });
+        } else {
+            allMap.forEach((e, code) => { if (code !== '') entries.push(mkEntry(e.code, e.label, e)); });
+        }
+
+        const sumIn = entries.reduce((s, e) => s + e.inT, 0);
+        const sumOut = entries.reduce((s, e) => s + e.outT, 0);
+        const denom = byCode ? (dist.allRespondents || 0) : (isValues ? entries.reduce((s, e) => s + e.total, 0) : sumIn);
+        const maxCount = Math.max(...entries.map(e => e.total), 1);
+        const missingIn = selectedVar.missing ?? 0;
+        const missingOut = Math.max(0, blank - missingIn);
+        const canFilter = detail._kind === 'unexpected' && (detail.total ?? 0) <= 5000;
+        const shown = entries.length;
+        const cut = (dist.allDistinct || 0) > shown + (blank ? 1 : 0) ? dist.allDistinct - shown - (blank ? 1 : 0) : 0;
+
+        const Bar = ({ inT, outT, inColor = C.blue, outColor = C.orange }) => (
+            <div className="lc-dist-track">
+                <div style={{ width: `${(inT / maxCount) * 100}%`, background: inColor }} />
+                <div style={{ width: `${(outT / maxCount) * 100}%`, background: outColor }} />
             </div>
         );
-    }, [detail, selectedVar, handleKindSelect]);
+
+        return (
+            <div className={`lc-dist-wrap${isValues ? ' full' : ''}`}>
+                <div className="lc-dist-title">
+                    {byCode ? '고른 코드' : '응답값 분포'}
+                    {byCode && <span className="lc-dist-sub">여러 개 고르는 문항 — 코드마다 고른 사람 수</span>}
+                </div>
+                <div className="lc-dist-scroll">
+                    <table className="lc-dist-table">
+                        <colgroup>
+                            <col style={{ width: '56px' }} />
+                            <col style={{ width: '30%' }} />
+                            <col />
+                            {isValues ? <col style={{ width: '72px' }} /> : <>
+                                <col style={{ width: '68px' }} />
+                                <col style={{ width: '68px' }} />
+                                <col style={{ width: '68px' }} />
+                            </>}
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>코드</th>
+                                <th>보기</th>
+                                <th>분포</th>
+                                {isValues ? <th className="num">응답</th> : <>
+                                    <th className="num">대상자</th>
+                                    <th className="num">비대상</th>
+                                    <th className="num">계</th>
+                                </>}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {entries.map((e, i) => {
+                                const noLabel = hasAnyLabel && e.label == null;
+                                const base = isValues ? e.total : e.inT;
+                                // 대상자 응답이 하나도 없으면(전부 비대상 응답) → 비대상 응답 기준 비율(주황) — 막대와 맞춤
+                                const outBased = !denom && !isValues && sumOut > 0;
+                                const pct = denom ? `${(base / denom * 100).toFixed(1)}%`
+                                    : outBased ? `${(e.outT / sumOut * 100).toFixed(1)}%` : '–';
+                                return (
+                                    <tr key={i} className={noLabel ? 'nolabel' : e.total === 0 ? 'zero' : ''}>
+                                        <td className="code">{hasAnyLabel ? e.code : ''}</td>
+                                        <td title={hasAnyLabel ? (e.label ?? '보기에 없는 코드') : String(e.code)}>
+                                            {hasAnyLabel ? (e.label ?? '보기에 없는 코드') : e.code}
+                                        </td>
+                                        <td>
+                                            <div className="lc-dist-bar-wrap">
+                                                <Bar inT={isValues ? e.total : e.inT} outT={isValues ? 0 : e.outT} />
+                                                <span className="lc-dist-pct" style={outBased ? { color: C.orange } : undefined}
+                                                    title={outBased ? '대상자 응답이 없어 비대상 응답 기준 비율입니다' : undefined}>{pct}</span>
+                                            </div>
+                                        </td>
+                                        {isValues ? <td className="num">{fmt(e.total)}</td> : <>
+                                            <td className="num">{fmt(e.inT)}</td>
+                                            <td className="num">
+                                                {e.outT > 0 && canFilter ? (
+                                                    <button type="button" className="lc-dist-num-btn" style={{ color: C.orange }}
+                                                        onClick={() => setCodeFilter({ code: e.code, label: e.label })}>
+                                                        {fmt(e.outT)}
+                                                    </button>
+                                                ) : (
+                                                    <span style={e.outT > 0 ? { color: C.orange, fontWeight: 700 } : { color: '#cbd5e1' }}>{fmt(e.outT)}</span>
+                                                )}
+                                            </td>
+                                            <td className="num">{fmt(e.total)}</td>
+                                        </>}
+                                    </tr>
+                                );
+                            })}
+                            {!byCode && !isValues && (
+                                <tr className="sum">
+                                    <td />
+                                    <td>응답 계</td>
+                                    <td />
+                                    <td className="num">{fmt(sumIn)}</td>
+                                    <td className="num" style={{ color: sumOut ? C.orange : undefined }}>{fmt(sumOut)}</td>
+                                    <td className="num">{fmt(sumIn + sumOut)}</td>
+                                </tr>
+                            )}
+                            <tr className="blank">
+                                <td />
+                                <td>무응답</td>
+                                <td>
+                                    {!isValues && <Bar inT={missingIn} outT={missingOut} inColor={C.red} outColor="#e2e8f0" />}
+                                </td>
+                                {isValues ? <td className="num">{fmt(blank)}</td> : <>
+                                    <td className="num">
+                                        {missingIn > 0 ? (
+                                            <button type="button" className="lc-dist-num-btn" style={{ color: C.red }}
+                                                onClick={() => handleKindSelect('missing')}>
+                                                {fmt(missingIn)}
+                                            </button>
+                                        ) : <span style={{ color: '#cbd5e1' }}>0</span>}
+                                    </td>
+                                    <td className="num" style={{ color: '#94a3b8' }}>{fmt(missingOut)}</td>
+                                    <td className="num" style={{ color: '#94a3b8' }}>{fmt(blank)}</td>
+                                </>}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                {cut > 0 && <div className="lc-dist-note">외 {fmt(cut)}종</div>}
+            </div>
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [detail, selectedVar, variables, handleKindSelect]);
 
     // ─── 응답자 표 렌더 ───
     const RespTable = useMemo(() => {
-        if (!detail?.rows) return null;
-        const cols = detail.columns || [];
-        const rows = codeFilter
-            ? detail.rows.filter(r => {
-                // 변수 이 문항 컬럼 인덱스 찾기 (2번째 이후)
-                const idx = cols.findIndex(c => c.isTarget);
-                return idx >= 0 ? String(r[idx]) === String(codeFilter.code) : true;
-            })
-            : detail.rows;
-        const total = detail.total || rows.length;
+        if (!detail?.rows || detail._kind === 'values') return null;
+        if (!selectedKind && !codeFilter && (detail.total ?? detail.rows.length) === 0) return null; // 정상 문항 — 자리표
+        const variable = detail.variable || selectedVar?.variable || selectedVar?.sysName;
+        const condVars = detail.conditionVariables || [];
+        const rows = filteredRows;
+        const total = detail.total ?? rows.length;
         const kindLabel = {
             missing: '대상자 무응답', unexpected: '비대상 응답',
-            base: '대상자', answered: '대상자 응답', values: '응답자'
-        }[detailKind] || '응답자';
+            base: '대상자 전체', answered: '대상자 응답',
+        }[detail._kind] || '응답자';
+        const dot = detail._kind === 'missing' ? C.red : detail._kind === 'unexpected' ? C.orange : C.blue;
+        const count = codeFilter ? rows.length : total;
 
         return (
             <div className="lc-resp-wrap">
                 <div className="lc-resp-head">
                     <span className="lc-resp-title">
-                        <span className="lc-resp-dot" style={{
-                            background: detailKind === 'missing' ? C.red : detailKind === 'unexpected' ? C.orange : C.blue
-                        }} />
-                        {kindLabel} {fmt(total)}명
+                        <span className="lc-resp-dot" style={{ background: dot }} />
+                        {kindLabel} {fmt(count)}명
                         {codeFilter && (
                             <button type="button" className="lc-chip" onClick={() => setCodeFilter(null)}>
-                                코드 {codeFilter.code} {codeFilter.label} ×
+                                코드 {codeFilter.code} {codeFilter.label || ''} <X size={11} />
                             </button>
                         )}
                     </span>
-                    <div className="lc-resp-actions">
-                        <div className="lc-dropdown-wrap">
-                            <button type="button" className="lc-btn-outline" style={{ height: '28px', padding: '0 10px', fontSize: '12px' }}>
-                                <Copy size={12} /> PID 복사 <ChevronDown size={11} />
-                            </button>
-                            <div className="lc-dropdown-menu">
-                                <button type="button" onClick={() => handleCopyPids('excel')}>엑셀에 붙일 표</button>
-                                <button type="button" onClick={() => handleCopyPids('comma')}>쉼표로 이은 PID</button>
+                    {count > 0 && (
+                        <div className="lc-resp-actions">
+                            <div className={`lc-dropdown-wrap${copyMenuOpen ? ' open' : ''}`} ref={copyMenuRef}>
+                                <button type="button" className="lc-btn-outline" onClick={() => setCopyMenuOpen(o => !o)}>
+                                    <Copy size={12} /> PID 복사 <ChevronDown size={11} />
+                                </button>
+                                <div className="lc-dropdown-menu">
+                                    <button type="button" onClick={() => { setCopyMenuOpen(false); handleCopyPids('excel'); }}>엑셀에 붙일 표</button>
+                                    <button type="button" onClick={() => { setCopyMenuOpen(false); handleCopyPids('comma'); }}>쉼표로 이은 PID</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
-                <div className="lc-resp-table-wrap">
-                    <table className="lc-resp-table">
-                        <thead>
-                            <tr>
-                                <th style={{ width: '40px' }}>#</th>
-                                {cols.map((c, i) => (
-                                    <th key={i}>{c.title || c}</th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {rows.map((r, ri) => (
-                                <tr key={ri}>
-                                    <td style={{ color: '#94a3b8', fontSize: '11px', textAlign: 'right' }}>{ri + 1}</td>
-                                    {r.map((cell, ci) => (
-                                        <td key={ci} style={ci > 0 && cols[ci]?.isCondition ? { color: '#94a3b8', fontSize: '12px' } : {}}>
-                                            {cell === '' || cell == null
-                                                ? <span style={{ color: cols[ci]?.isCondition ? '#94a3b8' : C.red, fontSize: '12px' }}>무응답</span>
-                                                : cell}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-                {total > 5000 && (
-                    <div className="lc-resp-note">전체 {fmt(total)}명 중 앞의 5,000명만 보여 드립니다 (복사도 보이는 응답자만 됩니다)</div>
-                )}
-                {rows.length === 0 && (
+                {rows.length === 0 ? (
                     <div className="lc-resp-empty">해당하는 응답자가 없습니다.</div>
+                ) : (
+                    <div className="lc-resp-table-wrap">
+                        <table className="lc-resp-table">
+                            <thead>
+                                <tr>
+                                    <th style={{ width: '44px' }}>#</th>
+                                    <th>PID</th>
+                                    <th>{variable} <span className="lc-th-sub">이 문항</span></th>
+                                    {condVars.map(c => <th key={c}>{c} <span className="lc-th-sub">조건</span></th>)}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {rows.map((r, ri) => (
+                                    <tr key={`${r.pid}-${ri}`}>
+                                        <td className="idx">{ri + 1}</td>
+                                        <td>{r.pid}</td>
+                                        <td>{renderValue(r.value, false)}</td>
+                                        {condVars.map(c => <td key={c}>{renderValue(r.conditions?.[c], true)}</td>)}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+                {rows.length > 0 && (
+                    <div className="lc-resp-foot">
+                        {total > 5000 && !codeFilter
+                            ? `앞 5,000명만 보입니다 — 복사는 ${fmt(total)}명 전부`
+                            : `${fmt(count)}명 전부`}
+                    </div>
                 )}
             </div>
         );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [detail, codeFilter, detailKind, handleCopyPids]);
+    }, [detail, selectedVar, selectedKind, filteredRows, codeFilter, handleCopyPids, renderValue, copyMenuOpen]);
 
     // ─── 요약 문장 ───
     const summaryText = useMemo(() => {
@@ -1063,6 +1282,21 @@ const LogicCheckTab = ({
                     onClose={() => setFillResult(null)}
                     onRestore={handleRestore}
                     onGoJudge={() => { setFillResult(null); handleJudge(); }}
+                    onGoTo={(target, isSkip) => {
+                        // 변수명 그대로 → 없으면 문항 번호("문12")로 제목 앞부분을 찾음
+                        let name = target;
+                        if (!variables.some(v => v.name === target || v.sysName === target)) {
+                            const esc = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                            const re = new RegExp(`^${esc}(?![0-9-])`);
+                            const hit = variables.find(v => re.test(String(v.label || '').trim()));
+                            name = hit ? (hit.name || hit.sysName) : null;
+                        }
+                        if (name && onGoToVariable?.(name)) {
+                            setFillResult(null);
+                        } else {
+                            modal?.showAlert?.('알림', `맵에서 「${target}」 문항을 찾지 못했습니다.${isSkip ? '\n건너뛰기 시작 문항을 맵에서 직접 찾아 주세요.' : ''}`);
+                        }
+                    }}
                 />
             )}
             {autoFillDialog && (
@@ -1076,12 +1310,14 @@ const LogicCheckTab = ({
             )}
 
             {/* ── 상단 서브헤더 ── */}
-            <div className="lc-subheader">
+            {renderInTabBar(<div className="lc-subheader in-tabbar">
                 <span className="lc-status">
-                    <span className={`lc-status-dot${isJudged ? ' done' : ''}`} />
-                    {isJudged
-                        ? `${judgeResult.judgedAt} 판정 · 완료 응답 ${fmt(judgeResult.checkedResponses)}건`
-                        : '아직 판정하지 않았습니다'}
+                    {isJudged && (
+                        <>
+                            <span className="lc-status-dot done" />
+                            {`${judgeResult.judgedAt} 판정 · 완료 응답 ${fmt(judgeResult.checkedResponses)}건`}
+                        </>
+                    )}
                 </span>
 
                 <div className="lc-subheader-actions" ref={menuRef}>
@@ -1131,7 +1367,7 @@ const LogicCheckTab = ({
                         </div>
                     )}
                 </div>
-            </div>
+            </div>)}
 
             {/* ── 본문 ── */}
             {!isJudged ? (
@@ -1245,9 +1481,16 @@ const LogicCheckTab = ({
                                 />
                                 {listSearch && <button type="button" onClick={() => setListSearch('')}><X size={12} /></button>}
                             </div>
-                            <select className="lc-sort-sel" value={sortKey} onChange={e => setSortKey(e.target.value)}>
-                                {SORT_OPTIONS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
-                            </select>
+                            <DropDownList
+                                className="lc-sort-ddl"
+                                data={SORT_OPTIONS}
+                                textField="label"
+                                dataItemKey="key"
+                                value={SORT_OPTIONS.find(o => o.key === sortKey)}
+                                onChange={e => setSortKey(e.value.key)}
+                                popupSettings={{ width: 160, popupClass: 'lc-sort-popup' }}
+                                title={SORT_OPTIONS.find(o => o.key === sortKey)?.label}
+                            />
                         </div>
 
                         {/* 목록 */}
@@ -1287,13 +1530,30 @@ const LogicCheckTab = ({
                                 <div className="lc-detail-head">
                                     <div className="lc-detail-head-left">
                                         <span className="lc-detail-varname">{selectedVar.variable || selectedVar.sysName}</span>
-                                        <span className="lc-detail-type">{selectedVar.type || ''}</span>
+                                        <span className={`lc-detail-type t-${String(selectedVar.type || '').toLowerCase()}`}>{selectedVar.type || ''}</span>
                                         <span className="lc-detail-title" title={selectedVar.title || selectedVar.label || ''}>
                                             {selectedVar.title || selectedVar.label || ''}
                                         </span>
+                                        {summaryText && (
+                                            <span className="lc-detail-summary" style={{
+                                                color: summaryText.color,
+                                                background: summaryText.color === C.green ? 'var(--dm-primary-light)' : summaryText.color === C.red ? C.redLight : '#f8fafc',
+                                                borderColor: summaryText.color === C.green ? 'var(--dm-primary-border)' : summaryText.color === C.red ? '#fecaca' : 'var(--dm-border)',
+                                            }} title={summaryText.text}>
+                                                {summaryText.text}
+                                            </span>
+                                        )}
+                                        {selectedVar.hints?.map((h, i) => (
+                                            <span key={`hint-${i}`} className="lc-detail-summary" style={{
+                                                color: '#b45309', background: '#fffbeb', borderColor: '#fde68a',
+                                                display: 'inline-flex', alignItems: 'center', gap: 4,
+                                            }} title={h}>
+                                                <Lightbulb size={11} style={{ flexShrink: 0 }} />{h}
+                                            </span>
+                                        ))}
                                     </div>
                                     <div className="lc-detail-head-actions">
-                                        <button type="button" className="lc-btn-outline" style={{ height: '28px', fontSize: '12px' }}
+                                        <button type="button" className="lc-btn-outline"
                                             onClick={() => {/* 로직 편집 팝업 — 맵관리 탭으로 이동 또는 팝업 */ }}>
                                             <Edit2 size={12} />
                                             {selectedVar.hasLogic ? '로직 수정' : '로직 넣기'}
@@ -1302,7 +1562,6 @@ const LogicCheckTab = ({
                                             <button
                                                 type="button"
                                                 className={`lc-btn-primary${selectedVar.hints?.length > 0 ? '' : ''}`}
-                                                style={{ height: '28px', fontSize: '12px' }}
                                                 onClick={() => handleFixForm(selectedVar.variable || selectedVar.sysName)}
                                             >
                                                 <FileDown size={12} /> 수정 양식 받기
@@ -1311,72 +1570,63 @@ const LogicCheckTab = ({
                                     </div>
                                 </div>
 
-                                {/* ② 요약 */}
-                                {summaryText && (
-                                    <div className="lc-summary-bar" style={{
-                                        borderLeftColor: summaryText.color,
-                                        background: summaryText.color === C.green ? '#f0faf5' : summaryText.color === C.red ? C.redLight : '#f8fafc'
-                                    }}>
-                                        <span style={{ color: summaryText.color, fontWeight: 700 }}>{summaryText.text}</span>
-                                    </div>
-                                )}
-
-                                {/* 힌트 */}
-                                {selectedVar.hints?.map((h, i) => (
-                                    <div key={i} className="lc-hint">
-                                        <Lightbulb size={13} style={{ color: '#d97706', flexShrink: 0 }} />
-                                        <span>{h}</span>
-                                    </div>
-                                ))}
-
-                                {/* 로직 줄 */}
+                                {/* 로직 + 베이스 현황 — 카드 하나 */}
                                 {selectedVar.hasLogic && (
-                                    <div className="lc-logic-line">
-                                        <span className="lc-logic-label">로직</span>
-                                        <code className="lc-logic-code">{selectedVar.logic || 'all'}</code>
-                                    </div>
-                                )}
-
-                                {/* 베이스 현황 */}
-                                {selectedVar.hasLogic && !selectedVar._unreadable && selectedVar.status !== 'noResponse' && (
-                                    <>
-                                        {/* 얇은 막대 */}
-                                        <div className="lc-base-bar">
-                                            {(() => {
-                                                const total = judgeResult.checkedResponses || 1;
-                                                const a = (selectedVar.answered / total) * 100;
-                                                const m = (selectedVar.missing / total) * 100;
-                                                const u = (selectedVar.unexpected / total) * 100;
-                                                const r = Math.max(0, 100 - a - m - u);
-                                                return <>
-                                                    <div style={{ width: `${a}%`, background: C.blue }} />
-                                                    <div style={{ width: `${m}%`, background: C.red }} />
-                                                    <div style={{ width: `${u}%`, background: C.orange }} />
-                                                    <div style={{ width: `${r}%`, background: C.gray }} />
-                                                </>;
-                                            })()}
+                                    <div className="lc-base-card">
+                                        <div className="lc-base-card-head">
+                                            <span className="lc-logic-label">로직</span>
+                                            <code className="lc-logic-code">{selectedVar.logic || 'all'}</code>
+                                            {(selectedVar.logic || 'all') === 'all' && <span className="lc-base-card-note">모든 응답자</span>}
+                                            {!selectedVar._unreadable && selectedVar.status !== 'noResponse' && (
+                                                <span className="lc-base-card-total">완료 응답 {fmt(judgeResult.checkedResponses)}명 기준 · 숫자를 누르면 아래에 응답자 목록이 나옵니다</span>
+                                            )}
                                         </div>
-                                        <BaseQuad
-                                            item={selectedVar}
-                                            checkedResponses={judgeResult.checkedResponses}
-                                            selectedKind={selectedKind}
-                                            onSelectKind={handleKindSelect}
-                                        />
-                                    </>
+                                        {!selectedVar._unreadable && selectedVar.status !== 'noResponse' && (
+                                            <>
+                                                <div className="lc-base-bar">
+                                                    {(() => {
+                                                        const total = judgeResult.checkedResponses || 1;
+                                                        const a = (selectedVar.answered / total) * 100;
+                                                        const m = (selectedVar.missing / total) * 100;
+                                                        const u = (selectedVar.unexpected / total) * 100;
+                                                        const r = Math.max(0, 100 - a - m - u);
+                                                        return <>
+                                                            <div style={{ width: `${a}%`, background: C.blue }} />
+                                                            <div style={{ width: `${m}%`, background: C.red }} />
+                                                            <div style={{ width: `${u}%`, background: C.orange }} />
+                                                            <div style={{ width: `${r}%`, background: C.gray }} />
+                                                        </>;
+                                                    })()}
+                                                </div>
+                                                <BaseQuad
+                                                    item={selectedVar}
+                                                    checkedResponses={judgeResult.checkedResponses}
+                                                    selectedKind={selectedKind}
+                                                    onSelectKind={handleKindSelect}
+                                                />
+                                            </>
+                                        )}
+                                    </div>
                                 )}
 
                                 {/* ③ 분포 + ④ 응답자 */}
-                                {detailLoading ? (
+                                {detailLoading && !detail?.distribution ? (
                                     <div className="lc-detail-loading">
-                                        <Loader2 size={20} className="lc-spin" /> 불러오는 중입니다…
+                                        <Loader2 size={20} className="lc-spin" /> 응답자 명단을 불러오고 있습니다... 응답자가 많으면 조금 더 걸릴 수 있습니다.
                                     </div>
                                 ) : (
                                     <div className="lc-detail-tables">
                                         {DistTable}
-                                        {RespTable || (
-                                            <div className="lc-resp-placeholder">
-                                                위의 칸이나 분포표의 숫자를 누르면 해당 응답자 목록이 여기에 나옵니다
-                                            </div>
+                                        {detail?._distKind !== 'values' && (
+                                            detailLoading ? (
+                                                <div className="lc-resp-placeholder">
+                                                    <Loader2 size={18} className="lc-spin" />&nbsp;응답자를 불러오는 중입니다…
+                                                </div>
+                                            ) : (RespTable || (
+                                                <div className="lc-resp-placeholder">
+                                                    베이스 칸이나 분포의 비대상 응답 숫자를 누르면 그 사람들이 여기 나옵니다
+                                                </div>
+                                            ))
                                         )}
                                     </div>
                                 )}

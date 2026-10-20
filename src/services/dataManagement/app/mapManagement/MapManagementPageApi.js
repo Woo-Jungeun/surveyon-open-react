@@ -247,22 +247,24 @@ export function MapManagementPageApi() {
         }
     );
 
-    /** 로직 판정 상세 조회 — AbortController 지원 (직접 fetch) */
-    const fetchCheckLogicDetail = (data, abortSignal) => {
-        const base = window.API_CONFIG?.API_BASE_URL_DATAMANAGEMENT || "";
-        let url = base.replace(/\/+$/, '') + '/check-logic/detail';
-        if (import.meta.env.DEV && url.startsWith('http')) {
-            try { const u = new URL(url); url = u.pathname; } catch (e) { /* ignore */ }
+    /** 로직 판정 상세 조회 — AbortController 지원. 공통 api(apiAxios)로 보내 인증 헤더가 다른 요청과 똑같이 실림 */
+    const fetchCheckLogicDetail = async (data, abortSignal) => {
+        try {
+            const res = await api.post(data, "/check-logic/detail", "API_BASE_URL_DATAMANAGEMENT", { signal: abortSignal });
+            // 인증 실패 등은 평문으로 올 수 있음
+            if (typeof res === 'string') {
+                try { return JSON.parse(res); } catch { return { success: '0', errorcontent: res }; }
+            }
+            return res;
+        } catch (err) {
+            if (isCanceled(err)) return { canceled: true, resultjson: { canceled: true } };
+            const body = err?.response?.data;
+            if (typeof body === 'string') {
+                try { return JSON.parse(body); } catch { return { success: '0', errorcontent: body }; }
+            }
+            if (body) return body;
+            throw err;
         }
-        return fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-            signal: abortSignal,
-        }).then(async (res) => {
-            const text = await res.text();
-            try { return JSON.parse(text); } catch { return { success: '0', errorcontent: text }; }
-        });
     };
 
     /** 수정 양식 받기 — 파일 다운로드 */

@@ -224,6 +224,19 @@ const MapManagementPage = () => {
         setSkip(0);
     };
 
+    // 로직체크 → 맵의 그 문항 줄로 이동(변수명으로 찾기) + 로직 편집 팝업
+    const goToVariableFromLogic = (name) => {
+        const key = String(name || '').trim();
+        if (!key) return false;
+        const v = variables.find(x => x.name === key || x.sysName === key);
+        if (!v) return false;
+        setActiveTab('mapping');
+        handleMappingSearchChange(v.name || v.sysName);
+        setEditingRowId(v.id);
+        setEditingLogicPopupOpen(v);
+        return true;
+    };
+
     // ── 핸들러 ──
     const pageChange = (event) => {
         setSkip(event.page.skip);
@@ -887,6 +900,8 @@ const MapManagementPage = () => {
                         >
                             로직 체크
                         </button>
+                        {/* 탭별 도구 자리 — 로직 체크 탭이 판정 정보·버튼을 여기에 그림 */}
+                        <div id="map-tab-extra" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', minWidth: 0 }} />
                     </div>
 
                     {activeTab === 'logic' ? (
@@ -900,6 +915,7 @@ const MapManagementPage = () => {
                             getVariableTitles={getVariableTitles}
                             restoreExcelVersion={restoreExcelVersion}
                             onMapReload={loadData}
+                            onGoToVariable={goToVariableFromLogic}
                         />
                     ) : activeTab === 'mapping' ? (
                         <MapConfigTab
