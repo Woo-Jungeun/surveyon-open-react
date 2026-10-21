@@ -145,19 +145,19 @@ const InfoSection = () => {
                         const token = getCookie("TOKEN");
                         const xAuthToken = getCookie("X-Auth-Token");
                         const userId = auth?.user?.userId || sessionStorage.getItem("userId");
-                        
+
                         if (token) sessionStorage.setItem("Authorization", `Bearer ${token}`);
                         if (xAuthToken) sessionStorage.setItem("X-Auth-Token", xAuthToken);
                         if (userId) {
                           sessionStorage.setItem("X-User-Id", userId);
                           sessionStorage.setItem("hrc", AES256.Crypto.encryptAES256(String(userId)));
                         }
-                        
+
                         window.open("/APIs/m/UI/index", "_blank");
                       }}
                     >
                       <ClipboardList size={18} />
-                      <span>매뉴얼 정보 관리</span>
+                      <span>사용자 매뉴얼 가이드</span>
                     </button>
                   </div>
                 )}

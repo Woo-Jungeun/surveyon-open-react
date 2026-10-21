@@ -164,7 +164,7 @@ export const SurveyonAssistant = ({
 
   // 웰컴 메시지 (API: /chat/welcome, 실패 시 아래 기본값 사용)
   const DEFAULT_WELCOME = {
-    title: '안녕하세요! 설문온 AI 어시스턴트입니다.',
+    title: '안녕하세요! 설문온 챗봇 어시스턴트입니다.',
     subTitle: '설문 중 막히는 부분을 편하게 물어보세요!\n<span style="color:#6366F1; font-weight:bold;">화면에서 직접 버튼을 짚어가며</span> 쉽게 안내해 드릴게요.',
     questions: ['척도 문항 요약표 어떻게 만들어?', '그리드 복사는 어디에 있어?', 'AI 조건식 자동생성 어떻게 해?'],
   };
@@ -611,7 +611,7 @@ export const SurveyonAssistant = ({
         <button
           onClick={() => setIsOpen(true)}
           className="so-btn-toggle"
-          title="설문온 AI 가이드 어시스턴트 열기"
+          title="설문온 챗봇 열기"
         >
           <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z" />
