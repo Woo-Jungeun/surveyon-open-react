@@ -1531,6 +1531,29 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
         });
     }, []);
 
+    // 정렬고정(bottom_pinned) 토글: 고정 시 bottom_order를 마지막 순번으로 부여, 해제 시 나머지 순번 재정렬
+    const handleTogglePinned = useCallback((dataIndex) => {
+        setCategories(prev => {
+            const next = [...prev];
+            const target = next[dataIndex];
+            if (!target) return prev;
+            const willPin = !target.bottom_pinned;
+            if (willPin) {
+                const maxOrder = next.reduce((m, c) => (c.bottom_pinned && Number(c.bottom_order) > m ? Number(c.bottom_order) : m), 0);
+                next[dataIndex] = { ...target, bottom_pinned: true, bottom_order: maxOrder + 1 };
+            } else {
+                next[dataIndex] = { ...target, bottom_pinned: false, bottom_order: null };
+            }
+            // 고정 행들의 순번을 1부터 연속으로 정리
+            const pinned = next
+                .map((c, i) => ({ c, i }))
+                .filter(x => x.c.bottom_pinned)
+                .sort((a, b) => (Number(a.c.bottom_order) || 0) - (Number(b.c.bottom_order) || 0));
+            pinned.forEach((x, order) => { next[x.i] = { ...next[x.i], bottom_order: order + 1 }; });
+            return next;
+        });
+    }, []);
+
     const renderColorCell = useCallback((p) => {
         return <ColorEditCell p={p} onUpdate={handleCategoryCellUpdate} />;
     }, [handleCategoryCellUpdate]);
@@ -1807,11 +1830,11 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                             >
                                 {isDetailSetting && <Column field="label3" title="대분류" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label3" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
                                 {isDetailSetting && <Column field="label2" title="중분류" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label2" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
-                                <Column field="label" title="소분류" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
+                                <Column field="label" title="소분류" width="210px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
                                 <Column
                                     field="type"
                                     title="형식"
-                                    width="150px"
+                                    width="110px"
                                     headerCell={TypeHeaderCell}
                                     headerClassName="k-text-center"
                                     cell={(p) => (
@@ -1827,15 +1850,36 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                         </td>
                                     )}
                                 />
-                                <Column field="logic" title="조건" width="250px" headerCell={ConditionHeaderCell} headerClassName="k-text-center" cell={(p) => <TextEditCell dataItem={p.dataItem} field="logic" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
-                                <Column field="target_var" title="대상 변수" width="150px" cell={(p) => {
+                                <Column field="logic" title="조건" width="230px" headerCell={ConditionHeaderCell} headerClassName="k-text-center" cell={(p) => <TextEditCell dataItem={p.dataItem} field="logic" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
+                                <Column field="target_var" title="대상 변수" width="110px" cell={(p) => {
                                     const STAT_TYPES_FOR_TARGET = ['mean', 'std', 'median', 'mode', 'min', 'max', 'var'];
                                     if (!STAT_TYPES_FOR_TARGET.includes(p.dataItem.type)) {
                                         return <td style={{ padding: '1px 4px', verticalAlign: 'middle', backgroundColor: '#eaedf1', color: '#94a3b8', textAlign: 'center', userSelect: 'none' }}>-</td>;
                                     }
                                     return <TextEditCell dataItem={p.dataItem} field="target_var" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />;
                                 }} />
-                                <Column field="value" title="값" width="100px" headerClassName="k-text-center" className="k-text-center" cell={(p) => <TextEditCell dataItem={p.dataItem} field="value" align="center" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
+                                <Column field="value" title="값" width="70px" headerClassName="k-text-center" className="k-text-center" cell={(p) => <TextEditCell dataItem={p.dataItem} field="value" align="center" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
+                                <Column field="bottom_pinned" title="정렬고정" width="72px" headerClassName="k-text-center" cell={(p) => {
+                                    const isBase = p.dataItem.type === 'base' || p.dataItem.row_role === 'base';
+                                    const pinned = !!p.dataItem.bottom_pinned;
+                                    return (
+                                        <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '4px' }}>
+                                            {!isBase && (
+                                                <div
+                                                    title={pinned ? `정렬 시 하단 고정 (${p.dataItem.bottom_order || 1}번째)` : '정렬 시 하단에 고정'}
+                                                    onClick={() => handleTogglePinned(p.dataIndex)}
+                                                    style={{
+                                                        width: '16px', height: '16px', border: '1px solid #94a3b8', borderRadius: '4px',
+                                                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                                        cursor: 'pointer', background: pinned ? '#2563eb' : '#fff', margin: '0 auto'
+                                                    }}
+                                                >
+                                                    {pinned && <Check size={12} color="#fff" strokeWidth={3} />}
+                                                </div>
+                                            )}
+                                        </td>
+                                    );
+                                }} />
 
                                 {isDetailSetting && <Column field="prefix" title="앞문자" width="120px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="prefix" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
                                 {isDetailSetting && <Column field="postfix" title="뒷문자" width="120px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="postfix" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}

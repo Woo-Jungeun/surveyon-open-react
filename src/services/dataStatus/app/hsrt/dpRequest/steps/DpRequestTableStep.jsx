@@ -1941,6 +1941,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     rank_preset_name: item.rank_preset_id || '',
                     group_preset_name: item.group_preset_id || '',
                     info: infoArray,
+                    sort_mode: item.sort_mode ?? v.sort_mode ?? null,
+                    customized_fields: Array.isArray(item.customized_fields) ? item.customized_fields : (Array.isArray(v.customized_fields) ? v.customized_fields : []),
                     rank_outputs: v.rank_outputs || item.rank_outputs || []
                 };
             });
@@ -2307,7 +2309,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 infoArray = stub.info.map((opt, i) => {
                     const isBase = opt.type === 'base';
                     const isStat = ["mean", "median", "mode", "min", "max", "var", "std", "sum", "variance", "rse"].includes(opt.type);
-                    const rowRole = isBase ? 'base' : (isStat ? "stat" : (opt.row_role || "item"));
+                    const rowRole = isBase ? 'base' : (isStat ? "stat" : (opt.row_role || "option"));
 
                     if (isBase) {
                         if (!hasStubCondition && opt.logic && String(opt.logic).trim() !== '') {
@@ -2343,7 +2345,14 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                         type: opt.type,
                         row_role: rowRole,
                         target_var: opt.target_var || null,
-                        line: mappedLine,
+                        line: mappedLine || "",
+                        color: opt.color || null,
+                        bottom_pinned: !!opt.bottom_pinned,
+                        bottom_order: opt.bottom_pinned && opt.bottom_order !== undefined && opt.bottom_order !== null && opt.bottom_order !== '' ? Number(opt.bottom_order) : null,
+                        group_id: opt.group_id ?? null,
+                        group_label: opt.group_label ?? null,
+                        tier: opt.tier !== undefined && opt.tier !== null && opt.tier !== '' ? Number(opt.tier) : null,
+                        parent_group_id: opt.parent_group_id ?? null,
                         round: opt.round !== undefined && opt.round !== '' ? Number(opt.round) : (isStat ? 2 : null),
                         logic: rowLogic,
                         value: opt.value !== undefined && opt.value !== null && String(opt.value).trim() !== '' && !isNaN(Number(opt.value)) ? Number(opt.value) : null
@@ -2418,6 +2427,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 condition: filterExp || null,
                 banner: bannerArr,
                 info: infoArray ? infoArray.filter(opt => !isRankParent || opt.type !== 'rank') : undefined,
+                sort_mode: stub.sort_mode && stub.sort_mode !== 'none' ? stub.sort_mode : null,
+                customized_fields: Array.isArray(stub.customized_fields) ? stub.customized_fields : [],
                 ...(finalRankOutputs ? { rank_outputs: finalRankOutputs } : {})
             };
         }
@@ -2884,10 +2895,20 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                     value: opt.value !== '' && opt.value !== undefined && opt.value !== null ? opt.value : null,
                                     stat_type: opt.stat_type || null,
                                     target_var: opt.target_var || null,
-                                    line: opt.line || null,
+                                    line: opt.line || "",
                                     color: opt.color || null,
+                                    // 그룹 계층 / 정렬고정 필드 보존
+                                    bottom_pinned: !!opt.bottom_pinned,
+                                    bottom_order: opt.bottom_pinned ? (opt.bottom_order ?? null) : null,
+                                    group_id: opt.group_id ?? null,
+                                    group_label: opt.group_label ?? null,
+                                    tier: opt.tier ?? null,
+                                    parent_group_id: opt.parent_group_id ?? null,
                                 };
                             });
+                            // info가 수동 변경되었는지 비교 → customized_fields에 "info" 추가 (프리셋 자동 덮어쓰기 방지)
+                            const pickCompare = (arr) => JSON.stringify((arr || []).map(o => [o.label || '', o.logic || '', o.type || '', o.row_role || '', o.value ?? null, !!o.bottom_pinned, o.bottom_order ?? null, o.hide || null, o.line || '', o.color || null, o.prefix || null, o.postfix || null, o.round ?? null, o.label2 || '', o.label3 || '', o.target_var || null]));
+                            const infoChanged = pickCompare(selectedStubForModal?.info) !== pickCompare(normalizedRules);
                             // 해당 stub의 info 및 rank_outputs 업데이트
                             setStubs(prev => prev.map(s => {
                                 if (s.recoded_var_id === selectedStubForModal?.recoded_var_id) {
@@ -2896,6 +2917,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                         ...s,
                                         info: normalizedRules,
                                         sort_mode: sortMode,
+                                        ...(infoChanged ? { customized_fields: Array.from(new Set([...(Array.isArray(s.customized_fields) ? s.customized_fields : []), 'info'])) } : {}),
                                         ...(baseRule && baseRule.logic !== undefined ? { condition: baseRule.logic } : {}),
                                         ...(rankOutputs ? { rank_outputs: rankOutputs } : {})
                                     };
