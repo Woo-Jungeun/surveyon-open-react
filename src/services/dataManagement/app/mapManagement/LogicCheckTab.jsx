@@ -1760,7 +1760,8 @@ const LogicCheckTab = ({
                                 <RefreshCw size={13} />
                             </button>
                         )}
-                        <button
+                        {/* 판정 전엔 준비 화면에 [자동 채우기]가 있고 지울 결과도 없어 ⋯ 를 숨김 */}
+                        {isJudged && <button
                             id="lc-more-btn"
                             type="button"
                             className={`lc-btn-icon${isMenuOpen ? ' active' : ''}`}
@@ -1768,9 +1769,9 @@ const LogicCheckTab = ({
                             title="더보기"
                         >
                             <MoreHorizontal size={16} />
-                        </button>
+                        </button>}
 
-                        {isMenuOpen && (
+                        {isJudged && isMenuOpen && (
                             <div className="lc-menu">
                                 <button type="button" className="lc-menu-item" onClick={() => { setIsMenuOpen(false); handleAutoFill(false); }}>
                                     <Wand2 size={14} /> 로직 자동 채우기
