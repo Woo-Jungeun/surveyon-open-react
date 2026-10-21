@@ -1374,6 +1374,7 @@ const AnalysisSettingTab = ({
                                                             <div style={{ width: '130px', paddingLeft: '10px' }}>
                                                                 <input
                                                                     type="text"
+                                                                    className="dp-bottom-val-input"
                                                                     value={group.bottom_values || ''}
                                                                     onChange={(e) => handleUpdateGroupRow(item.id, groupIdx, 'bottom_values', e.target.value)}
                                                                     onBlur={(e) => {
@@ -1395,8 +1396,8 @@ const AnalysisSettingTab = ({
                                                                     return [...valTokens, ...extra].map((tok, tIdx) => {
                                                                         const pinned = bottomTokens.includes(tok);
                                                                         return (
-                                                                            <span key={tIdx} title={pinned ? '하단 고정 코드' : undefined} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '2px 10px', borderRadius: '999px', border: `1px solid ${pinned ? '#FDBA74' : colorObj.border}`, background: pinned ? '#FFF7ED' : colorObj.bg, color: pinned ? '#C2410C' : colorObj.text, fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                                                                {pinned && <Pin size={11} style={{ transform: 'rotate(45deg)' }} />}
+                                                                            <span key={tIdx} title={pinned ? '하단 고정 코드' : undefined} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '2px 10px', borderRadius: '999px', border: `1px solid ${pinned ? '#CBD5E1' : colorObj.border}`, background: pinned ? '#F1F5F9' : colorObj.bg, color: pinned ? '#475569' : colorObj.text, fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                                                                {pinned && <Pin size={10} color="#64748B" style={{ transform: 'rotate(45deg)' }} />}
                                                                                 {tok}
                                                                             </span>
                                                                         );
@@ -1422,7 +1423,8 @@ const AnalysisSettingTab = ({
                                                 })}
                                                 </div>
 
-                                                <GroupTotalChipsSection groups={item.groups} totalCount={totalChips.length} />
+                                                {/* 전체 값 칩 영역 (임시 주석) */}
+                                                {/* <GroupTotalChipsSection groups={item.groups} totalCount={totalChips.length} /> */}
                                             </div>
                                         )}
                                     </div>
@@ -1629,6 +1631,12 @@ const AnalysisSettingTab = ({
                 onCreateNew={handleAiCreatePreset}
                 onOverwrite={handleAiOverwritePreset}
                 overwriteTargetName={groupData.find(g => g.id === expandedGroupId)?.name || ''}
+                initialGenCrosstab={!!groupData.find(g => g.id === expandedGroupId)?.generate_group_crosstab}
+                onGenCrosstabChange={(val) => {
+                    if (expandedGroupId) {
+                        handleUpdateGroupPresetField(expandedGroupId, 'generate_group_crosstab', val);
+                    }
+                }}
                 defaultPresetName="새 그룹 설정"
             />
         </div>

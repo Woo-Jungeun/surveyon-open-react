@@ -42,7 +42,7 @@ const thStyle = { padding: '6px 4px', textAlign: 'left', color: '#475569', fontW
  * 표설정 → 그룹 묶기 → AI 자동 그룹 생성
  * 디자인은 AiAutoBannerModal과 맞춤
  */
-const AiAutoGroupModal = ({ isOpen, onClose, onCreateNew, onOverwrite, overwriteTargetName, defaultPresetName }) => {
+const AiAutoGroupModal = ({ isOpen, onClose, onCreateNew, onOverwrite, overwriteTargetName, defaultPresetName, initialGenCrosstab, onGenCrosstabChange }) => {
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
     const user = auth?.user?.userId || '';
@@ -75,8 +75,8 @@ const AiAutoGroupModal = ({ isOpen, onClose, onCreateNew, onOverwrite, overwrite
         setIsAnalyzing(false);
         setElapsedSeconds(0);
         setProgressMsg('');
-        setPresetName('');
-        setGenCrosstab(false);
+        setPresetName(defaultPresetName || '');
+        setGenCrosstab(!!initialGenCrosstab);
         if (fileInputRef.current) fileInputRef.current.value = '';
         if (!isOpen) return;
 
@@ -340,7 +340,16 @@ const AiAutoGroupModal = ({ isOpen, onClose, onCreateNew, onOverwrite, overwrite
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', backgroundColor: '#f8fafc' }}>
                             <label className="dp-checkbox-label" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none', margin: 0 }}>
-                                <input type="checkbox" className="dp-checkbox-input" checked={genCrosstab} onChange={(e) => setGenCrosstab(e.target.checked)} />
+                                <input
+                                    type="checkbox"
+                                    className="dp-checkbox-input"
+                                    checked={genCrosstab}
+                                    onChange={(e) => {
+                                        const checked = e.target.checked;
+                                        setGenCrosstab(checked);
+                                        onGenCrosstabChange?.(checked);
+                                    }}
+                                />
                                 <span className="dp-checkbox-box" />
                                 <span style={{ fontSize: '12.5px', color: '#334155', fontWeight: 600 }}>그룹 전용 교차표 추가 생성</span>
                             </label>
@@ -422,7 +431,7 @@ const AiAutoGroupModal = ({ isOpen, onClose, onCreateNew, onOverwrite, overwrite
                                                         <input type="text" value={item.values} placeholder="예: 1~3, 5" onChange={(e) => updateItem(idx, 'values', e.target.value)} style={{ ...inputStyle, fontFamily: 'monospace' }} />
                                                     </td>
                                                     <td style={{ padding: '4px 6px' }}>
-                                                        <input type="text" value={item.bottom_values} placeholder="예: 98, 99" onChange={(e) => updateItem(idx, 'bottom_values', e.target.value)} style={{ ...inputStyle, fontFamily: 'monospace' }} />
+                                                        <input type="text" className="dp-bottom-val-input" value={item.bottom_values} placeholder="예: 98, 99" onChange={(e) => updateItem(idx, 'bottom_values', e.target.value)} style={{ ...inputStyle, fontFamily: 'monospace' }} />
                                                     </td>
                                                     <td style={{ textAlign: 'center', padding: '4px 6px' }}>
                                                         <button className="dp-ai-trash-btn" onClick={() => deleteItem(idx)} title="행 삭제"><Trash2 size={14} /></button>

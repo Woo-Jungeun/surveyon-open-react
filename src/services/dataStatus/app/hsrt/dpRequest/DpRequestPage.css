@@ -2077,3 +2077,10 @@
 
 /* AI 자동 그룹 — 입력 예시(placeholder) 회색 */
 .dp-ai-group-input::placeholder { color: #94a3b8 !important; opacity: 1 !important; }
+
+/* 하단 고정 코드 예시(placeholder) 색감 */
+.dp-bottom-val-input::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+    font-weight: 400 !important;
+}
