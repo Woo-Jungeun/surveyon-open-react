@@ -1234,11 +1234,11 @@ const AnalysisSettingTab = ({
                                                     return (
                                                         <div key={groupIdx} style={{
                                                             display: 'flex', alignItems: 'center', minHeight: '40px', boxSizing: 'border-box',
-                                                            ...(isSub
-                                                                ? { margin: '0 0 0 28px', padding: '6px 12px 6px 4px', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }
-                                                                : { padding: '6px 12px', borderBottom: '1px solid #F1F5F9', borderTop: groupIdx > 0 ? '1px solid #E2E8F0' : 'none', background: '#FFFFFF' })
+                                                            padding: '6px 12px',
+                                                            borderBottom: '1px solid #E2E8F0',
+                                                            borderTop: groupIdx > 0 && !isSub ? '1px solid #E2E8F0' : 'none',
+                                                            background: isSub ? '#F8FAFC' : '#FFFFFF'
                                                         }}>
-                                                            {isSub && <span style={{ color: '#93C5FD', fontSize: '14px', fontWeight: 700, width: '8px', flexShrink: 0 }}>└</span>}
                                                             <div style={{ width: '48px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                                                 <button
                                                                     onClick={() => handleAddGroupRow(item.id, groupIdx)}
@@ -1250,7 +1250,12 @@ const AnalysisSettingTab = ({
                                                                     <Plus size={16} />
                                                                 </button>
                                                             </div>
-                                                            <div style={{ width: '120px', paddingRight: '10px', boxSizing: 'border-box', position: 'relative' }}>
+                                                            <div style={{ width: '120px', paddingLeft: isSub ? '22px' : '0', paddingRight: '10px', boxSizing: 'border-box', position: 'relative' }}>
+                                                                {isSub && (
+                                                                    <span style={{ position: 'absolute', left: '5px', top: '50%', transform: 'translateY(-55%)', color: '#93C5FD', fontSize: '14px', fontWeight: 700, pointerEvents: 'none' }}>
+                                                                        └
+                                                                    </span>
+                                                                )}
                                                                 <DropDownList
                                                                     data={groupIdx === 0 ? TIER_OPTIONS.slice(0, 1) : TIER_OPTIONS}
                                                                     textField="text"
@@ -1264,7 +1269,7 @@ const AnalysisSettingTab = ({
                                                                     style={{ width: '100%', opacity: 1 }}
                                                                 />
                                                                 {/* 글씨는 화살표 영역을 뺀 나머지 공간의 가운데 (첫 행은 화살표 없음 → 박스 전체 가운데) */}
-                                                                <span style={{ position: 'absolute', left: 0, right: groupIdx === 0 ? '10px' : '32px', top: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', fontSize: isSub ? '12px' : '13px', fontWeight: isSub ? 500 : 600, color: isSub ? '#475569' : '#1E40AF' }}>
+                                                                <span style={{ position: 'absolute', left: isSub ? '22px' : 0, right: groupIdx === 0 ? '10px' : '32px', top: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', fontSize: isSub ? '12px' : '13px', fontWeight: isSub ? 500 : 600, color: isSub ? '#475569' : '#1E40AF' }}>
                                                                     {isSub ? '중분류' : '대분류'}
                                                                 </span>
                                                                 {groupIdx !== 0 && (
