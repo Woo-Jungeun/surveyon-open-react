@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useLayoutEffect } from 'react';
 import { AlertCircle, ChevronDown, ChevronRight, Plus, Trash2, X, Info, GripVertical, Sparkles, Pin } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import AiAutoGroupModal from './AiAutoGroupModal';
@@ -34,6 +34,75 @@ const getBandScore = (label) => {
     return 99;
 };
 
+// 미리보기용: "1,3, 1to100" → ["1", "3", "1 to 100"]
+const tokenizeGroupValues = (str) => String(str || '')
+    .split(',').map(s => s.trim()).filter(Boolean)
+    .map(s => s.replace(/\s*to\s*/i, ' to '));
+
+// 그룹 프리셋 하단 전체 값 칩 섹션 (2줄 초과 시에만 전체보기 토글 표시)
+const GroupTotalChipsSection = ({ groups, totalCount }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [hasOverflow, setHasOverflow] = useState(false);
+    const containerRef = useRef(null);
+
+    useLayoutEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+
+        const checkOverflow = () => {
+            if (containerRef.current) {
+                // 칩 2줄 높이는 약 48~52px. 3줄 이상일 때 scrollHeight가 약 74px 이상이 되므로 56px 기준으로 판단
+                setHasOverflow(containerRef.current.scrollHeight > 56);
+            }
+        };
+
+        checkOverflow();
+
+        if (window.ResizeObserver) {
+            const ro = new ResizeObserver(checkOverflow);
+            ro.observe(el);
+            return () => ro.disconnect();
+        }
+    }, [groups]);
+
+    return (
+        <div style={{ paddingTop: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>전체 값</span>
+                <span style={{ fontSize: '12px', color: '#94A3B8', marginLeft: '6px' }}>{totalCount}개</span>
+                {hasOverflow && (
+                    <button
+                        type="button"
+                        onClick={() => setIsExpanded(prev => !prev)}
+                        style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '2px', border: 'none', background: 'transparent', color: '#2563EB', fontSize: '12px', fontWeight: 600, cursor: 'pointer', padding: '2px 4px' }}
+                    >
+                        {isExpanded ? '접기' : '전체보기'}
+                        <ChevronDown size={13} style={{ transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                    </button>
+                )}
+            </div>
+            <div
+                ref={containerRef}
+                style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '4px',
+                    ...(hasOverflow && !isExpanded ? { maxHeight: '52px', overflow: 'hidden' } : {})
+                }}
+            >
+                {(groups || []).flatMap((g, gIdx) => {
+                    const c = GROUP_COLORS[gIdx % GROUP_COLORS.length];
+                    return tokenizeGroupValues(g.values).map((tok, tIdx) => (
+                        <span key={`${gIdx}_${tIdx}`} title={g.label} style={{ padding: '2px 10px', borderRadius: '999px', border: `1px solid ${c.border}`, background: c.bg, color: c.text, fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                            {tok}
+                        </span>
+                    ));
+                })}
+            </div>
+        </div>
+    );
+};
+
 const AnalysisSettingTab = ({
     contextData,
     scaleData,
@@ -57,7 +126,6 @@ const AnalysisSettingTab = ({
     const [dragOverPresetId, setDragOverPresetId] = useState(null);
 
     // --- 유틸리티 함수 ---
-    const [expandedTotals, setExpandedTotals] = useState({}); // 그룹 프리셋별 '전체 값' 펼침 여부
     const markUnsaved = () => {
         if (onUnsavedChange) onUnsavedChange(true);
     };
@@ -1354,32 +1422,7 @@ const AnalysisSettingTab = ({
                                                 })}
                                                 </div>
 
-                                                <div style={{ paddingTop: '4px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
-                                                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>전체 값</span>
-                                                        <span style={{ fontSize: '12px', color: '#94A3B8', marginLeft: '6px' }}>{totalChips.length}개</span>
-                                                        {totalChips.length > 20 && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setExpandedTotals(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                                                                style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '2px', border: 'none', background: 'transparent', color: '#2563EB', fontSize: '12px', fontWeight: 600, cursor: 'pointer', padding: '2px 4px' }}
-                                                            >
-                                                                {expandedTotals[item.id] ? '접기' : '전체보기'}
-                                                                {expandedTotals[item.id] ? <ChevronDown size={13} style={{ transform: 'rotate(180deg)' }} /> : <ChevronDown size={13} />}
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', ...(totalChips.length > 20 && !expandedTotals[item.id] ? { maxHeight: '52px', overflow: 'hidden' } : {}) }}>
-                                                        {(item.groups || []).flatMap((g, gIdx) => {
-                                                            const c = GROUP_COLORS[gIdx % GROUP_COLORS.length];
-                                                            return tokenizeGroupValues(g.values).map((tok, tIdx) => (
-                                                                <span key={`${gIdx}_${tIdx}`} title={g.label} style={{ padding: '2px 10px', borderRadius: '999px', border: `1px solid ${c.border}`, background: c.bg, color: c.text, fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                                                    {tok}
-                                                                </span>
-                                                            ));
-                                                        })}
-                                                    </div>
-                                                </div>
+                                                <GroupTotalChipsSection groups={item.groups} totalCount={totalChips.length} />
                                             </div>
                                         )}
                                     </div>
