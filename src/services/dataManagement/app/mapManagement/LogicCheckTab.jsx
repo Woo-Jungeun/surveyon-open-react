@@ -127,6 +127,8 @@ function normalizeSyntax(res) {
     }
     return groups.filter(g => g.rows.length > 0);
 }
+const judgeCache = {}; // 탭 이동 후 돌아와도 판정 결과 유지 (pn별)
+const logicSig = (vars) => (vars || []).map(v => `${v?.name ?? ''}=${v?.logic ?? ''}`).join('|');
 let syntaxCache = null; // 고정표 — 한 번만 받기
 
 const LOGIC_WORDS = new Set(['and', 'or', 'not', 'in', 'is', 'null', 'all', 'like', 'true', 'false']);
@@ -804,13 +806,17 @@ const LogicCheckTab = ({
     const userId = auth?.user?.userId || '';
 
     // ── 전체 상태 ──
-    const [judgeResult, setJudgeResult] = useState(null);   // { items, unreadable, summary, checkedResponses, judgedAt }
+    const cached = judgeCache[pn];
+    const curSig = useMemo(() => logicSig(variables), [variables]);
+    const [judgeResult, setJudgeResult] = useState(cached?.judgeResult || null);   // { items, unreadable, summary, checkedResponses, judgedAt }
+    // 다른 탭에서 맵 로직이 바뀐 뒤 돌아온 경우
+    const [isStale, setIsStale] = useState(!!cached && cached.sig !== curSig);
     const [isProgressing, setIsProgressing] = useState(false);
     const [progressData, setProgressData] = useState({ title: '', message: '', percent: 0 });
     const [abortFn, setAbortFn] = useState(null);
 
     // ── 왼쪽 목록 상태 ──
-    const [filter, setFilter] = useState('error');          // 거르개
+    const [filter, setFilter] = useState(cached?.filter || 'error');          // 거르개
     const [copyMenuOpen, setCopyMenuOpen] = useState(false);
     const [hintsOpen, setHintsOpen] = useState(false);
     const copyMenuRef = useRef(null);
@@ -820,17 +826,27 @@ const LogicCheckTab = ({
         document.addEventListener('mousedown', onDown);
         return () => document.removeEventListener('mousedown', onDown);
     }, [copyMenuOpen]);
-    const [sortKey, setSortKey] = useState('order');        // 정렬
+    const [sortKey, setSortKey] = useState(cached?.sortKey || 'order');        // 정렬
     const [listSearch, setListSearch] = useState('');       // 찾기
-    const [selectedVar, setSelectedVar] = useState(null);   // 선택된 item
+    const [selectedVar, setSelectedVar] = useState(cached?.selectedVar || null);   // 선택된 item
     useEffect(() => { setHintsOpen(false); }, [selectedVar?.variable]);
     const [logicEditOpen, setLogicEditOpen] = useState(false);
 
     // ── 오른쪽 상세 상태 ──
-    const [detail, setDetail] = useState(null);              // API 응답
+    const [detail, setDetail] = useState(cached?.detail || null);              // API 응답
     const [detailLoading, setDetailLoading] = useState(false);
-    const [detailKind, setDetailKind] = useState(null);      // 현재 표시 kind
-    const [selectedKind, setSelectedKind] = useState(null);  // 베이스 칸 선택
+    const [detailKind, setDetailKind] = useState(cached?.detailKind || null);      // 현재 표시 kind
+    const [selectedKind, setSelectedKind] = useState(cached?.selectedKind || null);  // 베이스 칸 선택
+
+    // 판정 결과 기억 — 이 탭 안에서 고친 로직은 _fixed로 이미 표시되므로 서명만 갱신
+    useEffect(() => {
+        if (!judgeResult) { delete judgeCache[pn]; return; }
+        const prevSig = judgeCache[pn]?.sig;
+        judgeCache[pn] = {
+            judgeResult, filter, sortKey, selectedVar, detail, detailKind, selectedKind,
+            sig: isStale ? (prevSig ?? curSig) : curSig,
+        };
+    }, [pn, judgeResult, filter, sortKey, selectedVar, detail, detailKind, selectedKind, curSig, isStale]);
     const [codeFilter, setCodeFilter] = useState(null);      // 분포 → 응답자 필터
     const detailAbortRef = useRef(null);
     const selectDebounceRef = useRef(null);
@@ -1014,6 +1030,7 @@ const LogicCheckTab = ({
                     checkedResponses: rj.checkedResponses || 0,
                     judgedAt: new Date().toLocaleString('ko-KR'),
                 });
+                setIsStale(false);
                 setFilter('error');
                 setSortKey('order');
                 setSelectedVar(null);
@@ -1735,9 +1752,9 @@ const LogicCheckTab = ({
                                 if (!n) return null;
                                 return (
                                     <button type="button" className="lc-fixed-badge"
-                                        title="판정 뒤 고친 로직입니다. 그 문항만 다시 판정했고, 전체 숫자에 반영하려면 [다시 판정]을 눌러 주세요."
-                                        onClick={() => modal?.showAlert?.('알림', `판정 뒤 고친 로직이 ${n}개 있습니다.\n전체 결과에 반영하려면 [다시 판정]을 눌러 주세요.`)}>
-                                        <Edit2 size={11} /> 고친 로직 {n}개 미반영
+                                        title="판정 뒤 로직을 고쳐 그 문항만 다시 판정했습니다. 전체 집계는 처음 판정 기준입니다."
+                                        onClick={() => modal?.showAlert?.('알림', `로직을 고쳐 다시 판정한 문항이 ${n}개 있습니다.\n이 문항들의 결과는 새 로직 기준이고, 전체 집계는 처음 판정 기준입니다.\n집계까지 맞추려면 [다시 판정]을 눌러 주세요.`)}>
+                                        <Edit2 size={11} /> 다시 판정한 문항 {n}개
                                     </button>
                                 );
                             })()}
@@ -1751,13 +1768,14 @@ const LogicCheckTab = ({
                             <button
                                 id="lc-rejudge-btn"
                                 type="button"
-                                className="lc-rejudge-icon"
+                                className={`lc-rejudge-icon${isStale ? ' stale' : ''}`}
                                 onClick={handleJudge}
                                 disabled={isProgressing}
-                                title="다시 판정"
+                                title={isStale ? '맵에서 로직이 바뀌었습니다 — 다시 판정해 주세요' : '다시 판정'}
                                 aria-label="다시 판정"
                             >
                                 <RefreshCw size={13} />
+                                {isStale && <span className="lc-rejudge-label">로직 변경됨 · 다시 판정</span>}
                             </button>
                         )}
                         {/* 판정 전엔 준비 화면에 [자동 채우기]가 있고 지울 결과도 없어 ⋯ 를 숨김 */}
