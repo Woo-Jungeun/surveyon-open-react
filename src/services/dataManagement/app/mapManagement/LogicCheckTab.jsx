@@ -129,8 +129,8 @@ function normalizeSyntax(res) {
 }
 let syntaxCache = null; // 고정표 — 한 번만 받기
 
-const LOGIC_WORDS = new Set(['and', 'or', 'not', 'in', 'is', 'null', 'all', 'like']);
-/** 식에 쓴 변수 → 맵 변수 (쓴 순서 · 중복 제거) */
+const LOGIC_WORDS = new Set(['and', 'or', 'not', 'in', 'is', 'null', 'all', 'like', 'true', 'false']);
+/** 식에 쓴 변수 → 맵 변수 (쓴 순서 · 중복 제거) — 맵에 없는 이름은 { _missing: true, name } */
 function findLogicVars(text, variables) {
     const byName = new Map();
     (variables || []).forEach(v => {
@@ -139,14 +139,18 @@ function findLogicVars(text, variables) {
     });
     const out = [];
     const seen = new Set();
-    for (const m of String(text || '').matchAll(/[A-Za-z_][A-Za-z0-9_]*/g)) {
+    // 따옴표 안 글자는 변수가 아님
+    const src = String(text || '').replace(/'[^']*'|"[^"]*"/g, ' ');
+    for (const m of src.matchAll(/[A-Za-z_][A-Za-z0-9_]*/g)) {
         const key = m[0].toLowerCase();
         if (LOGIC_WORDS.has(key) || seen.has(key)) continue;
+        seen.add(key);
         const v = byName.get(key);
-        if (v) { seen.add(key); out.push(v); }
+        out.push(v || { _missing: true, name: m[0] });
     }
     return out;
 }
+const normLogic = (s) => String(s || '').replace(/\s+/g, ' ').trim();
 
 /** 로직 넣기 / 수정 창 (기획서 팝업) */
 function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCancel, onSave }) {
@@ -173,8 +177,26 @@ function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCanc
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [helpOpen, syntax]);
 
+    const modal = useContext(modalContext);
+    const initialText = mapVar?.logic || item.logic || '';
+
     const handleSave = async () => {
         if (saving) return;
+        // 안 바꿨으면 보내지 않음 (원래 없던 로직을 빈 채로 저장해도 같음)
+        if (normLogic(text) === normLogic(current)) {
+            modal?.showAlert?.('알림', '변경사항이 없습니다.');
+            return;
+        }
+        // 비워서 저장 = 로직 지우기 → 한 번 묻기
+        if (!normLogic(text)) {
+            const ok = await new Promise(resolve => modal?.showConfirm?.('알림', `${varName} 의 로직을 지울까요?\n지우면 이 문항은 판정하지 않습니다.`, {
+                btns: [
+                    { title: '취소', click: () => resolve(false) },
+                    { title: '지우기', click: () => resolve(true) },
+                ],
+            }));
+            if (!ok) return;
+        }
         setSaving(true);
         setError('');
         try {
@@ -184,8 +206,27 @@ function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCanc
         } finally { setSaving(false); }
     };
 
+    // 닫기 — 고치던 식이 있으면 한 번 묻기 · 다시 판정 중엔 닫지 않음
+    const requestClose = () => {
+        if (saving) return;
+        if (normLogic(text) === normLogic(initialText)) { onCancel(); return; }
+        modal?.showConfirm?.('알림', '고치던 식이 저장되지 않았습니다. 버리고 닫을까요?', {
+            btns: [
+                { title: '취소', click: () => { } },
+                { title: '버리고 닫기', click: () => onCancel() },
+            ],
+        });
+    };
+    const closeRef = useRef(requestClose);
+    closeRef.current = requestClose;
+    useEffect(() => {
+        const onKey = (e) => { if (e.key === 'Escape' && !builderOpen) { e.preventDefault(); closeRef.current(); } };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [builderOpen]);
+
     return (
-        <div className="variable-modal-overlay" data-theme="data-management" onClick={onCancel}>
+        <div className="variable-modal-overlay" data-theme="data-management" onClick={requestClose}>
             <div className="lc-dialog lc-logic-dialog" role="dialog" aria-labelledby="lc-logic-title" onClick={e => e.stopPropagation()}>
                 <div className="variable-modal-header">
                     <div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
@@ -197,12 +238,11 @@ function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCanc
                             <span className="lc-logic-dialog-sub" title={item.title || item.label}>{item.title || item.label}</span>
                         )}
                     </div>
-                    <button type="button" id="lc-logic-close" onClick={onCancel} className="variable-modal-close">&times;</button>
+                    <button type="button" id="lc-logic-close" onClick={requestClose} disabled={saving} className="variable-modal-close">&times;</button>
                 </div>
 
                 <div className="lc-dialog-body">
-                    <div className={`lc-logic-now${
-                        !current || !item.hasLogic || item.status === 'noResponse' ? ''
+                    <div className={`lc-logic-now${!current || !item.hasLogic || item.status === 'noResponse' ? ''
                             : item._unreadable ? ' tone-warn'
                                 : item.missing > 0 ? ' tone-error'
                                     : item.unexpected > 0 ? ' tone-warn'
@@ -280,9 +320,18 @@ function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCanc
                     {(() => {
                         const refs = findLogicVars(text, variables);
                         if (!refs.length) return null;
+                        const shownRefs = refs.slice(0, 5);
                         return (
                             <ul className="lc-logic-refs">
-                                {refs.map(v => {
+                                {shownRefs.map(v => {
+                                    if (v._missing) {
+                                        return (
+                                            <li key={`x-${v.name}`} className="missing">
+                                                <span className="ref-name">{v.name}</span>
+                                                <span className="ref-missing">맵에 없는 변수입니다</span>
+                                            </li>
+                                        );
+                                    }
                                     const labels = v.labels || [];
                                     return (
                                         <li key={v.id ?? v.name}>
@@ -291,15 +340,18 @@ function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCanc
                                             <span className="ref-label" title={v.label || ''}>{v.label || ''}</span>
                                             {labels.length > 0 && (
                                                 <span className="ref-opts">
-                                                    {labels.slice(0, 12).map(l => (
+                                                    {labels.slice(0, 6).map(l => (
                                                         <span key={l.code} className="ref-opt"><b>{l.code}</b> {l.label}</span>
                                                     ))}
-                                                    {labels.length > 12 && <span className="ref-more">외 {labels.length - 12}개</span>}
+                                                    {labels.length > 6 && (
+                                                        <span className="ref-more" title={labels.map(l => `${l.code} ${l.label}`).join('\n')}>+{labels.length - 6}</span>
+                                                    )}
                                                 </span>
                                             )}
                                         </li>
                                     );
                                 })}
+                                {refs.length > 5 && <li className="ref-more-vars">외 변수 {refs.length - 5}개</li>}
                             </ul>
                         );
                     })()}
@@ -309,11 +361,21 @@ function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCanc
                 <div className="variable-modal-footer lc-logic-footer">
                     <button type="button" id="lc-logic-builder" className="btn-cancel lc-btn-green-outline" onClick={() => setBuilderOpen(true)}>조건으로 만들기</button>
                     <div style={{ flex: 1 }} />
-                    <button type="button" id="lc-logic-cancel" className="btn-cancel" onClick={onCancel}>취소</button>
+                    <button type="button" id="lc-logic-cancel" className="btn-cancel" onClick={requestClose}>취소</button>
                     <button type="button" id="lc-logic-save" className="btn-save" disabled={saving} onClick={handleSave}>
-                        {saving ? '저장 중…' : '저장 후 재확인'}
+                        저장 후 재확인
                     </button>
                 </div>
+
+                {/* 다시 판정 중 — 진행률이 없어 퍼센트는 안 줌 · 이 동안 닫히지 않음 */}
+                {saving && (
+                    <div className="lc-logic-saving" role="status">
+                        <Loader2 size={22} className="lc-spin" />
+                        <div className="lc-logic-saving-title">다시 판정하는 중</div>
+                        <div className="lc-logic-saving-desc">이 문항만 응답을 한 번 읽어 판정한 뒤 저장합니다</div>
+                        <div className="lc-logic-saving-bar"><span /></div>
+                    </div>
+                )}
             </div>
 
             {builderOpen && (
@@ -390,6 +452,7 @@ function AutoFillDialog({ initialRestart = false, logicCount = 0, totalCount = 0
                             ? <li>지우기 전에 지금 상태를 복원 지점으로 저장해 둡니다. 중간에 멈추면 남은 문항은 빈 칸으로 남습니다.</li>
                             : <li>로직이 필요 없어 일부러 비워 둔 문항도 채워질 수 있습니다. 끝나면 새로 채워진 문항을 알려 드립니다.</li>}
                         <li>10~20분 정도 걸립니다. 중간에 멈춰도 그때까지 채운 로직은 저장됩니다.</li>
+                        {!restart && <li>다시 보고 싶은 문항은 맵에서 로직을 지운 뒤 다시 누르세요.</li>}
                     </ul>
                 </div>
 
@@ -634,8 +697,8 @@ const VarRow = React.memo(function VarRow({ item, isActive, isUnreadable, checke
                 <>
                     <div className="lc-vr-bar">
                         <div style={{ width: `${bAnswered}%`, background: BAR.blue }} />
-                        <div style={{ width: `${bMissing}%`, background: BAR.red }} />
-                        <div style={{ width: `${bUnexpected}%`, background: BAR.orange }} />
+                        <div style={{ width: `${bMissing > 0 ? Math.max(bMissing, 1.5) : 0}%`, background: BAR.red }} />
+                        <div style={{ width: `${bUnexpected > 0 ? Math.max(bUnexpected, 1.5) : 0}%`, background: BAR.orange }} />
                         <div style={{ width: `${bRest}%`, background: C.gray }} />
                     </div>
                     <div className="lc-vr-nums">
@@ -919,6 +982,9 @@ const LogicCheckTab = ({
                             const res = await restoreExcelVersion?.mutateAsync({ pn, user: userId, versionId });
                             if (String(res?.success) === '777') {
                                 setFillResult(null);
+                                setJudgeResult(null); // 로직이 바뀌었으니 다시 판정
+                                setSelectedVar(null);
+                                setDetail(null);
                                 onMapReload?.();
                                 modal?.showAlert?.('알림', '자동 채우기 전으로 되돌렸습니다.');
                             } else {
@@ -1095,20 +1161,11 @@ const LogicCheckTab = ({
 
     // ─── 로직 고치기 — 그 문항만 다시 판정하고 저장 (check-logic/one) ───
     // 돌려주는 값: { logic? (입력칸에 다시 넣을 식), error? (창 안에 보여 줄 이유) }
-    const handleSaveLogicOne = useCallback(async (item, mapVar, text, info) => {
+    const saveLogicRef = useRef(null);
+    const handleSaveLogicOne = useCallback(async (item, mapVar, text, info, opts = {}) => {
         const variable = item.variable || item.sysName;
-        const current = String(mapVar?.logic || item.logic || '').trim();
+        // 바뀐 것 없음 · 지우기 확인은 로직 수정 창에서 먼저 함
         const isClear = String(text || '').trim() === '';
-        if (isClear && !current) return { error: '식을 입력해 주세요.' };
-        if (isClear) {
-            const ok = await new Promise(resolve => modal?.showConfirm?.('알림', '로직을 지울까요?\n지우면 이 문항은 판정에서 빠지고 응답값만 보게 됩니다.', {
-                btns: [
-                    { title: '취소', click: () => resolve(false) },
-                    { title: '지우기', click: () => resolve(true) },
-                ],
-            }));
-            if (!ok) return {};
-        }
 
         let res;
         try {
@@ -1118,17 +1175,19 @@ const LogicCheckTab = ({
         }
         const rj = res?.resultjson || {};
         if (String(res?.success) !== '777') {
-            return { error: rj.errorcontent || res?.errorcontent || res?.message || '저장하지 못했습니다.' };
+            const msg = rj.errorcontent || res?.errorcontent || res?.message || '저장하지 못했습니다.';
+            if (opts.revert) { modal?.showErrorAlert?.('오류', msg); return { error: msg }; }
+            return { error: String(res?.success) === '904' ? `읽지 못해 저장하지 않았습니다 — ${msg}` : msg };
         }
 
         const savedLogic = rj.logic ?? (isClear ? '' : text);
         if (rj.saved !== false && mapVar) onLogicSaved?.(mapVar.id, savedLogic, isClear ? null : info);
 
-        // 판정 결과에서 그 문항 한 줄만 바꿔 끼우기
+        // 판정 결과에서 그 문항 한 줄만 바꿔 끼우기 (✎ 고침 · 다시 판정 전)
         const same = (x) => (x?.variable || x?.sysName) === variable;
         const newItem = rj.item
-            ? { ...rj.item }
-            : { ...item, _unreadable: false, hasLogic: !isClear, logic: savedLogic, status: isClear ? undefined : item.status };
+            ? { ...rj.item, _fixed: true }
+            : { ...item, _unreadable: false, hasLogic: !isClear, logic: savedLogic, status: isClear ? undefined : item.status, _fixed: true };
         delete newItem._unreadable;
         setJudgeResult(prev => {
             if (!prev) return prev;
@@ -1145,11 +1204,35 @@ const LogicCheckTab = ({
         setSelectedKind(null);
         setDetail(null);
         loadDetail(newItem);
+
+        // 알림 + [되돌리기] (previousLogic 으로 다시 저장)
+        const statusText = !newItem.hasLogic ? ''
+            : newItem.status === 'ok' ? '정상'
+                : newItem.status === 'noResponse' ? '응답 없음'
+                    : `대상자 무응답 ${fmt(newItem.missing || 0)}명 · 비대상 응답 ${fmt(newItem.unexpected || 0)}명`;
+        const msg = opts.revert
+            ? `되돌렸습니다${statusText ? ` · ${statusText}` : ''}`
+            : isClear ? '로직을 지웠습니다.'
+                : `저장하고 ${variable} 만 다시 판정했습니다 · ${statusText}`;
+        const prevLogic = rj.previousLogic;
+        if (!opts.revert && prevLogic != null && normLogic(prevLogic) !== normLogic(savedLogic)) {
+            modal?.showConfirm?.('알림', msg, {
+                btns: [
+                    { title: '닫기', click: () => { } },
+                    { title: '되돌리기', click: () => saveLogicRef.current?.(newItem, mapVar, prevLogic, undefined, { revert: true }) },
+                ],
+            });
+        } else {
+            modal?.showAlert?.('알림', msg);
+        }
         return { logic: savedLogic };
     }, [pn, userId, checkLogicOne, onLogicSaved, modal, loadDetail]);
+    saveLogicRef.current = handleSaveLogicOne;
 
     // ─── 수정 양식 받기 ───
+    const [fixLoading, setFixLoading] = useState(false);
     const handleFixForm = useCallback(async (variable) => {
+        setFixLoading(true);
         loadingSpinner?.show?.();
         try {
             const res = await getCheckLogicFixForm?.mutateAsync({ pn, user: userId, variable });
@@ -1175,8 +1258,23 @@ const LogicCheckTab = ({
             modal?.showErrorAlert?.('오류', '수정 양식을 내려받지 못했습니다. 잠시 후 다시 시도해 주세요.');
         } finally {
             loadingSpinner?.hide?.();
+            setFixLoading(false);
         }
     }, [pn, userId, getCheckLogicFixForm, modal, loadingSpinner]);
+
+    // 힌트가 있는 문항은 받기 전에 한 번 묻기 — 로직이 틀렸다면 정상 응답을 지우게 됨
+    const requestFixForm = useCallback((item) => {
+        const variable = item.variable || item.sysName;
+        if (!(item.hints?.length > 0)) { handleFixForm(variable); return; }
+        modal?.showConfirm?.('알림',
+            `로직부터 확인해 주세요.\n로직이 틀렸다면 지금 받는 양식은 비대상 응답 ${fmt(item.unexpected || 0)}명은 모두 삭제(1) · 대상자 무응답 ${fmt(item.missing || 0)}명은 값 채우기로 들어갑니다.`,
+            {
+                btns: [
+                    { title: '로직 수정', click: () => setLogicEditOpen(true) },
+                    { title: '그래도 받기', click: () => handleFixForm(variable) },
+                ],
+            });
+    }, [handleFixForm, modal]);
 
     // ─── 코드 → 보기 이름 (분포 all 에서) ───
     const labelMap = useMemo(() => {
@@ -1629,7 +1727,20 @@ const LogicCheckTab = ({
                     {isJudged && (
                         <>
                             <span className="lc-status-dot done" />
-                            {`${judgeResult.judgedAt} 판정 · 완료 응답 ${fmt(judgeResult.checkedResponses)}건`}
+                            <span title="완료 · 실사 응답 기준 (테스트 · 제외 응답은 빼고 판정합니다)">
+                                {`${judgeResult.judgedAt} 판정 · 완료 응답 ${fmt(judgeResult.checkedResponses)}건 (실사 기준)`}
+                            </span>
+                            {(() => {
+                                const n = (judgeResult.items || []).filter(i => i._fixed).length;
+                                if (!n) return null;
+                                return (
+                                    <button type="button" className="lc-fixed-badge"
+                                        title="판정 뒤 고친 로직입니다. 그 문항만 다시 판정했고, 전체 숫자에 반영하려면 [다시 판정]을 눌러 주세요."
+                                        onClick={() => modal?.showAlert?.('알림', `판정 뒤 고친 로직이 ${n}개 있습니다.\n전체 결과에 반영하려면 [다시 판정]을 눌러 주세요.`)}>
+                                        <Edit2 size={11} /> 고친 로직 {n}개 미반영
+                                    </button>
+                                );
+                            })()}
                         </>
                     )}
                 </span>
@@ -1816,8 +1927,8 @@ const LogicCheckTab = ({
                         <div className="lc-var-list">
                             {listItems.length === 0 ? (
                                 <div className="lc-var-empty">조건에 맞는 문항이 없습니다.</div>
-                            ) : (
-                                listItems.map(item => (
+                            ) : (() => {
+                                const renderRow = (item) => (
                                     <VarRow
                                         key={item.variable || item.sysName}
                                         item={item}
@@ -1826,8 +1937,25 @@ const LogicCheckTab = ({
                                         checkedResponses={judgeResult.checkedResponses}
                                         onClick={() => handleVarClick(item)}
                                     />
-                                ))
-                            )}
+                                );
+                                // 확인 필요 + 문항 순서 → 문제 종류로 묶음 (제목은 위에 붙음)
+                                if (filter !== 'error' || sortKey !== 'order') return listItems.map(renderRow);
+                                const GROUPS = [
+                                    { key: 'unreadable', label: '로직 못 읽음', test: i => i._unreadable },
+                                    { key: 'both', label: '대상자 무응답 + 비대상 응답', test: i => i.missing > 0 && i.unexpected > 0 },
+                                    { key: 'unexpected', label: '비대상 응답', test: i => i.unexpected > 0 },
+                                    { key: 'missing', label: '대상자 무응답', test: i => i.missing > 0 },
+                                    { key: 'fixed', label: '고침 · 다시 판정 전', test: () => true },
+                                ];
+                                const buckets = GROUPS.map(g => ({ ...g, rows: [] }));
+                                listItems.forEach(it => { buckets.find(b => b.test(it)).rows.push(it); });
+                                return buckets.filter(b => b.rows.length).map(b => (
+                                    <React.Fragment key={b.key}>
+                                        <div className="lc-list-group">{b.label} <span>{fmt(b.rows.length)}문항</span></div>
+                                        {b.rows.map(renderRow)}
+                                    </React.Fragment>
+                                ));
+                            })()}
                         </div>
 
                         {/* 하단 줄 */}
@@ -1876,7 +2004,8 @@ const LogicCheckTab = ({
                                         )}
                                     </div>
                                     <div className="lc-detail-head-actions">
-                                        <button type="button" className="lc-btn-outline"
+                                        <button type="button"
+                                            className={(selectedVar.hints?.length > 0 || selectedVar._unreadable) ? 'lc-btn-primary' : 'lc-btn-outline'}
                                             onClick={() => setLogicEditOpen(true)}>
                                             <Edit2 size={12} />
                                             {selectedVar.hasLogic ? '로직 수정' : '로직 넣기'}
@@ -1884,8 +2013,11 @@ const LogicCheckTab = ({
                                         {(selectedVar.missing > 0 || selectedVar.unexpected > 0) && (
                                             <button
                                                 type="button"
-                                                className={`lc-btn-primary${selectedVar.hints?.length > 0 ? '' : ''}`}
-                                                onClick={() => handleFixForm(selectedVar.variable || selectedVar.sysName)}
+                                                // 힌트·못 읽은 로직이면 로직 수정이 먼저 → 양식은 보조
+                                                className={(selectedVar.hints?.length > 0 || selectedVar._unreadable) ? 'lc-btn-outline' : 'lc-btn-primary'}
+                                                onClick={() => requestFixForm(selectedVar)}
+                                                disabled={fixLoading}
+                                                title="큐마 데이터 수정 양식(엑셀) — 대상자 무응답은 값 채우기 · 비대상 응답은 삭제(1)"
                                             >
                                                 <FileDown size={12} /> 수정 양식 다운로드
                                             </button>
@@ -1902,7 +2034,9 @@ const LogicCheckTab = ({
                                             <code className="lc-logic-code">{selectedVar.logic || 'all'}</code>
                                             {(selectedVar.logic || 'all') === 'all' && <span className="lc-base-card-note">모든 응답자</span>}
                                             {!selectedVar._unreadable && selectedVar.status !== 'noResponse' && (
-                                                <span className="lc-base-card-total">완료 응답 {fmt(judgeResult.checkedResponses)}명 기준 · 숫자를 누르면 아래에 응답자 목록이 나옵니다</span>
+                                                <span className="lc-base-card-total">완료 응답 {fmt(judgeResult.checkedResponses)}명 기준 · 숫자를 누르면 아래에 응답자 목록이 나옵니다
+                                                    <span className="lc-help-q" title={`대상자 — 로직 조건에 해당하는 응답자\n비대상 — 조건에 해당하지 않는 응답자\n응답 / 무응답 — 이 문항에 값이 있는지\n\n확인할 것: 대상자 무응답(빨강) · 비대상 응답(주황)\n완료 응답 ${fmt(judgeResult.checkedResponses)}명 = 100% · 칸을 누르면 그 사람들`}>?</span>
+                                                </span>
                                             )}
                                         </div>
                                         {!selectedVar._unreadable && selectedVar.status !== 'noResponse' && (
@@ -1916,8 +2050,8 @@ const LogicCheckTab = ({
                                                         const r = Math.max(0, 100 - a - m - u);
                                                         return <>
                                                             <div style={{ width: `${a}%`, background: BAR.blue }} />
-                                                            <div style={{ width: `${m}%`, background: BAR.red }} />
-                                                            <div style={{ width: `${u}%`, background: BAR.orange }} />
+                                                            <div style={{ width: `${m > 0 ? Math.max(m, 1.5) : 0}%`, background: BAR.red }} />
+                                                            <div style={{ width: `${u > 0 ? Math.max(u, 1.5) : 0}%`, background: BAR.orange }} />
                                                             <div style={{ width: `${r}%`, background: C.gray }} />
                                                         </>;
                                                     })()}
