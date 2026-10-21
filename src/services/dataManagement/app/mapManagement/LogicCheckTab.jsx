@@ -32,9 +32,9 @@ const BAR = { blue: '#7ba3f5', red: '#fb7185', orange: '#fdab5e' };
 
 // ─── 판정 결과 범례 ─────────────────────────────
 const LEGEND_ITEMS = [
-    { key: 'target-answer', label: '대상자 응답', color: C.blue },
-    { key: 'target-missing', label: '대상자 무응답', color: C.red },
-    { key: 'nontarget-answer', label: '비대상 응답', color: C.orange },
+    { key: 'target-answer', label: '대상자 응답', color: BAR.blue },
+    { key: 'target-missing', label: '대상자 무응답', color: BAR.red },
+    { key: 'nontarget-answer', label: '비대상 응답', color: BAR.orange },
     { key: 'nontarget-missing', label: '비대상 무응답', color: C.gray },
 ];
 
@@ -1839,7 +1839,7 @@ const LogicCheckTab = ({
                                 <span className="lc-step-badge">2</span>
                                 <div className="lc-step-text">
                                     <span className="lc-step-title">판정</span>
-                                    <span className="lc-step-desc">완료된 응답이 로직대로 들어왔는지 확인합니다. 2~10분 정도 걸립니다.</span>
+                                    <span className="lc-step-desc">완료 응답이 로직대로 들어왔는지 검사합니다.<br />응답 수에 따라 몇 초에서 몇 분 걸립니다.</span>
                                 </div>
                                 <button
                                     id="lc-judge-btn"

@@ -2014,3 +2014,15 @@ table.lc-logic-help tbody { display: table; width: 100%; table-layout: fixed; }
 /* 고친 로직 N개 미반영 — 진한 노랑 */
 .lc-fixed-badge { background: #facc15 !important; border-color: #eab308 !important; color: #422006 !important; font-weight: 700 !important; }
 .lc-fixed-badge:hover { background: #eab308 !important; }
+/* 준비 화면 — 넓은 화면에서 휑하지 않게 폭·글씨 키움 */
+.lc-panel { width: 100% !important; max-width: 560px !important; }
+.lc-title { font-size: 20px !important; }
+.lc-subtitle { font-size: 13.5px !important; }
+.lc-step { padding: 16px 18px !important; }
+.lc-step-title { font-size: 14.5px !important; }
+.lc-step-desc { font-size: 13px !important; line-height: 1.55 !important; }
+.lc-guide-title { font-size: 13.5px !important; }
+.lc-guide-list li { font-size: 13px !important; line-height: 1.6 !important; }
+.lc-legend-item { font-size: 12.5px !important; }
+/* 판정 결과 보는 법 — 테두리 또렷하게 */
+.lc-guide { border: 1px solid #cbd5e1 !important; }
