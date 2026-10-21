@@ -318,6 +318,16 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/variables/ai/recalculate-banner-counts", "API_BASE_URL_DATASTATUS")
     );
 
+    /** 표설정 - AI 자동 그룹 생성 요청 (jobId 반환 → 상태 조회로 폴링) */
+    const autoGenerateGroupAsync = useMutation(
+        async (data) => await api.post(data, "/variables/ai/auto-generate-group-async", "API_BASE_URL_DATASTATUS")
+    );
+
+    /** 표설정 - AI 자동 그룹 작업 상태 조회 { jobId } → processing / completed / failed */
+    const getGroupJobStatus = useMutation(
+        async (data) => await api.post(data, "/variables/ai/group-job-status", "API_BASE_URL_DATASTATUS")
+    );
+
     /** DP 의뢰서 - 설정 재적용 (source_based 부모 스터브만 가능) */
     const reapplyPreset = useMutation(
         async (data) => await api.post(data, "/dp-request/recoded/overview/reapply-preset", "API_BASE_URL_DATASTATUS"),
@@ -386,6 +396,8 @@ export function DpRequestPageApi() {
         getAiModels,
         autoGenerateBannerAsync,
         getBannerJobStatus,
+        getGroupJobStatus,
         recalculateBannerCounts,
+        autoGenerateGroupAsync,
     };
 }

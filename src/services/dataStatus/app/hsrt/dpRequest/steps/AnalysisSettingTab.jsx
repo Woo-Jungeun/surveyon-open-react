@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { AlertCircle, ChevronDown, ChevronRight, Plus, Trash2, X, Info, GripVertical } from 'lucide-react';
+import { AlertCircle, ChevronDown, ChevronRight, Plus, Trash2, X, Info, GripVertical, Sparkles, Pin } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
+import AiAutoGroupModal from './AiAutoGroupModal';
+import { TIER_OPTIONS, insertSiblingRow } from './groupTierOptions';
 
 // 그룹 색상 팔레트 정의
 const GROUP_COLORS = [
@@ -48,12 +50,14 @@ const AnalysisSettingTab = ({
     const [expandedScaleId, setExpandedScaleId] = useState(null);
     const [expandedGroupId, setExpandedGroupId] = useState(null);
     const [expandedRankId, setExpandedRankId] = useState(null);
+    const [aiGroupOpen, setAiGroupOpen] = useState(false); // AI 자동 그룹 생성 팝업
 
     // --- 드래그 앤 드롭 상태 ---
     const [dragOverIdx, setDragOverIdx] = useState(null);
     const [dragOverPresetId, setDragOverPresetId] = useState(null);
 
     // --- 유틸리티 함수 ---
+    const [expandedTotals, setExpandedTotals] = useState({}); // 그룹 프리셋별 '전체 값' 펼침 여부
     const markUnsaved = () => {
         if (onUnsavedChange) onUnsavedChange(true);
     };
@@ -117,7 +121,7 @@ const AnalysisSettingTab = ({
         if (!str) return [];
         const out = [];
         String(str).split(',').map(s => s.trim()).filter(Boolean).forEach(tok => {
-            const m = tok.match(/^(-?\d+(?:\.\d+)?)\s*to\s*(-?\d+(?:\.\d+)?)$/i);
+            const m = tok.match(/^(-?\d+(?:\.\d+)?)\s*(?:to|~)\s*(-?\d+(?:\.\d+)?)$/i);
             if (m) {
                 let a = Number(m[1]), b = Number(m[2]);
                 if (a > b) [a, b] = [b, a];
@@ -264,19 +268,58 @@ const AnalysisSettingTab = ({
 
 
     // --- 그룹 묶기 조작 ---
+    const newGroupRow = (label = '', tier = 1) => ({
+        id: `g_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        label, values: '', bottom_values: '', tier
+    });
+
     const handleAddGroupPreset = () => {
         const newPreset = {
             id: `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
             name: '새 그룹 설정',
             min: 1,
             max: 7,
-            stt_position: 'bottom_all',
+            stt_position: 'before_first',
             groups: [
-                { label: '그룹 A', values: '' }
+                newGroupRow('그룹 A')
             ]
         };
         setGroupData([...groupData, newPreset]);
         setExpandedGroupId(newPreset.id);
+        markUnsaved();
+    };
+
+    // AI 결과 행 → 프리셋 groups
+    const aiRowsToGroups = (rows) => rows.map(r => ({
+        id: r.id || newGroupRow().id,
+        label: r.label || '',
+        values: r.values || '',
+        bottom_values: r.bottom_values || '',
+        tier: Number(r.tier) === 2 ? 2 : 1
+    }));
+
+    const handleAiCreatePreset = (rows, name, generateCrosstab = false) => {
+        const newPreset = {
+            id: `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+            name: name || '새 그룹 설정',
+            min: 1,
+            max: 7,
+            stt_position: 'before_first',
+            generate_group_crosstab: !!generateCrosstab,
+            groups: aiRowsToGroups(rows)
+        };
+        setGroupData([...groupData, newPreset]);
+        setExpandedGroupId(newPreset.id);
+        setAiGroupOpen(false);
+        markUnsaved();
+    };
+
+    const handleAiOverwritePreset = (rows, name, generateCrosstab = false) => {
+        if (!expandedGroupId) return;
+        setGroupData(groupData.map(item => item.id === expandedGroupId
+            ? { ...item, name: name || item.name, generate_group_crosstab: !!generateCrosstab, groups: aiRowsToGroups(rows) }
+            : item));
+        setAiGroupOpen(false);
         markUnsaved();
     };
 
@@ -305,15 +348,10 @@ const AnalysisSettingTab = ({
     const handleAddGroupRow = (presetId, afterIdx) => {
         setGroupData(groupData.map(item => {
             if (item.id === presetId) {
-                const groups = [...(item.groups || [])];
-                const nextLabelIdx = groups.length + 1;
-                const newRow = { label: `그룹 ${String.fromCharCode(64 + nextLabelIdx)}`, values: '' };
-                const insertAt = (afterIdx === undefined || afterIdx === null) ? groups.length : afterIdx + 1;
-                groups.splice(insertAt, 0, newRow);
-                return {
-                    ...item,
-                    groups
-                };
+                const rows = item.groups || [];
+                const newRow = newGroupRow(`그룹 ${String.fromCharCode(64 + rows.length + 1)}`);
+                // 대분류 [+] → 소속 중분류들 아래에 대분류 추가 / 중분류 [+] → 바로 아래 중분류 추가
+                return { ...item, groups: insertSiblingRow(rows, afterIdx, newRow) };
             }
             return item;
         }));
@@ -619,8 +657,29 @@ const AnalysisSettingTab = ({
                             </button>
                         </div>
                     )}
-                    {activeTab === 'group' && groupData.length > 0 && (
-                        <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                    {activeTab === 'group' && (
+                        <div style={{ display: 'flex', alignItems: 'center', height: '100%', gap: '6px' }}>
+                            <button
+                                id="group-ai-auto-btn"
+                                onClick={() => setAiGroupOpen(true)}
+                                style={{
+                                    padding: '5px 12px',
+                                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                                    border: '1px solid #1d4ed8',
+                                    color: '#FFFFFF',
+                                    borderRadius: '6px',
+                                    fontSize: '12px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    boxSizing: 'border-box'
+                                }}
+                            >
+                                <Sparkles size={14} /> AI 자동 그룹 생성
+                            </button>
+                            {groupData.length > 0 && (
                             <button
                                 onClick={handleAddGroupPreset}
                                 style={{
@@ -641,6 +700,7 @@ const AnalysisSettingTab = ({
                             >
                                 <Plus size={14} /> 그룹 프리셋 추가
                             </button>
+                            )}
                         </div>
                     )}
                     {activeTab === 'rank' && rankData.length > 0 && (
@@ -1107,7 +1167,7 @@ const AnalysisSettingTab = ({
                                                     </div>
                                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                                                         {STT_POSITION_OPTIONS.map(opt => {
-                                                            const selected = (item.stt_position || 'bottom_all') === opt.value;
+                                                            const selected = (item.stt_position || 'before_first') === opt.value;
                                                             return (
                                                                 <button
                                                                     key={opt.value}
@@ -1132,11 +1192,35 @@ const AnalysisSettingTab = ({
                                                     </div>
                                                 </div>
 
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '8px 12px', border: '1px solid #E2E8F0', borderRadius: '6px', background: '#FFFFFF' }}>
+                                                    <label
+                                                        className="dp-checkbox-label"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none', margin: 0 }}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            className="dp-checkbox-input"
+                                                            checked={!!item.generate_group_crosstab}
+                                                            onChange={(e) => handleUpdateGroupPresetField(item.id, 'generate_group_crosstab', e.target.checked)}
+                                                        />
+                                                        <span className="dp-checkbox-box" />
+                                                        <span style={{ fontSize: '13px', color: '#334155', fontWeight: 600 }}>그룹 전용 교차표 추가 생성</span>
+                                                    </label>
+                                                    <span style={{ fontSize: '12px', color: '#94A3B8' }}>
+                                                        {item.generate_group_crosstab
+                                                            ? '원본 보기 + 그룹 소계 교차표에 더해, 그룹만 있는 교차표를 하나 더 만듭니다.'
+                                                            : '기본: 원본 보기와 그룹 소계가 함께 있는 교차표만 만듭니다.'}
+                                                    </span>
+                                                </div>
+
                                                 <div style={{ border: '1px solid #E2E8F0', borderRadius: '6px', overflow: 'hidden', background: '#FFFFFF' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', height: '32px', padding: '0 12px', background: '#EFF6FF', borderBottom: '1px solid #BFDBFE' }}>
-                                                    <div style={{ width: '64px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>추가</span></div>
-                                                    <div style={{ width: '150px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>그룹 라벨</span></div>
+                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>추가</span></div>
+                                                    <div style={{ width: '120px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>단계</span></div>
+                                                    <div style={{ width: '190px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>그룹 라벨</span></div>
                                                     <div style={{ width: '180px', paddingLeft: '10px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>값</span></div>
+                                                    <div style={{ width: '130px', paddingLeft: '10px' }} title="그룹 안에서 맨 아래에 고정할 코드"><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>하단 고정 코드</span></div>
                                                     <div style={{ flex: 1, paddingLeft: '10px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>미리보기</span></div>
                                                     <div style={{ width: '64px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>삭제</span></div>
                                                 </div>
@@ -1145,26 +1229,57 @@ const AnalysisSettingTab = ({
                                                     const colorObj = GROUP_COLORS[groupIdx % GROUP_COLORS.length];
                                                     const displayStr = group.values || '';
 
+                                                    const isSub = Number(group.tier) === 2;
+
                                                     return (
-                                                        <div key={groupIdx} style={{ display: 'flex', alignItems: 'center', minHeight: '40px', padding: '6px 12px', borderBottom: '1px solid #F1F5F9', boxSizing: 'border-box' }}>
-                                                            <div style={{ width: '64px', display: 'flex', justifyContent: 'center' }}>
+                                                        <div key={groupIdx} style={{
+                                                            display: 'flex', alignItems: 'center', minHeight: '40px', boxSizing: 'border-box',
+                                                            ...(isSub
+                                                                ? { margin: '0 0 0 28px', padding: '6px 12px 6px 4px', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }
+                                                                : { padding: '6px 12px', borderBottom: '1px solid #F1F5F9', borderTop: groupIdx > 0 ? '1px solid #E2E8F0' : 'none', background: '#FFFFFF' })
+                                                        }}>
+                                                            {isSub && <span style={{ color: '#93C5FD', fontSize: '14px', fontWeight: 700, width: '8px', flexShrink: 0 }}>└</span>}
+                                                            <div style={{ width: '48px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                                                 <button
                                                                     onClick={() => handleAddGroupRow(item.id, groupIdx)}
                                                                     title="아래에 그룹 추가"
-                                                                    style={{ border: 'none', background: 'transparent', color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                                                    style={{ border: 'none', background: 'transparent', color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
                                                                     onMouseEnter={e => e.currentTarget.style.color = '#1D4ED8'}
                                                                     onMouseLeave={e => e.currentTarget.style.color = '#2563EB'}
                                                                 >
                                                                     <Plus size={16} />
                                                                 </button>
                                                             </div>
-                                                            <div style={{ width: '150px' }}>
+                                                            <div style={{ width: '120px', paddingRight: '10px', boxSizing: 'border-box', position: 'relative' }}>
+                                                                <DropDownList
+                                                                    data={groupIdx === 0 ? TIER_OPTIONS.slice(0, 1) : TIER_OPTIONS}
+                                                                    textField="text"
+                                                                    dataItemKey="value"
+                                                                    value={TIER_OPTIONS.find(o => o.value === (isSub ? 2 : 1))}
+                                                                    onChange={(e) => handleUpdateGroupRow(item.id, groupIdx, 'tier', groupIdx === 0 ? 1 : (e.value?.value || 1))}
+                                                                    disabled={groupIdx === 0}
+                                                                    title={groupIdx === 0 ? '첫 번째 행은 대분류만 가능합니다' : undefined}
+                                                                    className={isSub ? 'dp-tier-dropdown dp-tier-overlay dp-tier-sub' : 'dp-tier-dropdown dp-tier-overlay'}
+                                                                    popupSettings={{ popupClass: 'dp-tier-dropdown-popup' }}
+                                                                    style={{ width: '100%', opacity: 1 }}
+                                                                />
+                                                                {/* 글씨는 화살표 영역을 뺀 나머지 공간의 가운데 (첫 행은 화살표 없음 → 박스 전체 가운데) */}
+                                                                <span style={{ position: 'absolute', left: 0, right: groupIdx === 0 ? '10px' : '32px', top: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', fontSize: isSub ? '12px' : '13px', fontWeight: isSub ? 500 : 600, color: isSub ? '#475569' : '#1E40AF' }}>
+                                                                    {isSub ? '중분류' : '대분류'}
+                                                                </span>
+                                                                {groupIdx !== 0 && (
+                                                                    <span style={{ position: 'absolute', right: '11px', top: '3px', bottom: '3px', width: '22px', borderLeft: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                                                                        <ChevronDown size={14} color={isSub ? '#94A3B8' : '#3B82F6'} />
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div style={{ width: '190px', display: 'flex', alignItems: 'center', boxSizing: 'border-box' }}>
                                                                 <input
                                                                     type="text"
                                                                     value={group.label}
                                                                     onChange={(e) => handleUpdateGroupRow(item.id, groupIdx, 'label', e.target.value)}
-                                                                    style={{ width: '135px', padding: '4px 8px', border: '1px solid #CBD5E1', borderRadius: '4px', fontSize: '13px', outline: 'none' }}
-                                                                    placeholder="예: 브랜드 A"
+                                                                    style={{ width: '100%', minWidth: 0, padding: '4px 8px', border: '1px solid #CBD5E1', borderRadius: '4px', fontSize: '13px', fontWeight: isSub ? 400 : 600, outline: 'none', boxSizing: 'border-box' }}
+                                                                    placeholder={isSub ? '예: 휴대폰' : '예: 브랜드 A'}
                                                                 />
                                                             </div>
 
@@ -1183,12 +1298,37 @@ const AnalysisSettingTab = ({
                                                                 />
                                                             </div>
 
+                                                            <div style={{ width: '130px', paddingLeft: '10px' }}>
+                                                                <input
+                                                                    type="text"
+                                                                    value={group.bottom_values || ''}
+                                                                    onChange={(e) => handleUpdateGroupRow(item.id, groupIdx, 'bottom_values', e.target.value)}
+                                                                    onBlur={(e) => {
+                                                                        let val = e.target.value.trim();
+                                                                        val = val.replace(/,+/g, ',').replace(/^,|,$/g, '');
+                                                                        handleUpdateGroupRow(item.id, groupIdx, 'bottom_values', val);
+                                                                    }}
+                                                                    style={{ width: '100%', padding: '4px 8px', border: '1px solid #CBD5E1', borderRadius: '4px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                                                                    placeholder="예: 98, 99"
+                                                                    title="그룹 안 상세 코드 중 맨 아래에 고정할 코드 (기타 · 모름 등)"
+                                                                />
+                                                            </div>
+
                                                             <div style={{ flex: 1, paddingLeft: '10px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                                                {tokenizeGroupValues(group.values).map((tok, tIdx) => (
-                                                                    <span key={tIdx} style={{ padding: '2px 10px', borderRadius: '999px', border: `1px solid ${colorObj.border}`, background: colorObj.bg, color: colorObj.text, fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                                                        {tok}
-                                                                    </span>
-                                                                ))}
+                                                                {(() => {
+                                                                    const valTokens = tokenizeGroupValues(group.values);
+                                                                    const bottomTokens = tokenizeGroupValues(group.bottom_values || '');
+                                                                    const extra = bottomTokens.filter(b => !valTokens.includes(b));
+                                                                    return [...valTokens, ...extra].map((tok, tIdx) => {
+                                                                        const pinned = bottomTokens.includes(tok);
+                                                                        return (
+                                                                            <span key={tIdx} title={pinned ? '하단 고정 코드' : undefined} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '2px 10px', borderRadius: '999px', border: `1px solid ${pinned ? '#FDBA74' : colorObj.border}`, background: pinned ? '#FFF7ED' : colorObj.bg, color: pinned ? '#C2410C' : colorObj.text, fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                                                                {pinned && <Pin size={11} style={{ transform: 'rotate(45deg)' }} />}
+                                                                                {tok}
+                                                                            </span>
+                                                                        );
+                                                                    });
+                                                                })()}
                                                             </div>
 
                                                             <div style={{ width: '64px', display: 'flex', justifyContent: 'center' }}>
@@ -1210,11 +1350,21 @@ const AnalysisSettingTab = ({
                                                 </div>
 
                                                 <div style={{ paddingTop: '4px' }}>
-                                                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>
                                                         <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>전체 값</span>
                                                         <span style={{ fontSize: '12px', color: '#94A3B8', marginLeft: '6px' }}>{totalChips.length}개</span>
+                                                        {totalChips.length > 20 && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setExpandedTotals(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                                                                style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '2px', border: 'none', background: 'transparent', color: '#2563EB', fontSize: '12px', fontWeight: 600, cursor: 'pointer', padding: '2px 4px' }}
+                                                            >
+                                                                {expandedTotals[item.id] ? '접기' : '전체보기'}
+                                                                {expandedTotals[item.id] ? <ChevronDown size={13} style={{ transform: 'rotate(180deg)' }} /> : <ChevronDown size={13} />}
+                                                            </button>
+                                                        )}
                                                     </div>
-                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', ...(totalChips.length > 20 && !expandedTotals[item.id] ? { maxHeight: '52px', overflow: 'hidden' } : {}) }}>
                                                         {(item.groups || []).flatMap((g, gIdx) => {
                                                             const c = GROUP_COLORS[gIdx % GROUP_COLORS.length];
                                                             return tokenizeGroupValues(g.values).map((tok, tIdx) => (
@@ -1424,6 +1574,15 @@ const AnalysisSettingTab = ({
 
                 </div>
             </div>
+
+            <AiAutoGroupModal
+                isOpen={aiGroupOpen}
+                onClose={() => setAiGroupOpen(false)}
+                onCreateNew={handleAiCreatePreset}
+                onOverwrite={handleAiOverwritePreset}
+                overwriteTargetName={groupData.find(g => g.id === expandedGroupId)?.name || ''}
+                defaultPresetName="새 그룹 설정"
+            />
         </div>
     );
 };

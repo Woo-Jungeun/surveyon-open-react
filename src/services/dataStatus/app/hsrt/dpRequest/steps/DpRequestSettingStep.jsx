@@ -814,15 +814,19 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     nextGroupData = actualTableDetail.group_presets.map(item => {
                         let groups = [];
                         if (Array.isArray(item.groups)) {
-                            groups = item.groups.map(g => ({
+                            groups = item.groups.map((g, gIdx) => ({
+                                id: g.id || `g_${gIdx}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
                                 label: g.label || '',
-                                values: g.values_text ? String(g.values_text) : (Array.isArray(g.values) ? g.values.join(',') : '')
+                                values: g.values_text ? String(g.values_text) : (Array.isArray(g.values) ? g.values.join(',') : ''),
+                                bottom_values: g.bottom_values_text ? String(g.bottom_values_text) : (Array.isArray(g.bottom_values) ? g.bottom_values.join(',') : ''),
+                                tier: Number(g.tier) === 2 ? 2 : 1
                             }));
                         }
                         return {
                             id: item.id,
                             name: item.name || '',
-                            stt_position: item.stt_position || 'bottom_all',
+                            stt_position: item.stt_position || 'before_first',
+                            generate_group_crosstab: !!item.generate_group_crosstab,
                             groups: groups
                         };
                     });
@@ -1102,13 +1106,16 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                         if (JSON.stringify(aCombos[i].values) !== JSON.stringify(bCombos[i].values)) return false;
                     }
                 } else if (type === 'group') {
-                    if ((a.stt_position || 'bottom_all') !== (b.stt_position || 'bottom_all')) return false;
+                    if ((a.stt_position || 'before_first') !== (b.stt_position || 'before_first')) return false;
+                    if (!!a.generate_group_crosstab !== !!b.generate_group_crosstab) return false;
                     const aGroups = a.groups || [];
                     const bGroups = b.groups || [];
                     if (aGroups.length !== bGroups.length) return false;
                     for (let i = 0; i < aGroups.length; i++) {
                         if (aGroups[i].label !== bGroups[i].label) return false;
                         if (String(aGroups[i].values) !== String(bGroups[i].values)) return false;
+                        if (String(aGroups[i].bottom_values || '') !== String(bGroups[i].bottom_values || '')) return false;
+                        if ((Number(aGroups[i].tier) || 1) !== (Number(bGroups[i].tier) || 1)) return false;
                     }
                 }
                 return true;
@@ -1210,12 +1217,12 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 };
             });
 
-            // 그룹 값 파싱: "1 to 100", "1,2,3,5", "1 to 100, 999"
+            // 그룹 값 파싱: "1 to 100", "1~5", "1,2,3,5", "1 to 100, 999"
             const parseGroupValues = (str) => {
                 if (!str) return [];
                 const out = [];
                 String(str).split(',').map(s => s.trim()).filter(Boolean).forEach(tok => {
-                    const m = tok.match(/^(-?\d+(?:\.\d+)?)\s*to\s*(-?\d+(?:\.\d+)?)$/i);
+                    const m = tok.match(/^(-?\d+(?:\.\d+)?)\s*(?:to|~)\s*(-?\d+(?:\.\d+)?)$/i);
                     if (m) {
                         let a = Number(m[1]), b = Number(m[2]);
                         if (a > b) [a, b] = [b, a];
@@ -1234,15 +1241,30 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 .join(', ');
 
             const groupDataPayload = groupData.map(item => {
+                // 중분류은 바로 위 대분류 아래로
+                let lastTier1Id = null;
+                const groups = (item.groups || []).map((g, gIdx) => {
+                    const id = g.id || `g_${gIdx}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+                    const tier = Number(g.tier) === 2 && lastTier1Id ? 2 : 1;
+                    if (tier === 1) lastTier1Id = id;
+                    return {
+                        id,
+                        label: g.label || '',
+                        values: parseGroupValues(g.values),
+                        values_text: normalizeValuesText(g.values),
+                        bottom_values: parseGroupValues(g.bottom_values),
+                        bottom_values_text: normalizeValuesText(g.bottom_values),
+                        tier,
+                        parent_group_id: tier === 2 ? lastTier1Id : null
+                    };
+                });
                 return {
                     id: item.id || `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)} `,
                     name: item.name,
-                    stt_position: item.stt_position || 'bottom_all',
-                    groups: (item.groups || []).map(g => ({
-                        label: g.label || '',
-                        values: parseGroupValues(g.values),
-                        values_text: normalizeValuesText(g.values)
-                    }))
+                    stt_position: item.stt_position || 'before_first',
+                    has_sub_group: groups.some(g => g.tier === 2),
+                    generate_group_crosstab: !!item.generate_group_crosstab,
+                    groups
                 };
             });
 

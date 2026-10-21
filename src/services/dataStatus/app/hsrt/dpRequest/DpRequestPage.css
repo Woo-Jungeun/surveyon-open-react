@@ -2019,3 +2019,61 @@
     stroke: #ef4444 !important;
     color: #ef4444 !important;
 }
+/* 그룹 묶기 · AI 자동 그룹 — 단계(그룹 대/중) 켄도 드롭다운 (파란 계열) */
+.dp-tier-dropdown.k-dropdownlist, .dp-tier-dropdown.k-picker { height: 28px !important; min-height: 28px !important; border: 1px solid #bfdbfe !important; border-radius: 4px !important; background: #eff6ff !important; box-shadow: none !important; }
+.dp-tier-dropdown .k-input-inner, .dp-tier-dropdown .k-input-value-text { font-size: 12px !important; font-weight: 600 !important; color: #1d4ed8 !important; padding: 0 6px !important; }
+.dp-tier-dropdown .k-input-button { background: transparent !important; border: none !important; color: #3b82f6 !important; width: 22px !important; }
+.dp-tier-dropdown:hover { border-color: #93c5fd !important; background: #dbeafe !important; }
+.dp-tier-dropdown.k-focus, .dp-tier-dropdown:focus-within { border-color: #3b82f6 !important; box-shadow: 0 0 0 2px rgba(59,130,246,.18) !important; outline: none !important; }
+.k-animation-container:has(.dp-tier-dropdown-popup) { z-index: 100010 !important; }
+.dp-tier-dropdown-popup { border: 1px solid #bfdbfe !important; border-radius: 4px !important; box-shadow: 0 4px 12px rgba(37,99,235,.12) !important; padding: 2px 0 !important; }
+.dp-tier-dropdown-popup .k-list-item { padding: 5px 10px !important; font-size: 12px !important; color: #1e293b !important; }
+.dp-tier-dropdown-popup .k-list-item:hover, .dp-tier-dropdown-popup .k-list-item.k-hover, .dp-tier-dropdown-popup .k-list-item.k-focus { background: #eff6ff !important; color: #2563eb !important; box-shadow: none !important; }
+.dp-tier-dropdown-popup .k-list-item.k-selected { background: #dbeafe !important; color: #1d4ed8 !important; font-weight: 600 !important; }
+/* 단계 드롭다운 정리 — 넓이 확보 · 깔끔한 선택 표시 (위 규칙 덮어씀) */
+.dp-tier-dropdown.k-dropdownlist, .dp-tier-dropdown.k-picker { height: 28px !important; min-height: 28px !important; border: 1px solid #cbd5e1 !important; border-radius: 6px !important; background: #ffffff !important; }
+.dp-tier-dropdown .k-input-inner { flex: 1 1 auto !important; min-width: 0 !important; padding: 0 0 0 8px !important; justify-content: flex-start !important; text-align: left !important; }
+.dp-tier-dropdown .k-input-value-text { font-size: 12px !important; font-weight: 600 !important; color: #1e40af !important; overflow: visible !important; text-overflow: clip !important; white-space: nowrap !important; }
+.dp-tier-dropdown .k-input-button { flex: 0 0 20px !important; width: 20px !important; padding: 0 !important; color: #64748b !important; }
+.dp-tier-dropdown:hover { border-color: #93c5fd !important; background: #f8fbff !important; }
+.dp-tier-dropdown.k-focus, .dp-tier-dropdown:focus-within { border-color: #3b82f6 !important; background: #ffffff !important; box-shadow: 0 0 0 3px rgba(59,130,246,.12) !important; }
+.dp-tier-dropdown-popup { border: 1px solid #e2e8f0 !important; border-radius: 8px !important; box-shadow: 0 8px 20px rgba(15,23,42,.10) !important; padding: 4px !important; margin-top: 2px !important; }
+.dp-tier-dropdown-popup .k-list-ul { display: flex; flex-direction: column; gap: 2px; }
+.dp-tier-dropdown-popup .k-list-item { padding: 6px 10px !important; border-radius: 5px !important; font-size: 12px !important; font-weight: 500 !important; color: #334155 !important; background: transparent !important; box-shadow: none !important; }
+.dp-tier-dropdown-popup .k-list-item:hover, .dp-tier-dropdown-popup .k-list-item.k-hover { background: #f1f5f9 !important; color: #0f172a !important; }
+.dp-tier-dropdown-popup .k-list-item.k-focus:not(.k-selected) { background: transparent !important; }
+.dp-tier-dropdown-popup .k-list-item.k-selected { background: #eff6ff !important; color: #1d4ed8 !important; font-weight: 700 !important; }
+
+/* 단계 드롭다운 — 글씨 가운데 정렬, 대분류 13px / 중분류 12px */
+.dp-tier-dropdown .k-input-button { display: none !important; }
+.dp-tier-dropdown .k-input-inner { justify-content: center !important; text-align: center !important; padding: 0 6px !important; }
+.dp-tier-dropdown .k-input-value-text { font-size: 13px !important; width: 100%; text-align: center !important; }
+.dp-tier-dropdown.dp-tier-sub .k-input-value-text { font-size: 12px !important; font-weight: 500 !important; color: #475569 !important; }
+
+/* 단계 드롭다운 — CSS 화살표 표시 (글씨는 가운데 유지) */
+.dp-tier-dropdown .k-input-button { display: inline-flex !important; align-items: center; justify-content: center; flex: 0 0 20px !important; width: 20px !important; padding: 0 !important; background: transparent !important; border: none !important; }
+.dp-tier-dropdown .k-input-button > * { display: none !important; }
+.dp-tier-dropdown .k-input-button::after { content: ''; width: 6px; height: 6px; border-right: 1.5px solid #3b82f6; border-bottom: 1.5px solid #3b82f6; transform: translateY(-2px) rotate(45deg); }
+.dp-tier-dropdown.dp-tier-sub .k-input-button::after { border-color: #94a3b8; }
+.dp-tier-dropdown .k-input-inner { padding: 0 0 0 20px !important; }
+
+/* 화살표는 JSX ChevronDown 으로 표시 — 기본 버튼 숨김, 글씨 가운데 */
+.dp-tier-dropdown .k-input-button { display: none !important; }
+.dp-tier-dropdown .k-input-inner { padding: 0 18px !important; }
+
+/* 표설정 그룹 표: 단계 글씨는 JSX 오버레이로 표시 */
+.dp-tier-dropdown.dp-tier-overlay .k-input-value-text { color: transparent !important; }
+
+/* 첫 행(대분류 고정) — 비활성이어도 흐리게 보이지 않게 */
+.dp-tier-dropdown.k-disabled { opacity: 1 !important; filter: none !important; background: #f8fafc !important; cursor: default !important; }
+
+/* AI 자동 그룹 — 모델 선택 드롭다운 (파란 계열, 화살표는 JSX) */
+.dp-model-dropdown.k-dropdownlist, .dp-model-dropdown.k-picker { height: 32px !important; border: 1px solid #bfdbfe !important; border-radius: 6px !important; background: #ffffff !important; box-shadow: none !important; }
+.dp-model-dropdown .k-input-inner { padding: 0 28px 0 10px !important; }
+.dp-model-dropdown .k-input-value-text { font-size: 12.5px !important; font-weight: 600 !important; color: #1d4ed8 !important; }
+.dp-model-dropdown .k-input-button { display: none !important; }
+.dp-model-dropdown:hover { border-color: #93c5fd !important; background: #f8fbff !important; }
+.dp-model-dropdown.k-focus, .dp-model-dropdown:focus-within { border-color: #3b82f6 !important; box-shadow: 0 0 0 3px rgba(59,130,246,.12) !important; }
+
+/* AI 자동 그룹 — 입력 예시(placeholder) 회색 */
+.dp-ai-group-input::placeholder { color: #94a3b8 !important; opacity: 1 !important; }

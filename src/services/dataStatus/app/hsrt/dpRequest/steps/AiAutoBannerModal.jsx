@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useContext } from 'react';
 import { useSelector } from 'react-redux';
+import { modalContext } from '@/components/common/Modal.jsx';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import * as XLSX from 'xlsx';
 import { X, Sparkles, Upload, RotateCw, Plus, Trash2, FileText } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 
 const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanner, currentBannerLabel, defaultNewBannerName }) => {
+    const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
     const user = auth?.user?.userId || '';
     const { getAiModels, autoGenerateBannerAsync, getBannerJobStatus, recalculateBannerCounts } = DpRequestPageApi();
@@ -125,7 +127,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                     setUserInput(tsvText);
                 } catch (err) {
                     console.error("Excel parse error:", err);
-                    alert("엑셀 파일을 읽는 중 오류가 발생했습니다.");
+                    modal.showAlert('알림', "엑셀 파일을 읽는 중 오류가 발생했습니다.");
                 } finally {
                     if (fileInputRef.current) fileInputRef.current.value = '';
                 }
@@ -160,7 +162,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
     // AI 자동분석 시작 (비동기 처리 & 폴링)
     const handleStartAnalysis = async () => {
         if (!userInput.trim()) {
-            alert("배너 정의 내용(텍스트 또는 파일)을 입력해주세요.");
+            modal.showAlert('알림', "배너 정의 내용(텍스트 또는 파일)을 입력해주세요.");
             return;
         }
 
@@ -222,7 +224,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                             if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
                             if (timerRef.current) clearInterval(timerRef.current);
                             setIsAnalyzing(false);
-                            alert(`AI 분석 실패: ${jobData.errorMessage || '오류가 발생했습니다.'}`);
+                            modal.showAlert('알림', `AI 분석 실패: ${jobData.errorMessage || '오류가 발생했습니다.'}`);
                         }
                     }
                 } catch (err) {
@@ -235,7 +237,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
             if (timerRef.current) clearInterval(timerRef.current);
             if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
             setIsAnalyzing(false);
-            alert("AI 분석 시작 요청 중 오류가 발생했습니다.");
+            modal.showAlert('알림', "AI 분석 시작 요청 중 오류가 발생했습니다.");
         }
     };
 
@@ -268,7 +270,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
             }
         } catch (err) {
             console.error("Recalculate error:", err);
-            alert("N수 재계산 중 오류가 발생했습니다.");
+            modal.showAlert('알림', "N수 재계산 중 오류가 발생했습니다.");
         } finally {
             setIsRecalculating(false);
         }
@@ -324,7 +326,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
     const handleApplyCurrent = () => {
         const selectedItems = items.filter(i => i.selected);
         if (selectedItems.length === 0) {
-            alert("등록할 배너 항목을 선택해주세요.");
+            modal.showAlert('알림', "등록할 배너 항목을 선택해주세요.");
             return;
         }
         onApplyToCurrent(selectedItems);
@@ -333,7 +335,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
     const handleOpenCreateNewModal = () => {
         const selectedItems = items.filter(i => i.selected);
         if (selectedItems.length === 0) {
-            alert("등록할 배너 항목을 선택해주세요.");
+            modal.showAlert('알림', "등록할 배너 항목을 선택해주세요.");
             return;
         }
         setNewBannerNameInput(defaultNewBannerName || 'banner_001');
@@ -343,7 +345,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
     const handleConfirmCreateNew = () => {
         const selectedItems = items.filter(i => i.selected);
         if (selectedItems.length === 0) {
-            alert("등록할 배너 항목을 선택해주세요.");
+            modal.showAlert('알림', "등록할 배너 항목을 선택해주세요.");
             return;
         }
         onCreateNewBanner(selectedItems, newBannerNameInput);
@@ -465,6 +467,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                             style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}
                         >
                             <textarea
+                                className="dp-ai-group-input"
                                 wrap="off"
                                 value={userInput}
                                 onChange={(e) => setUserInput(e.target.value)}
@@ -510,17 +513,17 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                                     borderRadius: '6px',
                                     background: isAnalyzing
                                         ? '#94a3b8'
-                                        : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                                    color: '#ffffff',
+                                        : (!userInput.trim() ? '#e2e8f0' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'),
+                                    color: !isAnalyzing && !userInput.trim() ? '#94a3b8' : '#ffffff',
                                     border: 'none',
                                     fontSize: '13px',
                                     fontWeight: 700,
-                                    cursor: isAnalyzing || !userInput.trim() ? 'not-allowed' : 'pointer',
+                                    cursor: isAnalyzing ? 'wait' : (!userInput.trim() ? 'default' : 'pointer'),
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     gap: '6px',
-                                    boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)',
+                                    boxShadow: !isAnalyzing && userInput.trim() ? '0 2px 4px rgba(37, 99, 235, 0.25)' : 'none',
                                     transition: 'all 0.15s'
                                 }}
                             >
@@ -740,8 +743,8 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                             disabled={selectedCount === 0}
                             style={{
                                 padding: '8px 16px', fontSize: '13px', fontWeight: 700,
-                                color: '#2563eb', backgroundColor: '#eff6ff',
-                                border: '1px solid #93c5fd', borderRadius: '6px', cursor: selectedCount === 0 ? 'not-allowed' : 'pointer'
+                                color: selectedCount === 0 ? '#94a3b8' : '#2563eb', backgroundColor: selectedCount === 0 ? '#f1f5f9' : '#eff6ff',
+                                border: `1px solid ${selectedCount === 0 ? '#e2e8f0' : '#93c5fd'}`, borderRadius: '6px', cursor: selectedCount === 0 ? 'default' : 'pointer'
                             }}
                         >
                             현재 배너에 추가
@@ -751,9 +754,9 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                             disabled={selectedCount === 0}
                             style={{
                                 padding: '8px 18px', fontSize: '13px', fontWeight: 700,
-                                color: '#ffffff', backgroundColor: '#2563eb',
-                                border: 'none', borderRadius: '6px', cursor: selectedCount === 0 ? 'not-allowed' : 'pointer',
-                                boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)'
+                                color: selectedCount === 0 ? '#94a3b8' : '#ffffff', backgroundColor: selectedCount === 0 ? '#e2e8f0' : '#2563eb',
+                                border: 'none', borderRadius: '6px', cursor: selectedCount === 0 ? 'default' : 'pointer',
+                                boxShadow: selectedCount === 0 ? 'none' : '0 2px 4px rgba(37, 99, 235, 0.25)'
                             }}
                         >
                             새 배너로 생성
