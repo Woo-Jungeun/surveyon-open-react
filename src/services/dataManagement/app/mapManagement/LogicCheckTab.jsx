@@ -1788,7 +1788,7 @@ const LogicCheckTab = ({
                             </div>
                         )}
                     </span>
-                    <span className="lc-tool-divider" />
+                    {isJudged && <span className="lc-tool-divider" />}
                     <button
                         id="lc-varlist-btn"
                         type="button"
