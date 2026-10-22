@@ -245,10 +245,10 @@ function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCanc
 
                 <div className="lc-dialog-body">
                     <div className={`lc-logic-now${!current || !item.hasLogic || item.status === 'noResponse' ? ''
-                            : item._unreadable ? ' tone-warn'
-                                : item.missing > 0 ? ' tone-error'
-                                    : item.unexpected > 0 ? ' tone-warn'
-                                        : ' tone-ok'}`}>
+                        : item._unreadable ? ' tone-warn'
+                            : item.missing > 0 ? ' tone-error'
+                                : item.unexpected > 0 ? ' tone-warn'
+                                    : ' tone-ok'}`}>
                         <div className="lc-logic-now-row">
                             <span className="lc-logic-now-label">상태</span>
                             {!current || !item.hasLogic ? (
@@ -1531,6 +1531,12 @@ const LogicCheckTab = ({
             </div>
         );
 
+        // AI 오픈코딩 문항: AI 코드 없는 응답 수
+        const allUncoded = Number(dist.allUncoded || 0);
+        const matchedUncoded = Number(dist.matchedUncoded || 0);
+        const uncodedOut = distKind === 'unexpected' ? matchedUncoded : 0;
+        const uncodedIn = allUncoded - uncodedOut;
+
         return (
             <div className={`lc-dist-wrap${isValues ? ' full' : ''}`}>
                 <div className="lc-dist-title">
@@ -1607,6 +1613,24 @@ const LogicCheckTab = ({
                                     <td className="num">{fmt(sumIn)}</td>
                                     <td className="num" style={{ color: sumOut ? C.orange : undefined }}>{fmt(sumOut)}</td>
                                     <td className="num">{fmt(sumIn + sumOut)}</td>
+                                </tr>
+                            )}
+                            {allUncoded > 0 && (
+                                <tr className="uncoded">
+                                    <td />
+                                    <td title="글은 있으나 아직 AI 코드가 부여되지 않은 응답자 수입니다">AI 코드 없는 응답</td>
+                                    <td />
+                                    {isValues ? (
+                                        <td className="num">{fmt(allUncoded)}</td>
+                                    ) : (
+                                        <>
+                                            <td className="num">{fmt(uncodedIn)}</td>
+                                            <td className="num" style={{ color: uncodedOut > 0 ? C.orange : undefined }}>
+                                                {fmt(uncodedOut)}
+                                            </td>
+                                            <td className="num">{fmt(allUncoded)}</td>
+                                        </>
+                                    )}
                                 </tr>
                             )}
                             <tr className="blank">

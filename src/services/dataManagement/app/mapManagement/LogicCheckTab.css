@@ -1732,6 +1732,7 @@ button.lc-result-restore {
 .lc-dist-table td.code { font-family: 'Menlo', 'Consolas', monospace; font-size: 12px; color: var(--dm-text-sub); }
 .lc-dist-table tr.nolabel td { color: #e11d48; }
 .lc-dist-table tr.sum td { font-weight: 700; border-top: 1px solid var(--dm-border); background: #f8fafc; }
+.lc-dist-table tr.uncoded td { color: var(--dm-text-sub); }
 .lc-dist-table tr.blank td { color: var(--dm-text-sub); }
 .lc-dist-num-btn { text-decoration: underline dotted; font-weight: 700; }
 .lc-th-sub { font-size: 10.5px; font-weight: 500; color: #94a3b8; margin-left: 2px; }
