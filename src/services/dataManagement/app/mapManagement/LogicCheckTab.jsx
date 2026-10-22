@@ -1952,17 +1952,6 @@ const LogicCheckTab = ({
             ) : (
                 /* ── 판정 완료 화면 ── */
                 <div className="lc-judge-body">
-                    {!isListOpen && (
-                        <button
-                            type="button"
-                            className="lc-edge-reopen-btn"
-                            onClick={() => setIsListOpen(true)}
-                            title="문항 목록 열기"
-                        >
-                            <ChevronRight size={15} />
-                            <span>문항 목록</span>
-                        </button>
-                    )}
                     {/* ── 왼쪽 목록 ── */}
                     <div className={`lc-left${isListOpen ? '' : ' collapsed'}`}>
                         {/* 거르개 */}
@@ -2079,13 +2068,12 @@ const LogicCheckTab = ({
                                 {!isListOpen && (
                                     <button
                                         type="button"
-                                        className="lc-btn-reopen-list"
+                                        className="lc-btn-toggle-list"
                                         style={{ marginTop: 8 }}
                                         onClick={() => setIsListOpen(true)}
-                                        title="문항 목록 열기"
+                                        title="문항 목록 펼치기"
                                     >
-                                        <ChevronRight size={14} />
-                                        <span>문항 목록 열기</span>
+                                        <ChevronRight size={16} />
                                     </button>
                                 )}
                             </div>
@@ -2097,12 +2085,11 @@ const LogicCheckTab = ({
                                         {!isListOpen && (
                                             <button
                                                 type="button"
-                                                className="lc-btn-reopen-list"
+                                                className="lc-btn-toggle-list"
                                                 onClick={() => setIsListOpen(true)}
-                                                title="문항 목록 열기"
+                                                title="문항 목록 펼치기"
                                             >
-                                                <ChevronRight size={14} />
-                                                <span>문항 목록</span>
+                                                <ChevronRight size={16} />
                                             </button>
                                         )}
                                         <span className="lc-detail-varname">{selectedVar.variable || selectedVar.sysName}</span>

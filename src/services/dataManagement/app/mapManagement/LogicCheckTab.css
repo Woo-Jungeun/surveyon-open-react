@@ -2440,75 +2440,30 @@ table.lc-logic-help tbody { display: table; width: 100%; table-layout: fixed; }
     visibility: hidden !important;
 }
 
-.lc-btn-collapse-list {
+/* 닫기 버튼 (목록 툴바 우측) & 열기 버튼 (상세 헤더 좌측): 동일한 30x30px 깔끔한 아이콘 버튼 */
+.lc-btn-collapse-list,
+.lc-btn-toggle-list {
     width: 30px !important;
     height: 30px !important;
-    border: 1px solid #e2e8f0 !important;
-    background: #fff !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
     border-radius: 6px !important;
-    color: #64748b !important;
-    display: flex !important;
+    color: #475569 !important;
+    display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     cursor: pointer !important;
     flex-shrink: 0 !important;
+    padding: 0 !important;
     transition: all 0.15s ease !important;
+    box-sizing: border-box !important;
 }
 
-.lc-btn-collapse-list:hover {
+.lc-btn-collapse-list:hover,
+.lc-btn-toggle-list:hover {
     background: #f1f5f9 !important;
     color: #0f172a !important;
-    border-color: #cbd5e1 !important;
-}
-
-.lc-btn-reopen-list {
-    height: 28px !important;
-    padding: 0 10px !important;
-    font-size: 12px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    font-weight: 600 !important;
-    color: var(--dm-primary, #16a34a) !important;
-    border: 1px solid var(--dm-primary, #16a34a) !important;
-    border-radius: 6px !important;
-    background: #fff !important;
-    cursor: pointer !important;
-    flex-shrink: 0 !important;
-    transition: all 0.15s ease !important;
-}
-
-.lc-btn-reopen-list:hover {
-    background: var(--dm-primary-light, #f0fdf4) !important;
-}
-
-.lc-edge-reopen-btn {
-    position: absolute;
-    left: 0;
-    top: 72px;
-    z-index: 30;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 7px 11px 7px 8px;
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-left: none;
-    border-radius: 0 8px 8px 0;
-    box-shadow: 2px 2px 10px rgba(15, 23, 42, 0.12);
-    color: #334155;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.lc-edge-reopen-btn:hover {
-    background: var(--dm-primary-light, #f0fdf4);
-    color: var(--dm-primary, #16a34a);
-    border-color: var(--dm-primary, #16a34a);
-    padding-left: 10px;
-    box-shadow: 3px 3px 12px rgba(15, 23, 42, 0.16);
+    border-color: #94a3b8 !important;
 }
 
 /* ── 우측 상세: 상단 베이스 카드 & 하단 분포/응답자 표 5:5 수직 센터 라인 완벽 일치 (CSS Grid) ── */
