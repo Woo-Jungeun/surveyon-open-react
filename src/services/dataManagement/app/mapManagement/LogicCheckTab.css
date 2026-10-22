@@ -2132,3 +2132,436 @@ table.lc-logic-help tbody { display: table; width: 100%; table-layout: fixed; }
     background: #fde68a !important;
     border-color: #fcd34d !important;
 }
+
+/* ── 문항 목록 카드 (라벨 중점 및 변수명 소형화) ── */
+.lc-vr-top {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    margin-bottom: 3px !important;
+}
+
+.lc-vr-name {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: var(--dm-text-main) !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+    line-height: 1.35 !important;
+}
+
+.lc-vr-icons {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-shrink: 0 !important;
+}
+
+.lc-vr-icon {
+    font-size: 12px !important;
+    flex-shrink: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+.lc-vr-sub {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-bottom: 5px !important;
+}
+
+.lc-vr-code {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 4px !important;
+    padding: 0 5px !important;
+    line-height: 17px !important;
+    height: 17px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    letter-spacing: 0.2px !important;
+}
+
+.lc-var-row.active .lc-vr-code {
+    background: #fff !important;
+    border-color: #bbf7d0 !important;
+    color: var(--dm-primary) !important;
+}
+
+/* ── 문항 목록 테이블/그리드 스타일 (헤더 및 행 정렬) ── */
+.lc-left {
+    width: 460px !important;
+}
+
+.lc-tbl-head {
+    display: flex !important;
+    align-items: center !important;
+    padding: 7px 12px !important;
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    user-select: none !important;
+    flex-shrink: 0 !important;
+}
+
+.lc-tbl-head .lc-col-missing {
+    color: #b91c1c !important;
+    text-align: right !important;
+    line-height: 1.2 !important;
+    font-size: 10.5px !important;
+    font-weight: 500 !important;
+    width: 52px !important;
+    flex-shrink: 0 !important;
+    padding: 0 3px !important;
+    box-sizing: border-box !important;
+}
+
+.lc-tbl-head .lc-col-unexpected {
+    color: #b45309 !important;
+    text-align: right !important;
+    line-height: 1.2 !important;
+    font-size: 10.5px !important;
+    font-weight: 500 !important;
+    width: 52px !important;
+    flex-shrink: 0 !important;
+    padding: 0 3px !important;
+    box-sizing: border-box !important;
+}
+
+.lc-tbl-row {
+    display: flex !important;
+    align-items: center !important;
+    padding: 8px 12px !important;
+    min-height: 54px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    cursor: pointer !important;
+    transition: background 0.12s ease !important;
+    border-left: 3px solid transparent !important;
+    background: #ffffff !important;
+}
+
+.lc-tbl-row:hover {
+    background: #f8fafc !important;
+}
+
+.lc-tbl-row.active {
+    background: #f0fdf4 !important;
+    border-left-color: var(--dm-primary, #16a34a) !important;
+}
+
+.lc-col-q {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding-right: 8px !important;
+}
+
+.lc-q-info {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 2px !important;
+}
+
+.lc-q-head {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+}
+
+/* 문항 레이블: 두께를 줄여 부담 없이 깔끔한 미디엄(500) 메인 텍스트 */
+.lc-q-title {
+    font-size: 12.5px !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+    line-height: 1.35 !important;
+    padding-right: 4px !important;
+}
+
+.lc-q-sub {
+    display: flex !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+}
+
+/* 변수명: 밑단 및 글자 끝(우측) 잘림 방지 (우측 패딩 8px 및 여유 공간 확보) */
+.lc-q-var {
+    font-size: 11px !important;
+    font-weight: 400 !important;
+    color: #64748b !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    line-height: 1.45 !important;
+    display: inline-block !important;
+    padding: 0 8px 3px 0 !important;
+    box-sizing: border-box !important;
+}
+
+.lc-tbl-row.active .lc-q-title {
+    color: #15803d !important;
+    font-weight: 600 !important;
+}
+
+.lc-tbl-row.active .lc-q-var {
+    color: #16a34a !important;
+    font-weight: 500 !important;
+}
+
+.lc-col-base {
+    width: 90px !important;
+    flex-shrink: 0 !important;
+    padding: 0 4px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    overflow: hidden !important;
+}
+
+.lc-col-base .lc-vr-bar {
+    height: 5px !important;
+    margin-bottom: 0 !important;
+    border-radius: 2px !important;
+    background: #e2e8f0 !important;
+}
+
+.lc-base-txt {
+    font-size: 10px !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
+}
+
+.lc-base-nodata {
+    font-size: 10px !important;
+    color: #94a3b8 !important;
+    white-space: nowrap !important;
+}
+
+.lc-col-missing,
+.lc-col-unexpected {
+    width: 52px !important;
+    flex-shrink: 0 !important;
+    text-align: right !important;
+    font-size: 11px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    padding: 0 3px !important;
+    box-sizing: border-box !important;
+}
+
+.num-zero {
+    color: #cbd5e1 !important;
+    font-size: 10.5px !important;
+    font-weight: 500 !important;
+}
+
+.num-err {
+    color: #dc2626 !important;
+    font-weight: 700 !important;
+    font-size: 11.5px !important;
+}
+
+.num-warn {
+    color: #d97706 !important;
+    font-weight: 700 !important;
+    font-size: 11.5px !important;
+}
+
+.lc-vr-tip-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 4px !important;
+    height: 16px !important;
+    border-radius: 3px !important;
+    background: #fef3c7 !important;
+    border: 1px solid #fde68a !important;
+    color: #b45309 !important;
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px !important;
+    line-height: 16px !important;
+    flex-shrink: 0 !important;
+    cursor: help !important;
+    user-select: none !important;
+    transition: all 0.15s ease !important;
+    align-self: center !important;
+}
+
+.lc-vr-tip-badge:hover {
+    background: #fde68a !important;
+    border-color: #f59e0b !important;
+    color: #78350f !important;
+    transform: scale(1.06) !important;
+}
+
+/* ── 문항 목록 접기 / 펼치기 토글 스타일 ── */
+.lc-left {
+    transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.18s ease !important;
+}
+
+.lc-left.collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    padding: 0 !important;
+    border-right: none !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+}
+
+.lc-btn-collapse-list {
+    width: 30px !important;
+    height: 30px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #fff !important;
+    border-radius: 6px !important;
+    color: #64748b !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    transition: all 0.15s ease !important;
+}
+
+.lc-btn-collapse-list:hover {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+}
+
+.lc-btn-reopen-list {
+    height: 28px !important;
+    padding: 0 10px !important;
+    font-size: 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-weight: 600 !important;
+    color: var(--dm-primary, #16a34a) !important;
+    border: 1px solid var(--dm-primary, #16a34a) !important;
+    border-radius: 6px !important;
+    background: #fff !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    transition: all 0.15s ease !important;
+}
+
+.lc-btn-reopen-list:hover {
+    background: var(--dm-primary-light, #f0fdf4) !important;
+}
+
+.lc-edge-reopen-btn {
+    position: absolute;
+    left: 0;
+    top: 72px;
+    z-index: 30;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 7px 11px 7px 8px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    box-shadow: 2px 2px 10px rgba(15, 23, 42, 0.12);
+    color: #334155;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.lc-edge-reopen-btn:hover {
+    background: var(--dm-primary-light, #f0fdf4);
+    color: var(--dm-primary, #16a34a);
+    border-color: var(--dm-primary, #16a34a);
+    padding-left: 10px;
+    box-shadow: 3px 3px 12px rgba(15, 23, 42, 0.16);
+}
+
+/* ── 우측 상세: 상단 베이스 카드 & 하단 분포/응답자 표 5:5 수직 센터 라인 완벽 일치 (CSS Grid) ── */
+.lc-base-card .lc-basequad {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 12px !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.lc-base-card .lc-bq-group {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.lc-detail-tables {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    min-height: 320px !important;
+    flex: 1 !important;
+}
+
+.lc-detail-tables > .lc-dist-wrap:not(.full),
+.lc-detail-tables > .lc-resp-wrap,
+.lc-detail-tables > .lc-resp-placeholder {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.lc-detail-tables > .lc-dist-wrap.full {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+}
+
+@media (max-width: 860px) {
+    .lc-detail-tables {
+        grid-template-columns: 1fr !important;
+    }
+    .lc-base-card .lc-basequad {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.lc-judge-body {
+    position: relative !important;
+}

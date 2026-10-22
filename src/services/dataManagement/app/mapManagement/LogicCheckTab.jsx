@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import {
     Check, List, MoreHorizontal, RotateCcw, Wand2, PlayCircle, X,
-    RefreshCw, RotateCw, ChevronDown, Edit2, FileDown,
+    RefreshCw, RotateCw, ChevronDown, ChevronLeft, ChevronRight, Edit2, FileDown,
     Lightbulb, Search, Loader2, Copy, Trash2, Info,
 } from 'lucide-react';
 import { modalContext } from '@/components/common/Modal.jsx';
@@ -674,42 +674,70 @@ const VarRow = React.memo(function VarRow({ item, isActive, isUnreadable, checke
     const bUnexpected = (unexpected / total) * 100;
     const bRest = Math.max(0, 100 - bAnswered - bMissing - bUnexpected);
     const noData = item.status == null || !item.hasLogic || isUnreadable || item.status === 'noResponse';
+    const varName = item.variable || item.sysName || '';
+    const label = (item.label || item.title || '').trim();
+    const hasLabel = !!label && label !== varName;
+    const mainTitle = label || varName;
 
     return (
         <div
-            className={`lc-var-row${isActive ? ' active' : ''}${item.status === 'error' ? ` err ${item.missing > 0 ? 'err-missing' : 'err-unexpected'}` : ''}`}
+            className={`lc-tbl-row${isActive ? ' active' : ''}${item.status === 'error' ? ' err' : ''}`}
             onClick={onClick}
-            data-var={item.variable || item.sysName}
-            title={item.label || item.title || ''}
+            data-var={varName}
+            title={label ? `${label} (${varName})` : varName}
         >
-            <div className="lc-vr-top">
-                <span className="lc-vr-name">{item.variable || item.sysName}</span>
-                {(item.hints?.length > 0) && <span className="lc-vr-icon" title="확인 팁 있음"><Lightbulb size={11} /></span>}
-                {isUnreadable && <span className="lc-vr-icon err-icon" title="로직을 해석하지 못했습니다">!</span>}
-                {item._fixed && <span className="lc-vr-icon" title="로직을 고쳐 다시 판정했습니다"><Edit2 size={11} /></span>}
-            </div>
-            <div className="lc-vr-label" title={item.title || item.label || ''}>
-                {item.title || item.label || ''}
-            </div>
-            {noData ? (
-                <div className="lc-vr-nodata">
-                    {isUnreadable ? '로직 해석 불가' : !item.hasLogic ? '로직 없음 · 판정 안 함' : item.status === 'noResponse' ? '응답 없음' : '판정 전'}
+            {/* 1. 문항: 레이블 중점 (상단) + 작은 변수명 (하단) */}
+            {/* 1. 문항: 레이블 중점 (상단) + 작은 변수명 (하단) + 세로 중앙 TIP 뱃지 */}
+            <div className="lc-col-q">
+                <div className="lc-q-info">
+                    <div className="lc-q-head">
+                        <span className="lc-q-title" title={mainTitle}>{mainTitle}</span>
+                        {isUnreadable && <span className="lc-vr-icon err-icon" title="로직을 해석하지 못했습니다">!</span>}
+                        {item._fixed && <span className="lc-vr-icon" title="로직을 고쳐 다시 판정했습니다"><Info size={11} /></span>}
+                    </div>
+                    {hasLabel && (
+                        <div className="lc-q-sub">
+                            <span className="lc-q-var">{varName}</span>
+                        </div>
+                    )}
                 </div>
-            ) : (
-                <>
-                    <div className="lc-vr-bar">
-                        <div style={{ width: `${bAnswered}%`, background: BAR.blue }} />
-                        <div style={{ width: `${bMissing > 0 ? Math.max(bMissing, 1.5) : 0}%`, background: BAR.red }} />
-                        <div style={{ width: `${bUnexpected > 0 ? Math.max(bUnexpected, 1.5) : 0}%`, background: BAR.orange }} />
-                        <div style={{ width: `${bRest}%`, background: C.gray }} />
+                {item.hints?.length > 0 && (
+                    <span className="lc-vr-tip-badge" title={`확인 팁: ${item.hints[0]}`}>
+                        TIP
+                    </span>
+                )}
+            </div>
+
+            {/* 2. 베이스: 막대 + 대상자 10,091 · 100% */}
+            <div className="lc-col-base">
+                {noData ? (
+                    <div className="lc-base-nodata">
+                        {isUnreadable ? '로직 불가' : !item.hasLogic ? '로직 없음' : '응답 없음'}
                     </div>
-                    <div className="lc-vr-nums">
-                        <span className="lc-vr-base">대상자 {fmt(base)} · {base && total ? ((base / total) * 100).toFixed(1) : 0}%</span>
-                        <span className={`lc-vr-num${missing > 0 ? ' red' : ' zero'}`}>{fmt(missing)}</span>
-                        <span className={`lc-vr-num${unexpected > 0 ? ' orange' : ' zero'}`}>{fmt(unexpected)}</span>
-                    </div>
-                </>
-            )}
+                ) : (
+                    <>
+                        <div className="lc-vr-bar">
+                            <div style={{ width: `${bAnswered}%`, background: BAR.blue }} />
+                            <div style={{ width: `${bMissing > 0 ? Math.max(bMissing, 1.5) : 0}%`, background: BAR.red }} />
+                            <div style={{ width: `${bUnexpected > 0 ? Math.max(bUnexpected, 1.5) : 0}%`, background: BAR.orange }} />
+                            <div style={{ width: `${bRest}%`, background: C.gray }} />
+                        </div>
+                        <div className="lc-base-txt" title={`대상자 ${fmt(base)}명`}>
+                            {fmt(base)} · {base && total ? ((base / total) * 100).toFixed(0) : 0}%
+                        </div>
+                    </>
+                )}
+            </div>
+
+            {/* 3. 대상자 무응답 */}
+            <div className="lc-col-missing">
+                <span className={missing > 0 ? 'num-err' : 'num-zero'}>{fmt(missing)}</span>
+            </div>
+
+            {/* 4. 비대상 응답 */}
+            <div className="lc-col-unexpected">
+                <span className={unexpected > 0 ? 'num-warn' : 'num-zero'}>{fmt(unexpected)}</span>
+            </div>
         </div>
     );
 });
@@ -831,6 +859,7 @@ const LogicCheckTab = ({
     const [selectedVar, setSelectedVar] = useState(cached?.selectedVar || null);   // 선택된 item
     useEffect(() => { setHintsOpen(false); }, [selectedVar?.variable]);
     const [logicEditOpen, setLogicEditOpen] = useState(false);
+    const [isListOpen, setIsListOpen] = useState(true); // 문항 목록 토글 열기/접기
 
     // ── 오른쪽 상세 상태 ──
     const [detail, setDetail] = useState(cached?.detail || null);              // API 응답
@@ -1056,9 +1085,27 @@ const LogicCheckTab = ({
         if (!judgeResult) return [];
         const { items, unreadable } = judgeResult;
 
-        // 언리더블은 별도 플래그
+        // 변수 맵에서 라벨 매핑 보완 (judgeResult에 없는 경우 대비)
+        const varMap = new Map();
+        (variables || []).forEach(v => {
+            const k1 = v.name;
+            const k2 = v.sysName;
+            const lbl = v.label || v.title || '';
+            if (k1 && lbl && !varMap.has(k1)) varMap.set(k1, lbl);
+            if (k2 && lbl && !varMap.has(k2)) varMap.set(k2, lbl);
+        });
+
+        // 언리더블은 별도 플래그 및 라벨 보완
         const unreadableSet = new Set((unreadable || []).map(u => u.variable));
-        const enriched = items.map(it => ({ ...it, _unreadable: unreadableSet.has(it.variable) }));
+        const enriched = items.map(it => {
+            const vKey = it.variable || it.sysName;
+            const fallbackLabel = varMap.get(vKey) || '';
+            return {
+                ...it,
+                label: (it.label || it.title || fallbackLabel).trim(),
+                _unreadable: unreadableSet.has(it.variable),
+            };
+        });
 
         let filtered = enriched;
         if (filter === 'error') {
@@ -1092,7 +1139,7 @@ const LogicCheckTab = ({
         }
 
         return filtered;
-    }, [judgeResult, filter, sortKey, listSearch]);
+    }, [judgeResult, filter, sortKey, listSearch, variables]);
 
     // ─── F. 오른쪽 상세 — 변수 선택 시 API 호출 ───
     const loadDetail = useCallback(async (item, kindOverride) => {
@@ -1905,8 +1952,19 @@ const LogicCheckTab = ({
             ) : (
                 /* ── 판정 완료 화면 ── */
                 <div className="lc-judge-body">
+                    {!isListOpen && (
+                        <button
+                            type="button"
+                            className="lc-edge-reopen-btn"
+                            onClick={() => setIsListOpen(true)}
+                            title="문항 목록 열기"
+                        >
+                            <ChevronRight size={15} />
+                            <span>문항 목록</span>
+                        </button>
+                    )}
                     {/* ── 왼쪽 목록 ── */}
-                    <div className="lc-left">
+                    <div className={`lc-left${isListOpen ? '' : ' collapsed'}`}>
                         {/* 거르개 */}
                         <div className="lc-filters">
                             {FILTERS.map(f => {
@@ -1953,6 +2011,22 @@ const LogicCheckTab = ({
                                 popupSettings={{ width: 160, popupClass: 'lc-sort-popup' }}
                                 title={SORT_OPTIONS.find(o => o.key === sortKey)?.label}
                             />
+                            <button
+                                type="button"
+                                className="lc-btn-collapse-list"
+                                onClick={() => setIsListOpen(false)}
+                                title="문항 목록 접기"
+                            >
+                                <ChevronLeft size={16} />
+                            </button>
+                        </div>
+
+                        {/* 목록 헤더 (테이블형) */}
+                        <div className="lc-tbl-head">
+                            <div className="lc-col-q">문항</div>
+                            <div className="lc-col-base">베이스</div>
+                            <div className="lc-col-missing">대상자<br />무응답</div>
+                            <div className="lc-col-unexpected">비대상<br />응답</div>
                         </div>
 
                         {/* 목록 */}
@@ -2002,12 +2076,35 @@ const LogicCheckTab = ({
                         {!selectedVar ? (
                             <div className="lc-right-empty">
                                 <div>왼쪽 목록에서 문항을 선택하면<br />판정 결과를 자세히 볼 수 있습니다</div>
+                                {!isListOpen && (
+                                    <button
+                                        type="button"
+                                        className="lc-btn-reopen-list"
+                                        style={{ marginTop: 8 }}
+                                        onClick={() => setIsListOpen(true)}
+                                        title="문항 목록 열기"
+                                    >
+                                        <ChevronRight size={14} />
+                                        <span>문항 목록 열기</span>
+                                    </button>
+                                )}
                             </div>
                         ) : (
                             <div className="lc-detail">
                                 {/* ① 머리 */}
                                 <div className="lc-detail-head">
                                     <div className="lc-detail-head-left">
+                                        {!isListOpen && (
+                                            <button
+                                                type="button"
+                                                className="lc-btn-reopen-list"
+                                                onClick={() => setIsListOpen(true)}
+                                                title="문항 목록 열기"
+                                            >
+                                                <ChevronRight size={14} />
+                                                <span>문항 목록</span>
+                                            </button>
+                                        )}
                                         <span className="lc-detail-varname">{selectedVar.variable || selectedVar.sysName}</span>
                                         <span className={`lc-detail-type t-${String(selectedVar.type || '').toLowerCase()}`}>{selectedVar.type || ''}</span>
                                         <span className="lc-detail-title" title={selectedVar.title || selectedVar.label || ''}>
