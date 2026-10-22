@@ -44,7 +44,6 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
     const [validationResult, setValidationResult] = useState(null);
     const [confirmChecks, setConfirmChecks] = useState({});
     const [typeOverrides, setTypeOverrides] = useState({});
-    const [deleteVarChecks, setDeleteVarChecks] = useState({});
     const [labelFromSavChecks, setLabelFromSavChecks] = useState({});
 
     // Collapsible states
@@ -62,7 +61,6 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
         setValidationResult(null);
         setConfirmChecks({});
         setTypeOverrides({});
-        setDeleteVarChecks({});
         setLabelFromSavChecks({});
         setShowRemovedPids(false);
         setShowAutoTypes(false);
@@ -202,18 +200,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
             });
             setTypeOverrides(initTypes);
 
-            // 3. SAV 미존재 변수 삭제 선택 초기화 (기본: false = 남김)
-            const initDeleteVars = {};
-            const missingList = resData.missingInSavList || [];
-            missingList.forEach(item => {
-                const vName = item.variable || item.varName;
-                if (vName) {
-                    initDeleteVars[vName] = false;
-                }
-            });
-            setDeleteVarChecks(initDeleteVars);
-
-            // 4. SAV 글로 바꾸기 선택 초기화 (different 문항만, 기본: false = 해제)
+            // SAV 글로 바꾸기 선택 초기화 (different 문항만, 기본: false = 해제)
             const initLabelFromSav = {};
             const labelChanges = resData.labelChanges || [];
             labelChanges.forEach(item => {
@@ -260,25 +247,6 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
             return;
         }
 
-        const deleteVarList = Object.keys(deleteVarChecks).filter(k => deleteVarChecks[k]);
-
-        // 지우는 변수가 있으면 2차 확인 창
-        if (deleteVarList.length > 0) {
-            const confirmed = await new Promise((resolve) => {
-                modal.showConfirm(
-                    "변수 삭제 경고",
-                    `변수 ${deleteVarList.length}개(${deleteVarList.join(', ')})를 지웁니다.\n되살릴 수 없습니다. 계속할까요?`,
-                    {
-                        btns: [
-                            { title: "취소", click: () => resolve(false) },
-                            { title: "삭제 후 적용", click: () => resolve(true) }
-                        ]
-                    }
-                );
-            });
-            if (!confirmed) return;
-        }
-
         const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum');
         const userId = auth?.user?.userId || '';
 
@@ -297,7 +265,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
             user: userId,
             checkId: resData.checkId,
             confirm: Object.keys(confirmChecks).filter(k => confirmChecks[k]),
-            deleteVariables: deleteVarList,
+            deleteVariables: [],
             types: typesPayload,
             labelsFromSav: Object.keys(labelFromSavChecks).filter(k => labelFromSavChecks[k])
         };
@@ -490,7 +458,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                     fontSize: '12px',
                                     fontWeight: '500',
                                 }}>
-                                    맵유지·응답교체
+                                    맵유지 · 값 붙이기
                                 </span>
                             </button>
                         </div>
@@ -544,7 +512,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                             <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
                                                 <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '500', whiteSpace: 'nowrap' }}>응답자 수</span>
                                                 <span style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', whiteSpace: 'nowrap' }}>
-                                                    {(resData.respondents?.current ?? 0).toLocaleString()}명 → {(resData.respondents?.sav ?? 0).toLocaleString()}명
+                                                    {(resData.respondents?.current ?? 0).toLocaleString()}명 → {((resData.respondents?.current ?? 0) + (resData.respondents?.added ?? 0)).toLocaleString()}명
                                                 </span>
                                             </div>
                                             {(resData.respondents?.removed || 0) > 0 && (
@@ -667,7 +635,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                                             </>
                                                         ) : (
                                                             <>
-                                                                응답 데이터를 <strong style={{ fontWeight: '600', color: '#0f172a', fontSize: 'inherit' }}>SAV 기준으로 전체 교체</strong>합니다 (신규 PID는 추가되고, SAV에 없는 기존 PID는 삭제됩니다)
+                                                                <strong style={{ fontWeight: '600', color: '#0f172a', fontSize: 'inherit' }}>PID 로 응답자를 맞춰 SAV 값을 붙입니다</strong> (신규 PID는 추가되고, SAV에 없는 기존 PID는 그대로 둡니다)
                                                             </>
                                                         )}
                                                     </span>
@@ -681,8 +649,11 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                                         flexShrink: 0,
                                                         marginLeft: '8px'
                                                     }}>
-                                                        {activeTab === 'new' ? '신규 생성' : 'SAV 기준'}
+                                                        {activeTab === 'new' ? '신규 생성' : 'PID 기준'}
                                                     </span>
+                                                </div>
+                                                <div style={{ fontSize: '12px', color: '#d97706', marginTop: '6px', fontWeight: '500' }}>
+                                                    ※ SAV 에 pid 칸(응답자 번호)이 있어야 등록 · 업데이트할 수 있습니다
                                                 </div>
                                             </td>
                                         </tr>
@@ -705,7 +676,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                                             </>
                                                         ) : (
                                                             <>
-                                                                기존 변수 설정은 <strong style={{ fontWeight: '600', color: '#0f172a', fontSize: 'inherit' }}>유지</strong>하고 신규 변수는 <strong style={{ fontWeight: '600', color: '#0f172a', fontSize: 'inherit' }}>추가</strong>합니다 (SAV에 없는 기존 변수는 값 초기화 또는 삭제 선택 가능)
+                                                                기존 변수 설정은 <strong style={{ fontWeight: '600', color: '#0f172a', fontSize: 'inherit' }}>유지</strong>하고 신규 변수는 <strong style={{ fontWeight: '600', color: '#0f172a', fontSize: 'inherit' }}>추가</strong>합니다 (SAV에 없는 기존 변수는 맵과 값 모두 그대로 둡니다)
                                                             </>
                                                         )}
                                                     </span>
@@ -743,7 +714,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                                             </>
                                                         ) : (
                                                             <>
-                                                                기존 응답 데이터가 <strong style={{ fontWeight: '600', color: '#0f172a', fontSize: 'inherit' }}>SAV로 교체</strong>되며, 동일 PID·동일 응답의 <strong style={{ fontWeight: '600', color: '#0f172a', fontSize: 'inherit' }}>AI 오픈코딩 결과는 자동 이관</strong>됩니다
+                                                                SAV에 있는 변수만 <strong style={{ fontWeight: '600', color: '#0f172a', fontSize: 'inherit' }}>SAV 값으로 바뀌고 나머지는 그대로</strong>입니다. AI 오픈코딩 결과도 그대로입니다 (SAV에서 답이 바뀐 문항만 빠짐)
                                                             </>
                                                         )}
                                                     </span>
@@ -1076,89 +1047,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                         </div>
                                     )}
 
-                                    {/* 5. SAV 미존재 변수 (missingInSavList[]) - 목업 11 대응 */}
-                                    {resData.missingInSavList && resData.missingInSavList.length > 0 && (
-                                        <div style={{
-                                            border: '1px solid #fca5a5',
-                                            background: '#fff5f5',
-                                            borderRadius: '8px',
-                                            padding: '10px 12px',
-                                        }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '8px' }}>
-                                                <strong style={{ color: '#991b1b', fontSize: '14px' }}>
-                                                    SAV 파일에 없는 기존 변수 {resData.missingInSavList.length}개
-                                                </strong>
-                                                <span style={{ fontSize: '12px', color: '#dc2626' }}>
-                                                    ※ 기본값은 변수 유지(응답값 초기화)이며, 체크 시 해당 변수가 영구 삭제됩니다
-                                                </span>
-                                            </div>
 
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                {resData.missingInSavList.map((item, mIdx) => {
-                                                    const vName = item.variable || item.varName;
-                                                    const vLabel = item.label || item.varLabel;
-                                                    const isChecked = !!deleteVarChecks[vName];
-                                                    const usedByList = item.usedBy || [];
-                                                    const hasLogic = item.hasLogic || usedByList.length > 0;
-                                                    const hasAiOpen = !!item.hasAiOpen;
-
-                                                    return (
-                                                        <label key={mIdx} style={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'space-between',
-                                                            background: '#ffffff',
-                                                            border: `1px solid ${isChecked ? '#fca5a5' : '#fee2e2'}`,
-                                                            borderRadius: '6px',
-                                                            padding: '8px 8px',
-                                                            fontSize: '13px',
-                                                            cursor: 'pointer'
-                                                        }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-                                                                <div
-                                                                    onClick={(e) => {
-                                                                        e.preventDefault();
-                                                                        setDeleteVarChecks(prev => ({ ...prev, [vName]: !prev[vName] }));
-                                                                    }}
-                                                                    style={{
-                                                                        width: '16px',
-                                                                        height: '16px',
-                                                                        border: `1px solid ${isChecked ? '#dc2626' : '#cbd5e1'}`,
-                                                                        background: isChecked ? '#dc2626' : '#fff',
-                                                                        borderRadius: '3px',
-                                                                        display: 'flex',
-                                                                        alignItems: 'center',
-                                                                        justifyContent: 'center',
-                                                                        flexShrink: 0,
-                                                                        cursor: 'pointer'
-                                                                    }}
-                                                                >
-                                                                    {isChecked && <Check size={12} color="#fff" strokeWidth={3} />}
-                                                                </div>
-                                                                <strong style={{ color: '#1e293b', width: '80px', fontSize: '13px' }}>{vName}</strong>
-                                                                <span style={{ color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '13px' }}>
-                                                                    {vLabel}
-                                                                </span>
-                                                            </div>
-
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                                                                {hasLogic && (
-                                                                    <span style={{ fontSize: '11.5px', background: '#fee2e2', color: '#991b1b', padding: '1px 5px', borderRadius: '3px', fontWeight: '600' }}>
-                                                                        {usedByList.length > 0 ? `연관 로직에서 사용 중 (${usedByList.join(', ')})` : '연관 로직 존재'}
-                                                                    </span>
-                                                                )}
-                                                                {hasAiOpen && (
-                                                                    <span style={{ fontSize: '11.5px', background: '#fee2e2', color: '#991b1b', padding: '1px 5px', borderRadius: '3px', fontWeight: '600' }}>
-                                                                        AI 오픈코딩 데이터 존재
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </label>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
 
                                     {/* 6. 보기 차이 (labelChanges[]) - 목업 11 대응 */}
                                     {resData.labelChanges && resData.labelChanges.length > 0 && (
@@ -1280,7 +1169,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData, onOpenBatchMapEdit }) =
                                 <div style={{ width: '70%', background: '#16a34a', height: '100%', borderRadius: '3px', transition: 'width 0.5s' }}></div>
                             </div>
                             <div style={{ fontSize: '13px', color: '#64748b' }}>
-                                {activeTab === 'new' ? 'SPSS 데이터 DB 적재 중...' : '응답 교체 → 맵 합치기 → SRT이관'}
+                                {activeTab === 'new' ? 'SPSS 데이터 DB 적재 중...' : '응답 값 붙이기 → 맵 합치기 → SRT이관'}
                             </div>
                         </div>
                     )}
