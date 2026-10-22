@@ -5,8 +5,8 @@ import { createPortal } from 'react-dom';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import {
     Check, List, MoreHorizontal, RotateCcw, Wand2, PlayCircle, X,
-    RefreshCw, ChevronDown, Edit2, FileDown,
-    Lightbulb, Search, Loader2, Copy, Trash2,
+    RefreshCw, RotateCw, ChevronDown, Edit2, FileDown,
+    Lightbulb, Search, Loader2, Copy, Trash2, Info,
 } from 'lucide-react';
 import { modalContext } from '@/components/common/Modal.jsx';
 import { loadingSpinnerContext } from '@/components/common/LoadingSpinner.jsx';
@@ -855,10 +855,15 @@ const LogicCheckTab = ({
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef(null);
 
-    // ── 판정 정보·버튼 줄은 맵 관리 탭 줄 오른쪽(#map-tab-extra)에 그린다 ──
+    // ── 탭 줄 바로 옆(#map-tab-action)과 오른쪽(#map-tab-extra) 포털 슬롯 ──
     const [tabBarSlot, setTabBarSlot] = useState(null);
-    useEffect(() => { setTabBarSlot(document.getElementById('map-tab-extra')); }, []);
-    const renderInTabBar = (node) => (tabBarSlot ? createPortal(node, tabBarSlot) : node);
+    const [tabActionSlot, setTabActionSlot] = useState(null);
+    useEffect(() => {
+        setTabBarSlot(document.getElementById('map-tab-extra'));
+        setTabActionSlot(document.getElementById('map-tab-action'));
+    }, []);
+    const renderInTabBar = (node) => (tabBarSlot ? createPortal(node, tabBarSlot) : null);
+    const renderInTabAction = (node) => (tabActionSlot ? createPortal(node, tabActionSlot) : null);
 
     // ─── 로직 보유 현황 (준비 화면용) ───
     const totalCount = variables.length;
@@ -868,6 +873,10 @@ const LogicCheckTab = ({
     );
     const isLogicReady = logicCount > 0;
     const isJudged = !!judgeResult;
+    const fixedCount = useMemo(
+        () => (judgeResult?.items || []).filter(i => i._fixed).length,
+        [judgeResult]
+    );
 
     // ─── ··· 메뉴 외부 클릭 닫기 ───
     useEffect(() => {
@@ -1738,7 +1747,36 @@ const LogicCheckTab = ({
                 />
             )}
 
-            {/* ── 상단 서브헤더 ── */}
+            {/* ── 탭 영역 바로 옆 주요 액션 (로직 다시 판정 및 노란색 뱃지) ── */}
+            {renderInTabAction(
+                isJudged && (
+                    <div className="lc-tab-actions">
+                        <button
+                            id="lc-rejudge-btn"
+                            type="button"
+                            className={`lc-btn-rejudge${isStale ? ' stale' : ''}`}
+                            onClick={handleJudge}
+                            disabled={isProgressing}
+                            title={isStale ? '맵에서 로직이 바뀌었습니다 — 다시 판정해 주세요' : '로직 다시 판정'}
+                        >
+                            <RotateCw size={13} className={isProgressing ? 'btn-icon-spin' : ''} />
+                            <span>{isStale ? '로직 변경됨 · 다시 판정' : '로직 다시 판정'}</span>
+                        </button>
+
+                        {fixedCount > 0 && (
+                            <span
+                                className="lc-fixed-pill"
+                                title={`판정 뒤 로직을 고쳐 그 문항만 다시 판정했습니다.\n이 문항들의 결과는 새 로직 기준이고, 전체 집계는 처음 판정 기준입니다.\n집계까지 맞추려면 [로직 다시 판정]을 눌러 주세요.`}
+                            >
+                                <Info size={12} />
+                                <span>다시 판정한 문항 {fixedCount}개</span>
+                            </span>
+                        )}
+                    </div>
+                )
+            )}
+
+            {/* ── 상단 서브헤더 (우측 판정 정보 및 도구들) ── */}
             {renderInTabBar(<div className="lc-subheader in-tabbar">
                 <span className="lc-status">
                     {isJudged && (
@@ -1747,37 +1785,12 @@ const LogicCheckTab = ({
                             <span title="완료 · 실사 응답 기준 (테스트 · 제외 응답은 빼고 판정합니다)">
                                 {`${judgeResult.judgedAt} 판정 · 완료 응답 ${fmt(judgeResult.checkedResponses)}건 (실사 기준)`}
                             </span>
-                            {(() => {
-                                const n = (judgeResult.items || []).filter(i => i._fixed).length;
-                                if (!n) return null;
-                                return (
-                                    <button type="button" className="lc-fixed-badge"
-                                        title="판정 뒤 로직을 고쳐 그 문항만 다시 판정했습니다. 전체 집계는 처음 판정 기준입니다."
-                                        onClick={() => modal?.showAlert?.('알림', `로직을 고쳐 다시 판정한 문항이 ${n}개 있습니다.\n이 문항들의 결과는 새 로직 기준이고, 전체 집계는 처음 판정 기준입니다.\n집계까지 맞추려면 [다시 판정]을 눌러 주세요.`)}>
-                                        <Edit2 size={11} /> 다시 판정한 문항 {n}개
-                                    </button>
-                                );
-                            })()}
                         </>
                     )}
                 </span>
 
                 <div className="lc-subheader-actions">
                     <span className="lc-tool-group" ref={menuRef}>
-                        {isJudged && (
-                            <button
-                                id="lc-rejudge-btn"
-                                type="button"
-                                className={`lc-rejudge-icon${isStale ? ' stale' : ''}`}
-                                onClick={handleJudge}
-                                disabled={isProgressing}
-                                title={isStale ? '맵에서 로직이 바뀌었습니다 — 다시 판정해 주세요' : '다시 판정'}
-                                aria-label="다시 판정"
-                            >
-                                <RefreshCw size={13} />
-                                {isStale && <span className="lc-rejudge-label">로직 변경됨 · 다시 판정</span>}
-                            </button>
-                        )}
                         {/* 판정 전엔 준비 화면에 [자동 채우기]가 있고 지울 결과도 없어 ⋯ 를 숨김 */}
                         {isJudged && <button
                             id="lc-more-btn"

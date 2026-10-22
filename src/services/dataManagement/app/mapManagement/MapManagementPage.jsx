@@ -907,8 +907,10 @@ const MapManagementPage = () => {
                         >
                             로직 체크
                         </button>
+                        {/* 탭 바로 옆 주요 액션 자리 (교차 검증 재실행 느낌) */}
+                        <div id="map-tab-action" style={{ display: 'flex', alignItems: 'center', marginLeft: '12px', alignSelf: 'center' }} />
                         {/* 탭별 도구 자리 — 로직 체크 탭이 판정 정보·버튼을 여기에 그림 */}
-                        <div id="map-tab-extra" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', minWidth: 0 }} />
+                        <div id="map-tab-extra" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', minWidth: 0, alignSelf: 'center' }} />
                     </div>
 
                     {activeTab === 'logic' ? (
