@@ -101,8 +101,9 @@ const SurveyTestPage = () => {
 
     // ── AI 교차 검증 시작 ──
     const handleAnalyze = async (isInit = false) => {
+        const isInitial = isInit === true;
         // 로딩바 초기화 및 모달 띄우기
-        if (!isInit) {
+        if (!isInitial) {
             setProgressPercentage(0);
             setProgressMessage('연결 준비 중...');
             setIsProgressComplete(false);
@@ -174,7 +175,7 @@ const SurveyTestPage = () => {
         try {
             const res = await analyzeAll.mutateAsync(fd);
             
-            if (isInit) {
+            if (isInitial) {
                 if (String(res?.success) === '777') {
                     setResultJson(res.resultjson);
                 }
@@ -187,7 +188,7 @@ const SurveyTestPage = () => {
             }
         } catch (e) {
             console.error("analyzeAll error:", e);
-            if (!isInit) {
+            if (!isInitial) {
                 setIsProgressModalOpen(false);
                 modal.showErrorAlert("에러", e.response?.data?.message || e.message || "교차 검증 중 오류가 발생했습니다.");
             }
@@ -200,15 +201,16 @@ const SurveyTestPage = () => {
 
     // ── 문구 비교 (Compare Wording) 실행 ──
     const handleCompareWording = async (isInit = false) => {
+        const isInitial = isInit === true;
         const pn = sessionStorage.getItem('projectnum') || '';
         const user = auth?.user?.userId || '';
 
         if (!pn) {
-            if (!isInit) modal.showErrorAlert("알림", "설문번호(pn)를 찾지 못했습니다. 프로젝트를 먼저 선택해주세요.");
+            if (!isInitial) modal.showErrorAlert("알림", "설문번호(pn)를 찾지 못했습니다. 프로젝트를 먼저 선택해주세요.");
             return;
         }
 
-        if (!isInit) setIsWordingLoading(true);
+        if (!isInitial) setIsWordingLoading(true);
         const requestedPn = pn;
 
         try {
@@ -224,20 +226,23 @@ const SurveyTestPage = () => {
             if (String(res?.success) === '777') {
                 setWordingResultJson(res.resultjson || {});
                 setWordingTopMessage(res.message || '');
-                if (!isInit) setViewMode('wording');
+                if (!isInitial) {
+                    setViewMode('wording');
+                    modal.showAlert("알림", "문구 비교가 재실행되었습니다.");
+                }
             } else if (res?.success === '900' || res?.success === '909') {
                 const errMsg = res.resultjson?.errorcontent || res.message || "문구 비교를 진행할 수 없습니다.";
-                if (!isInit) modal.showErrorAlert("알림", errMsg);
+                if (!isInitial) modal.showErrorAlert("알림", errMsg);
             } else {
                 const errMsg = res?.resultjson?.errorcontent || res?.message || "문구 비교를 하지 못했습니다. 잠시 후 다시 시도해주세요.";
-                if (!isInit) modal.showErrorAlert("알림", errMsg);
+                if (!isInitial) modal.showErrorAlert("알림", errMsg);
             }
         } catch (e) {
             console.error("compareWording error:", e);
             const errMsg = e.response?.data?.message || e.message || "문구 비교를 하지 못했습니다. 잠시 후 다시 시도해주세요.";
-            if (!isInit) modal.showErrorAlert("에러", errMsg);
+            if (!isInitial) modal.showErrorAlert("에러", errMsg);
         } finally {
-            if (!isInit) setIsWordingLoading(false);
+            if (!isInitial) setIsWordingLoading(false);
         }
     };
 
@@ -300,7 +305,7 @@ const SurveyTestPage = () => {
                             {viewMode === 'qa' && resultJson && (
                                 <button
                                     className="st-btn-action compact-btn btn-green"
-                                    onClick={handleAnalyze}
+                                    onClick={() => handleAnalyze(false)}
                                     disabled={analyzeAll.isLoading || isWordingLoading}
                                     style={{ height: '32px', padding: '0 16px', fontSize: '13px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                                 >
@@ -312,7 +317,7 @@ const SurveyTestPage = () => {
                             {viewMode === 'wording' && (!isWordingLoading && wordingResultJson ? (
                                 <button
                                     className="st-btn-action compact-btn st-btn-wording"
-                                    onClick={handleCompareWording}
+                                    onClick={() => handleCompareWording(false)}
                                     disabled={isWordingLoading || analyzeAll.isLoading}
                                     style={{ height: '32px', padding: '0 16px', fontSize: '13px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                                 >
@@ -401,7 +406,7 @@ const SurveyTestPage = () => {
                                         <button
                                             type="button"
                                             className={`st-btn-action st-btn-wording ${!isWordingLoading && !analyzeAll.isLoading ? 'active-pulse' : ''}`}
-                                            onClick={handleCompareWording}
+                                            onClick={() => handleCompareWording(false)}
                                             disabled={isWordingLoading || analyzeAll.isLoading}
                                         >
                                             <FileSearch size={18} className="btn-icon-spin" />
@@ -637,7 +642,7 @@ const SurveyTestPage = () => {
                                         <button
                                             type="button"
                                             className={`st-btn-action st-btn-wording ${!analyzeAll.isLoading && !isWordingLoading ? 'active-pulse' : ''}`}
-                                            onClick={handleAnalyze}
+                                            onClick={() => handleAnalyze(false)}
                                             disabled={analyzeAll.isLoading || isWordingLoading}
                                         >
                                             <Search size={18} />
