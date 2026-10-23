@@ -57,6 +57,29 @@ const Sidebar = ({
     const [moduleListOpen, setModuleListOpen] = useState(false); // 드롭다운용으로 사용
     const [openSections, setOpenSections] = useState({});
     const [openSubmenus, setOpenSubmenus] = useState({});
+    const [selectedDpView, setSelectedDpView] = useState(() => {
+        return new URLSearchParams(location.search).get("dp_view") || "table";
+    });
+
+    useEffect(() => {
+        const view = new URLSearchParams(location.search).get("dp_view") || "table";
+        setSelectedDpView(view);
+    }, [location.search]);
+
+    useEffect(() => {
+        const handleStepEvent = (e) => {
+            const stepKey = e.detail?.targetKey || e.detail?.stepKey;
+            if (stepKey) {
+                setSelectedDpView(stepKey);
+            }
+        };
+        window.addEventListener("dpChangeStepRequest", handleStepEvent);
+        window.addEventListener("dpStepChanged", handleStepEvent);
+        return () => {
+            window.removeEventListener("dpChangeStepRequest", handleStepEvent);
+            window.removeEventListener("dpStepChanged", handleStepEvent);
+        };
+    }, []);
 
     const userRef = useRef(null);
     const moduleMenuRef = useRef(null); // 모듈 메뉴 외부 클릭 감지용
@@ -106,7 +129,7 @@ const Sidebar = ({
         setOpenSections(prev => ({ ...prev, [label]: !prev[label] }));
     };
 
-    // 초기 열려있는 섹션 설정
+    // 초기 열려있는 섹션 및 하위 메뉴 설정
     useEffect(() => {
         if (menuGroups.length > 0) {
             const initial = {};
@@ -115,13 +138,21 @@ const Sidebar = ({
                 initial[group.label] = group.defaultOpen !== false;
                 group.items?.forEach(item => {
                     if (item.children && item.children.length > 0) {
-                        const isCurrentPath = item.path && location.pathname.startsWith(item.path);
+                        const itemBasePath = item.path ? item.path.split('?')[0] : "";
+                        const isCurrentPath = (itemBasePath && location.pathname.startsWith(itemBasePath)) ||
+                            item.children.some(child => child.path && location.pathname.startsWith(child.path.split('?')[0]));
                         initialSub[item.label] = Boolean(item.defaultOpen || isCurrentPath);
                     }
                 });
             });
-            setOpenSections(initial);
-            setOpenSubmenus(initialSub);
+            setOpenSections(prev => ({ ...initial, ...prev }));
+            setOpenSubmenus(prev => {
+                const nextSub = { ...initialSub, ...prev };
+                Object.keys(initialSub).forEach(key => {
+                    if (initialSub[key]) nextSub[key] = true;
+                });
+                return nextSub;
+            });
         }
     }, [menuGroups]);
 
@@ -130,13 +161,16 @@ const Sidebar = ({
         menuGroups.forEach(group => {
             group.items?.forEach(item => {
                 if (item.children && item.children.length > 0) {
-                    if (item.path && location.pathname.startsWith(item.path)) {
+                    const itemBasePath = item.path ? item.path.split('?')[0] : "";
+                    const isCurrentPath = (itemBasePath && location.pathname.startsWith(itemBasePath)) ||
+                        item.children.some(child => child.path && location.pathname.startsWith(child.path.split('?')[0]));
+                    if (isCurrentPath) {
                         setOpenSubmenus(prev => ({ ...prev, [item.label]: true }));
                     }
                 }
             });
         });
-    }, [location.pathname, menuGroups]);
+    }, [location.pathname, location.search, menuGroups]);
 
     const handleLogout = async () => {
         modal.showConfirm("알림", "로그아웃하시겠습니까?", {
@@ -333,7 +367,12 @@ const Sidebar = ({
                                     {group.items.map((item, i) => {
                                         const Icon = item.icon;
                                         const hasChildren = Array.isArray(item.children) && item.children.length > 0;
-                                        const isSubOpen = Boolean(openSubmenus[item.label]);
+                                        const itemBasePath = item.path ? item.path.split('?')[0] : "";
+                                        const isCurrentInItem = Boolean(
+                                            (itemBasePath && location.pathname.startsWith(itemBasePath)) ||
+                                            item.children?.some(child => child.path && location.pathname.startsWith(child.path.split('?')[0]))
+                                        );
+                                        const isSubOpen = openSubmenus[item.label] !== undefined ? Boolean(openSubmenus[item.label]) : isCurrentInItem;
 
                                         if (!item.path) {
                                             return (
@@ -375,12 +414,14 @@ const Sidebar = ({
                                                     {hasChildren && !isCollapsed && isSubOpen && (
                                                         <ul className="sub-group-list">
                                                             {item.children.map((child, cIdx) => {
-                                                                const currentDpView = new URLSearchParams(location.search).get("dp_view") || "table";
-                                                                const isChildActive = location.pathname.startsWith(item.path || "") && (
-                                                                    child.isActive
+                                                                const currentDpView = selectedDpView || new URLSearchParams(location.search).get("dp_view") || "table";
+                                                                const isDpRequestPage = location.pathname.startsWith("/data_status/hsrt/dp_request");
+                                                                const isChildActive = child.view
+                                                                    ? (isDpRequestPage && currentDpView === child.view)
+                                                                    : (child.isActive
                                                                         ? child.isActive(location.pathname, location)
-                                                                        : (child.view ? currentDpView === child.view : `${location.pathname}${location.search}` === child.path)
-                                                                );
+                                                                        : (itemBasePath ? location.pathname.startsWith(itemBasePath) : true) && `${location.pathname}${location.search}` === child.path
+                                                                    );
 
                                                                 return (
                                                                     <li key={cIdx} className="sub-nav-item">
@@ -389,6 +430,7 @@ const Sidebar = ({
                                                                             className={`sub-nav-link ${isChildActive ? "active" : ""} ${child.disabled ? "disabled" : ""}`}
                                                                             title={child.description || (child.disabled ? child.disabledMessage : child.label)}
                                                                             onClick={(e) => {
+                                                                                setOpenSubmenus(prev => ({ ...prev, [item.label]: true }));
                                                                                 if (child.disabled) {
                                                                                     e.preventDefault();
                                                                                     e.stopPropagation();
@@ -483,12 +525,14 @@ const Sidebar = ({
                                                 {hasChildren && !isCollapsed && isSubOpen && (
                                                     <ul className="sub-group-list">
                                                         {item.children.map((child, cIdx) => {
-                                                            const currentDpView = new URLSearchParams(location.search).get("dp_view") || "table";
-                                                            const isChildActive = location.pathname.startsWith(item.path) && (
-                                                                child.isActive
+                                                            const currentDpView = selectedDpView || new URLSearchParams(location.search).get("dp_view") || "table";
+                                                            const isDpRequestPage = location.pathname.startsWith("/data_status/hsrt/dp_request");
+                                                            const isChildActive = child.view
+                                                                ? (isDpRequestPage && currentDpView === child.view)
+                                                                : (child.isActive
                                                                     ? child.isActive(location.pathname, location)
-                                                                    : (child.view ? currentDpView === child.view : `${location.pathname}${location.search}` === child.path)
-                                                            );
+                                                                    : (itemBasePath ? location.pathname.startsWith(itemBasePath) : true) && `${location.pathname}${location.search}` === child.path
+                                                                );
 
                                                             return (
                                                                 <li key={cIdx} className="sub-nav-item">
@@ -497,6 +541,7 @@ const Sidebar = ({
                                                                         className={`sub-nav-link ${isChildActive ? "active" : ""} ${child.disabled ? "disabled" : ""}`}
                                                                         title={child.description || (child.disabled ? child.disabledMessage : child.label)}
                                                                         onClick={(e) => {
+                                                                            setOpenSubmenus(prev => ({ ...prev, [item.label]: true }));
                                                                             if (child.disabled) {
                                                                                 e.preventDefault();
                                                                                 e.stopPropagation();

@@ -127,11 +127,11 @@ const DpRequestPage = () => {
 
         const step = steps[idx];
         if (step) {
-            setSearchParams(prev => {
-                prev.set('dp_view', step.key);
-                return prev;
-            });
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.set('dp_view', step.key);
+            setSearchParams(nextParams);
             setCurrentStep(idx);
+            window.dispatchEvent(new CustomEvent("dpStepChanged", { detail: { stepKey: step.key } }));
         }
     };
 
@@ -174,10 +174,9 @@ const DpRequestPage = () => {
     useEffect(() => {
         if (contextData && contextData.steps?.recoded?.completed !== true && currentStep === 3) {
             setCurrentStep(0);
-            setSearchParams(prev => {
-                prev.set('dp_view', 'table');
-                return prev;
-            });
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.set('dp_view', 'table');
+            setSearchParams(nextParams);
         }
     }, [contextData, currentStep, setSearchParams]);
 
