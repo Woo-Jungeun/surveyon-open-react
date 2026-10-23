@@ -39,7 +39,7 @@ const KendoGrid = ({ parentProps, children }) => {
     const onItemChange = parentProps?.onItemChange;
     const onCellClose = parentProps?.onCellClose;
     const editCell = parentProps?.editCell;
-    const height = parentProps?.height;
+    const height = parentProps?.height || parentProps?.style?.height;
     const columnVirtualization = parentProps?.columnVirtualization ?? false;
     const cellRender = parentProps?.cellRender;
     const rowRender = parentProps?.rowRender;
@@ -559,7 +559,7 @@ const KendoGrid = ({ parentProps, children }) => {
         <Grid
             loading={parentProps?.loading}
             scrollable={scrollable}
-            style={{ height: height || "625px" }}
+            style={{ height: height || "625px", ...(parentProps?.style || {}) }}
             data={gridData}
             sortable={parentProps?.sortable ?? { mode: 'multiple', allowUnsort: true }}
             filterable={parentProps?.filterable ?? true}

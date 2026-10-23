@@ -415,6 +415,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
     const parentProps = useMemo(() => ({
         data: localData,
         dataItemKey: "pageid",
+        height: "100%",
         style: { height: "100%", border: "none" },
         sortable: true,
         scrollable: "scrollable",
@@ -508,7 +509,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect, pageListApi }) => {
                 </div>
                 <div className="pl-modal-content">
                     <div className="pl-content-wrapper">
-                        <div className="cmn_grid singlehead" style={{ height: "100%", position: 'relative' }}>
+                        <div className="cmn_grid singlehead" style={{ height: "100%", minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
                             <KendoGrid
                                 parentProps={parentProps}
                             >
