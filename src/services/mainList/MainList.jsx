@@ -288,7 +288,7 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
         if (!projectnum || !projectname) return;
 
         if (from === 'data_status') {
-            navigate('/data_status/hsrt/add_question');
+            navigate('/data_status');
         } else {
             navigate('/project/pro_list', { state: { projectnum, projectname, servername, projectpof } });
         }

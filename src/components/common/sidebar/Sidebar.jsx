@@ -454,7 +454,9 @@ const Sidebar = ({
                                                         }
                                                         if (location.pathname === "/data_status/hsrt/dp_request" && item.path.startsWith("/data_status/hsrt/dp_request")) {
                                                             e.preventDefault();
-                                                            window.dispatchEvent(new CustomEvent("dpChangeStepRequest", { detail: { targetKey: 'table' } }));
+                                                            const query = item.path.includes("?") ? item.path.split("?")[1] : "";
+                                                            const targetKey = new URLSearchParams(query).get("dp_view") || "table";
+                                                            window.dispatchEvent(new CustomEvent("dpChangeStepRequest", { detail: { targetKey } }));
                                                         }
                                                         if (item.onClick) {
                                                             item.onClick(e);

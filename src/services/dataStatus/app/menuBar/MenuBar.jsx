@@ -112,7 +112,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   // 모듈 전환 메뉴 아이템
   const moduleItems = [
     { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
-    { label: "H-SRT", icon: <Grid size={16} />, path: "/data_status/hsrt/add_question", highlight: true },
+    { label: "H-SRT", icon: <Grid size={16} />, path: "/data_status", highlight: true },
     {
       label: "데이터관리",
       icon: <Database size={16} />,
@@ -288,13 +288,45 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     sessionStorage.setItem("pageId", pageId);
     sessionStorage.setItem("pagetitle", pageTitle);
     sessionStorage.setItem("myRole", myRole);
-    window.dispatchEvent(new Event("pageSelected"));
 
     setPageState({
       title: pageTitle,
       merge_pn: sessionStorage.getItem("merge_pn") || "-",
       myRole: myRole
     });
+
+    try {
+      const res = await getDpContext.mutateAsync({ pageid: pageId, page_id: pageId, user: userId });
+      const context = res?.resultjson || res?.data?.resultjson || res;
+      if (context) {
+        setDpContext(context);
+        window.dispatchEvent(new CustomEvent("dpContextUpdated", { detail: context }));
+      }
+      const pageHasStub = Boolean(
+        context?.steps?.recoded?.completed === true ||
+        context?.steps?.recoded?.completed === 1 ||
+        context?.steps?.recoded?.completed === '1' ||
+        context?.steps?.recoded?.completed === 'true'
+      );
+
+      // 1. DP의뢰서 스터브 셋팅이 있으면 "교차분석", 없을 경우 "DP의뢰서->표설정"
+      if (myRole === "viewer") {
+        navigate("/data_status/hsrt/cross_analysis");
+      } else if (pageHasStub) {
+        navigate("/data_status/hsrt/cross_analysis");
+      } else {
+        navigate("/data_status/hsrt/dp_request?dp_view=table");
+      }
+    } catch (e) {
+      console.warn("getDpContext error on page select", e);
+      if (myRole === "viewer") {
+        navigate("/data_status/hsrt/cross_analysis");
+      } else {
+        navigate("/data_status/hsrt/dp_request?dp_view=table");
+      }
+    } finally {
+      window.dispatchEvent(new Event("pageSelected"));
+    }
   };
 
   const handleProjectSelect = async (project) => {
@@ -494,7 +526,15 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   const isAiSolutionTeam = userGroup === "AI솔루션팀";
   const isHSRTCustomer = userGroup === "H-SRT고객";
 
-  const isSummaryDisabled = dpContext?.steps?.recoded?.completed !== true;
+  const hasStub = Boolean(
+    dpContext?.steps?.recoded?.completed === true ||
+    dpContext?.steps?.recoded?.completed === 1 ||
+    dpContext?.steps?.recoded?.completed === '1' ||
+    dpContext?.steps?.recoded?.completed === 'true'
+  );
+  const isSummaryDisabled = !hasStub;
+  const targetDpView = hasStub ? "recoded" : "table";
+  const targetDpPath = `/data_status/hsrt/dp_request?dp_view=${targetDpView}`;
 
   const dpRequestChildren = [
     {
@@ -535,6 +575,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       if (item.label === "DP의뢰서") {
         return {
           ...item,
+          path: targetDpPath,
           children: dpRequestChildren,
           isActive: (pathname) => pathname.startsWith("/data_status/hsrt/dp_request")
         };
@@ -599,7 +640,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
           title: "",
           logoText: "H-SRT",
           logoClass: "menu-bar-logo",
-          onClick: () => navigate(isHsrtCustomer ? "/data_status/hsrt/cross_analysis" : "/data_status/hsrt/add_question")
+          onClick: () => navigate(isHsrtCustomer ? "/data_status/hsrt/cross_analysis" : "/data_status")
         }}
         menuGroups={computedMenuGroups}
         projectInfo={projectInfoData}

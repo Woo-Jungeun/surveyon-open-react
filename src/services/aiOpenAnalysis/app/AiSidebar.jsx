@@ -145,8 +145,8 @@ const AiSidebar = ({ onOpenProjectModal }) => {
         {
             label: "H-SRT",
             icon: <Grid size={16} />,
-            path: "/data_status/hsrt/add_question",
-            onClick: () => { navigate("/data_status/hsrt/add_question"); }
+            path: "/data_status",
+            onClick: () => { navigate("/data_status"); }
             // isDisabled: true
         },
         {

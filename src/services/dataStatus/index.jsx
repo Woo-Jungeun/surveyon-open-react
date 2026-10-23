@@ -9,6 +9,7 @@ import AiReportWrapperView from "./views/hsrt/AiReportWrapperView.jsx";
 import SingleCrosstabViewerPage from "./app/hsrt/aiReport/SingleCrosstabViewerPage.jsx";
 
 import CrossAnalysisWrapperView from "./views/hsrt/CrossAnalysisWrapperView.jsx";
+import HsrtGateway from "./app/hsrt/HsrtGateway.jsx";
 import "./app/DataStatusTheme.css"; // Global Theme Import
 
 export default function DataStatusRoutes() {
@@ -19,7 +20,9 @@ export default function DataStatusRoutes() {
 
       {/* 기본 Wrapper */}
       <Route element={<MainWrapperView />}>
-        <Route path="" element={<Navigate to="hsrt/add_question" replace />} />
+        {/* 기본 진입 시 스터브 세팅 여부에 따라 동적 분기(교차분석 vs DP의뢰서 표설정) */}
+        <Route path="" element={<HsrtGateway />} />
+        <Route path="hsrt" element={<HsrtGateway />} />
         <Route path="hsrt/additional_analysis" element={<AdditionalWrapperView />} />
         <Route path="hsrt/menu_permission" element={<MenuPermissionWrapperView />} />
         {/* 신규 H-SRT 라우트 */}

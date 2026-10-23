@@ -112,7 +112,7 @@ const MenuSection = () => {
             let targetState = {};
 
             if (item.id === "data-dashboard") {
-              targetPath = "/data_status/hsrt/add_question";
+              targetPath = "/data_status";
               targetState = { from: "data_status" };
             } else if (item.id === "field-management") {
               targetPath = "/field_management/analysis/progress";

@@ -187,16 +187,11 @@ const DpRequestPage = () => {
 
         const handlePageSelected = () => {
             fetchContext();
-            setCurrentStep(0);
-            setSearchParams(prev => {
-                prev.set('dp_view', 'table');
-                return prev;
-            });
         };
 
         window.addEventListener("pageSelected", handlePageSelected);
         return () => window.removeEventListener("pageSelected", handlePageSelected);
-    }, [currentStep, fetchContext, setSearchParams]);
+    }, [fetchContext]);
 
     // 단계별 컴포넌트 렌더링
     const renderStepContent = () => {
