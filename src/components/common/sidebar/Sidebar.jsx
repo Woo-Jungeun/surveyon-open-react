@@ -115,12 +115,13 @@ const Sidebar = ({
                 initial[group.label] = group.defaultOpen !== false;
                 group.items?.forEach(item => {
                     if (item.children && item.children.length > 0) {
-                        initialSub[item.label] = item.defaultOpen !== false;
+                        const isCurrentPath = item.path && location.pathname.startsWith(item.path);
+                        initialSub[item.label] = Boolean(item.defaultOpen || isCurrentPath);
                     }
                 });
             });
             setOpenSections(initial);
-            setOpenSubmenus(prev => ({ ...initialSub, ...prev }));
+            setOpenSubmenus(initialSub);
         }
     }, [menuGroups]);
 
@@ -332,7 +333,7 @@ const Sidebar = ({
                                     {group.items.map((item, i) => {
                                         const Icon = item.icon;
                                         const hasChildren = Array.isArray(item.children) && item.children.length > 0;
-                                        const isSubOpen = openSubmenus[item.label] ?? true;
+                                        const isSubOpen = Boolean(openSubmenus[item.label]);
 
                                         if (!item.path) {
                                             return (
@@ -449,6 +450,9 @@ const Sidebar = ({
                                                             e.preventDefault();
                                                             modal.showAlert("알림", "서비스 준비 중입니다.");
                                                             return;
+                                                        }
+                                                        if (hasChildren && !isCollapsed) {
+                                                            setOpenSubmenus(prev => ({ ...prev, [item.label]: true }));
                                                         }
                                                         if (location.pathname === "/data_status/hsrt/dp_request" && item.path.startsWith("/data_status/hsrt/dp_request")) {
                                                             e.preventDefault();
