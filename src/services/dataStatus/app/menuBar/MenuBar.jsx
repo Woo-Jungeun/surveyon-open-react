@@ -144,13 +144,16 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     }
   };
 
-  // 날짜 포맷팅 함수
+  // 날짜 포맷팅 함수 (분 단위까지만 표출)
   const formatDate = (rawDate) => {
-    if (!rawDate) return "-";
+    if (!rawDate || rawDate === "-") return "-";
     const d = new Date(rawDate);
-    if (isNaN(d.getTime())) return rawDate;
     const pad = (n) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    if (!isNaN(d.getTime())) {
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    // 문자열로 들어왔을 때도 초(:ss) 제거
+    return String(rawDate).replace(/(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}):\d{2}/, "$1");
   };
 
   // 데이터 정보 조회 (최종 업데이트 시간)
@@ -248,21 +251,24 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     }
   };
 
-  // 추가 액션 영역 (날짜와 새로고침 아이콘 한 줄 정리)
+  // 추가 액션 영역 (2단 카드: 좌측 라벨+시간, 우측 세로 중앙 새로고침 버튼)
   const isHsrtCustomer = sessionStorage.getItem("groupcode") === "999999991";
   const ExtraActions = isHsrtCustomer ? null : (
     <div className="menu-bar-actions">
-      <div className="menu-bar-refresh-bar">
-        <div className="menu-bar-info-group">
-          <Clock size={12} strokeWidth={2.5} />
-          <span>{pageInfo.processedAt}</span>
+      <div className="menu-bar-refresh-card">
+        <div className="menu-bar-refresh-card-left" title="현재 H-SRT에 반영된 데이터의 수집 기준 일시입니다.">
+          <span className="menu-bar-refresh-label">데이터 기준 일시</span>
+          <div className="menu-bar-refresh-time-row">
+            <Clock size={12} strokeWidth={2.2} className="menu-bar-clock-icon" />
+            <span className="menu-bar-time-text">{formatDate(pageInfo.processedAt)}</span>
+          </div>
         </div>
         <button
-          className="menu-bar-refresh-btn-minimal"
+          className="menu-bar-refresh-icon-btn"
           onClick={handleRefresh}
-          title="데이터 새로고침"
+          title="최신 응답 데이터를 반영하여 H-SRT를 새로고침합니다."
         >
-          <RefreshCw size={14} className={syncMap.isLoading ? "spin" : ""} />
+          <RefreshCw size={13} className={syncMap.isLoading ? "spin" : ""} />
         </button>
       </div>
     </div>

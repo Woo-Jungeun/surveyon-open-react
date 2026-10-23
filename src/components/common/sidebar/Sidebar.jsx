@@ -413,7 +413,7 @@ const Sidebar = ({
                                                                                 className="sub-nav-right"
                                                                                 title={child.disabled ? (child.disabledMessage || "스터브 저장 완료 후 요약표를 설정할 수 있습니다.") : undefined}
                                                                             >
-                                                                                {child.disabled ? (
+                                                                                {child.disabled && (
                                                                                     <span
                                                                                         className="sub-nav-lock-wrapper"
                                                                                         title={child.disabledMessage || "스터브 저장 완료 후 요약표를 설정할 수 있습니다."}
@@ -421,9 +421,7 @@ const Sidebar = ({
                                                                                     >
                                                                                         <Lock size={12} className="sub-nav-lock-icon" />
                                                                                     </span>
-                                                                                ) : isChildActive ? (
-                                                                                    <span className="sub-nav-active-dot" />
-                                                                                ) : null}
+                                                                                )}
                                                                             </div>
                                                                         </Link>
                                                                     </li>
@@ -521,7 +519,7 @@ const Sidebar = ({
                                                                             className="sub-nav-right"
                                                                             title={child.disabled ? (child.disabledMessage || "스터브 저장 완료 후 요약표를 설정할 수 있습니다.") : undefined}
                                                                         >
-                                                                            {child.disabled ? (
+                                                                            {child.disabled && (
                                                                                 <span
                                                                                     className="sub-nav-lock-wrapper"
                                                                                     title={child.disabledMessage || "스터브 저장 완료 후 요약표를 설정할 수 있습니다."}
@@ -529,9 +527,7 @@ const Sidebar = ({
                                                                                 >
                                                                                     <Lock size={12} className="sub-nav-lock-icon" />
                                                                                 </span>
-                                                                            ) : isChildActive ? (
-                                                                                <span className="sub-nav-active-dot" />
-                                                                            ) : null}
+                                                                            )}
                                                                         </div>
                                                                     </Link>
                                                                 </li>
