@@ -704,6 +704,183 @@
     color: inherit;
 }
 
+/* Sub Menu (Children) Styling - Seamless Integrated Tree */
+.sub-group-list {
+    list-style: none;
+    margin: 2px 16px 6px 22px;
+    padding: 2px 0 2px 10px;
+    border-left: 2px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sub-nav-item {
+    position: relative;
+    margin: 0;
+    padding: 0;
+}
+
+.sub-nav-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    background: transparent;
+    color: #64748b;
+}
+
+.sub-nav-link:hover:not(.disabled):not(.active) {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.sub-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.sub-nav-step-badge {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0;
+    padding-bottom: 1.5px; /* 글꼴 baseline으로 인해 숫자가 아래로 처지는 현상 광학적 중앙 보정 */
+    font-variant-numeric: tabular-nums;
+    background: #ffffff;
+    color: #64748b;
+    border: 1.5px solid #94a3b8;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+}
+
+.sub-nav-link:hover:not(.disabled):not(.active) .sub-nav-step-badge {
+    background: #f8fafc;
+    border-color: #475569;
+    color: #0f172a;
+}
+
+.sub-nav-title {
+    font-size: 13.5px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.15s ease;
+}
+
+/* Active State */
+.sub-nav-link.active {
+    background: #eff6ff;
+    color: #2563eb;
+    font-weight: 600;
+}
+
+.sub-nav-link.active .sub-nav-step-badge {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.sub-nav-link.active .sub-nav-title {
+    color: #1d4ed8;
+    font-weight: 600;
+}
+
+.sub-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.sub-nav-active-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #2563eb;
+}
+
+/* Disabled State - 금지 아이콘 제거하고 일반 클릭 포인터 유지 */
+.sub-nav-link.disabled {
+    cursor: pointer !important;
+    opacity: 0.6;
+    background: transparent !important;
+}
+
+.sub-nav-link.disabled .sub-nav-step-badge {
+    background: #f8fafc;
+    color: #94a3b8;
+    border: 1.5px dashed #cbd5e1;
+}
+
+.sub-nav-link.disabled .sub-nav-title {
+    color: #94a3b8;
+}
+
+.sub-nav-lock-icon {
+    color: #94a3b8;
+}
+
+
+.common-sidebar.collapsed .sub-group-list {
+    display: none !important;
+}
+
+/* Submenu toggle button and chevron - Inline next to label */
+.submenu-toggle-btn {
+    margin-left: -3px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 2px 3px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.nav-link.active .submenu-toggle-btn {
+    color: #3b82f6;
+}
+
+.submenu-toggle-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: #1e293b;
+}
+
+.submenu-arrow {
+    transition: transform 0.2s ease;
+}
+
+.submenu-toggle-btn.open .submenu-arrow {
+    transform: rotate(180deg);
+}
+
+.common-sidebar.collapsed .sub-group-list,
+.common-sidebar.collapsed .submenu-toggle-btn {
+    display: none !important;
+}
+
 /* Footer / User */
 .sidebar-footer {
     padding: 16px;

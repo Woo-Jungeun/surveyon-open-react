@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import {
-    Home, ChevronRight, ChevronLeft, User, LogOut, Menu, Clock, ChevronDown, Settings, ShieldCheck, BookOpen
+    Home, ChevronRight, ChevronLeft, User, LogOut, Menu, Clock, ChevronDown, Settings, ShieldCheck, BookOpen, Lock, Check
 } from "lucide-react";
-import { useNavigate, useLocation, NavLink } from "react-router-dom";
+import { useNavigate, useLocation, NavLink, Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useCookies } from "react-cookie";
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -56,6 +56,7 @@ const Sidebar = ({
     // 모듈 리스트 내 '메인 메뉴' 토글 상태 (기본값 true로 펼쳐둠)
     const [moduleListOpen, setModuleListOpen] = useState(false); // 드롭다운용으로 사용
     const [openSections, setOpenSections] = useState({});
+    const [openSubmenus, setOpenSubmenus] = useState({});
 
     const userRef = useRef(null);
     const moduleMenuRef = useRef(null); // 모듈 메뉴 외부 클릭 감지용
@@ -109,12 +110,32 @@ const Sidebar = ({
     useEffect(() => {
         if (menuGroups.length > 0) {
             const initial = {};
+            const initialSub = {};
             menuGroups.forEach(group => {
                 initial[group.label] = group.defaultOpen !== false;
+                group.items?.forEach(item => {
+                    if (item.children && item.children.length > 0) {
+                        initialSub[item.label] = item.defaultOpen !== false;
+                    }
+                });
             });
             setOpenSections(initial);
+            setOpenSubmenus(prev => ({ ...initialSub, ...prev }));
         }
     }, [menuGroups]);
+
+    // 하위 메뉴가 있는 아이템 경로에 진입 시 하위 메뉴 자동 열림
+    useEffect(() => {
+        menuGroups.forEach(group => {
+            group.items?.forEach(item => {
+                if (item.children && item.children.length > 0) {
+                    if (item.path && location.pathname.startsWith(item.path)) {
+                        setOpenSubmenus(prev => ({ ...prev, [item.label]: true }));
+                    }
+                }
+            });
+        });
+    }, [location.pathname, menuGroups]);
 
     const handleLogout = async () => {
         modal.showConfirm("알림", "로그아웃하시겠습니까?", {
@@ -310,10 +331,12 @@ const Sidebar = ({
                                 <ul className="group-list">
                                     {group.items.map((item, i) => {
                                         const Icon = item.icon;
+                                        const hasChildren = Array.isArray(item.children) && item.children.length > 0;
+                                        const isSubOpen = openSubmenus[item.label] ?? true;
 
                                         if (!item.path) {
                                             return (
-                                                <li key={i} className="nav-item">
+                                                <li key={i} className={`nav-item ${hasChildren ? "has-children" : ""}`}>
                                                     <div
                                                         className={`nav-link ${item.isPending ? "pending" : ""}`}
                                                         title={isCollapsed ? item.label : undefined}
@@ -323,6 +346,9 @@ const Sidebar = ({
                                                                 modal.showAlert("알림", "서비스 준비 중입니다.");
                                                                 return;
                                                             }
+                                                            if (hasChildren && !isCollapsed) {
+                                                                setOpenSubmenus(prev => ({ ...prev, [item.label]: !isSubOpen }));
+                                                            }
                                                             if (item.onClick) {
                                                                 item.onClick(e);
                                                             }
@@ -330,25 +356,103 @@ const Sidebar = ({
                                                     >
                                                         {Icon && <Icon className="nav-icon" size={18} strokeWidth={2} />}
                                                         <span>{item.label}</span>
+                                                        {hasChildren && !isCollapsed && (
+                                                            <span
+                                                                className={`submenu-toggle-btn ${isSubOpen ? "open" : ""}`}
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    setOpenSubmenus(prev => ({ ...prev, [item.label]: !isSubOpen }));
+                                                                }}
+                                                                title={isSubOpen ? "하위 메뉴 접기" : "하위 메뉴 펼치기"}
+                                                            >
+                                                                <ChevronDown size={14} className="submenu-arrow" />
+                                                            </span>
+                                                        )}
                                                     </div>
+
+                                                    {hasChildren && !isCollapsed && isSubOpen && (
+                                                        <ul className="sub-group-list">
+                                                            {item.children.map((child, cIdx) => {
+                                                                const currentDpView = new URLSearchParams(location.search).get("dp_view") || "table";
+                                                                const isChildActive = location.pathname.startsWith(item.path || "") && (
+                                                                    child.isActive
+                                                                        ? child.isActive(location.pathname, location)
+                                                                        : (child.view ? currentDpView === child.view : `${location.pathname}${location.search}` === child.path)
+                                                                );
+
+                                                                return (
+                                                                    <li key={cIdx} className="sub-nav-item">
+                                                                        <Link
+                                                                            to={child.path}
+                                                                            className={`sub-nav-link ${isChildActive ? "active" : ""} ${child.disabled ? "disabled" : ""}`}
+                                                                            title={child.description || (child.disabled ? child.disabledMessage : child.label)}
+                                                                            onClick={(e) => {
+                                                                                if (child.disabled) {
+                                                                                    e.preventDefault();
+                                                                                    e.stopPropagation();
+                                                                                    modal.showAlert("알림", child.disabledMessage || "이용할 수 없는 메뉴입니다.");
+                                                                                    return;
+                                                                                }
+                                                                                if (child.onClick) {
+                                                                                    child.onClick(e);
+                                                                                    if (e.defaultPrevented) return;
+                                                                                }
+                                                                                if (location.pathname === "/data_status/hsrt/dp_request" && child.view) {
+                                                                                    e.preventDefault();
+                                                                                    window.dispatchEvent(new CustomEvent("dpChangeStepRequest", { detail: { targetKey: child.view } }));
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            <div className="sub-nav-left">
+                                                                                <span className="sub-nav-step-badge">{child.stepNum || cIdx + 1}</span>
+                                                                                <span className="sub-nav-title">{child.label}</span>
+                                                                            </div>
+                                                                            <div
+                                                                                className="sub-nav-right"
+                                                                                title={child.disabled ? (child.disabledMessage || "스터브 저장 완료 후 요약표를 설정할 수 있습니다.") : undefined}
+                                                                            >
+                                                                                {child.disabled ? (
+                                                                                    <span
+                                                                                        className="sub-nav-lock-wrapper"
+                                                                                        title={child.disabledMessage || "스터브 저장 완료 후 요약표를 설정할 수 있습니다."}
+                                                                                        style={{ display: "inline-flex", alignItems: "center" }}
+                                                                                    >
+                                                                                        <Lock size={12} className="sub-nav-lock-icon" />
+                                                                                    </span>
+                                                                                ) : isChildActive ? (
+                                                                                    <span className="sub-nav-active-dot" />
+                                                                                ) : null}
+                                                                            </div>
+                                                                        </Link>
+                                                                    </li>
+                                                                );
+                                                            })}
+                                                        </ul>
+                                                    )}
                                                 </li>
                                             );
                                         }
 
                                         return (
-                                            <li key={i} className="nav-item">
+                                            <li key={i} className={`nav-item ${hasChildren ? "has-children" : ""}`}>
                                                 <NavLink
                                                     to={item.path}
                                                     end={item.end}
                                                     title={isCollapsed ? item.label : undefined}
                                                     className={({ isActive }) => {
-                                                        const finalActive = item.isActive ? item.isActive(location.pathname) : isActive;
+                                                        const finalActive = item.isActive ? item.isActive(location.pathname, location) : isActive;
                                                         return `nav-link ${finalActive ? "active" : ""} ${item.isPending ? "pending" : ""}`;
                                                     }}
                                                     onClick={(e) => {
                                                         if (item.isPending) {
                                                             e.preventDefault();
                                                             modal.showAlert("알림", "서비스 준비 중입니다.");
+                                                            return;
+                                                        }
+                                                        if (location.pathname === "/data_status/hsrt/dp_request" && item.path.startsWith("/data_status/hsrt/dp_request")) {
+                                                            e.preventDefault();
+                                                            window.dispatchEvent(new CustomEvent("dpChangeStepRequest", { detail: { targetKey: 'table' } }));
                                                         }
                                                         if (item.onClick) {
                                                             item.onClick(e);
@@ -357,7 +461,80 @@ const Sidebar = ({
                                                 >
                                                     {Icon && <Icon className="nav-icon" size={18} strokeWidth={2} />}
                                                     <span>{item.label}</span>
+                                                    {hasChildren && !isCollapsed && (
+                                                        <span
+                                                            className={`submenu-toggle-btn ${isSubOpen ? "open" : ""}`}
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                setOpenSubmenus(prev => ({ ...prev, [item.label]: !isSubOpen }));
+                                                            }}
+                                                            title={isSubOpen ? "하위 메뉴 접기" : "하위 메뉴 펼치기"}
+                                                        >
+                                                            <ChevronDown size={14} className="submenu-arrow" />
+                                                        </span>
+                                                    )}
                                                 </NavLink>
+
+                                                {hasChildren && !isCollapsed && isSubOpen && (
+                                                    <ul className="sub-group-list">
+                                                        {item.children.map((child, cIdx) => {
+                                                            const currentDpView = new URLSearchParams(location.search).get("dp_view") || "table";
+                                                            const isChildActive = location.pathname.startsWith(item.path) && (
+                                                                child.isActive
+                                                                    ? child.isActive(location.pathname, location)
+                                                                    : (child.view ? currentDpView === child.view : `${location.pathname}${location.search}` === child.path)
+                                                            );
+
+                                                            return (
+                                                                <li key={cIdx} className="sub-nav-item">
+                                                                    <Link
+                                                                        to={child.path}
+                                                                        className={`sub-nav-link ${isChildActive ? "active" : ""} ${child.disabled ? "disabled" : ""}`}
+                                                                        title={child.description || (child.disabled ? child.disabledMessage : child.label)}
+                                                                        onClick={(e) => {
+                                                                            if (child.disabled) {
+                                                                                e.preventDefault();
+                                                                                e.stopPropagation();
+                                                                                modal.showAlert("알림", child.disabledMessage || "이용할 수 없는 메뉴입니다.");
+                                                                                return;
+                                                                            }
+                                                                            if (child.onClick) {
+                                                                                child.onClick(e);
+                                                                                if (e.defaultPrevented) return;
+                                                                            }
+                                                                            if (location.pathname === "/data_status/hsrt/dp_request" && child.view) {
+                                                                                e.preventDefault();
+                                                                                window.dispatchEvent(new CustomEvent("dpChangeStepRequest", { detail: { targetKey: child.view } }));
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <div className="sub-nav-left">
+                                                                            <span className="sub-nav-step-badge">{child.stepNum || cIdx + 1}</span>
+                                                                            <span className="sub-nav-title">{child.label}</span>
+                                                                        </div>
+                                                                        <div
+                                                                            className="sub-nav-right"
+                                                                            title={child.disabled ? (child.disabledMessage || "스터브 저장 완료 후 요약표를 설정할 수 있습니다.") : undefined}
+                                                                        >
+                                                                            {child.disabled ? (
+                                                                                <span
+                                                                                    className="sub-nav-lock-wrapper"
+                                                                                    title={child.disabledMessage || "스터브 저장 완료 후 요약표를 설정할 수 있습니다."}
+                                                                                    style={{ display: "inline-flex", alignItems: "center" }}
+                                                                                >
+                                                                                    <Lock size={12} className="sub-nav-lock-icon" />
+                                                                                </span>
+                                                                            ) : isChildActive ? (
+                                                                                <span className="sub-nav-active-dot" />
+                                                                            ) : null}
+                                                                        </div>
+                                                                    </Link>
+                                                                </li>
+                                                            );
+                                                        })}
+                                                    </ul>
+                                                )}
                                             </li>
                                         );
                                     })}

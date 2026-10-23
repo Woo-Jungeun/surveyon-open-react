@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useCallback } from "react";
 import Sidebar from "@/components/common/sidebar/Sidebar";
 import {
   Info, Database, Wrench, FileText, Target, BarChart3, Grid,
@@ -12,6 +12,7 @@ import { MenuBarApi } from "./MenuBarApi";
 import ProjectSelectionModal from "./ProjectSelectionModal";
 import PageListPopup from "../variable/PageListPopup"; // Import PageListPopup
 import { VariablePageApi } from "../variable/VariablePageApi"; // Import API for page list
+import { DpRequestPageApi } from "../hsrt/dpRequest/DpRequestPageApi";
 import { useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -50,6 +51,45 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   const navigate = useNavigate();
   const { getPageMetadata, getDataInfo, syncMap } = MenuBarApi();
   const { pageList } = VariablePageApi(); // Use VariablePageApi for page list
+  const { getDpContext } = DpRequestPageApi();
+  const [dpContext, setDpContext] = useState(null);
+
+  // DP의뢰서 컨텍스트(단계별 완료 여부, 요약표 활성화 상태 등) 조회
+  const fetchDpContext = useCallback(async () => {
+    const pageId = sessionStorage.getItem("pageId");
+    const userId = auth?.user?.userId;
+    if (!pageId || !userId) {
+      setDpContext(null);
+      return;
+    }
+    try {
+      const res = await getDpContext.mutateAsync({ pageid: pageId, user: userId });
+      if (res?.resultjson) {
+        setDpContext(res.resultjson);
+      }
+    } catch (e) {
+      // silent
+    }
+  }, [auth?.user?.userId]);
+
+  useEffect(() => {
+    fetchDpContext();
+
+    const handleDpUpdate = (e) => {
+      if (e?.detail) {
+        setDpContext(e.detail);
+      } else {
+        fetchDpContext();
+      }
+    };
+
+    window.addEventListener("dpContextUpdated", handleDpUpdate);
+    window.addEventListener("pageSelected", fetchDpContext);
+    return () => {
+      window.removeEventListener("dpContextUpdated", handleDpUpdate);
+      window.removeEventListener("pageSelected", fetchDpContext);
+    };
+  }, [fetchDpContext]);
 
   const [isNewDataModalOpen, setIsNewDataModalOpen] = useState(false);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -448,7 +488,54 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   const isAiSolutionTeam = userGroup === "AI솔루션팀";
   const isHSRTCustomer = userGroup === "H-SRT고객";
 
-  let computedMenuGroups = [...MENU_ITEMS];
+  const isSummaryDisabled = dpContext?.steps?.recoded?.completed !== true;
+
+  const dpRequestChildren = [
+    {
+      label: "표 설정",
+      path: "/data_status/hsrt/dp_request?dp_view=table",
+      view: "table",
+      description: "기본 표 구조 및 표시 옵션 설정",
+      isActive: (pathname, loc) => pathname === "/data_status/hsrt/dp_request" && (!new URLSearchParams(loc.search).get("dp_view") || new URLSearchParams(loc.search).get("dp_view") === "table")
+    },
+    {
+      label: "배너",
+      path: "/data_status/hsrt/dp_request?dp_view=banner",
+      view: "banner",
+      description: "열(Banner) 변수 및 비교 집단 구성",
+      isActive: (pathname, loc) => pathname === "/data_status/hsrt/dp_request" && new URLSearchParams(loc.search).get("dp_view") === "banner"
+    },
+    {
+      label: "스터브",
+      path: "/data_status/hsrt/dp_request?dp_view=recoded",
+      view: "recoded",
+      description: "행(Stub) 변수 및 리코딩 문항 구성",
+      isActive: (pathname, loc) => pathname === "/data_status/hsrt/dp_request" && new URLSearchParams(loc.search).get("dp_view") === "recoded"
+    },
+    {
+      label: "요약표",
+      path: "/data_status/hsrt/dp_request?dp_view=summary",
+      view: "summary",
+      description: "최종 집계 요약 및 결과 테이블 조회",
+      disabled: isSummaryDisabled,
+      disabledMessage: "스터브 저장 완료 후 요약표를 설정할 수 있습니다.",
+      isActive: (pathname, loc) => pathname === "/data_status/hsrt/dp_request" && new URLSearchParams(loc.search).get("dp_view") === "summary"
+    }
+  ];
+
+  let computedMenuGroups = MENU_ITEMS.map(group => ({
+    ...group,
+    items: group.items.map(item => {
+      if (item.label === "DP의뢰서") {
+        return {
+          ...item,
+          children: dpRequestChildren,
+          isActive: (pathname) => pathname.startsWith("/data_status/hsrt/dp_request")
+        };
+      }
+      return item;
+    })
+  }));
 
   // H-SRT고객인 경우 세션에 있는 showmenu 값(권한 메뉴)으로만 메뉴 아이템을 필터링 구성합니다.
   if (isHSRTCustomer) {

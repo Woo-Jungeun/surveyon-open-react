@@ -142,12 +142,44 @@ const DpRequestPage = () => {
         try {
             // 상단 헤더 데이터는 spinner 없이 자연스럽게 로드
             const result = await getDpContext.mutateAsync({ pageid: pageId, user: auth.user?.userId });
-            if (result?.resultjson) setContextData(result.resultjson);
+            if (result?.resultjson) {
+                setContextData(result.resultjson);
+                window.dispatchEvent(new CustomEvent("dpContextUpdated", { detail: result.resultjson }));
+            }
         } catch (err) {
             console.error("Context load failed:", err);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [auth?.user?.userId]);
+
+    // 메뉴바 등 외부에서 스텝 변경 요청 시 안전하게 처리 (더티 체크 포함)
+    useEffect(() => {
+        const handleStepRequest = (e) => {
+            const targetKey = e.detail?.targetKey;
+            const idx = steps.findIndex(s => s.key === targetKey);
+            if (idx !== -1) {
+                const isSummaryDisabled = targetKey === 'summary' && contextData?.steps?.recoded?.completed !== true;
+                if (isSummaryDisabled) {
+                    modal.showAlert('알림', '스터브 최초 저장 후 요약표를 설정할 수 있습니다.');
+                    return;
+                }
+                handleStepChange(idx);
+            }
+        };
+        window.addEventListener("dpChangeStepRequest", handleStepRequest);
+        return () => window.removeEventListener("dpChangeStepRequest", handleStepRequest);
+    }, [handleStepChange, contextData]);
+
+    // 요약표 비활성화 상태에서 요약표 탭(3)에 접근한 경우 안전하게 표 설정(0)으로 이동
+    useEffect(() => {
+        if (contextData && contextData.steps?.recoded?.completed !== true && currentStep === 3) {
+            setCurrentStep(0);
+            setSearchParams(prev => {
+                prev.set('dp_view', 'table');
+                return prev;
+            });
+        }
+    }, [contextData, currentStep, setSearchParams]);
 
     // --- 컨텍스트 조회 (카운트 및 완료 상태) ---
     useEffect(() => {
