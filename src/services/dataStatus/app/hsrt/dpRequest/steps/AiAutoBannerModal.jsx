@@ -552,7 +552,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                                     2. 생성 결과 검토 & 프리뷰
                                 </span>
                                 <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 600 }}>
-                                    선택: <strong style={{ color: '#2563eb' }}>{selectedCount}</strong> / {items.length}건
+                                    선택: <strong style={{ color: '#2563eb' }}>{Number(selectedCount || 0).toLocaleString()}</strong> / {Number(items.length || 0).toLocaleString()}건
                                 </span>
                             </div>
 

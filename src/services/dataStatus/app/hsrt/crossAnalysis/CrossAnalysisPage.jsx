@@ -424,6 +424,8 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                                             const digitsKey = `${statType}_digits`;
                                             const digits = effectivePolicy[digitsKey] ?? 1;
                                             formattedSingleVal = Number(singleVal).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+                                        } else if (typeof singleVal === 'number' || (!isNaN(Number(singleVal)) && String(singleVal).trim() !== '')) {
+                                            formattedSingleVal = Number(singleVal).toLocaleString();
                                         } else {
                                             formattedSingleVal = String(singleVal);
                                         }

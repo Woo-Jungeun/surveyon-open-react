@@ -329,7 +329,7 @@ const AiAutoGroupModal = ({ isOpen, onClose, onCreateNew, onOverwrite, overwrite
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>2. 결과 확인 및 수정</span>
                                 <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 600 }}>
-                                    선택: <strong style={{ color: '#2563eb' }}>{selectedCount}</strong> / {items.length}건
+                                    선택: <strong style={{ color: '#2563eb' }}>{Number(selectedCount || 0).toLocaleString()}</strong> / {Number(items.length || 0).toLocaleString()}건
                                 </span>
                             </div>
                             <button onClick={() => insertBelow(undefined)}
