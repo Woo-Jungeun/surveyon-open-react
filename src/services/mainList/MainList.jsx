@@ -91,7 +91,9 @@ const GridRenderer = (props) => {
             const projectPof = (item.projectpof || '').toLowerCase();
             const projectNum = (item.projectnum || '').toLowerCase();
             const projectName = (item.projectname || '').toLowerCase();
-            return projectPof.includes(query) || projectNum.includes(query) || projectName.includes(query);
+            const registerUser = (item.register_userid || item.register_username || item.register_name || '').toLowerCase();
+            const projectUseName = (item.project_use_name || item.project_user_name || '').toLowerCase();
+            return projectPof.includes(query) || projectNum.includes(query) || projectName.includes(query) || registerUser.includes(query) || projectUseName.includes(query);
         });
     }, [dataState?.data, searchText]);
 
@@ -124,7 +126,7 @@ const GridRenderer = (props) => {
                         <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 1 }} />
                         <input
                             type="text"
-                            placeholder="프로젝트명, 번호로 검색하세요."
+                            placeholder="프로젝트명, 번호, 담당자를 검색하세요"
                             value={searchText}
                             onChange={(e) => {
                                 setSearchText(e.target.value);
