@@ -567,7 +567,7 @@ const CustomDownloadModal = ({
             "PC 내보내기 도구가 감지되지 않았습니다.\n\n" +
             "1. [도구 다운로드] 버튼을 눌러 SurveyonExportTool.exe를 내려받아 주세요.\n" +
             "2. 내려받은 파일(SurveyonExportTool.exe)을 더블클릭 후 [예]를 눌러 설치를 완료해 주세요.\n" +
-            "3. 설치 완료 후 [내 PC에서 만들기] 버튼을 다시 눌러주시면 작업이 시작됩니다.\n\n" +
+            "3. 설치 완료 후 [내 PC에서 받기] 버튼을 다시 눌러주시면 작업이 시작됩니다.\n\n" +
             "(※ 이미 설치하셨다면 브라우저 확장 프로그램의 프로토콜 차단 여부를 확인해 주세요.)",
             {
                 btns: [
@@ -1871,7 +1871,7 @@ const CustomDownloadModal = ({
                             else if (noFormat) label = '형식을 1개 이상 선택하세요';
                             else if (statusMode === 'ready' && checkResult) {
                                 label = isToolMode
-                                    ? `내 PC에서 만들기 · ${checkResult.count.toLocaleString()}건`
+                                    ? `내 PC에서 받기 · ${checkResult.count.toLocaleString()}건`
                                     : `받기 · ${checkResult.count.toLocaleString()}건`;
                             } else label = '받기';
 

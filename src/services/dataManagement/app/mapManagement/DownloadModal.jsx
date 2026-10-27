@@ -1010,24 +1010,6 @@ const DownloadModal = ({ isOpen, onClose, onCustomDownload, customFilterInfo = n
                 {/* 2. Body */}
                 <div className="variable-modal-body" style={{ padding: '24px 32px 10px 32px' }}>
 
-                    {/* 구분 1: 데이터 추출 조건 */}
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        marginBottom: '12px'
-                    }}>
-                        <span style={{
-                            fontSize: '12px',
-                            fontWeight: 700,
-                            color: '#475569',
-                            letterSpacing: '-0.2px'
-                        }}>
-                            데이터 추출 조건
-                        </span>
-                        <div style={{ flex: 1, height: '1px', backgroundColor: '#e2e8f0' }} />
-                    </div>
-
                     {/* 컨택상황 (응답 상태) */}
                     {contactStates.length > 0 && (
                         <div style={{ marginBottom: '10px' }}>
@@ -1159,77 +1141,8 @@ const DownloadModal = ({ isOpen, onClose, onCustomDownload, customFilterInfo = n
                         </div>
                     )}
 
-                    {/* 커스텀 다운로드 설정 열기 카드 */}
-                    <div
-                        onClick={handleOpenCustomSettings}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            backgroundColor: '#ffffff',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '10px',
-                            padding: '12px 16px',
-                            cursor: 'pointer',
-                            marginBottom: '16px',
-                            transition: 'all 0.15s ease'
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#ffffff'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
-                    >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '8px',
-                                backgroundColor: '#f0fdf4',
-                                border: '1px solid #bbf7d0',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: '#16a34a'
-                            }}>
-                                <SlidersHorizontal size={16} />
-                            </div>
-                            <div>
-                                <div style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
-                                    커스텀 다운로드
-                                </div>
-                                <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '2px' }}>
-                                    설문 문항 조건, 기기, 경로, 특정 PID 목록을 지정하여 맞춤형 데이터셋 추출
-                                </div>
-                            </div>
-                        </div>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            color: '#16a34a',
-                            fontSize: '12px',
-                            fontWeight: 700
-                        }}>
-                            <span>설정 열기</span>
-                            <ChevronRight size={14} />
-                        </div>
-                    </div>
-
-                    {/* 구분: 다운로드 파일 형식 선택 */}
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        margin: '20px 0 12px 0'
-                    }}>
-                        <span style={{
-                            fontSize: '12px',
-                            fontWeight: 700,
-                            color: '#475569',
-                            letterSpacing: '-0.2px'
-                        }}>
-                            다운로드 파일 형식 선택
-                        </span>
-                        <div style={{ flex: 1, height: '1px', backgroundColor: '#e2e8f0' }} />
-                    </div>
+                    {/* 컨택상황 + 파일 형식은 한 영역 (구분선 없이 간격만) */}
+                    <div style={{ height: '6px' }} />
 
                     {/* 3. Primary Top Highlight Card: SPSS 데이터 (.sav) */}
                     <div
@@ -1301,19 +1214,23 @@ const DownloadModal = ({ isOpen, onClose, onCustomDownload, customFilterInfo = n
                                 cursor: (downloadingSav || downloading) ? 'wait' : (selectedStates.length === 0) ? 'default' : 'pointer'
                             }}
                         >
-                            <span>{downloadingSav ? '다운로드 중...' : (estimateInfo.useTool ? '도구로 받기' : '바로 받기')}</span>
                             <Download size={13} />
+                            <span>{downloadingSav ? '다운로드 중...' : (estimateInfo.useTool ? '내 PC에서 받기' : '바로 받기')}</span>
                         </button>
                     </div>
 
 
-                    {/* 4. Accordion Toggle Header: 다른 형식으로 받기 */}
+                    {/* 4. Accordion Toggle Header: 다른 형식으로 받기 (SPSS 카드에 딸린 보조 펼침 — 컨택상황보다 가볍게) */}
                     <div
                         style={{
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            marginBottom: '12px',
+                            marginBottom: '10px',
+                            padding: '8px 14px',
+                            backgroundColor: '#ffffff',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px',
                             userSelect: 'none'
                         }}
                     >
@@ -1321,20 +1238,23 @@ const DownloadModal = ({ isOpen, onClose, onCustomDownload, customFilterInfo = n
                             onClick={() => {
                                 if (!stateErrorMsg) setIsAccordionOpen(!isAccordionOpen);
                             }}
-                            style={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                gap: '6px', 
-                                fontSize: '13px', 
-                                fontWeight: 600, 
-                                color: stateErrorMsg ? '#94a3b8' : '#475569', 
-                                cursor: stateErrorMsg ? 'default' : 'pointer', 
-                                flex: 1 
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                fontSize: '13px',
+                                fontWeight: 600,
+                                color: stateErrorMsg ? '#94a3b8' : '#475569',
+                                cursor: stateErrorMsg ? 'default' : 'pointer',
+                                flex: 1
                             }}
                         >
-                            {isAccordionOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                            <span style={{ fontSize: '14px', fontWeight: 700, color: stateErrorMsg ? '#cbd5e1' : '#1e293b' }}>
-                                다른 형식으로 받기 (다중 선택 가능)
+                            {isAccordionOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: stateErrorMsg ? '#cbd5e1' : '#334155' }}>
+                                다른 형식으로 받기
+                            </span>
+                            <span style={{ fontSize: '12px', fontWeight: 400, color: stateErrorMsg ? '#cbd5e1' : '#94a3b8' }}>
+                                .crd · .sps · 오픈 등, 다중선택 가능
                             </span>
                             {selectedFormats.length > 0 && (
                                 <span style={{
@@ -1490,6 +1410,53 @@ const DownloadModal = ({ isOpen, onClose, onCustomDownload, customFilterInfo = n
                             </div>
                         </div>
                     )}
+
+                    {/* 커스텀 다운로드: 별도 화면에서 조건 → 확인 → 받기까지 진행 — 구분선 아래 가벼운 링크 줄 */}
+                    <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '16px 0 6px 0' }} />
+
+                    <div
+                        onClick={handleOpenCustomSettings}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '12px',
+                            padding: '10px 8px',
+                            margin: '0 -8px 8px',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.15s ease'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                            <SlidersHorizontal size={15} color="#16a34a" style={{ flexShrink: 0 }} />
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap' }}>
+                                커스텀 다운로드
+                            </span>
+                            <span style={{ fontSize: '12px', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                조건에 맞는 응답만 골라 받기
+                            </span>
+                        </div>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '2px',
+                            height: '28px',
+                            padding: '0 8px 0 12px',
+                            border: '1px solid #16a34a',
+                            borderRadius: '6px',
+                            backgroundColor: '#ffffff',
+                            color: '#16a34a',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            flexShrink: 0
+                        }}>
+                            <span>열기</span>
+                            <ChevronRight size={14} />
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
