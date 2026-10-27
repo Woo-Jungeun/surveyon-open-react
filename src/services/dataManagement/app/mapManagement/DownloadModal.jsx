@@ -1412,7 +1412,7 @@ const DownloadModal = ({ isOpen, onClose, onCustomDownload, customFilterInfo = n
                     )}
 
                     {/* 커스텀 다운로드: 별도 화면에서 조건 → 확인 → 받기까지 진행 — 구분선 아래 가벼운 링크 줄 */}
-                    <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '16px 0 6px 0' }} />
+                    <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '16px 0 8px 0' }} />
 
                     <div
                         onClick={handleOpenCustomSettings}
@@ -1422,7 +1422,7 @@ const DownloadModal = ({ isOpen, onClose, onCustomDownload, customFilterInfo = n
                             justifyContent: 'space-between',
                             gap: '12px',
                             padding: '10px 8px',
-                            margin: '0 -8px 8px',
+                            margin: '0 -8px',
                             borderRadius: '8px',
                             cursor: 'pointer',
                             transition: 'background-color 0.15s ease'
