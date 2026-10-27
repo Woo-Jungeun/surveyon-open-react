@@ -13,6 +13,7 @@ import AddLabelPopup from './AddLabelPopup';
 import LogicEditPopup from './LogicEditPopup';
 import MapConfigFilterPopup from '../../../../components/common/popup/MapConfigFilterPopup';
 import DownloadModal from './DownloadModal';
+import CustomDownloadModal from './CustomDownloadModal';
 import UploadModal from './UploadModal';
 import DataUpdateModal from './DataUpdateModal';
 import RelabelModal from './RelabelModal';
@@ -53,6 +54,8 @@ const MapManagementPage = () => {
     const [editingCategoryPopupOpen, SetEditingCategoryPopupOpen] = useState(null); // 보기 변경 팝업
     const [editingLogicPopupOpen, setEditingLogicPopupOpen] = useState(null);       // 로직 변경 팝업
     const [downloadModalOpen, setDownloadModalOpen] = useState(false);              // 다운로드 모달 상태
+    const [customDownloadModalOpen, setCustomDownloadModalOpen] = useState(false);  // 커스텀 다운로드 모달 상태
+    const [customFilterInfo, setCustomFilterInfo] = useState(null);                 // 적용된 커스텀 추출 조건 상태
     const [uploadModalOpen, setUploadModalOpen] = useState(false);                  // 업로드 모달 상태
     const [dataUpdateModalOpen, setDataUpdateModalOpen] = useState(false);          //  데이터 등록 모달 상태
     const [reLabelModalOpen, setReLabelModalOpen] = useState(false);                // Re_Label 모달 상태
@@ -128,6 +131,7 @@ const MapManagementPage = () => {
                         multiValChange: !!item.multiChange,
                         minQuestions: item.minAnswer || 0,
                         excludeOpenMerge: !!item.noOpenMerge,
+                        isAiOpened: !!item.isAiOpened,
                         verificationVar: !!item.isValid,
                         excludeOutput: !!item.noOutput,
                         category: categoryStr,
@@ -594,6 +598,30 @@ const MapManagementPage = () => {
         });
     };
 
+    // 커스텀 다운로드 열기 — 서버는 저장된 맵(문항 이름) 기준으로 조건을 확인하므로, 저장 안 된 변경이 있으면 먼저 안내
+    const handleOpenCustomDownload = () => {
+        if (!hasChanges) {
+            setCustomDownloadModalOpen(true);
+            return;
+        }
+        modal.showConfirm(
+            "알림",
+            "저장하지 않은 맵 변경 사항이 있습니다.\n커스텀 다운로드는 저장된 맵 기준으로 응답을 찾으므로 먼저 저장해 주세요.",
+            {
+                btns: [
+                    { title: "취소", click: () => { } },
+                    {
+                        title: "저장 후 열기",
+                        click: async () => {
+                            const success = await executeSave(false);
+                            if (success) setCustomDownloadModalOpen(true);
+                        }
+                    }
+                ]
+            }
+        );
+    };
+
     const handleUpdateMap = () => {
         modal.showConfirm("알림", "큐마의 최신맵으로 대체됩니다.\n주의사항 : 설문온 맵작성에서 설정한 옵션들은 모두 초기화됩니다.", {
             btns: [
@@ -1008,6 +1036,19 @@ const MapManagementPage = () => {
                 <DownloadModal
                     isOpen={downloadModalOpen}
                     onClose={() => setDownloadModalOpen(false)}
+                    onCustomDownload={handleOpenCustomDownload}
+                    customFilterInfo={customFilterInfo}
+                    onClearCustomFilter={() => setCustomFilterInfo(null)}
+                />
+
+                {/* 커스텀 다운로드 모달 */}
+                <CustomDownloadModal
+                    isOpen={customDownloadModalOpen}
+                    onClose={() => setCustomDownloadModalOpen(false)}
+                    variables={variables}
+                    customFilterInfo={customFilterInfo}
+                    onApplyCustomFilter={(info) => setCustomFilterInfo(info)}
+                    onClearCustomFilter={() => setCustomFilterInfo(null)}
                 />
 
                 {/* 업로드 모달 */}

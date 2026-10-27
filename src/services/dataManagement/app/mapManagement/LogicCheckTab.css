@@ -1901,7 +1901,7 @@ button.lc-result-restore {
 .lc-logic-footer .btn-save { border: 1px solid var(--dm-primary) !important; }
 /* 문법표 (서버) — 묶음 제목 · 옛 글자 · 오류 */
 .lc-logic-help tr.grp td { padding-top: 8px !important; font-size: 11px !important; font-weight: 600; color: #94a3b8 !important; font-family: inherit !important; }
-.lc-logic-help tr.legacy td.op { color: #94a3b8 !important; text-decoration: line-through; }
+.lc-logic-help tr.legacy td.op { color: #94a3b8 !important; }
 .lc-logic-help .instead { color: #64748b; }
 .lc-logic-help .instead code { font-family: Consolas, 'D2Coding', monospace; color: var(--dm-primary); }
 .lc-logic-help .note { color: #94a3b8; }

@@ -100,6 +100,43 @@ export function MapManagementPageApi() {
         async (data) => await api.post(data, "/export/supply/tool/status", "API_BASE_URL_DATAMANAGEMENT")
     );
 
+    /** 커스텀 다운로드 - 필드 목록 및 SAV 여부 조회 */
+    const exportCustomFields = useMutation(
+        async (data) => await api.post(data, "/export/custom/fields", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 커스텀 다운로드 - 추출 방식(서버/PC도구) 예상 */
+    const exportCustomEstimate = useMutation(
+        async (data) => await api.post(data, "/export/custom/estimate", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 커스텀 다운로드 - 맞는 응답 수 확인 */
+    const exportCustomCheck = useMutation(
+        async (data) => await api.post(data, "/export/custom/check", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 커스텀 다운로드 - PC 도구용 티켓 발급 */
+    const exportCustomTicket = useMutation(
+        async (data) => await api.post(data, "/export/custom/ticket", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 커스텀 다운로드 - 파일 다운로드 요청 */
+    const exportCustom = useMutation(
+        async (args) => {
+            try {
+                if (args && args.data && args.config) {
+                    return await api.file(args.data, "/export/custom", "API_BASE_URL_DATAMANAGEMENT", args.config);
+                }
+                return await api.file(args, "/export/custom", "API_BASE_URL_DATAMANAGEMENT");
+            } catch (err) {
+                if (axios.isCancel(err) || err?.name === 'CanceledError' || err?.name === 'AbortError' || err?.code === 'ERR_CANCELED') {
+                    return null;
+                }
+                throw err;
+            }
+        }
+    );
+
     /** SPS 파일 업로드 */
     const uploadSpss = useMutation(
         async (data) => await api.post(data, "/upload", "API_BASE_URL_DATAMANAGEMENT"),
@@ -344,6 +381,11 @@ export function MapManagementPageApi() {
         exportSupplyTicket,
         exportSupplyToolStatus,
         resetExportSupplyTool,
+        exportCustomFields,
+        exportCustomEstimate,
+        exportCustomCheck,
+        exportCustomTicket,
+        exportCustom,
         uploadSpss,
         updateDataFromSav,
         validateSav,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Download, X, FileText, ChevronDown, ChevronUp, Check, RotateCcw, Monitor, AlertCircle } from 'lucide-react';
+import { Download, X, FileText, ChevronDown, ChevronUp, ChevronRight, Check, RotateCcw, Monitor, AlertCircle, SlidersHorizontal } from 'lucide-react';
 import { MapManagementPageApi } from './MapManagementPageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
 import moment from 'moment';
@@ -17,7 +17,7 @@ const OTHER_FORMAT_OPTIONS = [
     { id: 'stp', token: 'stp', label: '.stp', badge: '2개', desc: '정의 파일 · 건수 무관' }
 ];
 
-const DownloadModal = ({ isOpen, onClose }) => {
+const DownloadModal = ({ isOpen, onClose, onCustomDownload, customFilterInfo = null, onClearCustomFilter }) => {
     const { exportData, exportSupplyTicket, exportSupplyToolStatus, resetExportSupplyTool, exportStates, exportEstimate } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
@@ -558,6 +558,15 @@ const DownloadModal = ({ isOpen, onClose }) => {
         }
     };
 
+    /** 커스텀 다운로드 설정 팝업 열기 */
+    const handleOpenCustomSettings = () => {
+        if (onCustomDownload) {
+            onCustomDownload();
+        } else {
+            modal.showAlert("알림", "커스텀 다운로드 기능 준비 중입니다.");
+        }
+    };
+
     /** 선택된 다른 형식들 다중 다운로드 (콤마 조인 토큰 전송: 예 "crd,sps") */
     const handleBulkDownload = async () => {
         if (selectedFormats.length === 0 || downloading || downloadingSav || selectedStates.length === 0) return;
@@ -664,7 +673,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
         const { percent, step, statusText, isCompleted } = exportProgress;
 
         return (
-            <div className="variable-modal-overlay" style={{ zIndex: 1300, backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)' }}>
+            <div className="variable-modal-overlay" style={{ zIndex: 1300, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
                 <div style={{
                     width: '440px',
                     backgroundColor: '#ffffff',
@@ -907,8 +916,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                        backdropFilter: 'blur(4px)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.96)',
                         zIndex: 100,
                         display: 'flex',
                         flexDirection: 'column',
@@ -993,7 +1001,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                             <h3 className="variable-modal-title">다운로드</h3>
                         </div>
                         <p className="download-modal-desc" style={{ fontSize: '13px', color: '#64748b', margin: 0, paddingLeft: '12px' }}>
-                            원하는 형식의 파일을 선택하여 다운로드하세요.
+                            다운로드할 대상 조건과 파일 형식을 선택하세요.
                         </p>
                     </div>
                     <button onClick={handleCloseModal} className="variable-modal-close" style={{ alignSelf: 'flex-start' }}><X size={20} /></button>
@@ -1002,10 +1010,27 @@ const DownloadModal = ({ isOpen, onClose }) => {
                 {/* 2. Body */}
                 <div className="variable-modal-body" style={{ padding: '24px 32px 10px 32px' }}>
 
+                    {/* 구분 1: 데이터 추출 조건 */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        marginBottom: '12px'
+                    }}>
+                        <span style={{
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            color: '#475569',
+                            letterSpacing: '-0.2px'
+                        }}>
+                            데이터 추출 조건
+                        </span>
+                        <div style={{ flex: 1, height: '1px', backgroundColor: '#e2e8f0' }} />
+                    </div>
 
                     {/* 컨택상황 (응답 상태) */}
                     {contactStates.length > 0 && (
-                        <div style={{ marginBottom: '16px' }}>
+                        <div style={{ marginBottom: '10px' }}>
                             <div
                                 onClick={() => setIsStateAccordionOpen(!isStateAccordionOpen)}
                                 style={{
@@ -1122,7 +1147,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                             padding: '12px 16px',
                             fontSize: '13.5px',
                             fontWeight: 600,
-                            marginBottom: '16px',
+                            marginBottom: '12px',
                             display: 'flex',
                             alignItems: 'flex-start',
                             gap: '8px'
@@ -1133,6 +1158,78 @@ const DownloadModal = ({ isOpen, onClose }) => {
                             </span>
                         </div>
                     )}
+
+                    {/* 커스텀 다운로드 설정 열기 카드 */}
+                    <div
+                        onClick={handleOpenCustomSettings}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            backgroundColor: '#ffffff',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '10px',
+                            padding: '12px 16px',
+                            cursor: 'pointer',
+                            marginBottom: '16px',
+                            transition: 'all 0.15s ease'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#ffffff'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '8px',
+                                backgroundColor: '#f0fdf4',
+                                border: '1px solid #bbf7d0',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#16a34a'
+                            }}>
+                                <SlidersHorizontal size={16} />
+                            </div>
+                            <div>
+                                <div style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
+                                    커스텀 다운로드
+                                </div>
+                                <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '2px' }}>
+                                    설문 문항 조건, 기기, 경로, 특정 PID 목록을 지정하여 맞춤형 데이터셋 추출
+                                </div>
+                            </div>
+                        </div>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            color: '#16a34a',
+                            fontSize: '12px',
+                            fontWeight: 700
+                        }}>
+                            <span>설정 열기</span>
+                            <ChevronRight size={14} />
+                        </div>
+                    </div>
+
+                    {/* 구분: 다운로드 파일 형식 선택 */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        margin: '20px 0 12px 0'
+                    }}>
+                        <span style={{
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            color: '#475569',
+                            letterSpacing: '-0.2px'
+                        }}>
+                            다운로드 파일 형식 선택
+                        </span>
+                        <div style={{ flex: 1, height: '1px', backgroundColor: '#e2e8f0' }} />
+                    </div>
 
                     {/* 3. Primary Top Highlight Card: SPSS 데이터 (.sav) */}
                     <div
@@ -1147,7 +1244,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                             borderRadius: '12px',
                             padding: '14px 16px',
                             cursor: (downloadingSav || downloading) ? 'wait' : (selectedStates.length === 0) ? 'default' : 'pointer',
-                            marginBottom: '20px',
+                            marginBottom: '12px',
                             boxShadow: (stateErrorMsg || selectedStates.length === 0) ? 'none' : '0 2px 8px rgba(22, 163, 74, 0.08)'
                         }}
                         onMouseEnter={(e) => { if (!stateErrorMsg && selectedStates.length > 0) e.currentTarget.style.backgroundColor = '#e6f7ed'; }}
@@ -1208,6 +1305,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                             <Download size={13} />
                         </button>
                     </div>
+
 
                     {/* 4. Accordion Toggle Header: 다른 형식으로 받기 */}
                     <div
