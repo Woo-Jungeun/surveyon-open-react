@@ -1836,7 +1836,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
             {/* 2. 메인 레이아웃 */}
             <div className="dp-main-layout" onClick={(e) => e.stopPropagation()} style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden', margin: '16px 16px 16px 16px' }}>
-                <div className={`dp-sidebar-container ${!isSummarySidebarOpen ? 'collapsed' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+                <div className={`dp-sidebar-container dp-summary-sidebar-container ${!isSummarySidebarOpen ? 'collapsed' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
                     {!isSummarySidebarOpen && (
                         <div className="dp-sidebar-collapsed-bar" onClick={() => setIsSummarySidebarOpen(true)}>
                             <div className="dp-collapsed-header">

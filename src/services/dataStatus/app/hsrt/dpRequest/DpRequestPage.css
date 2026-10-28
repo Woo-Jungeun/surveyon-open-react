@@ -592,6 +592,15 @@
     width: 40px;
 }
 
+/* 요약표(척도/오픈 탭) 원본 변수 목록 전용 넓이 */
+.dp-sidebar-container.dp-summary-sidebar-container {
+    width: 380px;
+}
+
+.dp-sidebar-container.dp-summary-sidebar-container.collapsed {
+    width: 40px;
+}
+
 .dp-sidebar-container.collapsed .dp-sidebar {
     opacity: 0;
     pointer-events: none;
