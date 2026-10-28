@@ -1919,9 +1919,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#0f172a', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                 {group.parentLabel}
                                             </span>
-                                            <span style={{ fontSize: '10.5px', color: '#64748b', background: '#f1f5f9', padding: '1px 5px', borderRadius: '4px', fontWeight: 500, display: 'inline-flex', alignItems: 'center' }}>
-                                                {dn(group.parentId)}
-                                            </span>
+                                            {/* group_id 배지 표출 제거 (그룹 단위 spss_name 없음) */}
                                         </div>
 
                                         {/* 자식 문항 리스트 */}
