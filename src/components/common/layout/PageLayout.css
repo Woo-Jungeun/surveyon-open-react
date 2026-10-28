@@ -1,0 +1,381 @@
+/* ==========================================================================
+   설문온 공통 레이아웃 & 페이지 규격 시스템 (SurveyOn Page Layout System)
+   - 사이드바 (1번), 헤더 (2번), 푸터 (3번), 메인 작업영역 (4번) 통일 규격
+   ========================================================================== */
+
+/* ==========================================================================
+   4대 서비스 테마 색상 정의 (색상만 테마별 자동 전환)
+   - H-SRT: Blue 계열 (#3b82f6)
+   - 데이터관리: Green 계열 (#16a34a)
+   - AI 오픈분석: Orange 계열 (#ff6b35)
+   - 실사관리: Navy 계열 (#1e3a8a)
+   ========================================================================== */
+:root,
+[data-theme="hsrt"],
+[data-theme="data-dashboard"] {
+    --ds-primary: var(--srt-primary-500, #3b82f6);
+    --ds-primary-hover: var(--srt-primary-600, #2563eb);
+    --ds-primary-light: var(--srt-primary-50, #eff6ff);
+    --ds-primary-border: var(--srt-primary-200, #bfdbfe);
+}
+
+[data-theme="dataManagement"],
+[data-theme="data-management"] {
+    --ds-primary: #16a34a;
+    --ds-primary-hover: #15803d;
+    --ds-primary-light: #f0fdf4;
+    --ds-primary-border: #bbf7d0;
+}
+
+[data-theme="aiOpen"],
+[data-theme="aiOpenAnalysis"],
+[data-theme="ai-analysis"] {
+    --ds-primary: #ff6b35;
+    --ds-primary-hover: #ea580c;
+    --ds-primary-light: #fff7ed;
+    --ds-primary-border: #fed7aa;
+}
+
+[data-theme="fieldManagement"],
+[data-theme="field-management"] {
+    --ds-primary: #1e3a8a;
+    --ds-primary-hover: #1e40af;
+    --ds-primary-light: #e0e7ff;
+    --ds-primary-border: #c7d2fe;
+}
+
+/* --------------------------------------------------------------------------
+   1. 전체 앱 래퍼 레이아웃 (AppLayout)
+   -------------------------------------------------------------------------- */
+.app-layout-root {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #f5f7fa;
+}
+
+.app-layout-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+    background-color: #f1f5f9;
+}
+
+.app-layout-content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background-color: #f1f5f9;
+}
+
+/* --------------------------------------------------------------------------
+   2. 페이지 컨테이너 (PageContainer)
+   -------------------------------------------------------------------------- */
+.page-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background-color: #f1f5f9;
+}
+
+/* --------------------------------------------------------------------------
+   3. 페이지 상단 헤더 (PageHeader - 2번 영역)
+   -------------------------------------------------------------------------- */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 64px;
+    min-height: 64px;
+    padding: 0 24px;
+    background: #ffffff;
+    border-bottom: 1px solid var(--ds-border, #e2e8f0);
+    box-sizing: border-box;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    z-index: 100;
+    position: relative;
+    user-select: none;
+}
+
+.page-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+}
+
+.page-header-title {
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0;
+    color: var(--ds-text-main, #1e293b);
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+/* 설문온 시그니처: 제목 앞 파란색 세로 막대 */
+.page-header-title::before {
+    content: '';
+    display: block;
+    width: 4px;
+    height: 20px;
+    background: var(--ds-primary, var(--srt-primary-500, #3b82f6));
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.page-header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* 헤더 검색창 */
+.page-header-search {
+    position: relative;
+    width: 240px;
+}
+
+.page-header-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ds-text-sub, #64748b);
+    pointer-events: none;
+}
+
+.page-header-search-input {
+    width: 100%;
+    height: 32px;
+    padding: 0 12px 0 34px;
+    border-radius: 6px;
+    border: 1px solid var(--ds-border, #cbd5e1);
+    font-size: 13px;
+    outline: none;
+    background: var(--ds-bg, #f8fafc);
+    color: var(--ds-text-main, #334155);
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.page-header-search-input:focus {
+    background: #ffffff;
+    border-color: var(--ds-primary, #3b82f6);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--srt-primary-500, #3b82f6) 12%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   4. 본문 작업 영역 (PageContent - 4번 영역)
+   -------------------------------------------------------------------------- */
+.page-content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.page-content-padded {
+    padding: 16px;
+    gap: 12px;
+}
+
+.page-content-scrollable {
+    overflow-y: auto;
+}
+
+/* --------------------------------------------------------------------------
+   5. 공통 버튼 규격 클래스 (Common Buttons)
+   -------------------------------------------------------------------------- */
+.cmn-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    border: 1px solid var(--ds-border, #cbd5e1);
+    background: #ffffff;
+    color: var(--ds-text-main, #334155);
+    box-sizing: border-box;
+    white-space: nowrap;
+    outline: none;
+    text-decoration: none;
+}
+
+.cmn-btn:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #1e293b;
+}
+
+.cmn-btn:active {
+    transform: translateY(1px);
+}
+
+/* [Primary 버튼] - 저장, 확인, 주요 실행 액션 */
+.cmn-btn.cmn-btn-primary,
+.cmn-btn-primary {
+    border: 1px solid transparent !important;
+    background-color: var(--ds-primary, var(--srt-primary-500, #3b82f6)) !important;
+    background: var(--ds-primary, var(--srt-primary-500, #3b82f6)) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.cmn-btn.cmn-btn-primary:not(:disabled) *,
+.cmn-btn-primary:not(:disabled) * {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+}
+
+.cmn-btn.cmn-btn-primary:hover:not(:disabled),
+.cmn-btn-primary:hover:not(:disabled) {
+    background-color: var(--ds-primary-hover, var(--srt-primary-600, #2563eb)) !important;
+    background: var(--ds-primary-hover, var(--srt-primary-600, #2563eb)) !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+}
+
+.cmn-btn.cmn-btn-primary:active:not(:disabled),
+.cmn-btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* [비활성화(Disabled) 버튼 규격] - 두 번째 사진과 동일한 부드러운 연회색 스타일 */
+.cmn-btn:disabled,
+.cmn-btn[disabled],
+.cmn-btn.cmn-btn-primary:disabled,
+.cmn-btn.cmn-btn-primary[disabled],
+.cmn-btn.cmn-btn-outline:disabled,
+.cmn-btn.cmn-btn-outline[disabled] {
+    opacity: 1 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    background: #e2e8f0 !important;
+    background-color: #e2e8f0 !important;
+    border: 1px solid transparent !important;
+    color: #94a3b8 !important;
+    box-shadow: none !important;
+}
+
+.cmn-btn:disabled *,
+.cmn-btn[disabled] *,
+.cmn-btn.cmn-btn-primary:disabled *,
+.cmn-btn.cmn-btn-primary[disabled] * {
+    color: #94a3b8 !important;
+    stroke: #94a3b8 !important;
+}
+
+.cmn-btn:disabled:hover,
+.cmn-btn[disabled]:hover,
+.cmn-btn.cmn-btn-primary:disabled:hover,
+.cmn-btn.cmn-btn-primary[disabled]:hover {
+    background: #e2e8f0 !important;
+    background-color: #e2e8f0 !important;
+    color: #94a3b8 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* 헤더 내 Kendo UI 버튼(GridHeaderBtnPrimary 등)의 비활성화(disabled) 규격 */
+.page-header .btnM:disabled,
+.page-header .btnM.k-disabled,
+.page-header .btnM[themecolor="primary"]:disabled,
+.page-header .btnM[themecolor="primary"].k-disabled,
+.page-header button.k-button:disabled,
+.page-header button.k-button.k-disabled,
+.page-header .btnM[disabled] {
+    background: #e2e8f0 !important;
+    background-color: #e2e8f0 !important;
+    color: #94a3b8 !important;
+    border: 1px solid transparent !important;
+    box-shadow: none !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    opacity: 1 !important;
+}
+
+.page-header .btnM:disabled *,
+.page-header .btnM.k-disabled *,
+.page-header .btnM[themecolor="primary"]:disabled *,
+.page-header .btnM[themecolor="primary"].k-disabled *,
+.page-header button.k-button:disabled * {
+    color: #94a3b8 !important;
+    stroke: #94a3b8 !important;
+}
+
+/* [Outline/Brand 버튼] - AI조건식 자동생성, 변수 조합기 등 브랜드 시그니처 버튼 */
+.cmn-btn.cmn-btn-outline,
+.cmn-btn-outline {
+    color: var(--ds-primary, #2563eb) !important;
+    border: 1px solid var(--ds-primary, #2563eb) !important;
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+}
+
+.cmn-btn.cmn-btn-outline *,
+.cmn-btn-outline * {
+    color: var(--ds-primary, #2563eb) !important;
+}
+
+.cmn-btn.cmn-btn-outline:hover,
+.cmn-btn-outline:hover {
+    background-color: var(--ds-primary-light, #eff6ff) !important;
+    background: var(--ds-primary-light, #eff6ff) !important;
+    border-color: var(--ds-primary-hover, #1d4ed8) !important;
+    color: var(--ds-primary-hover, #1d4ed8) !important;
+}
+
+/* [Secondary 버튼] - 서브 액션, 일괄수정, 복사 등 */
+.cmn-btn-secondary {
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #475569;
+}
+
+.cmn-btn-secondary:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #1e293b;
+}
+
+/* [Danger 버튼] - 삭제 등 */
+.cmn-btn-danger {
+    border: 1px solid #fecaca;
+    background: #ffffff;
+    color: #ef4444;
+}
+
+.cmn-btn-danger:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+}
+
+/* 소형 버튼 (height 28px) */
+.cmn-btn-sm {
+    height: 28px;
+    padding: 0 10px;
+    font-size: 12px;
+}

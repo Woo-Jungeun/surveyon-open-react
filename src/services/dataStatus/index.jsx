@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-
-import MainWrapperView from "./views/MainWrapperView.jsx";
+import { AppLayout } from "@/components/common/layout";
 import AdditionalWrapperView from "./views/analysis/AdditionalWrapperView.jsx";
 import MenuPermissionWrapperView from "./views/hsrt/MenuPermissionWrapperView.jsx";
 import AddQuestionWrapperView from "./views/hsrt/AddQuestionWrapperView.jsx";
@@ -19,7 +18,7 @@ export default function DataStatusRoutes() {
       <Route path="hsrt/crosstab_viewer" element={<SingleCrosstabViewerPage />} />
 
       {/* 기본 Wrapper */}
-      <Route element={<MainWrapperView />}>
+      <Route element={<AppLayout service="hsrt" />}>
         {/* 기본 진입 시 스터브 세팅 여부에 따라 동적 분기(교차분석 vs DP의뢰서 표설정) */}
         <Route path="" element={<HsrtGateway />} />
         <Route path="hsrt" element={<HsrtGateway />} />

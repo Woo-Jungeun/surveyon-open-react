@@ -6,7 +6,7 @@ import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
-import DataHeader from "@/services/dataStatus/components/DataHeader";
+import { PageContainer } from "@/components/common/layout";
 import CartesianGeneratorModal from "./CartesianGeneratorModal";
 import { getSpss } from "../../common/spssName";
 import BulkEditConditionsModal from "./BulkEditConditionsModal";
@@ -723,23 +723,6 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [toast, setToast] = useState({ show: false, message: '' });
     const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
 
-    const [showTitleTooltip, setShowTitleTooltip] = useState(false);
-    const titleTooltipRef = useRef(null);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (titleTooltipRef.current && !titleTooltipRef.current.contains(event.target)) {
-                setShowTitleTooltip(false);
-            }
-        };
-        if (showTitleTooltip) {
-            document.addEventListener("mousedown", handleClickOutside);
-        }
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, [showTitleTooltip]);
-
     const handleCopyGrid = async () => {
         try {
             if (!currentInfo || currentInfo.length === 0) {
@@ -1354,61 +1337,34 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         currentInfoRef.current = currentInfoRef.current.map(it => ({ ...it, inEdit: false }));
     }, []);
 
-    const titleNode = (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: 800 }}>
-            문항추가
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }} ref={titleTooltipRef}>
-                <button
-                    onClick={(e) => { e.stopPropagation(); setShowTitleTooltip(!showTitleTooltip); }}
-                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#64748b', display: 'flex', outline: 'none' }}
-                    title="도움말 보기"
-                >
-                    <Info size={18} />
-                </button>
-                {showTitleTooltip && (
-                    <div style={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: '-12px',
-                        marginTop: '10px',
-                        backgroundColor: '#ffffff',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: '8px',
-                        padding: '12px 14px',
-                        width: 'max-content',
-                        maxWidth: '350px',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                        zIndex: 1000,
-                        fontSize: '13px',
-                        color: '#334155',
-                        lineHeight: '1.5',
-                        fontWeight: 400,
-                        whiteSpace: 'normal',
-                        wordBreak: 'keep-all',
-                        letterSpacing: '-0.3px'
-                    }}>
-                        <div style={{
-                            position: 'absolute',
-                            top: '-6px',
-                            left: '17px',
-                            width: '10px',
-                            height: '10px',
-                            backgroundColor: '#ffffff',
-                            borderTop: '1px solid #cbd5e1',
-                            borderLeft: '1px solid #cbd5e1',
-                            transform: 'rotate(45deg)'
-                        }} />
-                        <div style={{ position: 'relative', zIndex: 2 }}>
-                            기존 보기를 재구성(리코딩)하거나, 여러 문항을 합쳐서 분석에 딱 맞는 새로운 문항을 생성합니다.
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
+    const headerActions = (
+        <>
+            <button
+                type="button"
+                onClick={() => setIsAiModalOpen(true)}
+                className="cmn-btn cmn-btn-outline"
+            >
+                <Sparkles size={14} />
+                <span>AI조건식 자동생성</span>
+            </button>
+            <button
+                type="button"
+                onClick={() => setIsCartesianModalOpen(true)}
+                className="cmn-btn cmn-btn-outline"
+            >
+                <Wand2 size={14} />
+                <span>변수 조합기 (자동생성)</span>
+            </button>
+        </>
     );
 
     return (
-        <>
+        <PageContainer
+            title="문항추가"
+            infoTooltip="기존 보기를 재구성(리코딩)하거나, 여러 문항을 합쳐서 분석에 딱 맞는 새로운 문항을 생성합니다."
+            headerActions={headerActions}
+            onSave={handleSaveBanner}
+        >
             <style>{`
                 .dp-add-question-dropdown .k-input-value-text { font-weight: 400 !important; }
                 .dp-add-question-dropdown .k-input-button,
@@ -1420,54 +1376,6 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                     fill: var(--srt-primary-500) !important;
                 }
             `}</style>
-            <DataHeader title={titleNode} onSave={handleSaveBanner}>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <Button
-                        onClick={() => setIsAiModalOpen(true)}
-                        className="dp-btn"
-                        style={{
-                            color: 'var(--srt-primary-600)',
-                            border: '1px solid var(--srt-primary-600)',
-                            background: '#ffffff',
-                            height: '32px',
-                            padding: '0 16px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            transition: 'all 0.15s'
-                        }}
-                        onMouseOver={(e) => { e.currentTarget.style.background = 'var(--srt-primary-50)'; e.currentTarget.style.borderColor = 'var(--srt-primary-700)'; }}
-                        onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = 'var(--srt-primary-600)'; }}
-                    >
-                        <Sparkles size={14} style={{ marginRight: '6px' }} /> AI조건식 자동생성
-                    </Button>
-                    <Button
-                        onClick={() => setIsCartesianModalOpen(true)}
-                        className="dp-btn"
-                        style={{
-                            color: 'var(--srt-primary-600)',
-                            border: '1px solid var(--srt-primary-600)',
-                            background: '#ffffff',
-                            height: '32px',
-                            padding: '0 16px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            transition: 'all 0.15s'
-                        }}
-                        onMouseOver={(e) => { e.currentTarget.style.background = 'var(--srt-primary-50)'; e.currentTarget.style.borderColor = 'var(--srt-primary-700)'; }}
-                        onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = 'var(--srt-primary-600)'; }}
-                    >
-                        <Wand2 size={14} style={{ marginRight: '6px' }} /> 변수 조합기 (자동생성)
-                    </Button>
-                </div>
-            </DataHeader>
             <div className="dp-request-container" style={{ flex: 1, minHeight: 0, padding: '16px', gap: '12px' }} onClick={handleCloseEdit}>
                 <div className="dp-main-layout" onClick={(e) => e.stopPropagation()} style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
                     {/* 사이드바 */}
@@ -1604,48 +1512,16 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                             </span>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button
+                                    type="button"
                                     onClick={() => setIsBulkEditModalOpen(true)}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        height: '28px',
-                                        padding: '0 12px',
-                                        borderRadius: '6px',
-                                        border: '1px solid #cbd5e1',
-                                        color: '#475569',
-                                        background: '#FFFFFF',
-                                        fontSize: '12px',
-                                        fontWeight: 600,
-                                        cursor: 'pointer',
-                                        transition: 'all 0.15s',
-                                        boxSizing: 'border-box'
-                                    }}
-                                    onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
-                                    onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                                    className="cmn-btn cmn-btn-secondary cmn-btn-sm"
                                 >
                                     일괄 문구 수정
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={handleCopyGrid}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        height: '28px',
-                                        padding: '0 12px',
-                                        borderRadius: '6px',
-                                        border: '1px solid #cbd5e1',
-                                        color: '#475569',
-                                        background: '#FFFFFF',
-                                        fontSize: '12px',
-                                        fontWeight: 600,
-                                        cursor: 'pointer',
-                                        transition: 'all 0.15s',
-                                        boxSizing: 'border-box'
-                                    }}
-                                    onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
-                                    onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                                    className="cmn-btn cmn-btn-secondary cmn-btn-sm"
                                 >
                                     그리드 복사
                                 </button>
@@ -1707,7 +1583,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 message={toast.message}
                 onClose={() => setToast({ ...toast, show: false })}
             />
-        </>
+        </PageContainer>
     );
 });
 

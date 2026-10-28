@@ -28,19 +28,10 @@ const DropdownMenu = ({ label, items, isPrimary }) => {
     return (
         <div ref={ref} style={{ position: 'relative' }}>
             <button
+                type="button"
                 onClick={() => setOpen(!open)}
-                className={`ai-data-header-btn ${isPrimary ? 'ai-data-header-btn-primary' : 'ai-data-header-btn-secondary'}`}
-                style={isPrimary ? {
-                    backgroundColor: '#FFB74D',
-                    borderColor: '#FFB74D',
-                    color: '#fff',
-                    height: '32px',
-                    fontSize: '13px',
-                    padding: '0 12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                } : {
+                className={`cmn-btn ai-data-header-btn ${isPrimary ? 'cmn-btn-primary ai-data-header-btn-primary' : 'cmn-btn-secondary ai-data-header-btn-secondary'}`}
+                style={{
                     height: '32px',
                     fontSize: '13px',
                     padding: '0 12px',

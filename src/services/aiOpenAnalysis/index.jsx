@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-
-import MainWrapperView from "./views/MainWrapperView.jsx";
+import { AppLayout } from "@/components/common/layout";
 import PopupWrapperView from "./views/PopupWrapperView.jsx";
 import MainListWrapperView from "./views/MainList/MainListWrapperView.jsx";
 import OptionSettingWrapperView from "./views/optionSetting/OptionSettingWrapperView.jsx";
@@ -25,7 +24,7 @@ export default function AiOpenAnalysisRoutes() {
       </Route>
 
       {/* 1. AI Open Analysis 기본 Wrapper (Orange Theme) */}
-      <Route element={<MainWrapperView />}>
+      <Route element={<AppLayout service="aiOpen" />}>
         <Route index element={<Navigate to="pro_list" replace />} />
         {/* MainListWrapperView moved out */}
         <Route path="option_setting/*" element={<OptionSettingWrapperView />} />
