@@ -345,10 +345,6 @@ const DataFilterCard = ({ variables, badges, onChangeBadges, previewFilter, onVa
                                 )}
                             </div>
                         )}
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 18px', background: '#F8FAFC', borderTop: `1px solid ${isInvalid || isZero ? '#FECACA' : '#E2E8F0'}` }}>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: '#64748B', whiteSpace: 'nowrap', flexShrink: 0, lineHeight: 1.6 }}>산출 조건식</span>
-                            <code style={{ flex: 1, minWidth: 0, fontSize: 12, color: '#475569', fontFamily: 'Consolas, monospace', wordBreak: 'break-all', maxHeight: 96, overflowY: 'auto', lineHeight: 1.6 }}>{expression}</code>
-                        </div>
                     </div>
                 </div>
             )}
