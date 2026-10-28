@@ -1354,17 +1354,19 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
 // --- 텍스트 편집 셀: 자체 로컬 state로 타이핑 즉각 반응, onBlur에만 stubs 업데이트 ---
 const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', placeholder = '', displayValue = '' }) => {
     const [isEditing, setIsEditing] = useState(false);
-    const [localVal, setLocalVal] = useState(String(dataItem[field] ?? ''));
+    const effectiveVal = displayValue || String(dataItem[field] ?? '');
+    const [localVal, setLocalVal] = useState(effectiveVal);
     const context = useContext(TableStepContext);
 
-    // 외부에서 dataItem이 바뀔 때만 동기화 (편집 중에는 무시)
+    // 외부에서 dataItem 또는 displayValue가 바뀔 때만 동기화 (편집 중에는 무시)
     useEffect(() => {
-        if (!isEditing) setLocalVal(String(dataItem[field] ?? ''));
-    }, [dataItem.source_var_id, dataItem[field], isEditing]);
+        if (!isEditing) setLocalVal(displayValue || String(dataItem[field] ?? ''));
+    }, [dataItem.source_var_id, dataItem[field], displayValue, isEditing]);
 
     const commit = () => {
         setIsEditing(false);
-        if (localVal !== String(dataItem[field] ?? '')) onUpdate(dataItem, field, localVal);
+        const currentEffective = displayValue || String(dataItem[field] ?? '');
+        if (localVal !== currentEffective) onUpdate(dataItem, field, localVal);
     };
 
     const handlePaste = (e) => {
@@ -1423,7 +1425,7 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', pl
                     onPaste={handlePaste}
                     onKeyDown={e => {
                         if (e.key === 'Enter') e.target.blur();
-                        if (e.key === 'Escape') { setLocalVal(String(dataItem[field] ?? '')); setIsEditing(false); }
+                        if (e.key === 'Escape') { setLocalVal(displayValue || String(dataItem[field] ?? '')); setIsEditing(false); }
                     }}
                     style={{ width: '100%', border: '1px solid var(--srt-primary-500)', borderRadius: '2px', padding: '0 5px', fontSize: '13px', height: '22px', outline: 'none', boxSizing: 'border-box' }}
                 />
@@ -1434,14 +1436,17 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', pl
     return (
         <td
             title={displayValue || localVal}
-            onClick={() => setIsEditing(true)}
+            onClick={() => {
+                setLocalVal(displayValue || String(dataItem[field] ?? ''));
+                setIsEditing(true);
+            }}
             style={{
                 padding: '0 8px', fontSize: '13px', verticalAlign: 'middle', cursor: 'text', textAlign: align,
-                color: localVal ? '#1e293b' : '#94a3b8', userSelect: 'none',
+                color: (displayValue || localVal) ? '#1e293b' : '#94a3b8', userSelect: 'none',
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '1px'
             }}
         >
-            {(localVal && displayValue) || localVal || (placeholder ? <span style={{ fontSize: '11px', opacity: 0.7 }}>{placeholder}</span> : '-')}
+            {displayValue || localVal || (placeholder ? <span style={{ fontSize: '11px', opacity: 0.7 }}>{placeholder}</span> : '-')}
         </td>
     );
 });
