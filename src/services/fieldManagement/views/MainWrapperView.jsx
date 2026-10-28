@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { useLocation, Outlet, useNavigate } from "react-router-dom";
 
-import MenuBar from "@/services/fieldManagement/app/menuBar/MenuBar.jsx";
+import AppSidebar from "@/components/common/sidebar/AppSidebar.jsx";
 import FooterSection from "@/services/homePage/FooterSection";
 import { useSelector } from "react-redux";
 
@@ -10,7 +10,7 @@ const MainWrapperView = (props) => {
 
     return (
         <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f5f7fa' }} data-theme="field-management">
-            <MenuBar userName={auth?.user?.userName ?? ""} />
+            <AppSidebar service="fieldManagement" />
             <section style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                     <Outlet />

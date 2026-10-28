@@ -330,11 +330,16 @@ const Sidebar = ({
                             className={`project-info-card ${isHsrtCustomer ? "customer-mode" : ""}`}
                             onClick={() => {
                                 if (pageInfo.onSettingsClick) pageInfo.onSettingsClick();
+                                else if (pageInfo.onClick) pageInfo.onClick();
                             }}
                         >
                             <div className="project-title" style={{ fontSize: "13px", fontWeight: 500 }} title={pageInfo.title}>{pageInfo.title}</div>
                             {!isHsrtCustomer && (
-                                <button className="project-settings-btn">
+                                <button className="project-settings-btn" onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (pageInfo.onSettingsClick) pageInfo.onSettingsClick();
+                                    else if (pageInfo.onClick) pageInfo.onClick();
+                                }}>
                                     <Settings size={16} />
                                 </button>
                             )}

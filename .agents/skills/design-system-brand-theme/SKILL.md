@@ -149,27 +149,54 @@ PROJECT_BRAND_THEME
 5. **캡처 추출** — 결과를 같은 토큰 JSON으로 채우기만 하면 됨
 - 캡처 추출(색 뽑기)은 토큰 규격만 정해지면 2번과 **병렬 개발 가능** (다른 사람에게 맡겨도 됨)
 
-## 9. 진행 상황
-- 사용자 결정: **토큰 규격은 보류하고 SRT CSS 정리부터** 진행
-- git: 태그 `backup/srt-before-brand-20261028`, 작업 브랜치 `feature/srt-brand-theme`
-- `src/services/dataStatus/app/hsrt/srtTheme.css` 생성
-  - `--srt-primary-25~950`(blue), `--srt-secondary-100/200/600`(sky), `--srt-accent-500/600`(indigo), `--srt-on-primary`
-  - 기본값 = 기존 hex와 동일. `html[data-srt-brand]` + `--srt-brand` 지정 시 color-mix로 전체 단계 자동 생성
-- 치환 스크립트: 대화 artifact `scratch/srt-brand-replace.mjs` (`node srt-brand-replace.mjs <dir> [--dry]`)
-  - hex → `var(--srt-*)`, 파란 rgba → `color-mix(in srgb, var(--srt-*) N%, transparent)`
-  - `document.write(\`...\`)` 새 창 HTML은 변수 없어서 제외, `TableThemePresets.js` 제외
-- ✅ **DP의뢰서(dpRequest) 완료**: 464곳 치환
-- ✅ **SRT 전체 영역 완료**:
-  - 좌측 사이드바: `Sidebar.css`의 H-SRT 테마(.blue) 및 서브메뉴 액티브 스타일을 `--srt-primary-*`로 연동 (H-SRT 로고, 프로젝트 뱃지, 메뉴 선택 불빛, 세팅 아이콘)
-  - 상단 헤더: `DataStatusTheme.css`의 `--ds-primary`를 `--srt-primary-500`, `--ds-primary-hover`를 `--srt-primary-600` 등으로 연동하여 `DataHeader`의 `| 타이틀` 세로 바, `저장` 버튼 등 전체 헤더 일괄 반영
-  - `addQuestion` (문항추가): AI조건식/변수조합기 버튼, + 추가 버튼, 검색창 등 치환 완료
-  - `crossAnalysis` (교차분석): 95곳 치환 완료
-  - `aiReport` (AI보고서): 150여 곳 치환 완료
-  - `menuPermission` (대시보드 권한 설정): 26곳 치환 완료
-  - `menuBar` (새로고침 카드, 모달 등): 20곳 치환 완료
-  - `DpRequestPage.css`의 상단 스텝퍼 활성 뱃지(#4B7CF3 등) 치환 완료
-- 빌드 검증: `vite build` 정상 통과 (오류 0건)
+## 9. 진행 상황 및 완료 내역 (2026-10-28)
+- ✅ **1단계: 브랜드 테마 기반 구축 & 화면 전수 연동 완료**:
+  - `src/services/dataStatus/app/hsrt/srtTheme.css` 구축:
+    - 단일 브랜드 색상(`--srt-brand`) 입력 시 `color-mix()`로 25~950 전 단계 명도 자동 생성
+    - `--srt-primary-*`, `--srt-secondary-*`, `--srt-accent-*`, `--srt-on-primary`
+  - **SRT 전체 화면 연동**:
+    - DP의뢰서, 문항추가, 교차분석, 빈도분석, 리코딩, 대시보드 권한설정, 헤더/사이드바
+    - 대시보드 목록 팝업(`PageListPopup`), 집계 변수 팝업(`OverviewVariablePopup`), 보기 수정 모달(`VariablePageModal`)
+    - 공통 확인 모달(`Modal.jsx`), 로딩 스피너(`LoadingSpinner.jsx`), 빈도분석 차트 툴바 및 필터 칩
+  - **고유 색상 보존 및 격리 완료**:
+    - 설문온 공통 상단 프로젝트 선택/등록 팝업(`.ps-modal-container`): 설문온 고유 보라색(`#5A4BFF`, `#7C3AED`) 및 Kendo 마스크 화살표 유지
+    - AI 요약보고서 L1 단계: 파란색(`#2563eb`) 고정 보존
+    - 삭제/에러: 빨강(`#ef4444`) 보존
+- ✅ **Git 반영 완료**:
+  - 커밋 해시: `c3bdfa74` ([feature] H-SRT 고객사 브랜드 테마(화이트라벨) 체계 구축 및 화면 연동)
+  - `feature/srt-brand-theme` → `main` 브랜치 머지 및 `origin/main` 푸시 완료
 
-## 다음에 이어서 할 수 있는 것 (제안했던 것)
-- 실제 변수 이름까지 정한 디자인 토큰 목록 초안
-- 브랜드 테마 DB 저장/조회 API + 프론트 로직 설계·구현
+---
+
+## 10. 향후 로드맵: "이미지 업로드 기반 브랜드 테마 관리 웹 메뉴" 개발
+> 사용자의 핵심 요구사항:
+> 개발자용 일회성 분석이 아니라, **설문온 서비스 내부에 연구원/사용자가 이용할 수 있는 '브랜드 테마 설정' 메뉴/모달을 개발**하여,
+> 사용자가 고객사 웹사이트 캡처 이미지를 업로드하면 시스템이 대표 색상을 자동 추출하고, 연구원이 확인/수정 후 DB에 저장하며, SRT 화면 진입 시 DB에서 불러와 자동 적용하는 정식 기능 구축.
+
+### 전체 아키텍처 흐름
+```
+[1. 연구원 메뉴 진입] → [2. 캡처 이미지 업로드] → [3. 브라우저/서버 색상 추출]
+        ↓
+[4. 추천 색상 팔레트 & SRT 미니 미리보기] → [5. 연구원 확인/수정 후 저장]
+        ↓
+[6. DB 저장 (tb_project_brand_theme)] → [7. SRT 진입 시 자동 로드 & srtTheme.css 적용]
+```
+
+### 단계별 개발 계획
+1. **차트 라이브러리 연동 (Next)**:
+   - 교차분석/빈도분석 Kendo Chart에 브랜드 색상 배열을 주입할 `BrandThemeProvider` (React Context) 연동
+2. **DB 테이블 설계 & API**:
+   - `tb_project_brand_theme` (project_num, brand_name, primary_color, secondary_color, accent_color, logo_url 등)
+   - 테마 저장(POST/PUT) 및 테마 조회(GET) API
+3. **프론트엔드 브랜드 테마 관리 UI 개발**:
+   - 대시보드 목록 또는 프로젝트 설정 내 "브랜드 테마 설정" 모달/페이지
+   - 이미지 파일 드래그앤드롭 / 파일 선택 영역
+   - `ColorThief` / HTML5 Canvas 기반 경량 색상 추출 (서버 비용 0원, 0.5초 즉시 추출)
+   - 추출된 색상 칩 선택 및 컬러피커 미세조정 UI
+   - SRT 미니 컴포넌트 실시간 미리보기 (버튼, 헤더 바, 카드)
+4. **SRT 진입 시 DB 연동 자동 적용**:
+   - 프로젝트 번호 기반으로 DB 테마 데이터를 조회하여 `document.documentElement`에 `--srt-brand` 주입
+5. **(확장) 사이트 URL 직접 입력 크롤링 & 비전 LLM 역할 추천**:
+   - URL 입력 시 백엔드 헤드리스 브라우저가 실제 CSS 수집
+   - 비전 AI가 색상별 UI 역할(메인/보조/배경) 자동 매핑
+
