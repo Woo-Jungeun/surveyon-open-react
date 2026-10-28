@@ -79,12 +79,15 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         }
     };
 
+    // SRT(MenuBar) 와 동일한 포맷: YYYY-MM-DD HH:mm
     const formatDate = (rawDate) => {
-        if (!rawDate) return "-";
+        if (!rawDate || rawDate === "-") return "-";
         const d = new Date(rawDate);
-        if (isNaN(d.getTime())) return rawDate;
         const pad = (n) => String(n).padStart(2, '0');
-        return `${d.getFullYear()} -${pad(d.getMonth() + 1)} -${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} `;
+        if (!isNaN(d.getTime())) {
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+        return String(rawDate).replace(/(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}):\d{2}/, "$1");
     };
 
     const fetchDataInfo = async (pn) => {
@@ -155,15 +158,23 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         }
     };
 
+    // SRT 와 동일한 2단 카드 (좌측 라벨+시간, 우측 새로고침 버튼)
     const ExtraActions = (
         <div className="menu-bar-actions">
-            <div className="menu-bar-refresh-bar">
-                <div className="menu-bar-info-group">
-                    <Clock size={12} strokeWidth={2.5} />
-                    <span>{pageInfo.processedAt}</span>
+            <div className="menu-bar-refresh-card">
+                <div className="menu-bar-refresh-card-left" title="현재 실사관리에 반영된 데이터의 수집 기준 일시입니다.">
+                    <span className="menu-bar-refresh-label">데이터 기준 일시</span>
+                    <div className="menu-bar-refresh-time-row">
+                        <Clock size={12} strokeWidth={2.2} className="menu-bar-clock-icon" />
+                        <span className="menu-bar-time-text">{formatDate(pageInfo.processedAt)}</span>
+                    </div>
                 </div>
-                <button className="menu-bar-refresh-btn-minimal" onClick={handleRefresh} title="데이터 새로고침">
-                    <RefreshCw size={14} className={syncMap?.isLoading ? "spin" : ""} />
+                <button
+                    className="menu-bar-refresh-icon-btn"
+                    onClick={handleRefresh}
+                    title="최신 응답 데이터를 반영하여 새로고침합니다."
+                >
+                    <RefreshCw size={13} className={syncMap?.isLoading ? "spin" : ""} />
                 </button>
             </div>
         </div>
