@@ -1603,7 +1603,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
 const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getOverviewContext, getOverviewStyled, savePageSettings, exportOverviewXlsx, createSnapshot, evaluateChartData, deleteBaseVariable, getAiModels, getCrosstabAiSummaryAll, cancelCrosstabAiSummary } = DpRequestPageApi();
+    const { getOverviewContext, getTableDetail, getOverviewStyled, savePageSettings, exportOverviewXlsx, createSnapshot, evaluateChartData, deleteBaseVariable, getAiModels, getCrosstabAiSummaryAll, cancelCrosstabAiSummary } = DpRequestPageApi();
     const [models, setModels] = useState([]);
     const [selectedModel, setSelectedModel] = useState("");
     const modelsFetchedRef = useRef(false);
@@ -2189,6 +2189,39 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 // X 정보 (기준변수) 리스트 세팅 및 데이터 필터 (파생문항) 세팅
                 const ctxPayload = contextRes?.resultjson || contextRes || {};
 
+                // DP 의뢰서 표설정(table/detail)의 display_policy를 기본값으로 사용 (null 값은 제외)
+                let detailDp = {};
+                try {
+                    const detailRes = await getTableDetail.mutateAsync({ pageid: pageId, user: user });
+                    const rawDp = (detailRes?.resultjson || detailRes || {})?.display_policy || {};
+                    detailDp = Object.fromEntries(
+                        Object.entries(rawDp).filter(([, v]) => v !== null && v !== undefined)
+                    );
+                } catch (e) {
+                    console.error("table/detail display_policy 조회 실패:", e);
+                }
+                // ui_settings에서 사용하는 format_* 키로도 매핑
+                const detailFormatAlias = {};
+                const aliasMap = {
+                    show_n: "format_show_n",
+                    show_percent: "format_show_percent",
+                    n_digits: "format_n_round",
+                    percent_digits: "format_percent_round",
+                    mean_digits: "format_mean_round",
+                    std_digits: "format_std_round",
+                    median_digits: "format_median_round",
+                    min_digits: "format_min_round",
+                    max_digits: "format_max_round",
+                    var_digits: "format_var_round",
+                    percent_symbol: "format_percent_symbol",
+                    percent_as_column: "format_percent_as_column",
+                    base_prefix: "format_base_prefix",
+                    base_postfix: "format_base_postfix",
+                };
+                Object.entries(aliasMap).forEach(([k, alias]) => {
+                    if (detailDp[k] !== undefined) detailFormatAlias[alias] = detailDp[k];
+                });
+
                 if (ctxPayload) {
                     // Parse weight variables from recoded_variables (keys starting with 'weight_')
                     const recodedVarsForWeights = ctxPayload.recoded_variables || {};
@@ -2212,23 +2245,26 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     initialWeightFromCtx = initialWeight;
 
                     setProjectNum(ctxPayload.pn || "");
-                    const resolvedMeanDigits = ctxPayload.display_policy?.mean_digits ?? ctxPayload.ui_settings?.format_mean_round ?? 2;
-                    const resolvedStdDigits = ctxPayload.display_policy?.std_digits ?? ctxPayload.ui_settings?.format_std_round ?? 2;
-                    const resolvedMedianDigits = ctxPayload.display_policy?.median_digits ?? ctxPayload.ui_settings?.format_median_round ?? 2;
-                    const resolvedMinDigits = ctxPayload.display_policy?.min_digits ?? ctxPayload.ui_settings?.format_min_round ?? 0;
-                    const resolvedMaxDigits = ctxPayload.display_policy?.max_digits ?? ctxPayload.ui_settings?.format_max_round ?? 0;
-                    const resolvedVarDigits = ctxPayload.display_policy?.var_digits ?? ctxPayload.ui_settings?.format_var_round ?? 2;
-                    const resolvedNDigits = ctxPayload.display_policy?.n_digits ?? ctxPayload.ui_settings?.format_n_round ?? 0;
-                    const resolvedPercentDigits = ctxPayload.display_policy?.percent_digits ?? ctxPayload.ui_settings?.format_percent_round ?? 1;
+                    const resolvedMeanDigits = detailDp.mean_digits ?? ctxPayload.display_policy?.mean_digits ?? ctxPayload.ui_settings?.format_mean_round ?? 2;
+                    const resolvedStdDigits = detailDp.std_digits ?? ctxPayload.display_policy?.std_digits ?? ctxPayload.ui_settings?.format_std_round ?? 2;
+                    const resolvedMedianDigits = detailDp.median_digits ?? ctxPayload.display_policy?.median_digits ?? ctxPayload.ui_settings?.format_median_round ?? 2;
+                    const resolvedMinDigits = detailDp.min_digits ?? ctxPayload.display_policy?.min_digits ?? ctxPayload.ui_settings?.format_min_round ?? 0;
+                    const resolvedMaxDigits = detailDp.max_digits ?? ctxPayload.display_policy?.max_digits ?? ctxPayload.ui_settings?.format_max_round ?? 0;
+                    const resolvedVarDigits = detailDp.var_digits ?? ctxPayload.display_policy?.var_digits ?? ctxPayload.ui_settings?.format_var_round ?? 2;
+                    const resolvedNDigits = detailDp.n_digits ?? ctxPayload.display_policy?.n_digits ?? ctxPayload.ui_settings?.format_n_round ?? 0;
+                    const resolvedPercentDigits = detailDp.percent_digits ?? ctxPayload.display_policy?.percent_digits ?? ctxPayload.ui_settings?.format_percent_round ?? 1;
 
                     fetchedUi = {
                         ...(ctxPayload.display_policy || {}),
                         ...(ctxPayload.ui_settings || {}),
-                        percent_symbol: ctxPayload.ui_settings?.percent_symbol ?? ctxPayload.ui_settings?.format_percent_symbol ?? ctxPayload.display_policy?.percent_symbol ?? true,
-                        percent_as_column: ctxPayload.ui_settings?.percent_as_column ?? ctxPayload.ui_settings?.format_percent_as_column ?? ctxPayload.display_policy?.percent_as_column ?? false,
-                        base_prefix: ctxPayload.ui_settings?.base_prefix ?? ctxPayload.ui_settings?.format_base_prefix ?? ctxPayload.display_policy?.base_prefix ?? "(",
-                        base_postfix: ctxPayload.ui_settings?.base_postfix ?? ctxPayload.ui_settings?.format_base_postfix ?? ctxPayload.display_policy?.base_postfix ?? ")",
-                        is_transpose: ctxPayload.ui_settings?.is_transpose ?? ctxPayload.display_policy?.is_transpose ?? false,
+                        // table/detail display_policy 우선 적용
+                        ...detailDp,
+                        ...detailFormatAlias,
+                        percent_symbol: detailDp.percent_symbol ?? ctxPayload.ui_settings?.percent_symbol ?? ctxPayload.ui_settings?.format_percent_symbol ?? ctxPayload.display_policy?.percent_symbol ?? true,
+                        percent_as_column: detailDp.percent_as_column ?? ctxPayload.ui_settings?.percent_as_column ?? ctxPayload.ui_settings?.format_percent_as_column ?? ctxPayload.display_policy?.percent_as_column ?? false,
+                        base_prefix: detailDp.base_prefix ?? ctxPayload.ui_settings?.base_prefix ?? ctxPayload.ui_settings?.format_base_prefix ?? ctxPayload.display_policy?.base_prefix ?? "(",
+                        base_postfix: detailDp.base_postfix ?? ctxPayload.ui_settings?.base_postfix ?? ctxPayload.ui_settings?.format_base_postfix ?? ctxPayload.display_policy?.base_postfix ?? ")",
+                        is_transpose: detailDp.is_transpose ?? ctxPayload.ui_settings?.is_transpose ?? ctxPayload.display_policy?.is_transpose ?? false,
                         mean_digits: resolvedMeanDigits,
                         std_digits: resolvedStdDigits,
                         median_digits: resolvedMedianDigits,
