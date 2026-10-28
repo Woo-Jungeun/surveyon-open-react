@@ -1589,12 +1589,53 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
     const [displayNameMap, setDisplayNameMap] = useState({});
     const getStubDisplayId = useCallback((s) => {
         if (!s) return '';
+        // 명시적 display_var_id가 있으면 최우선 사용
+        if (s.display_var_id) return s.display_var_id;
+
         const rid = s.recoded_var_id;
         const sidRaw = s.source_var_id;
         const ridName = rid ? displayNameMap[rid] : '';
         // recoded spss_name 이 자기 id 또는 원본 id(_stub 제거값) 와 같으면 의미 없는 값으로 보고 건너뜀
         if (ridName && ridName !== rid && ridName !== sidRaw && ridName !== String(rid).replace(/_stub$/, '')) return ridName;
+
         const sid = s.source_var_id;
+
+        // 복사된 행인 경우 (_copy_ 포함 또는 _origin === 'copied'):
+        // 원본 변수의 spss_name에 연쇄 복사 체인(_copy1, _copy2_copy1 등)을 이어붙여 표출
+        const isCopied = String(rid).includes('_copy_') || s._origin === 'copied';
+        if (isCopied) {
+            let baseName = '';
+            if (sid && displayNameMap[sid] && displayNameMap[sid] !== sid) {
+                baseName = displayNameMap[sid];
+            }
+            if (!baseName && rid) {
+                const baseRid = String(rid).split('_copy_')[0];
+                const cleanBaseId = baseRid.replace(/_stub$/, '');
+                if (displayNameMap[baseRid] && displayNameMap[baseRid] !== baseRid) {
+                    baseName = displayNameMap[baseRid];
+                } else if (displayNameMap[cleanBaseId] && displayNameMap[cleanBaseId] !== cleanBaseId) {
+                    baseName = displayNameMap[cleanBaseId];
+                } else {
+                    baseName = cleanBaseId || baseRid;
+                }
+            }
+            if (baseName) {
+                // split('_copy_')로 체인 분리하여 정규식 overlap 문제 방지
+                const parts = String(rid).split('_copy_');
+                if (parts.length > 1) {
+                    const copyNums = parts.slice(1).map(p => p.split('_')[0]).filter(Boolean);
+                    // 100 미만의 정수 번호들인 경우 계층적 번호 매핑
+                    const isAllNumbered = copyNums.length > 0 && copyNums.every(n => /^\d+$/.test(n) && parseInt(n, 10) < 100);
+                    if (isAllNumbered) {
+                        return `${baseName}${copyNums.map(n => `_copy${n}`).join('')}`;
+                    }
+                    const copyCount = parts.length - 1;
+                    return copyCount > 1 ? `${baseName}_copy${copyCount}` : `${baseName}_copy1`;
+                }
+                return `${baseName}_copy1`;
+            }
+        }
+
         if (sid && (rid === sid || rid === `${sid}_stub`) && displayNameMap[sid] && displayNameMap[sid] !== sid) return displayNameMap[sid];
         return rid || '';
     }, [displayNameMap]);
@@ -1663,7 +1704,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
             }
             const headers = ['변수', '라벨', '유형', '조건', '배너', '그룹', '통계 설정', '척도', '순위'].join('\t');
             const rows = filteredStubs.map(item => {
-                const varId = String(item.recoded_var_id ?? '').trim();
+                const varId = String(getStubDisplayId(item) || item.recoded_var_id || '').trim();
                 const label = String(item.var_label ?? '').trim();
                 const type = String(item.var_type ?? '').trim();
                 const condition = String(item.condition ?? '').trim();
@@ -2100,6 +2141,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         } else {
             setStubs(prev => prev.map(s => {
                 if (s._row_id === targetId) {
+                    if (field === 'recoded_var_id') return s; // 변수 컬럼 편집 불가
                     if (s[field] !== value && isPresetModified) {
                         setModifiedPresetIds(old => new Set(old).add(s.recoded_var_id));
                     }
@@ -2125,12 +2167,16 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         if (onUnsavedChange) onUnsavedChange(true);
     }, [onUnsavedChange]);
     const handleRowAdd = (insertAfterIdx) => {
-        const draftId = `__draft_custom_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        let customId = '';
+        do {
+            const rand4 = Math.floor(1000 + Math.random() * 9000);
+            customId = `custom_${rand4}`;
+        } while (stubs.some(s => s.recoded_var_id === customId));
 
         const newRow = {
             _row_id: `row_${Date.now()}_${Math.random()}`,
             source_var_id: null,
-            recoded_var_id: draftId,
+            recoded_var_id: customId,
             var_label: '새 스터브',
             var_type: 'custom',
             _is_custom: true,
@@ -2185,12 +2231,31 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
 
             const target = prev[realIdx];
             const next = [...prev];
-            const newRecodedId = `${target.recoded_var_id}_copy_${Math.floor(Math.random() * 1000)}`;
+
+            // 대상 행의 표시명 및 라벨 (예: A8_n4, A8_n4_copy1, A8_n4_copy2 등)
+            const targetDisplay = getStubDisplayId(target) || String(target.recoded_var_id || 'var');
+            const targetLabel = String(target.var_label || '').trim();
+
+            // 현재 목록의 표시명들을 수집하여 다음 copy 번호(1, 2, 3...) 결정 (절대 겹치지 않음)
+            const existingDisplayNames = new Set(prev.map(item => getStubDisplayId(item)));
+            let copyNum = 1;
+            while (existingDisplayNames.has(`${targetDisplay}_copy${copyNum}`)) {
+                copyNum += 1;
+            }
+
+            const newDisplayName = `${targetDisplay}_copy${copyNum}`;
+            const newLabel = `${targetLabel}_copy${copyNum}`;
+
+            // recoded_var_id: 직계 베이스 ID 뒤에 _copy_${copyNum}_[랜덤난수]
+            const targetRecodedBase = String(target.recoded_var_id).replace(/_\d+$/, '');
+            const newRecodedId = `${targetRecodedBase}_copy_${copyNum}_${Math.floor(Math.random() * 1000)}`;
+
             const newRow = {
                 ...target,
                 _row_id: copiedRowId,
                 recoded_var_id: newRecodedId,
-                var_label: `${target.var_label}_copy`,
+                var_label: newLabel,
+                display_var_id: newDisplayName,
                 _origin: 'copied',
                 _is_new: true
             };
@@ -2761,7 +2826,26 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                 />
 
                                 <Column field="recoded_var_id" title="변수" width="115px" headerClassName="k-text-center"
-                                    cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" displayValue={getStubDisplayId(p.dataItem)} onUpdate={handleCellUpdate} placeholder="" style={{ opacity: p.dataItem.is_hidden ? 0.5 : 1 }} />}
+                                    cell={(p) => (
+                                        <td
+                                            title={getStubDisplayId(p.dataItem)}
+                                            style={{
+                                                padding: '0 8px',
+                                                fontSize: '13px',
+                                                verticalAlign: 'middle',
+                                                textAlign: 'left',
+                                                color: '#1e293b',
+                                                userSelect: 'text',
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                maxWidth: '1px',
+                                                opacity: p.dataItem.is_hidden ? 0.5 : 1
+                                            }}
+                                        >
+                                            {getStubDisplayId(p.dataItem) || '-'}
+                                        </td>
+                                    )}
                                 />
                                 <Column field="var_label" title="라벨" width="210px" headerClassName="k-text-center"
                                     cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} style={{ opacity: p.dataItem.is_hidden ? 0.5 : 1 }} />}
