@@ -75,7 +75,11 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [matrixSelection, setMatrixSelection] = useState({ top: [1, 2], mid: [], bot: [1, 2] });
     const [isMeanIncluded, setIsMeanIncluded] = useState(true);
     const [openStats, setOpenStats] = useState({ mean: true, sd: false, median: false, mode: false });
-    const [isMergeByTitle, setIsMergeByTitle] = useState(false);
+    const [mergeByTitleMap, setMergeByTitleMap] = useState({ scale: false, 'open-num': false });
+    const isMergeByTitle = mergeByTitleMap[wizardTab] || false;
+    const setIsMergeByTitle = useCallback((checked) => {
+        setMergeByTitleMap(prev => ({ ...prev, [wizardTab]: checked }));
+    }, [wizardTab]);
     const [wizardSelectedIds, setWizardSelectedIds] = useState(new Set());
     const [isSummarySidebarOpen, setIsSummarySidebarOpen] = useState(true);
     const [summarySearchMap, setSummarySearchMap] = useState({ scale: '', 'open-num': '' });
@@ -1159,6 +1163,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     subItems,
                     tags,
                     items: group.items.map(it => it.id),
+                    itemObjs: group.items,
                     itemsDesc: `대상 문항: ${group.items.map(it => `${vn(it)}. ${it.label}`).join(', ')}`,
                     scale_points: sp
                 });
@@ -1193,6 +1198,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     subItems,
                     tags,
                     items: group.items.map(it => it.id),
+                    itemObjs: group.items,
                     itemsDesc: `대상 문항: ${group.items.map(it => `${vn(it)}. ${it.label}`).join(', ')}`
                 });
             });
@@ -1212,6 +1218,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         subItems: [],
                         tags: new Set(),
                         items: new Set(),
+                        itemObjs: [],
                         scale_points: prop.scale_points
                     };
                 }
@@ -1223,19 +1230,33 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 });
                 prop.tags.forEach(t => mergedMap[key].tags.add(t));
                 prop.items.forEach(itm => mergedMap[key].items.add(itm));
+                if (prop.itemObjs) {
+                    prop.itemObjs.forEach(it => {
+                        if (!mergedMap[key].itemObjs.some(x => x.id === it.id)) {
+                            mergedMap[key].itemObjs.push(it);
+                        }
+                    });
+                }
             });
 
-            return Object.values(mergedMap).map(m => ({
-                id: m.id,
-                title: m.title,
-                groupLabel: m.groupLabel,
-                groupId: m.groupId,
-                subItems: m.subItems,
-                tags: Array.from(m.tags),
-                items: Array.from(m.items),
-                itemsDesc: `대상 문항: ${Array.from(m.items).join(', ')}`,
-                scale_points: m.scale_points
-            }));
+            return Object.values(mergedMap).map(m => {
+                const descList = (m.itemObjs && m.itemObjs.length > 0)
+                    ? m.itemObjs.map(it => vn(it) || dn(it.id) || it.id)
+                    : Array.from(m.items).map(id => dn(id) || id);
+
+                return {
+                    id: m.id,
+                    title: m.title,
+                    groupLabel: m.groupLabel,
+                    groupId: m.groupId,
+                    subItems: m.subItems,
+                    tags: Array.from(m.tags),
+                    items: Array.from(m.items),
+                    itemObjs: m.itemObjs,
+                    itemsDesc: `대상 문항: ${descList.join(', ')}`,
+                    scale_points: m.scale_points
+                };
+            });
         }
 
         return proposals;
