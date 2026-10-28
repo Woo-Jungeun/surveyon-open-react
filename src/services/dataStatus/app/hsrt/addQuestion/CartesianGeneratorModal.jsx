@@ -10,10 +10,16 @@ function getUniqueId() {
 function generateCartesianRules(selectedVarIds, variablesMap) {
     if (selectedVarIds.length === 0) return [];
 
+    // 표출/조건식용 변수명: spss_name 우선 (백엔드가 저장 시 id 로 변환)
+    const nameOf = (vid) => {
+        const v = variablesMap.find(x => x.id === vid);
+        return (v && v.spss_name) ? String(v.spss_name) : vid;
+    };
+
     const varInfos = selectedVarIds.map(vid => {
         const v = variablesMap.find(x => x.id === vid) || { info: [] };
         if (!v.info || v.info.length === 0) {
-            return [{ value: "ANY", label: `Any ${vid}` }];
+            return [{ value: "ANY", label: `Any ${nameOf(vid)}` }];
         }
 
         // 유효한 보기만 걸러냄 (서버 저장값과 비교될수도 있으니 null check)
@@ -24,7 +30,7 @@ function generateCartesianRules(selectedVarIds, variablesMap) {
         );
 
         if (validInfo.length === 0) {
-            return [{ value: "ANY", label: `Any ${vid}` }];
+            return [{ value: "ANY", label: `Any ${nameOf(vid)}` }];
         }
         return validInfo;
     });
@@ -47,7 +53,7 @@ function generateCartesianRules(selectedVarIds, variablesMap) {
                 val = `'${val}'`;
             }
 
-            return `${varId} == ${val}`;
+            return `${nameOf(varId)} == ${val}`;
         });
 
         return {
