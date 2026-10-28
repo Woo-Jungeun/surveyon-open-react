@@ -122,7 +122,8 @@
     flex-direction: column;
     padding: 16px 0 16px 20px;
     /* Remove right padding to move scrollbar to edge */
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     gap: 12px;
     height: calc(100% - 32px);
     min-height: 0;
@@ -162,7 +163,7 @@
     display: flex;
     flex-direction: column;
     flex: 1;
-    min-height: 0;
+    min-height: 570px;
     margin-right: 20px;
 }
 
@@ -476,16 +477,21 @@
     display: flex;
     flex-direction: column;
     background: #fff;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .cross-tab-page .drop-zones-top {
     display: flex;
-    height: 140px;
+    height: 185px;
     flex-shrink: 0;
 }
 
 .corner-label {
     width: 200px;
+    min-width: 200px;
+    flex-shrink: 0;
     background: #f0f2f5;
     display: flex;
     align-items: center;
@@ -500,7 +506,7 @@
     flex: 1;
     min-width: 0;
     background: var(--srt-primary-50);
-    padding: 8px 12px;
+    padding: 6px 12px;
     display: flex;
     flex-direction: column;
     border-bottom: 1px solid #e0e0e0;
@@ -510,7 +516,7 @@
     font-size: 13px;
     font-weight: 600;
     color: #555;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .cross-tab-page .drop-zone-area {
@@ -520,7 +526,7 @@
     background: #fff;
     display: flex;
     align-items: center;
-    padding: 8px;
+    padding: 6px 8px;
     gap: 6px;
     overflow-x: auto;
 }
@@ -550,10 +556,14 @@
     flex: 1;
     display: flex;
     overflow: hidden;
+    min-height: 0;
+    min-width: 0;
 }
 
 .row-drop-zone {
     width: 200px;
+    min-width: 200px;
+    flex-shrink: 0;
     background: #f0fdf4;
     padding: 12px;
     display: flex;
@@ -573,6 +583,7 @@
     min-height: 0;
     /* Required for flex children to scroll */
     overflow: hidden;
+    height: 100%;
 }
 
 .center-content__label {
@@ -634,7 +645,7 @@
     position: relative;
     flex: 1;
     min-width: 150px;
-    min-height: 150px;
+    min-height: 112px;
 }
 
 .cross-tab-page .dropped-tag.grouped {
@@ -694,7 +705,7 @@
 }
 
 .empty-slot {
-    height: 34px;
+    height: 30px;
     border-radius: 6px;
     background: #dae3f3;
     /* empty slot shadow */
@@ -1747,41 +1758,38 @@
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     min-height: 0;
-    /* Allow it to shrink and scroll */
+    min-width: 0;
     width: 100%;
+    height: 100%;
     margin: 0;
     background: #fff;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.02);
+    scrollbar-width: thin;
+    scrollbar-color: #94a3b8 #f1f5f9;
 }
 
 .preview-table-wrapper::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-    background: transparent;
+    width: 8px;
+    height: 8px;
+    background: #f8fafc;
 }
 
 .preview-table-wrapper::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
+    background: #94a3b8;
+    border-radius: 4px;
+}
+
+.preview-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
 }
 
 .preview-table-wrapper::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-/* Vertical Scrollbar: Offset by header height (80px) */
-.preview-table-wrapper::-webkit-scrollbar-track:vertical {
-    margin-top: 50px;
-}
-
-/* Horizontal Scrollbar: Offset by sidebar width (240px) */
-.preview-table-wrapper::-webkit-scrollbar-track:horizontal {
-    margin-left: 280px;
+    background: #f1f5f9;
 }
 
 /* Corner between scrollbars */
 .preview-table-wrapper::-webkit-scrollbar-corner {
-    background: transparent;
+    background: #f1f5f9;
 }
 
 .preview-table {

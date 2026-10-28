@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { ChevronDown, ChevronUp, Play, Search, BarChart2, BarChartHorizontal, Download, X, Settings, ChevronRight, GripVertical, GripHorizontal, LineChart, Map as MapIcon, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2, Maximize, Minimize, Save, Grid, Plus, Table, List, Star, Table2, HelpCircle } from 'lucide-react';
 import Toast from '../../../../components/common/Toast';
@@ -272,6 +272,48 @@ const AdditionalAnalysisPage = () => {
 
     const [rowVars, setRowVars] = useState([]);
     const [colVars, setColVars] = useState([]);
+
+    const getVarDisplayName = useCallback((v) => {
+        if (!v) return '';
+        if (typeof v === 'string') {
+            const found = variables.find(x => x.id === v || x.name === v) ||
+                allBaseVariablesRef.current.find(x => x.id === v || x.name === v);
+            if (found?.spss_name) return found.spss_name;
+            if (v.includes('_stub')) {
+                const baseMatch = v.match(/^(.*?)(?:_stub)(.*)$/);
+                if (baseMatch) {
+                    const baseId = baseMatch[1];
+                    const suffix = baseMatch[2];
+                    const baseVar = variables.find(x => x.id === baseId || x.name === baseId) ||
+                        allBaseVariablesRef.current.find(x => x.id === baseId || x.name === baseId);
+                    if (baseVar?.spss_name) {
+                        return `${baseVar.spss_name}${suffix || ''}`;
+                    }
+                }
+            }
+            return v;
+        }
+        if (v.spss_name) return v.spss_name;
+        const targetId = v.id || v.name;
+        const found = variables.find(x => x.id === targetId || x.name === targetId) ||
+            allBaseVariablesRef.current.find(x => x.id === targetId || x.name === targetId);
+        if (found?.spss_name) return found.spss_name;
+        const rawId = String(targetId || '');
+        if (rawId.includes('_stub')) {
+            const baseMatch = rawId.match(/^(.*?)(?:_stub)(.*)$/);
+            if (baseMatch) {
+                const baseId = baseMatch[1];
+                const suffix = baseMatch[2];
+                const baseVar = variables.find(x => x.id === baseId || x.name === baseId) ||
+                    allBaseVariablesRef.current.find(x => x.id === baseId || x.name === baseId);
+                if (baseVar?.spss_name) {
+                    return `${baseVar.spss_name}${suffix || ''}`;
+                }
+            }
+        }
+        return v.name || v.id || '';
+    }, [variables]);
+
     const [variableOverrides, setVariableOverrides] = useState({}); // Array of arrays: [[v1, v2], [v3]]
     const [selectedVarIds, setSelectedVarIds] = useState([]);
     const [draggedItem, setDraggedItem] = useState(null);
@@ -1341,15 +1383,15 @@ const AdditionalAnalysisPage = () => {
                     allBaseVariablesRef.current.find(existing => existing.id === v.id || existing.name === v.id || existing.name === v.name);
                 let labels = [];
                 if (!variable || !variable.info) {
-                    labels = [v.id || v.name];
+                    labels = [getVarDisplayName(v)];
                 } else {
                     labels = variable.info
                         .filter(i => i.type !== 'config')
                         .map(i => i.label);
 
-                    if (labels.length === 0) labels = [v.id || v.name];
+                    if (labels.length === 0) labels = [getVarDisplayName(v)];
                 }
-                return { name: v.id || v.name, labels: labels.map(String) };
+                return { name: getVarDisplayName(v), labels: labels.map(String) };
             });
         };
 
@@ -1411,12 +1453,12 @@ const AdditionalAnalysisPage = () => {
                     allBaseVariablesRef.current.find(existing => existing.id === v.id || existing.name === v.id || existing.name === v.name);
                 let labels = [];
                 if (!variable || !variable.info) {
-                    labels = [v.id || v.name];
+                    labels = [getVarDisplayName(v)];
                 } else {
                     labels = variable.info.filter(i => i.type !== 'config').map(i => i.label);
-                    if (labels.length === 0) labels = [v.id || v.name];
+                    if (labels.length === 0) labels = [getVarDisplayName(v)];
                 }
-                return { name: v.id || v.name, labels: labels.map(String) };
+                return { name: getVarDisplayName(v), labels: labels.map(String) };
             });
         } else {
             rowGroups = rowVars.length > 0 ? getGroupDefinitions(rowVars) : [{ name: '', labels: [''] }];
@@ -1430,7 +1472,7 @@ const AdditionalAnalysisPage = () => {
             maxRowLevels: 2,
             isSeparated: tableMode === 'separated'
         };
-    }, [rowVars, colVars, variables, tableMode]);
+    }, [rowVars, colVars, variables, tableMode, getVarDisplayName]);
 
     useEffect(() => {
         if (isConfigOpen) {
@@ -1822,7 +1864,15 @@ const AdditionalAnalysisPage = () => {
                     }
                     if (newRowVars.length < 10) {
                         if (!newRowVars.find(v => v.id === item.id)) {
-                            const newItem = { id: item.id, name: item.name, label: item.label, info: item.info || [], isBase: fullVar.isBase, isRecoded: fullVar.isRecoded };
+                            const newItem = {
+                                id: item.id,
+                                name: item.name,
+                                label: item.label,
+                                spss_name: fullVar.spss_name || item.spss_name || getVarDisplayName(fullVar),
+                                info: item.info || [],
+                                isBase: fullVar.isBase,
+                                isRecoded: fullVar.isRecoded
+                            };
                             if (targetType === 'row_item') {
                                 newRowVars.splice(targetItemIndex, 0, newItem);
                             } else {
@@ -1854,6 +1904,7 @@ const AdditionalAnalysisPage = () => {
                         let targetName = item.name;
                         let targetLabel = item.label;
                         let targetInfo = item.info || [];
+                        let targetSpss = fullVar.spss_name || item.spss_name || getVarDisplayName(fullVar);
 
                         if (String(item.id).includes('_stub')) {
                             const cleanId = String(item.id).replace(/_stub\+?$/, '');
@@ -1863,6 +1914,7 @@ const AdditionalAnalysisPage = () => {
                                 targetName = origVar.name;
                                 targetLabel = origVar.label || origVar.name;
                                 targetInfo = origVar.info || [];
+                                targetSpss = origVar.spss_name || targetSpss;
                             } else {
                                 targetId = cleanId;
                                 targetName = cleanId;
@@ -1870,7 +1922,7 @@ const AdditionalAnalysisPage = () => {
                             }
                         }
 
-                        const newItem = { id: targetId, name: targetName, label: targetLabel, info: targetInfo, isBase: true, isRecoded: false };
+                        const newItem = { id: targetId, name: targetName, label: targetLabel, spss_name: targetSpss, info: targetInfo, isBase: true, isRecoded: false };
                         newColVars.push([newItem]);
                     } else {
                         skipped = true;
@@ -1905,6 +1957,7 @@ const AdditionalAnalysisPage = () => {
             id: fullVariable.id,
             name: fullVariable.name,
             label: fullVariable.label || fullVariable.name,
+            spss_name: fullVariable.spss_name || getVarDisplayName(fullVariable),
             info: fullVariable.info || [],
             isBase: fullVariable.isBase,
             isRecoded: fullVariable.isRecoded
@@ -1919,6 +1972,7 @@ const AdditionalAnalysisPage = () => {
                         id: origVar.id,
                         name: origVar.name,
                         label: origVar.label || origVar.name,
+                        spss_name: origVar.spss_name || fullVariable.spss_name || getVarDisplayName(origVar),
                         info: origVar.info || [],
                         isBase: true,
                         isRecoded: false
@@ -1928,6 +1982,7 @@ const AdditionalAnalysisPage = () => {
                         id: cleanId,
                         name: cleanId,
                         label: cleanId,
+                        spss_name: fullVariable.spss_name || getVarDisplayName(fullVariable),
                         info: [],
                         isBase: true,
                         isRecoded: false
@@ -3601,7 +3656,7 @@ const AdditionalAnalysisPage = () => {
                                     flex: isConfigOpen ? 1 : 'none',
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    minHeight: 0,
+                                    minHeight: isConfigOpen ? '570px' : 0,
                                     transition: 'all 0.3s ease',
                                     borderRadius: '8px'
                                 }}>
@@ -3755,7 +3810,7 @@ const AdditionalAnalysisPage = () => {
                                                                 <X size={12} />
                                                             </button>
                                                         </div>
-                                                        <div className="drop-zone-area" style={{ padding: '8px', overflowX: 'auto', overflowY: 'hidden', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                        <div className="drop-zone-area" style={{ padding: '8px', overflowX: 'auto', overflowY: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
                                                             {colVars.map((group, groupIndex) => (
                                                                 <div
                                                                     key={`group-${groupIndex}`}
@@ -3779,7 +3834,7 @@ const AdditionalAnalysisPage = () => {
                                                                                 onDrop={(e) => handleDrop(e, 'col_item', groupIndex, itemIndex)}
                                                                             >
                                                                                 <span className="item-drag-handle"><GripVertical size={13} strokeWidth={2.5} /></span>
-                                                                                <span className="tag-text">{v.spss_name || v.id}</span>
+                                                                                <span className="tag-text">{getVarDisplayName(v)}</span>
                                                                                 <X size={14} className="remove" onClick={(e) => { e.stopPropagation(); removeVar(v.id, 'col', groupIndex); }} />
                                                                             </div>
                                                                         ))}
@@ -3837,7 +3892,7 @@ const AdditionalAnalysisPage = () => {
                                                                         onDrop={(e) => handleDrop(e, 'row_item', null, itemIndex)}
                                                                     >
                                                                         <span className="item-drag-handle"><GripHorizontal size={13} strokeWidth={2.5} /></span>
-                                                                        <span className="tag-text">{v.spss_name || v.id}</span>
+                                                                        <span className="tag-text">{getVarDisplayName(v)}</span>
                                                                         <X size={14} className="remove" onClick={(e) => { e.stopPropagation(); removeVar(v.id, 'row'); }} />
                                                                     </div>
                                                                 ))
