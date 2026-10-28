@@ -130,13 +130,13 @@ const renderSigUpColorContent = (item) => {
     if (val === 'red') {
         return (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: 500, userSelect: 'none', cursor: 'pointer' }}>
-                <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '10px' }}>UP</span> 빨강 / <span style={{ color: '#3b82f6', fontWeight: 600, fontSize: '10px' }}>DOWN</span> 파랑
+                <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '10px' }}>UP</span> 빨강 / <span style={{ color: 'var(--srt-primary-500)', fontWeight: 600, fontSize: '10px' }}>DOWN</span> 파랑
             </span>
         );
     }
     return (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: 500, userSelect: 'none', cursor: 'pointer' }}>
-            <span style={{ color: '#3b82f6', fontWeight: 600, fontSize: '10px' }}>UP</span> 파랑 / <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '10px' }}>DOWN</span> 빨강
+            <span style={{ color: 'var(--srt-primary-500)', fontWeight: 600, fontSize: '10px' }}>UP</span> 파랑 / <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '10px' }}>DOWN</span> 빨강
         </span>
     );
 };
@@ -1767,7 +1767,7 @@ const AdditionalAnalysisPage = () => {
                 // UI: 드래그할 때 여러 개가 선택되었음을 보여주기 위한 고스트 엘리먼트 생성
                 const dragGhost = document.createElement('div');
                 dragGhost.style.padding = '8px 16px';
-                dragGhost.style.background = '#3b82f6';
+                dragGhost.style.background = 'var(--srt-primary-500)';
                 dragGhost.style.color = 'white';
                 dragGhost.style.borderRadius = '20px';
                 dragGhost.style.fontSize = '14px';
@@ -2588,8 +2588,8 @@ const AdditionalAnalysisPage = () => {
                             <Settings size={14} color="#64748b" />
                             <span>표시 설정</span>
                             <span style={{
-                                background: '#eff6ff',
-                                color: '#2563eb',
+                                background: 'var(--srt-primary-50)',
+                                color: 'var(--srt-primary-600)',
                                 padding: '2px 6px',
                                 borderRadius: '4px',
                                 fontSize: '11px',
@@ -2726,8 +2726,8 @@ const AdditionalAnalysisPage = () => {
                                                     height: '32px',
                                                     border: '1px solid #cbd5e1',
                                                     borderRadius: '6px',
-                                                    background: isSigPopupOpen ? '#eff6ff' : '#ffffff',
-                                                    color: isSigPopupOpen ? '#2563eb' : '#64748b',
+                                                    background: isSigPopupOpen ? 'var(--srt-primary-50)' : '#ffffff',
+                                                    color: isSigPopupOpen ? 'var(--srt-primary-600)' : '#64748b',
                                                     cursor: 'pointer',
                                                     transition: 'all 0.2s',
                                                 }}
@@ -2819,7 +2819,7 @@ const AdditionalAnalysisPage = () => {
                                                         position: 'relative',
                                                         width: '38px', height: '20px',
                                                         borderRadius: '10px',
-                                                        background: localSigExcludeEtc ? '#3b82f6' : '#cbd5e1',
+                                                        background: localSigExcludeEtc ? 'var(--srt-primary-500)' : '#cbd5e1',
                                                         cursor: 'pointer',
                                                         transition: 'background-color 0.2s ease',
                                                         userSelect: 'none'
@@ -2870,7 +2870,7 @@ const AdditionalAnalysisPage = () => {
                                                         position: 'relative',
                                                         width: '38px', height: '20px',
                                                         borderRadius: '10px',
-                                                        background: localSigShowArrow ? '#3b82f6' : '#cbd5e1',
+                                                        background: localSigShowArrow ? 'var(--srt-primary-500)' : '#cbd5e1',
                                                         cursor: 'pointer',
                                                         transition: 'background-color 0.2s ease',
                                                         userSelect: 'none'
@@ -3022,8 +3022,8 @@ const AdditionalAnalysisPage = () => {
                                     >
                                         <div style={{
                                             width: '18px', height: '18px', borderRadius: '4px',
-                                            background: localIsTranspose ? '#2563eb' : '#fff',
-                                            border: `1.5px solid ${localIsTranspose ? '#2563eb' : '#cbd5e1'}`,
+                                            background: localIsTranspose ? 'var(--srt-primary-600)' : '#fff',
+                                            border: `1.5px solid ${localIsTranspose ? 'var(--srt-primary-600)' : '#cbd5e1'}`,
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             flexShrink: 0
                                         }}>
@@ -3050,8 +3050,8 @@ const AdditionalAnalysisPage = () => {
                                     >
                                         <div style={{
                                             width: '18px', height: '18px', borderRadius: '4px',
-                                            background: localShowN ? '#2563eb' : '#fff',
-                                            border: `1.5px solid ${localShowN ? '#2563eb' : '#cbd5e1'}`,
+                                            background: localShowN ? 'var(--srt-primary-600)' : '#fff',
+                                            border: `1.5px solid ${localShowN ? 'var(--srt-primary-600)' : '#cbd5e1'}`,
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             flexShrink: 0
                                         }}>
@@ -3118,8 +3118,8 @@ const AdditionalAnalysisPage = () => {
                                     >
                                         <div style={{
                                             width: '18px', height: '18px', borderRadius: '4px',
-                                            background: localShowPct ? '#2563eb' : '#fff',
-                                            border: `1.5px solid ${localShowPct ? '#2563eb' : '#cbd5e1'}`,
+                                            background: localShowPct ? 'var(--srt-primary-600)' : '#fff',
+                                            border: `1.5px solid ${localShowPct ? 'var(--srt-primary-600)' : '#cbd5e1'}`,
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             flexShrink: 0
                                         }}>
@@ -3210,7 +3210,7 @@ const AdditionalAnalysisPage = () => {
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            background: '#3b82f6',
+                                            background: 'var(--srt-primary-500)',
                                             color: '#ffffff',
                                             border: 'none',
                                             borderRadius: '6px',
@@ -3220,8 +3220,8 @@ const AdditionalAnalysisPage = () => {
                                             cursor: 'pointer',
                                             transition: 'all 0.2s',
                                         }}
-                                        onMouseOver={(e) => e.currentTarget.style.background = '#2563eb'}
-                                        onMouseOut={(e) => e.currentTarget.style.background = '#3b82f6'}
+                                        onMouseOver={(e) => e.currentTarget.style.background = 'var(--srt-primary-600)'}
+                                        onMouseOut={(e) => e.currentTarget.style.background = 'var(--srt-primary-500)'}
                                     >
                                         적용
                                     </button>
@@ -3234,8 +3234,8 @@ const AdditionalAnalysisPage = () => {
                     <button
                         onClick={() => setIsExcelModalOpen(true)}
                         style={{
-                            color: '#2563eb',
-                            border: '1px solid #2563eb',
+                            color: 'var(--srt-primary-600)',
+                            border: '1px solid var(--srt-primary-600)',
                             background: '#ffffff',
                             height: '32px',
                             padding: '0 16px',
@@ -3251,10 +3251,10 @@ const AdditionalAnalysisPage = () => {
                             outline: 'none'
                         }}
                         className="dp-btn"
-                        onMouseOver={(e) => e.currentTarget.style.background = '#eff6ff'}
+                        onMouseOver={(e) => e.currentTarget.style.background = 'var(--srt-primary-50)'}
                         onMouseOut={(e) => e.currentTarget.style.background = '#ffffff'}
                     >
-                        <Download size={16} strokeWidth={2.5} style={{ marginRight: '6px' }} color="#2563eb" />
+                        <Download size={16} strokeWidth={2.5} style={{ marginRight: '6px' }} color="var(--srt-primary-600)" />
                         <span>엑셀 다운로드</span>
                     </button>
                 </div>
@@ -3282,7 +3282,7 @@ const AdditionalAnalysisPage = () => {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            border: `1px solid ${isFilterOpen ? '#3b82f6' : '#cbd5e1'}`,
+                            border: `1px solid ${isFilterOpen ? 'var(--srt-primary-500)' : '#cbd5e1'}`,
                             borderRadius: '4px',
                             background: '#fff',
                             padding: '0 12px',
@@ -3304,7 +3304,7 @@ const AdditionalAnalysisPage = () => {
                     style={{
                         height: '32px',
                         padding: '0 16px',
-                        background: '#3b82f6',
+                        background: 'var(--srt-primary-500)',
                         color: '#ffffff',
                         border: 'none',
                         borderRadius: '4px',
@@ -3317,10 +3317,10 @@ const AdditionalAnalysisPage = () => {
                         gap: '6px',
                     }}
                     onMouseOver={(e) => {
-                        e.currentTarget.style.background = '#2563eb';
+                        e.currentTarget.style.background = 'var(--srt-primary-600)';
                     }}
                     onMouseOut={(e) => {
-                        e.currentTarget.style.background = '#3b82f6';
+                        e.currentTarget.style.background = 'var(--srt-primary-500)';
                     }}
                 >
                     필터 추가
@@ -3346,13 +3346,13 @@ const AdditionalAnalysisPage = () => {
                                             display: 'flex',
                                             alignItems: 'center',
                                             gap: '6px',
-                                            background: '#eff6ff',
-                                            border: '1px solid #bfdbfe',
+                                            background: 'var(--srt-primary-50)',
+                                            border: '1px solid var(--srt-primary-200)',
                                             borderRadius: '16px',
                                             padding: '4px 10px',
                                             fontSize: '11px',
                                             fontWeight: 500,
-                                            color: '#2563eb',
+                                            color: 'var(--srt-primary-600)',
                                             userSelect: 'none',
                                         }}
                                     >
@@ -3369,8 +3369,8 @@ const AdditionalAnalysisPage = () => {
                                                 borderRadius: '50%',
                                                 fontSize: '9px',
                                                 fontWeight: 700,
-                                                background: '#dbeafe',
-                                                color: '#1d4ed8'
+                                                background: 'var(--srt-primary-100)',
+                                                color: 'var(--srt-primary-700)'
                                             }}
                                             title="삭제"
                                         >
@@ -3477,7 +3477,7 @@ const AdditionalAnalysisPage = () => {
                                                 <div style={{
                                                     width: '13px',
                                                     height: '13px',
-                                                    border: (isParentChecked || isParentIndeterminate) ? '1.5px solid #3b82f6' : '1px solid #cbd5e1',
+                                                    border: (isParentChecked || isParentIndeterminate) ? '1.5px solid var(--srt-primary-500)' : '1px solid #cbd5e1',
                                                     borderRadius: '3px',
                                                     background: '#fff',
                                                     display: 'flex',
@@ -3485,8 +3485,8 @@ const AdditionalAnalysisPage = () => {
                                                     justifyContent: 'center',
                                                     flexShrink: 0
                                                 }}>
-                                                    {isParentChecked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
-                                                    {isParentIndeterminate && <div style={{ width: '7px', height: '2px', background: '#3b82f6' }} />}
+                                                    {isParentChecked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--srt-primary-500)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                                                    {isParentIndeterminate && <div style={{ width: '7px', height: '2px', background: 'var(--srt-primary-500)' }} />}
                                                 </div>
                                                 <span style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b' }}>
                                                     {group.variableLabel}
@@ -3518,7 +3518,7 @@ const AdditionalAnalysisPage = () => {
                                                             <div style={{
                                                                 width: '13px',
                                                                 height: '13px',
-                                                                border: isChildChecked ? '1.5px solid #3b82f6' : '1px solid #cbd5e1',
+                                                                border: isChildChecked ? '1.5px solid var(--srt-primary-500)' : '1px solid #cbd5e1',
                                                                 borderRadius: '3px',
                                                                 background: '#fff',
                                                                 display: 'flex',
@@ -3526,7 +3526,7 @@ const AdditionalAnalysisPage = () => {
                                                                 justifyContent: 'center',
                                                                 flexShrink: 0
                                                             }}>
-                                                                {isChildChecked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                                                                {isChildChecked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--srt-primary-500)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
                                                             </div>
                                                             <span style={{ fontSize: '12px', color: '#475569', fontWeight: 500 }}>
                                                                 {opt.label}
@@ -3558,7 +3558,7 @@ const AdditionalAnalysisPage = () => {
                         headerAction={
                             <button
                                 onClick={handleAddNewTable}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', height: '24px', padding: '0 8px', borderRadius: '4px', border: '1px solid #2563eb', color: '#2563eb', background: '#eff6ff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', height: '24px', padding: '0 8px', borderRadius: '4px', border: '1px solid var(--srt-primary-600)', color: 'var(--srt-primary-600)', background: 'var(--srt-primary-50)', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
                             >
                                 <Plus size={12} /> 추가
                             </button>
@@ -4066,7 +4066,7 @@ const AdditionalAnalysisPage = () => {
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.4)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div style={{ background: '#fff', borderRadius: '16px', padding: '32px', width: '450px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9' }}>
                         <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <Download size={22} color="#2563eb" strokeWidth={2.5} />
+                            <Download size={22} color="var(--srt-primary-600)" strokeWidth={2.5} />
                             엑셀 다운로드
                         </h3>
                         <p style={{ margin: '0 0 24px 0', fontSize: '15px', color: '#475569', fontWeight: 500, lineHeight: '1.5' }}>
@@ -4082,8 +4082,8 @@ const AdditionalAnalysisPage = () => {
                                 >
                                     <div style={{
                                         width: '20px', height: '20px', borderRadius: '5px',
-                                        background: excelShowPct ? '#2563eb' : '#fff',
-                                        border: `1.5px solid ${excelShowPct ? '#2563eb' : '#cbd5e1'}`,
+                                        background: excelShowPct ? 'var(--srt-primary-600)' : '#fff',
+                                        border: `1.5px solid ${excelShowPct ? 'var(--srt-primary-600)' : '#cbd5e1'}`,
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         flexShrink: 0,
                                         transition: 'all 0.15s'
@@ -4131,7 +4131,7 @@ const AdditionalAnalysisPage = () => {
                                             }}
                                             style={{
                                                 width: '100%', height: '100%', border: 'none', background: 'transparent',
-                                                textAlign: 'center', fontSize: '13px', fontWeight: 800, color: '#1e3a8a',
+                                                textAlign: 'center', fontSize: '13px', fontWeight: 800, color: 'var(--srt-primary-900)',
                                                 outline: 'none', padding: 0
                                             }}
                                         />
@@ -4147,8 +4147,8 @@ const AdditionalAnalysisPage = () => {
                             >
                                 <div style={{
                                     width: '20px', height: '20px', borderRadius: '5px',
-                                    background: excelShowBaseParenthesis ? '#2563eb' : '#fff',
-                                    border: `1.5px solid ${excelShowBaseParenthesis ? '#2563eb' : '#cbd5e1'}`,
+                                    background: excelShowBaseParenthesis ? 'var(--srt-primary-600)' : '#fff',
+                                    border: `1.5px solid ${excelShowBaseParenthesis ? 'var(--srt-primary-600)' : '#cbd5e1'}`,
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     flexShrink: 0,
                                     transition: 'all 0.15s'
@@ -4176,9 +4176,9 @@ const AdditionalAnalysisPage = () => {
                                     setIsExcelModalOpen(false);
                                     await handleExcelExport();
                                 }}
-                                onMouseOver={(e) => e.target.style.background = '#1d4ed8'}
-                                onMouseOut={(e) => e.target.style.background = '#2563eb'}
-                                style={{ padding: '10px 24px', background: '#2563eb', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, transition: 'background 0.2s' }}
+                                onMouseOver={(e) => e.target.style.background = 'var(--srt-primary-700)'}
+                                onMouseOut={(e) => e.target.style.background = 'var(--srt-primary-600)'}
+                                style={{ padding: '10px 24px', background: 'var(--srt-primary-600)', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, transition: 'background 0.2s' }}
                             >
                                 다운로드
                             </button>

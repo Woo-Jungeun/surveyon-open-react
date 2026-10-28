@@ -266,18 +266,18 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
             const maxVal = Math.max(...heatmapData.map(d => Number(d.value || 0))) || 1;
 
             const darkColorsByPalette = {
-                default: '#1e3a8a',
+                default: 'var(--srt-primary-900)',
                 professional: '#312e81',
                 tableau: '#1f2937',
                 pastel: '#0f172a',
-                ocean: '#1e3a8a',
+                ocean: 'var(--srt-primary-900)',
                 forest: '#064e3b',
                 sunset: '#7c2d12',
                 slate: '#0f172a',
                 premium: '#4c1d95',
                 vivid: '#0f172a'
             };
-            const themeDarkColor = darkColorsByPalette[paletteId] || '#1e3a8a';
+            const themeDarkColor = darkColorsByPalette[paletteId] || 'var(--srt-primary-900)';
 
             return (
                 <ChartSeriesItem
@@ -613,11 +613,11 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                 padding: '6px 12px',
                                 border: '1px solid #e2e8f0',
                                 borderRadius: '6px',
-                                backgroundColor: showLegend ? '#eff6ff' : 'white',
+                                backgroundColor: showLegend ? 'var(--srt-primary-50)' : 'white',
                                 fontSize: '13px',
                                 fontWeight: '500',
-                                color: showLegend ? '#2563eb' : '#475569',
-                                borderIColor: showLegend ? '#bfdbfe' : '#e2e8f0',
+                                color: showLegend ? 'var(--srt-primary-600)' : '#475569',
+                                borderIColor: showLegend ? 'var(--srt-primary-200)' : '#e2e8f0',
                                 cursor: 'pointer',
                                 transition: 'all 0.2s'
                             }}

@@ -566,9 +566,9 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                                 onClick={() => setShowLegend(!showLegend)}
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '6px',
-                                    padding: '4px 8px', border: `1px solid ${showLegend ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
-                                    background: showLegend ? '#eff6ff' : '#fff',
-                                    color: showLegend ? '#2563eb' : '#64748b',
+                                    padding: '4px 8px', border: `1px solid ${showLegend ? 'var(--srt-primary-500, #3b82f6)' : '#e2e8f0'}`, borderRadius: '6px',
+                                    background: showLegend ? 'var(--srt-primary-50, #eff6ff)' : '#fff',
+                                    color: showLegend ? 'var(--srt-primary-600, #2563eb)' : '#64748b',
                                     fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '28px'
                                 }}
                                 title="범례 보기/숨기기"
@@ -590,9 +590,9 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                                     onClick={() => setIsChartOptionsOpen(!isChartOptionsOpen)}
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: '6px',
-                                        padding: '4px 8px', border: `1px solid ${isChartOptionsOpen ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
-                                        background: isChartOptionsOpen ? '#eff6ff' : '#fff',
-                                        color: isChartOptionsOpen ? '#2563eb' : '#64748b',
+                                        padding: '4px 8px', border: `1px solid ${isChartOptionsOpen ? 'var(--srt-primary-500, #3b82f6)' : '#e2e8f0'}`, borderRadius: '6px',
+                                        background: isChartOptionsOpen ? 'var(--srt-primary-50, #eff6ff)' : '#fff',
+                                        color: isChartOptionsOpen ? 'var(--srt-primary-600, #2563eb)' : '#64748b',
                                         fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '28px'
                                     }}
                                     title="차트 옵션"
@@ -617,7 +617,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                                                     style={{
                                                         flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px',
                                                         fontWeight: chartDataType === 'frequency' ? 700 : 500,
-                                                        color: chartDataType === 'frequency' ? '#2563eb' : '#64748b',
+                                                        color: chartDataType === 'frequency' ? 'var(--srt-primary-600, #2563eb)' : '#64748b',
                                                         background: chartDataType === 'frequency' ? '#fff' : 'transparent',
                                                         borderRadius: '4px', cursor: 'pointer',
                                                         boxShadow: chartDataType === 'frequency' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
@@ -631,7 +631,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                                                     style={{
                                                         flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px',
                                                         fontWeight: chartDataType === 'percentage' ? 700 : 500,
-                                                        color: chartDataType === 'percentage' ? '#2563eb' : '#64748b',
+                                                        color: chartDataType === 'percentage' ? 'var(--srt-primary-600, #2563eb)' : '#64748b',
                                                         background: chartDataType === 'percentage' ? '#fff' : 'transparent',
                                                         borderRadius: '4px', cursor: 'pointer',
                                                         boxShadow: chartDataType === 'percentage' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
@@ -651,7 +651,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                                             >
                                                 <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>값 표출하기</span>
                                                 <div style={{
-                                                    width: '36px', height: '20px', background: showChartValues ? '#3b82f6' : '#e2e8f0',
+                                                    width: '36px', height: '20px', background: showChartValues ? 'var(--srt-primary-500, #3b82f6)' : '#e2e8f0',
                                                     borderRadius: '20px', position: 'relative', transition: 'background 0.2s', flexShrink: 0
                                                 }}>
                                                     <div style={{
@@ -668,7 +668,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                                                 >
                                                     <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>% 표출</span>
                                                     <div style={{
-                                                        width: '36px', height: '20px', background: showPercentSymbol ? '#3b82f6' : '#e2e8f0',
+                                                        width: '36px', height: '20px', background: showPercentSymbol ? 'var(--srt-primary-500, #3b82f6)' : '#e2e8f0',
                                                         borderRadius: '20px', position: 'relative', transition: 'background 0.2s', flexShrink: 0
                                                     }}>
                                                         <div style={{
@@ -697,9 +697,9 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                                     onClick={(e) => { e.stopPropagation(); setIsGroupFilterMenuOpen(!isGroupFilterMenuOpen); }}
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: '6px',
-                                        padding: '4px 8px', border: `1px solid ${(selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
-                                        background: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#eff6ff' : '#fff',
-                                        color: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#2563eb' : '#64748b',
+                                        padding: '4px 8px', border: `1px solid ${(selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? 'var(--srt-primary-500, #3b82f6)' : '#e2e8f0'}`, borderRadius: '6px',
+                                        background: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? 'var(--srt-primary-50, #eff6ff)' : '#fff',
+                                        color: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? 'var(--srt-primary-600, #2563eb)' : '#64748b',
                                         fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '28px', maxWidth: '220px'
                                     }}
                                     title="그룹 필터"
@@ -756,9 +756,9 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                                             >
                                                 <div style={{
                                                     width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    border: `1px solid ${selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#cbd5e1'}`,
+                                                    border: `1px solid ${selectedChartGroups.length === availableChartGroups.length ? 'var(--srt-primary-600, #2563eb)' : '#cbd5e1'}`,
                                                     borderRadius: '3px',
-                                                    background: selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#fff'
+                                                    background: selectedChartGroups.length === availableChartGroups.length ? 'var(--srt-primary-600, #2563eb)' : '#fff'
                                                 }}>
                                                     {selectedChartGroups.length === availableChartGroups.length && <Check size={10} color="#fff" strokeWidth={3} />}
                                                 </div>
@@ -778,9 +778,9 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                                                     >
                                                         <div style={{
                                                             width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                            border: `1px solid ${isChecked ? '#2563eb' : '#cbd5e1'}`,
+                                                            border: `1px solid ${isChecked ? 'var(--srt-primary-600, #2563eb)' : '#cbd5e1'}`,
                                                             borderRadius: '3px',
-                                                            background: isChecked ? '#2563eb' : '#fff'
+                                                            background: isChecked ? 'var(--srt-primary-600, #2563eb)' : '#fff'
                                                         }}>
                                                             {isChecked && <Check size={10} color="#fff" strokeWidth={3} />}
                                                         </div>
@@ -2650,13 +2650,13 @@ const FrequencyAnalysisPage = () => {
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         gap: '6px',
-                                                        background: '#eff6ff',
-                                                        border: '1px solid #bfdbfe',
+                                                        background: 'var(--srt-primary-50, #eff6ff)',
+                                                        border: '1px solid var(--srt-primary-200, #bfdbfe)',
                                                         borderRadius: '16px',
                                                         padding: '4px 10px',
                                                         fontSize: '11px',
                                                         fontWeight: 500,
-                                                        color: '#1e40af',
+                                                        color: 'var(--srt-primary-800, #1e40af)',
                                                         userSelect: 'none',
                                                         transition: 'all 0.15s ease-in-out'
                                                     }}
@@ -2673,17 +2673,17 @@ const FrequencyAnalysisPage = () => {
                                                             height: '12px',
                                                             borderRadius: '50%',
                                                             fontSize: '9px',
-                                                            color: '#3b82f6',
+                                                            color: 'var(--srt-primary-600, #3b82f6)',
                                                             fontWeight: 700,
                                                             transition: 'all 0.15s'
                                                         }}
                                                         onMouseOver={(e) => {
-                                                            e.currentTarget.style.background = '#dbeafe';
-                                                            e.currentTarget.style.color = '#1d4ed8';
+                                                            e.currentTarget.style.background = 'var(--srt-primary-100, #dbeafe)';
+                                                            e.currentTarget.style.color = 'var(--srt-primary-700, #1d4ed8)';
                                                         }}
                                                         onMouseOut={(e) => {
                                                             e.currentTarget.style.background = 'transparent';
-                                                            e.currentTarget.style.color = '#3b82f6';
+                                                            e.currentTarget.style.color = 'var(--srt-primary-600, #3b82f6)';
                                                         }}
                                                     >
                                                         ✕

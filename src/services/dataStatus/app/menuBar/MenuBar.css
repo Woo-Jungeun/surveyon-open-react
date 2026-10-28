@@ -203,18 +203,18 @@
 
 .module-dd-item:hover:not(.highlight) {
     background: #f0f7ff;
-    color: #3b82f6;
+    color: var(--srt-primary-500);
 }
 
 .module-dd-item.highlight {
-    background: #eff6ff;
-    color: #3b82f6 !important;
+    background: var(--srt-primary-50);
+    color: var(--srt-primary-500) !important;
     font-weight: 700;
     margin-bottom: 6px;
 }
 
 .module-dd-item.highlight:hover {
-    background: #dbeafe;
+    background: var(--srt-primary-100);
 }
 
 .module-dd-item.disabled {
@@ -353,9 +353,9 @@
 }
 
 .common-sidebar .menu-bar-refresh-icon-btn:hover {
-    background: #eff6ff !important;
-    border-color: #bfdbfe !important;
-    color: #2563eb !important;
+    background: var(--srt-primary-50) !important;
+    border-color: var(--srt-primary-200) !important;
+    color: var(--srt-primary-600) !important;
 }
 
 .common-sidebar .menu-bar-refresh-icon-btn svg {
@@ -429,9 +429,9 @@
 
 .menu-bar-nav-link.active {
     font-weight: 700;
-    color: var(--ds-primary, #3b82f6);
-    background: #eff6ff;
-    border-left-color: var(--ds-primary, #3b82f6);
+    color: var(--ds-primary, var(--srt-primary-500));
+    background: var(--srt-primary-50);
+    border-left-color: var(--ds-primary, var(--srt-primary-500));
 }
 
 .menu-bar-nav-link:hover:not(.active) {

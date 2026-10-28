@@ -391,9 +391,9 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
                                 style={{
                                     padding: '5px 16px',
                                     borderRadius: '4px',
-                                    border: '1px solid #3b82f6',
+                                    border: '1px solid var(--srt-primary-500, #3b82f6)',
                                     background: '#ffffff',
-                                    color: '#3b82f6',
+                                    color: 'var(--srt-primary-500, #3b82f6)',
                                     cursor: 'pointer',
                                     display: 'inline-flex',
                                     alignItems: 'center',
@@ -468,7 +468,7 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
                                                     pointerEvents: isOnlyAdd ? 'none' : 'auto'
                                                 }}
                                             >
-                                                <Plus size={18} color="#3b82f6" strokeWidth={3} />
+                                                <Plus size={18} strokeWidth={3} style={{ stroke: 'var(--srt-primary-500, #3b82f6)' }} />
                                             </button>
                                         )}
                                         {addable && copyable && (

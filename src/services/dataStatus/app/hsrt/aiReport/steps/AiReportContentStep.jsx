@@ -3,9 +3,9 @@ import { Sparkles, RotateCcw, Plus, Trash2, Info } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 
 const CATEGORY_COLORS = [
-    '#3b82f6', // Blue
+    'var(--srt-primary-500)', // Blue
     '#a855f7', // Purple
-    '#6366f1', // Indigo
+    'var(--srt-accent-500)', // Indigo
     '#f97316', // Orange
     '#10b981', // Emerald Green
     '#f43f5e', // Rose Pink
@@ -15,7 +15,7 @@ const CATEGORY_COLORS = [
     '#14b8a6', // Teal
     '#84cc16', // Lime Green
     '#8b5cf6', // Violet
-    '#0284c7', // Sky Blue
+    'var(--srt-secondary-600)', // Sky Blue
     '#d946ef'  // Fuchsia
 ];
 
@@ -201,7 +201,7 @@ const AiReportContentStep = ({
                                                 fontWeight: '800',
                                                 textTransform: 'lowercase',
                                                 ...((q.type || '').toLowerCase() === 'single' ? { background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' } :
-                                                    ((q.type || '').toLowerCase() === 'double' || (q.type || '').toLowerCase() === 'multi') ? { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' } :
+                                                    ((q.type || '').toLowerCase() === 'double' || (q.type || '').toLowerCase() === 'multi') ? { background: 'var(--srt-primary-50)', color: 'var(--srt-primary-700)', border: '1px solid var(--srt-primary-100)' } :
                                                         (q.type || '').toLowerCase() === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
                                                             (q.type || '').toLowerCase() === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
                                                                 ((q.type || '').toLowerCase() === 'open(문자)' || (q.type || '').toLowerCase() === 'open-text') ? { background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' } :
@@ -304,9 +304,9 @@ const AiReportContentStep = ({
                                                 transition: 'all 0.2s ease-in-out'
                                             }}
                                             onFocus={(e) => {
-                                                e.target.style.borderColor = '#2563eb';
+                                                e.target.style.borderColor = 'var(--srt-primary-600)';
                                                 e.target.style.backgroundColor = '#ffffff';
-                                                e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.15)';
+                                                e.target.style.boxShadow = '0 0 0 3px color-mix(in srgb, var(--srt-primary-600) 15%, transparent)';
                                             }}
                                             onBlur={(e) => {
                                                 e.target.style.borderColor = '#cbd5e1';
@@ -334,9 +334,9 @@ const AiReportContentStep = ({
                                                 transition: 'all 0.2s ease-in-out'
                                             }}
                                             onFocus={(e) => {
-                                                e.target.style.borderColor = '#2563eb';
+                                                e.target.style.borderColor = 'var(--srt-primary-600)';
                                                 e.target.style.backgroundColor = '#ffffff';
-                                                e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.15)';
+                                                e.target.style.boxShadow = '0 0 0 3px color-mix(in srgb, var(--srt-primary-600) 15%, transparent)';
                                             }}
                                             onBlur={(e) => {
                                                 e.target.style.borderColor = '#cbd5e1';
@@ -355,9 +355,9 @@ const AiReportContentStep = ({
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: '#475569' }}>
                                         <span>연동될 문항 목록</span>
                                         <span style={{
-                                            backgroundColor: '#eff6ff',
-                                            color: '#2563eb',
-                                            border: '1px solid #dbeafe',
+                                            backgroundColor: 'var(--srt-primary-50)',
+                                            color: 'var(--srt-primary-600)',
+                                            border: '1px solid var(--srt-primary-100)',
                                             padding: '2px 8px',
                                             borderRadius: '20px',
                                             fontWeight: 700,
@@ -377,8 +377,8 @@ const AiReportContentStep = ({
                                                         onClick={() => setNewKpiQuestionId(q.id)}
                                                         style={{
                                                             backgroundColor: '#ffffff',
-                                                            color: '#2563eb',
-                                                            border: isKpi ? '1.5px solid #2563eb' : '1px solid #dbeafe',
+                                                            color: 'var(--srt-primary-600)',
+                                                            border: isKpi ? '1.5px solid var(--srt-primary-600)' : '1px solid var(--srt-primary-100)',
                                                             borderRadius: '6px',
                                                             padding: '2px 8px',
                                                             fontSize: '11px',
@@ -397,7 +397,7 @@ const AiReportContentStep = ({
                                                                 padding: '1px 5px',
                                                                 fontSize: '9px',
                                                                 fontWeight: 800,
-                                                                backgroundColor: '#2563eb',
+                                                                backgroundColor: 'var(--srt-primary-600)',
                                                                 color: '#ffffff',
                                                                 borderRadius: '4px',
                                                                 lineHeight: 1,
@@ -484,15 +484,15 @@ const AiReportContentStep = ({
                                             padding: '0 12px',
                                             fontSize: '12px',
                                             fontWeight: 600,
-                                            backgroundColor: '#2563eb',
+                                            backgroundColor: 'var(--srt-primary-600)',
                                             color: '#ffffff',
                                             border: 'none',
                                             borderRadius: '6px',
                                             cursor: 'pointer',
                                             transition: 'all 0.15s ease'
                                         }}
-                                        onMouseOver={(e) => { e.target.style.backgroundColor = '#1d4ed8'; }}
-                                        onMouseOut={(e) => { e.target.style.backgroundColor = '#2563eb'; }}
+                                        onMouseOver={(e) => { e.target.style.backgroundColor = 'var(--srt-primary-700)'; }}
+                                        onMouseOut={(e) => { e.target.style.backgroundColor = 'var(--srt-primary-600)'; }}
                                     >
                                         저장
                                     </button>
@@ -554,9 +554,9 @@ const AiReportContentStep = ({
                                                     transition: 'all 0.2s ease-in-out'
                                                 }}
                                                 onFocus={(e) => {
-                                                    e.target.style.borderColor = '#2563eb';
+                                                    e.target.style.borderColor = 'var(--srt-primary-600)';
                                                     e.target.style.backgroundColor = '#ffffff';
-                                                    e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.15)';
+                                                    e.target.style.boxShadow = '0 0 0 3px color-mix(in srgb, var(--srt-primary-600) 15%, transparent)';
                                                 }}
                                                 onBlur={(e) => {
                                                     e.target.style.borderColor = '#cbd5e1';
@@ -584,9 +584,9 @@ const AiReportContentStep = ({
                                                     transition: 'all 0.2s ease-in-out'
                                                 }}
                                                 onFocus={(e) => {
-                                                    e.target.style.borderColor = '#2563eb';
+                                                    e.target.style.borderColor = 'var(--srt-primary-600)';
                                                     e.target.style.backgroundColor = '#ffffff';
-                                                    e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.15)';
+                                                    e.target.style.boxShadow = '0 0 0 3px color-mix(in srgb, var(--srt-primary-600) 15%, transparent)';
                                                 }}
                                                 onBlur={(e) => {
                                                     e.target.style.borderColor = '#cbd5e1';
@@ -605,9 +605,9 @@ const AiReportContentStep = ({
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: '#475569' }}>
                                             <span>연동될 문항 목록</span>
                                             <span style={{
-                                                backgroundColor: '#eff6ff',
-                                                color: '#2563eb',
-                                                border: '1px solid #dbeafe',
+                                                backgroundColor: 'var(--srt-primary-50)',
+                                                color: 'var(--srt-primary-600)',
+                                                border: '1px solid var(--srt-primary-100)',
                                                 padding: '2px 8px',
                                                 borderRadius: '20px',
                                                 fontWeight: 700,
@@ -627,8 +627,8 @@ const AiReportContentStep = ({
                                                             onClick={() => setNewKpiQuestionId(q.id)}
                                                             style={{
                                                                 backgroundColor: '#ffffff',
-                                                                color: '#2563eb',
-                                                                border: isKpi ? '1.8px solid #2563eb' : '1px solid #dbeafe',
+                                                                color: 'var(--srt-primary-600)',
+                                                                border: isKpi ? '1.8px solid var(--srt-primary-600)' : '1px solid var(--srt-primary-100)',
                                                                 borderRadius: '6px',
                                                                 padding: '2px 8px',
                                                                 fontSize: '11px',
@@ -647,7 +647,7 @@ const AiReportContentStep = ({
                                                                     padding: '1px 5px',
                                                                     fontSize: '10px',
                                                                     fontWeight: 400,
-                                                                    backgroundColor: '#2563eb',
+                                                                    backgroundColor: 'var(--srt-primary-600)',
                                                                     color: '#ffffff',
                                                                     borderRadius: '4px',
                                                                     lineHeight: 1,
@@ -734,15 +734,15 @@ const AiReportContentStep = ({
                                                 padding: '0 12px',
                                                 fontSize: '12px',
                                                 fontWeight: 600,
-                                                backgroundColor: '#2563eb',
+                                                backgroundColor: 'var(--srt-primary-600)',
                                                 color: '#ffffff',
                                                 border: 'none',
                                                 borderRadius: '6px',
                                                 cursor: 'pointer',
                                                 transition: 'all 0.15s ease'
                                             }}
-                                            onMouseOver={(e) => { e.target.style.backgroundColor = '#1d4ed8'; }}
-                                            onMouseOut={(e) => { e.target.style.backgroundColor = '#2563eb'; }}
+                                            onMouseOver={(e) => { e.target.style.backgroundColor = 'var(--srt-primary-700)'; }}
+                                            onMouseOut={(e) => { e.target.style.backgroundColor = 'var(--srt-primary-600)'; }}
                                         >
                                             저장
                                         </button>
@@ -782,9 +782,9 @@ const AiReportContentStep = ({
                                 </div>
                                 <div className="ai-cat-card-right" style={{ marginLeft: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <span className="ai-cat-card-count" style={{
-                                        backgroundColor: isSelected ? cat.color : '#eff6ff',
-                                        color: isSelected ? '#ffffff' : '#4B7CF3',
-                                        border: isSelected ? `1px solid ${cat.color}` : '1px solid #dbeafe'
+                                        backgroundColor: isSelected ? cat.color : 'var(--srt-primary-50)',
+                                        color: isSelected ? '#ffffff' : 'var(--srt-primary-600)',
+                                        border: isSelected ? `1px solid ${cat.color}` : '1px solid var(--srt-primary-100)'
                                     }}>{cat.count}문항</span>
                                     <button
                                         onClick={(e) => handleDeleteCategory(cat.id, e)}

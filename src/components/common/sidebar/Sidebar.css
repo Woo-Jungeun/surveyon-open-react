@@ -186,8 +186,8 @@
 }
 
 .blue .home-btn:hover {
-    color: #3b82f6;
-    background: #eff6ff;
+    color: var(--srt-primary-500, #3b82f6);
+    background: var(--srt-primary-50, #eff6ff);
 }
 
 .header-divider {
@@ -248,7 +248,7 @@
 }
 
 .blue .logo-accent {
-    color: #3b82f6;
+    color: var(--srt-primary-500, #3b82f6);
 }
 
 /* Module Menu Button in Header */
@@ -285,8 +285,8 @@
 
 .blue .module-menu-btn:hover,
 .blue .module-menu-btn.active {
-    background: #eff6ff;
-    color: #3b82f6;
+    background: var(--srt-primary-50, #eff6ff);
+    color: var(--srt-primary-500, #3b82f6);
 }
 
 .orange .module-menu-btn:hover,
@@ -455,8 +455,8 @@
 }
 
 .blue .project-info-card.customer-mode:hover {
-    background: #eff6ff !important;
-    border-color: #bfdbfe !important;
+    background: var(--srt-primary-50, #eff6ff) !important;
+    border-color: var(--srt-primary-200, #bfdbfe) !important;
 }
 
 .orange .project-info-card.customer-mode:hover {
@@ -475,11 +475,11 @@
 
 .blue .project-info-card:hover {
     background: #fff;
-    border-color: #3b82f6;
+    border-color: var(--srt-primary-500, #3b82f6);
 }
 
 .blue .project-info-card:hover .project-settings-btn {
-    color: #3b82f6;
+    color: var(--srt-primary-500, #3b82f6);
 }
 
 .orange .project-info-card:hover .project-settings-btn {
@@ -496,8 +496,8 @@
 }
 
 .blue .project-info-card {
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
+    background: var(--srt-primary-50, #eff6ff);
+    border: 1px solid var(--srt-primary-200, #bfdbfe);
     /* Subtle blue border for blue theme */
 }
 
@@ -517,7 +517,7 @@
 }
 
 .blue .project-title {
-    color: #1e3a8a;
+    color: var(--srt-primary-900, #1e3a8a);
 }
 
 .project-id-badge {
@@ -532,8 +532,8 @@
 }
 
 .blue .project-id-badge {
-    color: #3b82f6;
-    background: #dbeafe;
+    color: var(--srt-primary-500, #3b82f6);
+    background: var(--srt-primary-100, #dbeafe);
 }
 
 .project-settings-btn {
@@ -559,7 +559,7 @@
 }
 
 .blue .project-settings-btn:hover {
-    color: #3b82f6;
+    color: var(--srt-primary-500, #3b82f6);
 }
 
 .green .project-settings-btn:hover {
@@ -678,10 +678,10 @@
 }
 
 .blue .nav-link.active {
-    background: #eff6ff;
-    color: #3b82f6;
+    background: var(--srt-primary-50, #eff6ff);
+    color: var(--srt-primary-500, #3b82f6);
     font-weight: 700;
-    border-left-color: #3b82f6;
+    border-left-color: var(--srt-primary-500, #3b82f6);
     border-radius: 0 8px 8px 0;
     box-shadow: none;
 }
@@ -697,12 +697,12 @@
 }
 
 .blue .nav-link.main-nav-link.active {
-    background: #dbeafe;
-    color: #1e40af;
+    background: var(--srt-primary-100, #dbeafe);
+    color: var(--srt-primary-800, #1e40af);
     font-weight: 700;
-    border-left-color: #2563eb;
+    border-left-color: var(--srt-primary-600, #2563eb);
     border-radius: 0 12px 12px 0;
-    box-shadow: 2px 2px 8px rgba(37, 99, 235, 0.2);
+    box-shadow: 2px 2px 8px color-mix(in srgb, var(--srt-primary-600, #2563eb) 20%, transparent);
 }
 
 .nav-icon {
@@ -792,22 +792,22 @@
     transition: color 0.15s ease;
 }
 
-/* Active State - Soft harmonious blue */
+/* Active State - Soft harmonious blue / Brand adaptive */
 .sub-nav-link.active {
-    background: #eff6ff;
-    color: #2563eb;
+    background: var(--srt-primary-50, #eff6ff);
+    color: var(--srt-primary-600, #2563eb);
     font-weight: 600;
 }
 
 .sub-nav-link.active .sub-nav-step-badge {
-    background: #dbeafe;
-    border-color: #3b82f6;
-    color: #2563eb;
+    background: var(--srt-primary-100, #dbeafe);
+    border-color: var(--srt-primary-500, #3b82f6);
+    color: var(--srt-primary-600, #2563eb);
     font-weight: 700;
 }
 
 .sub-nav-link.active .sub-nav-title {
-    color: #2563eb;
+    color: var(--srt-primary-600, #2563eb);
     font-weight: 600;
 }
 
@@ -860,7 +860,7 @@
 }
 
 .nav-link.active .submenu-toggle-btn {
-    color: #3b82f6;
+    color: var(--srt-primary-600, #3b82f6);
 }
 
 .submenu-toggle-btn:hover {

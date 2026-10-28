@@ -318,7 +318,7 @@ modal.showAlert('알림', `'${band.label}' 밴드에 지정된 값이 없습니�
                     padding: '20px 28px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '4px', height: '18px', background: '#3b82f6', borderRadius: '2px' }}></div>
+                        <div style={{ width: '4px', height: '18px', background: 'var(--srt-primary-500)', borderRadius: '2px' }}></div>
                         <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>
                             {mode === 'edit' ? '요약 설정 수정' : `요약 설정 생성 (${selectedIds.length}개 문항 선택됨)`}
                         </h3>
@@ -475,9 +475,9 @@ modal.showAlert('알림', `'${band.label}' 밴드에 지정된 값이 없습니�
 
                                                     if (isSelected) {
                                                         if (labelLower.includes('top')) {
-                                                            circleBg = '#e0f2fe';
-                                                            circleBorder = '1px solid #3b82f6';
-                                                            circleColor = '#2563eb';
+                                                            circleBg = 'var(--srt-secondary-100)';
+                                                            circleBorder = '1px solid var(--srt-primary-500)';
+                                                            circleColor = 'var(--srt-primary-600)';
                                                         } else if (labelLower.includes('bot')) {
                                                             circleBg = '#ffe4e6';
                                                             circleBorder = '1px solid #f43f5e';
@@ -554,7 +554,7 @@ modal.showAlert('알림', `'${band.label}' 밴드에 지정된 값이 없습니�
                                                     width: '14px',
                                                     height: '14px',
                                                     borderRadius: '4px',
-                                                    border: isMeanIncluded ? '1.5px solid #3b82f6' : '1.5px solid #cbd5e1',
+                                                    border: isMeanIncluded ? '1.5px solid var(--srt-primary-500)' : '1.5px solid #cbd5e1',
                                                     background: '#ffffff',
                                                     display: 'flex',
                                                     alignItems: 'center',
@@ -564,7 +564,7 @@ modal.showAlert('알림', `'${band.label}' 밴드에 지정된 값이 없습니�
                                                     boxSizing: 'border-box'
                                                 }}
                                             >
-                                                {isMeanIncluded && <Check size={10} strokeWidth={3.5} style={{ color: '#3b82f6' }} />}
+                                                {isMeanIncluded && <Check size={10} strokeWidth={3.5} style={{ color: 'var(--srt-primary-500)' }} />}
                                             </div>
                                             <span style={{ fontWeight: 600 }}>평균 요약표 자동 포함</span>
                                         </label>
@@ -625,11 +625,11 @@ modal.showAlert('알림', `'${band.label}' 밴드에 지정된 값이 없습니�
                         onClick={handleConfirm}
                         style={{
                             padding: '7px 20px', fontSize: '12.5px', borderRadius: '4px', border: 'none',
-                            background: '#2563eb', color: '#ffffff',
+                            background: 'var(--srt-primary-600)', color: '#ffffff',
                             fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.15s'
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = '#1d4ed8'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = '#2563eb'; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--srt-primary-700)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--srt-primary-600)'; }}
                     >
                         <span>{mode === 'edit' ? '저장하기' : '요약표 생성하기'}</span>
                     </button>

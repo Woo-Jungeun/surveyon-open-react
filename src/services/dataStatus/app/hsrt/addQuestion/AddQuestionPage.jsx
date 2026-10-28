@@ -194,8 +194,8 @@ const ConditionHeaderCell = (props) => {
                             border: 1px solid #e2e8f0;
                         }
                         .section-compare {
-                            border-color: #dbeafe;
-                            background-color: #eff6ff;
+                            border-color: var(--srt-primary-200, #dbeafe);
+                            background-color: var(--srt-primary-50, #eff6ff);
                         }
                         .section-include {
                             border-color: #f3e8ff;
@@ -235,7 +235,7 @@ const ConditionHeaderCell = (props) => {
                             font-size: 11px;
                             font-weight: 700;
                         }
-                        .badge-compare { background-color: #dbeafe; color: #2563eb; border: 1px solid #bfdbfe; }
+                        .badge-compare { background-color: var(--srt-primary-100, #dbeafe); color: var(--srt-primary-600, #2563eb); border: 1px solid var(--srt-primary-200, #bfdbfe); }
                         .badge-include { background-color: #f3e8ff; color: #7c3aed; border: 1px solid #e9d5ff; }
                         .badge-logic { background-color: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
                         .badge-range { background-color: #fef3c7; color: #d97706; border: 1px solid #fde68a; }
@@ -268,7 +268,7 @@ const ConditionHeaderCell = (props) => {
                             display: flex;
                             align-items: center;
                         }
-                        .section-compare .box { border-color: #bfdbfe; }
+                        .section-compare .box { border-color: var(--srt-primary-200, #bfdbfe); }
                         .section-include .box { border-color: #e9d5ff; }
                         .section-logic .box { border-color: #bbf7d0; }
                         .section-range .box { border-color: #fde68a; }
@@ -298,7 +298,7 @@ const ConditionHeaderCell = (props) => {
                             text-align: center;
                             display: inline-block;
                         }
-                        .section-compare .operator { color: #2563eb; min-width: 26px; }
+                        .section-compare .operator { color: var(--srt-primary-600, #2563eb); min-width: 26px; }
                         .section-include .operator { color: #7c3aed; }
                         .section-logic .operator { color: #16a34a; }
                         .section-range .operator { color: #d97706; }
@@ -1409,15 +1409,25 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     return (
         <>
-            <style>{`.dp-add-question-dropdown .k-input-value-text { font-weight: 400 !important; }`}</style>
+            <style>{`
+                .dp-add-question-dropdown .k-input-value-text { font-weight: 400 !important; }
+                .dp-add-question-dropdown .k-input-button,
+                .dp-add-question-dropdown .k-input-button svg,
+                .dp-add-question-dropdown .k-input-button svg path,
+                .dp-add-question-dropdown .k-input-button .k-icon,
+                .dp-add-question-dropdown .k-input-button .k-svg-icon {
+                    color: var(--srt-primary-500) !important;
+                    fill: var(--srt-primary-500) !important;
+                }
+            `}</style>
             <DataHeader title={titleNode} onSave={handleSaveBanner}>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <Button
                         onClick={() => setIsAiModalOpen(true)}
                         className="dp-btn"
                         style={{
-                            color: '#2563eb',
-                            border: '1px solid #2563eb',
+                            color: 'var(--srt-primary-600)',
+                            border: '1px solid var(--srt-primary-600)',
                             background: '#ffffff',
                             height: '32px',
                             padding: '0 16px',
@@ -1429,8 +1439,8 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                             cursor: 'pointer',
                             transition: 'all 0.15s'
                         }}
-                        onMouseOver={(e) => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = '#1d4ed8'; }}
-                        onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#2563eb'; }}
+                        onMouseOver={(e) => { e.currentTarget.style.background = 'var(--srt-primary-50)'; e.currentTarget.style.borderColor = 'var(--srt-primary-700)'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = 'var(--srt-primary-600)'; }}
                     >
                         <Sparkles size={14} style={{ marginRight: '6px' }} /> AI조건식 자동생성
                     </Button>
@@ -1438,8 +1448,8 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                         onClick={() => setIsCartesianModalOpen(true)}
                         className="dp-btn"
                         style={{
-                            color: '#2563eb',
-                            border: '1px solid #2563eb',
+                            color: 'var(--srt-primary-600)',
+                            border: '1px solid var(--srt-primary-600)',
                             background: '#ffffff',
                             height: '32px',
                             padding: '0 16px',
@@ -1451,8 +1461,8 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                             cursor: 'pointer',
                             transition: 'all 0.15s'
                         }}
-                        onMouseOver={(e) => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = '#1d4ed8'; }}
-                        onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#2563eb'; }}
+                        onMouseOver={(e) => { e.currentTarget.style.background = 'var(--srt-primary-50)'; e.currentTarget.style.borderColor = 'var(--srt-primary-700)'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = 'var(--srt-primary-600)'; }}
                     >
                         <Wand2 size={14} style={{ marginRight: '6px' }} /> 변수 조합기 (자동생성)
                     </Button>
@@ -1471,7 +1481,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                             <div className="dp-sidebar-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '8px' }}>
                                 <span>추가된 문항 목록 ({filteredBanners.length})</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <button onClick={handleAddNew} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', height: '24px', padding: '0 8px', borderRadius: '4px', border: '1px solid #2563eb', color: '#2563eb', background: '#eff6ff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                                    <button onClick={handleAddNew} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', height: '24px', padding: '0 8px', borderRadius: '4px', border: '1px solid var(--srt-primary-600)', color: 'var(--srt-primary-600)', background: 'var(--srt-primary-50)', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
                                         <Plus size={12} /> 추가
                                     </button>
                                     <button className="dp-sidebar-toggle-btn-compact" onClick={() => setIsBannerSidebarOpen(false)} style={{ display: 'flex', alignItems: 'center' }}>

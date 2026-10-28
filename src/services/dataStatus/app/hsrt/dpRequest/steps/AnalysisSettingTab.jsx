@@ -6,7 +6,7 @@ import { TIER_OPTIONS, insertSiblingRow } from './groupTierOptions';
 
 // 그룹 색상 팔레트 정의
 const GROUP_COLORS = [
-    { bg: '#BFDBFE', border: '#60A5FA', text: '#1E3A8A' }, // Blue
+    { bg: 'var(--srt-primary-200)', border: 'var(--srt-primary-400)', text: 'var(--srt-primary-900)' }, // Blue
     { bg: '#D1E7DD', border: '#A3CFBB', text: '#0F5132' }, // Green (Refined Sage Green)
     { bg: '#DDD6FE', border: '#A78BFA', text: '#4C1D95' }, // Purple
     { bg: '#FDE68A', border: '#FBBF24', text: '#78350F' }, // Orange
@@ -74,7 +74,7 @@ const GroupTotalChipsSection = ({ groups, totalCount }) => {
                     <button
                         type="button"
                         onClick={() => setIsExpanded(prev => !prev)}
-                        style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '2px', border: 'none', background: 'transparent', color: '#2563EB', fontSize: '12px', fontWeight: 600, cursor: 'pointer', padding: '2px 4px' }}
+                        style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '2px', border: 'none', background: 'transparent', color: 'var(--srt-primary-600)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', padding: '2px 4px' }}
                     >
                         {isExpanded ? '접기' : '전체보기'}
                         <ChevronDown size={13} style={{ transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
@@ -708,8 +708,8 @@ const AnalysisSettingTab = ({
                                 style={{
                                     padding: '5px 12px',
                                     background: '#FFFFFF',
-                                    border: '1px solid #2563EB',
-                                    color: '#2563EB',
+                                    border: '1px solid var(--srt-primary-600)',
+                                    color: 'var(--srt-primary-600)',
                                     borderRadius: '6px',
                                     fontSize: '12px',
                                     fontWeight: 600,
@@ -732,8 +732,8 @@ const AnalysisSettingTab = ({
                                 onClick={() => setAiGroupOpen(true)}
                                 style={{
                                     padding: '5px 12px',
-                                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                                    border: '1px solid #1d4ed8',
+                                    background: 'linear-gradient(135deg, var(--srt-primary-500) 0%, var(--srt-primary-700) 100%)',
+                                    border: '1px solid var(--srt-primary-700)',
                                     color: '#FFFFFF',
                                     borderRadius: '6px',
                                     fontSize: '12px',
@@ -753,8 +753,8 @@ const AnalysisSettingTab = ({
                                 style={{
                                     padding: '5px 12px',
                                     background: '#FFFFFF',
-                                    border: '1px solid #2563EB',
-                                    color: '#2563EB',
+                                    border: '1px solid var(--srt-primary-600)',
+                                    color: 'var(--srt-primary-600)',
                                     borderRadius: '6px',
                                     fontSize: '12px',
                                     fontWeight: 600,
@@ -778,8 +778,8 @@ const AnalysisSettingTab = ({
                                 style={{
                                     padding: '5px 12px',
                                     background: '#FFFFFF',
-                                    border: '1px solid #2563EB',
-                                    color: '#2563EB',
+                                    border: '1px solid var(--srt-primary-600)',
+                                    color: 'var(--srt-primary-600)',
                                     borderRadius: '6px',
                                     fontSize: '12px',
                                     fontWeight: 600,
@@ -808,7 +808,7 @@ const AnalysisSettingTab = ({
                                     <span style={{ fontSize: '13px', color: '#94A3B8' }}>등록된 척도 프리셋이 없습니다.</span>
                                     <button
                                         onClick={handleAddScalePreset}
-                                        style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', border: '1px solid #2563EB', borderRadius: '6px', background: '#EFF6FF', color: '#2563EB', cursor: 'pointer' }}
+                                        style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', border: '1px solid var(--srt-primary-600)', borderRadius: '6px', background: 'var(--srt-primary-50)', color: 'var(--srt-primary-600)', cursor: 'pointer' }}
                                     >
                                         <Plus size={14} /><span style={{ fontSize: '13px', fontWeight: 600 }}>척도 프리셋 추가</span>
                                     </button>
@@ -927,7 +927,7 @@ const AnalysisSettingTab = ({
                                             </div>
 
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} onClick={(e) => e.stopPropagation()}>
-                                                <span style={{ fontSize: '11px', background: '#EFF6FF', color: '#1D4ED8', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                                                <span style={{ fontSize: '11px', background: 'var(--srt-primary-50)', color: 'var(--srt-primary-700)', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
                                                     {(item.bands || []).length} 밴드
                                                 </span>
                                                 <button
@@ -948,21 +948,21 @@ const AnalysisSettingTab = ({
 
                                                 {/* 표 헤더 */}
                                                 <div style={{ border: '1px solid #E2E8F0', borderRadius: '6px', overflow: 'hidden', background: '#FFFFFF' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', height: '32px', padding: '0 12px', background: '#EFF6FF', borderBottom: '1px solid #BFDBFE' }}>
-                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>추가</span></div>
-                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>순서</span></div>
-                                                    <div style={{ width: '120px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>종류</span></div>
-                                                    <div style={{ width: '50px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>N</span></div>
-                                                    <div style={{ width: '180px', paddingLeft: '10px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>값</span></div>
+                                                <div style={{ display: 'flex', alignItems: 'center', height: '32px', padding: '0 12px', background: 'var(--srt-primary-50)', borderBottom: '1px solid var(--srt-primary-200)' }}>
+                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>추가</span></div>
+                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>순서</span></div>
+                                                    <div style={{ width: '120px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>종류</span></div>
+                                                    <div style={{ width: '50px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>N</span></div>
+                                                    <div style={{ width: '180px', paddingLeft: '10px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>값</span></div>
                                                     <div style={{ flex: 1, paddingLeft: '10px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>미리보기 ({minVal}~{maxVal})</span>
+                                                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>미리보기 ({minVal}~{maxVal})</span>
                                                         <div style={{ display: 'inline-flex', gap: '8px' }}>
-                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#64748B' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#BFDBFE', border: '1px solid #60A5FA', boxSizing: 'border-box' }} /> Top</span>
+                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#64748B' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--srt-primary-200)', border: '1px solid var(--srt-primary-400)', boxSizing: 'border-box' }} /> Top</span>
                                                             <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#64748B' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FEF3C7', border: '1px solid #F59E0B', boxSizing: 'border-box' }} /> Mid</span>
                                                             <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#64748B' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FECACA', border: '1px solid #F87171', boxSizing: 'border-box' }} /> Bot</span>
                                                         </div>
                                                     </div>
-                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>삭제</span></div>
+                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>삭제</span></div>
                                                 </div>
 
                                                 {(item.bands || []).map((band, bandIdx) => {
@@ -971,9 +971,9 @@ const AnalysisSettingTab = ({
                                                     let activeBorder = '#94A3B8';
                                                     const labelLower = String(band.label || '').toLowerCase().trim();
                                                     if (labelLower.startsWith('top')) {
-                                                        activeBg = '#BFDBFE';
-                                                        activeColor = '#1E3A8A';
-                                                        activeBorder = '#60A5FA';
+                                                        activeBg = 'var(--srt-primary-200)';
+                                                        activeColor = 'var(--srt-primary-900)';
+                                                        activeBorder = 'var(--srt-primary-400)';
                                                     }
                                                     if (labelLower.startsWith('bot')) {
                                                         activeBg = '#FECACA';
@@ -1001,7 +1001,7 @@ const AnalysisSettingTab = ({
                                                                 minHeight: '40px',
                                                                 padding: '6px 12px',
                                                                 borderBottom: '1px solid #F1F5F9',
-                                                                borderTop: isDragOver ? '2px solid #3B82F6' : '2px solid transparent',
+                                                                borderTop: isDragOver ? '2px solid var(--srt-primary-500)' : '2px solid transparent',
                                                                 transition: 'border-color 0.15s ease',
                                                                 boxSizing: 'border-box'
                                                             }}
@@ -1011,9 +1011,9 @@ const AnalysisSettingTab = ({
                                                                 <button
                                                                     onClick={() => handleAddScaleBand(item.id, bandIdx)}
                                                                     title="아래에 밴드 추가"
-                                                                    style={{ border: 'none', background: 'transparent', color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                                                                    onMouseEnter={e => e.currentTarget.style.color = '#1D4ED8'}
-                                                                    onMouseLeave={e => e.currentTarget.style.color = '#2563EB'}
+                                                                    style={{ border: 'none', background: 'transparent', color: 'var(--srt-primary-600)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                                                    onMouseEnter={e => e.currentTarget.style.color = 'var(--srt-primary-700)'}
+                                                                    onMouseLeave={e => e.currentTarget.style.color = 'var(--srt-primary-600)'}
                                                                 >
                                                                     <Plus size={16} />
                                                                 </button>
@@ -1133,7 +1133,7 @@ const AnalysisSettingTab = ({
                                                 {(item.bands || []).length === 0 && (
                                                     <button
                                                         onClick={() => handleAddScaleBand(item.id)}
-                                                        style={{ width: '100%', height: '36px', border: 'none', background: '#FFFFFF', color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                                                        style={{ width: '100%', height: '36px', border: 'none', background: '#FFFFFF', color: 'var(--srt-primary-600)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
                                                     >
                                                         <Plus size={14} /><span style={{ fontSize: '13px', fontWeight: 600 }}>밴드 추가</span>
                                                     </button>
@@ -1158,7 +1158,7 @@ const AnalysisSettingTab = ({
                                     <span style={{ fontSize: '13px', color: '#94A3B8' }}>등록된 그룹 프리셋이 없습니다.</span>
                                     <button
                                         onClick={handleAddGroupPreset}
-                                        style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', border: '1px solid #2563EB', borderRadius: '6px', background: '#EFF6FF', color: '#2563EB', cursor: 'pointer' }}
+                                        style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', border: '1px solid var(--srt-primary-600)', borderRadius: '6px', background: 'var(--srt-primary-50)', color: 'var(--srt-primary-600)', cursor: 'pointer' }}
                                     >
                                         <Plus size={14} /><span style={{ fontSize: '13px', fontWeight: 600 }}>그룹 프리셋 추가</span>
                                     </button>
@@ -1244,13 +1244,13 @@ const AnalysisSettingTab = ({
                                                                     title={opt.desc}
                                                                     style={{
                                                                         padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textAlign: 'left',
-                                                                        border: selected ? '1px solid #2563EB' : '1px solid #E2E8F0',
-                                                                        background: selected ? '#EFF6FF' : '#FFFFFF',
+                                                                        border: selected ? '1px solid var(--srt-primary-600)' : '1px solid #E2E8F0',
+                                                                        background: selected ? 'var(--srt-primary-50)' : '#FFFFFF',
                                                                         display: 'flex', flexDirection: 'column', gap: '2px'
                                                                     }}
                                                                 >
-                                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: selected ? 600 : 500, color: selected ? '#1D4ED8' : '#475569' }}>
-                                                                        <span style={{ width: '12px', height: '12px', borderRadius: '50%', boxSizing: 'border-box', border: selected ? '4px solid #2563EB' : '1px solid #CBD5E1', background: '#fff', flexShrink: 0 }} />
+                                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: selected ? 600 : 500, color: selected ? 'var(--srt-primary-700)' : '#475569' }}>
+                                                                        <span style={{ width: '12px', height: '12px', borderRadius: '50%', boxSizing: 'border-box', border: selected ? '4px solid var(--srt-primary-600)' : '1px solid #CBD5E1', background: '#fff', flexShrink: 0 }} />
                                                                         {opt.label}
                                                                     </span>
                                                                     <span style={{ fontSize: '12px', color: '#94A3B8', paddingLeft: '18px', whiteSpace: 'nowrap' }}>{opt.desc}</span>
@@ -1283,14 +1283,14 @@ const AnalysisSettingTab = ({
                                                 </div>
 
                                                 <div style={{ border: '1px solid #E2E8F0', borderRadius: '6px', overflow: 'hidden', background: '#FFFFFF' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', height: '32px', padding: '0 12px', background: '#EFF6FF', borderBottom: '1px solid #BFDBFE' }}>
-                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>추가</span></div>
-                                                    <div style={{ width: '120px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>단계</span></div>
-                                                    <div style={{ width: '190px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>그룹 라벨</span></div>
-                                                    <div style={{ width: '180px', paddingLeft: '10px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>값</span></div>
-                                                    <div style={{ width: '130px', paddingLeft: '10px' }} title="그룹 안에서 맨 아래에 고정할 코드"><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>하단 고정 코드</span></div>
-                                                    <div style={{ flex: 1, paddingLeft: '10px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>미리보기</span></div>
-                                                    <div style={{ width: '64px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>삭제</span></div>
+                                                <div style={{ display: 'flex', alignItems: 'center', height: '32px', padding: '0 12px', background: 'var(--srt-primary-50)', borderBottom: '1px solid var(--srt-primary-200)' }}>
+                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>추가</span></div>
+                                                    <div style={{ width: '120px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>단계</span></div>
+                                                    <div style={{ width: '190px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>그룹 라벨</span></div>
+                                                    <div style={{ width: '180px', paddingLeft: '10px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>값</span></div>
+                                                    <div style={{ width: '130px', paddingLeft: '10px' }} title="그룹 안에서 맨 아래에 고정할 코드"><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>하단 고정 코드</span></div>
+                                                    <div style={{ flex: 1, paddingLeft: '10px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>미리보기</span></div>
+                                                    <div style={{ width: '64px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>삭제</span></div>
                                                 </div>
 
                                                 {(item.groups || []).map((group, groupIdx) => {
@@ -1311,16 +1311,16 @@ const AnalysisSettingTab = ({
                                                                 <button
                                                                     onClick={() => handleAddGroupRow(item.id, groupIdx)}
                                                                     title="아래에 그룹 추가"
-                                                                    style={{ border: 'none', background: 'transparent', color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
-                                                                    onMouseEnter={e => e.currentTarget.style.color = '#1D4ED8'}
-                                                                    onMouseLeave={e => e.currentTarget.style.color = '#2563EB'}
+                                                                    style={{ border: 'none', background: 'transparent', color: 'var(--srt-primary-600)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
+                                                                    onMouseEnter={e => e.currentTarget.style.color = 'var(--srt-primary-700)'}
+                                                                    onMouseLeave={e => e.currentTarget.style.color = 'var(--srt-primary-600)'}
                                                                 >
                                                                     <Plus size={16} />
                                                                 </button>
                                                             </div>
                                                             <div style={{ width: '120px', paddingLeft: isSub ? '22px' : '0', paddingRight: '10px', boxSizing: 'border-box', position: 'relative' }}>
                                                                 {isSub && (
-                                                                    <span style={{ position: 'absolute', left: '5px', top: '50%', transform: 'translateY(-55%)', color: '#93C5FD', fontSize: '14px', fontWeight: 700, pointerEvents: 'none' }}>
+                                                                    <span style={{ position: 'absolute', left: '5px', top: '50%', transform: 'translateY(-55%)', color: 'var(--srt-primary-300)', fontSize: '14px', fontWeight: 700, pointerEvents: 'none' }}>
                                                                         └
                                                                     </span>
                                                                 )}
@@ -1337,12 +1337,12 @@ const AnalysisSettingTab = ({
                                                                     style={{ width: '100%', opacity: 1 }}
                                                                 />
                                                                 {/* 글씨는 화살표 영역을 뺀 나머지 공간의 가운데 (첫 행은 화살표 없음 → 박스 전체 가운데) */}
-                                                                <span style={{ position: 'absolute', left: isSub ? '22px' : 0, right: groupIdx === 0 ? '10px' : '32px', top: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', fontSize: isSub ? '12px' : '13px', fontWeight: isSub ? 500 : 600, color: isSub ? '#475569' : '#1E40AF' }}>
+                                                                <span style={{ position: 'absolute', left: isSub ? '22px' : 0, right: groupIdx === 0 ? '10px' : '32px', top: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', fontSize: isSub ? '12px' : '13px', fontWeight: isSub ? 500 : 600, color: isSub ? '#475569' : 'var(--srt-primary-800)' }}>
                                                                     {isSub ? '중분류' : '대분류'}
                                                                 </span>
                                                                 {groupIdx !== 0 && (
                                                                     <span style={{ position: 'absolute', right: '11px', top: '3px', bottom: '3px', width: '22px', borderLeft: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                                                                        <ChevronDown size={14} color={isSub ? '#94A3B8' : '#3B82F6'} />
+                                                                        <ChevronDown size={14} color={isSub ? '#94A3B8' : 'var(--srt-primary-500)'} />
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -1443,7 +1443,7 @@ const AnalysisSettingTab = ({
                                     <span style={{ fontSize: '13px', color: '#94A3B8' }}>등록된 순위 프리셋이 없습니다.</span>
                                     <button
                                         onClick={handleAddRankPreset}
-                                        style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', border: '1px solid #2563EB', borderRadius: '6px', background: '#EFF6FF', color: '#2563EB', cursor: 'pointer' }}
+                                        style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', border: '1px solid var(--srt-primary-600)', borderRadius: '6px', background: 'var(--srt-primary-50)', color: 'var(--srt-primary-600)', cursor: 'pointer' }}
                                     >
                                         <Plus size={14} /><span style={{ fontSize: '13px', fontWeight: 600 }}>순위 프리셋 추가</span>
                                     </button>
@@ -1526,11 +1526,11 @@ const AnalysisSettingTab = ({
                                                 </div>
 
                                                 <div style={{ border: '1px solid #E2E8F0', borderRadius: '6px', overflow: 'hidden', background: '#FFFFFF' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', height: '32px', padding: '0 12px', background: '#EFF6FF', borderBottom: '1px solid #BFDBFE' }}>
-                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>추가</span></div>
-                                                    <div style={{ width: '200px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>라벨</span><span style={{ fontSize: '11px', color: '#64748B', marginLeft: '4px' }}>(비우면 자동 생성)</span></div>
-                                                    <div style={{ flex: 1, paddingLeft: '10px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>순위 선택</span></div>
-                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF' }}>삭제</span></div>
+                                                <div style={{ display: 'flex', alignItems: 'center', height: '32px', padding: '0 12px', background: 'var(--srt-primary-50)', borderBottom: '1px solid var(--srt-primary-200)' }}>
+                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>추가</span></div>
+                                                    <div style={{ width: '200px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>라벨</span><span style={{ fontSize: '11px', color: '#64748B', marginLeft: '4px' }}>(비우면 자동 생성)</span></div>
+                                                    <div style={{ flex: 1, paddingLeft: '10px' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>순위 선택</span></div>
+                                                    <div style={{ width: '48px', textAlign: 'center' }}><span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--srt-primary-800)' }}>삭제</span></div>
                                                 </div>
 
                                                 {(item.combinations || []).map((combo, comboIdx) => {
@@ -1540,9 +1540,9 @@ const AnalysisSettingTab = ({
                                                                 <button
                                                                     onClick={() => handleAddRankCombo(item.id, comboIdx)}
                                                                     title="아래에 조합 추가"
-                                                                    style={{ border: 'none', background: 'transparent', color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                                                                    onMouseEnter={e => e.currentTarget.style.color = '#1D4ED8'}
-                                                                    onMouseLeave={e => e.currentTarget.style.color = '#2563EB'}
+                                                                    style={{ border: 'none', background: 'transparent', color: 'var(--srt-primary-600)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                                                    onMouseEnter={e => e.currentTarget.style.color = 'var(--srt-primary-700)'}
+                                                                    onMouseLeave={e => e.currentTarget.style.color = 'var(--srt-primary-600)'}
                                                                 >
                                                                     <Plus size={16} />
                                                                 </button>
@@ -1570,9 +1570,9 @@ const AnalysisSettingTab = ({
                                                                                 flexShrink: 0,
                                                                                 borderRadius: '50%',
                                                                                 border: '1px solid',
-                                                                                borderColor: isActive ? '#60A5FA' : '#CBD5E1',
-                                                                                background: isActive ? '#BFDBFE' : '#FFFFFF',
-                                                                                color: isActive ? '#1E3A8A' : '#64748B',
+                                                                                borderColor: isActive ? 'var(--srt-primary-400)' : '#CBD5E1',
+                                                                                background: isActive ? 'var(--srt-primary-200)' : '#FFFFFF',
+                                                                                color: isActive ? 'var(--srt-primary-900)' : '#64748B',
                                                                                 fontSize: '11px',
                                                                                 fontWeight: 700,
                                                                                 cursor: 'pointer',
@@ -1607,7 +1607,7 @@ const AnalysisSettingTab = ({
                                                 {(item.combinations || []).length === 0 && (
                                                     <button
                                                         onClick={() => handleAddRankCombo(item.id)}
-                                                        style={{ width: '100%', height: '36px', border: 'none', background: '#FFFFFF', color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                                                        style={{ width: '100%', height: '36px', border: 'none', background: '#FFFFFF', color: 'var(--srt-primary-600)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
                                                     >
                                                         <Plus size={14} /><span style={{ fontSize: '13px', fontWeight: 600 }}>조합 추가</span>
                                                     </button>

@@ -70,13 +70,13 @@ const renderSigUpColorContent = (item) => {
     if (val === 'red') {
         return (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: 500, userSelect: 'none', cursor: 'pointer' }}>
-                <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '10px' }}>UP</span> 빨강 / <span style={{ color: '#3b82f6', fontWeight: 600, fontSize: '10px' }}>DOWN</span> 파랑
+                <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '10px' }}>UP</span> 빨강 / <span style={{ color: 'var(--srt-primary-500)', fontWeight: 600, fontSize: '10px' }}>DOWN</span> 파랑
             </span>
         );
     }
     return (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: 500, userSelect: 'none', cursor: 'pointer' }}>
-            <span style={{ color: '#3b82f6', fontWeight: 600, fontSize: '10px' }}>UP</span> 파랑 / <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '10px' }}>DOWN</span> 빨강
+            <span style={{ color: 'var(--srt-primary-500)', fontWeight: 600, fontSize: '10px' }}>UP</span> 파랑 / <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '10px' }}>DOWN</span> 빨강
         </span>
     );
 };
@@ -518,7 +518,7 @@ const ConditionHeaderCell = (props) => {
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: '11px',
                         }}>i</div>
-                        <span style={{ color: '#2563eb', fontWeight: '800', fontSize: '13px' }}>조건</span>
+                        <span style={{ color: 'var(--srt-primary-600)', fontWeight: '800', fontSize: '13px' }}>조건</span>
                     </div>
                     <div style={{ fontSize: '13px', letterSpacing: '-0.3px', marginLeft: '4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <div><span style={{ fontWeight: 600 }}>• 동등 대조:</span> <span>GENDER == 1, REGION == 'A'</span></div>
@@ -1080,11 +1080,11 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                 <div style={{
                     alignSelf: 'flex-start',
                     display: 'inline-flex', alignItems: 'center',
-                    background: '#e0e7ff',
+                    background: 'var(--srt-primary-100, #e0e7ff)',
                     padding: '6px 16px',
                     borderRadius: '24px'
                 }}>
-                    <span style={{ fontSize: '14px', fontWeight: 800, color: '#1e3a8a', lineHeight: 1.3 }}>
+                    <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--srt-primary-900)', lineHeight: 1.3 }}>
                         {banner.label}
                     </span>
                 </div>
@@ -1156,7 +1156,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
                 {/* 2. AI Summary */}
                 <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isAiSummaryOpen ? '12px' : '8px 12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#1e3a8a', marginBottom: isAiSummaryOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--srt-primary-900)', marginBottom: isAiSummaryOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div onClick={() => setLocalAiSummaryOpen(!isAiSummaryOpen)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', flex: 1, userSelect: 'none' }}>
                             <Sparkles size={16} /> AI 데이터 요약
                         </div>
@@ -1189,10 +1189,10 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                 <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                     {displayAiSummaryData.mode_a_demographic_analysis.map((item, idx) => (
                                                         <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', fontSize: '13px', lineHeight: '1.6' }}>
-                                                            <span style={{ color: '#2563eb', marginRight: '4px', fontSize: '16px', lineHeight: 1 }}>•</span>
+                                                            <span style={{ color: 'var(--srt-primary-600)', marginRight: '4px', fontSize: '16px', lineHeight: 1 }}>•</span>
                                                             <div style={{ wordBreak: 'keep-all' }}>
                                                                 <span style={{ fontWeight: 700, color: '#1e293b' }}>[{item.variable_name}]</span>
-                                                                <span style={{ color: '#2563eb', fontWeight: 600, marginLeft: '6px', marginRight: '6px' }}>({item.max_min_gap})</span>
+                                                                <span style={{ color: 'var(--srt-primary-600)', fontWeight: 600, marginLeft: '6px', marginRight: '6px' }}>({item.max_min_gap})</span>
                                                                 <span style={{ color: '#334155' }}>{item.finding}</span>
                                                             </div>
                                                         </li>
@@ -1210,7 +1210,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                 <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                     {displayAiSummaryData.mode_b_parallel_summary.key_insights_by_banner.map((item, idx) => (
                                                         <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', fontSize: '13px', lineHeight: '1.6' }}>
-                                                            <span style={{ color: '#2563eb', marginRight: '4px', fontSize: '16px', lineHeight: 1 }}>•</span>
+                                                            <span style={{ color: 'var(--srt-primary-600)', marginRight: '4px', fontSize: '16px', lineHeight: 1 }}>•</span>
                                                             <div style={{ wordBreak: 'keep-all' }}>
                                                                 <span style={{ fontWeight: 700, color: '#1e293b' }}>[{item.banner_name}]</span>
                                                                 <span style={{ color: '#334155', marginLeft: '6px' }}>{item.insight}</span>
@@ -1224,12 +1224,12 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                         {/* 전략적 핵심 요약 */}
                                         {displayAiSummaryData.mode_b_parallel_summary && (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                <div style={{ fontSize: '14px', fontWeight: 700, color: '#2563eb' }}>
+                                                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--srt-primary-600)' }}>
                                                     전략적 핵심 요약
                                                 </div>
                                                 {displayAiSummaryData.mode_b_parallel_summary.result_data && (
                                                     <div style={{
-                                                        borderLeft: '3px solid #2563eb',
+                                                        borderLeft: '3px solid var(--srt-primary-600)',
                                                         paddingLeft: '12px',
                                                         color: '#1e293b',
                                                         fontSize: '14px',
@@ -1309,9 +1309,9 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                         onClick={() => setShowLegend(!showLegend)}
                                         style={{
                                             display: 'flex', alignItems: 'center', gap: '6px',
-                                            padding: '0 10px', boxSizing: 'border-box', justifyContent: 'center', border: `1px solid ${showLegend ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
-                                            background: showLegend ? '#eff6ff' : '#fff',
-                                            color: showLegend ? '#2563eb' : '#64748b',
+                                            padding: '0 10px', boxSizing: 'border-box', justifyContent: 'center', border: `1px solid ${showLegend ? 'var(--srt-primary-500)' : '#e2e8f0'}`, borderRadius: '6px',
+                                            background: showLegend ? 'var(--srt-primary-50)' : '#fff',
+                                            color: showLegend ? 'var(--srt-primary-600)' : '#64748b',
                                             fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '28px', alignSelf: 'center'
                                         }}
                                         title="범례 보기/숨기기"
@@ -1328,9 +1328,9 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                 onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
                                                 style={{
                                                     display: 'flex', alignItems: 'center', gap: '6px',
-                                                    padding: '0 10px', boxSizing: 'border-box', justifyContent: 'center', border: `1px solid ${(selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
-                                                    background: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#eff6ff' : '#fff',
-                                                    color: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#2563eb' : '#64748b',
+                                                    padding: '0 10px', boxSizing: 'border-box', justifyContent: 'center', border: `1px solid ${(selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? 'var(--srt-primary-500)' : '#e2e8f0'}`, borderRadius: '6px',
+                                                    background: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? 'var(--srt-primary-50)' : '#fff',
+                                                    color: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? 'var(--srt-primary-600)' : '#64748b',
                                                     fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '28px',
                                                     maxWidth: '220px'
                                                 }}
@@ -1388,9 +1388,9 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                         >
                                                             <div style={{
                                                                 width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                border: `1px solid ${selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#cbd5e1'}`,
+                                                                border: `1px solid ${selectedChartGroups.length === availableChartGroups.length ? 'var(--srt-primary-600)' : '#cbd5e1'}`,
                                                                 borderRadius: '3px',
-                                                                background: selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#fff'
+                                                                background: selectedChartGroups.length === availableChartGroups.length ? 'var(--srt-primary-600)' : '#fff'
                                                             }}>
                                                                 {selectedChartGroups.length === availableChartGroups.length && <Check size={10} color="#fff" strokeWidth={3} />}
                                                             </div>
@@ -1410,9 +1410,9 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                                 >
                                                                     <div style={{
                                                                         width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                        border: `1px solid ${isChecked ? '#2563eb' : '#cbd5e1'}`,
+                                                                        border: `1px solid ${isChecked ? 'var(--srt-primary-600)' : '#cbd5e1'}`,
                                                                         borderRadius: '3px',
-                                                                        background: isChecked ? '#2563eb' : '#fff'
+                                                                        background: isChecked ? 'var(--srt-primary-600)' : '#fff'
                                                                     }}>
                                                                         {isChecked && <Check size={10} color="#fff" strokeWidth={3} />}
                                                                     </div>
@@ -1434,9 +1434,9 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                             onClick={() => setIsChartOptionsOpen(!isChartOptionsOpen)}
                                             style={{
                                                 display: 'flex', alignItems: 'center', gap: '6px',
-                                                padding: '0 10px', boxSizing: 'border-box', justifyContent: 'center', border: `1px solid ${isChartOptionsOpen ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
-                                                background: isChartOptionsOpen ? '#eff6ff' : '#fff',
-                                                color: isChartOptionsOpen ? '#2563eb' : '#64748b',
+                                                padding: '0 10px', boxSizing: 'border-box', justifyContent: 'center', border: `1px solid ${isChartOptionsOpen ? 'var(--srt-primary-500)' : '#e2e8f0'}`, borderRadius: '6px',
+                                                background: isChartOptionsOpen ? 'var(--srt-primary-50)' : '#fff',
+                                                color: isChartOptionsOpen ? 'var(--srt-primary-600)' : '#64748b',
                                                 fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '28px'
                                             }}
                                             title="차트 옵션"
@@ -1461,7 +1461,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                             style={{
                                                                 flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px',
                                                                 fontWeight: chartDataType === 'frequency' ? 700 : 500,
-                                                                color: chartDataType === 'frequency' ? '#2563eb' : '#64748b',
+                                                                color: chartDataType === 'frequency' ? 'var(--srt-primary-600)' : '#64748b',
                                                                 background: chartDataType === 'frequency' ? '#fff' : 'transparent',
                                                                 borderRadius: '4px', cursor: 'pointer',
                                                                 boxShadow: chartDataType === 'frequency' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
@@ -1475,7 +1475,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                             style={{
                                                                 flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px',
                                                                 fontWeight: chartDataType === 'percentage' ? 700 : 500,
-                                                                color: chartDataType === 'percentage' ? '#2563eb' : '#64748b',
+                                                                color: chartDataType === 'percentage' ? 'var(--srt-primary-600)' : '#64748b',
                                                                 background: chartDataType === 'percentage' ? '#fff' : 'transparent',
                                                                 borderRadius: '4px', cursor: 'pointer',
                                                                 boxShadow: chartDataType === 'percentage' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
@@ -1495,7 +1495,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                     >
                                                         <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>값 표출하기</span>
                                                         <div style={{
-                                                            width: '36px', height: '20px', background: showChartValues ? '#3b82f6' : '#e2e8f0',
+                                                            width: '36px', height: '20px', background: showChartValues ? 'var(--srt-primary-500)' : '#e2e8f0',
                                                             borderRadius: '20px', position: 'relative', transition: 'background 0.2s', flexShrink: 0
                                                         }}>
                                                             <div style={{
@@ -1512,7 +1512,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                         >
                                                             <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>% 표출</span>
                                                             <div style={{
-                                                                width: '36px', height: '20px', background: showPercentSymbol ? '#3b82f6' : '#e2e8f0',
+                                                                width: '36px', height: '20px', background: showPercentSymbol ? 'var(--srt-primary-500)' : '#e2e8f0',
                                                                 borderRadius: '20px', position: 'relative', transition: 'background 0.2s', flexShrink: 0
                                                             }}>
                                                                 <div style={{
@@ -1564,7 +1564,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             background: 'rgba(255, 255, 255, 0.7)', zIndex: 10
                                         }}>
-                                            <Loader2 className="animate-spin" size={24} color="#3b82f6" />
+                                            <Loader2 className="animate-spin" size={24} color="var(--srt-primary-500)" />
                                         </div>
                                     )}
                                     {(rawChartData ? apiChartData.length > 0 : (columns.length > 0 || rows.length > 0)) ? (
@@ -3127,7 +3127,27 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 }
                 
                 .filter-item-selected {
-                    background-color: #e6effd !important;
+                    background-color: var(--srt-primary-100, #e6effd) !important;
+                    color: var(--srt-primary-700, var(--srt-primary-700)) !important;
+                }
+
+                .custom-xinfo-dropdown.k-popup,
+                .custom-xinfo-popup.k-popup,
+                .custom-sig-popup.k-popup {
+                    border: 1.5px solid var(--srt-primary-500, var(--srt-primary-500)) !important;
+                    border-radius: 8px !important;
+                    box-shadow: 0 8px 24px color-mix(in srgb, var(--srt-primary-600, var(--srt-primary-600)) 18%, transparent) !important;
+                }
+                .custom-xinfo-dropdown .k-list-item.k-selected,
+                .custom-sig-popup .k-list-item.k-selected {
+                    background-color: var(--srt-primary-50, var(--srt-primary-50)) !important;
+                    color: var(--srt-primary-700, var(--srt-primary-700)) !important;
+                    font-weight: 700 !important;
+                }
+                .custom-xinfo-dropdown .k-list-item:hover:not(.k-selected),
+                .custom-sig-popup .k-list-item:hover:not(.k-selected) {
+                    background-color: var(--srt-primary-25, var(--srt-primary-25)) !important;
+                    color: var(--srt-primary-600, var(--srt-primary-600)) !important;
                 }
 
                 .custom-filter-popup.k-popup {
@@ -3148,8 +3168,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     transition: border-color 0.2s, box-shadow 0.2s;
                 }
                 .sig-input-container:focus-within {
-                    border-color: #3b82f6;
-                    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+                    border-color: var(--srt-primary-500);
+                    box-shadow: 0 0 0 2px color-mix(in srgb, var(--srt-primary-500) 15%, transparent);
                 }
                 .sig-input-container input {
                     width: 100%;
@@ -3159,7 +3179,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     text-align: center;
                     font-size: 12px;
                     font-weight: 800;
-                    color: #1e3a8a;
+                    color: var(--srt-primary-900);
                     outline: none;
                     padding: 0;
                 }
@@ -3168,8 +3188,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     100% { transform: rotate(360deg); }
                 }
                 .animate-sig-highlight {
-                    background-color: #eff6ff !important;
-                    color: #2563eb !important;
+                    background-color: var(--srt-primary-50) !important;
+                    color: var(--srt-primary-600) !important;
                 }
                 .animate-sig-highlight svg {
                     animation: sig-settings-spin 1.2s cubic-bezier(0.25, 1, 0.5, 1) 1;
@@ -3232,8 +3252,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             <Settings size={14} color="#64748b" />
                             <span>표시 설정</span>
                             <span style={{
-                                background: '#eff6ff',
-                                color: '#2563eb',
+                                background: 'var(--srt-primary-50)',
+                                color: 'var(--srt-primary-600)',
                                 padding: '2px 6px',
                                 borderRadius: '4px',
                                 fontSize: '11px',
@@ -3390,8 +3410,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                     height: '32px',
                                                     border: '1px solid #cbd5e1',
                                                     borderRadius: '6px',
-                                                    background: isSigPopupOpen ? '#eff6ff' : '#ffffff',
-                                                    color: isSigPopupOpen ? '#2563eb' : '#64748b',
+                                                    background: isSigPopupOpen ? 'var(--srt-primary-50)' : '#ffffff',
+                                                    color: isSigPopupOpen ? 'var(--srt-primary-600)' : '#64748b',
                                                     cursor: 'pointer',
                                                     transition: 'all 0.2s',
                                                 }}
@@ -3484,7 +3504,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                         position: 'relative',
                                                         width: '38px', height: '20px',
                                                         borderRadius: '10px',
-                                                        background: localSigExcludeEtc ? '#3b82f6' : '#cbd5e1',
+                                                        background: localSigExcludeEtc ? 'var(--srt-primary-500)' : '#cbd5e1',
                                                         cursor: 'pointer',
                                                         transition: 'background-color 0.2s ease',
                                                         userSelect: 'none'
@@ -3535,7 +3555,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                         position: 'relative',
                                                         width: '38px', height: '20px',
                                                         borderRadius: '10px',
-                                                        background: localSigShowArrow ? '#3b82f6' : '#cbd5e1',
+                                                        background: localSigShowArrow ? 'var(--srt-primary-500)' : '#cbd5e1',
                                                         cursor: 'pointer',
                                                         transition: 'background-color 0.2s ease',
                                                         userSelect: 'none'
@@ -3689,8 +3709,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     >
                                         <div style={{
                                             width: '18px', height: '18px', borderRadius: '4px',
-                                            background: localIsTranspose ? '#2563eb' : '#fff',
-                                            border: `1.5px solid ${localIsTranspose ? '#2563eb' : '#cbd5e1'}`,
+                                            background: localIsTranspose ? 'var(--srt-primary-600)' : '#fff',
+                                            border: `1.5px solid ${localIsTranspose ? 'var(--srt-primary-600)' : '#cbd5e1'}`,
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             flexShrink: 0
                                         }}>
@@ -3717,8 +3737,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     >
                                         <div style={{
                                             width: '18px', height: '18px', borderRadius: '4px',
-                                            background: localShowN ? '#2563eb' : '#fff',
-                                            border: `1.5px solid ${localShowN ? '#2563eb' : '#cbd5e1'}`,
+                                            background: localShowN ? 'var(--srt-primary-600)' : '#fff',
+                                            border: `1.5px solid ${localShowN ? 'var(--srt-primary-600)' : '#cbd5e1'}`,
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             flexShrink: 0
                                         }}>
@@ -3785,8 +3805,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     >
                                         <div style={{
                                             width: '18px', height: '18px', borderRadius: '4px',
-                                            background: localShowPct ? '#2563eb' : '#fff',
-                                            border: `1.5px solid ${localShowPct ? '#2563eb' : '#cbd5e1'}`,
+                                            background: localShowPct ? 'var(--srt-primary-600)' : '#fff',
+                                            border: `1.5px solid ${localShowPct ? 'var(--srt-primary-600)' : '#cbd5e1'}`,
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             flexShrink: 0
                                         }}>
@@ -3949,7 +3969,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            background: '#2563eb',
+                                            background: 'var(--srt-primary-600)',
                                             color: '#ffffff',
                                             border: 'none',
                                             borderRadius: '6px',
@@ -3960,10 +3980,10 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             transition: 'background-color 0.2s',
                                         }}
                                         onMouseOver={(e) => {
-                                            e.currentTarget.style.background = '#1d4ed8';
+                                            e.currentTarget.style.background = 'var(--srt-primary-700)';
                                         }}
                                         onMouseOut={(e) => {
-                                            e.currentTarget.style.background = '#2563eb';
+                                            e.currentTarget.style.background = 'var(--srt-primary-600)';
                                         }}
                                     >
                                         적용
@@ -3979,9 +3999,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             <button
                                 disabled={true}
                                 style={{
-                                    color: '#3b82f6',
-                                    border: '1px solid #93c5fd',
-                                    background: '#eff6ff',
+                                    color: 'var(--srt-primary-500)',
+                                    border: '1px solid var(--srt-primary-300)',
+                                    background: 'var(--srt-primary-50)',
                                     height: '32px',
                                     padding: '0 16px',
                                     display: 'flex',
@@ -3997,7 +4017,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 }}
                                 className="dp-btn"
                             >
-                                <Loader2 className="animate-spin" size={14} color="#3b82f6" />
+                                <Loader2 className="animate-spin" size={14} color="var(--srt-primary-500)" />
                                 <span>분석 중 ({Math.round(globalAiProgress ?? 0)}%)</span>
                             </button>
 
@@ -4038,9 +4058,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 await fetchAiSummaryStatus(true);
                             }}
                             style={{
-                                color: '#3b82f6',
-                                border: '1px solid #93c5fd',
-                                background: '#eff6ff',
+                                color: 'var(--srt-primary-500)',
+                                border: '1px solid var(--srt-primary-300)',
+                                background: 'var(--srt-primary-50)',
                                 height: '32px',
                                 padding: '0 16px',
                                 display: 'flex',
@@ -4056,10 +4076,10 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 outline: 'none'
                             }}
                             className="dp-btn"
-                            onMouseOver={(e) => e.currentTarget.style.background = '#dbeafe'}
-                            onMouseOut={(e) => e.currentTarget.style.background = '#eff6ff'}
+                            onMouseOver={(e) => e.currentTarget.style.background = 'var(--srt-primary-100)'}
+                            onMouseOut={(e) => e.currentTarget.style.background = 'var(--srt-primary-50)'}
                         >
-                            <Sparkles size={14} color="#3b82f6" />
+                            <Sparkles size={14} color="var(--srt-primary-500)" />
                             <span>전체 AI 요약</span>
                         </button>
                     )}
@@ -4151,7 +4171,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             }
                         }}
                         style={{
-                            color: '#2563eb', border: '1px solid #2563eb', background: '#ffffff',
+                            color: 'var(--srt-primary-600)', border: '1px solid var(--srt-primary-600)', background: '#ffffff',
                             height: '32px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                             borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', marginLeft: '0px'
                         }}
@@ -4182,7 +4202,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             setIsExcelModalOpen(true);
                         }}
                         style={{
-                            color: '#2563eb', border: '1px solid #2563eb', background: '#ffffff',
+                            color: 'var(--srt-primary-600)', border: '1px solid var(--srt-primary-600)', background: '#ffffff',
                             height: '32px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                             borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', marginLeft: '8px'
                         }}
@@ -4229,7 +4249,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            border: `1px solid ${isFilterOpen ? '#3b82f6' : '#cbd5e1'}`,
+                            border: `1px solid ${isFilterOpen ? 'var(--srt-primary-500)' : '#cbd5e1'}`,
                             borderRadius: '4px',
                             background: '#fff',
                             padding: '0 12px',
@@ -4250,7 +4270,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     style={{
                         height: '32px',
                         padding: '0 16px',
-                        background: '#3b82f6',
+                        background: 'var(--srt-primary-500)',
                         color: '#ffffff',
                         border: 'none',
                         borderRadius: '4px',
@@ -4263,10 +4283,10 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         gap: '6px',
                     }}
                     onMouseOver={(e) => {
-                        e.currentTarget.style.background = '#2563eb';
+                        e.currentTarget.style.background = 'var(--srt-primary-600)';
                     }}
                     onMouseOut={(e) => {
-                        e.currentTarget.style.background = '#3b82f6';
+                        e.currentTarget.style.background = 'var(--srt-primary-500)';
                     }}
                 >
                     필터 추가
@@ -4304,13 +4324,13 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     gap: '6px',
-                                                    background: '#eff6ff',
-                                                    border: '1px solid #bfdbfe',
+                                                    background: 'var(--srt-primary-50)',
+                                                    border: '1px solid var(--srt-primary-200)',
                                                     borderRadius: '16px',
                                                     padding: '4px 10px',
                                                     fontSize: '11px',
                                                     fontWeight: 500,
-                                                    color: '#2563eb',
+                                                    color: 'var(--srt-primary-600)',
                                                     userSelect: 'none',
                                                 }}
                                             >
@@ -4326,17 +4346,17 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                         height: '12px',
                                                         borderRadius: '50%',
                                                         fontSize: '9px',
-                                                        color: '#3b82f6',
+                                                        color: 'var(--srt-primary-500)',
                                                         fontWeight: 700,
                                                         transition: 'all 0.15s'
                                                     }}
                                                     onMouseOver={(e) => {
-                                                        e.currentTarget.style.background = '#dbeafe';
-                                                        e.currentTarget.style.color = '#1d4ed8';
+                                                        e.currentTarget.style.background = 'var(--srt-primary-100)';
+                                                        e.currentTarget.style.color = 'var(--srt-primary-700)';
                                                     }}
                                                     onMouseOut={(e) => {
                                                         e.currentTarget.style.background = 'transparent';
-                                                        e.currentTarget.style.color = '#3b82f6';
+                                                        e.currentTarget.style.color = 'var(--srt-primary-500)';
                                                     }}
                                                 >
                                                     ✕
@@ -4452,7 +4472,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         style={{
                                             height: '32px',
                                             padding: '0 10px',
-                                            background: '#2563eb',
+                                            background: 'var(--srt-primary-600)',
                                             color: '#ffffff',
                                             border: 'none',
                                             borderRadius: '6px',
@@ -4466,8 +4486,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             flexShrink: 0,
                                             transition: 'background 0.15s'
                                         }}
-                                        onMouseEnter={(e) => e.currentTarget.style.background = '#1d4ed8'}
-                                        onMouseLeave={(e) => e.currentTarget.style.background = '#2563eb'}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--srt-primary-700)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'var(--srt-primary-600)'}
                                     >
                                         검색
                                     </button>
@@ -4512,7 +4532,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                 fontWeight: '800',
                                                 textTransform: 'lowercase',
                                                 ...(banner.raw.type === 'single' ? { background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' } :
-                                                    (banner.raw.type === 'double' || banner.raw.type === 'multi') ? { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' } :
+                                                    (banner.raw.type === 'double' || banner.raw.type === 'multi') ? { background: 'var(--srt-primary-50)', color: 'var(--srt-primary-700)', border: '1px solid var(--srt-primary-100)' } :
                                                         banner.raw.type === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
                                                             banner.raw.type === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
                                                                 { background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0' })
@@ -4554,7 +4574,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         <ChevronLeft size={16} />
                                     </button>
                                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', userSelect: 'none', margin: '0 8px' }}>
-                                        <span style={{ color: '#1e3a8a' }}>{currentPage}</span> / <span style={{ color: '#0f172a' }}>{Math.ceil(totalTables / PAGE_SIZE)}</span>
+                                        <span style={{ color: 'var(--srt-primary-900)' }}>{currentPage}</span> / <span style={{ color: '#0f172a' }}>{Math.ceil(totalTables / PAGE_SIZE)}</span>
                                     </div>
                                     <button
                                         onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalTables / PAGE_SIZE), p + 1))}
@@ -4697,7 +4717,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                 <div style={{
                                                     width: '13px',
                                                     height: '13px',
-                                                    border: (isParentChecked || isParentIndeterminate) ? '1.5px solid #3b82f6' : '1px solid #cbd5e1',
+                                                    border: (isParentChecked || isParentIndeterminate) ? '1.5px solid var(--srt-primary-500)' : '1px solid #cbd5e1',
                                                     borderRadius: '3px',
                                                     background: '#fff',
                                                     display: 'flex',
@@ -4705,8 +4725,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                     justifyContent: 'center',
                                                     flexShrink: 0
                                                 }}>
-                                                    {isParentChecked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
-                                                    {isParentIndeterminate && <div style={{ width: '7px', height: '2px', background: '#3b82f6' }} />}
+                                                    {isParentChecked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--srt-primary-500)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                                                    {isParentIndeterminate && <div style={{ width: '7px', height: '2px', background: 'var(--srt-primary-500)' }} />}
                                                 </div>
                                                 <span style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b' }}>
                                                     {group.variableLabel}
@@ -4738,7 +4758,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                             <div style={{
                                                                 width: '13px',
                                                                 height: '13px',
-                                                                border: isChildChecked ? '1.5px solid #3b82f6' : '1px solid #cbd5e1',
+                                                                border: isChildChecked ? '1.5px solid var(--srt-primary-500)' : '1px solid #cbd5e1',
                                                                 borderRadius: '3px',
                                                                 background: '#fff',
                                                                 display: 'flex',
@@ -4746,7 +4766,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                                 justifyContent: 'center',
                                                                 flexShrink: 0
                                                             }}>
-                                                                {isChildChecked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                                                                {isChildChecked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--srt-primary-500)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
                                                             </div>
                                                             <span style={{ fontSize: '12px', color: '#475569', fontWeight: 500 }}>
                                                                 {opt.label}
@@ -4879,7 +4899,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                                 url.searchParams.set('tab', 'TableSnapshotTab');
                                                                 window.location.href = url.toString();
                                                             }}
-                                                            style={{ padding: '4px 8px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 600 }}
+                                                            style={{ padding: '4px 8px', background: 'var(--srt-primary-500)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 600 }}
                                                         >
                                                             보관함에서 보기
                                                         </button>
@@ -4909,7 +4929,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.4)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div style={{ background: '#fff', borderRadius: '16px', padding: '32px', width: '450px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9' }}>
                         <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <Download size={22} color="#2563eb" strokeWidth={2.5} />
+                            <Download size={22} color="var(--srt-primary-600)" strokeWidth={2.5} />
                             엑셀 다운로드
                         </h3>
                         <p style={{ margin: '0 0 24px 0', fontSize: '15px', color: '#475569', fontWeight: 500, lineHeight: '1.5' }}>
@@ -4925,8 +4945,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 >
                                     <div style={{
                                         width: '20px', height: '20px', borderRadius: '5px',
-                                        background: excelShowPct ? '#2563eb' : '#fff',
-                                        border: `1.5px solid ${excelShowPct ? '#2563eb' : '#cbd5e1'}`,
+                                        background: excelShowPct ? 'var(--srt-primary-600)' : '#fff',
+                                        border: `1.5px solid ${excelShowPct ? 'var(--srt-primary-600)' : '#cbd5e1'}`,
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         flexShrink: 0,
                                         transition: 'all 0.15s'
@@ -4974,7 +4994,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             }}
                                             style={{
                                                 width: '100%', height: '100%', border: 'none', background: 'transparent',
-                                                textAlign: 'center', fontSize: '13px', fontWeight: 800, color: '#1e3a8a',
+                                                textAlign: 'center', fontSize: '13px', fontWeight: 800, color: 'var(--srt-primary-900)',
                                                 outline: 'none', padding: 0
                                             }}
                                         />
@@ -4990,8 +5010,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             >
                                 <div style={{
                                     width: '20px', height: '20px', borderRadius: '5px',
-                                    background: excelShowBaseParenthesis ? '#2563eb' : '#fff',
-                                    border: `1.5px solid ${excelShowBaseParenthesis ? '#2563eb' : '#cbd5e1'}`,
+                                    background: excelShowBaseParenthesis ? 'var(--srt-primary-600)' : '#fff',
+                                    border: `1.5px solid ${excelShowBaseParenthesis ? 'var(--srt-primary-600)' : '#cbd5e1'}`,
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     flexShrink: 0,
                                     transition: 'all 0.15s'
@@ -5019,9 +5039,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     setIsExcelModalOpen(false);
                                     await handleExcelExport();
                                 }}
-                                onMouseOver={(e) => e.target.style.background = '#1d4ed8'}
-                                onMouseOut={(e) => e.target.style.background = '#2563eb'}
-                                style={{ padding: '10px 24px', background: '#2563eb', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, transition: 'background 0.2s' }}
+                                onMouseOver={(e) => e.target.style.background = 'var(--srt-primary-700)'}
+                                onMouseOut={(e) => e.target.style.background = 'var(--srt-primary-600)'}
+                                style={{ padding: '10px 24px', background: 'var(--srt-primary-600)', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, transition: 'background 0.2s' }}
                             >
                                 다운로드
                             </button>

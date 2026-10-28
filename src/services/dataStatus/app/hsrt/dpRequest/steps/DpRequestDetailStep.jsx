@@ -53,7 +53,7 @@ const ConditionHeaderCell = (props) => {
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: '11px', fontWeight: 'bold'
                         }}>i</div>
-                        <span style={{ color: '#2563eb', fontWeight: '800', fontSize: '13px' }}>조건</span>
+                        <span style={{ color: 'var(--srt-primary-600)', fontWeight: '800', fontSize: '13px' }}>조건</span>
                     </div>
                     <div style={{ fontSize: '13px', letterSpacing: '-0.3px', marginLeft: '4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <div><span style={{ fontWeight: 600 }}>• 동등 대조:</span> <span>GENDER == 1, REGION == 'A'</span></div>
@@ -273,7 +273,7 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     <div key={item.id} style={{ position: 'relative' }}>
                                         {/* 상단 파란색 삽입선 인디케이터 */}
                                         {dragOverIdx === index && dragPos === 'top' && draggedIdx !== index && (
-                                            <div style={{ position: 'absolute', top: '-4px', left: 0, right: 0, height: '4px', background: '#3b82f6', borderRadius: '2px', zIndex: 10 }} />
+                                            <div style={{ position: 'absolute', top: '-4px', left: 0, right: 0, height: '4px', background: 'var(--srt-primary-500)', borderRadius: '2px', zIndex: 10 }} />
                                         )}
 
                                         <div
@@ -289,8 +289,8 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 display: 'flex', alignItems: 'center', gap: '8px',
                                                 padding: '6px 10px', border: '1px solid',
                                                 borderRadius: '4px', marginBottom: '4px',
-                                                background: isSelected ? '#eff6ff' : '#fff',
-                                                borderColor: isSelected ? '#3b82f6' : '#cbd5e1',
+                                                background: isSelected ? 'var(--srt-primary-50)' : '#fff',
+                                                borderColor: isSelected ? 'var(--srt-primary-500)' : '#cbd5e1',
                                                 cursor: 'grab',
                                                 boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
                                                 opacity: draggedIdx === index ? 0.4 : 1,
@@ -300,7 +300,7 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             <span style={{
                                                 flex: 1,
                                                 fontSize: '12px',
-                                                color: isSelected ? '#1e40af' : '#334155',
+                                                color: isSelected ? 'var(--srt-primary-800)' : '#334155',
                                                 fontWeight: 600,
                                                 whiteSpace: 'nowrap',
                                                 overflow: 'hidden',
@@ -312,7 +312,7 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                                         {/* 하단 파란색 삽입선 인디케이터 */}
                                         {dragOverIdx === index && dragPos === 'bottom' && draggedIdx !== index && (
-                                            <div style={{ position: 'absolute', bottom: '0px', left: 0, right: 0, height: '4px', background: '#3b82f6', borderRadius: '2px', zIndex: 10 }} />
+                                            <div style={{ position: 'absolute', bottom: '0px', left: 0, right: 0, height: '4px', background: 'var(--srt-primary-500)', borderRadius: '2px', zIndex: 10 }} />
                                         )}
                                     </div>
                                 );
@@ -577,7 +577,7 @@ const DetailEditPreview = ({ item, onClose }) => {
                     {editLabel || getSpss(item) || item?.id}
                 </h2>
                 {item?.type && (
-                    <span style={{ fontSize: '11px', padding: '2px 8px', background: '#eff6ff', color: '#2563eb', borderRadius: '12px', border: '1px solid #bfdbfe', fontWeight: 600, marginLeft: '4px' }}>
+                    <span style={{ fontSize: '11px', padding: '2px 8px', background: 'var(--srt-primary-50)', color: 'var(--srt-primary-600)', borderRadius: '12px', border: '1px solid var(--srt-primary-200)', fontWeight: 600, marginLeft: '4px' }}>
                         {item.type}
                     </span>
                 )}
@@ -604,7 +604,7 @@ const DetailEditPreview = ({ item, onClose }) => {
                 <div style={{ border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '24px', background: '#fff', overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: isCategoryOpen ? 1 : 'none', minHeight: 0 }}>
                     {/* Header */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: '#f8fafc', borderBottom: isCategoryOpen ? '1px solid #e2e8f0' : 'none', flexShrink: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#1d4ed8', fontWeight: 700 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--srt-primary-700)', fontWeight: 700 }}>
                             카테고리 <Info size={14} color="#94a3b8" />
                         </div>
                         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
@@ -612,7 +612,7 @@ const DetailEditPreview = ({ item, onClose }) => {
                                 <>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setIsDetailSetting(!isDetailSetting)}>
                                         <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>상세 설정</span>
-                                        <div style={{ width: '32px', height: '18px', borderRadius: '10px', background: isDetailSetting ? '#3b82f6' : '#cbd5e1', position: 'relative', transition: 'background 0.2s', display: 'flex', alignItems: 'center', padding: '2px' }}>
+                                        <div style={{ width: '32px', height: '18px', borderRadius: '10px', background: isDetailSetting ? 'var(--srt-primary-500)' : '#cbd5e1', position: 'relative', transition: 'background 0.2s', display: 'flex', alignItems: 'center', padding: '2px' }}>
                                             <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#fff', position: 'absolute', left: isDetailSetting ? 'calc(100% - 16px)' : '2px', transition: 'left 0.2s' }} />
                                         </div>
                                     </div>
@@ -620,8 +620,8 @@ const DetailEditPreview = ({ item, onClose }) => {
                                         onClick={handleSaveAndEvaluate}
                                         style={{
                                             background: '#fff',
-                                            border: '1px solid #3b82f6',
-                                            color: '#3b82f6',
+                                            border: '1px solid var(--srt-primary-500)',
+                                            color: 'var(--srt-primary-500)',
                                             fontSize: '13px',
                                             fontWeight: 700,
                                             padding: '4px 12px',
@@ -632,10 +632,10 @@ const DetailEditPreview = ({ item, onClose }) => {
                                             cursor: 'pointer',
                                             transition: 'all 0.2s'
                                         }}
-                                        onMouseOver={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
+                                        onMouseOver={(e) => { e.currentTarget.style.background = 'var(--srt-primary-50)'; }}
                                         onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; }}
                                     >
-                                        <Play size={14} fill="#3b82f6" color="#3b82f6" /> 저장 및 출력
+                                        <Play size={14} fill="var(--srt-primary-500)" color="var(--srt-primary-500)" /> 저장 및 출력
                                     </button>
                                 </>
                             )}
@@ -692,7 +692,7 @@ const DetailEditPreview = ({ item, onClose }) => {
                                             style={{
                                                 width: '16px', height: '16px', border: '1px solid #94a3b8', borderRadius: '4px',
                                                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                                cursor: 'pointer', background: p.dataItem.hide ? '#2563eb' : '#fff', margin: '0 auto'
+                                                cursor: 'pointer', background: p.dataItem.hide ? 'var(--srt-primary-600)' : '#fff', margin: '0 auto'
                                             }}
                                         >
                                             {p.dataItem.hide && <Check size={12} color="#fff" strokeWidth={3} />}
@@ -744,7 +744,7 @@ const DetailEditPreview = ({ item, onClose }) => {
                     {/* Header */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: '#f8fafc', borderBottom: isResultOpen ? '1px solid #e2e8f0' : 'none', flexShrink: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                            <div style={{ fontWeight: 700, fontSize: '14px', color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--srt-primary-700)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 검사 결과 출력 영역
                             </div>
                             {isResultOpen && (
@@ -752,29 +752,29 @@ const DetailEditPreview = ({ item, onClose }) => {
                                     <div style={{ display: 'flex', border: '1px solid #cbd5e1', borderRadius: '16px', overflow: 'hidden', fontSize: '12px', background: '#fff' }}>
                                         <div
                                             onClick={() => setShowN(!showN)}
-                                            style={{ background: showN ? '#eff6ff' : '#f8fafc', padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px', borderRight: '1px solid #cbd5e1', cursor: 'pointer', userSelect: 'none', transition: 'all 0.2s' }}
+                                            style={{ background: showN ? 'var(--srt-primary-50)' : '#f8fafc', padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px', borderRight: '1px solid #cbd5e1', cursor: 'pointer', userSelect: 'none', transition: 'all 0.2s' }}
                                         >
-                                            <div style={{ width: '14px', height: '14px', borderRadius: '3px', background: showN ? '#3b82f6' : '#fff', border: showN ? '1px solid #3b82f6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+                                            <div style={{ width: '14px', height: '14px', borderRadius: '3px', background: showN ? 'var(--srt-primary-500)' : '#fff', border: showN ? '1px solid var(--srt-primary-500)' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
                                                 {showN && <Check size={10} color="#fff" strokeWidth={3} />}
                                             </div>
-                                            <span style={{ fontWeight: 700, color: showN ? '#1e40af' : '#64748b', transition: 'all 0.2s' }}>N</span>
+                                            <span style={{ fontWeight: 700, color: showN ? 'var(--srt-primary-800)' : '#64748b', transition: 'all 0.2s' }}>N</span>
                                         </div>
                                         <div style={{ padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px', opacity: showN ? 1 : 0.4, pointerEvents: showN ? 'auto' : 'none', transition: 'opacity 0.2s' }}>
-                                            소수점 <input type="number" className="dp-decimal-input" min="0" max="13" value={decimalN} onChange={(e) => { let val = parseInt(e.target.value) || 0; if (val > 13) val = 13; setDecimalN(val); }} style={{ background: '#f8fafc', border: '1px solid #cbd5e1', width: '36px', height: '22px', borderRadius: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: showN ? '#1e40af' : '#64748b', outline: 'none', padding: 0 }} />
+                                            소수점 <input type="number" className="dp-decimal-input" min="0" max="13" value={decimalN} onChange={(e) => { let val = parseInt(e.target.value) || 0; if (val > 13) val = 13; setDecimalN(val); }} style={{ background: '#f8fafc', border: '1px solid #cbd5e1', width: '36px', height: '22px', borderRadius: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: showN ? 'var(--srt-primary-800)' : '#64748b', outline: 'none', padding: 0 }} />
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', border: '1px solid #cbd5e1', borderRadius: '16px', overflow: 'hidden', fontSize: '12px', background: '#fff' }}>
                                         <div
                                             onClick={() => setShowP(!showP)}
-                                            style={{ background: showP ? '#eff6ff' : '#f8fafc', padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px', borderRight: '1px solid #cbd5e1', cursor: 'pointer', userSelect: 'none', transition: 'all 0.2s' }}
+                                            style={{ background: showP ? 'var(--srt-primary-50)' : '#f8fafc', padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px', borderRight: '1px solid #cbd5e1', cursor: 'pointer', userSelect: 'none', transition: 'all 0.2s' }}
                                         >
-                                            <div style={{ width: '14px', height: '14px', borderRadius: '3px', background: showP ? '#3b82f6' : '#fff', border: showP ? '1px solid #3b82f6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+                                            <div style={{ width: '14px', height: '14px', borderRadius: '3px', background: showP ? 'var(--srt-primary-500)' : '#fff', border: showP ? '1px solid var(--srt-primary-500)' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
                                                 {showP && <Check size={10} color="#fff" strokeWidth={3} />}
                                             </div>
-                                            <span style={{ fontWeight: 700, color: showP ? '#1e40af' : '#64748b', transition: 'all 0.2s' }}>%</span>
+                                            <span style={{ fontWeight: 700, color: showP ? 'var(--srt-primary-800)' : '#64748b', transition: 'all 0.2s' }}>%</span>
                                         </div>
                                         <div style={{ padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px', opacity: showP ? 1 : 0.4, pointerEvents: showP ? 'auto' : 'none', transition: 'opacity 0.2s' }}>
-                                            소수점 <input type="number" className="dp-decimal-input" min="0" max="13" value={decimalP} onChange={(e) => { let val = parseInt(e.target.value) || 0; if (val > 13) val = 13; setDecimalP(val); }} style={{ background: '#f8fafc', border: '1px solid #cbd5e1', width: '36px', height: '22px', borderRadius: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: showP ? '#1e40af' : '#64748b', outline: 'none', padding: 0 }} />
+                                            소수점 <input type="number" className="dp-decimal-input" min="0" max="13" value={decimalP} onChange={(e) => { let val = parseInt(e.target.value) || 0; if (val > 13) val = 13; setDecimalP(val); }} style={{ background: '#f8fafc', border: '1px solid #cbd5e1', width: '36px', height: '22px', borderRadius: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: showP ? 'var(--srt-primary-800)' : '#64748b', outline: 'none', padding: 0 }} />
                                         </div>
                                     </div>
                                 </div>

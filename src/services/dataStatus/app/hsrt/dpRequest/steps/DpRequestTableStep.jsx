@@ -585,7 +585,7 @@ const MultiSelectHeaderCell = (props) => {
                 onMouseLeave={() => setIsHovered(false)}
                 style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
             >
-                <Info size={13} color={isHovered ? "#2563eb" : "#94a3b8"} style={{ transition: 'color 0.15s' }} />
+                <Info size={13} color={isHovered ? "var(--srt-primary-600)" : "#94a3b8"} style={{ transition: 'color 0.15s' }} />
             </div>
             {isHovered && anchorRef.current && (
                 <Popup
@@ -638,7 +638,7 @@ const SortMultiSelectHeaderCell = (props) => {
                     onMouseLeave={() => setIsHovered(false)}
                     style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
                 >
-                    <Info size={13} color={isHovered ? "#2563eb" : "#94a3b8"} style={{ transition: 'color 0.15s' }} />
+                    <Info size={13} color={isHovered ? "var(--srt-primary-600)" : "#94a3b8"} style={{ transition: 'color 0.15s' }} />
                 </div>
             </div>
 
@@ -790,11 +790,11 @@ if (typeof window !== 'undefined') {
 
 const STUB_INLINE_STYLE = `
 .stub-cell-selected {
-    background-color: #e0f2fe !important;
+    background-color: var(--srt-secondary-100) !important;
 }
 .stub-cell-selected .dp-mini-dropdown,
 td.stub-cell-selected .dp-mini-dropdown {
-    background-color: #e0f2fe !important;
+    background-color: var(--srt-secondary-100) !important;
 }
 .dp-mini-dropdown-popup .k-list-item,
 .dp-mini-dropdown-popup .k-list-optionlabel {
@@ -819,7 +819,7 @@ td.stub-cell-selected .dp-mini-dropdown {
     border-radius: 8px !important;
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1) !important;
     padding: 4px 0 !important;
-    border: 1px solid var(--primary-color, #4f46e5) !important;
+    border: 1px solid var(--primary-color, var(--srt-accent-600)) !important;
 }
 .dp-tooltip-clean-popup,
 .dp-tooltip-clean-popup.k-animation-container,
@@ -1123,7 +1123,7 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
                     </span>
                 </div>
                 <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', paddingRight: '2px', flexShrink: 0, pointerEvents: 'none' }}>
-                    <ChevronDown size={14} color="#2563eb" />
+                    <ChevronDown size={14} color="var(--srt-primary-600)" />
                 </span>
             </div>
             {show && (
@@ -1311,7 +1311,7 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
                     </span>
                 </div>
                 <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', paddingRight: '2px', flexShrink: 0, pointerEvents: 'none' }}>
-                    <ChevronDown size={14} color="#2563eb" />
+                    <ChevronDown size={14} color="var(--srt-primary-600)" />
                 </span>
             </div>
             {show && (
@@ -1325,9 +1325,9 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
                                         key={item.id}
                                         className={`k-list-item dp-custom-list-item ${isSelected ? 'k-selected' : ''}`}
                                         style={{
-                                            backgroundColor: isSelected ? '#eff6ff' : 'transparent',
+                                            backgroundColor: isSelected ? 'var(--srt-primary-50)' : 'transparent',
                                             fontWeight: isSelected ? 600 : 400,
-                                            color: isSelected ? '#2563eb' : '#1e293b',
+                                            color: isSelected ? 'var(--srt-primary-600)' : '#1e293b',
                                             whiteSpace: 'normal',
                                             wordBreak: 'break-all',
                                             lineHeight: 1.4,
@@ -1425,7 +1425,7 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', pl
                         if (e.key === 'Enter') e.target.blur();
                         if (e.key === 'Escape') { setLocalVal(String(dataItem[field] ?? '')); setIsEditing(false); }
                     }}
-                    style={{ width: '100%', border: '1px solid #3b82f6', borderRadius: '2px', padding: '0 5px', fontSize: '13px', height: '22px', outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', border: '1px solid var(--srt-primary-500)', borderRadius: '2px', padding: '0 5px', fontSize: '13px', height: '22px', outline: 'none', boxSizing: 'border-box' }}
                 />
             </td>
         );
@@ -1521,7 +1521,7 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
                         </span>
                     </div>
                     <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', paddingRight: '2px', flexShrink: 0, pointerEvents: 'none' }}>
-                        <ChevronDown size={14} color="#2563eb" />
+                        <ChevronDown size={14} color="var(--srt-primary-600)" />
                     </span>
                 </div>
                 {show && (
@@ -1535,9 +1535,9 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
                                             key={opt}
                                             className={`k-list-item dp-custom-list-item ${isSelected ? 'k-selected' : ''}`}
                                             style={{
-                                                backgroundColor: isSelected ? '#eff6ff' : 'transparent',
+                                                backgroundColor: isSelected ? 'var(--srt-primary-50)' : 'transparent',
                                                 fontWeight: isSelected ? 600 : 400,
-                                                color: isSelected ? '#2563eb' : '#1e293b'
+                                                color: isSelected ? 'var(--srt-primary-600)' : '#1e293b'
                                             }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -2593,7 +2593,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     <div style={{ padding: '8px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '13px', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <div>
-                                전체 <span style={{ color: '#2563eb', fontWeight: 600 }}>{filteredStubs.length.toLocaleString()}</span>건
+                                전체 <span style={{ color: 'var(--srt-primary-600)', fontWeight: 600 }}>{filteredStubs.length.toLocaleString()}</span>건
                             </div>
                             <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500, userSelect: 'none' }}>
                                 💡 입력창 중 하나를 선택해 엑셀 열을 붙여넣기(Ctrl+V)하면 아래로 자동 채워집니다.
@@ -2747,7 +2747,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                                 }}
                                                 title={isHidden ? "숨김 해제" : "숨김 처리"}
                                             >
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '24px', color: isHidden ? '#94a3b8' : '#3b82f6' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '24px', color: isHidden ? '#94a3b8' : 'var(--srt-primary-500)' }}>
                                                     {isHidden ? <EyeOff size={16} /> : <Eye size={16} />}
                                                 </div>
                                             </td>
@@ -2769,16 +2769,16 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                                 onClick={() => setSelectedStubForModal(p.dataItem)}
                                                 style={{
                                                     padding: '2px 8px',
-                                                    border: '1px solid #3b82f6',
+                                                    border: '1px solid var(--srt-primary-500)',
                                                     background: '#ffffff',
-                                                    color: '#3b82f6',
+                                                    color: 'var(--srt-primary-500)',
                                                     borderRadius: '3px',
                                                     fontSize: '11px',
                                                     cursor: 'pointer',
                                                     fontWeight: 500,
                                                     whiteSpace: 'nowrap'
                                                 }}
-                                                onMouseEnter={(e) => e.currentTarget.style.background = '#eff6ff'}
+                                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--srt-primary-50)'}
                                                 onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
                                             >
                                                 설정
@@ -2821,7 +2821,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                                 }}
                                             >
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px' }}>
-                                                    {isDesc ? <ArrowDown size={15} color="#2563eb" strokeWidth={3} /> : <ArrowUp size={15} color="#94a3b8" strokeWidth={2} />}
+                                                    {isDesc ? <ArrowDown size={15} color="var(--srt-primary-600)" strokeWidth={3} /> : <ArrowUp size={15} color="#94a3b8" strokeWidth={2} />}
                                                 </div>
                                             </td>
                                         );

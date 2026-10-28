@@ -66,7 +66,7 @@ const VariablePageModal = ({ variable, onClose, onSave }) => {
                         <div style={{
                             width: '4px',
                             height: '18px',
-                            backgroundColor: '#3b82f6',
+                            backgroundColor: 'var(--srt-primary-500, #3b82f6)',
                             borderRadius: '4px',
                             marginRight: '8px'
                         }}></div>

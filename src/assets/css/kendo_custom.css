@@ -1759,7 +1759,7 @@ input[type='checkbox']+label {
 html body .dp-excel-grid-v2 tbody tr:hover td,
 html body .dp-excel-grid-v2 tbody tr.k-hover td,
 html body .dp-excel-grid-v2 tbody tr.k-state-hover td {
-    background-color: #e0f2fe !important;
+    background-color: var(--srt-hover-bg, #e0f2fe) !important;
     transition: background-color 0.2s;
 }
 html body .dp-excel-grid-v2 tbody tr:hover td .k-input-inner,

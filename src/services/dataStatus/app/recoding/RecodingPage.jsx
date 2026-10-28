@@ -64,8 +64,8 @@ const EditableCell = (props) => {
                         }}
                         style={{
                             backgroundColor: '#fff',
-                            color: '#3b82f6',
-                            border: '1px solid #3b82f6',
+                            color: 'var(--srt-primary-600, #3b82f6)',
+                            border: '1px solid var(--srt-primary-600, #3b82f6)',
                             borderRadius: '4px',
                             padding: '4px 12px',
                             fontSize: '13px',

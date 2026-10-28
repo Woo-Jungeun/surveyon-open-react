@@ -965,7 +965,7 @@ export const ResultSectionBlock = ({
                     .table-wrapper .cross-table th.sticky-col {
                         border-right: ${stubBorder} !important;
                         background-color: ${uiSettings?.theme_stub_header_bg || uiSettings?.theme_primary || '#f8fafc'} !important;
-                        color: ${uiSettings?.theme_stub_header_fg || uiSettings?.theme_primary_fg || '#1e3a8a'} !important;
+                        color: ${uiSettings?.theme_stub_header_fg || uiSettings?.theme_primary_fg || 'var(--srt-primary-900)'} !important;
                     }
                     .table-wrapper .cross-table td.sticky-col {
                         border-right: ${stubBorder} !important;
@@ -974,7 +974,7 @@ export const ResultSectionBlock = ({
                     }
                     .table-wrapper .cross-table td.sticky-col.row-group-label {
                         background-color: ${uiSettings?.theme_stub_group_bg || uiSettings?.theme_primary || '#f8fafc'} !important;
-                        color: ${uiSettings?.theme_stub_group_fg || uiSettings?.theme_primary_fg || '#1e3a8a'} !important;
+                        color: ${uiSettings?.theme_stub_group_fg || uiSettings?.theme_primary_fg || 'var(--srt-primary-900)'} !important;
                     }
                 `}</style>
                                             {resultData.html ? (
@@ -998,7 +998,7 @@ export const ResultSectionBlock = ({
 
 
                                                                                 fontWeight: '700',
-                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                                color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                                                 fontSize: '11px',
                                                                                 textAlign: 'center',
                                                                                 verticalAlign: 'middle'
@@ -1012,7 +1012,7 @@ export const ResultSectionBlock = ({
                                                                                 rowSpan={group.rowSpan}
                                                                                 style={{
                                                                                     background: uiSettings?.theme_primary || '#f8fafc',
-                                                                                    color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                                    color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                                                     fontSize: '11px',
                                                                                     textAlign: 'center',
                                                                                     padding: '4px 12px',
@@ -1042,7 +1042,7 @@ export const ResultSectionBlock = ({
 
 
                                                                                     fontWeight: '700',
-                                                                                    color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                                    color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                                                     fontSize: '11px',
                                                                                     textAlign: 'center',
                                                                                     verticalAlign: 'middle'
@@ -1056,7 +1056,7 @@ export const ResultSectionBlock = ({
                                                                             if (isSpanned) return null;
 
                                                                             return (
-                                                                                <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: uiSettings?.theme_primary || '#f0f9ff', color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
+                                                                                <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: uiSettings?.theme_primary || '#f0f9ff', color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
                                                                                     {group.label}
                                                                                 </th>
                                                                             );
@@ -1078,7 +1078,7 @@ export const ResultSectionBlock = ({
 
 
                                                                                     fontWeight: '700',
-                                                                                    color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                                    color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                                                     fontSize: '11px',
                                                                                     textAlign: 'center',
                                                                                     verticalAlign: 'middle'
@@ -1094,7 +1094,7 @@ export const ResultSectionBlock = ({
                                                                             if (coveredByRow1 || coveredByRow3) return null;
 
                                                                             return (
-                                                                                <th key={i} colSpan={group.count} style={{ background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
+                                                                                <th key={i} colSpan={group.count} style={{ background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
                                                                                     {group.label}
                                                                                 </th>
                                                                             );
@@ -1116,7 +1116,7 @@ export const ResultSectionBlock = ({
 
 
                                                                                 fontWeight: '700',
-                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                                color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                                                 fontSize: '11px',
                                                                                 textAlign: 'center',
                                                                                 verticalAlign: 'middle'
@@ -1173,7 +1173,7 @@ export const ResultSectionBlock = ({
                                                                                 display: (i === 0 || (resultData.rows[i - 1].label2 || resultData.rows[i - 1].var_label) !== (row.label2 || row.var_label)) ? 'table-cell' : 'none',
                                                                                 verticalAlign: 'middle',
                                                                                 background: uiSettings?.theme_primary || '#f8fafc',
-                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                                color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                                                 fontSize: '11px',
                                                                                 fontWeight: '700',
                                                                                 textAlign: 'center',
@@ -1276,7 +1276,7 @@ export const ResultSectionBlock = ({
                                                                             
                                                                             
                                                                             fontWeight: '700',
-                                                                            color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                            color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                                             fontSize: '11px',
                                                                             textAlign: 'center',
                                                                             verticalAlign: 'middle'
@@ -1290,12 +1290,12 @@ export const ResultSectionBlock = ({
                                                                             rowSpan={group.rowSpan}
                                                                             style={{
                                                                                 background: uiSettings?.theme_primary || '#f8fafc',
-                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                                color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                                                 fontSize: '11px',
                                                                                 textAlign: 'center',
                                                                                 padding: '4px 12px',
                                                                                 
-                                                                                borderRight: i < headerGroups.row1.length - 1 ? '1px solid #dbeafe' : 'none',
+                                                                                borderRight: i < headerGroups.row1.length - 1 ? '1px solid var(--srt-primary-100)' : 'none',
                                                                                 whiteSpace: 'normal',
                                                                                 wordBreak: 'break-all',
                                                                                 verticalAlign: 'middle'
@@ -1320,7 +1320,7 @@ export const ResultSectionBlock = ({
                                                                                 
                                                                                 
                                                                                 fontWeight: '700',
-                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                                color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                                                 fontSize: '11px',
                                                                                 textAlign: 'center',
                                                                                 verticalAlign: 'middle'
@@ -1333,7 +1333,7 @@ export const ResultSectionBlock = ({
                                                                         const isSpanned = headerGroups.row1.some(g1 => g1.rowSpan >= 2 && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
                                                                         if (isSpanned) return null;
                                                                         return (
-                                                                            <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: uiSettings?.theme_primary || '#f0f9ff',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
+                                                                            <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: uiSettings?.theme_primary || '#f0f9ff',  color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)', fontWeight: '700', fontSize: '11px' }}>
                                                                                 {group.label}
                                                                             </th>
                                                                         );
@@ -1354,7 +1354,7 @@ export const ResultSectionBlock = ({
                                                                                 
                                                                                 
                                                                                 fontWeight: '700',
-                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                                color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                                                 fontSize: '11px',
                                                                                 textAlign: 'center',
                                                                                 verticalAlign: 'middle'
@@ -1368,7 +1368,7 @@ export const ResultSectionBlock = ({
                                                                         const coveredByRow3 = headerGroups.row3.some(g3 => g3.rowSpan >= 2 && g3.startIndex <= group.startIndex && (g3.startIndex + g3.count) >= (group.startIndex + group.count));
                                                                         if (coveredByRow1 || coveredByRow3) return null;
                                                                         return (
-                                                                            <th key={i} colSpan={group.count} style={{ background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
+                                                                            <th key={i} colSpan={group.count} style={{ background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)', fontWeight: '700', fontSize: '11px' }}>
                                                                                 {group.label}
                                                                             </th>
                                                                         );
@@ -1388,7 +1388,7 @@ export const ResultSectionBlock = ({
                                                                             
                                                                             
                                                                             fontWeight: '700',
-                                                                            color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                            color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                                             fontSize: '11px',
                                                                             textAlign: 'center',
                                                                             verticalAlign: 'middle'
@@ -1411,7 +1411,7 @@ export const ResultSectionBlock = ({
                                                 <tbody>
                                                     {statsOptions.filter(opt => opt.checked).map(stat => (
                                                         <tr key={stat.id}>
-                                                            <td className="stats-td-label" style={{ color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', textAlign: 'center' }}>{stat.label}</td>
+                                                            <td className="stats-td-label" style={{ color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)', fontWeight: '700', textAlign: 'center' }}>{stat.label}</td>
                                                             {(resultData.stats[stat.id] || []).map((v, i) => (
                                                                 <td key={i} className="stats-td-data">{v}</td>
                                                             ))}
@@ -1491,9 +1491,9 @@ export const ResultSectionBlock = ({
                                                         onClick={() => setShowLegend(!showLegend)}
                                                         style={{
                                                             display: 'flex', alignItems: 'center', gap: '6px',
-                                                            padding: '4px 8px', border: `1px solid ${showLegend ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
-                                                            background: showLegend ? '#eff6ff' : '#fff',
-                                                            color: showLegend ? '#2563eb' : '#64748b',
+                                                            padding: '4px 8px', border: `1px solid ${showLegend ? 'var(--srt-primary-500)' : '#e2e8f0'}`, borderRadius: '6px',
+                                                            background: showLegend ? 'var(--srt-primary-50)' : '#fff',
+                                                            color: showLegend ? 'var(--srt-primary-600)' : '#64748b',
                                                             fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '100%'
                                                         }}
                                                         title="범례 보기/숨기기"
@@ -1510,9 +1510,9 @@ export const ResultSectionBlock = ({
                                                                 onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
                                                                 style={{
                                                                     display: 'flex', alignItems: 'center', gap: '6px',
-                                                                    padding: '4px 8px', border: `1px solid ${(selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
-                                                                    background: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#eff6ff' : '#fff',
-                                                                    color: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#2563eb' : '#64748b',
+                                                                    padding: '4px 8px', border: `1px solid ${(selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? 'var(--srt-primary-500)' : '#e2e8f0'}`, borderRadius: '6px',
+                                                                    background: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? 'var(--srt-primary-50)' : '#fff',
+                                                                    color: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? 'var(--srt-primary-600)' : '#64748b',
                                                                     fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '100%',
                                                                     maxWidth: '220px'
                                                                 }}
@@ -1570,9 +1570,9 @@ export const ResultSectionBlock = ({
                                                                         >
                                                                             <div style={{
                                                                                 width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                                border: `1px solid ${selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#cbd5e1'}`,
+                                                                                border: `1px solid ${selectedChartGroups.length === availableChartGroups.length ? 'var(--srt-primary-600)' : '#cbd5e1'}`,
                                                                                 borderRadius: '3px',
-                                                                                background: selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#fff'
+                                                                                background: selectedChartGroups.length === availableChartGroups.length ? 'var(--srt-primary-600)' : '#fff'
                                                                             }}>
                                                                                 {selectedChartGroups.length === availableChartGroups.length && <Check size={10} color="#fff" strokeWidth={3} />}
                                                                             </div>
@@ -1592,9 +1592,9 @@ export const ResultSectionBlock = ({
                                                                                 >
                                                                                     <div style={{
                                                                                         width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                                        border: `1px solid ${isChecked ? '#2563eb' : '#cbd5e1'}`,
+                                                                                        border: `1px solid ${isChecked ? 'var(--srt-primary-600)' : '#cbd5e1'}`,
                                                                                         borderRadius: '3px',
-                                                                                        background: isChecked ? '#2563eb' : '#fff'
+                                                                                        background: isChecked ? 'var(--srt-primary-600)' : '#fff'
                                                                                     }}>
                                                                                         {isChecked && <Check size={10} color="#fff" strokeWidth={3} />}
                                                                                     </div>
@@ -1617,9 +1617,9 @@ export const ResultSectionBlock = ({
                                                             className={`view-option-btn ${isChartOptionsOpen ? 'active' : ''}`}
                                                             style={{
                                                                 display: 'flex', alignItems: 'center', gap: '4px',
-                                                                fontSize: '12px', fontWeight: 600, border: `1px solid ${isChartOptionsOpen ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
-                                                                background: isChartOptionsOpen ? '#eff6ff' : '#fff',
-                                                                color: isChartOptionsOpen ? '#2563eb' : '#64748b',
+                                                                fontSize: '12px', fontWeight: 600, border: `1px solid ${isChartOptionsOpen ? 'var(--srt-primary-500)' : '#e2e8f0'}`, borderRadius: '6px',
+                                                                background: isChartOptionsOpen ? 'var(--srt-primary-50)' : '#fff',
+                                                                color: isChartOptionsOpen ? 'var(--srt-primary-600)' : '#64748b',
                                                                 cursor: 'pointer', transition: 'all 0.2s',
                                                                 width: 'auto',
                                                                 height: '100%',
@@ -1646,7 +1646,7 @@ export const ResultSectionBlock = ({
                                                                             style={{
                                                                                 flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px',
                                                                                 fontWeight: chartDataType === 'frequency' ? 700 : 500,
-                                                                                color: chartDataType === 'frequency' ? '#2563eb' : '#64748b',
+                                                                                color: chartDataType === 'frequency' ? 'var(--srt-primary-600)' : '#64748b',
                                                                                 background: chartDataType === 'frequency' ? '#fff' : 'transparent',
                                                                                 borderRadius: '4px', cursor: 'pointer',
                                                                                 boxShadow: chartDataType === 'frequency' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
@@ -1660,7 +1660,7 @@ export const ResultSectionBlock = ({
                                                                             style={{
                                                                                 flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px',
                                                                                 fontWeight: chartDataType === 'percentage' ? 700 : 500,
-                                                                                color: chartDataType === 'percentage' ? '#2563eb' : '#64748b',
+                                                                                color: chartDataType === 'percentage' ? 'var(--srt-primary-600)' : '#64748b',
                                                                                 background: chartDataType === 'percentage' ? '#fff' : 'transparent',
                                                                                 borderRadius: '4px', cursor: 'pointer',
                                                                                 boxShadow: chartDataType === 'percentage' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
@@ -1680,7 +1680,7 @@ export const ResultSectionBlock = ({
                                                                     >
                                                                         <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>값 표출하기</span>
                                                                         <div style={{
-                                                                            width: '36px', height: '20px', background: showChartValues ? '#3b82f6' : '#e2e8f0',
+                                                                            width: '36px', height: '20px', background: showChartValues ? 'var(--srt-primary-500)' : '#e2e8f0',
                                                                             borderRadius: '20px', position: 'relative', transition: 'background 0.2s', flexShrink: 0
                                                                         }}>
                                                                             <div style={{
@@ -1697,7 +1697,7 @@ export const ResultSectionBlock = ({
                                                                         >
                                                                             <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>% 표출</span>
                                                                             <div style={{
-                                                                                width: '36px', height: '20px', background: showPercentSymbol ? '#3b82f6' : '#e2e8f0',
+                                                                                width: '36px', height: '20px', background: showPercentSymbol ? 'var(--srt-primary-500)' : '#e2e8f0',
                                                                                 borderRadius: '20px', position: 'relative', transition: 'background 0.2s', flexShrink: 0
                                                                             }}>
                                                                                 <div style={{
@@ -1818,7 +1818,7 @@ export const ResultSectionBlock = ({
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                     background: 'rgba(255, 255, 255, 0.7)', zIndex: 10
                                                 }}>
-                                                    <Loader2 className="animate-spin" size={24} color="#3b82f6" />
+                                                    <Loader2 className="animate-spin" size={24} color="var(--srt-primary-500)" />
                                                 </div>
                                             )}
                                             <KendoChart
@@ -1886,10 +1886,10 @@ export const ResultSectionBlock = ({
                                                                     <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                                         {aiResult.mode_a_demographic_analysis.map((item, idx) => (
                                                                             <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', fontSize: '13px', lineHeight: '1.6' }}>
-                                                                                <span style={{ color: '#2563eb', marginRight: '6px', fontSize: '16px', lineHeight: 1 }}>•</span>
+                                                                                <span style={{ color: 'var(--srt-primary-600)', marginRight: '6px', fontSize: '16px', lineHeight: 1 }}>•</span>
                                                                                 <div style={{ wordBreak: 'keep-all' }}>
                                                                                     <span style={{ fontWeight: 700, color: '#1e293b' }}>[{item.variable_name}]</span>
-                                                                                    {item.max_min_gap && <span style={{ color: '#2563eb', fontWeight: 600, marginLeft: '6px', marginRight: '6px' }}>({item.max_min_gap})</span>}
+                                                                                    {item.max_min_gap && <span style={{ color: 'var(--srt-primary-600)', fontWeight: 600, marginLeft: '6px', marginRight: '6px' }}>({item.max_min_gap})</span>}
                                                                                     <span style={{ color: '#334155' }}>{item.finding}</span>
                                                                                 </div>
                                                                             </li>
@@ -1907,7 +1907,7 @@ export const ResultSectionBlock = ({
                                                                     <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                                         {aiResult.mode_b_parallel_summary.key_insights_by_banner.map((item, idx) => (
                                                                             <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', fontSize: '13px', lineHeight: '1.6' }}>
-                                                                                <span style={{ color: '#2563eb', marginRight: '6px', fontSize: '16px', lineHeight: 1 }}>•</span>
+                                                                                <span style={{ color: 'var(--srt-primary-600)', marginRight: '6px', fontSize: '16px', lineHeight: 1 }}>•</span>
                                                                                 <div style={{ wordBreak: 'keep-all' }}>
                                                                                     <span style={{ fontWeight: 700, color: '#1e293b' }}>[{item.banner_name}]</span>
                                                                                     <span style={{ color: '#334155', marginLeft: '6px' }}>{item.insight}</span>
@@ -1921,12 +1921,12 @@ export const ResultSectionBlock = ({
                                                             {/* 전략적 핵심 요약 */}
                                                             {aiResult.mode_b_parallel_summary && (
                                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#2563eb' }}>
+                                                                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--srt-primary-600)' }}>
                                                                         전략적 핵심 요약
                                                                     </div>
                                                                     {aiResult.mode_b_parallel_summary.result_data && (
                                                                         <div style={{
-                                                                            borderLeft: '3px solid #2563eb',
+                                                                            borderLeft: '3px solid var(--srt-primary-600)',
                                                                             paddingLeft: '12px',
                                                                             color: '#1e293b',
                                                                             fontSize: '13px',

@@ -68,16 +68,16 @@
     border: none;
     cursor: pointer;
     transition: all 0.2s;
-    background-color: #3b82f6 !important;
+    background-color: var(--srt-primary-500) !important;
     color: #fff !important;
 }
 
 .mp-btn-submit:hover {
-    background-color: #2563eb !important;
+    background-color: var(--srt-primary-600) !important;
 }
 
 .mp-btn-submit:disabled {
-    background-color: #93c5fd !important;
+    background-color: var(--srt-primary-300) !important;
     color: #fff !important;
     cursor: default !important;
 }
@@ -148,7 +148,7 @@
 /* Grid data count number orange -> blue */
 .menu-permission-page .grid-data-count__number,
 .mp-grid-panel .grid-data-count__number {
-    color: #3b82f6 !important;
+    color: var(--srt-primary-500) !important;
 }
 
 /* Kendo dropdown focus states scoped to form panel */
@@ -157,8 +157,8 @@
 .mp-form-panel .k-dropdownlist:focus-within,
 .mp-form-panel .k-picker:focus,
 .mp-form-panel .k-picker.k-focus {
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.18) !important;
+    border-color: var(--srt-primary-500) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--srt-primary-500) 18%, transparent) !important;
 }
 
 /* Scoped Dropdown list popup container styles using custom class */
@@ -199,20 +199,20 @@
 /* Dropdown filter search box active/focus border */
 .mp-dropdown-popup .k-list-filter .k-input:focus-within,
 .mp-dropdown-popup .k-list-filter .k-searchbox:focus-within {
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.18) !important;
+    border-color: var(--srt-primary-500) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--srt-primary-500) 18%, transparent) !important;
 }
 
 /* Selection and hover styles in dropdown lists */
 .mp-dropdown-popup .k-list .k-selected,
 .mp-dropdown-popup .k-list-item.k-selected {
-    background-color: #eff6ff !important;
-    color: #3b82f6 !important;
+    background-color: var(--srt-primary-50) !important;
+    color: var(--srt-primary-500) !important;
 }
 
 .mp-dropdown-popup .k-list-item:hover {
-    background-color: #dbeafe !important;
-    color: #3b82f6 !important;
+    background-color: var(--srt-primary-100) !important;
+    color: var(--srt-primary-500) !important;
 }
 
 /* Disabled/Read-only input fields on dashboard permission page */
@@ -276,11 +276,11 @@
     font-size: 14px !important;
 }
 
-/* Calendar button: Set background to #3b82f6 (blue) with white calendar SVG */
+/* Calendar button: Set background to var(--srt-primary-500) (blue) with white calendar SVG */
 .mp-form-panel .k-datepicker .k-input-button,
 .mp-form-panel .k-datepicker>button,
 .mp-form-panel .k-datepicker .k-button {
-    background-color: #3b82f6 !important;
+    background-color: var(--srt-primary-500) !important;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-position: center !important;
@@ -298,7 +298,7 @@
 .mp-form-panel .k-datepicker .k-input-button:hover,
 .mp-form-panel .k-datepicker>button:hover,
 .mp-form-panel .k-datepicker .k-button:hover {
-    background-color: #2563eb !important;
+    background-color: var(--srt-primary-600) !important;
 }
 
 /* Hide default Kendo SVG and icons inside DatePicker button */
@@ -309,31 +309,31 @@
     display: none !important;
 }
 
-/* Active / Focus border: Change orange to #3b82f6 (blue) */
+/* Active / Focus border: Change orange to var(--srt-primary-500) (blue) */
 .mp-form-panel .k-datepicker:focus,
 .mp-form-panel .k-datepicker.k-focus,
 .mp-form-panel .k-datepicker:focus-within {
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.18) !important;
+    border-color: var(--srt-primary-500) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--srt-primary-500) 18%, transparent) !important;
 }
 
 /* DatePicker calendar popup styles */
 .k-calendar-container .k-calendar .k-selected .k-link,
 .k-calendar-container .k-calendar td.k-selected .k-link {
-    background-color: #3b82f6 !important;
-    border-color: #3b82f6 !important;
+    background-color: var(--srt-primary-500) !important;
+    border-color: var(--srt-primary-500) !important;
     color: #fff !important;
 }
 
 .k-calendar-container .k-calendar .k-today .k-link,
 .k-calendar-container .k-calendar td.k-today .k-link {
-    border-color: #3b82f6 !important;
-    color: #3b82f6 !important;
+    border-color: var(--srt-primary-500) !important;
+    color: var(--srt-primary-500) !important;
 }
 
 .k-calendar-container .k-calendar td:not(.k-selected):hover .k-link {
-    background-color: #eff6ff !important;
-    color: #3b82f6 !important;
+    background-color: var(--srt-primary-50) !important;
+    color: var(--srt-primary-500) !important;
 }
 
 /* Highlight selected row in the grid (keep color consistent when mouse leaves) */

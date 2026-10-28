@@ -103,7 +103,7 @@ const BulkEditConditionsModal = ({ show, currentInfo, onClose, onApply }) => {
                 }}>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ width: '3px', height: '16px', background: '#2563eb', borderRadius: '2px' }} />
+                            <div style={{ width: '3px', height: '16px', background: 'var(--srt-primary-600)', borderRadius: '2px' }} />
                             <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>일괄 문구 수정</h3>
                         </div>
                         <p style={{ fontSize: '12px', color: '#475569', margin: '8px 0 0 0', lineHeight: 1.5 }}>
@@ -134,7 +134,7 @@ const BulkEditConditionsModal = ({ show, currentInfo, onClose, onApply }) => {
                 {/* Content */}
                 <div style={{ padding: '20px 24px', background: '#ffffff' }}>
                     <div style={{
-                        border: '1px solid #3b82f6',
+                        border: '1px solid var(--srt-primary-500)',
                         borderRadius: '8px',
                         overflow: 'hidden',
                         display: 'flex',
@@ -214,14 +214,14 @@ const BulkEditConditionsModal = ({ show, currentInfo, onClose, onApply }) => {
                             border: 'none',
                             borderRadius: '6px',
                             color: '#ffffff',
-                            background: '#2563eb',
+                            background: 'var(--srt-primary-600)',
                             fontSize: '13px',
                             fontWeight: 600,
                             cursor: 'pointer',
                             transition: 'all 0.15s'
                         }}
-                        onMouseOver={(e) => { e.currentTarget.style.background = '#1d4ed8'; }}
-                        onMouseOut={(e) => { e.currentTarget.style.background = '#2563eb'; }}
+                        onMouseOver={(e) => { e.currentTarget.style.background = 'var(--srt-primary-700)'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.background = 'var(--srt-primary-600)'; }}
                     >
                         일괄 적용
                     </button>

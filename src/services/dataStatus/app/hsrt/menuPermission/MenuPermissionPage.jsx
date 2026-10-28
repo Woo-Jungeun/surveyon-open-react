@@ -443,7 +443,7 @@ const MenuPermissionPage = () => {
                     title="대시보드 권한 설정"
                 />
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, color: '#64748b', gap: '12px', padding: '40px' }}>
-                    <Info size={32} color="#3b82f6" />
+                    <Info size={32} color="var(--srt-primary-500)" />
                     <span style={{ fontSize: '15px', fontWeight: 600 }}>대시보드를 먼저 선택해 주세요.</span>
                 </div>
             </div>
@@ -463,7 +463,7 @@ const MenuPermissionPage = () => {
                 {/* Left: Form */}
                 <div className="mp-form-panel">
                     <div className="mp-form-header">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#3b82f6', marginBottom: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--srt-primary-500)', marginBottom: '4px' }}>
                             <UserPlus size={16} />
                             <h3 className="mp-form-title">{isEditMode ? "권한 수정" : "권한 등록"}</h3>
                         </div>

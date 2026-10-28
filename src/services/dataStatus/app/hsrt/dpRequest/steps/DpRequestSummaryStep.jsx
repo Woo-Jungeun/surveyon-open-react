@@ -1026,9 +1026,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
         if (isTop) {
             return {
-                bg: '#eff6ff',
-                border: '#3b82f6',
-                text: '#2563eb'
+                bg: 'var(--srt-primary-50)',
+                border: 'var(--srt-primary-500)',
+                text: 'var(--srt-primary-600)'
             };
         }
         if (isBot) {
@@ -1785,8 +1785,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             cursor: 'pointer',
                             fontWeight: currentTab === 'scale' ? 600 : 500,
                             fontSize: '15px',
-                            color: currentTab === 'scale' ? '#2563eb' : '#64748B',
-                            borderBottom: currentTab === 'scale' ? '3px solid #2563eb' : '3px solid transparent',
+                            color: currentTab === 'scale' ? 'var(--srt-primary-600)' : '#64748B',
+                            borderBottom: currentTab === 'scale' ? '3px solid var(--srt-primary-600)' : '3px solid transparent',
                             marginBottom: '-1px',
                             transition: 'all 0.2s ease',
                             display: 'flex',
@@ -1804,8 +1804,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             cursor: 'pointer',
                             fontWeight: currentTab === 'open-num' ? 600 : 500,
                             fontSize: '15px',
-                            color: currentTab === 'open-num' ? '#2563eb' : '#64748B',
-                            borderBottom: currentTab === 'open-num' ? '3px solid #2563eb' : '3px solid transparent',
+                            color: currentTab === 'open-num' ? 'var(--srt-primary-600)' : '#64748B',
+                            borderBottom: currentTab === 'open-num' ? '3px solid var(--srt-primary-600)' : '3px solid transparent',
                             marginBottom: '-1px',
                             transition: 'all 0.2s ease',
                             display: 'flex',
@@ -1823,10 +1823,10 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     onClick={() => setIsWizardOpen(true)}
                     style={{
                         display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px',
-                        background: '#fff', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '4px',
+                        background: '#fff', color: 'var(--srt-primary-600)', border: '1px solid var(--srt-primary-600)', borderRadius: '4px',
                         padding: '0 16px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--srt-primary-50)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
                 >
                     <Wand2 size={14} />
@@ -1849,7 +1849,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <span>원본 변수 목록 ({searchedVariables.length})</span>
                                 {tabSelectedCount > 0 && (
-                                    <span style={{ fontSize: '11px', color: '#2563eb', fontWeight: 600, background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '1px 6px', display: 'inline-flex', alignItems: 'center', height: '18px' }}>
+                                    <span style={{ fontSize: '11px', color: 'var(--srt-primary-600)', fontWeight: 600, background: 'var(--srt-primary-50)', border: '1px solid var(--srt-primary-200)', borderRadius: '4px', padding: '1px 6px', display: 'inline-flex', alignItems: 'center', height: '18px' }}>
                                         선택 {tabSelectedCount}
                                     </span>
                                 )}
@@ -1942,7 +1942,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                                 padding: '5px 8px 5px 22px',
                                                                 borderBottom: '1px solid #f1f5f9',
                                                                 cursor: 'grab',
-                                                                background: isSelected ? '#eff6ff' : '#ffffff',
+                                                                background: isSelected ? 'var(--srt-primary-50)' : '#ffffff',
                                                                 transition: 'background-color 0.15s'
                                                             }}
                                                         >
@@ -1960,7 +1960,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                                 {vn(variable)}
                                                             </span>
                                                             {currentTab === 'scale' && variable.scale_points && (
-                                                                <span style={{ fontSize: '8.5px', fontWeight: 700, color: '#0284c7', background: '#e0f2fe', padding: '1px 4px', borderRadius: '10px', whiteSpace: 'nowrap' }}>
+                                                                <span style={{ fontSize: '8.5px', fontWeight: 700, color: 'var(--srt-secondary-600)', background: 'var(--srt-secondary-100)', padding: '1px 4px', borderRadius: '10px', whiteSpace: 'nowrap' }}>
                                                                     {variable.scale_points}점
                                                                 </span>
                                                             )}
@@ -1990,17 +1990,17 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     gap: '6px',
                                     borderRadius: '4px',
                                     border: 'none',
-                                    background: tabSelectedCount > 0 ? '#2563eb' : '#cbd5e1',
+                                    background: tabSelectedCount > 0 ? 'var(--srt-primary-600)' : '#cbd5e1',
                                     color: '#ffffff',
                                     cursor: tabSelectedCount > 0 ? 'pointer' : 'not-allowed',
                                     transition: 'all 0.2s',
-                                    boxShadow: tabSelectedCount > 0 ? '0 2px 4px rgba(37, 99, 235, 0.15)' : 'none'
+                                    boxShadow: tabSelectedCount > 0 ? '0 2px 4px color-mix(in srgb, var(--srt-primary-600) 15%, transparent)' : 'none'
                                 }}
                                 onMouseEnter={(e) => {
-                                    if (tabSelectedCount > 0) e.currentTarget.style.background = '#1d4ed8';
+                                    if (tabSelectedCount > 0) e.currentTarget.style.background = 'var(--srt-primary-700)';
                                 }}
                                 onMouseLeave={(e) => {
-                                    if (tabSelectedCount > 0) e.currentTarget.style.background = '#2563eb';
+                                    if (tabSelectedCount > 0) e.currentTarget.style.background = 'var(--srt-primary-600)';
                                 }}
                             >
                                 <span>요약표 생성 ({tabSelectedCount}개 선택됨)</span>
@@ -2143,7 +2143,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     const fromIdx = folders.findIndex(f => f.id === draggedFolderId);
                                     const toIdx = folders.findIndex(f => f.id === folder.id);
 
-                                    const baseBorderColor = (newlyCreatedFolderIds.has(folder.id) || isExpanded) ? '#3b82f6' : '#e2e8f0';
+                                    const baseBorderColor = (newlyCreatedFolderIds.has(folder.id) || isExpanded) ? 'var(--srt-primary-500)' : '#e2e8f0';
                                     const baseBorderWidth = (newlyCreatedFolderIds.has(folder.id) || isExpanded) ? '1.5px' : '1px';
                                     const baseBorderStyle = 'solid';
 
@@ -2154,9 +2154,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                                     if (draggedFolderId && dragOverFolderId === folder.id) {
                                         if (fromIdx > toIdx) {
-                                            customBorderTop = '3px solid #2563eb';
+                                            customBorderTop = '3px solid var(--srt-primary-600)';
                                         } else if (fromIdx < toIdx) {
-                                            customBorderBottom = '3px solid #2563eb';
+                                            customBorderBottom = '3px solid var(--srt-primary-600)';
                                         }
                                     }
 
@@ -2175,7 +2175,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 borderRight: customBorderRight,
                                                 borderLeft: customBorderLeft,
                                                 borderRadius: '6px',
-                                                background: (newlyCreatedFolderIds.has(folder.id) || isExpanded) ? '#f0f9ff' : '#ffffff',
+                                                background: (newlyCreatedFolderIds.has(folder.id) || isExpanded) ? 'var(--srt-primary-25, #f8fbff)' : '#ffffff',
                                                 boxShadow: '0 1px 2px rgba(0, 0, 0, 0.02)',
                                                 padding: '10px 14px',
                                                 display: 'flex',
@@ -2253,7 +2253,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                                     else if (lower.startsWith('bot')) cleanB = 'Bot' + b.slice(3);
                                                                     else if (lower.startsWith('mid')) cleanB = 'Mid' + b.slice(3);
 
-                                                                    if (lower.includes('top')) { bg = '#eff6ff'; fg = '#3b82f6'; }
+                                                                    if (lower.includes('top')) { bg = 'var(--srt-primary-50)'; fg = 'var(--srt-primary-500)'; }
                                                                     else if (lower.includes('bot')) { bg = '#fff1f2'; fg = '#f43f5e'; }
                                                                     else if (lower.includes('mid')) { bg = '#fffbeb'; fg = '#d97706'; }
                                                                     else if (lower === '평균') { bg = '#ecfdf5'; fg = '#10b981'; }
@@ -2283,7 +2283,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                             cursor: 'pointer', transition: 'all 0.15s'
                                                         }}
                                                         onMouseEnter={(e) => {
-                                                            e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.color = '#2563eb';
+                                                            e.currentTarget.style.background = 'var(--srt-primary-50)'; e.currentTarget.style.color = 'var(--srt-primary-600)';
                                                         }}
                                                         onMouseLeave={(e) => {
                                                             e.currentTarget.style.background = 'transparent';
@@ -2437,7 +2437,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                                         fg = '#94a3b8';
                                                                         border = '1px dashed #cbd5e1';
                                                                     } else {
-                                                                        if (lower.includes('top')) { bg = '#eff6ff'; fg = '#3b82f6'; border = '1px solid #bfdbfe'; }
+                                                                        if (lower.includes('top')) { bg = 'var(--srt-primary-50)'; fg = 'var(--srt-primary-500)'; border = '1px solid var(--srt-primary-200)'; }
                                                                         else if (lower.includes('bot')) { bg = '#fff1f2'; fg = '#f43f5e'; border = '1px solid #fca5a5'; }
                                                                         else if (lower.includes('mid')) { bg = '#fffbeb'; fg = '#d97706'; border = '1px solid #fde68a'; }
                                                                         else if (lower === '평균') { bg = '#ecfdf5'; fg = '#10b981'; border = '1px solid #a7f3d0'; }
@@ -2701,8 +2701,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                                                     }}
                                                                                     onPaste={(e) => handlePasteLabels(e, idx, folder.items)}
                                                                                     onFocus={(e) => {
-                                                                                        e.currentTarget.style.borderColor = '#3b82f6';
-                                                                                        e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.08)';
+                                                                                        e.currentTarget.style.borderColor = 'var(--srt-primary-500)';
+                                                                                        e.currentTarget.style.boxShadow = '0 0 0 3px color-mix(in srgb, var(--srt-primary-500) 8%, transparent)';
                                                                                         e.currentTarget.style.backgroundColor = '#ffffff';
                                                                                     }}
                                                                                     onBlur={(e) => {
@@ -2773,7 +2773,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             padding: '20px 28px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                                <div style={{ width: '4px', height: '18px', background: '#3b82f6', borderRadius: '2px', marginTop: '3px' }}></div>
+                                <div style={{ width: '4px', height: '18px', background: 'var(--srt-primary-500)', borderRadius: '2px', marginTop: '3px' }}></div>
                                 <div>
                                     <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>요약표 일괄 자동 생성</h3>
                                     <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '4px', fontWeight: 500 }}>
@@ -2828,9 +2828,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                         bgStyle = '#f8fafc';
                                                     }
                                                     if (isActive) {
-                                                        borderStyle = '1px solid #2563eb';
-                                                        bgStyle = '#eff6ff';
-                                                        colorStyle = '#2563eb';
+                                                        borderStyle = '1px solid var(--srt-primary-600)';
+                                                        bgStyle = 'var(--srt-primary-50)';
+                                                        colorStyle = 'var(--srt-primary-600)';
                                                     }
                                                     return (
                                                         <button
@@ -2870,7 +2870,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             {/* Top 선택 */}
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#3b82f6' }} />
+                                                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--srt-primary-500)' }} />
                                                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                         <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', lineHeight: 1.2 }}>Top</span>
                                                         <span style={{ fontSize: '10px', color: '#64748b' }}>가장 높은 점수부터</span>
@@ -2885,9 +2885,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                                 onClick={() => setSelectionCount('top', count)}
                                                                 style={{
                                                                     padding: '4px 12px', fontSize: '11.5px', borderRadius: '16px',
-                                                                    border: isSelected ? '1px solid #3b82f6' : '1px solid #cbd5e1',
-                                                                    background: isSelected ? '#eff6ff' : '#ffffff',
-                                                                    color: isSelected ? '#2563eb' : '#64748b',
+                                                                    border: isSelected ? '1px solid var(--srt-primary-500)' : '1px solid #cbd5e1',
+                                                                    background: isSelected ? 'var(--srt-primary-50)' : '#ffffff',
+                                                                    color: isSelected ? 'var(--srt-primary-600)' : '#64748b',
                                                                     fontWeight: isSelected ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s'
                                                                 }}
                                                             >
@@ -3007,7 +3007,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#475569' }}>척도별 요약 기준 미리보기</span>
                                                 <div style={{ display: 'flex', gap: '8px', fontSize: '10.5px', fontWeight: 600 }}>
                                                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#334155' }}>
-                                                        <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#3b82f6' }} /> Top
+                                                        <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--srt-primary-500)' }} /> Top
                                                     </span>
                                                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#334155' }}>
                                                         <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#f59e0b' }} /> Mid
@@ -3106,7 +3106,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', gap: '8px' }}>
                                         <button
                                             onClick={() => handleToggleAllWizardProposals(true)}
-                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', fontWeight: 600 }}
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--srt-primary-600)', fontWeight: 600 }}
                                         >
                                             전체 선택
                                         </button>
@@ -3137,9 +3137,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                     style={{
                                                         display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 14px',
                                                         borderRadius: '6px',
-                                                        border: isChecked ? '1px solid #bfdbfe' : '1px solid #e2e8f0',
+                                                        border: isChecked ? '1px solid var(--srt-primary-200)' : '1px solid #e2e8f0',
                                                         cursor: 'pointer',
-                                                        background: isChecked ? '#eff6ff' : '#ffffff',
+                                                        background: isChecked ? 'var(--srt-primary-50)' : '#ffffff',
                                                         boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)',
                                                         marginBottom: '6px',
                                                         transition: 'all 0.15s ease-in-out'
@@ -3167,7 +3167,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                                                             <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>{prop.title}</span>
                                                             {prop.scale_points && (
-                                                                <span style={{ fontSize: '8.5px', fontWeight: 700, color: '#0284c7', background: '#e0f2fe', padding: '1px 4px', borderRadius: '10px', whiteSpace: 'nowrap' }}>
+                                                                <span style={{ fontSize: '8.5px', fontWeight: 700, color: 'var(--srt-secondary-600)', background: 'var(--srt-secondary-100)', padding: '1px 4px', borderRadius: '10px', whiteSpace: 'nowrap' }}>
                                                                     {prop.scale_points}점
                                                                 </span>
                                                             )}
@@ -3187,7 +3187,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                         {prop.tags.map(tag => {
                                                             let badgeBg = '#f1f5f9';
                                                             let badgeColor = '#64748b';
-                                                            if (tag.includes('Top')) { badgeBg = '#e0f2fe'; badgeColor = '#2563eb'; }
+                                                            if (tag.includes('Top')) { badgeBg = 'var(--srt-secondary-100)'; badgeColor = 'var(--srt-primary-600)'; }
                                                             else if (tag.includes('Mid')) { badgeBg = '#fef3c7'; badgeColor = '#d97706'; }
                                                             else if (tag.includes('Bot')) { badgeBg = '#ffe4e6'; badgeColor = '#ef4444'; }
                                                             else if (tag.includes('평균')) { badgeBg = '#ecfdf5'; badgeColor = '#10b981'; }
@@ -3239,11 +3239,11 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 onClick={handleAddProposals}
                                 style={{
                                     height: '38px', padding: '0 24px', fontSize: '13px', borderRadius: '6px', border: 'none',
-                                    background: '#3b82f6', color: '#ffffff',
+                                    background: 'var(--srt-primary-500)', color: '#ffffff',
                                     fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.15s'
                                 }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = '#2563eb'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = '#3b82f6'; }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--srt-primary-600)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--srt-primary-500)'; }}
                             >
                                 <span>{wizardSelectedIds.size}개 생성 목록 추가</span>
                             </button>
@@ -3286,7 +3286,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             padding: '20px 28px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                                <div style={{ width: '4px', height: '18px', background: '#3b82f6', borderRadius: '2px', marginTop: '3px' }}></div>
+                                <div style={{ width: '4px', height: '18px', background: 'var(--srt-primary-500)', borderRadius: '2px', marginTop: '3px' }}></div>
                                 <div>
                                     <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>요약표 제목 일괄 편집</h3>
                                     <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '4px', fontWeight: 500 }}>
@@ -3317,8 +3317,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         transition: 'border-color 0.15s, box-shadow 0.15s'
                                     }}
                                     onFocus={(e) => {
-                                        e.target.style.borderColor = '#3b82f6';
-                                        e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                                        e.target.style.borderColor = 'var(--srt-primary-500)';
+                                        e.target.style.boxShadow = '0 0 0 3px color-mix(in srgb, var(--srt-primary-500) 10%, transparent)';
                                     }}
                                     onBlur={(e) => {
                                         e.target.style.borderColor = '#cbd5e1';
@@ -3346,8 +3346,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 boxShadow: '0 1px 2px rgba(0,0,0,0.01)', transition: 'border-color 0.15s, box-shadow 0.15s'
                                             }}
                                                 onFocusCapture={(e) => {
-                                                    e.currentTarget.style.borderColor = '#3b82f6';
-                                                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.08)';
+                                                    e.currentTarget.style.borderColor = 'var(--srt-primary-500)';
+                                                    e.currentTarget.style.boxShadow = '0 0 0 3px color-mix(in srgb, var(--srt-primary-500) 8%, transparent)';
                                                 }}
                                                 onBlurCapture={(e) => {
                                                     e.currentTarget.style.borderColor = '#cbd5e1';
@@ -3391,11 +3391,11 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 onClick={handleApplyBulkTitleText}
                                 style={{
                                     height: '36px', padding: '0 20px', fontSize: '12px', borderRadius: '6px', border: 'none',
-                                    background: '#3b82f6', color: '#ffffff', fontWeight: '600', cursor: 'pointer',
+                                    background: 'var(--srt-primary-500)', color: '#ffffff', fontWeight: '600', cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.15s'
                                 }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = '#2563eb'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = '#3b82f6'; }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--srt-primary-600)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--srt-primary-500)'; }}
                             >
                                 <span>일괄 적용</span>
                             </button>
@@ -3423,7 +3423,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             padding: '20px 28px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                                <div style={{ width: '4px', height: '18px', background: '#3b82f6', borderRadius: '2px', marginTop: '3px' }}></div>
+                                <div style={{ width: '4px', height: '18px', background: 'var(--srt-primary-500)', borderRadius: '2px', marginTop: '3px' }}></div>
                                 <div>
                                     <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>교차표 문구 일괄 수정</h3>
                                     <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '4px', fontWeight: 500 }}>현재 요약표에 속한 변수들의 교차표 문구 목록입니다. 줄바꿈 단위로 편집하거나, 엑셀 열 데이터를 복사해서 붙여넣으면 일괄 반영됩니다.
@@ -3452,8 +3452,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     transition: 'border-color 0.15s, box-shadow 0.15s'
                                 }}
                                 onFocus={(e) => {
-                                    e.target.style.borderColor = '#3b82f6';
-                                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                                    e.target.style.borderColor = 'var(--srt-primary-500)';
+                                    e.target.style.boxShadow = '0 0 0 3px color-mix(in srgb, var(--srt-primary-500) 10%, transparent)';
                                 }}
                                 onBlur={(e) => {
                                     e.target.style.borderColor = '#cbd5e1';
@@ -3483,10 +3483,10 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 onClick={handleApplyBulkItemLabelText}
                                 style={{
                                     height: '38px', padding: '0 24px', fontSize: '13px', borderRadius: '6px', border: 'none',
-                                    background: '#3b82f6', color: '#ffffff', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
+                                    background: 'var(--srt-primary-500)', color: '#ffffff', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
                                 }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = '#2563eb'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = '#3b82f6'; }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--srt-primary-600)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--srt-primary-500)'; }}
                             >
                                 일괄 적용
                             </button>

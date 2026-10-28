@@ -98,7 +98,7 @@ export default function HsrtGateway() {
         width: "32px",
         height: "32px",
         border: "3px solid #e5e7eb",
-        borderTopColor: "#3b82f6",
+        borderTopColor: "var(--srt-primary-500)",
         borderRadius: "50%",
         animation: "hsrtSpin 0.8s linear infinite"
       }} />

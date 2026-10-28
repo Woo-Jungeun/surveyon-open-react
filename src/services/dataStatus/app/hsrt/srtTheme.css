@@ -1,0 +1,583 @@
+/* ==========================================================================
+   SRT(H-SRT) 브랜드 테마 변수
+   --------------------------------------------------------------------------
+   - SRT 화면의 "브랜드(포인트) 색"은 모두 이 변수를 사용한다.
+     (JSX 인라인 style / CSS 파일 모두 hex 직접 사용 금지 → var(--srt-*) 사용)
+   - 기본값은 기존에 쓰던 Tailwind blue / sky / indigo 값과 "완전히 동일"하다.
+     → 브랜드를 지정하지 않으면 화면은 이전과 똑같이 보인다.
+   - 고객사 브랜드 색 적용 시:
+       document.documentElement.style.setProperty('--srt-brand', '#DA291C');
+       document.documentElement.setAttribute('data-srt-brand', '');
+     → 아래 [data-srt-brand] 블록이 --srt-brand 하나로 전체 단계를 자동 생성한다.
+   - 반투명 색은 rgba() 대신 color-mix() 사용
+       예) rgba(37,99,235,.12) → color-mix(in srgb, var(--srt-primary-600) 12%, transparent)
+   ※ 토큰 규격(최종 키 이름)은 추후 확정. 확정되면 이 파일에서 매핑만 바꾸면 됨.
+   ========================================================================== */
+
+:root {
+    /* Primary (기존 Tailwind blue) — 600 이 메인 브랜드 색 */
+    --srt-primary-25: #f8fbff;
+    --srt-primary-50: #eff6ff;
+    --srt-primary-100: #dbeafe;
+    --srt-primary-200: #bfdbfe;
+    --srt-primary-300: #93c5fd;
+    --srt-primary-400: #60a5fa;
+    --srt-primary-500: #3b82f6;
+    --srt-primary-600: #2563eb;
+    --srt-primary-700: #1d4ed8;
+    --srt-primary-800: #1e40af;
+    --srt-primary-900: #1e3a8a;
+    --srt-primary-950: #172554;
+
+    /* Secondary (기존 Tailwind sky) */
+    --srt-secondary-100: #e0f2fe;
+    --srt-secondary-200: #bae6fd;
+    --srt-secondary-600: #0284c7;
+
+    /* Accent (기존 Tailwind indigo) */
+    --srt-accent-500: #6366f1;
+    --srt-accent-600: #4f46e5;
+
+    /* 그리드 기본 호버 배경 (기존 SRT Sky-100) */
+    --srt-hover-bg: #e0f2fe;
+
+    /* 브랜드 색 위 글씨 */
+    --srt-on-primary: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   고객사 브랜드 적용 (html 에 data-srt-brand 속성이 있을 때만 동작)
+   --srt-brand (필수), --srt-brand-secondary / --srt-brand-accent (선택)
+   -------------------------------------------------------------------------- */
+:root[data-srt-brand] {
+    --srt-brand-secondary: var(--srt-brand);
+    --srt-brand-accent: var(--srt-brand);
+
+    --srt-primary-25: color-mix(in srgb, var(--srt-brand) 3%, white);
+    --srt-primary-50: color-mix(in srgb, var(--srt-brand) 7%, white);
+    --srt-primary-100: color-mix(in srgb, var(--srt-brand) 15%, white);
+    --srt-primary-200: color-mix(in srgb, var(--srt-brand) 28%, white);
+    --srt-primary-300: color-mix(in srgb, var(--srt-brand) 45%, white);
+    --srt-primary-400: color-mix(in srgb, var(--srt-brand) 70%, white);
+    --srt-primary-500: color-mix(in srgb, var(--srt-brand) 88%, white);
+    --srt-primary-600: var(--srt-brand);
+    --srt-primary-700: color-mix(in srgb, var(--srt-brand) 85%, black);
+    --srt-primary-800: color-mix(in srgb, var(--srt-brand) 70%, black);
+    --srt-primary-900: color-mix(in srgb, var(--srt-brand) 55%, black);
+    --srt-primary-950: color-mix(in srgb, var(--srt-brand) 40%, black);
+
+    --srt-secondary-100: color-mix(in srgb, var(--srt-brand-secondary) 15%, white);
+    --srt-secondary-200: color-mix(in srgb, var(--srt-brand-secondary) 30%, white);
+    --srt-secondary-600: var(--srt-brand-secondary);
+
+    --srt-accent-500: color-mix(in srgb, var(--srt-brand-accent) 85%, white);
+    --srt-accent-600: var(--srt-brand-accent);
+
+    --srt-hover-bg: var(--srt-primary-50);
+}
+
+/* --------------------------------------------------------------------------
+   브랜드 활성화 시 설문온 레거시 theme.css 변수 전면 오버라이드
+   -------------------------------------------------------------------------- */
+:root[data-srt-brand],
+:root[data-srt-brand] [data-theme="data-dashboard"],
+:root[data-srt-brand] [data-theme],
+html[data-srt-brand],
+html[data-srt-brand] [data-theme="data-dashboard"],
+html[data-srt-brand] [data-theme] {
+    --primary-color: var(--srt-primary-600) !important;
+    --primary-hover: var(--srt-primary-700) !important;
+    --primary-focus: var(--srt-primary-700) !important;
+    --primary-dark: var(--srt-primary-800) !important;
+
+    --primary-bg-light: color-mix(in srgb, var(--srt-brand) 12%, transparent) !important;
+    --primary-bg-medium: color-mix(in srgb, var(--srt-brand) 20%, transparent) !important;
+    --primary-bg-hover: var(--srt-primary-50) !important;
+    --primary-bg-selected: var(--srt-primary-100) !important;
+
+    --primary-border: var(--srt-primary-500) !important;
+    --primary-border-light: var(--srt-primary-300) !important;
+    --primary-border-hover: var(--srt-primary-600) !important;
+    --primary-border-focus: var(--srt-primary-700) !important;
+
+    --primary-text: var(--srt-primary-600) !important;
+    --primary-text-dark: var(--srt-primary-800) !important;
+
+    --header-bg-gradient: linear-gradient(to right, color-mix(in srgb, var(--srt-brand) 8%, transparent), color-mix(in srgb, var(--srt-brand) 15%, transparent)) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Kendo UI Portal (DropdownList Popup) 전역 브랜드 테마 연동
+   - Kendo Popup은 <body> 직계 자식으로 렌더링되므로 :root / html 범위에서 직접 제어
+   -------------------------------------------------------------------------- */
+.k-animation-container .k-popup,
+.k-animation-container .k-list-container,
+.k-animation-container.k-animation-container-shown .k-popup {
+    border: 1.5px solid var(--srt-primary-500) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--srt-primary-600) 18%, transparent) !important;
+}
+
+.k-animation-container .k-list-item.k-selected,
+.k-animation-container .k-list-item.k-selected.k-focus,
+.k-animation-container .k-list-item.k-selected:hover,
+.k-popup .k-list-item.k-selected {
+    background-color: var(--srt-primary-50) !important;
+    color: var(--srt-primary-700) !important;
+    font-weight: 700 !important;
+}
+
+.k-animation-container .k-list-item:hover:not(.k-selected),
+.k-popup .k-list-item:hover:not(.k-selected) {
+    background-color: var(--srt-primary-25) !important;
+    color: var(--srt-primary-600) !important;
+}
+
+/* Kendo 드롭다운 화살표 버튼 (CSS mask 방식) 및 SVG 아이콘 */
+.k-dropdownlist .k-input-button,
+.k-picker .k-input-button,
+.k-dropdownlist .k-svg-icon,
+.k-picker .k-svg-icon,
+.k-dropdownlist svg,
+.k-picker svg,
+.k-dropdownlist svg path,
+.k-picker svg path {
+    color: var(--srt-primary-500) !important;
+    fill: var(--srt-primary-500) !important;
+}
+
+/* 브랜드 적용 시 Kendo 드롭다운 화살표 버튼 배경색 (mask로 아이콘을 그리는 구조 대응) */
+html[data-srt-brand] .k-dropdownlist.k-picker > button,
+html[data-srt-brand] .k-dropdownlist > button,
+html[data-srt-brand] .k-picker > button,
+html[data-srt-brand] .k-combobox > button,
+html[data-srt-brand] .k-dropdownlist .k-input-button,
+html[data-srt-brand] .k-picker .k-input-button,
+html[data-srt-brand] .k-input-button {
+    background-color: var(--srt-primary-600) !important;
+}
+
+html[data-srt-brand] .k-dropdownlist.k-picker:hover > button,
+html[data-srt-brand] .k-dropdownlist:hover > button,
+html[data-srt-brand] .k-picker:hover > button,
+html[data-srt-brand] .k-combobox:hover > button {
+    background-color: var(--srt-primary-700) !important;
+}
+
+html[data-srt-brand] .k-dropdownlist,
+html[data-srt-brand] .k-picker,
+html[data-srt-brand] .k-combobox {
+    border-color: var(--srt-primary-500) !important;
+}
+
+html[data-srt-brand] .k-dropdownlist:hover,
+html[data-srt-brand] .k-dropdownlist:focus,
+html[data-srt-brand] .k-dropdownlist.k-focus,
+html[data-srt-brand] .k-picker:hover,
+html[data-srt-brand] .k-picker:focus,
+html[data-srt-brand] .k-picker.k-focus,
+html[data-srt-brand] .k-combobox:hover,
+html[data-srt-brand] .k-combobox:focus,
+html[data-srt-brand] .k-combobox.k-focus {
+    border-color: var(--srt-primary-600) !important;
+}
+
+/* --------------------------------------------------------------------------
+   그리드 행 호버 및 셀/행 선택 테마 연동 (dp-excel-grid-v2 및 k-grid)
+   -------------------------------------------------------------------------- */
+html[data-srt-brand] body .dp-excel-grid-v2 tbody tr:hover td,
+html[data-srt-brand] body .dp-excel-grid-v2 tbody tr.k-hover td,
+html[data-srt-brand] body .dp-excel-grid-v2 tbody tr.k-state-hover td,
+html[data-srt-brand] .dp-excel-grid-v2 tbody tr:hover td,
+html[data-srt-brand] .dp-excel-grid-v2 tbody tr.k-hover td,
+html[data-srt-brand] .dp-excel-grid-v2 tbody tr.k-state-hover td,
+html[data-srt-brand] .k-grid tbody tr:hover,
+html[data-srt-brand] .k-grid tbody tr:hover td,
+html[data-srt-brand] .k-grid .k-table-row:hover,
+html[data-srt-brand] .k-grid .k-table-row:hover td,
+html[data-srt-brand] [data-theme="data-dashboard"] .k-grid-content tr:not(.k-grouping-row):hover,
+html[data-srt-brand] [data-theme="data-dashboard"] .k-grid-content tr:not(.k-grouping-row):hover td {
+    background-color: var(--srt-primary-50) !important;
+}
+
+html[data-srt-brand] .k-grid td.k-selected,
+html[data-srt-brand] .k-grid .k-table-row.k-selected > td,
+html[data-srt-brand] .k-grid .k-table-td.k-selected,
+html[data-srt-brand] .k-grid .k-table-row.k-selected > .k-table-td,
+html[data-srt-brand] [data-theme="data-dashboard"] .k-grid td.k-state-selected,
+html[data-srt-brand] [data-theme="data-dashboard"] .k-grid tr.k-state-selected > td,
+html[data-srt-brand] [data-theme="data-dashboard"] .k-grid td.k-selected,
+html[data-srt-brand] [data-theme="data-dashboard"] .k-grid tr.k-selected > td {
+    background-color: var(--srt-primary-100) !important;
+}
+
+/* 프로젝트 선택 팝업 (ProjectSelectionModal)은 설문온 고유 보라색(#F9F8FF / #F3F1FF) 유지 */
+html[data-srt-brand] .ps-modal-container .k-grid tbody tr:hover,
+html[data-srt-brand] .ps-modal-container .k-grid tbody tr:hover td,
+html[data-srt-brand] .ps-modal-container .k-grid .k-table-row:hover,
+html[data-srt-brand] .ps-modal-container .k-grid .k-table-row:hover td,
+html[data-srt-brand] .ps-modal-container .k-grid tr:hover:not(.k-selected),
+html[data-srt-brand] .ps-modal-container .k-grid tr:hover:not(.k-selected) td,
+html[data-srt-brand] .ps-modal-container .k-grid .k-table-tbody > .k-table-row:not(.k-detail-row):hover:not(.k-selected) td {
+    background-color: #F9F8FF !important;
+    background: #F9F8FF !important;
+}
+
+html[data-srt-brand] .ps-modal-container .k-grid td.k-selected,
+html[data-srt-brand] .ps-modal-container .k-grid .k-table-row.k-selected > td,
+html[data-srt-brand] .ps-modal-container .k-grid .k-table-td.k-selected,
+html[data-srt-brand] .ps-modal-container .k-grid .k-table-row.k-selected > .k-table-td,
+html[data-srt-brand] .ps-modal-container .k-grid .k-table-row.k-selected,
+html[data-srt-brand] .ps-modal-container .k-grid tr.k-selected,
+html[data-srt-brand] .ps-modal-container .k-grid tr.k-selected > td,
+html[data-srt-brand] .ps-modal-container .k-grid tr[aria-selected="true"],
+html[data-srt-brand] .ps-modal-container .k-grid tr[aria-selected="true"] > td,
+html[data-srt-brand] .ps-modal-container .k-grid tr:active,
+html[data-srt-brand] .ps-modal-container .k-grid tr:active > td,
+html[data-srt-brand] .ps-modal-container .k-grid .k-table-row:active,
+html[data-srt-brand] .ps-modal-container .k-grid .k-table-row:active > td {
+    background-color: #F3F1FF !important;
+    background: #F3F1FF !important;
+}
+
+/* 프로젝트 등록(ProEnter) 폼 입력창, 드롭다운, 콤보박스 보라색 유지 */
+html[data-srt-brand] .ps-modal-container .k-combobox,
+html[data-srt-brand] .ps-modal-container .k-dropdownlist,
+html[data-srt-brand] .ps-modal-container .k-picker,
+html[data-srt-brand] .ps-modal-container .k-input,
+html[data-srt-brand] .ps-modal-container .k-input-solid,
+html[data-srt-brand] .ps-modal-container .k-textbox,
+html[data-srt-brand] .ps-modal-container input[type="text"],
+html[data-srt-brand] .ps-modal-container textarea {
+    border-color: #7C3AED !important;
+}
+
+html[data-srt-brand] .ps-modal-container .k-combobox:hover,
+html[data-srt-brand] .ps-modal-container .k-dropdownlist:hover,
+html[data-srt-brand] .ps-modal-container .k-picker:hover,
+html[data-srt-brand] .ps-modal-container .k-input:hover,
+html[data-srt-brand] .ps-modal-container .k-input-solid:hover,
+html[data-srt-brand] .ps-modal-container .k-textbox:hover,
+html[data-srt-brand] .ps-modal-container input[type="text"]:hover,
+html[data-srt-brand] .ps-modal-container textarea:hover {
+    border-color: #6D28D9 !important;
+}
+
+html[data-srt-brand] .ps-modal-container .k-combobox:focus,
+html[data-srt-brand] .ps-modal-container .k-combobox.k-focus,
+html[data-srt-brand] .ps-modal-container .k-combobox:focus-within,
+html[data-srt-brand] .ps-modal-container .k-dropdownlist:focus,
+html[data-srt-brand] .ps-modal-container .k-dropdownlist.k-focus,
+html[data-srt-brand] .ps-modal-container .k-dropdownlist:focus-within,
+html[data-srt-brand] .ps-modal-container .k-picker:focus,
+html[data-srt-brand] .ps-modal-container .k-picker.k-focus,
+html[data-srt-brand] .ps-modal-container .k-picker:focus-within,
+html[data-srt-brand] .ps-modal-container .k-input:focus,
+html[data-srt-brand] .ps-modal-container .k-input.k-focus,
+html[data-srt-brand] .ps-modal-container .k-input:focus-within,
+html[data-srt-brand] .ps-modal-container .k-input-solid:focus,
+html[data-srt-brand] .ps-modal-container .k-input-solid:focus-within,
+html[data-srt-brand] .ps-modal-container .k-textbox:focus,
+html[data-srt-brand] .ps-modal-container .k-textbox:focus-within,
+html[data-srt-brand] .ps-modal-container input[type="text"]:focus,
+html[data-srt-brand] .ps-modal-container textarea:focus {
+    border-color: #7C3AED !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
+}
+
+/* 콤보박스 / 드롭다운 우측 화살표 버튼 (CSS mask: icon_dropdown.png 방식 - background-color로 아이콘 색상 표현) */
+html[data-srt-brand] .ps-modal-container {
+    --primary-color: #5A4BFF !important;
+}
+
+html[data-srt-brand] .ps-modal-container .k-dropdownlist.k-picker > button,
+html[data-srt-brand] .ps-modal-container .k-dropdownlist > button,
+html[data-srt-brand] .ps-modal-container .k-picker > button,
+html[data-srt-brand] .ps-modal-container .k-combobox > button,
+html[data-srt-brand] .ps-modal-container .k-dropdownlist .k-input-button,
+html[data-srt-brand] .ps-modal-container .k-picker .k-input-button,
+html[data-srt-brand] .ps-modal-container .k-combobox .k-input-button,
+html[data-srt-brand] .ps-modal-container .k-input-button {
+    background-color: #5A4BFF !important;
+    color: #5A4BFF !important;
+    fill: #5A4BFF !important;
+}
+
+html[data-srt-brand] .ps-modal-container .k-dropdownlist .k-svg-icon,
+html[data-srt-brand] .ps-modal-container .k-picker .k-svg-icon,
+html[data-srt-brand] .ps-modal-container .k-combobox .k-svg-icon,
+html[data-srt-brand] .ps-modal-container .k-input-button .k-svg-icon,
+html[data-srt-brand] .ps-modal-container .k-dropdownlist svg,
+html[data-srt-brand] .ps-modal-container .k-picker svg,
+html[data-srt-brand] .ps-modal-container .k-combobox svg,
+html[data-srt-brand] .ps-modal-container .k-input-button svg,
+html[data-srt-brand] .ps-modal-container .k-dropdownlist svg path,
+html[data-srt-brand] .ps-modal-container .k-picker svg path,
+html[data-srt-brand] .ps-modal-container .k-combobox svg path,
+html[data-srt-brand] .ps-modal-container .k-input-button svg path {
+    color: #5A4BFF !important;
+    fill: #5A4BFF !important;
+}
+
+/* 모달이 열려있을 때 바디 직계 자식 Kendo 팝업 리스트 보라색 유지 */
+body:has(.ps-modal-overlay) .k-animation-container .k-popup,
+body:has(.ps-modal-overlay) .k-animation-container .k-list-container {
+    border-color: #7C3AED !important;
+    box-shadow: 0 8px 24px rgba(124, 58, 237, 0.18) !important;
+}
+
+body:has(.ps-modal-overlay) .k-animation-container .k-list-item.k-selected,
+body:has(.ps-modal-overlay) .k-popup .k-list-item.k-selected {
+    background-color: #F3F1FF !important;
+    color: #5A4BFF !important;
+}
+
+body:has(.ps-modal-overlay) .k-animation-container .k-list-item:hover:not(.k-selected),
+body:has(.ps-modal-overlay) .k-popup .k-list-item:hover:not(.k-selected) {
+    background-color: #F9F8FF !important;
+    color: #5A4BFF !important;
+}
+
+/* --------------------------------------------------------------------------
+   전역 네이티브 체크박스 & 라디오 버튼 브랜드 색 연동
+   - HTML5 기본 <input type="checkbox">, <input type="radio">의 체크/선택/indeterminate 색상
+   -------------------------------------------------------------------------- */
+input[type="checkbox"],
+input[type="radio"] {
+    accent-color: var(--srt-primary-600) !important;
+}
+
+/* --------------------------------------------------------------------------
+   전역 팝업/모달 (ConditionBuilderPopup, 공통 Modal 등) 브랜드 테마 연동
+   -------------------------------------------------------------------------- */
+html[data-srt-brand] .header-title-cbp h3::before {
+    background: var(--srt-primary-600) !important;
+}
+
+html[data-srt-brand] .btn-apply-cbp {
+    background: var(--srt-primary-600) !important;
+    border-color: var(--srt-primary-600) !important;
+    color: #ffffff !important;
+}
+
+html[data-srt-brand] .btn-apply-cbp:hover:not(:disabled) {
+    background: var(--srt-primary-700) !important;
+    border-color: var(--srt-primary-700) !important;
+}
+
+html[data-srt-brand] .btn-apply-cbp:disabled {
+    background: var(--srt-primary-600) !important;
+    border-color: var(--srt-primary-600) !important;
+    opacity: 0.5 !important;
+}
+
+html[data-srt-brand] .filter-popup-container-cbp {
+    background-color: var(--srt-primary-25) !important;
+}
+
+html[data-srt-brand] .data-dashboard-theme,
+html[data-srt-brand] .modal.data-dashboard-theme,
+html[data-srt-brand] .data-dashboard-theme.modal {
+    --primary-color: var(--srt-primary-500) !important;
+}
+
+/* --------------------------------------------------------------------------
+   로딩 스피너 (LoadingSpinner) 브랜드 테마 연동
+   - 화면 갱신 / 저장 시 표시되는 중앙 문서 아이콘 테두리·내부선 및 4개 회전 점
+   -------------------------------------------------------------------------- */
+html[data-srt-brand] .survey-loading-spinner::before {
+    border-color: var(--srt-primary-400, var(--srt-primary-500)) !important;
+}
+
+html[data-srt-brand] .survey-loading-spinner::after {
+    background:
+        linear-gradient(var(--srt-primary-400, var(--srt-primary-500)) 0 0) 10px 15px / 40px 3px,
+        linear-gradient(var(--srt-primary-400, var(--srt-primary-500)) 0 0) 10px 28px / 40px 3px,
+        linear-gradient(var(--srt-primary-400, var(--srt-primary-500)) 0 0) 10px 41px / 40px 3px,
+        linear-gradient(var(--srt-primary-400, var(--srt-primary-500)) 0 0) 10px 54px / 28px 3px !important;
+    background-repeat: no-repeat !important;
+}
+
+html[data-srt-brand] .survey-loading-spinner .dot {
+    background-color: var(--srt-primary-400, var(--srt-primary-500)) !important;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--srt-primary-500) 40%, transparent) !important;
+}
+
+/* --------------------------------------------------------------------------
+   공통 알림/확인 팝업 (Modal.jsx / common.css) 브랜드 테마 연동
+   - 느낌표(!) 아이콘: common.css의 하드코딩 #4EA3FF SVG를 CSS mask로 오버라이드
+   - 확인 버튼: k-button-solid-primary 및 btnM
+   - 취소 버튼: btnTxt.type01
+   -------------------------------------------------------------------------- */
+html[data-srt-brand] .modal .iconNoti::before,
+html[data-srt-brand] .data-dashboard-theme.modal .iconNoti::before,
+html[data-srt-brand] .modal.data-dashboard-theme .iconNoti::before,
+html[data-srt-brand] .cmn_popup .iconNoti::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 32px !important;
+    height: 32px !important;
+    vertical-align: middle !important;
+    margin-right: 8px !important;
+    background: none !important;
+    background-color: var(--srt-primary-600) !important;
+    -webkit-mask: url("data:image/svg+xml,%3csvg width='24' height='24' viewBox='0 0 24 24' fill='black' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12 2C12.5523 2 13 2.44772 13 3V13C13 13.5523 12.5523 14 12 14C11.4477 14 11 13.5523 11 13V3C11 2.44772 11.4477 2 12 2Z'/%3e%3ccircle cx='12' cy='18' r='1.5'/%3e%3c/svg%3e") no-repeat center / contain !important;
+    mask: url("data:image/svg+xml,%3csvg width='24' height='24' viewBox='0 0 24 24' fill='black' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12 2C12.5523 2 13 2.44772 13 3V13C13 13.5523 12.5523 14 12 14C11.4477 14 11 13.5523 11 13V3C11 2.44772 11.4477 2 12 2Z'/%3e%3ccircle cx='12' cy='18' r='1.5'/%3e%3c/svg%3e") no-repeat center / contain !important;
+}
+
+html[data-srt-brand] .data-dashboard-theme.modal .k-button-solid-primary,
+html[data-srt-brand] .data-dashboard-theme.modal .btnM[themeColor="primary"],
+html[data-srt-brand] .data-dashboard-theme.modal button.btnM:not(.btnTxt),
+html[data-srt-brand] .modal.data-dashboard-theme .k-button-solid-primary,
+html[data-srt-brand] .modal.data-dashboard-theme .btnM[themeColor="primary"],
+html[data-srt-brand] .modal.data-dashboard-theme button.btnM:not(.btnTxt),
+html[data-srt-brand] .modal .popBtnS button.k-button-solid-primary,
+html[data-srt-brand] .modal .popBtnS button.btnM:not(.btnTxt),
+html[data-srt-brand] .modal .popBtn button.k-button-solid-primary,
+html[data-srt-brand] .modal .popBtn button.btnM:not(.btnTxt),
+html[data-srt-brand] .cmn_popup .k-button-solid-primary,
+html[data-srt-brand] .cmn_popup button.btnM:not(.btnTxt),
+html[data-srt-brand] .modal .btnType01 {
+    background: var(--srt-primary-600) !important;
+    background-color: var(--srt-primary-600) !important;
+    border: 1px solid var(--srt-primary-600) !important;
+    border-color: var(--srt-primary-600) !important;
+    color: #ffffff !important;
+    min-width: 64px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+html[data-srt-brand] .data-dashboard-theme.modal .k-button-solid-primary:hover,
+html[data-srt-brand] .data-dashboard-theme.modal .btnM[themeColor="primary"]:hover,
+html[data-srt-brand] .data-dashboard-theme.modal button.btnM:not(.btnTxt):hover,
+html[data-srt-brand] .modal.data-dashboard-theme .k-button-solid-primary:hover,
+html[data-srt-brand] .modal.data-dashboard-theme .btnM[themeColor="primary"]:hover,
+html[data-srt-brand] .modal.data-dashboard-theme button.btnM:not(.btnTxt):hover,
+html[data-srt-brand] .modal .popBtnS button.k-button-solid-primary:hover,
+html[data-srt-brand] .modal .popBtnS button.btnM:not(.btnTxt):hover,
+html[data-srt-brand] .modal .popBtn button.k-button-solid-primary:hover,
+html[data-srt-brand] .modal .popBtn button.btnM:not(.btnTxt):hover,
+html[data-srt-brand] .cmn_popup .k-button-solid-primary:hover,
+html[data-srt-brand] .cmn_popup button.btnM:not(.btnTxt):hover,
+html[data-srt-brand] .modal .btnType01:hover {
+    background: var(--srt-primary-700) !important;
+    background-color: var(--srt-primary-700) !important;
+    border-color: var(--srt-primary-700) !important;
+    color: #ffffff !important;
+}
+
+/* 팝업 취소/닫기 등 보조 Outline 버튼 (.btnTxt.type01) */
+html[data-srt-brand] .data-dashboard-theme.modal .btnTxt.type01,
+html[data-srt-brand] .modal.data-dashboard-theme .btnTxt.type01,
+html[data-srt-brand] .modal .popBtnS .btnTxt.type01,
+html[data-srt-brand] .modal .popBtn .btnTxt.type01,
+html[data-srt-brand] .modal .btnTxt.type01 {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: var(--srt-primary-600) !important;
+    border: 1px solid var(--srt-primary-600) !important;
+    border-color: var(--srt-primary-600) !important;
+    min-width: 64px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+html[data-srt-brand] .data-dashboard-theme.modal .btnTxt.type01:hover,
+html[data-srt-brand] .modal.data-dashboard-theme .btnTxt.type01:hover,
+html[data-srt-brand] .modal .popBtnS .btnTxt.type01:hover,
+html[data-srt-brand] .modal .popBtn .btnTxt.type01:hover,
+html[data-srt-brand] .modal .btnTxt.type01:hover {
+    background: var(--srt-primary-50) !important;
+    background-color: var(--srt-primary-50) !important;
+    color: var(--srt-primary-700) !important;
+    border-color: var(--srt-primary-700) !important;
+}
+
+/* --------------------------------------------------------------------------
+   차트 툴바 버튼 (view-option-btn) 브랜드 테마 연동
+   - 차트 타입 선택기(막대형, 선형, 원형 등) active / hover 상태
+   -------------------------------------------------------------------------- */
+html[data-srt-brand] .view-option-btn.active,
+html[data-srt-brand] .chart-type-toolbar .view-option-btn.active {
+    background: var(--srt-primary-50) !important;
+    border: 1px solid var(--srt-primary-200) !important;
+    color: var(--srt-primary-600) !important;
+    box-shadow: 0 2px 4px color-mix(in srgb, var(--srt-primary-500) 20%, transparent) !important;
+}
+
+html[data-srt-brand] .view-option-btn:hover:not(.active),
+html[data-srt-brand] .chart-type-toolbar .view-option-btn:hover:not(.active) {
+    background: var(--srt-primary-25, #f8fafc) !important;
+    color: var(--srt-primary-600) !important;
+}
+
+/* --------------------------------------------------------------------------
+   차트 다운로드 드롭다운 메뉴 (.download-dropdown) 브랜드 테마 연동
+   - PNG (이미지), SVG (PPT용) 다운로드 메뉴 항목 hover / active 상태
+   -------------------------------------------------------------------------- */
+html[data-srt-brand] .download-dropdown button:hover {
+    background: var(--srt-primary-50) !important;
+    color: var(--srt-primary-600) !important;
+}
+
+html[data-srt-brand] .download-dropdown button.active {
+    background: var(--srt-primary-100) !important;
+    color: var(--srt-primary-700) !important;
+    font-weight: 700 !important;
+}
+
+html[data-srt-brand] .download-dropdown button:active {
+    background: var(--srt-primary-200) !important;
+    color: var(--srt-primary-800) !important;
+}
+
+/* --------------------------------------------------------------------------
+   좌측 LNB 사이드바 (Sidebar) 브랜드 테마 연동
+   - 활성 메뉴의 하위 메뉴 접기/펼치기 화살표 버튼 (.submenu-toggle-btn)
+   -------------------------------------------------------------------------- */
+html[data-srt-brand] .nav-link.active .submenu-toggle-btn,
+html[data-srt-brand] .nav-item.active .submenu-toggle-btn,
+html[data-srt-brand] .submenu-toggle-btn.open {
+    color: var(--srt-primary-600) !important;
+}
+
+/* --------------------------------------------------------------------------
+   대시보드 목록 팝업 (PageListPopup) 브랜드 테마 연동
+   - 헤더 아이콘, 추가/저장 버튼, 행 호버, 수정 인풋 포커스
+   -------------------------------------------------------------------------- */
+html[data-srt-brand] .pl-header-icon {
+    color: var(--srt-primary-600) !important;
+}
+
+html[data-srt-brand] .pl-action-btn.primary {
+    background: var(--srt-primary-600) !important;
+    border-color: var(--srt-primary-600) !important;
+    color: var(--srt-on-primary, #ffffff) !important;
+}
+
+html[data-srt-brand] .pl-action-btn.primary:hover {
+    background: var(--srt-primary-700) !important;
+    border-color: var(--srt-primary-700) !important;
+}
+
+html[data-srt-brand] .pl-content-wrapper .k-grid tbody tr:hover {
+    background-color: var(--srt-primary-50) !important;
+}
+
+html[data-srt-brand] .pl-edit-input {
+    border-color: var(--srt-primary-600) !important;
+    background: var(--srt-primary-25) !important;
+}
+
+html[data-srt-brand] .pl-edit-input:focus {
+    box-shadow: 0 0 0 2px var(--srt-primary-200) !important;
+}
+
+
+
+

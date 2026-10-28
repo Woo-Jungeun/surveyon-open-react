@@ -584,9 +584,9 @@ const FullscreenModal = ({
                                     onClick={() => setShowLegend(!showLegend)}
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: '6px',
-                                        padding: '4px 8px', border: `1px solid ${showLegend ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
-                                        background: showLegend ? '#eff6ff' : '#fff',
-                                        color: showLegend ? '#2563eb' : '#64748b',
+                                        padding: '4px 8px', border: `1px solid ${showLegend ? 'var(--srt-primary-500)' : '#e2e8f0'}`, borderRadius: '6px',
+                                        background: showLegend ? 'var(--srt-primary-50)' : '#fff',
+                                        color: showLegend ? 'var(--srt-primary-600)' : '#64748b',
                                         fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '100%'
                                     }}
                                     title="범례 보기/숨기기"
@@ -603,9 +603,9 @@ const FullscreenModal = ({
                                             onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
                                             style={{
                                                 display: 'flex', alignItems: 'center', gap: '6px',
-                                                padding: '4px 8px', border: `1px solid ${(selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
-                                                background: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#eff6ff' : '#fff',
-                                                color: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#2563eb' : '#64748b',
+                                                padding: '4px 8px', border: `1px solid ${(selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? 'var(--srt-primary-500)' : '#e2e8f0'}`, borderRadius: '6px',
+                                                background: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? 'var(--srt-primary-50)' : '#fff',
+                                                color: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? 'var(--srt-primary-600)' : '#64748b',
                                                 fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '100%',
                                                 maxWidth: '180px'
                                             }}
@@ -663,9 +663,9 @@ const FullscreenModal = ({
                                                     >
                                                         <div style={{
                                                             width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                            border: `1px solid ${selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#cbd5e1'}`,
+                                                            border: `1px solid ${selectedChartGroups.length === availableChartGroups.length ? 'var(--srt-primary-600)' : '#cbd5e1'}`,
                                                             borderRadius: '3px',
-                                                            background: selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#fff'
+                                                            background: selectedChartGroups.length === availableChartGroups.length ? 'var(--srt-primary-600)' : '#fff'
                                                         }}>
                                                             {selectedChartGroups.length === availableChartGroups.length && <Check size={10} color="#fff" strokeWidth={3} />}
                                                         </div>
@@ -685,9 +685,9 @@ const FullscreenModal = ({
                                                             >
                                                                 <div style={{
                                                                     width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                    border: `1px solid ${isChecked ? '#2563eb' : '#cbd5e1'}`,
+                                                                    border: `1px solid ${isChecked ? 'var(--srt-primary-600)' : '#cbd5e1'}`,
                                                                     borderRadius: '3px',
-                                                                    background: isChecked ? '#2563eb' : '#fff'
+                                                                    background: isChecked ? 'var(--srt-primary-600)' : '#fff'
                                                                 }}>
                                                                     {isChecked && <Check size={10} color="#fff" strokeWidth={3} />}
                                                                 </div>
@@ -709,9 +709,9 @@ const FullscreenModal = ({
                                         className={`view-option-btn ${isChartOptionsOpen ? 'active' : ''}`}
                                         style={{
                                             display: 'flex', alignItems: 'center', gap: '4px',
-                                            fontSize: '12px', fontWeight: 600, border: `1px solid ${isChartOptionsOpen ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
-                                            background: isChartOptionsOpen ? '#eff6ff' : '#fff',
-                                            color: isChartOptionsOpen ? '#2563eb' : '#64748b',
+                                            fontSize: '12px', fontWeight: 600, border: `1px solid ${isChartOptionsOpen ? 'var(--srt-primary-500)' : '#e2e8f0'}`, borderRadius: '6px',
+                                            background: isChartOptionsOpen ? 'var(--srt-primary-50)' : '#fff',
+                                            color: isChartOptionsOpen ? 'var(--srt-primary-600)' : '#64748b',
                                             cursor: 'pointer', transition: 'all 0.2s',
                                             width: 'auto',
                                             height: '100%',
@@ -738,7 +738,7 @@ const FullscreenModal = ({
                                                         style={{
                                                             flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px',
                                                             fontWeight: localChartDataType === 'frequency' ? 700 : 500,
-                                                            color: localChartDataType === 'frequency' ? '#2563eb' : '#64748b',
+                                                            color: localChartDataType === 'frequency' ? 'var(--srt-primary-600)' : '#64748b',
                                                             background: localChartDataType === 'frequency' ? '#fff' : 'transparent',
                                                             borderRadius: '4px', cursor: 'pointer',
                                                             boxShadow: localChartDataType === 'frequency' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
@@ -752,7 +752,7 @@ const FullscreenModal = ({
                                                         style={{
                                                             flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px',
                                                             fontWeight: localChartDataType === 'percentage' ? 700 : 500,
-                                                            color: localChartDataType === 'percentage' ? '#2563eb' : '#64748b',
+                                                            color: localChartDataType === 'percentage' ? 'var(--srt-primary-600)' : '#64748b',
                                                             background: localChartDataType === 'percentage' ? '#fff' : 'transparent',
                                                             borderRadius: '4px', cursor: 'pointer',
                                                             boxShadow: localChartDataType === 'percentage' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
@@ -772,7 +772,7 @@ const FullscreenModal = ({
                                                 >
                                                     <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>값 표출하기</span>
                                                     <div style={{
-                                                        width: '36px', height: '20px', background: localShowChartValues ? '#3b82f6' : '#e2e8f0',
+                                                        width: '36px', height: '20px', background: localShowChartValues ? 'var(--srt-primary-500)' : '#e2e8f0',
                                                         borderRadius: '20px', position: 'relative', transition: 'background 0.2s', flexShrink: 0
                                                     }}>
                                                         <div style={{
@@ -793,7 +793,7 @@ const FullscreenModal = ({
                                                     >
                                                         <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>% 표출</span>
                                                         <div style={{
-                                                            width: '36px', height: '20px', background: localShowPercentSymbol ? '#3b82f6' : '#e2e8f0',
+                                                            width: '36px', height: '20px', background: localShowPercentSymbol ? 'var(--srt-primary-500)' : '#e2e8f0',
                                                             borderRadius: '20px', position: 'relative', transition: 'background 0.2s', flexShrink: 0
                                                         }}>
                                                             <div style={{
@@ -914,7 +914,7 @@ const FullscreenModal = ({
                                                         style={{
                                                             background: uiSettings?.theme_primary || '#f8fafc',
                                                             fontWeight: '700',
-                                                            color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                            color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                             fontSize: '11px',
                                                             textAlign: 'center',
                                                             verticalAlign: 'middle'
@@ -928,7 +928,7 @@ const FullscreenModal = ({
                                                             rowSpan={group.rowSpan}
                                                             style={{
                                                                 background: uiSettings?.theme_primary || '#f8fafc',
-                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                                 fontSize: '11px',
                                                                 textAlign: 'center',
                                                                 padding: '4px 12px',
@@ -956,7 +956,7 @@ const FullscreenModal = ({
                                                             style={{
                                                                 background: uiSettings?.theme_primary || '#f8fafc',
                                                                 fontWeight: '700',
-                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                                 fontSize: '11px',
                                                                 textAlign: 'center',
                                                                 verticalAlign: 'middle'
@@ -970,7 +970,7 @@ const FullscreenModal = ({
                                                         if (isSpanned) return null;
 
                                                         return (
-                                                            <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: uiSettings?.theme_primary || '#f0f9ff',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
+                                                            <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: uiSettings?.theme_primary || '#f0f9ff',  color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
                                                                 {group.label}
                                                             </th>
                                                         );
@@ -990,7 +990,7 @@ const FullscreenModal = ({
                                                             style={{
                                                                 background: uiSettings?.theme_primary || '#f8fafc',
                                                                 fontWeight: '700',
-                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                                 fontSize: '11px',
                                                                 textAlign: 'center',
                                                                 verticalAlign: 'middle'
@@ -1006,7 +1006,7 @@ const FullscreenModal = ({
                                                         if (coveredByRow1 || coveredByRow3) return null;
 
                                                         return (
-                                                            <th key={i} colSpan={group.count} style={{ background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
+                                                            <th key={i} colSpan={group.count} style={{ background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
                                                                 {group.label}
                                                             </th>
                                                         );
@@ -1026,7 +1026,7 @@ const FullscreenModal = ({
                                                         style={{
                                                             background: uiSettings?.theme_primary || '#f8fafc',
                                                             fontWeight: '700',
-                                                            color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                            color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                             fontSize: '11px',
                                                             textAlign: 'center',
                                                             verticalAlign: 'middle'
@@ -1077,7 +1077,7 @@ const FullscreenModal = ({
                                                         display: (i === 0 || (resultData.rows[i - 1].label2 || resultData.rows[i - 1].var_label) !== (row.label2 || row.var_label)) ? 'table-cell' : 'none',
                                                         verticalAlign: 'middle',
                                                         background: uiSettings?.theme_primary || '#f8fafc',
-                                                        color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                        color: uiSettings?.theme_primary_fg || 'var(--srt-primary-900)',
                                                         fontSize: '11px',
                                                         fontWeight: '700',
                                                         textAlign: 'center',
@@ -1163,7 +1163,7 @@ const FullscreenModal = ({
                                                 }
                                             });
                                             return varGroups.map((group, idx) => (
-                                                <th key={`fs-stat-var-group-${idx}`} colSpan={group.colspan} rowSpan={group.rowSpan} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: 0, height: `${group.rowSpan * 25}px`, zIndex: 20, background: '#dbeafe', color: '#1e40af', fontSize: '11px' }}>
+                                                <th key={`fs-stat-var-group-${idx}`} colSpan={group.colspan} rowSpan={group.rowSpan} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: 0, height: `${group.rowSpan * 25}px`, zIndex: 20, background: 'var(--srt-primary-100)', color: 'var(--srt-primary-800)', fontSize: '11px' }}>
                                                     {group.var_label}
                                                 </th>
                                             ));
@@ -1291,7 +1291,7 @@ const FullscreenModal = ({
                                         const statValues = resultData.stats?.[statKey] || [];
                                         return (
                                             <tr key={statIdx}>
-                                                <td colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-cell-sticky" style={{ left: 0, zIndex: 10, background: '#eff6ff', color: '#334155', fontWeight: 'bold', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
+                                                <td colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-cell-sticky" style={{ left: 0, zIndex: 10, background: 'var(--srt-primary-50)', color: '#334155', fontWeight: 'bold', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
                                                     {stat.label}
                                                 </td>
                                                 {statValues.map((val, colIdx) => (

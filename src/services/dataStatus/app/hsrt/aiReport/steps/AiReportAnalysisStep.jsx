@@ -7,15 +7,15 @@ import KendoChart from '@/services/dataStatus/components/KendoChart';
 import { getSpss } from '../../../common/spssName';
 
 const CHART_THEME_OPTIONS = [
-    { id: 'default', name: '기본 테마', preview: ['#2563eb', '#7c3aed', '#db2777', '#ca8a04', '#16a34a'] },
-    { id: 'professional', name: '프로페셔널', preview: ['#1e40af', '#3b82f6', '#93c5fd', '#64748b', '#94a3b8'] },
+    { id: 'default', name: '기본 테마', preview: ['var(--srt-primary-600)', '#7c3aed', '#db2777', '#ca8a04', '#16a34a'] },
+    { id: 'professional', name: '프로페셔널', preview: ['var(--srt-primary-800)', 'var(--srt-primary-500)', 'var(--srt-primary-300)', '#64748b', '#94a3b8'] },
     { id: 'tableau', name: '태블로', preview: ['#4e79a7', '#f28e2b', '#e15759', '#76b7b2', '#59a14f'] },
     { id: 'pastel', name: '파스텔', preview: ['#a78bfa', '#f472b6', '#38bdf8', '#4ade80', '#fbbf24'] },
-    { id: 'ocean', name: '오션', preview: ['#0284c7', '#06b6d4', '#0d9488', '#14b8a6', '#2dd4bf'] },
+    { id: 'ocean', name: '오션', preview: ['var(--srt-secondary-600)', '#06b6d4', '#0d9488', '#14b8a6', '#2dd4bf'] },
     { id: 'forest', name: '포레스트', preview: ['#15803d', '#16a34a', '#65a30d', '#84cc16', '#a3e635'] },
     { id: 'sunset', name: '선셋', preview: ['#c026d3', '#e11d48', '#f97316', '#facc15', '#fbbf24'] },
     { id: 'slate', name: '슬레이트', preview: ['#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1'] },
-    { id: 'vivid', name: '비비드', preview: ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6'] }
+    { id: 'vivid', name: '비비드', preview: ['#ef4444', '#f97316', '#eab308', '#22c55e', 'var(--srt-primary-500)'] }
 ];
 
 const CHART_TYPE_OPTIONS = [
@@ -706,7 +706,7 @@ const AiReportAnalysisStep = ({
                                     style={{
                                         padding: '9px 14px',
                                         fontWeight: idx === 2 ? 700 : 500,
-                                        color: idx === 2 ? '#2563eb' : '#64748b',
+                                        color: idx === 2 ? 'var(--srt-primary-600)' : '#64748b',
                                         textAlign: idx === 0 ? 'left' : 'center',
                                         background: idx === 2 ? '#f8fafc' : 'transparent',
                                         width: idx === 0 ? '34%' : '33%'
@@ -738,7 +738,7 @@ const AiReportAnalysisStep = ({
                                             style={{
                                                 padding: '8.5px 14px',
                                                 textAlign: 'center',
-                                                color: vIdx === 1 ? '#2563eb' : (isTopOrBot ? '#0f172a' : '#334155'),
+                                                color: vIdx === 1 ? 'var(--srt-primary-600)' : (isTopOrBot ? '#0f172a' : '#334155'),
                                                 background: vIdx === 1 ? '#f8fafc' : 'transparent',
                                                 fontWeight: vIdx === 1 ? 700 : (isTopOrBot ? 700 : 400)
                                             }}
@@ -830,7 +830,7 @@ const AiReportAnalysisStep = ({
                                 <button
                                     key={opt.id}
                                     onClick={(e) => { e.stopPropagation(); setPaletteIdMap(prev => ({ ...prev, [evidenceKey]: opt.id })); closeDropdown(); }}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 12px', fontSize: '12px', border: 'none', background: currentPaletteId === opt.id ? '#eff6ff' : 'none', cursor: 'pointer', color: currentPaletteId === opt.id ? '#2563eb' : '#334155', fontWeight: currentPaletteId === opt.id ? 700 : 400 }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 12px', fontSize: '12px', border: 'none', background: currentPaletteId === opt.id ? 'var(--srt-primary-50)' : 'none', cursor: 'pointer', color: currentPaletteId === opt.id ? 'var(--srt-primary-600)' : '#334155', fontWeight: currentPaletteId === opt.id ? 700 : 400 }}
                                     onMouseEnter={(e) => { if (currentPaletteId !== opt.id) e.currentTarget.style.background = '#f8fafc'; }}
                                     onMouseLeave={(e) => { if (currentPaletteId !== opt.id) e.currentTarget.style.background = 'none'; }}
                                 >
@@ -850,7 +850,7 @@ const AiReportAnalysisStep = ({
                 <button
                     onClick={(e) => { e.stopPropagation(); setShowLegendMap(prev => ({ ...prev, [evidenceKey]: !currentShowLegend })); }}
                     title="범례 보기/숨기기"
-                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', border: `1px solid ${currentShowLegend ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px', background: currentShowLegend ? '#eff6ff' : '#ffffff', color: currentShowLegend ? '#2563eb' : '#64748b', fontSize: '12px', fontWeight: 600, cursor: 'pointer', height: '28px' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', border: `1px solid ${currentShowLegend ? 'var(--srt-primary-500)' : '#e2e8f0'}`, borderRadius: '6px', background: currentShowLegend ? 'var(--srt-primary-50)' : '#ffffff', color: currentShowLegend ? 'var(--srt-primary-600)' : '#64748b', fontSize: '12px', fontWeight: 600, cursor: 'pointer', height: '28px' }}
                 >
                     <LayoutList size={14} style={{ flexShrink: 0 }} />
                     <span style={{ whiteSpace: 'nowrap' }}>범례</span>
@@ -863,7 +863,7 @@ const AiReportAnalysisStep = ({
                     <button
                         onClick={(e) => { e.stopPropagation(); toggleDropdown('options'); }}
                         title="차트 옵션"
-                        style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', fontSize: '12px', fontWeight: 600, border: `1px solid ${activeDropdown === 'options' ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px', background: activeDropdown === 'options' ? '#eff6ff' : '#ffffff', color: activeDropdown === 'options' ? '#2563eb' : '#64748b', cursor: 'pointer', height: '28px' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', fontSize: '12px', fontWeight: 600, border: `1px solid ${activeDropdown === 'options' ? 'var(--srt-primary-500)' : '#e2e8f0'}`, borderRadius: '6px', background: activeDropdown === 'options' ? 'var(--srt-primary-50)' : '#ffffff', color: activeDropdown === 'options' ? 'var(--srt-primary-600)' : '#64748b', cursor: 'pointer', height: '28px' }}
                     >
                         <Settings size={14} style={{ flexShrink: 0 }} />
                         <span style={{ whiteSpace: 'nowrap' }}>옵션</span>
@@ -876,13 +876,13 @@ const AiReportAnalysisStep = ({
                                 <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '6px', padding: '4px' }}>
                                     <div
                                         onClick={(e) => { e.stopPropagation(); setChartDataTypeMap(prev => ({ ...prev, [evidenceKey]: 'frequency' })); }}
-                                        style={{ flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px', fontWeight: currentChartDataType === 'frequency' ? 700 : 500, color: currentChartDataType === 'frequency' ? '#2563eb' : '#64748b', background: currentChartDataType === 'frequency' ? '#ffffff' : 'transparent', borderRadius: '4px', cursor: 'pointer', boxShadow: currentChartDataType === 'frequency' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}
+                                        style={{ flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px', fontWeight: currentChartDataType === 'frequency' ? 700 : 500, color: currentChartDataType === 'frequency' ? 'var(--srt-primary-600)' : '#64748b', background: currentChartDataType === 'frequency' ? '#ffffff' : 'transparent', borderRadius: '4px', cursor: 'pointer', boxShadow: currentChartDataType === 'frequency' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}
                                     >
                                         빈도
                                     </div>
                                     <div
                                         onClick={(e) => { e.stopPropagation(); setChartDataTypeMap(prev => ({ ...prev, [evidenceKey]: 'percentage' })); }}
-                                        style={{ flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px', fontWeight: currentChartDataType === 'percentage' ? 700 : 500, color: currentChartDataType === 'percentage' ? '#2563eb' : '#64748b', background: currentChartDataType === 'percentage' ? '#ffffff' : 'transparent', borderRadius: '4px', cursor: 'pointer', boxShadow: currentChartDataType === 'percentage' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}
+                                        style={{ flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px', fontWeight: currentChartDataType === 'percentage' ? 700 : 500, color: currentChartDataType === 'percentage' ? 'var(--srt-primary-600)' : '#64748b', background: currentChartDataType === 'percentage' ? '#ffffff' : 'transparent', borderRadius: '4px', cursor: 'pointer', boxShadow: currentChartDataType === 'percentage' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}
                                     >
                                         비율
                                     </div>
@@ -896,7 +896,7 @@ const AiReportAnalysisStep = ({
                                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '4px 0' }}
                                 >
                                     <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>값 표출하기</span>
-                                    <div style={{ width: '36px', height: '20px', background: currentShowChartValues ? '#3b82f6' : '#e2e8f0', borderRadius: '20px', position: 'relative', flexShrink: 0, transition: 'background 0.2s' }}>
+                                    <div style={{ width: '36px', height: '20px', background: currentShowChartValues ? 'var(--srt-primary-500)' : '#e2e8f0', borderRadius: '20px', position: 'relative', flexShrink: 0, transition: 'background 0.2s' }}>
                                         <div style={{ position: 'absolute', top: '2px', left: currentShowChartValues ? '18px' : '2px', width: '16px', height: '16px', background: '#ffffff', borderRadius: '50%', transition: 'left 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }} />
                                     </div>
                                 </div>
@@ -906,7 +906,7 @@ const AiReportAnalysisStep = ({
                                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '4px 0', marginTop: '8px' }}
                                     >
                                         <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>% 표출</span>
-                                        <div style={{ width: '36px', height: '20px', background: currentShowPercentSymbol ? '#3b82f6' : '#e2e8f0', borderRadius: '20px', position: 'relative', flexShrink: 0, transition: 'background 0.2s' }}>
+                                        <div style={{ width: '36px', height: '20px', background: currentShowPercentSymbol ? 'var(--srt-primary-500)' : '#e2e8f0', borderRadius: '20px', position: 'relative', flexShrink: 0, transition: 'background 0.2s' }}>
                                             <div style={{ position: 'absolute', top: '2px', left: currentShowPercentSymbol ? '18px' : '2px', width: '16px', height: '16px', background: '#ffffff', borderRadius: '50%', transition: 'left 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }} />
                                         </div>
                                     </div>
@@ -923,7 +923,7 @@ const AiReportAnalysisStep = ({
                     <button
                         onClick={(e) => { e.stopPropagation(); toggleDropdown('chartType'); }}
                         title="차트 타입 변경"
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', border: `1px solid ${activeDropdown === 'chartType' ? '#3b82f6' : '#cbd5e1'}`, borderRadius: '6px', background: activeDropdown === 'chartType' ? '#eff6ff' : '#ffffff', color: activeDropdown === 'chartType' ? '#2563eb' : '#64748b', cursor: 'pointer' }}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', border: `1px solid ${activeDropdown === 'chartType' ? 'var(--srt-primary-500)' : '#cbd5e1'}`, borderRadius: '6px', background: activeDropdown === 'chartType' ? 'var(--srt-primary-50)' : '#ffffff', color: activeDropdown === 'chartType' ? 'var(--srt-primary-600)' : '#64748b', cursor: 'pointer' }}
                     >
                         {CHART_TYPE_OPTIONS.find(opt => opt.id === currentChartMode)?.icon || <BarChart2 size={16} />}
                     </button>
@@ -940,8 +940,8 @@ const AiReportAnalysisStep = ({
                                     }}
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '8px 14px', fontSize: '13px', border: 'none',
-                                        background: currentChartMode === option.id ? '#eff6ff' : 'transparent',
-                                        color: currentChartMode === option.id ? '#2563eb' : '#334155',
+                                        background: currentChartMode === option.id ? 'var(--srt-primary-50)' : 'transparent',
+                                        color: currentChartMode === option.id ? 'var(--srt-primary-600)' : '#334155',
                                         fontWeight: currentChartMode === option.id ? 700 : 500,
                                         cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s'
                                     }}
@@ -1119,7 +1119,7 @@ const AiReportAnalysisStep = ({
                                 borderRadius: '6px',
                                 fontSize: '12px',
                                 fontWeight: activeTab === 'table' ? 700 : 500,
-                                color: activeTab === 'table' ? '#2563eb' : '#64748b',
+                                color: activeTab === 'table' ? 'var(--srt-primary-600)' : '#64748b',
                                 background: activeTab === 'table' ? '#ffffff' : 'transparent',
                                 border: 'none',
                                 boxShadow: activeTab === 'table' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
@@ -1141,7 +1141,7 @@ const AiReportAnalysisStep = ({
                                 borderRadius: '6px',
                                 fontSize: '12px',
                                 fontWeight: activeTab === 'chart' ? 700 : 500,
-                                color: activeTab === 'chart' ? '#2563eb' : '#64748b',
+                                color: activeTab === 'chart' ? 'var(--srt-primary-600)' : '#64748b',
                                 background: activeTab === 'chart' ? '#ffffff' : 'transparent',
                                 border: 'none',
                                 boxShadow: activeTab === 'chart' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
@@ -1193,7 +1193,7 @@ const AiReportAnalysisStep = ({
                     const cleaned = line.replace(/^[-*•\s]+/, '').trim();
                     return (
                         <div key={lIdx} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-                            <span style={{ color: '#2563eb', fontSize: '11px', marginTop: '3px', flexShrink: 0 }}>•</span>
+                            <span style={{ color: 'var(--srt-primary-600)', fontSize: '11px', marginTop: '3px', flexShrink: 0 }}>•</span>
                             <span style={{ fontSize: '12px', color: '#334155', lineHeight: '1.5', flex: 1, wordBreak: 'keep-all' }}>
                                 {cleaned}
                             </span>
@@ -1227,9 +1227,9 @@ const AiReportAnalysisStep = ({
                             }}
                             title={`[${displayLabel}] (${getStubSpss(stub)}) 클릭하여 해당 문항 근거 상세 보기`}
                             style={{
-                                background: isSelectedStub ? '#2563eb' : '#eff6ff',
-                                color: isSelectedStub ? '#ffffff' : '#1d4ed8',
-                                border: `1px solid ${isSelectedStub ? '#2563eb' : '#bfdbfe'}`,
+                                background: isSelectedStub ? 'var(--srt-primary-600)' : 'var(--srt-primary-50)',
+                                color: isSelectedStub ? '#ffffff' : 'var(--srt-primary-700)',
+                                border: `1px solid ${isSelectedStub ? 'var(--srt-primary-600)' : 'var(--srt-primary-200)'}`,
                                 borderRadius: '5px',
                                 padding: '4px 10px',
                                 fontSize: '13px',
@@ -1240,7 +1240,7 @@ const AiReportAnalysisStep = ({
                                 gap: '4px',
                                 lineHeight: 1.3,
                                 transition: 'all 0.15s ease-in-out',
-                                boxShadow: isSelectedStub ? '0 2px 4px rgba(37, 99, 235, 0.25)' : '0 1px 2px rgba(37, 99, 235, 0.06)',
+                                boxShadow: isSelectedStub ? '0 2px 4px color-mix(in srgb, var(--srt-primary-600) 25%, transparent)' : '0 1px 2px color-mix(in srgb, var(--srt-primary-600) 6%, transparent)',
                                 maxWidth: '230px'
                             }}
                         >
@@ -1326,7 +1326,7 @@ const AiReportAnalysisStep = ({
                                 style={{
                                     background: 'transparent',
                                     border: 'none',
-                                    color: '#2563eb',
+                                    color: 'var(--srt-primary-600)',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -1558,9 +1558,9 @@ const AiReportAnalysisStep = ({
                                 <button
                                     onClick={() => setActiveSubTab('l1')}
                                     style={{
-                                        background: activeSubTab === 'l1' ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' : '#f8fafc',
-                                        color: activeSubTab === 'l1' ? '#1d4ed8' : '#475569',
-                                        border: activeSubTab === 'l1' ? '1.5px solid #2563eb' : '1px solid #e2e8f0',
+                                        background: activeSubTab === 'l1' ? 'linear-gradient(135deg, var(--srt-primary-50) 0%, var(--srt-primary-100) 100%)' : '#f8fafc',
+                                        color: activeSubTab === 'l1' ? 'var(--srt-primary-700)' : '#475569',
+                                        border: activeSubTab === 'l1' ? '1.5px solid var(--srt-primary-600)' : '1px solid #e2e8f0',
                                         borderRadius: '20px',
                                         padding: '3px 12px',
                                         fontSize: '11.5px',
@@ -1569,7 +1569,7 @@ const AiReportAnalysisStep = ({
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: '6px',
-                                        boxShadow: activeSubTab === 'l1' ? '0 2px 8px rgba(37, 99, 235, 0.15)' : 'none',
+                                        boxShadow: activeSubTab === 'l1' ? '0 2px 8px color-mix(in srgb, var(--srt-primary-600) 15%, transparent)' : 'none',
                                         transition: 'all 0.15s ease',
                                         outline: 'none'
                                     }}
@@ -1642,7 +1642,7 @@ const AiReportAnalysisStep = ({
                             style={{
                                 background: 'transparent',
                                 border: 'none',
-                                color: '#2563eb',
+                                color: 'var(--srt-primary-600)',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -1909,7 +1909,7 @@ const AiReportAnalysisStep = ({
                                             </span>
                                             <div style={{ display: 'flex', gap: '2px' }}>
                                                 <button
-                                                    style={{ background: 'transparent', border: 'none', color: activeCategoryIndex === -1 ? '#cbd5e1' : '#2563eb', cursor: activeCategoryIndex === -1 ? 'default' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
+                                                    style={{ background: 'transparent', border: 'none', color: activeCategoryIndex === -1 ? '#cbd5e1' : 'var(--srt-primary-600)', cursor: activeCategoryIndex === -1 ? 'default' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
                                                     disabled={activeCategoryIndex === -1}
                                                     onClick={() => setActiveCategoryIndex(-1)}
                                                     title="처음으로"
@@ -1917,7 +1917,7 @@ const AiReportAnalysisStep = ({
                                                     <ChevronsLeft size={16} />
                                                 </button>
                                                 <button
-                                                    style={{ background: 'transparent', border: 'none', color: activeCategoryIndex === -1 ? '#cbd5e1' : '#2563eb', cursor: activeCategoryIndex === -1 ? 'default' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
+                                                    style={{ background: 'transparent', border: 'none', color: activeCategoryIndex === -1 ? '#cbd5e1' : 'var(--srt-primary-600)', cursor: activeCategoryIndex === -1 ? 'default' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
                                                     disabled={activeCategoryIndex === -1}
                                                     onClick={() => setActiveCategoryIndex(prev => prev === 0 ? -1 : prev - 1)}
                                                     title="이전"
@@ -1946,7 +1946,7 @@ const AiReportAnalysisStep = ({
                                                 ref={activeCategoryIndex === -1 ? activeTabRef : null}
                                                 onClick={() => setActiveCategoryIndex(-1)}
                                                 style={{
-                                                    background: activeCategoryIndex === -1 ? '#2563eb' : '#f1f5f9',
+                                                    background: activeCategoryIndex === -1 ? 'var(--srt-primary-600)' : '#f1f5f9',
                                                     color: activeCategoryIndex === -1 ? '#ffffff' : '#475569',
                                                     border: 'none',
                                                     borderRadius: '6px',
@@ -1969,7 +1969,7 @@ const AiReportAnalysisStep = ({
                                                         ref={isActive ? activeTabRef : null}
                                                         onClick={() => setActiveCategoryIndex(idx)}
                                                         style={{
-                                                            background: isActive ? '#2563eb' : '#f1f5f9',
+                                                            background: isActive ? 'var(--srt-primary-600)' : '#f1f5f9',
                                                             color: isActive ? '#ffffff' : '#475569',
                                                             border: 'none',
                                                             borderRadius: '6px',
@@ -1992,7 +1992,7 @@ const AiReportAnalysisStep = ({
                                         {/* Right Controls (>, >>) */}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
                                             <button
-                                                style={{ background: 'transparent', border: 'none', color: activeCategoryIndex === l2Categories.length - 1 ? '#cbd5e1' : '#2563eb', cursor: activeCategoryIndex === l2Categories.length - 1 ? 'default' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
+                                                style={{ background: 'transparent', border: 'none', color: activeCategoryIndex === l2Categories.length - 1 ? '#cbd5e1' : 'var(--srt-primary-600)', cursor: activeCategoryIndex === l2Categories.length - 1 ? 'default' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
                                                 disabled={activeCategoryIndex === l2Categories.length - 1}
                                                 onClick={() => setActiveCategoryIndex(prev => prev === -1 ? 0 : prev + 1)}
                                                 title="다음"
@@ -2000,7 +2000,7 @@ const AiReportAnalysisStep = ({
                                                 <ChevronRight size={16} />
                                             </button>
                                             <button
-                                                style={{ background: 'transparent', border: 'none', color: activeCategoryIndex === l2Categories.length - 1 ? '#cbd5e1' : '#2563eb', cursor: activeCategoryIndex === l2Categories.length - 1 ? 'default' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
+                                                style={{ background: 'transparent', border: 'none', color: activeCategoryIndex === l2Categories.length - 1 ? '#cbd5e1' : 'var(--srt-primary-600)', cursor: activeCategoryIndex === l2Categories.length - 1 ? 'default' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
                                                 disabled={activeCategoryIndex === l2Categories.length - 1}
                                                 onClick={() => setActiveCategoryIndex(l2Categories.length - 1)}
                                                 title="끝으로"
@@ -2057,8 +2057,8 @@ const AiReportAnalysisStep = ({
                                                                 boxSizing: 'border-box'
                                                             }}
                                                             onMouseEnter={(e) => {
-                                                                e.currentTarget.style.borderColor = '#2563eb';
-                                                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.08)';
+                                                                e.currentTarget.style.borderColor = 'var(--srt-primary-600)';
+                                                                e.currentTarget.style.boxShadow = '0 4px 12px color-mix(in srgb, var(--srt-primary-600) 8%, transparent)';
                                                             }}
                                                             onMouseLeave={(e) => {
                                                                 e.currentTarget.style.borderColor = '#cbd5e1';
@@ -2069,7 +2069,7 @@ const AiReportAnalysisStep = ({
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: 0 }}>
                                                                     <span style={{
-                                                                        color: '#2563eb',
+                                                                        color: 'var(--srt-primary-600)',
                                                                         fontSize: '11.5px',
                                                                         fontWeight: 800,
                                                                         flexShrink: 0
@@ -2221,7 +2221,7 @@ const AiReportAnalysisStep = ({
                                                         {/* Category Section Title (Only in 전체보기 mode) */}
                                                         {activeCategoryIndex === -1 && (
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '8px', borderBottom: '1.5px solid #cbd5e1', marginTop: idx > 0 ? '28px' : '0' }}>
-                                                                <span style={{ color: '#2563eb', fontSize: '11px', fontWeight: 800, backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '2px 8px', lineHeight: '1.2' }}>
+                                                                <span style={{ color: 'var(--srt-primary-600)', fontSize: '11px', fontWeight: 800, backgroundColor: 'var(--srt-primary-50)', border: '1px solid var(--srt-primary-200)', borderRadius: '12px', padding: '2px 8px', lineHeight: '1.2' }}>
                                                                     카테고리 {idx + 1}
                                                                 </span>
                                                                 <h3 style={{ fontSize: '14.5px', fontWeight: 800, color: '#1e293b', margin: 0 }}>
@@ -2237,8 +2237,8 @@ const AiReportAnalysisStep = ({
                                                                 <div className="ai-card" style={{ padding: '14px 18px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px', order: 1, minWidth: 0, width: '100%', height: '100%', boxSizing: 'border-box', boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
                                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid #e2e8f0', paddingBottom: '8px' }}>
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                            <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                                <CheckCircle2 size={16} color="#2563eb" />
+                                                                            <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'var(--srt-primary-50)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                                <CheckCircle2 size={16} color="var(--srt-primary-600)" />
                                                                             </div>
                                                                             <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                                                                                 <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
@@ -2322,8 +2322,8 @@ const AiReportAnalysisStep = ({
                                                                         return (
                                                                             <div
                                                                                 style={{
-                                                                                    background: '#eff6ff',
-                                                                                    border: '1px solid #dbeafe',
+                                                                                    background: 'var(--srt-primary-50)',
+                                                                                    border: '1px solid var(--srt-primary-100)',
                                                                                     borderRadius: '6px',
                                                                                     padding: '10px 12px',
                                                                                     display: 'flex',
@@ -2333,8 +2333,8 @@ const AiReportAnalysisStep = ({
                                                                             >
                                                                                 <span style={{
                                                                                     background: '#ffffff',
-                                                                                    color: '#2563eb',
-                                                                                    border: '1px solid #bfdbfe',
+                                                                                    color: 'var(--srt-primary-600)',
+                                                                                    border: '1px solid var(--srt-primary-200)',
                                                                                     borderRadius: '4px',
                                                                                     padding: '1px 6px',
                                                                                     fontSize: '10px',
@@ -2343,7 +2343,7 @@ const AiReportAnalysisStep = ({
                                                                                 }}>
                                                                                     사전 가설
                                                                                 </span>
-                                                                                <span style={{ fontSize: '12px', color: '#1e3a8a', lineHeight: '1.5' }}>
+                                                                                <span style={{ fontSize: '12px', color: 'var(--srt-primary-900)', lineHeight: '1.5' }}>
                                                                                     &quot;{hypothesisText}&quot;
                                                                                 </span>
                                                                             </div>
@@ -2361,7 +2361,7 @@ const AiReportAnalysisStep = ({
                                                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '2px 0' }}>
                                                                                 {hypothesisResult.details.map((dt, dtIdx) => (
                                                                                     <div key={dtIdx} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-                                                                                        <span style={{ color: '#2563eb', fontSize: '11px', marginTop: '3px', flexShrink: 0 }}>•</span>
+                                                                                        <span style={{ color: 'var(--srt-primary-600)', fontSize: '11px', marginTop: '3px', flexShrink: 0 }}>•</span>
                                                                                         <span style={{ fontSize: '12px', color: '#334155', lineHeight: '1.55', flex: 1, wordBreak: 'keep-all' }}>
                                                                                             {dt}
                                                                                         </span>
@@ -2416,8 +2416,8 @@ const AiReportAnalysisStep = ({
                                                                 <div className="ai-card" style={{ padding: '14px 18px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px', order: 3, minWidth: 0, width: '100%', height: '100%', boxSizing: 'border-box', boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1.5px solid #e2e8f0', paddingBottom: '8px' }}>
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                            <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                                <BarChart2 size={16} color="#2563eb" />
+                                                                            <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'var(--srt-primary-50)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                                <BarChart2 size={16} color="var(--srt-primary-600)" />
                                                                             </div>
                                                                             <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                                                                                 <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
@@ -2443,15 +2443,15 @@ const AiReportAnalysisStep = ({
                                                                                             padding: '14px 16px',
                                                                                             borderRadius: '10px',
                                                                                             background: '#ffffff',
-                                                                                            border: isSelected ? '1.5px solid #3b82f6' : '1px solid #e2e8f0',
-                                                                                            boxShadow: isSelected ? '0 4px 12px rgba(59, 130, 246, 0.12)' : '0 2px 6px rgba(15, 23, 42, 0.04)',
+                                                                                            border: isSelected ? '1.5px solid var(--srt-primary-500)' : '1px solid #e2e8f0',
+                                                                                            boxShadow: isSelected ? '0 4px 12px color-mix(in srgb, var(--srt-primary-500) 12%, transparent)' : '0 2px 6px rgba(15, 23, 42, 0.04)',
                                                                                             transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
                                                                                         }}
                                                                                     >
                                                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                                                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
                                                                                                 <span style={{
-                                                                                                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                                                                                                    background: 'linear-gradient(135deg, var(--srt-primary-500) 0%, var(--srt-primary-700) 100%)',
                                                                                                     color: '#ffffff',
                                                                                                     fontWeight: 700,
                                                                                                     width: '22px',
@@ -2462,7 +2462,7 @@ const AiReportAnalysisStep = ({
                                                                                                     justifyContent: 'center',
                                                                                                     fontSize: '11px',
                                                                                                     flexShrink: 0,
-                                                                                                    boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)'
+                                                                                                    boxShadow: '0 2px 4px color-mix(in srgb, var(--srt-primary-600) 25%, transparent)'
                                                                                                 }}>
                                                                                                     {fIdx + 1}
                                                                                                 </span>
@@ -2474,9 +2474,9 @@ const AiReportAnalysisStep = ({
                                                                                                 <button
                                                                                                     onClick={() => handleEvidenceClick(find, evidenceKey, idx, '핵심 정량 분석', '핵심 분석 근거')}
                                                                                                     style={{
-                                                                                                        background: isSelected ? '#2563eb' : '#ffffff',
-                                                                                                        color: isSelected ? '#ffffff' : '#2563eb',
-                                                                                                        border: `1px solid ${isSelected ? '#2563eb' : '#bfdbfe'}`,
+                                                                                                        background: isSelected ? 'var(--srt-primary-600)' : '#ffffff',
+                                                                                                        color: isSelected ? '#ffffff' : 'var(--srt-primary-600)',
+                                                                                                        border: `1px solid ${isSelected ? 'var(--srt-primary-600)' : 'var(--srt-primary-200)'}`,
                                                                                                         borderRadius: '14px',
                                                                                                         padding: '5px 12px',
                                                                                                         fontSize: '12px',
@@ -2485,11 +2485,11 @@ const AiReportAnalysisStep = ({
                                                                                                         display: 'inline-flex',
                                                                                                         alignItems: 'center',
                                                                                                         gap: '4px',
-                                                                                                        boxShadow: '0 1px 2px rgba(37, 99, 235, 0.05)',
+                                                                                                        boxShadow: '0 1px 2px color-mix(in srgb, var(--srt-primary-600) 5%, transparent)',
                                                                                                         transition: 'all 0.15s ease'
                                                                                                     }}
                                                                                                 >
-                                                                                                    <Search size={11} color={isSelected ? '#ffffff' : '#2563eb'} />
+                                                                                                    <Search size={11} color={isSelected ? '#ffffff' : 'var(--srt-primary-600)'} />
                                                                                                     <span style={{ fontSize: '12px', lineHeight: 1 }}>증거</span>
                                                                                                 </button>
                                                                                             </div>
@@ -2559,9 +2559,9 @@ const AiReportAnalysisStep = ({
                                                                                                                     }}
                                                                                                                     onMouseEnter={(e) => {
                                                                                                                         e.currentTarget.style.background = '#f8fafc';
-                                                                                                                        e.currentTarget.style.borderColor = '#2563eb';
-                                                                                                                        e.currentTarget.style.color = '#2563eb';
-                                                                                                                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(37, 99, 235, 0.12)';
+                                                                                                                        e.currentTarget.style.borderColor = 'var(--srt-primary-600)';
+                                                                                                                        e.currentTarget.style.color = 'var(--srt-primary-600)';
+                                                                                                                        e.currentTarget.style.boxShadow = '0 2px 4px color-mix(in srgb, var(--srt-primary-600) 12%, transparent)';
                                                                                                                     }}
                                                                                                                     onMouseLeave={(e) => {
                                                                                                                         e.currentTarget.style.background = '#ffffff';
@@ -2570,7 +2570,7 @@ const AiReportAnalysisStep = ({
                                                                                                                         e.currentTarget.style.boxShadow = '0 1px 2px rgba(15, 23, 42, 0.06)';
                                                                                                                     }}
                                                                                                                 >
-                                                                                                                    <ExternalLink size={12} color="#2563eb" />
+                                                                                                                    <ExternalLink size={12} color="var(--srt-primary-600)" />
                                                                                                                     <span style={{ fontSize: '12px', lineHeight: 1.2 }}>핵심 교차표</span>
                                                                                                                 </button>
                                                                                                             )}
@@ -2599,8 +2599,8 @@ const AiReportAnalysisStep = ({
                                                                 <div className="ai-card" style={{ padding: '14px 18px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px', order: 2, minWidth: 0, width: '100%', height: '100%', boxSizing: 'border-box', boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1.5px solid #e2e8f0', paddingBottom: '8px' }}>
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                            <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                                <Target size={16} color="#2563eb" />
+                                                                            <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'var(--srt-primary-50)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                                <Target size={16} color="var(--srt-primary-600)" />
                                                                             </div>
                                                                             <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                                                                                 <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
@@ -2626,8 +2626,8 @@ const AiReportAnalysisStep = ({
                                                                                             padding: '14px 16px',
                                                                                             borderRadius: '10px',
                                                                                             background: '#ffffff',
-                                                                                            border: isSelected ? '1.5px solid #3b82f6' : '1px solid #e2e8f0',
-                                                                                            boxShadow: isSelected ? '0 4px 12px rgba(59, 130, 246, 0.12)' : '0 2px 6px rgba(15, 23, 42, 0.04)',
+                                                                                            border: isSelected ? '1.5px solid var(--srt-primary-500)' : '1px solid #e2e8f0',
+                                                                                            boxShadow: isSelected ? '0 4px 12px color-mix(in srgb, var(--srt-primary-500) 12%, transparent)' : '0 2px 6px rgba(15, 23, 42, 0.04)',
                                                                                             transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
                                                                                         }}
                                                                                     >
@@ -2653,9 +2653,9 @@ const AiReportAnalysisStep = ({
                                                                                                         border = '1px solid #d8b4fe';
                                                                                                     } else if (zoneUpper.includes('EASY')) {
                                                                                                         koreanText = '단기전략과제';
-                                                                                                        bg = '#eff6ff';
-                                                                                                        color = '#1e40af';
-                                                                                                        border = '1px solid #93c5fd';
+                                                                                                        bg = 'var(--srt-primary-50)';
+                                                                                                        color = 'var(--srt-primary-800)';
+                                                                                                        border = '1px solid var(--srt-primary-300)';
                                                                                                     } else if (zoneUpper.includes('LOW')) {
                                                                                                         koreanText = '낮은우선순위';
                                                                                                         bg = '#f3f4f6';
@@ -2691,9 +2691,9 @@ const AiReportAnalysisStep = ({
                                                                                                 <button
                                                                                                     onClick={() => handleEvidenceClick(plan, evidenceKey, idx, '전략적 시사점 & 액션 플랜', '전략 과제 근거')}
                                                                                                     style={{
-                                                                                                        background: isSelected ? '#2563eb' : '#ffffff',
-                                                                                                        color: isSelected ? '#ffffff' : '#2563eb',
-                                                                                                        border: `1px solid ${isSelected ? '#2563eb' : '#bfdbfe'}`,
+                                                                                                        background: isSelected ? 'var(--srt-primary-600)' : '#ffffff',
+                                                                                                        color: isSelected ? '#ffffff' : 'var(--srt-primary-600)',
+                                                                                                        border: `1px solid ${isSelected ? 'var(--srt-primary-600)' : 'var(--srt-primary-200)'}`,
                                                                                                         borderRadius: '14px',
                                                                                                         padding: '5px 12px',
                                                                                                         fontSize: '12px',
@@ -2702,11 +2702,11 @@ const AiReportAnalysisStep = ({
                                                                                                         display: 'inline-flex',
                                                                                                         alignItems: 'center',
                                                                                                         gap: '4px',
-                                                                                                        boxShadow: '0 1px 2px rgba(37, 99, 235, 0.05)',
+                                                                                                        boxShadow: '0 1px 2px color-mix(in srgb, var(--srt-primary-600) 5%, transparent)',
                                                                                                         transition: 'all 0.15s ease'
                                                                                                     }}
                                                                                                 >
-                                                                                                    <Search size={11} color={isSelected ? '#ffffff' : '#2563eb'} />
+                                                                                                    <Search size={11} color={isSelected ? '#ffffff' : 'var(--srt-primary-600)'} />
                                                                                                     <span style={{ fontSize: '12px', lineHeight: 1 }}>증거</span>
                                                                                                 </button>
                                                                                             </div>
@@ -2776,9 +2776,9 @@ const AiReportAnalysisStep = ({
                                                                                                                     }}
                                                                                                                     onMouseEnter={(e) => {
                                                                                                                         e.currentTarget.style.background = '#f8fafc';
-                                                                                                                        e.currentTarget.style.borderColor = '#2563eb';
-                                                                                                                        e.currentTarget.style.color = '#2563eb';
-                                                                                                                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(37, 99, 235, 0.12)';
+                                                                                                                        e.currentTarget.style.borderColor = 'var(--srt-primary-600)';
+                                                                                                                        e.currentTarget.style.color = 'var(--srt-primary-600)';
+                                                                                                                        e.currentTarget.style.boxShadow = '0 2px 4px color-mix(in srgb, var(--srt-primary-600) 12%, transparent)';
                                                                                                                     }}
                                                                                                                     onMouseLeave={(e) => {
                                                                                                                         e.currentTarget.style.background = '#ffffff';
@@ -2787,7 +2787,7 @@ const AiReportAnalysisStep = ({
                                                                                                                         e.currentTarget.style.boxShadow = '0 1px 2px rgba(15, 23, 42, 0.06)';
                                                                                                                     }}
                                                                                                                 >
-                                                                                                                    <ExternalLink size={12} color="#2563eb" />
+                                                                                                                    <ExternalLink size={12} color="var(--srt-primary-600)" />
                                                                                                                     <span style={{ fontSize: '12px', lineHeight: 1.2 }}>핵심 교차표</span>
                                                                                                                 </button>
                                                                                                             )}
@@ -2813,8 +2813,8 @@ const AiReportAnalysisStep = ({
                                                                 <div className="ai-card" style={{ padding: '14px 18px', border: '1.5px solid #cbd5e1', borderRadius: '12px', background: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px', order: 4, minWidth: 0, width: '100%', height: '100%', boxSizing: 'border-box', boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)' }}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1.5px solid #e2e8f0', paddingBottom: '8px' }}>
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                            <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                                <Users size={16} color="#2563eb" />
+                                                                            <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'var(--srt-primary-50)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                                <Users size={16} color="var(--srt-primary-600)" />
                                                                             </div>
                                                                             <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                                                                                 <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
@@ -2840,15 +2840,15 @@ const AiReportAnalysisStep = ({
                                                                                             padding: '14px 16px',
                                                                                             borderRadius: '10px',
                                                                                             background: '#ffffff',
-                                                                                            border: isSelected ? '1.5px solid #3b82f6' : '1px solid #e2e8f0',
-                                                                                            boxShadow: isSelected ? '0 4px 12px rgba(59, 130, 246, 0.12)' : '0 2px 6px rgba(15, 23, 42, 0.04)',
+                                                                                            border: isSelected ? '1.5px solid var(--srt-primary-500)' : '1px solid #e2e8f0',
+                                                                                            boxShadow: isSelected ? '0 4px 12px color-mix(in srgb, var(--srt-primary-500) 12%, transparent)' : '0 2px 6px rgba(15, 23, 42, 0.04)',
                                                                                             transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
                                                                                         }}
                                                                                     >
                                                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                                                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
                                                                                                 <span style={{
-                                                                                                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                                                                                                    background: 'linear-gradient(135deg, var(--srt-primary-500) 0%, var(--srt-primary-700) 100%)',
                                                                                                     color: '#ffffff',
                                                                                                     fontWeight: 700,
                                                                                                     width: '22px',
@@ -2859,7 +2859,7 @@ const AiReportAnalysisStep = ({
                                                                                                     justifyContent: 'center',
                                                                                                     fontSize: '11px',
                                                                                                     flexShrink: 0,
-                                                                                                    boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)'
+                                                                                                    boxShadow: '0 2px 4px color-mix(in srgb, var(--srt-primary-600) 25%, transparent)'
                                                                                                 }}>
                                                                                                     {pIdx + 1}
                                                                                                 </span>
@@ -2872,9 +2872,9 @@ const AiReportAnalysisStep = ({
                                                                                                 <button
                                                                                                     onClick={() => handleEvidenceClick(prof, evidenceKey, idx, '타겟 세그먼트 프로필', '세그먼트 특징 근거')}
                                                                                                     style={{
-                                                                                                        background: isSelected ? '#2563eb' : '#ffffff',
-                                                                                                        color: isSelected ? '#ffffff' : '#2563eb',
-                                                                                                        border: `1px solid ${isSelected ? '#2563eb' : '#bfdbfe'}`,
+                                                                                                        background: isSelected ? 'var(--srt-primary-600)' : '#ffffff',
+                                                                                                        color: isSelected ? '#ffffff' : 'var(--srt-primary-600)',
+                                                                                                        border: `1px solid ${isSelected ? 'var(--srt-primary-600)' : 'var(--srt-primary-200)'}`,
                                                                                                         borderRadius: '14px',
                                                                                                         padding: '5px 12px',
                                                                                                         fontSize: '12px',
@@ -2883,11 +2883,11 @@ const AiReportAnalysisStep = ({
                                                                                                         display: 'inline-flex',
                                                                                                         alignItems: 'center',
                                                                                                         gap: '4px',
-                                                                                                        boxShadow: '0 1px 2px rgba(37, 99, 235, 0.05)',
+                                                                                                        boxShadow: '0 1px 2px color-mix(in srgb, var(--srt-primary-600) 5%, transparent)',
                                                                                                         transition: 'all 0.15s ease'
                                                                                                     }}
                                                                                                 >
-                                                                                                    <Search size={11} color={isSelected ? '#ffffff' : '#2563eb'} />
+                                                                                                    <Search size={11} color={isSelected ? '#ffffff' : 'var(--srt-primary-600)'} />
                                                                                                     <span style={{ fontSize: '12px', lineHeight: 1 }}>증거</span>
                                                                                                 </button>
                                                                                             </div>
@@ -2972,9 +2972,9 @@ const AiReportAnalysisStep = ({
                                                                                                                     }}
                                                                                                                     onMouseEnter={(e) => {
                                                                                                                         e.currentTarget.style.background = '#f8fafc';
-                                                                                                                        e.currentTarget.style.borderColor = '#2563eb';
-                                                                                                                        e.currentTarget.style.color = '#2563eb';
-                                                                                                                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(37, 99, 235, 0.12)';
+                                                                                                                        e.currentTarget.style.borderColor = 'var(--srt-primary-600)';
+                                                                                                                        e.currentTarget.style.color = 'var(--srt-primary-600)';
+                                                                                                                        e.currentTarget.style.boxShadow = '0 2px 4px color-mix(in srgb, var(--srt-primary-600) 12%, transparent)';
                                                                                                                     }}
                                                                                                                     onMouseLeave={(e) => {
                                                                                                                         e.currentTarget.style.background = '#ffffff';
@@ -2983,7 +2983,7 @@ const AiReportAnalysisStep = ({
                                                                                                                         e.currentTarget.style.boxShadow = '0 1px 2px rgba(15, 23, 42, 0.06)';
                                                                                                                     }}
                                                                                                                 >
-                                                                                                                    <ExternalLink size={12} color="#2563eb" />
+                                                                                                                    <ExternalLink size={12} color="var(--srt-primary-600)" />
                                                                                                                     <span style={{ fontSize: '12px', lineHeight: 1.2 }}>핵심 교차표</span>
                                                                                                                 </button>
                                                                                                             )}

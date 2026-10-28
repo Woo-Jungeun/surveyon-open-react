@@ -127,7 +127,7 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
                         <button onClick={onClose} className="close-btn-cbp"><X size={20} /></button>
                     </div>
                 </div>
-                <div className="filter-popup-container-cbp" style={{ display: 'flex', flexDirection: 'column', padding: '16px', gap: '16px', background: '#f0f7ff', boxSizing: 'border-box', flex: 1, minHeight: 0 }}>
+                <div className="filter-popup-container-cbp" style={{ display: 'flex', flexDirection: 'column', padding: '16px', gap: '16px', background: 'var(--srt-primary-25)', boxSizing: 'border-box', flex: 1, minHeight: 0 }}>
 
                     {/* 상단 컨트롤 패널 */}
                     <div style={{
@@ -143,9 +143,9 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
                                 placeholder="G3=1,2는 소가족이고 G3 그 외 보기는 대가족으로 구분해줘."
                                 className="ai-prompt-textarea"
                                 style={{
-                                    width: '100%', height: '84px', padding: '12px', border: '1px solid #3b82f6',
+                                    width: '100%', height: '84px', padding: '12px', border: '1px solid var(--srt-primary-500)',
                                     borderRadius: '4px', fontSize: '13px', fontFamily: 'inherit', outline: 'none', resize: 'none',
-                                    lineHeight: '1.5', color: '#1e293b', boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.08)'
+                                    lineHeight: '1.5', color: '#1e293b', boxShadow: '0 0 0 3px color-mix(in srgb, var(--srt-primary-500) 8%, transparent)'
                                 }}
                             />
                         </div>
@@ -157,12 +157,12 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
                                 disabled={isGenerating}
                                 style={{
                                     width: '100%', height: '36px', border: 'none', borderRadius: '4px',
-                                    background: '#2563eb', color: '#ffffff', fontSize: '13px', fontWeight: 600,
+                                    background: 'var(--srt-primary-600)', color: '#ffffff', fontSize: '13px', fontWeight: 600,
                                     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     gap: '6px', transition: 'background 0.15s', marginTop: '19px'
                                 }}
-                                onMouseOver={(e) => { if (!isGenerating) e.currentTarget.style.background = '#1d4ed8'; }}
-                                onMouseOut={(e) => { if (!isGenerating) e.currentTarget.style.background = '#2563eb'; }}
+                                onMouseOver={(e) => { if (!isGenerating) e.currentTarget.style.background = 'var(--srt-primary-700)'; }}
+                                onMouseOut={(e) => { if (!isGenerating) e.currentTarget.style.background = 'var(--srt-primary-600)'; }}
                             >
                                 {isGenerating ? (
                                     <>
@@ -184,12 +184,12 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
                             <button
                                 onClick={handleAddRow}
                                 style={{
-                                    height: '28px', padding: '0 12px', border: '1px solid #3b82f6', borderRadius: '4px',
-                                    background: '#eff6ff', color: '#1d4ed8', fontSize: '12px', fontWeight: 600,
+                                    height: '28px', padding: '0 12px', border: '1px solid var(--srt-primary-500)', borderRadius: '4px',
+                                    background: 'var(--srt-primary-50)', color: 'var(--srt-primary-700)', fontSize: '12px', fontWeight: 600,
                                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s'
                                 }}
-                                onMouseOver={(e) => { e.currentTarget.style.background = '#dbeafe'; }}
-                                onMouseOut={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
+                                onMouseOver={(e) => { e.currentTarget.style.background = 'var(--srt-primary-100)'; }}
+                                onMouseOut={(e) => { e.currentTarget.style.background = 'var(--srt-primary-50)'; }}
                             >
                                 <Plus size={12} /> 행 추가
                             </button>
@@ -259,7 +259,7 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
                                                     style={{
                                                         flex: 1, height: '32px', border: '1px solid #cbd5e1', background: '#ffffff',
                                                         borderRadius: '4px', fontSize: '13px', outline: 'none', padding: '0 12px',
-                                                        fontFamily: 'Consolas, Monaco, monospace', color: '#0978eb'
+                                                        fontFamily: 'Consolas, Monaco, monospace', color: 'var(--srt-primary-600)'
                                                     }}
                                                 />
                                                 {/* 삭제 버튼 */}

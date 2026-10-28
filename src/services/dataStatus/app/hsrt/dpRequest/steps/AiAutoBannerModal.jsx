@@ -389,7 +389,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                                 display: 'inline-block',
                                 width: '3.5px',
                                 height: '16px',
-                                backgroundColor: '#2563eb',
+                                backgroundColor: 'var(--srt-primary-600)',
                                 borderRadius: '2px'
                             }} />
                             <span style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>AI 자동 배너생성</span>
@@ -513,7 +513,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                                     borderRadius: '6px',
                                     background: isAnalyzing
                                         ? '#94a3b8'
-                                        : (!userInput.trim() ? '#e2e8f0' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'),
+                                        : (!userInput.trim() ? '#e2e8f0' : 'linear-gradient(135deg, var(--srt-primary-500) 0%, var(--srt-primary-700) 100%)'),
                                     color: !isAnalyzing && !userInput.trim() ? '#94a3b8' : '#ffffff',
                                     border: 'none',
                                     fontSize: '13px',
@@ -523,7 +523,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     gap: '6px',
-                                    boxShadow: !isAnalyzing && userInput.trim() ? '0 2px 4px rgba(37, 99, 235, 0.25)' : 'none',
+                                    boxShadow: !isAnalyzing && userInput.trim() ? '0 2px 4px color-mix(in srgb, var(--srt-primary-600) 25%, transparent)' : 'none',
                                     transition: 'all 0.15s'
                                 }}
                             >
@@ -552,7 +552,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                                     2. 생성 결과 검토 & 프리뷰
                                 </span>
                                 <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 600 }}>
-                                    선택: <strong style={{ color: '#2563eb' }}>{Number(selectedCount || 0).toLocaleString()}</strong> / {Number(items.length || 0).toLocaleString()}건
+                                    선택: <strong style={{ color: 'var(--srt-primary-600)' }}>{Number(selectedCount || 0).toLocaleString()}</strong> / {Number(items.length || 0).toLocaleString()}건
                                 </span>
                             </div>
 
@@ -564,8 +564,8 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: '5px',
                                         padding: '4px 10px', fontSize: '11.5px', fontWeight: 600,
-                                        color: '#3b82f6', backgroundColor: '#eff6ff',
-                                        border: '1px solid #bfdbfe', borderRadius: '6px', cursor: 'pointer'
+                                        color: 'var(--srt-primary-500)', backgroundColor: 'var(--srt-primary-50)',
+                                        border: '1px solid var(--srt-primary-200)', borderRadius: '6px', cursor: 'pointer'
                                     }}
                                 >
                                     <RotateCw size={12} className={isRecalculating ? 'spin' : ''} /> N수 재계산
@@ -725,7 +725,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                     backgroundColor: '#ffffff'
                 }}>
                     <div style={{ fontSize: '12.5px', color: '#475569' }}>
-                        {/* 선택된 <strong style={{ color: '#4f46e5' }}>{selectedCount}개</strong> 항목을 배너로 등록합니다. */}
+                        {/* 선택된 <strong style={{ color: 'var(--srt-accent-600)' }}>{selectedCount}개</strong> 항목을 배너로 등록합니다. */}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <button
@@ -743,8 +743,8 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                             disabled={selectedCount === 0}
                             style={{
                                 padding: '8px 16px', fontSize: '13px', fontWeight: 700,
-                                color: selectedCount === 0 ? '#94a3b8' : '#2563eb', backgroundColor: selectedCount === 0 ? '#f1f5f9' : '#eff6ff',
-                                border: `1px solid ${selectedCount === 0 ? '#e2e8f0' : '#93c5fd'}`, borderRadius: '6px', cursor: selectedCount === 0 ? 'default' : 'pointer'
+                                color: selectedCount === 0 ? '#94a3b8' : 'var(--srt-primary-600)', backgroundColor: selectedCount === 0 ? '#f1f5f9' : 'var(--srt-primary-50)',
+                                border: `1px solid ${selectedCount === 0 ? '#e2e8f0' : 'var(--srt-primary-300)'}`, borderRadius: '6px', cursor: selectedCount === 0 ? 'default' : 'pointer'
                             }}
                         >
                             현재 배너에 추가
@@ -754,9 +754,9 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                             disabled={selectedCount === 0}
                             style={{
                                 padding: '8px 18px', fontSize: '13px', fontWeight: 700,
-                                color: selectedCount === 0 ? '#94a3b8' : '#ffffff', backgroundColor: selectedCount === 0 ? '#e2e8f0' : '#2563eb',
+                                color: selectedCount === 0 ? '#94a3b8' : '#ffffff', backgroundColor: selectedCount === 0 ? '#e2e8f0' : 'var(--srt-primary-600)',
                                 border: 'none', borderRadius: '6px', cursor: selectedCount === 0 ? 'default' : 'pointer',
-                                boxShadow: selectedCount === 0 ? 'none' : '0 2px 4px rgba(37, 99, 235, 0.25)'
+                                boxShadow: selectedCount === 0 ? 'none' : '0 2px 4px color-mix(in srgb, var(--srt-primary-600) 25%, transparent)'
                             }}
                         >
                             새 배너로 생성
@@ -788,7 +788,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Sparkles size={18} color="#2563eb" />
+                                    <Sparkles size={18} color="var(--srt-primary-600)" />
                                     <span style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>새 배너 생성</span>
                                 </div>
                                 <button
@@ -821,7 +821,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                                         height: '36px',
                                         padding: '0 12px',
                                         fontSize: '13px',
-                                        border: '1.5px solid #2563eb',
+                                        border: '1.5px solid var(--srt-primary-600)',
                                         borderRadius: '6px',
                                         outline: 'none',
                                         color: '#0f172a',
@@ -847,9 +847,9 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                                     onClick={handleConfirmCreateNew}
                                     style={{
                                         padding: '7px 18px', fontSize: '12.5px', fontWeight: 700,
-                                        color: '#ffffff', backgroundColor: '#2563eb',
+                                        color: '#ffffff', backgroundColor: 'var(--srt-primary-600)',
                                         border: 'none', borderRadius: '6px', cursor: 'pointer',
-                                        boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)'
+                                        boxShadow: '0 2px 4px color-mix(in srgb, var(--srt-primary-600) 25%, transparent)'
                                     }}
                                 >
                                     생성 완료
@@ -889,7 +889,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                     background: transparent !important;
                     border: none !important;
                     cursor: pointer !important;
-                    color: #3b82f6 !important;
+                    color: var(--srt-primary-500) !important;
                     display: inline-flex !important;
                     align-items: center !important;
                     justify-content: center !important;
@@ -899,8 +899,8 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                     transition: color 0.15s ease, background-color 0.15s ease !important;
                 }
                 .dp-ai-plus-btn:hover {
-                    color: #1d4ed8 !important;
-                    background-color: #eff6ff !important;
+                    color: var(--srt-primary-700) !important;
+                    background-color: var(--srt-primary-50) !important;
                 }
                 .dp-ai-plus-btn svg {
                     pointer-events: none;

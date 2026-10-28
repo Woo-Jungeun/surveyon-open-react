@@ -799,7 +799,7 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', pl
                         if (e.key === 'Enter') e.target.blur();
                         if (e.key === 'Escape') { setLocalVal(String(dataItem[field] ?? '')); setIsEditing(false); }
                     }}
-                    style={{ width: '100%', height: '22px', fontSize: '13px', border: '1px solid #3b82f6', outline: 'none', padding: '0 4px', borderRadius: '2px', textAlign: align }}
+                    style={{ width: '100%', height: '22px', fontSize: '13px', border: '1px solid var(--srt-primary-500)', outline: 'none', padding: '0 4px', borderRadius: '2px', textAlign: align }}
                 />
             </td>
         );
@@ -1581,10 +1581,10 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                             onClick={openTemplateGuide}
                             style={{
                                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                width: '24px', height: '24px', borderRadius: '50%', background: '#eff6ff', border: '1px solid #bfdbfe'
+                                width: '24px', height: '24px', borderRadius: '50%', background: 'var(--srt-primary-50)', border: '1px solid var(--srt-primary-200)'
                             }}
                         >
-                            <Info size={14} color="#3b82f6" />
+                            <Info size={14} color="var(--srt-primary-500)" />
                         </div>
                     </div>
                     <div className="header-actions-cbp">
@@ -1593,7 +1593,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                 </div>
 
                 {/* 컨텐츠 영역 */}
-                <div className="filter-popup-container-cbp" style={{ display: 'flex', flexDirection: 'column', padding: '16px', gap: '16px', background: '#f0f7ff', boxSizing: 'border-box', overflowY: 'auto' }}>
+                <div className="filter-popup-container-cbp" style={{ display: 'flex', flexDirection: 'column', padding: '16px', gap: '16px', background: 'var(--srt-primary-25)', boxSizing: 'border-box', overflowY: 'auto' }}>
 
                     {/* 상단 폼 영역 */}
                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
@@ -1621,14 +1621,14 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                             width: '24px',
                                             height: '24px',
                                             borderRadius: '50%',
-                                            background: isRankOutputsOpen ? '#e0f2fe' : '#e2e8f0',
-                                            color: isRankOutputsOpen ? '#0284c7' : '#64748b',
+                                            background: isRankOutputsOpen ? 'var(--srt-secondary-100)' : '#e2e8f0',
+                                            color: isRankOutputsOpen ? 'var(--srt-secondary-600)' : '#64748b',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             transition: 'all 0.2s',
                                             flexShrink: 0,
-                                            boxShadow: isRankOutputsOpen ? '0 0 0 2px #bae6fd' : 'none'
+                                            boxShadow: isRankOutputsOpen ? '0 0 0 2px var(--srt-secondary-200)' : 'none'
                                         }}
                                     >
                                         {isRankOutputsOpen ? <ChevronUp size={16} strokeWidth={3} /> : <ChevronDown size={16} strokeWidth={3} />}
@@ -1641,7 +1641,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                    <div style={{ border: '1px solid #bae6fd', background: '#e0f2fe', color: '#0369a1', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                                    <div style={{ border: '1px solid var(--srt-secondary-200)', background: 'var(--srt-secondary-100)', color: '#0369a1', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
                                         출력 {rankOutputs.length}개
                                     </div>
                                     <button
@@ -1784,27 +1784,27 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                     <div style={{ flex: 1, border: '1px solid #cbd5e1', borderRadius: '6px', background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
                         {/* 그리드 옵션 헤더 */}
-                        <div style={{ padding: '8px 16px', borderBottom: '1px solid #e2e8f0', background: isDetailSetting ? '#eff6ff' : '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background 0.3s' }}>
+                        <div style={{ padding: '8px 16px', borderBottom: '1px solid #e2e8f0', background: isDetailSetting ? 'var(--srt-primary-50)' : '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background 0.3s' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <div style={{ width: '3px', height: '14px', background: isDetailSetting ? '#3b82f6' : '#94a3b8', borderRadius: '2px' }}></div>
-                                <span style={{ fontSize: '13px', fontWeight: 700, color: isDetailSetting ? '#1e3a8a' : '#475569' }}>
+                                <div style={{ width: '3px', height: '14px', background: isDetailSetting ? 'var(--srt-primary-500)' : '#94a3b8', borderRadius: '2px' }}></div>
+                                <span style={{ fontSize: '13px', fontWeight: 700, color: isDetailSetting ? 'var(--srt-primary-900)' : '#475569' }}>
                                     그리드 편집
                                 </span>
                             </div>
                             <div
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
-                                    padding: '4px 12px', background: isDetailSetting ? '#dbeafe' : '#fff',
-                                    border: `1px solid ${isDetailSetting ? '#bfdbfe' : '#cbd5e1'}`,
+                                    padding: '4px 12px', background: isDetailSetting ? 'var(--srt-primary-100)' : '#fff',
+                                    border: `1px solid ${isDetailSetting ? 'var(--srt-primary-200)' : '#cbd5e1'}`,
                                     borderRadius: '20px', transition: 'all 0.2s',
-                                    boxShadow: isDetailSetting ? '0 1px 2px rgba(59,130,246,0.1)' : 'none'
+                                    boxShadow: isDetailSetting ? '0 1px 2px color-mix(in srgb, var(--srt-primary-500) 10%, transparent)' : 'none'
                                 }}
                                 onClick={() => setIsDetailSetting(!isDetailSetting)}
                                 onMouseOver={e => { if (!isDetailSetting) e.currentTarget.style.background = '#f8fafc'; }}
                                 onMouseOut={e => { if (!isDetailSetting) e.currentTarget.style.background = '#fff'; }}
                             >
-                                <span style={{ fontSize: '12px', fontWeight: 700, color: isDetailSetting ? '#1d4ed8' : '#64748b' }}>상세 컬럼 표시</span>
-                                <div style={{ width: '32px', height: '18px', borderRadius: '10px', background: isDetailSetting ? '#3b82f6' : '#cbd5e1', position: 'relative', transition: 'background 0.2s', display: 'flex', alignItems: 'center', padding: '2px' }}>
+                                <span style={{ fontSize: '12px', fontWeight: 700, color: isDetailSetting ? 'var(--srt-primary-700)' : '#64748b' }}>상세 컬럼 표시</span>
+                                <div style={{ width: '32px', height: '18px', borderRadius: '10px', background: isDetailSetting ? 'var(--srt-primary-500)' : '#cbd5e1', position: 'relative', transition: 'background 0.2s', display: 'flex', alignItems: 'center', padding: '2px' }}>
                                     <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#fff', position: 'absolute', left: isDetailSetting ? 'calc(100% - 16px)' : '2px', transition: 'left 0.2s' }} />
                                 </div>
                             </div>
@@ -1871,7 +1871,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                                     style={{
                                                         width: '16px', height: '16px', border: '1px solid #94a3b8', borderRadius: '4px',
                                                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                                        cursor: 'pointer', background: pinned ? '#2563eb' : '#fff', margin: '0 auto'
+                                                        cursor: 'pointer', background: pinned ? 'var(--srt-primary-600)' : '#fff', margin: '0 auto'
                                                     }}
                                                 >
                                                     {pinned && <Check size={12} color="#fff" strokeWidth={3} />}
@@ -1891,7 +1891,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                             style={{
                                                 width: '16px', height: '16px', border: '1px solid #94a3b8', borderRadius: '4px',
                                                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                                cursor: 'pointer', background: p.dataItem.hide ? '#2563eb' : '#fff', margin: '0 auto'
+                                                cursor: 'pointer', background: p.dataItem.hide ? 'var(--srt-primary-600)' : '#fff', margin: '0 auto'
                                             }}
                                         >
                                             {p.dataItem.hide && <Check size={12} color="#fff" strokeWidth={3} />}

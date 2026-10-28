@@ -1,3 +1,6 @@
+/* SRT 브랜드 색 변수 (--srt-*) — 이 파일의 파란 계열 색은 모두 변수 사용 */
+@import '../srtTheme.css';
+
 .dp-request-container {
     display: flex;
     flex-direction: column;
@@ -23,20 +26,20 @@
 
 /* KendoGridV2 Drag Indicator */
 .dp-excel-grid-v2 table tr.drag-over-top td {
-    border-top: 2px solid #3b82f6 !important;
+    border-top: 2px solid var(--srt-primary-500) !important;
 }
 
 .dp-excel-grid-v2 table tr.drag-over-bottom td {
-    border-bottom: 2px solid #3b82f6 !important;
+    border-bottom: 2px solid var(--srt-primary-500) !important;
 }
 
 /* KendoGridV3 Merged Cell Drag Indicator */
 .dp-excel-grid-v2 table td.dp-drop-top {
-    box-shadow: inset 0 2px 0 0 #3b82f6 !important;
+    box-shadow: inset 0 2px 0 0 var(--srt-primary-500) !important;
 }
 
 .dp-excel-grid-v2 table td.dp-drop-bottom {
-    box-shadow: inset 0 -2px 0 0 #3b82f6 !important;
+    box-shadow: inset 0 -2px 0 0 var(--srt-primary-500) !important;
 }
 
 /* Compact Stepper for DataHeader */
@@ -93,35 +96,31 @@
 }
 
 .dp-step-compact.active .dp-step-count {
-    background: #4B7CF3 !important;
+    background: var(--srt-primary-600) !important;
     color: #fff !important;
 }
 
-/* 완료된 단계 기본 스타일 (Unified Deep Blue) */
+/* 완료된 단계 기본 스타일 (Unified Deep Blue / Brand Adaptive) */
 .dp-step-compact.done .dp-step-num-compact {
-    background: #2563EB;
-    /* 신뢰감 있는 딥 블루 */
+    background: var(--srt-primary-600);
     color: #fff;
 }
 
 .dp-step-compact.done .dp-step-count {
-    background: #eff6ff;
-    /* 아주 연한 블루 배경 */
-    color: #2563EB;
-    /* 텍스트는 딥 블루 */
+    background: var(--srt-primary-50);
+    color: var(--srt-primary-600);
 }
 
 .dp-step-line-compact.done {
-    background: #2563EB;
+    background: var(--srt-primary-600);
     opacity: 0.4;
-    /* 라인은 시선을 뺏지 않게 은은하게 */
 }
 
-/* 활성 단계 스타일 (파란색 - 완료 상태보다 우선) */
+/* 활성 단계 스타일 (완료 상태보다 우선) */
 .dp-step-compact.active .dp-step-num-compact {
-    background: #4B7CF3 !important;
+    background: var(--srt-primary-600) !important;
     color: #fff !important;
-    box-shadow: 0 0 0 4px rgba(75, 124, 243, 0.15);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--srt-primary-600) 15%, transparent);
 }
 
 .dp-step-compact.active .dp-step-text {
@@ -158,8 +157,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    background: #4B7CF3;
-    /* Using the bright blue from the second image */
+    background: var(--srt-primary-600);
     color: #ffffff;
     border: none;
     padding: 8px 16px;
@@ -171,7 +169,7 @@
 }
 
 .dp-primary-btn:hover {
-    background: #3867d6;
+    background: var(--srt-primary-700);
 }
 
 /* Accordion */
@@ -294,8 +292,8 @@
 }
 
 .dp-search-input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    border-color: var(--srt-primary-500);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--srt-primary-500) 15%, transparent);
     background: #fff;
 }
 
@@ -315,8 +313,8 @@
 }
 
 .dp-input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    border-color: var(--srt-primary-500);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--srt-primary-500) 15%, transparent);
 }
 
 /* Kendo Dropdown Focus Override (Remove Orange) */
@@ -332,8 +330,8 @@
 .k-picker.k-state-focused,
 .k-picker.k-focus,
 .k-picker:focus-within {
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+    border-color: var(--srt-primary-500) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--srt-primary-500) 15%, transparent) !important;
     outline: none !important;
 }
 
@@ -358,13 +356,13 @@
 }
 
 .variable-item:hover {
-    border-color: #2563EB;
+    border-color: var(--srt-primary-600);
     background: #f8fafc;
 }
 
 .variable-item.selected {
-    background: #eff6ff;
-    border-color: #3b82f6;
+    background: var(--srt-primary-50);
+    border-color: var(--srt-primary-500);
     /* 조금 더 부드러운 블루 */
 }
 
@@ -411,9 +409,9 @@
 }
 
 .question-type-badge.multi {
-    background: #eff6ff;
-    color: #1d4ed8;
-    border: 1px solid #dbeafe;
+    background: var(--srt-primary-50);
+    color: var(--srt-primary-700);
+    border: 1px solid var(--srt-primary-100);
 }
 
 .question-type-badge.scale {
@@ -507,11 +505,11 @@
 }
 
 .dp-wizard-droparea-actions input:focus {
-    border-color: #4B7CF3;
+    border-color: var(--srt-primary-600);
 }
 
 .dp-wiz-create-btn {
-    background: #3b82f6;
+    background: var(--srt-primary-500);
     /* A bit standard blue */
     color: #fff;
     border: none;
@@ -524,7 +522,7 @@
 }
 
 .dp-wiz-create-btn:hover {
-    background: #2563eb;
+    background: var(--srt-primary-600);
 }
 
 .dp-wizard-dropzone-container {
@@ -637,7 +635,7 @@
 
 .dp-sidebar-collapsed-bar:hover {
     background: #f1f5f9;
-    color: #3b82f6;
+    color: var(--srt-primary-500);
 }
 
 .dp-sidebar-toggle-btn-compact {
@@ -655,7 +653,7 @@
 
 .dp-sidebar-toggle-btn-compact:hover {
     background: #f1f5f9;
-    color: #3b82f6;
+    color: var(--srt-primary-500);
 }
 
 /* Wizard Sidebar Header Alignment */
@@ -744,11 +742,10 @@
 }
 
 .dp-banner-item.active {
-    background: #f0f7ff;
-    border-color: #2563eb;
-    /* Strong blue for active */
+    background: var(--srt-primary-50);
+    border-color: var(--srt-primary-600);
     border-width: 1.5px;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--srt-primary-600) 10%, transparent);
 }
 
 .dp-banner-item.active::before {
@@ -839,8 +836,8 @@
 }
 
 .dp-content-label-edit input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    border-color: var(--srt-primary-500);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--srt-primary-500) 10%, transparent);
 }
 
 .dp-content-actions {
@@ -979,11 +976,11 @@
 .dp-order-change-cell:hover .dp-order-move-btn {
     opacity: 1;
     /* 마우스 올리면 선명하게 */
-    color: #3b82f6;
+    color: var(--srt-primary-500);
 }
 
 .dp-order-move-btn:hover:not(:disabled) {
-    color: #2563eb !important;
+    color: var(--srt-primary-600) !important;
     transform: scale(1.2);
 }
 
@@ -1019,7 +1016,7 @@
 }
 
 .dp-grid-add-row-btn:hover {
-    background: #eff6ff;
+    background: var(--srt-primary-50);
 }
 
 .dp-row-del-btn {
@@ -1073,8 +1070,8 @@
 }
 
 .dp-primary-btn {
-    background: #3b82f6;
-    border: 1px solid #2563eb;
+    background: var(--srt-primary-500);
+    border: 1px solid var(--srt-primary-600);
     color: #fff;
     padding: 6px 16px;
     border-radius: 6px;
@@ -1089,7 +1086,7 @@
 }
 
 .dp-primary-btn:hover {
-    background: #2563eb;
+    background: var(--srt-primary-600);
 }
 
 /* Media Queries for Responsiveness */
@@ -1186,9 +1183,9 @@
     align-items: stretch;
     gap: 4px;
     padding: 6px;
-    border: 1px dashed #93c5fd;
+    border: 1px dashed var(--srt-primary-300);
     border-radius: 8px;
-    background: #eff6ff;
+    background: var(--srt-primary-50);
     min-width: 0;
     flex-shrink: 0;
 }
@@ -1265,7 +1262,7 @@
 .dp-wizard-setup .empty-slot {
     height: 32px;
     border-radius: 6px;
-    background: #dbeafe;
+    background: var(--srt-primary-100);
     opacity: 0.65;
     width: 100%;
 }
@@ -1330,8 +1327,8 @@
 }
 
 .dp-excel-grid-v2 tr.drag-over {
-    border-top: 2px solid #3b82f6 !important;
-    background-color: #eff6ff !important;
+    border-top: 2px solid var(--srt-primary-500) !important;
+    background-color: var(--srt-primary-50) !important;
 }
 
 /* 그리드 인라인 에디팅 인풋 스타일 (SRT 디자인 동기화) */
@@ -1346,7 +1343,7 @@
     min-height: 21px !important;
     padding: 0 4px !important;
     margin: 0 !important;
-    border: 1px solid #3b82f6 !important;
+    border: 1px solid var(--srt-primary-500) !important;
     border-radius: 0 !important;
     background: #fff !important;
     font-size: 12px !important;
@@ -1358,9 +1355,9 @@
 }
 
 .dp-excel-grid-v2.k-grid .k-grid-edit-cell input:focus {
-    border-color: #2563eb !important;
+    border-color: var(--srt-primary-600) !important;
     background: #fff !important;
-    box-shadow: 0 0 0 1px #2563eb !important;
+    box-shadow: 0 0 0 1px var(--srt-primary-600) !important;
 }
 
 /* 설정 단계 전용 탭 스타일 */
@@ -1391,8 +1388,8 @@
 }
 
 .dp-tab-item.active {
-    background: #eff6ff;
-    color: #3b82f6;
+    background: var(--srt-primary-50);
+    color: var(--srt-primary-500);
 }
 
 /* 설정 카드 스타일 */
@@ -1456,7 +1453,7 @@
 }
 
 .dp-form-group input:focus {
-    border-color: #3b82f6;
+    border-color: var(--srt-primary-500);
 }
 
 .dp-alert-card {
@@ -1527,7 +1524,7 @@
 }
 
 .dp-badge {
-    background: #3b82f6;
+    background: var(--srt-primary-500);
     color: #fff;
     padding: 2px 8px;
     border-radius: 12px;
@@ -1556,7 +1553,7 @@
 
 /* --- DP Request Step 3 & Common Badge Styles --- */
 .dp-step-badge {
-    background: #2563eb;
+    background: var(--srt-primary-600);
     color: white;
     padding: 4px 10px;
     border-radius: 4px;
@@ -1574,9 +1571,9 @@
 }
 
 .dp-badge-mini.blue {
-    background: #eff6ff;
-    color: #2563eb;
-    border: 1px solid #dbeafe;
+    background: var(--srt-primary-50);
+    color: var(--srt-primary-600);
+    border: 1px solid var(--srt-primary-100);
 }
 
 .dp-badge-mini.gray {
@@ -1610,8 +1607,8 @@
 }
 
 .dp-search-input:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: var(--srt-primary-600);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--srt-primary-600) 10%, transparent);
 }
 
 /* ============================================================
@@ -1667,8 +1664,8 @@
 .hsrt-compact-dropdown.k-state-focused,
 .hsrt-compact-dropdown:focus-within,
 .hsrt-compact-dropdown.k-focus {
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25) !important;
+    border-color: var(--srt-primary-500) !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--srt-primary-500) 25%, transparent) !important;
     outline: none !important;
 }
 
@@ -1676,7 +1673,7 @@
 .hsrt-compact-dropdown .k-dropdown-wrap:focus,
 .hsrt-compact-dropdown .k-dropdown-wrap.k-state-focused,
 .hsrt-compact-dropdown .k-dropdown-wrap.k-state-hover {
-    border-color: #3b82f6 !important;
+    border-color: var(--srt-primary-500) !important;
     box-shadow: none !important;
     background: transparent !important;
 }
@@ -1704,23 +1701,23 @@
 .hsrt-compact-dropdown-popup .k-list-item:hover,
 .hsrt-compact-dropdown-popup .k-item.k-state-hover,
 .hsrt-compact-dropdown-popup .k-list-item.k-hover {
-    background: #eff6ff !important;
-    color: #2563eb !important;
+    background: var(--srt-primary-50) !important;
+    color: var(--srt-primary-600) !important;
 }
 
 /* 선택된 아이템 (오렌지 → 파란색) */
 .hsrt-compact-dropdown-popup .k-list-item.k-selected,
 .hsrt-compact-dropdown-popup .k-item.k-state-selected,
 .hsrt-compact-dropdown-popup .k-list-item.k-state-selected {
-    background: #dbeafe !important;
-    color: #1d4ed8 !important;
+    background: var(--srt-primary-100) !important;
+    color: var(--srt-primary-700) !important;
     font-weight: 600 !important;
 }
 
 /* 포커스된 아이템 */
 .hsrt-compact-dropdown-popup .k-list-item.k-focus,
 .hsrt-compact-dropdown-popup .k-item.k-state-focused {
-    background: #eff6ff !important;
+    background: var(--srt-primary-50) !important;
     box-shadow: none !important;
     outline: none !important;
 }
@@ -1748,8 +1745,8 @@
 .dp-mini-dropdown.k-focus,
 .dp-mini-dropdown.k-state-focused,
 .dp-mini-dropdown:focus-within {
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
-    border-color: #3B82F6 !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--srt-primary-500) 15%, transparent) !important;
+    border-color: var(--srt-primary-500) !important;
     outline: none !important;
 }
 
@@ -1799,8 +1796,8 @@
 .dp-summary-dropdown.k-dropdownlist:focus-within,
 .dp-summary-dropdown.k-picker:focus,
 .dp-summary-dropdown.k-picker.k-focus {
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
-    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--srt-primary-500) 20%, transparent) !important;
+    border-color: var(--srt-primary-500) !important;
     outline: none !important;
 }
 
@@ -1814,7 +1811,7 @@
 }
 
 .dp-checkbox-input:checked+.dp-checkbox-box {
-    border-color: #3b82f6;
+    border-color: var(--srt-primary-500);
 }
 
 .dp-checkbox-box::after {
@@ -1822,7 +1819,7 @@
     display: block;
     width: 4px;
     height: 8px;
-    border: solid #3b82f6;
+    border: solid var(--srt-primary-500);
     border-width: 0 1.5px 1.5px 0;
     transform: rotate(45deg);
     opacity: 0;
@@ -1835,7 +1832,7 @@
 }
 
 .dp-checkbox-box:hover {
-    border-color: #93c5fd;
+    border-color: var(--srt-primary-300);
 }
 
 /* Prevent Kendo headers from being chopped horizontally/vertically */
@@ -1913,21 +1910,21 @@
 .dp-mini-dropdown-popup .k-list-item:hover,
 .dp-mini-dropdown-popup .k-item.k-state-hover,
 .dp-mini-dropdown-popup .k-list-item.k-hover {
-    background: #eff6ff !important;
-    color: #2563eb !important;
+    background: var(--srt-primary-50) !important;
+    color: var(--srt-primary-600) !important;
 }
 
 .dp-mini-dropdown-popup .k-list-item.k-selected,
 .dp-mini-dropdown-popup .k-item.k-state-selected,
 .dp-mini-dropdown-popup .k-list-item.k-state-selected {
-    background: #dbeafe !important;
-    color: #1d4ed8 !important;
+    background: var(--srt-primary-100) !important;
+    color: var(--srt-primary-700) !important;
     font-weight: 600 !important;
 }
 
 .dp-mini-dropdown-popup .k-list-item.k-focus,
 .dp-mini-dropdown-popup .k-item.k-state-focused {
-    background: #eff6ff !important;
+    background: var(--srt-primary-50) !important;
     box-shadow: none !important;
     outline: none !important;
 }
@@ -1960,42 +1957,42 @@
 .dp-sort-dropdown-popup .k-list-item:hover,
 .dp-sort-dropdown-popup .k-item.k-state-hover,
 .dp-sort-dropdown-popup .k-list-item.k-hover {
-    background: #eff6ff !important;
-    color: #2563eb !important;
+    background: var(--srt-primary-50) !important;
+    color: var(--srt-primary-600) !important;
 }
 
 .dp-sort-dropdown-popup .k-list-item.k-selected,
 .dp-sort-dropdown-popup .k-item.k-state-selected,
 .dp-sort-dropdown-popup .k-list-item.k-state-selected {
-    background: #dbeafe !important;
-    color: #1d4ed8 !important;
+    background: var(--srt-primary-100) !important;
+    color: var(--srt-primary-700) !important;
     font-weight: 600 !important;
 }
 
 .dp-sort-dropdown-popup .k-list-item.k-focus,
 .dp-sort-dropdown-popup .k-item.k-state-focused {
-    background: #eff6ff !important;
+    background: var(--srt-primary-50) !important;
     box-shadow: none !important;
     outline: none !important;
 }
 
 /* Drag over feedback for banner col-group */
 .col-group.drag-over-group-left {
-    box-shadow: -4px 0 0 0 #2563eb !important;
+    box-shadow: -4px 0 0 0 var(--srt-primary-600) !important;
 }
 
 .col-group.drag-over-item {
-    border: 1px solid #2563eb !important;
-    background-color: #dbeafe !important;
+    border: 1px solid var(--srt-primary-600) !important;
+    background-color: var(--srt-primary-100) !important;
 }
 
 /* Item drag over reordering inside banner group */
 .dropped-tag.grouped.drag-over-item-top {
-    box-shadow: 0 -2px 0 0 #2563eb, 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 -2px 0 0 var(--srt-primary-600), 0 1px 2px rgba(0, 0, 0, 0.05) !important;
 }
 
 .dropped-tag.grouped.drag-over-item-bottom {
-    box-shadow: 0 2px 0 0 #2563eb, 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 2px 0 0 var(--srt-primary-600), 0 1px 2px rgba(0, 0, 0, 0.05) !important;
 }
 
 /* 일괄 수정 팝업 내 인풋의 이중 테두리 및 섀도우 완벽 리셋 */
@@ -2019,8 +2016,8 @@
 }
 
 .wizard-proposal-card.selected:hover {
-    border-color: #3b82f6 !important;
-    background: #eff6ff !important;
+    border-color: var(--srt-primary-500) !important;
+    background: var(--srt-primary-50) !important;
 }
 
 [data-theme="data-dashboard"] .dp-btn-delete-all .lucide-trash2,
@@ -2034,9 +2031,9 @@
 .dp-tier-dropdown.k-picker {
     height: 28px !important;
     min-height: 28px !important;
-    border: 1px solid #bfdbfe !important;
+    border: 1px solid var(--srt-primary-200) !important;
     border-radius: 4px !important;
-    background: #eff6ff !important;
+    background: var(--srt-primary-50) !important;
     box-shadow: none !important;
 }
 
@@ -2044,26 +2041,26 @@
 .dp-tier-dropdown .k-input-value-text {
     font-size: 12px !important;
     font-weight: 600 !important;
-    color: #1d4ed8 !important;
+    color: var(--srt-primary-700) !important;
     padding: 0 6px !important;
 }
 
 .dp-tier-dropdown .k-input-button {
     background: transparent !important;
     border: none !important;
-    color: #3b82f6 !important;
+    color: var(--srt-primary-500) !important;
     width: 22px !important;
 }
 
 .dp-tier-dropdown:hover {
-    border-color: #93c5fd !important;
-    background: #dbeafe !important;
+    border-color: var(--srt-primary-300) !important;
+    background: var(--srt-primary-100) !important;
 }
 
 .dp-tier-dropdown.k-focus,
 .dp-tier-dropdown:focus-within {
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, .18) !important;
+    border-color: var(--srt-primary-500) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--srt-primary-500) 18%, transparent) !important;
     outline: none !important;
 }
 
@@ -2072,9 +2069,9 @@
 }
 
 .dp-tier-dropdown-popup {
-    border: 1px solid #bfdbfe !important;
+    border: 1px solid var(--srt-primary-200) !important;
     border-radius: 4px !important;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, .12) !important;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--srt-primary-600) 12%, transparent) !important;
     padding: 2px 0 !important;
 }
 
@@ -2087,14 +2084,14 @@
 .dp-tier-dropdown-popup .k-list-item:hover,
 .dp-tier-dropdown-popup .k-list-item.k-hover,
 .dp-tier-dropdown-popup .k-list-item.k-focus {
-    background: #eff6ff !important;
-    color: #2563eb !important;
+    background: var(--srt-primary-50) !important;
+    color: var(--srt-primary-600) !important;
     box-shadow: none !important;
 }
 
 .dp-tier-dropdown-popup .k-list-item.k-selected {
-    background: #dbeafe !important;
-    color: #1d4ed8 !important;
+    background: var(--srt-primary-100) !important;
+    color: var(--srt-primary-700) !important;
     font-weight: 600 !important;
 }
 
@@ -2119,7 +2116,7 @@
 .dp-tier-dropdown .k-input-value-text {
     font-size: 12px !important;
     font-weight: 600 !important;
-    color: #1e40af !important;
+    color: var(--srt-primary-800) !important;
     overflow: visible !important;
     text-overflow: clip !important;
     white-space: nowrap !important;
@@ -2133,15 +2130,15 @@
 }
 
 .dp-tier-dropdown:hover {
-    border-color: #93c5fd !important;
-    background: #f8fbff !important;
+    border-color: var(--srt-primary-300) !important;
+    background: var(--srt-primary-25) !important;
 }
 
 .dp-tier-dropdown.k-focus,
 .dp-tier-dropdown:focus-within {
-    border-color: #3b82f6 !important;
+    border-color: var(--srt-primary-500) !important;
     background: #ffffff !important;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, .12) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--srt-primary-500) 12%, transparent) !important;
 }
 
 .dp-tier-dropdown-popup {
@@ -2179,8 +2176,8 @@
 }
 
 .dp-tier-dropdown-popup .k-list-item.k-selected {
-    background: #eff6ff !important;
-    color: #1d4ed8 !important;
+    background: var(--srt-primary-50) !important;
+    color: var(--srt-primary-700) !important;
     font-weight: 700 !important;
 }
 
@@ -2227,8 +2224,8 @@
     content: '';
     width: 6px;
     height: 6px;
-    border-right: 1.5px solid #3b82f6;
-    border-bottom: 1.5px solid #3b82f6;
+    border-right: 1.5px solid var(--srt-primary-500);
+    border-bottom: 1.5px solid var(--srt-primary-500);
     transform: translateY(-2px) rotate(45deg);
 }
 
@@ -2266,7 +2263,7 @@
 .dp-model-dropdown.k-dropdownlist,
 .dp-model-dropdown.k-picker {
     height: 32px !important;
-    border: 1px solid #bfdbfe !important;
+    border: 1px solid var(--srt-primary-200) !important;
     border-radius: 6px !important;
     background: #ffffff !important;
     box-shadow: none !important;
@@ -2279,7 +2276,7 @@
 .dp-model-dropdown .k-input-value-text {
     font-size: 12.5px !important;
     font-weight: 600 !important;
-    color: #1d4ed8 !important;
+    color: var(--srt-primary-700) !important;
 }
 
 .dp-model-dropdown .k-input-button {
@@ -2287,14 +2284,14 @@
 }
 
 .dp-model-dropdown:hover {
-    border-color: #93c5fd !important;
-    background: #f8fbff !important;
+    border-color: var(--srt-primary-300) !important;
+    background: var(--srt-primary-25) !important;
 }
 
 .dp-model-dropdown.k-focus,
 .dp-model-dropdown:focus-within {
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, .12) !important;
+    border-color: var(--srt-primary-500) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--srt-primary-500) 12%, transparent) !important;
 }
 
 /* AI 자동 그룹 — 입력 예시(placeholder) 회색 */

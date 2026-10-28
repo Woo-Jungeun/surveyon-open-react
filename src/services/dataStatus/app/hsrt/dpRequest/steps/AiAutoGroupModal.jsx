@@ -240,7 +240,7 @@ const AiAutoGroupModal = ({ isOpen, onClose, onCreateNew, onOverwrite, overwrite
                 <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff' }}>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ display: 'inline-block', width: '3.5px', height: '16px', backgroundColor: '#2563eb', borderRadius: '2px' }} />
+                            <span style={{ display: 'inline-block', width: '3.5px', height: '16px', backgroundColor: 'var(--srt-primary-600)', borderRadius: '2px' }} />
                             <span style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>AI 자동 그룹 생성</span>
                         </div>
                         <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
@@ -306,14 +306,14 @@ const AiAutoGroupModal = ({ isOpen, onClose, onCreateNew, onOverwrite, overwrite
                                     popupSettings={{ popupClass: 'dp-tier-dropdown-popup' }}
                                     style={{ width: '100%' }}
                                 />
-                                <ChevronDown size={14} color="#3B82F6" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                                <ChevronDown size={14} color="var(--srt-primary-500)" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                             </div>
                         </div>
 
                         <button
                             onClick={handleStart}
                             disabled={isAnalyzing || !userInput.trim()}
-                            style={{ width: '100%', height: '38px', borderRadius: '6px', background: isAnalyzing ? '#94a3b8' : (!userInput.trim() ? '#e2e8f0' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'), color: !isAnalyzing && !userInput.trim() ? '#94a3b8' : '#ffffff', border: 'none', fontSize: '13px', fontWeight: 700, cursor: isAnalyzing ? 'wait' : (!userInput.trim() ? 'default' : 'pointer'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: !isAnalyzing && userInput.trim() ? '0 2px 4px rgba(37, 99, 235, 0.25)' : 'none' }}
+                            style={{ width: '100%', height: '38px', borderRadius: '6px', background: isAnalyzing ? '#94a3b8' : (!userInput.trim() ? '#e2e8f0' : 'linear-gradient(135deg, var(--srt-primary-500) 0%, var(--srt-primary-700) 100%)'), color: !isAnalyzing && !userInput.trim() ? '#94a3b8' : '#ffffff', border: 'none', fontSize: '13px', fontWeight: 700, cursor: isAnalyzing ? 'wait' : (!userInput.trim() ? 'default' : 'pointer'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: !isAnalyzing && userInput.trim() ? '0 2px 4px color-mix(in srgb, var(--srt-primary-600) 25%, transparent)' : 'none' }}
                         >
                             <Sparkles size={15} />
                             {isAnalyzing ? `분석 진행 중... (${elapsedSeconds}초)` : (items.length > 0 ? '다시 분석하기' : 'AI 분석 시작')}
@@ -329,11 +329,11 @@ const AiAutoGroupModal = ({ isOpen, onClose, onCreateNew, onOverwrite, overwrite
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>2. 결과 확인 및 수정</span>
                                 <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 600 }}>
-                                    선택: <strong style={{ color: '#2563eb' }}>{Number(selectedCount || 0).toLocaleString()}</strong> / {Number(items.length || 0).toLocaleString()}건
+                                    선택: <strong style={{ color: 'var(--srt-primary-600)' }}>{Number(selectedCount || 0).toLocaleString()}</strong> / {Number(items.length || 0).toLocaleString()}건
                                 </span>
                             </div>
                             <button onClick={() => insertBelow(undefined)}
-                                style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px', fontSize: '11.5px', fontWeight: 600, color: '#3b82f6', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px', cursor: 'pointer' }}>
+                                style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px', fontSize: '11.5px', fontWeight: 600, color: 'var(--srt-primary-500)', backgroundColor: 'var(--srt-primary-50)', border: '1px solid var(--srt-primary-200)', borderRadius: '6px', cursor: 'pointer' }}>
                                 <Plus size={12} /> 그룹 추가
                             </button>
                         </div>
@@ -400,7 +400,7 @@ const AiAutoGroupModal = ({ isOpen, onClose, onCreateNew, onOverwrite, overwrite
                                                         </div>
                                                     </td>
                                                     <td style={{ padding: isSub ? '4px 6px 4px 24px' : '4px 6px', position: 'relative' }}>
-                                                        {isSub && <span style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-60%)', color: '#93C5FD', fontSize: '14px', fontWeight: 700, pointerEvents: 'none' }}>└</span>}
+                                                        {isSub && <span style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-60%)', color: 'var(--srt-primary-300)', fontSize: '14px', fontWeight: 700, pointerEvents: 'none' }}>└</span>}
                                                         <DropDownList
                                                             data={locked ? TIER_OPTIONS.slice(0, 1) : TIER_OPTIONS}
                                                             textField="text"
@@ -413,12 +413,12 @@ const AiAutoGroupModal = ({ isOpen, onClose, onCreateNew, onOverwrite, overwrite
                                                             popupSettings={{ popupClass: 'dp-tier-dropdown-popup' }}
                                                             style={{ width: '100%' }}
                                                         />
-                                                        <span style={{ position: 'absolute', left: isSub ? '24px' : '6px', right: locked ? '6px' : '28px', top: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', fontSize: isSub ? '12px' : '13px', fontWeight: isSub ? 500 : 600, color: isSub ? '#475569' : '#1E40AF' }}>
+                                                        <span style={{ position: 'absolute', left: isSub ? '24px' : '6px', right: locked ? '6px' : '28px', top: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', fontSize: isSub ? '12px' : '13px', fontWeight: isSub ? 500 : 600, color: isSub ? '#475569' : 'var(--srt-primary-800)' }}>
                                                             {isSub ? '중분류' : '대분류'}
                                                         </span>
                                                         {!locked && (
                                                             <span style={{ position: 'absolute', right: '7px', top: '7px', bottom: '7px', width: '22px', borderLeft: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                                                                <ChevronDown size={14} color={isSub ? '#94A3B8' : '#3B82F6'} />
+                                                                <ChevronDown size={14} color={isSub ? '#94A3B8' : 'var(--srt-primary-500)'} />
                                                             </span>
                                                         )}
                                                     </td>
@@ -456,14 +456,14 @@ const AiAutoGroupModal = ({ isOpen, onClose, onCreateNew, onOverwrite, overwrite
                             onClick={handleOverwrite}
                             disabled={disabledBtn || !overwriteTargetName}
                             title={overwriteTargetName ? `[${overwriteTargetName}] 의 그룹을 이 결과로 바꿉니다` : '덮어쓸 그룹 프리셋을 먼저 펼쳐 주세요'}
-                            style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 700, color: (disabledBtn || !overwriteTargetName) ? '#94a3b8' : '#2563eb', backgroundColor: (disabledBtn || !overwriteTargetName) ? '#f1f5f9' : '#eff6ff', border: `1px solid ${(disabledBtn || !overwriteTargetName) ? '#e2e8f0' : '#93c5fd'}`, borderRadius: '6px', cursor: (disabledBtn || !overwriteTargetName) ? 'default' : 'pointer' }}
+                            style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 700, color: (disabledBtn || !overwriteTargetName) ? '#94a3b8' : 'var(--srt-primary-600)', backgroundColor: (disabledBtn || !overwriteTargetName) ? '#f1f5f9' : 'var(--srt-primary-50)', border: `1px solid ${(disabledBtn || !overwriteTargetName) ? '#e2e8f0' : 'var(--srt-primary-300)'}`, borderRadius: '6px', cursor: (disabledBtn || !overwriteTargetName) ? 'default' : 'pointer' }}
                         >
                             {overwriteTargetName ? `[${overwriteTargetName}]에 덮어쓰기` : '열린 그룹으로 덮어쓰기'}
                         </button>
                         <button
                             onClick={() => { setPresetName(defaultPresetName || ''); setShowNameModal(true); }}
                             disabled={disabledBtn}
-                            style={{ padding: '8px 18px', fontSize: '13px', fontWeight: 700, color: disabledBtn ? '#94a3b8' : '#ffffff', backgroundColor: disabledBtn ? '#e2e8f0' : '#2563eb', border: 'none', borderRadius: '6px', cursor: disabledBtn ? 'default' : 'pointer', boxShadow: disabledBtn ? 'none' : '0 2px 4px rgba(37, 99, 235, 0.25)' }}
+                            style={{ padding: '8px 18px', fontSize: '13px', fontWeight: 700, color: disabledBtn ? '#94a3b8' : '#ffffff', backgroundColor: disabledBtn ? '#e2e8f0' : 'var(--srt-primary-600)', border: 'none', borderRadius: '6px', cursor: disabledBtn ? 'default' : 'pointer', boxShadow: disabledBtn ? 'none' : '0 2px 4px color-mix(in srgb, var(--srt-primary-600) 25%, transparent)' }}
                         >
                             새 그룹으로 추가
                         </button>
@@ -476,7 +476,7 @@ const AiAutoGroupModal = ({ isOpen, onClose, onCreateNew, onOverwrite, overwrite
                         <div style={{ width: '380px', backgroundColor: '#ffffff', borderRadius: '12px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px', fontFamily: "'Pretendard', sans-serif" }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Sparkles size={18} color="#2563eb" />
+                                    <Sparkles size={18} color="var(--srt-primary-600)" />
                                     <span style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>새 그룹으로 추가</span>
                                 </div>
                                 <button onClick={() => setShowNameModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px', borderRadius: '4px', display: 'flex' }}>
@@ -495,7 +495,7 @@ const AiAutoGroupModal = ({ isOpen, onClose, onCreateNew, onOverwrite, overwrite
                                     }}
                                     autoFocus
                                     placeholder="예: 유통 채널 분류"
-                                    style={{ height: '36px', padding: '0 12px', fontSize: '13px', border: '1.5px solid #2563eb', borderRadius: '6px', outline: 'none', color: '#0f172a', fontWeight: 600, boxSizing: 'border-box' }}
+                                    style={{ height: '36px', padding: '0 12px', fontSize: '13px', border: '1.5px solid var(--srt-primary-600)', borderRadius: '6px', outline: 'none', color: '#0f172a', fontWeight: 600, boxSizing: 'border-box' }}
                                 />
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
@@ -505,7 +505,7 @@ const AiAutoGroupModal = ({ isOpen, onClose, onCreateNew, onOverwrite, overwrite
                                 <button
                                     onClick={() => { setShowNameModal(false); handleCreate(); }}
                                     disabled={!presetName.trim()}
-                                    style={{ padding: '7px 16px', fontSize: '13px', fontWeight: 700, color: presetName.trim() ? '#ffffff' : '#94a3b8', backgroundColor: presetName.trim() ? '#2563eb' : '#e2e8f0', border: 'none', borderRadius: '6px', cursor: presetName.trim() ? 'pointer' : 'default' }}
+                                    style={{ padding: '7px 16px', fontSize: '13px', fontWeight: 700, color: presetName.trim() ? '#ffffff' : '#94a3b8', backgroundColor: presetName.trim() ? 'var(--srt-primary-600)' : '#e2e8f0', border: 'none', borderRadius: '6px', cursor: presetName.trim() ? 'pointer' : 'default' }}
                                 >
                                     추가
                                 </button>

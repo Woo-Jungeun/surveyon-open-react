@@ -17,9 +17,9 @@ import AiReportContentStep from "./steps/AiReportContentStep";
 import AiReportAnalysisStep from "./steps/AiReportAnalysisStep";
 
 const CATEGORY_COLORS = [
-    '#3b82f6', // Blue
+    'var(--srt-primary-500)', // Blue
     '#a855f7', // Purple
-    '#6366f1', // Indigo
+    'var(--srt-accent-500)', // Indigo
     '#f97316', // Orange
     '#10b981', // Emerald Green
     '#f43f5e', // Rose Pink
@@ -29,7 +29,7 @@ const CATEGORY_COLORS = [
     '#14b8a6', // Teal
     '#84cc16', // Lime Green
     '#8b5cf6', // Violet
-    '#0284c7', // Sky Blue
+    'var(--srt-secondary-600)', // Sky Blue
     '#d946ef'  // Fuchsia
 ];
 

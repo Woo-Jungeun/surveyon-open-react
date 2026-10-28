@@ -1157,7 +1157,7 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                                                                     </div>
                                                                     <div className="cond-actions">
                                                                         <button className="icon-btn-cbp add" onClick={() => handleAddCondition(selectedCatIndex, setIndex, condIndex)}>
-                                                                            <Plus size={14} color="#3b82f6" strokeWidth={3} />
+                                                                            <Plus size={14} color="var(--srt-primary-500)" strokeWidth={3} />
                                                                         </button>
                                                                         <button className="icon-btn-cbp delete" onClick={() => handleDeleteCondition(selectedCatIndex, setIndex, condIndex)}>
                                                                             <X size={14} color="#ef4444" strokeWidth={3} />

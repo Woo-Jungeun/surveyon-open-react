@@ -302,16 +302,16 @@
     padding: 8px 16px;
     border-radius: 6px;
     border: none;
-    background: #3b82f6 !important;
+    background: var(--srt-primary-500, #3b82f6) !important;
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
-    color: #fff;
+    color: var(--srt-on-primary, #fff);
     transition: background 0.2s;
 }
 
 .btn-save:hover {
-    background: #2563eb;
+    background: var(--srt-primary-600, #2563eb) !important;
 }
 
 /* Force Trash Icon Red in Modal */
@@ -344,6 +344,6 @@
 .variable-page .k-picker.k-focus,
 .variable-page .k-picker:focus-within,
 .variable-page .k-dropdownlist:focus {
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+    border-color: var(--srt-primary-500, #3b82f6) !important;
+    box-shadow: 0 0 0 2px var(--srt-primary-200, rgba(59, 130, 246, 0.2)) !important;
 }

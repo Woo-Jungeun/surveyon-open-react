@@ -45,7 +45,7 @@
 .fullscreen-modal-title-bar {
     width: 4px;
     height: 24px;
-    background: #3b82f6;
+    background: var(--srt-primary-500);
     border-radius: 2px;
 }
 
@@ -165,7 +165,7 @@
     z-index: 30;
     width: 150px;
     height: 50px;
-    background: #eff6ff;
+    background: var(--srt-primary-50);
     border-bottom: 1px solid #cbd5e1;
     border-right: 1px solid #cbd5e1;
     font-size: 11px;
@@ -183,7 +183,7 @@
     z-index: 20;
     min-width: 100px;
     height: 50px;
-    background: #eff6ff;
+    background: var(--srt-primary-50);
     border-bottom: 1px solid #cbd5e1;
     border-right: 1px solid #cbd5e1;
     font-size: 12px;
@@ -208,7 +208,7 @@
     z-index: 10;
     width: 150px;
     min-height: 40px;
-    background: #eff6ff;
+    background: var(--srt-primary-50);
     border-bottom: 1px solid #e2e8f0;
     border-right: 1px solid #cbd5e1;
     font-size: 12px;
@@ -288,11 +288,11 @@
 }
 
 .view-option-btn.active {
-    background: #eff6ff;
-    color: #2563eb;
-    border: 1px solid #bfdbfe;
+    background: var(--srt-primary-50);
+    color: var(--srt-primary-600);
+    border: 1px solid var(--srt-primary-200);
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 2px 4px color-mix(in srgb, var(--srt-primary-500) 15%, transparent);
 }
 
 /* Download Dropdown */
@@ -335,8 +335,8 @@
 }
 
 .download-dropdown button.active {
-    background: #eff6ff;
-    color: #2563eb;
+    background: var(--srt-primary-50);
+    color: var(--srt-primary-600);
     font-weight: 700;
 }
 
@@ -353,8 +353,8 @@
 }
 
 .sig-highlight-down {
-    background-color: #eff6ff !important;
-    color: #1d4ed8 !important;
+    background-color: var(--srt-primary-50) !important;
+    color: var(--srt-primary-700) !important;
 }
 
 .sig-highlight-down .cell-pct,

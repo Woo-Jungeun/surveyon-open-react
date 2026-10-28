@@ -19,14 +19,14 @@ const DpRequestComingSoon = ({ title }) => {
             <div style={{ 
                 width: '80px', 
                 height: '80px', 
-                background: '#eff6ff', 
+                background: 'var(--srt-primary-50)', 
                 borderRadius: '50%', 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center',
                 marginBottom: '24px'
             }}>
-                <Construction size={40} color="#3b82f6" />
+                <Construction size={40} color="var(--srt-primary-500)" />
             </div>
             <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#1e293b', marginBottom: '12px' }}>
                 {title} 준비 중
@@ -41,7 +41,7 @@ const DpRequestComingSoon = ({ title }) => {
                         width: '8px', 
                         height: '8px', 
                         borderRadius: '50%', 
-                        background: '#3b82f6', 
+                        background: 'var(--srt-primary-500)', 
                         opacity: 1 - (i * 0.2),
                         animation: `bounce 1.4s infinite ease-in-out both ${i * 0.1}s`
                     }} />

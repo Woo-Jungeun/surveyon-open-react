@@ -43,7 +43,7 @@
 .blue-bar {
     width: 4px;
     height: 20px;
-    background: #3b82f6;
+    background: var(--srt-primary-500);
     border-radius: 2px;
 }
 
@@ -110,8 +110,8 @@
 }
 
 .toggle-chip.active {
-    background: #3b82f6;
-    border-color: #3b82f6;
+    background: var(--srt-primary-500);
+    border-color: var(--srt-primary-500);
     color: #fff;
 }
 

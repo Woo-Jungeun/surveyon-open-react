@@ -863,16 +863,16 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                     <div className="dp-setting-card-header" style={{ padding: '10px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', fontSize: '13px', background: '#F8FAFC', borderRadius: '8px 8px 0 0', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span>실제 표 미리보기</span>
                         {loadingReal && (
-                            <span style={{ fontSize: '11px', color: '#3B82F6', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span className="loading-pulse-dot" style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#3B82F6' }}></span> 업데이트 중...
+                            <span style={{ fontSize: '11px', color: 'var(--srt-primary-500)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span className="loading-pulse-dot" style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--srt-primary-500)' }}></span> 업데이트 중...
                             </span>
                         )}
                     </div>
 
                     {selectedBorder && (
-                        <div onMouseEnter={() => setHoveredBorder(selectedBorder)} onMouseLeave={() => setHoveredBorder(null)} style={{ background: '#EFF6FF', borderBottom: '1px solid #BFDBFE', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexShrink: 0 }}>
+                        <div onMouseEnter={() => setHoveredBorder(selectedBorder)} onMouseLeave={() => setHoveredBorder(null)} style={{ background: 'var(--srt-primary-50)', borderBottom: '1px solid var(--srt-primary-200)', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexShrink: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <span style={{ fontSize: '11px', fontWeight: 700, color: '#1D4ED8', whiteSpace: 'nowrap' }}>선택: {borderNames[selectedBorder]}</span>
+                                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--srt-primary-700)', whiteSpace: 'nowrap' }}>선택: {borderNames[selectedBorder]}</span>
                                 <ColorInput value={settings.render[`${selectedBorder}_color`] || ''} onChange={(val) => handleChange(`render.${selectedBorder}_color`, val)} width="90px" textWidth="50px" padding="2px 4px" gap="4px" />
                                 <LineStylePicker value={settings.render[`${selectedBorder}_style`] || 'solid'} onChange={(val) => { handleChange(`render.${selectedBorder}_style`, val); if (val === 'double') { const curWidth = parseInt((settings.render[`${selectedBorder}_width`] || '0').replace('px', ''), 10); if (!curWidth || curWidth < 3) handleChange(`render.${selectedBorder}_width`, '3px'); } }} color={settings.render[`${selectedBorder}_color`] || '#000000'} direction="down" width="50px" padding="0 4px" />
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
@@ -880,7 +880,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
                                 </div>
                             </div>
-                            <button onClick={() => setSelectedBorder(null)} style={{ border: 'none', background: 'transparent', color: '#1D4ED8', fontSize: '11px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>선택 해제</button>
+                            <button onClick={() => setSelectedBorder(null)} style={{ border: 'none', background: 'transparent', color: 'var(--srt-primary-700)', fontSize: '11px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>선택 해제</button>
                         </div>
                     )}
 
@@ -924,10 +924,10 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             border: 'none',
                                             fontSize: '11px',
                                             fontWeight: isActive ? 700 : 500,
-                                            color: isActive ? '#2563EB' : '#64748B',
+                                            color: isActive ? 'var(--srt-primary-600)' : '#64748B',
                                             cursor: 'pointer',
                                             padding: '2px 4px',
-                                            borderBottom: isActive ? '2px solid #2563EB' : '2px solid transparent',
+                                            borderBottom: isActive ? '2px solid var(--srt-primary-600)' : '2px solid transparent',
                                             transition: 'all 0.15s ease',
                                             outline: 'none',
                                             userSelect: 'none'
@@ -1010,7 +1010,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     background: isActive ? '#FFFFFF' : 'transparent',
                                     fontSize: '13px',
                                     fontWeight: isActive ? 700 : 500,
-                                    color: isActive ? '#2563EB' : '#475569',
+                                    color: isActive ? 'var(--srt-primary-600)' : '#475569',
                                     boxShadow: isActive ? '0 2px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' : 'none',
                                     cursor: 'pointer',
                                     transition: 'all 0.2s ease-in-out',
@@ -1019,7 +1019,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     userSelect: 'none'
                                 }}
                             >
-                                <span style={{ color: isActive ? '#2563EB' : '#64748B', display: 'flex', alignItems: 'center' }}>
+                                <span style={{ color: isActive ? 'var(--srt-primary-600)' : '#64748B', display: 'flex', alignItems: 'center' }}>
                                     {tab.icon}
                                 </span>
                                 {tab.label}
@@ -1046,7 +1046,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                 onClick={() => toggleDisplay(item.field)}
                                                 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 14px', borderRadius: '6px' }}
                                             >
-                                                <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display[item.field] ? '#3B82F6' : '#fff', border: settings.display[item.field] ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display[item.field] ? 'var(--srt-primary-500)' : '#fff', border: settings.display[item.field] ? '1px solid var(--srt-primary-500)' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                     {settings.display[item.field] && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                                                 </div>
                                                 <span style={{ fontWeight: 500, fontSize: '12px' }}>{item.label}</span>
@@ -1065,7 +1065,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                 onClick={() => toggleDisplay(item.field)}
                                                 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 14px', borderRadius: '6px' }}
                                             >
-                                                <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display[item.field] ? '#3B82F6' : '#fff', border: settings.display[item.field] ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display[item.field] ? 'var(--srt-primary-500)' : '#fff', border: settings.display[item.field] ? '1px solid var(--srt-primary-500)' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                     {settings.display[item.field] && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                                                 </div>
                                                 <span style={{ fontWeight: 500, fontSize: '12px' }}>{item.label}</span>
@@ -1085,7 +1085,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                 onClick={() => toggleDisplay(item.field)}
                                                 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 14px', borderRadius: '6px' }}
                                             >
-                                                <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display[item.field] ? '#3B82F6' : '#fff', border: settings.display[item.field] ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display[item.field] ? 'var(--srt-primary-500)' : '#fff', border: settings.display[item.field] ? '1px solid var(--srt-primary-500)' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                     {settings.display[item.field] && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                                                 </div>
                                                 <span style={{ fontWeight: 500, fontSize: '12px' }}>{item.label}</span>
@@ -1149,7 +1149,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             setSettings(newSettings);
                                             if (onUnsavedChange) onUnsavedChange(true);
                                         }}
-                                        style={{ fontSize: '11px', color: '#3B82F6', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}
+                                        style={{ fontSize: '11px', color: 'var(--srt-primary-500)', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}
                                     >
                                         <RotateCcw size={12} /> 기본값(영문) 복원
                                     </button>
@@ -1200,7 +1200,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         onClick={() => handleChange('render.format_percent_as_column', !settings.render.format_percent_as_column)}
                                         style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 14px', borderRadius: '6px', minHeight: '42px', boxSizing: 'border-box' }}
                                     >
-                                        <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.render.format_percent_as_column ? '#3B82F6' : '#fff', border: settings.render.format_percent_as_column ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.render.format_percent_as_column ? 'var(--srt-primary-500)' : '#fff', border: settings.render.format_percent_as_column ? '1px solid var(--srt-primary-500)' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                             {settings.render.format_percent_as_column && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                                         </div>
                                         <span style={{ fontWeight: 500, fontSize: '12px' }}>N/% 가로 분리 표시 (열 분할)</span>
@@ -1209,7 +1209,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         onClick={() => toggleDisplay('is_transpose')}
                                         style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 14px', borderRadius: '6px', minHeight: '42px', boxSizing: 'border-box' }}
                                     >
-                                        <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display.is_transpose ? '#3B82F6' : '#fff', border: settings.display.is_transpose ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display.is_transpose ? 'var(--srt-primary-500)' : '#fff', border: settings.display.is_transpose ? '1px solid var(--srt-primary-500)' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                             {settings.display.is_transpose && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                                         </div>
                                         <span style={{ fontWeight: 500, fontSize: '12px' }}>행/열 순서 변경</span>
@@ -1349,16 +1349,16 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                         justifyContent: 'space-between',
                                                         gap: '12px',
                                                         padding: '8px 12px',
-                                                        border: isSelected ? '2px solid #2563EB' : '1px solid #E2E8F0',
+                                                        border: isSelected ? '2px solid var(--srt-primary-600)' : '1px solid #E2E8F0',
                                                         borderRadius: '8px',
                                                         background: 'transparent',
                                                         cursor: 'pointer',
                                                         transition: 'all 0.2s',
-                                                        boxShadow: isSelected ? '0 0 0 3px rgba(37, 99, 235, 0.15)' : 'none'
+                                                        boxShadow: isSelected ? '0 0 0 3px color-mix(in srgb, var(--srt-primary-600) 15%, transparent)' : 'none'
                                                     }}
                                                 >
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <div style={{ fontSize: '12px', fontWeight: isSelected ? 700 : 600, color: isSelected ? '#2563EB' : '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
+                                                        <div style={{ fontSize: '12px', fontWeight: isSelected ? 700 : 600, color: isSelected ? 'var(--srt-primary-600)' : '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
                                                     </div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
                                                         <ColorInput
@@ -1438,16 +1438,16 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                         justifyContent: 'space-between',
                                                         gap: '12px',
                                                         padding: '8px 12px',
-                                                        border: isSelected ? '2px solid #2563EB' : '1px solid #E2E8F0',
+                                                        border: isSelected ? '2px solid var(--srt-primary-600)' : '1px solid #E2E8F0',
                                                         borderRadius: '8px',
                                                         background: 'transparent',
                                                         cursor: 'pointer',
                                                         transition: 'all 0.2s',
-                                                        boxShadow: isSelected ? '0 0 0 3px rgba(37, 99, 235, 0.15)' : 'none'
+                                                        boxShadow: isSelected ? '0 0 0 3px color-mix(in srgb, var(--srt-primary-600) 15%, transparent)' : 'none'
                                                     }}
                                                 >
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <div style={{ fontSize: '12px', fontWeight: isSelected ? 700 : 600, color: isSelected ? '#2563EB' : '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
+                                                        <div style={{ fontSize: '12px', fontWeight: isSelected ? 700 : 600, color: isSelected ? 'var(--srt-primary-600)' : '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
                                                     </div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
                                                         <ColorInput

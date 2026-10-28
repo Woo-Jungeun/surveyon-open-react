@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { DpRequestPageApi } from "@/services/dataStatus/app/hsrt/dpRequest/DpRequestPageApi";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner";
+import "@/services/dataStatus/app/hsrt/srtTheme.css";
 
 const DpRequestPreviewPopup = () => {
     const [data, setData] = useState([]);
@@ -117,7 +118,7 @@ const DpRequestPreviewPopup = () => {
     return (
         <div style={{ padding: '20px', height: '100vh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', background: '#f8fafc' }}>
             <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ width: '4px', height: '22px', background: '#3b82f6', borderRadius: '2px' }}></div>
+                <div style={{ width: '4px', height: '22px', background: 'var(--srt-primary-500)', borderRadius: '2px' }}></div>
                 <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '800', color: '#1e293b', letterSpacing: '-0.5px' }}>{title}</h2>
             </div>
             <div style={{ flex: 1, minHeight: 0, background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>

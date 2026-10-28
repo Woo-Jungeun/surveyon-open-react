@@ -132,7 +132,7 @@ const AiReportOverviewStep = ({
                                 left: '40px',
                                 width: `calc((100% - 80px) * ${pollingInfo.total_steps > 1 ? Math.min(1, Math.max(0, pollingInfo.current_step_index / (pollingInfo.total_steps - 1))) : 0})`,
                                 height: '2px',
-                                background: '#4f46e5',
+                                background: 'var(--srt-accent-600)',
                                 zIndex: 1,
                                 transition: 'width 0.4s ease'
                             }}></div>
@@ -155,15 +155,15 @@ const AiReportOverviewStep = ({
                                             width: '24px',
                                             height: '24px',
                                             borderRadius: '50%',
-                                            background: isStepCompleted ? '#10b981' : (isStepProcessing ? '#3b82f6' : '#ffffff'),
-                                            border: isStepCompleted ? 'none' : (isStepProcessing ? '2px solid #3b82f6' : '2px solid #cbd5e1'),
+                                            background: isStepCompleted ? '#10b981' : (isStepProcessing ? 'var(--srt-primary-500)' : '#ffffff'),
+                                            border: isStepCompleted ? 'none' : (isStepProcessing ? '2px solid var(--srt-primary-500)' : '2px solid #cbd5e1'),
                                             color: isStepCompleted ? '#ffffff' : (isStepProcessing ? '#ffffff' : '#64748b'),
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             fontSize: '11px',
                                             fontWeight: 600,
-                                            boxShadow: isStepProcessing ? '0 0 0 2px rgba(59, 130, 246, 0.15)' : 'none',
+                                            boxShadow: isStepProcessing ? '0 0 0 2px color-mix(in srgb, var(--srt-primary-500) 15%, transparent)' : 'none',
                                             transition: 'all 0.3s ease'
                                         }}>
                                             {isStepCompleted ? <Check size={10} strokeWidth={3} /> : stepItem.step}
@@ -196,7 +196,7 @@ const AiReportOverviewStep = ({
                                 <div style={{
                                     width: `${formatProgressPercent(pollingInfo.progress)}%`,
                                     height: '100%',
-                                    background: 'linear-gradient(90deg, #3b82f6, #6366f1)',
+                                    background: 'linear-gradient(90deg, var(--srt-primary-500), var(--srt-accent-500))',
                                     borderRadius: '2px',
                                     transition: 'width 0.4s ease'
                                 }}></div>

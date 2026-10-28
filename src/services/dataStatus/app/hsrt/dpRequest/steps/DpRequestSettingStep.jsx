@@ -55,7 +55,7 @@ const NumericEditCell = (props) => {
             <td className={isChanged ? 'changed-cell' : ''} style={{
                 ...props.style,
                 padding: '0 12px',
-                ...(isChanged ? { backgroundColor: '#eff6ff', color: '#2563eb' } : {})
+                ...(isChanged ? { backgroundColor: 'var(--srt-primary-50)', color: 'var(--srt-primary-600)' } : {})
             }}>
                 {value}
             </td>
@@ -105,7 +105,7 @@ const NumericEditCell = (props) => {
         <td style={{
             ...props.style,
             padding: 0,
-            ...(isChanged ? { backgroundColor: '#eff6ff' } : {})
+            ...(isChanged ? { backgroundColor: 'var(--srt-primary-50)' } : {})
         }} className={`k-grid-edit-cell ${isChanged ? 'changed-cell' : ''}`}>
             <Input
                 type="number"
@@ -115,7 +115,7 @@ const NumericEditCell = (props) => {
                 className="no-spin"
                 style={{
                     width: '100%', height: '100%', border: 'none', outline: 'none',
-                    color: isChanged ? '#2563eb' : 'inherit',
+                    color: isChanged ? 'var(--srt-primary-600)' : 'inherit',
                     backgroundColor: 'transparent'
                 }}
             />
@@ -1546,7 +1546,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                 /* Use native CSS :hover which is handled by the browser and never gets stuck */
                 .dp-table-container .k-grid tbody tr:hover td:not(.changed-cell) {
-                    background-color: #e0f2fe !important;
+                    background-color: var(--srt-secondary-100) !important;
                 }
             `}</style>
             {/* 기본 Weight 변수 카드 */}
@@ -1588,7 +1588,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <div className="dp-sidebar-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
                                 <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>가중치 목록 ({filteredWeights.length})</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <button onClick={handleAddNewWeight} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', height: '24px', padding: '0 8px', borderRadius: '4px', border: '1px solid #2563eb', color: '#2563eb', background: '#eff6ff', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
+                                    <button onClick={handleAddNewWeight} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', height: '24px', padding: '0 8px', borderRadius: '4px', border: '1px solid var(--srt-primary-600)', color: 'var(--srt-primary-600)', background: 'var(--srt-primary-50)', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
                                         <Plus size={12} /> 추가
                                     </button>
                                     <button className="dp-sidebar-toggle-btn-compact" onClick={() => setIsWeightSidebarOpen(false)} style={{ display: 'flex', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 0 }}>
@@ -1614,9 +1614,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             minHeight: '40px',
                                             borderRadius: '8px',
                                             cursor: 'pointer',
-                                            background: selectedWeightId === w.id ? '#EFF6FF' : 'transparent',
-                                            color: selectedWeightId === w.id ? '#1D4ED8' : '#1E293B',
-                                            border: selectedWeightId === w.id ? '1.5px solid #2563eb' : '1px solid #cbd5e1',
+                                            background: selectedWeightId === w.id ? 'var(--srt-primary-50)' : 'transparent',
+                                            color: selectedWeightId === w.id ? 'var(--srt-primary-700)' : '#1E293B',
+                                            border: selectedWeightId === w.id ? '1.5px solid var(--srt-primary-600)' : '1px solid #cbd5e1',
                                             marginBottom: '4px',
                                             transition: 'all 0.15s'
                                         }}
@@ -1728,8 +1728,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     cursor: 'pointer',
                                     fontWeight: isActive ? 600 : 500,
                                     fontSize: '15px',
-                                    color: isActive ? '#3B82F6' : '#64748B',
-                                    borderBottom: isActive ? '3px solid #3B82F6' : '3px solid transparent',
+                                    color: isActive ? 'var(--srt-primary-500)' : '#64748B',
+                                    borderBottom: isActive ? '3px solid var(--srt-primary-500)' : '3px solid transparent',
                                     marginBottom: '-1px', // Overlay parent border
                                     transition: 'all 0.2s ease',
                                     userSelect: 'none'
@@ -1737,7 +1737,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                             >
                                 {tab.label}
                                 {tab.badge > 0 && (
-                                    <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 999, background: '#3B82F6', color: '#fff' }}>{tab.badge}</span>
+                                    <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 999, background: 'var(--srt-primary-500)', color: '#fff' }}>{tab.badge}</span>
                                 )}
                             </div>
                         );
@@ -1768,7 +1768,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                             padding: '20px 28px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                                <div style={{ width: '4px', height: '18px', background: '#3b82f6', borderRadius: '2px', marginTop: '3px' }}></div>
+                                <div style={{ width: '4px', height: '18px', background: 'var(--srt-primary-500)', borderRadius: '2px', marginTop: '3px' }}></div>
                                 <div>
                                     <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>가중치 비율 일괄 수정</h3>
                                     <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '4px', fontWeight: 500 }}>복사한 데이터를 아래에 붙여넣어 일괄 적용할 수 있습니다.</div>
@@ -1792,8 +1792,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 width: '100%',
                                 display: 'flex',
                                 flexDirection: 'column',
-                                border: isTextareaFocused ? '1px solid #3b82f6' : '1px solid #cbd5e1',
-                                boxShadow: isTextareaFocused ? '0 0 0 3px rgba(59, 130, 246, 0.1)' : 'none',
+                                border: isTextareaFocused ? '1px solid var(--srt-primary-500)' : '1px solid #cbd5e1',
+                                boxShadow: isTextareaFocused ? '0 0 0 3px color-mix(in srgb, var(--srt-primary-500) 10%, transparent)' : 'none',
                                 borderRadius: '8px',
                                 overflow: 'hidden',
                                 transition: 'border-color 0.15s, box-shadow 0.15s'
@@ -1848,10 +1848,10 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 onClick={handleApplyBulkWeightValuesText}
                                 style={{
                                     height: '38px', padding: '0 24px', fontSize: '13px', borderRadius: '6px', border: 'none',
-                                    background: '#3b82f6', color: '#ffffff', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
+                                    background: 'var(--srt-primary-500)', color: '#ffffff', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
                                 }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = '#2563eb'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = '#3b82f6'; }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--srt-primary-600)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--srt-primary-500)'; }}
                             >
                                 일괄 적용
                             </button>

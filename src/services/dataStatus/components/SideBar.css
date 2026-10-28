@@ -88,8 +88,8 @@
 }
 
 .sidebar-search-input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: var(--srt-primary-500, var(--srt-primary-500));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--srt-primary-500, var(--srt-primary-500)) 15%, transparent);
 }
 
 .sidebar-search-input::placeholder {
@@ -132,10 +132,10 @@
 }
 
 .sidebar-item.selected {
-    background: #eff6ff;
-    border-color: #2563eb;
+    background: var(--srt-primary-50, var(--srt-primary-50));
+    border-color: var(--srt-primary-600, var(--srt-primary-600));
     border-width: 1px;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--srt-primary-600, var(--srt-primary-600)) 12%, transparent);
 }
 
 .sidebar-item-content {
@@ -280,7 +280,7 @@
 }
 
 .question-type-badge.multi {
-    background: #E0F2FE;
+    background: var(--srt-secondary-100);
     color: #0369A1;
 }
 

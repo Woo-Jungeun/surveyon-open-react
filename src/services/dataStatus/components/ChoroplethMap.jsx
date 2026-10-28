@@ -310,7 +310,7 @@ const ChoroplethMap = ({ data }) => {
                         <div style={{ marginBottom: '2px', fontSize: '14px' }}>
                             {hoveredRegion}
                         </div>
-                        <div style={{ fontSize: '18px', color: '#60a5fa' }}>
+                        <div style={{ fontSize: '18px', color: 'var(--srt-primary-400)' }}>
                             {regionData[hoveredRegion]}%
                         </div>
                     </div>

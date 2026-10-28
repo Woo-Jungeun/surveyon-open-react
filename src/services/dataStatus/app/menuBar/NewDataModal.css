@@ -45,7 +45,7 @@
     display: none;
     width: 5px;
     height: 20px;
-    background-color: var(--ds-primary, #3b82f6);
+    background-color: var(--ds-primary, var(--srt-primary-500));
     border-radius: 3px;
     margin-right: 10px;
 }
@@ -99,9 +99,9 @@
 }
 
 .nd-select-btn:hover {
-    border-color: var(--ds-primary, #3b82f6);
-    background: var(--ds-primary-light, #eff6ff);
-    color: var(--ds-primary, #3b82f6);
+    border-color: var(--ds-primary, var(--srt-primary-500));
+    background: var(--ds-primary-light, var(--srt-primary-50));
+    color: var(--ds-primary, var(--srt-primary-500));
     transform: translateY(-1px);
     box-shadow: var(--ds-shadow, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
 }
@@ -120,8 +120,8 @@
 }
 
 .nd-input:focus {
-    border-color: var(--ds-primary, #3b82f6);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: var(--ds-primary, var(--srt-primary-500));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--srt-primary-500) 10%, transparent);
 }
 
 .nd-file-input-box {
@@ -137,7 +137,7 @@
 }
 
 .nd-file-input-box:hover {
-    border-color: var(--ds-primary, #3b82f6);
+    border-color: var(--ds-primary, var(--srt-primary-500));
 }
 
 .nd-file-btn-label {
@@ -192,13 +192,13 @@
 }
 
 .nd-btn-confirm {
-    background: var(--ds-primary, #3b82f6);
+    background: var(--ds-primary, var(--srt-primary-500));
     color: white;
     box-shadow: var(--ds-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
 }
 
 .nd-btn-confirm:hover {
-    background: var(--ds-primary-hover, #2563eb);
+    background: var(--ds-primary-hover, var(--srt-primary-600));
     transform: translateY(-1px);
     box-shadow: var(--ds-shadow, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
 }
@@ -215,7 +215,7 @@
 }
 
 .nd-back-link:hover {
-    color: var(--ds-primary, #3b82f6);
+    color: var(--ds-primary, var(--srt-primary-500));
     text-decoration: none;
 }
 

@@ -70,7 +70,7 @@
 .data-header-search-input:focus {
     background: #fff;
     border-color: var(--ds-primary);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--srt-primary-500) 10%, transparent);
 }
 
 /* Actions Section */
@@ -106,13 +106,13 @@
     border: none;
     background: var(--ds-primary);
     color: #fff;
-    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 2px 4px color-mix(in srgb, var(--srt-primary-500) 20%, transparent);
 }
 
 .data-header-btn-primary:hover {
     background: var(--ds-primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 6px color-mix(in srgb, var(--srt-primary-500) 30%, transparent);
 }
 
 .data-header-btn-primary:active {

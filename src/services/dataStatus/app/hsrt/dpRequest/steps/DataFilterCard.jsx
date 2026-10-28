@@ -59,7 +59,7 @@ export const toFilterVariables = (baseVars) => {
 const STATUS_STYLE = {
     none: { bg: '#F1F5F9', fg: '#64748B', border: '#E2E8F0' },
     ok: { bg: '#ECFDF5', fg: '#047857', border: '#A7F3D0' },
-    loading: { bg: '#EFF6FF', fg: '#1D4ED8', border: '#BFDBFE' },
+    loading: { bg: 'var(--srt-primary-50)', fg: 'var(--srt-primary-700)', border: 'var(--srt-primary-200)' },
     error: { bg: '#FEF2F2', fg: '#B91C1C', border: '#FECACA' },
 };
 
@@ -67,9 +67,9 @@ const fmt = (n) => (n === null || n === undefined || n === '' ? '-' : Number(n).
 
 // 추가분석 필터 팝업과 동일한 체크박스 모양
 const CheckBox = ({ checked, indeterminate }) => (
-    <div style={{ width: 15, height: 15, border: (checked || indeterminate) ? '1.5px solid #3b82f6' : '1.5px solid #cbd5e1', borderRadius: 3, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        {checked && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
-        {!checked && indeterminate && <div style={{ width: 8, height: 2, background: '#3b82f6' }} />}
+    <div style={{ width: 15, height: 15, border: (checked || indeterminate) ? '1.5px solid var(--srt-primary-500)' : '1.5px solid #cbd5e1', borderRadius: 3, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {checked && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--srt-primary-500)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+        {!checked && indeterminate && <div style={{ width: 8, height: 2, background: 'var(--srt-primary-500)' }} />}
     </div>
 );
 
@@ -196,7 +196,7 @@ const DataFilterCard = ({ variables, badges, onChangeBadges, previewFilter, onVa
     const isZero = hasFilter && !isInvalid && preview && Number(preview.after) === 0;
 
     // 상단 완료집계 배지 (파랑 기준, 오류/0명만 빨강)
-    const BLUE = { bg: '#EFF6FF', fg: '#1D4ED8', border: '#BFDBFE' };
+    const BLUE = { bg: 'var(--srt-primary-50)', fg: 'var(--srt-primary-700)', border: 'var(--srt-primary-200)' };
     const RED = { bg: '#FEF2F2', fg: '#B91C1C', border: '#FECACA' };
     const GRAY = { bg: '#F8FAFC', fg: '#64748B', border: '#E2E8F0' };
     let statusStyle = GRAY;
@@ -237,7 +237,7 @@ const DataFilterCard = ({ variables, badges, onChangeBadges, previewFilter, onVa
                 <span style={rowLabel}>필터</span>
                 <div ref={anchorRef} style={{ position: 'relative' }}>
                     <div id="dp-data-filter-select" onClick={togglePopup}
-                        style={{ width: 520, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: `1px solid ${isOpen ? '#3b82f6' : '#cbd5e1'}`, borderRadius: 4, background: '#fff', padding: '0 12px', cursor: 'pointer', userSelect: 'none', boxSizing: 'border-box' }}>
+                        style={{ width: 520, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: `1px solid ${isOpen ? 'var(--srt-primary-500)' : '#cbd5e1'}`, borderRadius: 4, background: '#fff', padding: '0 12px', cursor: 'pointer', userSelect: 'none', boxSizing: 'border-box' }}>
                         <span style={{ fontSize: 13, color: '#334155', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {isOpen && draftKeys.length > 0 ? `${draftKeys.length}개 선택됨` : '필터 선택'}
                         </span>
@@ -288,9 +288,9 @@ const DataFilterCard = ({ variables, badges, onChangeBadges, previewFilter, onVa
                     )}
                 </div>
                 <button id="dp-data-filter-add" type="button" ref={addBtnRef} onClick={handleAdd}
-                    style={{ height: 34, padding: '0 20px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 4, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-                    onMouseOver={e => { e.currentTarget.style.background = '#2563eb'; }}
-                    onMouseOut={e => { e.currentTarget.style.background = '#3b82f6'; }}>
+                    style={{ height: 34, padding: '0 20px', background: 'var(--srt-primary-500)', color: '#fff', border: 'none', borderRadius: 4, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                    onMouseOver={e => { e.currentTarget.style.background = 'var(--srt-primary-600)'; }}
+                    onMouseOut={e => { e.currentTarget.style.background = 'var(--srt-primary-500)'; }}>
                     필터 추가
                 </button>
             </div>
@@ -302,12 +302,12 @@ const DataFilterCard = ({ variables, badges, onChangeBadges, previewFilter, onVa
                     <div style={{ flex: 1, minWidth: 0, display: 'flex', flexWrap: 'wrap', gap: 6, maxHeight: 120, overflowY: 'auto' }}>
                         {groupedChips.map(chip => (
                             <div key={chip.variableId} title={`${chip.label} [${chip.items.join(', ')}]`}
-                                style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 16, padding: '3px 6px 3px 10px', maxWidth: 420 }}>
-                                <span style={{ fontSize: 12, fontWeight: 500, color: '#2563eb', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--srt-primary-50)', border: '1px solid var(--srt-primary-200)', borderRadius: 16, padding: '3px 6px 3px 10px', maxWidth: 420 }}>
+                                <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--srt-primary-600)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                     {chip.label} [{chip.items.join(', ')}]
                                 </span>
                                 <span onClick={() => handleRemoveVariable(chip.variableId)} title="삭제"
-                                    style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, borderRadius: '50%', fontSize: 11, fontWeight: 700, background: '#dbeafe', color: '#1d4ed8', flexShrink: 0 }}>✕</span>
+                                    style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, borderRadius: '50%', fontSize: 11, fontWeight: 700, background: 'var(--srt-primary-100)', color: 'var(--srt-primary-700)', flexShrink: 0 }}>✕</span>
                             </div>
                         ))}
                     </div>

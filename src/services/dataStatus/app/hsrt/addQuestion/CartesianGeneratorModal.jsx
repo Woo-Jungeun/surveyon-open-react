@@ -190,13 +190,13 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                 </div>
 
                 {/* 컨텐츠 영역 */}
-                <div className="filter-popup-container-cbp" style={{ display: 'flex', flexDirection: 'row', padding: '16px', gap: '16px', background: '#f0f7ff', boxSizing: 'border-box' }}>
+                <div className="filter-popup-container-cbp" style={{ display: 'flex', flexDirection: 'row', padding: '16px', gap: '16px', background: 'var(--srt-primary-25)', boxSizing: 'border-box' }}>
 
                     {/* 왼쪽: 변수 목록 */}
                     <div style={{ flex: 'none', width: 'calc(50% - 8px)', minWidth: 0, display: 'flex', flexDirection: 'column', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', padding: '12px', boxSizing: 'border-box' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                             <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>변수 목록</span>
-                            <span style={{ fontSize: '12px', color: '#1d4ed8', background: '#eff6ff', padding: '2px 6px', borderRadius: '4px' }}>Click</span>
+                            <span style={{ fontSize: '12px', color: 'var(--srt-primary-700)', background: 'var(--srt-primary-50)', padding: '2px 6px', borderRadius: '4px' }}>Click</span>
                         </div>
 
                         <div style={{ position: 'relative', marginBottom: '12px' }}>
@@ -224,21 +224,21 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                             }
                                         }}
                                         style={{
-                                            display: 'flex', alignItems: 'center', backgroundColor: isSelected ? '#eff6ff' : '#ffffff',
-                                            border: isSelected ? '1px solid #3b82f6' : '1px solid #e2e8f0', borderRadius: '4px', padding: '6px 10px',
+                                            display: 'flex', alignItems: 'center', backgroundColor: isSelected ? 'var(--srt-primary-50)' : '#ffffff',
+                                            border: isSelected ? '1px solid var(--srt-primary-500)' : '1px solid #e2e8f0', borderRadius: '4px', padding: '6px 10px',
                                             cursor: 'pointer', transition: 'all 0.2s', boxSizing: 'border-box'
                                         }}
                                         onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.borderColor = '#cbd5e1'; }}
                                         onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.borderColor = '#e2e8f0'; }}
                                     >
                                         {isSelected ? (
-                                            <Check size={16} color="#3b82f6" style={{ marginRight: '8px', flexShrink: 0 }} />
+                                            <Check size={16} color="var(--srt-primary-500)" style={{ marginRight: '8px', flexShrink: 0 }} />
                                         ) : (
                                             <Plus size={16} color="#cbd5e1" style={{ marginRight: '8px', flexShrink: 0 }} />
                                         )}
                                         <div style={{ flex: 1, display: 'flex', alignItems: 'center', minWidth: 0, overflow: 'hidden', gap: '6px' }}>
-                                            <span style={{ fontSize: '13px', fontWeight: 'bold', color: isSelected ? '#1d4ed8' : '#1e293b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', lineHeight: 1.2, paddingBottom: '2px', paddingRight: '4px' }}>{v.label}</span>
-                                            <span style={{ fontSize: '11px', color: isSelected ? '#60a5fa' : '#94a3b8', whiteSpace: 'nowrap', textOverflow: 'ellipsis', flexShrink: 0, lineHeight: 1.2, paddingBottom: '2px' }}>
+                                            <span style={{ fontSize: '13px', fontWeight: 'bold', color: isSelected ? 'var(--srt-primary-700)' : '#1e293b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', lineHeight: 1.2, paddingBottom: '2px', paddingRight: '4px' }}>{v.label}</span>
+                                            <span style={{ fontSize: '11px', color: isSelected ? 'var(--srt-primary-400)' : '#94a3b8', whiteSpace: 'nowrap', textOverflow: 'ellipsis', flexShrink: 0, lineHeight: 1.2, paddingBottom: '2px' }}>
                                                 ({v.spss_name || v.id})
                                             </span>
                                             {v.type && (
@@ -251,7 +251,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                                     textTransform: 'lowercase',
                                                     flexShrink: 0,
                                                     ...(v.type === 'single' ? { background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' } :
-                                                        (v.type === 'double' || v.type === 'multi') ? { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' } :
+                                                        (v.type === 'double' || v.type === 'multi') ? { background: 'var(--srt-primary-50)', color: 'var(--srt-primary-700)', border: '1px solid var(--srt-primary-100)' } :
                                                             v.type === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
                                                                 v.type === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
                                                                     { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' })
@@ -273,7 +273,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                     <div style={{ flex: 'none', width: 'calc(50% - 8px)', minWidth: 0, display: 'flex', flexDirection: 'column', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', overflow: 'hidden', boxSizing: 'border-box' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #e2e8f0', background: '#fafafa' }}>
                             <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>
-                                조합할 변수들 <span style={{ color: '#3b82f6', fontWeight: '600', marginLeft: '4px' }}>({selectedItems.length}개)</span>
+                                조합할 변수들 <span style={{ color: 'var(--srt-primary-500)', fontWeight: '600', marginLeft: '4px' }}>({selectedItems.length}개)</span>
                             </span>
                         </div>
 
@@ -301,7 +301,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                         <div key={item.uid} style={{ position: 'relative', width: '100%', maxWidth: '300px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                             {/* 상단 삽입선 인디케이터 (순서 변경 시) */}
                                             {dragOverItemIdx === index && dragPos === 'top' && draggedItemIdx !== index && (
-                                                <div style={{ position: 'absolute', top: index > 0 ? '8px' : '-2px', left: 0, right: 0, height: '4px', background: '#3b82f6', borderRadius: '2px', zIndex: 10 }} />
+                                                <div style={{ position: 'absolute', top: index > 0 ? '8px' : '-2px', left: 0, right: 0, height: '4px', background: 'var(--srt-primary-500)', borderRadius: '2px', zIndex: 10 }} />
                                             )}
 
                                             {index > 0 && (
@@ -320,7 +320,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                                 onDragLeave={() => setDragOverItemIdx(null)}
                                                 style={{
                                                     width: '100%', padding: '8px 12px', background: '#ffffff',
-                                                    border: draggedItemIdx === index ? '1px dashed #3b82f6' : '1px solid #cbd5e1',
+                                                    border: draggedItemIdx === index ? '1px dashed var(--srt-primary-500)' : '1px solid #cbd5e1',
                                                     borderRadius: '6px', display: 'flex', alignItems: 'center',
                                                     boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
                                                     opacity: draggedItemIdx === index ? 0.4 : 1,
@@ -341,7 +341,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                                             textTransform: 'lowercase',
                                                             flexShrink: 0,
                                                             ...(v.type === 'single' ? { background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' } :
-                                                                (v.type === 'double' || v.type === 'multi') ? { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' } :
+                                                                (v.type === 'double' || v.type === 'multi') ? { background: 'var(--srt-primary-50)', color: 'var(--srt-primary-700)', border: '1px solid var(--srt-primary-100)' } :
                                                                     v.type === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
                                                                         v.type === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
                                                                             { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' })
@@ -362,7 +362,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
 
                                             {/* 하단 삽입선 인디케이터 (순서 변경 시) */}
                                             {dragOverItemIdx === index && dragPos === 'bottom' && draggedItemIdx !== index && (
-                                                <div style={{ position: 'absolute', bottom: '-2px', left: 0, right: 0, height: '4px', background: '#3b82f6', borderRadius: '2px', zIndex: 10 }} />
+                                                <div style={{ position: 'absolute', bottom: '-2px', left: 0, right: 0, height: '4px', background: 'var(--srt-primary-500)', borderRadius: '2px', zIndex: 10 }} />
                                             )}
                                         </div>
                                     );

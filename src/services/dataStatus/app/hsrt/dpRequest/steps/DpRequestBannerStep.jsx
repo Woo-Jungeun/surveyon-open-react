@@ -693,7 +693,7 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
                         if (e.key === 'Escape') { setLocalVal(String(dataItem[field] ?? '')); setIsEditing(false); }
                     }}
                     onPaste={handlePaste}
-                    style={{ width: '100%', height: '22px', fontSize: '13px', border: '1px solid #3b82f6', outline: 'none', padding: '0 4px', borderRadius: '2px', textAlign: align, boxSizing: 'border-box' }}
+                    style={{ width: '100%', height: '22px', fontSize: '13px', border: '1px solid var(--srt-primary-500)', outline: 'none', padding: '0 4px', borderRadius: '2px', textAlign: align, boxSizing: 'border-box' }}
                 />
             </td>
         );
@@ -709,7 +709,7 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
             style={{
                 padding: '1px 4px',
                 verticalAlign: 'middle',
-                background: isSelected ? '#e0f2fe' : (isAllLabel ? '#f8fafc' : '#fff'),
+                background: isSelected ? 'var(--srt-secondary-100)' : (isAllLabel ? '#f8fafc' : '#fff'),
                 color: '#1e293b',
                 textAlign: align,
                 borderBottom: '1px solid #e2e8f0',
@@ -897,7 +897,7 @@ const BannerActionFooter = memo(({ onCreateBanner, name, onNameChange }) => {
                     fontSize: '13px',
                     fontWeight: 600,
                     borderRadius: '6px',
-                    background: '#2563eb',
+                    background: 'var(--srt-primary-600)',
                     color: '#fff',
                     border: 'none',
                     cursor: 'pointer',
@@ -2183,8 +2183,8 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: '4px',
                                         padding: '4px 8px', borderRadius: '4px',
-                                        border: '1px solid #3b82f6', background: '#eff6ff',
-                                        color: '#3b82f6', fontSize: '12px', fontWeight: 600, cursor: 'pointer'
+                                        border: '1px solid var(--srt-primary-500)', background: 'var(--srt-primary-50)',
+                                        color: 'var(--srt-primary-500)', fontSize: '12px', fontWeight: 600, cursor: 'pointer'
                                     }}
                                 >
                                     <Plus size={14} strokeWidth={3} /> 추가
@@ -2292,7 +2292,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     <button
                                         onClick={() => handleCreateBanner(currentLabel)}
                                         className="dp-primary-btn"
-                                        style={{ height: '32px', padding: '0 20px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, border: 'none', background: '#3b82f6', color: '#fff', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                        style={{ height: '32px', padding: '0 20px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, border: 'none', background: 'var(--srt-primary-500)', color: '#fff', cursor: 'pointer', whiteSpace: 'nowrap' }}
                                     >
                                         배너 생성
                                     </button>
@@ -2329,8 +2329,8 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                             height: '24px',
                                                             borderRadius: '50%',
                                                             border: 'none',
-                                                            background: '#eff6ff',
-                                                            color: '#3b82f6',
+                                                            background: 'var(--srt-primary-50)',
+                                                            color: 'var(--srt-primary-500)',
                                                             cursor: 'pointer',
                                                             transition: 'all 0.15s ease'
                                                         }}
@@ -2431,7 +2431,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             gridTemplateColumns: 'repeat(5, 1fr)',
                                             gap: '8px',
                                             padding: '12px',
-                                            background: '#eff6ff',
+                                            background: 'var(--srt-primary-50)',
                                             overflowY: 'auto',
                                             overflowX: 'hidden',
                                             alignContent: 'start',
@@ -2619,8 +2619,8 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         }}
                                         style={{
                                             background: '#fff',
-                                            border: '1px solid #3b82f6',
-                                            color: '#3b82f6',
+                                            border: '1px solid var(--srt-primary-500)',
+                                            color: 'var(--srt-primary-500)',
                                             height: '32px',
                                             padding: '0 16px',
                                             borderRadius: '4px',
@@ -2632,7 +2632,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             alignItems: 'center',
                                             justifyContent: 'center'
                                         }}
-                                        onMouseOver={(e) => e.currentTarget.style.background = '#eff6ff'}
+                                        onMouseOver={(e) => e.currentTarget.style.background = 'var(--srt-primary-50)'}
                                         onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
                                     >
                                         미리보기 계산
@@ -2641,9 +2641,9 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         ref={addVarButtonRef}
                                         onClick={() => setIsAddVarPopupOpen(!isAddVarPopupOpen)}
                                         style={{
-                                            background: isAddVarPopupOpen ? '#eff6ff' : '#fff',
-                                            border: '1px solid #3b82f6',
-                                            color: '#3b82f6',
+                                            background: isAddVarPopupOpen ? 'var(--srt-primary-50)' : '#fff',
+                                            border: '1px solid var(--srt-primary-500)',
+                                            color: 'var(--srt-primary-500)',
                                             height: '32px',
                                             padding: '0 16px',
                                             borderRadius: '6px',
@@ -2658,10 +2658,10 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             boxShadow: isAddVarPopupOpen ? 'inset 0 2px 4px rgba(0,0,0,0.05)' : 'none'
                                         }}
                                         onMouseOver={(e) => {
-                                            if (!isAddVarPopupOpen) e.currentTarget.style.background = '#eff6ff';
+                                            if (!isAddVarPopupOpen) e.currentTarget.style.background = 'var(--srt-primary-50)';
                                         }}
                                         onMouseOut={(e) => {
-                                            e.currentTarget.style.background = isAddVarPopupOpen ? '#eff6ff' : '#fff';
+                                            e.currentTarget.style.background = isAddVarPopupOpen ? 'var(--srt-primary-50)' : '#fff';
                                             e.currentTarget.style.transform = 'scale(1)';
                                         }}
                                         onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.96)'}

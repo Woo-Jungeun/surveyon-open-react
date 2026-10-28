@@ -5,7 +5,7 @@
 }
 
 .pl-content-wrapper .k-grid tbody tr:hover {
-    background-color: #f0f4ff !important;
+    background-color: var(--srt-primary-50, #f0f4ff) !important;
 }
 
 .pl-modal-overlay {
@@ -66,8 +66,7 @@
 }
 
 .pl-header-icon {
-    color: #1472ff;
-    /* Blue Theme */
+    color: var(--srt-primary-600, #1472ff);
 }
 
 .pl-action-btn {
@@ -91,29 +90,29 @@
 }
 
 .pl-action-btn.primary {
-    background: #1472ff;
-    border-color: #1472ff;
-    color: #fff;
+    background: var(--srt-primary-600, #1472ff);
+    border-color: var(--srt-primary-600, #1472ff);
+    color: var(--srt-on-primary, #fff);
 }
 
 .pl-action-btn.primary:hover {
-    background: #0d5be3;
-    border-color: #0d5be3;
+    background: var(--srt-primary-700, #0d5be3);
+    border-color: var(--srt-primary-700, #0d5be3);
 }
 
 .pl-edit-input {
     width: 100%;
     padding: 6px 8px;
-    border: 1px solid #1472ff;
+    border: 1px solid var(--srt-primary-600, #1472ff);
     border-radius: 4px;
     font-size: 13px;
     outline: none;
-    background: #f0f4ff;
+    background: var(--srt-primary-25, #f0f4ff);
     box-sizing: border-box;
 }
 
 .pl-edit-input:focus {
-    box-shadow: 0 0 0 2px rgba(20, 114, 255, 0.2);
+    box-shadow: 0 0 0 2px var(--srt-primary-200, rgba(20, 114, 255, 0.2));
 }
 
 .pl-close-btn {
