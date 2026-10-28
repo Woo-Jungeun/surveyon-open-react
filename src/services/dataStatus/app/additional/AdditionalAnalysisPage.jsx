@@ -14,6 +14,7 @@ import './AdditionalAnalysisPage.css';
 import { AdditionalAnalysisPageApi } from './AdditionalAnalysisPageApi';
 import { DpRequestPageApi } from '../hsrt/dpRequest/DpRequestPageApi';
 import GlobalFilterBadge from '../common/GlobalFilterBadge';
+import { omitSpssName, getSpss } from '../common/spssName';
 import { modalContext } from "@/components/common/Modal.jsx";
 import FullscreenModal from './FullscreenModal';
 import { VariablePageApi } from '../variable/VariablePageApi';
@@ -793,7 +794,7 @@ const AdditionalAnalysisPage = () => {
                 variables.forEach(v => {
                     const varId = v?.id || v?.name;
                     if (varId) {
-                        variablesMap[varId] = v;
+                        variablesMap[varId] = omitSpssName(v); // spss_name은 표출 전용 → 전송 제외
                     }
                 });
             }
@@ -1031,6 +1032,7 @@ const AdditionalAnalysisPage = () => {
                             color: color,
                             info: item.info || [],
                             recoded_type: item.recoded_type,
+                            spss_name: getSpss(item), // 표출 전용
                             isBase: true
                         });
                     });
@@ -1062,6 +1064,7 @@ const AdditionalAnalysisPage = () => {
                             type: displayType,
                             color: color,
                             info: item.info || [],
+                            spss_name: getSpss(item), // 표출 전용
                             isRecoded: true
                         });
                     });
@@ -1460,6 +1463,7 @@ const AdditionalAnalysisPage = () => {
         if (!isTarget) return false;
         return (
             variable?.name?.toLowerCase().includes(variableSearchTerm.toLowerCase()) ||
+            String(variable?.spss_name || '').toLowerCase().includes(variableSearchTerm.toLowerCase()) ||
             variable?.label?.toLowerCase().includes(variableSearchTerm.toLowerCase())
         );
     });
@@ -3707,16 +3711,16 @@ const AdditionalAnalysisPage = () => {
                                                                     draggable
                                                                     onDragStart={(e) => handleDragStart(e, v)}
                                                                     onClick={(e) => handleVariableClick(e, v.id)}
-                                                                    title={`${v.label || ''}${v.id ? ` (${v.id})` : ''}`}
+                                                                    title={`${v.label || ''}${v.id ? ` (${v.spss_name || v.id})` : ''}`}
                                                                 >
                                                                     <div className="variable-item-content" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flex: 1 }}>
                                                                         <div style={{ flex: 1, minWidth: 0 }}>
                                                                             <div className="variable-item__name" style={{ wordBreak: 'break-all', lineHeight: 1.3, marginBottom: 0 }}>
-                                                                                {v.label || v.id}
+                                                                                {v.label || v.spss_name || v.id}
                                                                             </div>
                                                                             {v.label && (
                                                                                 <div style={{ wordBreak: 'break-all', color: '#64748b', fontSize: '12px', marginTop: '4px' }}>
-                                                                                    {v.id}
+                                                                                    {v.spss_name || v.id}
                                                                                 </div>
                                                                             )}
                                                                         </div>
@@ -3775,7 +3779,7 @@ const AdditionalAnalysisPage = () => {
                                                                                 onDrop={(e) => handleDrop(e, 'col_item', groupIndex, itemIndex)}
                                                                             >
                                                                                 <span className="item-drag-handle"><GripVertical size={13} strokeWidth={2.5} /></span>
-                                                                                <span className="tag-text">{v.id}</span>
+                                                                                <span className="tag-text">{v.spss_name || v.id}</span>
                                                                                 <X size={14} className="remove" onClick={(e) => { e.stopPropagation(); removeVar(v.id, 'col', groupIndex); }} />
                                                                             </div>
                                                                         ))}
@@ -3833,7 +3837,7 @@ const AdditionalAnalysisPage = () => {
                                                                         onDrop={(e) => handleDrop(e, 'row_item', null, itemIndex)}
                                                                     >
                                                                         <span className="item-drag-handle"><GripHorizontal size={13} strokeWidth={2.5} /></span>
-                                                                        <span className="tag-text">{v.id}</span>
+                                                                        <span className="tag-text">{v.spss_name || v.id}</span>
                                                                         <X size={14} className="remove" onClick={(e) => { e.stopPropagation(); removeVar(v.id, 'row'); }} />
                                                                     </div>
                                                                 ))

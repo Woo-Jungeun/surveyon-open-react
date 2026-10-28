@@ -11,6 +11,7 @@ import useUpdateHistory from '@/hooks/useUpdateHistory';
 import DpRequestStubSettingModal from './DpRequestStubSettingModal';
 import Toast from "@/components/common/Toast";
 import BulkEditLabelsModal from "./BulkEditLabelsModal";
+import { buildDisplayNameMap } from "../../../common/spssName";
 
 const TableStepContext = React.createContext(null);
 
@@ -1351,7 +1352,7 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
 });
 
 // --- 텍스트 편집 셀: 자체 로컬 state로 타이핑 즉각 반응, onBlur에만 stubs 업데이트 ---
-const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', placeholder = '' }) => {
+const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', placeholder = '', displayValue = '' }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [localVal, setLocalVal] = useState(String(dataItem[field] ?? ''));
     const context = useContext(TableStepContext);
@@ -1432,7 +1433,7 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', pl
 
     return (
         <td
-            title={localVal}
+            title={displayValue || localVal}
             onClick={() => setIsEditing(true)}
             style={{
                 padding: '0 8px', fontSize: '13px', verticalAlign: 'middle', cursor: 'text', textAlign: align,
@@ -1440,7 +1441,7 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', pl
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '1px'
             }}
         >
-            {localVal || (placeholder ? <span style={{ fontSize: '11px', opacity: 0.7 }}>{placeholder}</span> : '-')}
+            {(localVal && displayValue) || localVal || (placeholder ? <span style={{ fontSize: '11px', opacity: 0.7 }}>{placeholder}</span> : '-')}
         </td>
     );
 });
@@ -1579,6 +1580,19 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [stubs, setStubs] = useState([]);
     const [banners, setBanners] = useState([]);
+    // 표출 전용: id → spss_name (저장/요청에는 사용하지 않음)
+    const [displayNameMap, setDisplayNameMap] = useState({});
+    const getStubDisplayId = useCallback((s) => {
+        if (!s) return '';
+        const rid = s.recoded_var_id;
+        const sidRaw = s.source_var_id;
+        const ridName = rid ? displayNameMap[rid] : '';
+        // recoded spss_name 이 자기 id 또는 원본 id(_stub 제거값) 와 같으면 의미 없는 값으로 보고 건너뜀
+        if (ridName && ridName !== rid && ridName !== sidRaw && ridName !== String(rid).replace(/_stub$/, '')) return ridName;
+        const sid = s.source_var_id;
+        if (sid && (rid === sid || rid === `${sid}_stub`) && displayNameMap[sid] && displayNameMap[sid] !== sid) return displayNameMap[sid];
+        return rid || '';
+    }, [displayNameMap]);
     const [originalRecodedIds, setOriginalRecodedIds] = useState([]);
     const [originalStubs, setOriginalStubs] = useState([]);
     const [modifiedPresetIds, setModifiedPresetIds] = useState(new Set());
@@ -1794,6 +1808,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 const recodesArr = Array.isArray(recodedVars)
                     ? recodedVars
                     : Object.entries(recodedVars).map(([key, val]) => ({ id: val.id || key, ...val }));
+                const baseVarsForName = tableRes?.resultjson?.base_variables || tableRes?.data?.resultjson?.base_variables || {};
+                setDisplayNameMap(buildDisplayNameMap(baseVarsForName, recodedVars));
 
                 if (bannerIds.length > 0) {
                     formattedBanners = bannerIds.map(bid => {
@@ -2037,8 +2053,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
     const filteredStubs = useMemo(() => {
         if (!searchTerm) return stubs;
         const q = searchTerm.toLowerCase();
-        return stubs.filter(s => searchPinnedIds.has(s._row_id) || s.recoded_var_id?.toLowerCase().includes(q) || s.var_label?.toLowerCase().includes(q));
-    }, [stubs, searchTerm, searchPinnedIds]);
+        return stubs.filter(s => searchPinnedIds.has(s._row_id) || s.recoded_var_id?.toLowerCase().includes(q) || s.var_label?.toLowerCase().includes(q) || String(getStubDisplayId(s)).toLowerCase().includes(q));
+    }, [stubs, searchTerm, searchPinnedIds, getStubDisplayId]);
 
     const scrollPosToRestore = useRef(null);
     // 스크롤 유지는 KendoGridV2 내부(virtual 모드)에서 처리합니다.
@@ -2226,7 +2242,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         const varId = stubItem.recoded_var_id;
         if (!varId) return;
 
-        modal.showConfirm('알림', `[${varId}] 설정을 재적용하시겠습니까?\n해당 스터브의 수동 수정값이 현재 프리셋 기준으로 덮어씌워집니다.`, {
+        modal.showConfirm('알림', `[${getStubDisplayId(stubItem)}] 설정을 재적용하시겠습니까?\n해당 스터브의 수동 수정값이 현재 프리셋 기준으로 덮어씌워집니다.`, {
             btns: [
                 { title: '취소', click: () => { } },
                 {
@@ -2237,7 +2253,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                 // 성공 후 그리드 데이터 재조회 및 상단 컨텍스트 갱신
                                 await fetchOverview();
                                 if (typeof onRefresh === 'function') onRefresh();
-                                modal.showAlert('완료', `[${varId}] 설정이 재적용되었습니다.`);
+                                modal.showAlert('완료', `[${getStubDisplayId(stubItem)}] 설정이 재적용되었습니다.`);
                             } else {
                                 modal.showAlert('오류', res?.message || '설정 재적용에 실패했습니다.');
                             }
@@ -2740,7 +2756,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                 />
 
                                 <Column field="recoded_var_id" title="변수" width="115px" headerClassName="k-text-center"
-                                    cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" onUpdate={handleCellUpdate} placeholder="" style={{ opacity: p.dataItem.is_hidden ? 0.5 : 1 }} />}
+                                    cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" displayValue={getStubDisplayId(p.dataItem)} onUpdate={handleCellUpdate} placeholder="" style={{ opacity: p.dataItem.is_hidden ? 0.5 : 1 }} />}
                                 />
                                 <Column field="var_label" title="라벨" width="210px" headerClassName="k-text-center"
                                     cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} style={{ opacity: p.dataItem.is_hidden ? 0.5 : 1 }} />}
@@ -2870,6 +2886,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                         show={true}
                         onClose={() => setSelectedStubForModal(null)}
                         rowData={selectedStubForModal}
+                        displayVarId={getStubDisplayId(selectedStubForModal)}
+                        displayBanner={(Array.isArray(selectedStubForModal?.x_info) ? selectedStubForModal.x_info : (selectedStubForModal?.x_info ? [selectedStubForModal.x_info] : [])).map(b => (displayNameMap[b] && displayNameMap[b] !== b) ? displayNameMap[b] : b).join(', ')}
                         variables={stubs} // 임시로 전체 stubs를 넘겨줍니다. 나중에 필요에 따라 수정
                         onApply={(rules, rankOutputs, sortMode) => {
                             // 그리드 내부 필드 정리 + 필수 필드 정규화

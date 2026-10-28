@@ -186,7 +186,7 @@ const AiReportContentStep = ({
                                             />
                                         </div>
                                         <div className="ai-td id-col" style={{ width: '130px', minWidth: '130px', flexShrink: 0, display: 'flex', alignItems: 'center', paddingRight: '8px' }}>
-                                            <span className="ai-q-id-badge" style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '100%', display: 'inline-block' }} title={q.id}>{q.id}</span>
+                                            <span className="ai-q-id-badge" style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '100%', display: 'inline-block' }} title={q.spss_name || q.id}>{q.spss_name || q.id}</span>
                                         </div>
                                         <div className="ai-td label-col">
                                             {q.qnum && <span className="ai-q-num-label">{q.qnum}.</span>}
@@ -404,7 +404,7 @@ const AiReportContentStep = ({
                                                                 display: 'inline-block'
                                                             }}>KPI</span>
                                                         )}
-                                                        {q.id}
+                                                        {q.spss_name || q.id}
                                                     </span>
                                                 );
                                             })
@@ -431,7 +431,7 @@ const AiReportContentStep = ({
                                             </div>
                                             {(() => {
                                                 const addDropdownData = selectedQuestions.map(q => ({
-                                                    text: `${q.id} ${q.qnum ? `(${q.qnum})` : ''} - ${q.label}`,
+                                                    text: `${q.spss_name || q.id} ${q.qnum ? `(${q.qnum})` : ''} - ${q.label}`,
                                                     value: q.id
                                                 }));
                                                 const selectedVal = addDropdownData.find(item => item.value === newKpiQuestionId) || addDropdownData[0];
@@ -654,7 +654,7 @@ const AiReportContentStep = ({
                                                                     display: 'inline-block'
                                                                 }}>KPI</span>
                                                             )}
-                                                            {q.id}
+                                                            {q.spss_name || q.id}
                                                         </span>
                                                     );
                                                 })
@@ -681,7 +681,7 @@ const AiReportContentStep = ({
                                                 </div>
                                                 {(() => {
                                                     const editDropdownData = selectedQuestions.map(q => ({
-                                                        text: `${q.id} ${q.qnum ? `(${q.qnum})` : ''} - ${q.label}`,
+                                                        text: `${q.spss_name || q.id} ${q.qnum ? `(${q.qnum})` : ''} - ${q.label}`,
                                                         value: q.id
                                                     }));
                                                     const selectedVal = editDropdownData.find(item => item.value === newKpiQuestionId) || editDropdownData[0];

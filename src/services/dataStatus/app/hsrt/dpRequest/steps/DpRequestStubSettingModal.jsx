@@ -1444,7 +1444,7 @@ const openTemplateGuide = () => {
     newWin.document.close();
 };
 
-const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onApply }) => {
+const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onApply, displayVarId, displayBanner }) => {
     const auth = useSelector(state => state.auth);
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
@@ -1599,7 +1599,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                         <div style={{ flex: 1.2, display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#475569', minWidth: '30px', flexShrink: 0 }}>변수</span>
-                            <input type="text" value={rowData?.recoded_var_id || ''} disabled style={{ flex: 1, height: '32px', padding: '0 10px', border: '1px solid #e2e8f0', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '13px' }} />
+                            <input type="text" value={displayVarId || rowData?.recoded_var_id || ''} title={rowData?.recoded_var_id || ''} disabled style={{ flex: 1, height: '32px', padding: '0 10px', border: '1px solid #e2e8f0', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '13px' }} />
                         </div>
                         <div style={{ flex: 2.2, display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#475569', minWidth: '30px', flexShrink: 0 }}>라벨</span>
@@ -1607,7 +1607,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                         </div>
                         <div style={{ flex: 1.6, display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#475569', minWidth: '30px', flexShrink: 0 }}>배너</span>
-                            <input type="text" value={Array.isArray(rowData?.x_info) ? rowData.x_info.join(', ') : (rowData?.x_info || '')} disabled style={{ flex: 1, height: '32px', padding: '0 10px', border: '1px solid #e2e8f0', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '13px' }} />
+                            <input type="text" value={displayBanner || (Array.isArray(rowData?.x_info) ? rowData.x_info.join(', ') : (rowData?.x_info || ''))} disabled style={{ flex: 1, height: '32px', padding: '0 10px', border: '1px solid #e2e8f0', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '13px' }} />
                         </div>
                     </div>
 

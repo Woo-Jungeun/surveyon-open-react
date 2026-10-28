@@ -6,24 +6,44 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
 import DpRequestManualSummaryModal from './DpRequestManualSummaryModal';
+import { buildDisplayNameMap, resolveDisplayId, getSpss } from "../../../common/spssName";
 
 
 
 const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getSummaryDetail, saveSummaryDetail, getTableDetail } = DpRequestPageApi();
+    const { getSummaryDetail, saveSummaryDetail, getTableDetail, getBaseVariableList } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
+
+    // 표출 전용: id → spss_name (저장 payload에는 사용하지 않음)
+    const [displayNameMap, setDisplayNameMap] = useState({});
+    const dn = useCallback((id) => resolveDisplayId(displayNameMap, id), [displayNameMap]);
+    // 변수 객체 → 표출명. id 와 같은 spss_name 은 무시하고 맵(table/detail 등)에서 다시 찾음
+    const vn = useCallback((v) => {
+        if (!v) return '';
+        const id = v.id;
+        const s = getSpss(v);
+        if (s && s !== id && s !== v.base_id) return s;
+        const a = id ? dn(id) : '';
+        if (a && a !== id) return a;
+        if (v.base_id) {
+            const b = dn(v.base_id);
+            if (b && b !== v.base_id) return b;
+        }
+        return id || '';
+    }, [dn]);
 
     const getVariableTooltip = useCallback((variable) => {
         const list = Array.isArray(variable.info) ? variable.info : (Array.isArray(variable.categories) ? variable.categories : []);
         const infoLabels = list.map(item => item.label).filter(Boolean);
-        const base = `${variable.label || ''}${variable.base_id ? ` (${variable.base_id})` : ''}`;
+        const shownId = vn(variable);
+        const base = `${variable.label || ''}${shownId ? ` (${shownId})` : ''}`;
         if (infoLabels.length > 0) {
             return `${base}\n\n[보기 목록]\n${infoLabels.map(l => `- ${l}`).join('\n')}`;
         }
         return base;
-    }, []);
+    }, [vn]);
 
     const handleVariableMouseUp = useCallback((variable) => {
         const list = Array.isArray(variable.info) ? variable.info : (Array.isArray(variable.categories) ? variable.categories : []);
@@ -439,14 +459,26 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         try {
             loadingSpinner.show();
             // 척도 프리셋 데이터 조회 (1단계와 척도 정합성 일치용)
+            let tableDetailVarsForName = [];
             try {
                 const tableDetailResult = await getTableDetail.mutateAsync({ pageid: pageId, user: userId });
                 const actualTableDetail = tableDetailResult?.resultjson || tableDetailResult;
                 if (actualTableDetail?.scale_presets) {
                     setScalePresets(actualTableDetail.scale_presets);
                 }
+                // 표출용 spss_name 보조 소스 (base_variables / recoded_variables)
+                tableDetailVarsForName = [actualTableDetail?.base_variables, actualTableDetail?.recoded_variables].filter(Boolean);
             } catch (err) {
                 console.error("Failed to fetch scale presets in summary step:", err);
+            }
+            // 표출용 spss_name 보조 소스 (variables/base/list → metadata.spss_name)
+            try {
+                const baseListRes = await getBaseVariableList.mutateAsync({ pageid: pageId, user: userId });
+                if (String(baseListRes?.success) === '777' && baseListRes.resultjson && typeof baseListRes.resultjson === 'object') {
+                    tableDetailVarsForName.unshift(baseListRes.resultjson);
+                }
+            } catch (err) {
+                console.error("Failed to fetch base variable list for spss_name:", err);
             }
 
             const result = await getSummaryDetail.mutateAsync({ pageid: pageId, user: userId });
@@ -454,6 +486,24 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 const sourceVars = result.resultjson.summary_source_variables || [];
                 const sourceVarsList = Array.isArray(sourceVars) ? sourceVars : Object.values(sourceVars);
                 setBaseVariables(sourceVarsList);
+
+                // 표출용 spss_name 맵 (summary_source_variables / summary_tables.vars / summary_history.vars)
+                try {
+                    const nameSources = [...tableDetailVarsForName, sourceVarsList];
+                    sourceVarsList.forEach(v => {
+                        if (v?.base_id && getSpss(v) && v.base_id !== v.id) nameSources.push([{ id: v.base_id, spss_name: getSpss(v) }]);
+                    });
+                    const collectVars = (arr) => {
+                        const list = Array.isArray(arr) ? arr : (arr && typeof arr === 'object' ? Object.values(arr) : []);
+                        list.forEach(t => {
+                            const vs = Array.isArray(t?.vars) ? t.vars : [];
+                            nameSources.push(vs.map(x => ({ id: x?.id || x?.name, spss_name: getSpss(x) })));
+                        });
+                    };
+                    collectVars(result.resultjson.summary_tables);
+                    collectVars(result.resultjson.summary_history);
+                    setDisplayNameMap(buildDisplayNameMap(...nameSources));
+                } catch (e) { console.error('spss_name map build failed', e); }
 
                 // --- 신규 백엔드 스펙(summary_tables) 기반 로드 복구 ---
                 const rawTables = result.resultjson.summary_tables || [];
@@ -857,9 +907,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         const search = (summarySearchMap[currentTab] || '').toLowerCase().trim();
         if (!search) return tabFilteredVariables;
         return tabFilteredVariables.filter(v =>
-            (v.label || '').toLowerCase().includes(search) || (v.id || '').toLowerCase().includes(search)
+            (v.label || '').toLowerCase().includes(search) || (v.id || '').toLowerCase().includes(search) || String(vn(v) || '').toLowerCase().includes(search)
         );
-    }, [tabFilteredVariables, summarySearchMap, currentTab]);
+    }, [tabFilteredVariables, summarySearchMap, currentTab, vn]);
 
     const groupedVariables = useMemo(() => {
         const groups = {};
@@ -1109,7 +1159,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     subItems,
                     tags,
                     items: group.items.map(it => it.id),
-                    itemsDesc: `대상 문항: ${group.items.map(it => `${it.id}. ${it.label}`).join(', ')}`,
+                    itemsDesc: `대상 문항: ${group.items.map(it => `${vn(it)}. ${it.label}`).join(', ')}`,
                     scale_points: sp
                 });
             });
@@ -1143,7 +1193,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     subItems,
                     tags,
                     items: group.items.map(it => it.id),
-                    itemsDesc: `대상 문항: ${group.items.map(it => `${it.id}. ${it.label}`).join(', ')}`
+                    itemsDesc: `대상 문항: ${group.items.map(it => `${vn(it)}. ${it.label}`).join(', ')}`
                 });
             });
         }
@@ -1189,7 +1239,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         }
 
         return proposals;
-    }, [wizardTab, matrixSelection, isMeanIncluded, openStats, isMergeByTitle, groupedVariables, scalePresets]);
+    }, [wizardTab, matrixSelection, isMeanIncluded, openStats, isMergeByTitle, groupedVariables, scalePresets, dn, vn]);
 
     const totalWizardSubItemsCount = useMemo(() => {
         const selectedProposals = wizardProposals.filter(p => wizardSelectedIds.has(p.id));
@@ -1870,7 +1920,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 {group.parentLabel}
                                             </span>
                                             <span style={{ fontSize: '10.5px', color: '#64748b', background: '#f1f5f9', padding: '1px 5px', borderRadius: '4px', fontWeight: 500, display: 'inline-flex', alignItems: 'center' }}>
-                                                {group.parentId}
+                                                {dn(group.parentId)}
                                             </span>
                                         </div>
 
@@ -1909,7 +1959,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                                 {variable.label}
                                                             </span>
                                                             <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: 500, marginRight: '8px' }}>
-                                                                {variable.id}
+                                                                {vn(variable)}
                                                             </span>
                                                             {currentTab === 'scale' && variable.scale_points && (
                                                                 <span style={{ fontSize: '8.5px', fontWeight: 700, color: '#0284c7', background: '#e0f2fe', padding: '1px 4px', borderRadius: '10px', whiteSpace: 'nowrap' }}>
@@ -2624,7 +2674,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                                                     fontSize: '11px',
                                                                                     border: '1px solid #e2e8f0'
                                                                                 }}>
-                                                                                    {itemId}
+                                                                                    {dn(itemId)}
                                                                                 </span>
                                                                             </td>
                                                                             <td style={{ padding: '8px 14px' }}>

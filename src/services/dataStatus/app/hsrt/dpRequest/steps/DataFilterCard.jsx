@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Filter, Users, X, AlertCircle, Loader2, ChevronDown, Search } from 'lucide-react';
+import { getSpss } from '../../../common/spssName';
 
 /**
  * 범용 데이터 필터 조건식 생성
@@ -49,7 +50,8 @@ export const toFilterVariables = (baseVars) => {
                 })
                 .filter(Boolean);
             if (options.length === 0) return null;
-            return { id, label, options };
+            // spssName: 표출/검색 전용 (배지 저장에는 포함하지 않음)
+            return { id, label, options, spssName: getSpss(v) };
         })
         .filter(Boolean);
 };
@@ -96,7 +98,7 @@ const DataFilterCard = ({ variables, badges, onChangeBadges, previewFilter, onVa
         const q = searchText.trim().toLowerCase();
         if (!q) return variables;
         return variables.map(v => {
-            if (v.label.toLowerCase().includes(q) || v.id.toLowerCase().includes(q)) return v;
+            if (v.label.toLowerCase().includes(q) || v.id.toLowerCase().includes(q) || (v.spssName || '').toLowerCase().includes(q)) return v;
             const opts = v.options.filter(o => o.label.toLowerCase().includes(q));
             return opts.length > 0 ? { ...v, options: opts } : null;
         }).filter(Boolean);

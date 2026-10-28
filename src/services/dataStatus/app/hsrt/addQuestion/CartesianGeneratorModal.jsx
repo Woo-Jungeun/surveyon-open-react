@@ -81,6 +81,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
         const list = variables || [];
         return list.filter(v =>
             (v.id && v.id.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (v.spss_name && String(v.spss_name).toLowerCase().includes(searchTerm.toLowerCase())) ||
             (v.label && v.label.toLowerCase().includes(searchTerm.toLowerCase()))
         );
     }, [variables, searchTerm]);
@@ -232,7 +233,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                         <div style={{ flex: 1, display: 'flex', alignItems: 'center', minWidth: 0, overflow: 'hidden', gap: '6px' }}>
                                             <span style={{ fontSize: '13px', fontWeight: 'bold', color: isSelected ? '#1d4ed8' : '#1e293b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', lineHeight: 1.2, paddingBottom: '2px', paddingRight: '4px' }}>{v.label}</span>
                                             <span style={{ fontSize: '11px', color: isSelected ? '#60a5fa' : '#94a3b8', whiteSpace: 'nowrap', textOverflow: 'ellipsis', flexShrink: 0, lineHeight: 1.2, paddingBottom: '2px' }}>
-                                                ({v.id})
+                                                ({v.spss_name || v.id})
                                             </span>
                                             {v.type && (
                                                 <div style={{
@@ -323,7 +324,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                                 <GripVertical size={16} color="#cbd5e1" style={{ cursor: 'grab', flexShrink: 0 }} />
                                                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', minWidth: 0, overflow: 'hidden', gap: '6px' }}>
                                                     <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', lineHeight: 1.2, paddingBottom: '2px', paddingRight: '4px' }}>{v.label || item.varId}</span>
-                                                    <span style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', flexShrink: 0, lineHeight: 1.2, paddingBottom: '2px' }}>({item.varId})</span>
+                                                    <span style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', flexShrink: 0, lineHeight: 1.2, paddingBottom: '2px' }}>({v.spss_name || item.varId})</span>
                                                     {v.type && (
                                                         <div style={{
                                                             fontSize: '10px',

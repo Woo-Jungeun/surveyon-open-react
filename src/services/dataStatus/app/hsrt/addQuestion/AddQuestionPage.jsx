@@ -8,6 +8,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
 import DataHeader from "@/services/dataStatus/components/DataHeader";
 import CartesianGeneratorModal from "./CartesianGeneratorModal";
+import { getSpss } from "../../common/spssName";
 import BulkEditConditionsModal from "./BulkEditConditionsModal";
 import AiConditionGeneratorModal from "./AiConditionGeneratorModal";
 import { Button } from "@/components/ui/button";
@@ -990,6 +991,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                         label: v.label || v.name || key,
                         type: v.type,
                         subId: v.id || key,
+                        spss_name: getSpss(v), // 표출 전용
                         info: Array.isArray(v.info) ? v.info.map(item => ({
                             ...item,
                             label2: item.value ?? item.label2 ?? '',

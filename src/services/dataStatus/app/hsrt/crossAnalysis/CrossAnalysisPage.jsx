@@ -4,6 +4,7 @@ import { Settings, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, Chev
 import { Popup } from '@progress/kendo-react-popup';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
 import GlobalFilterBadge from '../../common/GlobalFilterBadge';
+import { getSpss } from '../../common/spssName';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import KendoChart from '../../../components/KendoChart';
 import '@/services/fieldManagement/app/fieldProgress/FieldProgressPage.css';
@@ -2117,7 +2118,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         }
 
         // 2. 이미 서버에 존재하는 경우 (확인창 띄우고 API 호출)
-        modal.showConfirm('알림', <span style={{ wordBreak: 'break-all' }}>문항({bannerId})을 삭제하시겠습니까?</span>, {
+        modal.showConfirm('알림', <span style={{ wordBreak: 'break-all' }}>문항({banners.find(b => b.id === bannerId)?.displayId || bannerId})을 삭제하시겠습니까?</span>, {
             btns: [
                 { title: "취소", click: () => { } },
                 {
@@ -2479,6 +2480,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             t.type === 'double' ? '다중 응답형 (Double)' :
                                 t.type === 'numeric' ? '숫자형 (Numeric)' : (t.type || '단일 응답형 (Single)'),
                         subId: t.table_id || t.id,
+                        // 표출 전용 (저장/요청에는 id 사용)
+                        displayId: getSpss(t) || getSpss(stubVar) || t.table_id || t.id,
                         raw: { ...t, info: stubInfo },
                         html: t.html,
                         info: stubInfo
@@ -2491,7 +2494,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     ? banners.map((b, idx) => ({
                         ...b,
                         html: formatted[idx].html,
-                        raw: formatted[idx].raw
+                        raw: formatted[idx].raw,
+                        displayId: formatted[idx].displayId
                     }))
                     : formatted;
 
@@ -4453,14 +4457,14 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             }, 50);
                                         }}
                                         style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', minHeight: '40px', borderRadius: '8px' }}
-                                        title={`${banner.label || ''}${banner.id && !banner.id.startsWith('NEW_') ? ` (${banner.id})` : ''}`}
+                                        title={`${banner.label || ''}${banner.id && !banner.id.startsWith('NEW_') ? ` (${banner.displayId || banner.id})` : ''}`}
                                     >
                                         <div className="dp-banner-item-info" style={{ flex: 1, paddingRight: '8px' }}>
                                             <span className="dp-banner-label" style={{ display: 'block', marginBottom: '1px', lineHeight: 1.3, fontSize: '12px', wordBreak: 'break-all' }}>
                                                 {banner.id.startsWith('NEW_') ? (banner.label || '(새 문항 작성 중)') : banner.label}
                                             </span>
                                             <span className="dp-banner-sub" style={{ display: 'block', fontSize: '11px', opacity: 0.6, wordBreak: 'break-all', lineHeight: 1.3 }}>
-                                                {banner.id.startsWith('NEW_') ? '저장 대기' : banner.id}
+                                                {banner.id.startsWith('NEW_') ? '저장 대기' : (banner.displayId || banner.id)}
                                             </span>
                                         </div>
                                         {banner.raw?.type && (

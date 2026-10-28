@@ -4,6 +4,7 @@ import { Check, ArrowRight, RefreshCw, ChevronUp, ChevronDown, FileSpreadsheet, 
 import { DpRequestPageApi } from '../../dpRequest/DpRequestPageApi';
 import { AiReportPageApi } from '../AiReportPageApi';
 import KendoChart from '@/services/dataStatus/components/KendoChart';
+import { getSpss } from '../../../common/spssName';
 
 const CHART_THEME_OPTIONS = [
     { id: 'default', name: '기본 테마', preview: ['#2563eb', '#7c3aed', '#db2777', '#ca8a04', '#16a34a'] },
@@ -71,18 +72,21 @@ const AiReportAnalysisStep = ({
     categories,
     bannerVars,
     userId,
-    recodedVariables = {}
+    recodedVariables = {},
+    baseVariables = {}
 }) => {
     const { getOverviewContext } = DpRequestPageApi();
     const { getOverviewProofStyled, getOverviewProofStyledChart, getOverviewSingleStyled } = AiReportPageApi();
 
     const [recodedVariablesMap, setRecodedVariablesMap] = useState(recodedVariables || {});
+    const [baseVariablesMap, setBaseVariablesMap] = useState(baseVariables || {}); // 표출용 spss_name
 
     useEffect(() => {
-        if (recodedVariables && typeof recodedVariables === 'object' && Object.keys(recodedVariables).length > 0) {
-            setRecodedVariablesMap(recodedVariables);
-            return;
-        }
+        const hasRecoded = recodedVariables && typeof recodedVariables === 'object' && Object.keys(recodedVariables).length > 0;
+        const hasBase = baseVariables && typeof baseVariables === 'object' && Object.keys(baseVariables).length > 0;
+        if (hasRecoded) setRecodedVariablesMap(recodedVariables);
+        if (hasBase) setBaseVariablesMap(baseVariables);
+        if (hasRecoded && hasBase) return;
         const fetchRecodedVars = async () => {
             const pageId = sessionStorage.getItem('pageId') || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
             const user = userId || "";
@@ -90,15 +94,19 @@ const AiReportAnalysisStep = ({
                 const contextRes = await getOverviewContext.mutateAsync({ pageid: pageId, user });
                 const ctxPayload = contextRes?.resultjson || contextRes || {};
                 const recodedVars = ctxPayload.recoded_variables || {};
-                if (recodedVars && typeof recodedVars === 'object' && Object.keys(recodedVars).length > 0) {
+                if (!hasRecoded && recodedVars && typeof recodedVars === 'object' && Object.keys(recodedVars).length > 0) {
                     setRecodedVariablesMap(recodedVars);
+                }
+                const baseVars = ctxPayload.base_variables || {};
+                if (!hasBase && baseVars && typeof baseVars === 'object') {
+                    setBaseVariablesMap(baseVars);
                 }
             } catch (e) {
                 console.error("Failed to load recoded_variables for stub label lookup:", e);
             }
         };
         fetchRecodedVars();
-    }, [userId, getOverviewContext, recodedVariables]);
+    }, [userId, getOverviewContext, recodedVariables, baseVariables]);
 
     const getStubDisplayLabel = useCallback((stubCode) => {
         if (!stubCode) return '';
@@ -137,12 +145,26 @@ const AiReportAnalysisStep = ({
         return stubStr;
     }, [recodedVariablesMap, questions]);
 
+    // 표출 전용: stub id → spss_name (없으면 stub id)
+    const getStubSpss = useCallback((stubCode) => {
+        if (!stubCode) return '';
+        const s = String(stubCode).trim();
+        const base = s.replace(/_stub$/, '');
+        const withSuffix = s.endsWith('_stub') ? s : `${s}_stub`;
+        const fromMap = getSpss(recodedVariablesMap[s]) || getSpss(recodedVariablesMap[withSuffix]) || getSpss(recodedVariablesMap[base])
+            || getSpss(baseVariablesMap[base]) || getSpss(baseVariablesMap[s])
+            || getSpss(baseVariablesMap[recodedVariablesMap[withSuffix]?.source_var_id]) || getSpss(baseVariablesMap[recodedVariablesMap[s]?.source_var_id]);
+        if (fromMap) return fromMap;
+        const q = Array.isArray(questions) ? questions.find(q => q && (q.id === s || q.id === withSuffix || q.id === base)) : null;
+        return q?.spss_name || s;
+    }, [recodedVariablesMap, baseVariablesMap, questions]);
+
     const handleOpenSingleCrosstab = (stubCode, findItem) => {
         if (!stubCode) return;
 
         const pageId = sessionStorage.getItem('pageId') || "3fa85f64-5717-4562-b3fc-2c963f66afa6";
         const user = userId || "";
-        const windowTitle = findItem?.question_name || findItem?.question_title || findItem?.question || `문항 [${stubCode}] 핵심 교차표`;
+        const windowTitle = findItem?.question_name || findItem?.question_title || findItem?.question || `문항 [${getStubSpss(stubCode)}] 핵심 교차표`;
 
         const target = findItem?.evidence_target || {};
         const bannerName = target.banner_name || findItem?.banner_name || "";
@@ -1203,7 +1225,7 @@ const AiReportAnalysisStep = ({
                                 setSelectedEvidenceStubMap(prev => ({ ...prev, [evidenceKey]: stub }));
                                 fetchEvidenceForTarget(findItem, evidenceKey, stub);
                             }}
-                            title={`[${displayLabel}] (${stub}) 클릭하여 해당 문항 근거 상세 보기`}
+                            title={`[${displayLabel}] (${getStubSpss(stub)}) 클릭하여 해당 문항 근거 상세 보기`}
                             style={{
                                 background: isSelectedStub ? '#2563eb' : '#eff6ff',
                                 color: isSelectedStub ? '#ffffff' : '#1d4ed8',
@@ -1751,8 +1773,9 @@ const AiReportAnalysisStep = ({
                                         const matchingQ = questions.find(q => q && (q.id === qKey || q.qnum === qKey));
                                         const labelStr = matchingQ ? (typeof matchingQ.label === 'object' ? (matchingQ.label.text || matchingQ.label.label || JSON.stringify(matchingQ.label)) : String(matchingQ.label || '')) : '';
                                         const qTitle = matchingQ ? `${matchingQ.qnum || matchingQ.id}. ${labelStr}` : String(qKey || '');
+                                        const qDisplayId = matchingQ?.spss_name || getStubSpss(qKey); // 표출 전용
 
-                                        if (l1SearchQuery && !qKey.toLowerCase().includes(l1SearchQuery.toLowerCase()) && !qTitle.toLowerCase().includes(l1SearchQuery.toLowerCase())) {
+                                        if (l1SearchQuery && !qKey.toLowerCase().includes(l1SearchQuery.toLowerCase()) && !String(qDisplayId).toLowerCase().includes(l1SearchQuery.toLowerCase()) && !qTitle.toLowerCase().includes(l1SearchQuery.toLowerCase())) {
                                             return null;
                                         }
 
@@ -1760,7 +1783,7 @@ const AiReportAnalysisStep = ({
                                             <div className="ai-block-card" key={qKey || idx}>
                                                 <div className="ai-block-header" style={{ borderBottom: 'none' }}>
                                                     <div className="ai-block-header-left">
-                                                        <span className="ai-block-q-id">{qKey}</span>
+                                                        <span className="ai-block-q-id">{qDisplayId}</span>
                                                         <h4 className="ai-block-q-title">{qTitle}</h4>
                                                         <span className="ai-block-done-badge" style={{ background: '#fffbeb', color: '#d97706', border: '1px solid #fde68a' }}>미완료</span>
                                                     </div>
@@ -1779,8 +1802,9 @@ const AiReportAnalysisStep = ({
                                         const l1Val = insightData.l1[qKey];
                                         const matchingQ = questions.find(q => q.id === qKey || q.qnum === qKey);
                                         const qTitle = matchingQ ? `${matchingQ.qnum}. ${matchingQ.label}` : qKey;
+                                        const qDisplayId = matchingQ?.spss_name || getStubSpss(qKey); // 표출 전용
 
-                                        if (l1SearchQuery && !qKey.toLowerCase().includes(l1SearchQuery.toLowerCase()) && !qTitle.toLowerCase().includes(l1SearchQuery.toLowerCase())) {
+                                        if (l1SearchQuery && !qKey.toLowerCase().includes(l1SearchQuery.toLowerCase()) && !String(qDisplayId).toLowerCase().includes(l1SearchQuery.toLowerCase()) && !qTitle.toLowerCase().includes(l1SearchQuery.toLowerCase())) {
                                             return null;
                                         }
 
@@ -1792,7 +1816,7 @@ const AiReportAnalysisStep = ({
                                                     setExpandedL1Cards(prev => ({ ...prev, [qKey]: !prev[qKey] }));
                                                 }}>
                                                     <div className="ai-block-header-left">
-                                                        <span className="ai-block-q-id">{qKey}</span>
+                                                        <span className="ai-block-q-id">{qDisplayId}</span>
                                                         <h4 className="ai-block-q-title">{qTitle}</h4>
                                                         <span className="ai-block-done-badge">요약 완료</span>
                                                     </div>
@@ -2516,7 +2540,7 @@ const AiReportAnalysisStep = ({
                                                                                                                             evidence_target: activeEvInfo.target
                                                                                                                         });
                                                                                                                     }}
-                                                                                                                    title={`[${activeEvInfo.stubId}] 클릭하여 핵심 교차표 새창 보기`}
+                                                                                                                    title={`[${getStubSpss(activeEvInfo.stubId)}] 클릭하여 핵심 교차표 새창 보기`}
                                                                                                                     style={{
                                                                                                                         padding: '5.5px 10px',
                                                                                                                         borderRadius: '6px',
@@ -2733,7 +2757,7 @@ const AiReportAnalysisStep = ({
                                                                                                                             evidence_target: activeEvInfo.target
                                                                                                                         });
                                                                                                                     }}
-                                                                                                                    title={`[${activeEvInfo.stubId}] 클릭하여 핵심 교차표 새창 보기`}
+                                                                                                                    title={`[${getStubSpss(activeEvInfo.stubId)}] 클릭하여 핵심 교차표 새창 보기`}
                                                                                                                     style={{
                                                                                                                         padding: '5.5px 10px',
                                                                                                                         borderRadius: '6px',
@@ -2929,7 +2953,7 @@ const AiReportAnalysisStep = ({
                                                                                                                             evidence_target: activeEvInfo.target
                                                                                                                         });
                                                                                                                     }}
-                                                                                                                    title={`[${activeEvInfo.stubId}] 클릭하여 핵심 교차표 새창 보기`}
+                                                                                                                    title={`[${getStubSpss(activeEvInfo.stubId)}] 클릭하여 핵심 교차표 새창 보기`}
                                                                                                                     style={{
                                                                                                                         padding: '5.5px 10px',
                                                                                                                         borderRadius: '6px',

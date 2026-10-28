@@ -8,6 +8,7 @@ import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { DpRequestPageApi } from '../DpRequestPageApi';
+import { getSpss } from '../../../common/spssName';
 
 const ConditionHeaderCell = (props) => {
     const anchorRef = useRef(null);
@@ -573,7 +574,7 @@ const DetailEditPreview = ({ item, onClose }) => {
                     <div style={{ width: '3px', height: '3px', background: '#94a3b8', borderRadius: '50%' }}></div>
                 </div>
                 <h2 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#1e293b' }}>
-                    {editLabel || item?.id}
+                    {editLabel || getSpss(item) || item?.id}
                 </h2>
                 {item?.type && (
                     <span style={{ fontSize: '11px', padding: '2px 8px', background: '#eff6ff', color: '#2563eb', borderRadius: '12px', border: '1px solid #bfdbfe', fontWeight: 600, marginLeft: '4px' }}>

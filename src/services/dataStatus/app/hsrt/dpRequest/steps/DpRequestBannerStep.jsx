@@ -10,6 +10,7 @@ import useUpdateHistory from '@/hooks/useUpdateHistory';
 import Toast from "@/components/common/Toast";
 import BulkEditSubcategoriesModal from "./BulkEditSubcategoriesModal";
 import AiAutoBannerModal from "./AiAutoBannerModal";
+import { getDisplayId, omitSpssName, getSpss } from "../../../common/spssName";
 
 // --- 커스텀 헤더 셀 (조건 아이콘) ---
 const ConditionHeaderCell = (props) => {
@@ -831,12 +832,12 @@ const VariableItem = memo(({ v, index, isSelected, onDragStart, onMouseDown, onM
     }, [v.info, v.categories]);
 
     const tooltipText = useMemo(() => {
-        const base = `${v.label || ''}${v.id ? ` (${v.id})` : ''}`;
+        const base = `${v.label || ''}${v.id ? ` (${getDisplayId(v)})` : ''}`;
         if (infoLabels.length > 0) {
             return `${base}\n\n[보기 목록]\n${infoLabels.map(l => `- ${l}`).join('\n')}`;
         }
         return base;
-    }, [v.label, v.id, infoLabels]);
+    }, [v.label, v.id, v.spss_name, v.metadata, infoLabels]);
 
     return (
         <div
@@ -859,7 +860,7 @@ const VariableItem = memo(({ v, index, isSelected, onDragStart, onMouseDown, onM
                 <div className="variable-item__name">{v.label}</div>
                 {v.type && <span className={`question-type-badge ${getTypeClass(v.type)}`} style={{ marginBottom: '-12.5px' }}>{v.type}</span>}
             </div>
-            <div className="variable-item__label">{v.id}</div>
+            <div className="variable-item__label">{getDisplayId(v)}</div>
         </div>
     );
 });
@@ -1240,7 +1241,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         const search = addVarSearch.toLowerCase();
         const allowedTypes = ['single', 'multi', 'scale', 'rank'];
         return (Array.isArray(baseVariables) ? baseVariables : []).filter(v => {
-            const matchesSearch = (v.label || '').toLowerCase().includes(search) || (v.id || '').toLowerCase().includes(search);
+            const matchesSearch = (v.label || '').toLowerCase().includes(search) || (v.id || '').toLowerCase().includes(search) || String(getSpss(v)).toLowerCase().includes(search);
             const isAllowedType = allowedTypes.includes((v.type || '').toLowerCase());
             return matchesSearch && isAllowedType;
         });
@@ -1422,6 +1423,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             label: newLabel,
             name: newLabel,
             subId: newId,
+            spss_name: undefined, // 복제본은 원본 표출명을 사용하지 않음
             info: JSON.parse(JSON.stringify(target.info || [])), // deep copy
             categories: JSON.parse(JSON.stringify(target.categories || target.info || [])), // deep copy
             isNew: true
@@ -1439,7 +1441,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         const search = wizardSearch.toLowerCase();
         const allowedTypes = ['single', 'multi', 'scale', 'rank'];
         return (Array.isArray(baseVariables) ? baseVariables : []).filter(v => {
-            const matchesSearch = (v.label || '').toLowerCase().includes(search) || (v.id || '').toLowerCase().includes(search);
+            const matchesSearch = (v.label || '').toLowerCase().includes(search) || (v.id || '').toLowerCase().includes(search) || String(getSpss(v)).toLowerCase().includes(search);
             const isAllowedType = allowedTypes.includes((v.type || '').toLowerCase());
             return matchesSearch && isAllowedType;
         });
@@ -1449,7 +1451,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     const filteredBanners = useMemo(() => {
         const search = bannerSearch.toLowerCase();
         return banners.filter(b =>
-            (b.label || '').toLowerCase().includes(search) || (b.id || '').toLowerCase().includes(search)
+            (b.label || '').toLowerCase().includes(search) || (b.id || '').toLowerCase().includes(search) || String(getSpss(b)).toLowerCase().includes(search)
         );
     }, [banners, bannerSearch]);
 
@@ -1772,7 +1774,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                     pageid: pageId,
                     user: auth?.user?.userId,
                     variables: {
-                        [generatedVar.id]: generatedVar
+                        [generatedVar.id]: omitSpssName(generatedVar)
                     },
                     delete_ids: []
                 };
@@ -2221,7 +2223,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             background: isPendingDelete ? '#f1f5f9' : undefined,
                                             border: isPendingDelete ? '1px dashed #cbd5e1' : undefined
                                         }}
-                                        title={`${banner.label || ''}${banner.id && !banner.isNew ? ` (${banner.id})` : ''}`}
+                                        title={`${banner.label || ''}${banner.id && !banner.isNew ? ` (${getDisplayId(banner)})` : ''}`}
                                     >
                                         <div className="dp-banner-item-info" style={{ flex: 1, paddingRight: '8px' }}>
                                             <span className="dp-banner-label" style={{
@@ -2237,7 +2239,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 {banner.isNew ? (banner.label || '(새 배너 작성중)') : banner.label}
                                             </span>
                                             <span className="dp-banner-sub" style={{ display: 'block', fontSize: '11px', textDecoration: isPendingDelete ? 'line-through' : 'none', color: 'rgb(148, 163, 184)', wordBreak: 'break-all', lineHeight: 1.3 }}>
-                                                {banner.isNew ? '저장 대기' : banner.id}
+                                                {banner.isNew ? '저장 대기' : getDisplayId(banner)}
                                                 {isPendingDelete ? (
                                                     <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px', textDecoration: 'none' }}>(삭제예정)</span>
                                                 ) : (

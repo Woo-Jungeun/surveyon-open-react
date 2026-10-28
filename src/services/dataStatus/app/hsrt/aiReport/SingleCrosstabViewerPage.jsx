@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
 import { AiReportPageApi } from './AiReportPageApi';
+import { getSpss } from '../../common/spssName';
 
 export default function SingleCrosstabViewerPage() {
     const [searchParams] = useSearchParams();
@@ -34,6 +35,7 @@ export default function SingleCrosstabViewerPage() {
     const [displayTitle, setDisplayTitle] = useState(titleParam);
     const [errorMsg, setErrorMsg] = useState('');
     const [uiSettings, setUiSettings] = useState(null);
+    const [stubDisplayName, setStubDisplayName] = useState(''); // 표출 전용 spss_name
 
     useEffect(() => {
         let isMounted = true;
@@ -57,6 +59,20 @@ export default function SingleCrosstabViewerPage() {
                 } else if (ctxPayload.effective_render_settings && typeof ctxPayload.effective_render_settings === 'object') {
                     contextUiSettings = ctxPayload.effective_render_settings;
                 }
+                // 표출용 spss_name 해석 (stub id → recoded/base 변수)
+                const stubTrim = String(stubParam).trim();
+                const stubBase = stubTrim.replace(/_stub$/, '');
+                const recodedMap = ctxPayload.recoded_variables || {};
+                const baseMap = ctxPayload.base_variables || {};
+                const isRealName = (n) => n && n !== stubTrim && n !== stubBase; // id 와 같은 값은 무시
+                const resolved = [
+                    getSpss(baseMap[stubBase]),
+                    getSpss(baseMap[recodedMap[stubTrim]?.source_var_id]),
+                    getSpss(baseMap[stubTrim]),
+                    getSpss(recodedMap[stubTrim]),
+                    getSpss(recodedMap[stubBase])
+                ].find(isRealName);
+                if (isMounted && resolved) setStubDisplayName(resolved);
             } catch (ctxErr) {
                 console.error("Viewer: Failed to load context for single-styled:", ctxErr);
             }
@@ -135,6 +151,11 @@ export default function SingleCrosstabViewerPage() {
 
                 if (titleFromRes) {
                     setDisplayTitle(titleFromRes);
+                }
+                const spssFromRes = getSpss(data.tables?.[0]);
+                const stubTrimRes = String(stubParam).trim();
+                if (spssFromRes && spssFromRes !== stubTrimRes && spssFromRes !== stubTrimRes.replace(/_stub$/, '')) {
+                    setStubDisplayName(prev => prev || spssFromRes);
                 }
 
                 if (rawHtml) {
@@ -345,7 +366,7 @@ export default function SingleCrosstabViewerPage() {
                 {!loading && (
                     <div className="header-question-row">
                         <h2 className="question-text">{displayTitle}</h2>
-                        {stubParam && <span className="stub-tag">{stubParam}</span>}
+                        {stubParam && <span className="stub-tag">{stubDisplayName || stubParam}</span>}
                     </div>
                 )}
             </div>

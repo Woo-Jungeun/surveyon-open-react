@@ -11,6 +11,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import './AiReportPage.css';
 import { AiReportPageApi } from "./AiReportPageApi";
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
+import { getSpss } from '../../common/spssName';
 import AiReportOverviewStep from "./steps/AiReportOverviewStep";
 import AiReportContentStep from "./steps/AiReportContentStep";
 import AiReportAnalysisStep from "./steps/AiReportAnalysisStep";
@@ -53,6 +54,7 @@ const AiReportPage = () => {
     const { getOverviewContext, getCrosstabAiSummaryAll } = DpRequestPageApi();
     const fileInputRef = useRef(null);
     const recodedVariablesRef = useRef({});
+    const baseVariablesRef = useRef({}); // 표출용 spss_name 조회 (overview/context base_variables)
 
     const [currentStep, setCurrentStep] = useState(0);
     const [selectedModel, setSelectedModel] = useState("");
@@ -222,6 +224,8 @@ const AiReportPage = () => {
                     const ctxPayload = contextRes?.resultjson || contextRes || {};
                     const recodedVars = ctxPayload.recoded_variables || {};
                     recodedVariablesRef.current = recodedVars;
+                    const baseVarsCtx = ctxPayload.base_variables || {};
+                    baseVariablesRef.current = baseVarsCtx;
 
                     const mappedQuestions = Object.entries(recodedVars)
                         .filter(([key, v]) => {
@@ -249,6 +253,7 @@ const AiReportPage = () => {
 
                             return {
                                 id: varId,
+                                spss_name: getSpss(v) || getSpss(baseVarsCtx[String(varId).replace(/_stub$/, '')]) || getSpss(baseVarsCtx[v?.source_var_id]), // 표출 전용
                                 qnum: qnumVal || varId,
                                 label: labelVal,
                                 group: sectionName,
@@ -736,6 +741,7 @@ const AiReportPage = () => {
                     const ctxPayload = contextRes?.resultjson || contextRes || {};
                     recodedVars = ctxPayload.recoded_variables || {};
                     recodedVariablesRef.current = recodedVars;
+                    baseVariablesRef.current = ctxPayload.base_variables || {};
                 } catch (e) {
                     console.error("Failed to load context in regenerate:", e);
                 }
@@ -1513,6 +1519,7 @@ const AiReportPage = () => {
                         bannerVars={bannerVars}
                         userId={auth?.user?.userId}
                         recodedVariables={recodedVariablesRef.current}
+                        baseVariables={baseVariablesRef.current}
                     />
                 );
             default:
