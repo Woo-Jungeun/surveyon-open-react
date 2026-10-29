@@ -137,70 +137,103 @@
 }
 
 /* Kendo Dropdown Arrow Mask Button & SVG Icon Brand Theming */
-[data-theme="data-dashboard"] .k-dropdownlist.k-picker > button,
-[data-theme="data-dashboard"] .k-dropdownlist > button,
-[data-theme="data-dashboard"] .k-picker > button,
-[data-theme="data-dashboard"] .k-combobox > button,
-[data-theme="data-dashboard"] .k-dropdownlist .k-input-button,
-[data-theme="data-dashboard"] .k-picker .k-input-button,
-[data-theme="data-dashboard"] .k-dropdownlist .k-button,
-[data-theme="data-dashboard"] .k-picker .k-button,
-.dp-add-question-dropdown .k-input-button {
+[data-theme="data-dashboard"] .k-dropdownlist.k-picker > button:not(.dp-mini-dropdown *),
+[data-theme="data-dashboard"] .k-dropdownlist > button:not(.dp-mini-dropdown *),
+[data-theme="data-dashboard"] .k-picker > button:not(.dp-mini-dropdown *),
+[data-theme="data-dashboard"] .k-combobox > button:not(.dp-mini-dropdown *),
+[data-theme="data-dashboard"] .k-dropdownlist .k-input-button:not(.dp-mini-dropdown *),
+[data-theme="data-dashboard"] .k-picker .k-input-button:not(.dp-mini-dropdown *),
+[data-theme="data-dashboard"] .k-dropdownlist .k-button:not(.dp-mini-dropdown *),
+[data-theme="data-dashboard"] .k-picker .k-button:not(.dp-mini-dropdown *) {
     background-color: var(--srt-primary-600, var(--ds-primary)) !important;
 }
 
-[data-theme="data-dashboard"] .k-dropdownlist .k-icon,
-[data-theme="data-dashboard"] .k-picker .k-icon,
-[data-theme="data-dashboard"] .k-dropdownlist .k-svg-icon,
-[data-theme="data-dashboard"] .k-picker .k-svg-icon,
-[data-theme="data-dashboard"] .k-dropdownlist svg,
-[data-theme="data-dashboard"] .k-picker svg,
-[data-theme="data-dashboard"] .k-dropdownlist svg *,
-[data-theme="data-dashboard"] .k-picker svg *,
+/* Lucide stroke-based icons (ChevronDown, Check 등) - 스터브 그리드 및 미니 드롭다운에만 한정 적용 */
+.dp-mini-dropdown svg.lucide,
+.dp-mini-dropdown svg.lucide *,
+.dp-mini-dropdown svg,
+.dp-mini-dropdown svg *,
+.dp-compact-stub-grid .dp-mini-dropdown svg,
+.dp-compact-stub-grid .dp-mini-dropdown svg * {
+    fill: none !important;
+    stroke: var(--srt-primary-600, var(--ds-primary, #2563eb)) !important;
+}
+
+/* 버튼 내 아이콘 색상은 버튼 글자색(currentColor)을 정상 계승 */
+button svg.lucide,
+.data-header-btn svg,
+.data-header-btn svg.lucide {
+    stroke: currentColor !important;
+    color: currentColor !important;
+}
+
+.data-header-btn-primary svg,
+.data-header-btn-primary svg.lucide {
+    stroke: #ffffff !important;
+    color: #ffffff !important;
+}
+
+
+[data-theme="data-dashboard"] .k-dropdownlist:not(.dp-mini-dropdown) .k-icon,
+[data-theme="data-dashboard"] .k-picker:not(.dp-mini-dropdown) .k-icon,
+[data-theme="data-dashboard"] .k-dropdownlist:not(.dp-mini-dropdown) .k-svg-icon:not(.lucide),
+[data-theme="data-dashboard"] .k-picker:not(.dp-mini-dropdown) .k-svg-icon:not(.lucide),
+[data-theme="data-dashboard"] .k-dropdownlist:not(.dp-mini-dropdown) svg:not(.lucide) path,
+[data-theme="data-dashboard"] .k-picker:not(.dp-mini-dropdown) svg:not(.lucide) path,
 .dp-add-question-dropdown .k-input-button svg,
 .dp-add-question-dropdown .k-input-button svg * {
     color: var(--srt-primary-600, var(--ds-primary)) !important;
     fill: var(--srt-primary-600, var(--ds-primary)) !important;
 }
 
-/* Kendo Popup Container (Portal 전역 렌더링 대응) */
-.k-animation-container .k-popup,
-.k-animation-container .k-list-container,
-.k-animation-container.k-animation-container-shown .k-popup {
-    border: 1.5px solid var(--srt-primary-500, var(--ds-primary, #3b82f6)) !important;
+/* Kendo Popup Container (H-SRT 전용 대응) */
+html[data-theme="hsrt"] .k-animation-container .k-popup,
+html[data-theme="hsrt"] .k-animation-container .k-list-container,
+html[data-theme="data-dashboard"] .k-animation-container .k-popup,
+html[data-theme="data-dashboard"] .k-animation-container .k-list-container,
+body[data-theme="hsrt"] .k-animation-container .k-popup,
+body[data-theme="hsrt"] .k-animation-container .k-list-container,
+body[data-theme="data-dashboard"] .k-animation-container .k-popup,
+body[data-theme="data-dashboard"] .k-animation-container .k-list-container {
+    border: 1px solid var(--srt-primary-300, #93c5fd) !important;
     border-radius: 8px !important;
-    box-shadow: 0 8px 24px color-mix(in srgb, var(--srt-primary-600, var(--ds-primary, #2563eb)) 18%, transparent) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+    animation: none !important;
+    transition: none !important;
 }
 
-.k-animation-container .k-list-item.k-selected,
-.k-animation-container .k-list-item.k-selected.k-focus,
-.k-animation-container .k-list-item.k-selected:hover,
-.k-popup .k-list-item.k-selected,
-[data-theme="data-dashboard"] .k-list-item.k-selected {
-    background-color: var(--srt-primary-50, var(--ds-primary-light, #eff6ff)) !important;
-    color: var(--srt-primary-700, var(--ds-primary-hover, #1d4ed8)) !important;
+html[data-theme="hsrt"] .k-animation-container .k-list-item.k-selected,
+html[data-theme="hsrt"] .k-popup .k-list-item.k-selected,
+html[data-theme="data-dashboard"] .k-animation-container .k-list-item.k-selected,
+html[data-theme="data-dashboard"] .k-popup .k-list-item.k-selected,
+body[data-theme="hsrt"] .k-animation-container .k-list-item.k-selected,
+body[data-theme="hsrt"] .k-popup .k-list-item.k-selected,
+body[data-theme="data-dashboard"] .k-animation-container .k-list-item.k-selected,
+body[data-theme="data-dashboard"] .k-popup .k-list-item.k-selected {
+    background-color: var(--srt-primary-50, #eff6ff) !important;
+    color: var(--srt-primary-700, #1d4ed8) !important;
     font-weight: 700 !important;
 }
 
-.k-animation-container .k-list-item:hover:not(.k-selected),
-.k-popup .k-list-item:hover:not(.k-selected) {
+html[data-theme="hsrt"] .k-animation-container .k-list-item:hover:not(.k-selected),
+html[data-theme="hsrt"] .k-popup .k-list-item:hover:not(.k-selected),
+html[data-theme="data-dashboard"] .k-animation-container .k-list-item:hover:not(.k-selected),
+html[data-theme="data-dashboard"] .k-popup .k-list-item:hover:not(.k-selected),
+body[data-theme="hsrt"] .k-animation-container .k-list-item:hover:not(.k-selected),
+body[data-theme="hsrt"] .k-popup .k-list-item:hover:not(.k-selected),
+body[data-theme="data-dashboard"] .k-animation-container .k-list-item:hover:not(.k-selected),
+body[data-theme="data-dashboard"] .k-popup .k-list-item:hover:not(.k-selected) {
     background-color: var(--srt-primary-25, #f8fbff) !important;
     color: var(--srt-primary-600, #2563eb) !important;
 }
 
-/* Dropdown Popup Scrollbar */
-.k-animation-container .k-list-content::-webkit-scrollbar {
-    width: 6px;
-}
-.k-animation-container .k-list-content::-webkit-scrollbar-track {
-    background: transparent;
-}
+/* Dropdown Popup Scrollbar: 기본 회색(#cbd5e1) 유지 */
 .k-animation-container .k-list-content::-webkit-scrollbar-thumb {
-    background: var(--srt-primary-200, #cbd5e1) !important;
+    background: #cbd5e1 !important;
     border-radius: 4px;
 }
 .k-animation-container .k-list-content::-webkit-scrollbar-thumb:hover {
-    background: var(--srt-primary-400, #94a3b8) !important;
+    background: #94a3b8 !important;
 }
 
 /* Buttons Enhancement */

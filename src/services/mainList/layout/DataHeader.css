@@ -101,11 +101,23 @@
     border-color: #cbd5e1;
 }
 
+.data-header-btn svg {
+    color: currentColor;
+    stroke: currentColor;
+    flex-shrink: 0;
+}
+
 .data-header-btn-primary {
     border: none;
     background: var(--ds-primary);
     color: #fff;
     box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.data-header-btn-primary svg {
+    color: #fff !important;
+    stroke: #fff !important;
+    flex-shrink: 0;
 }
 
 .data-header-btn-primary:hover {
@@ -116,4 +128,4 @@
 
 .data-header-btn-primary:active {
     transform: translateY(0);
-}
+}

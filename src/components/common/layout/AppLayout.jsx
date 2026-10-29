@@ -37,6 +37,13 @@ const AppLayout = ({
     };
     const resolvedTheme = dataTheme || serviceThemeMap[service] || 'hsrt';
 
+    React.useEffect(() => {
+        if (typeof document !== 'undefined') {
+            document.documentElement.setAttribute('data-theme', resolvedTheme);
+            document.body.setAttribute('data-theme', resolvedTheme);
+        }
+    }, [resolvedTheme]);
+
     return (
         <div
             className={`app-layout-root ${className}`}

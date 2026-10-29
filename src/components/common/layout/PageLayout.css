@@ -29,7 +29,7 @@
     --ds-primary: #16a34a;
     --ds-primary-hover: #15803d;
     --ds-primary-light: #f0fdf4;
-    --ds-primary-border: #bbf7d0;
+    --ds-primary-border: #86efac;
 }
 
 [data-theme="aiOpen"],
@@ -395,3 +395,70 @@
     border-radius: 8px;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.02);
 }
+
+/* ==========================================================================
+   7. Kendo Popup / DropdownList 전 서비스 4대 테마 자동 연동 시스템
+   - H-SRT: 파란색 테두리 (#bfdbfe)
+   - 데이터관리: 초록색 테두리 (#86efac)
+   - AI오픈분석: 주황색 테두리 (#fed7aa)
+   - 실사관리: 남색 테두리 (#c7d2fe)
+   ========================================================================== */
+.k-animation-container .k-popup,
+.k-animation-container .k-list-container,
+.k-animation-container.k-animation-container-shown .k-popup {
+    border: 1px solid var(--ds-primary-border, #cbd5e1) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+    animation: none !important;
+    transition: none !important;
+}
+
+.k-animation-container .k-list-item.k-selected,
+.k-animation-container .k-list-item.k-selected.k-focus,
+.k-animation-container .k-list-item.k-selected:hover,
+.k-popup .k-list-item.k-selected {
+    background-color: var(--ds-primary-light, #f0fdf4) !important;
+    color: var(--ds-primary, #16a34a) !important;
+    font-weight: 700 !important;
+}
+
+.k-animation-container .k-list-item:hover:not(.k-selected) {
+    background-color: #f1f5f9 !important;
+    color: #1e293b !important;
+}
+
+/* 드롭다운 팝업 내부 스크롤바: 기본 소프트 회색(#cbd5e1) 통일 */
+.k-animation-container .k-list-content,
+.k-popup .k-list-content,
+.k-list-scroller,
+.logic-dropdown-popup .k-list-content {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+.k-animation-container .k-list-content::-webkit-scrollbar,
+.k-popup .k-list-content::-webkit-scrollbar,
+.k-list-scroller::-webkit-scrollbar,
+.logic-dropdown-popup .k-list-content::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.k-animation-container .k-list-content::-webkit-scrollbar-track,
+.k-popup .k-list-content::-webkit-scrollbar-track,
+.k-list-scroller::-webkit-scrollbar-track,
+.logic-dropdown-popup .k-list-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+.k-animation-container .k-list-content::-webkit-scrollbar-thumb,
+.k-popup .k-list-content::-webkit-scrollbar-thumb,
+.k-list-scroller::-webkit-scrollbar-thumb,
+.logic-dropdown-popup .k-list-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-radius: 4px;
+}
+.k-animation-container .k-list-content::-webkit-scrollbar-thumb:hover,
+.k-popup .k-list-content::-webkit-scrollbar-thumb:hover,
+.k-list-scroller::-webkit-scrollbar-thumb:hover,
+.logic-dropdown-popup .k-list-content::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8 !important;
+}
+

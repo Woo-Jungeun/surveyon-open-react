@@ -110,25 +110,42 @@ html[data-srt-brand] [data-theme] {
    Kendo UI Portal (DropdownList Popup) 전역 브랜드 테마 연동
    - Kendo Popup은 <body> 직계 자식으로 렌더링되므로 :root / html 범위에서 직접 제어
    -------------------------------------------------------------------------- */
-.k-animation-container .k-popup,
-.k-animation-container .k-list-container,
-.k-animation-container.k-animation-container-shown .k-popup {
-    border: 1.5px solid var(--srt-primary-500) !important;
+html[data-theme="hsrt"] .k-animation-container .k-popup,
+html[data-theme="hsrt"] .k-animation-container .k-list-container,
+html[data-theme="data-dashboard"] .k-animation-container .k-popup,
+html[data-theme="data-dashboard"] .k-animation-container .k-list-container,
+body[data-theme="hsrt"] .k-animation-container .k-popup,
+body[data-theme="hsrt"] .k-animation-container .k-list-container,
+body[data-theme="data-dashboard"] .k-animation-container .k-popup,
+body[data-theme="data-dashboard"] .k-animation-container .k-list-container {
+    border: 1px solid var(--srt-primary-300, #93c5fd) !important;
     border-radius: 8px !important;
-    box-shadow: 0 8px 24px color-mix(in srgb, var(--srt-primary-600) 18%, transparent) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+    animation: none !important;
+    transition: none !important;
 }
 
-.k-animation-container .k-list-item.k-selected,
-.k-animation-container .k-list-item.k-selected.k-focus,
-.k-animation-container .k-list-item.k-selected:hover,
-.k-popup .k-list-item.k-selected {
+html[data-theme="hsrt"] .k-animation-container .k-list-item.k-selected,
+html[data-theme="hsrt"] .k-popup .k-list-item.k-selected,
+html[data-theme="data-dashboard"] .k-animation-container .k-list-item.k-selected,
+html[data-theme="data-dashboard"] .k-popup .k-list-item.k-selected,
+body[data-theme="hsrt"] .k-animation-container .k-list-item.k-selected,
+body[data-theme="hsrt"] .k-popup .k-list-item.k-selected,
+body[data-theme="data-dashboard"] .k-animation-container .k-list-item.k-selected,
+body[data-theme="data-dashboard"] .k-popup .k-list-item.k-selected {
     background-color: var(--srt-primary-50) !important;
     color: var(--srt-primary-700) !important;
     font-weight: 700 !important;
 }
 
-.k-animation-container .k-list-item:hover:not(.k-selected),
-.k-popup .k-list-item:hover:not(.k-selected) {
+html[data-theme="hsrt"] .k-animation-container .k-list-item:hover:not(.k-selected),
+html[data-theme="hsrt"] .k-popup .k-list-item:hover:not(.k-selected),
+html[data-theme="data-dashboard"] .k-animation-container .k-list-item:hover:not(.k-selected),
+html[data-theme="data-dashboard"] .k-popup .k-list-item:hover:not(.k-selected),
+body[data-theme="hsrt"] .k-animation-container .k-list-item:hover:not(.k-selected),
+body[data-theme="hsrt"] .k-popup .k-list-item:hover:not(.k-selected),
+body[data-theme="data-dashboard"] .k-animation-container .k-list-item:hover:not(.k-selected),
+body[data-theme="data-dashboard"] .k-popup .k-list-item:hover:not(.k-selected) {
     background-color: var(--srt-primary-25) !important;
     color: var(--srt-primary-600) !important;
 }

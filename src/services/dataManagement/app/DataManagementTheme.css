@@ -168,3 +168,78 @@
     background: var(--dm-primary-hover);
     box-shadow: 0 4px 6px rgba(22, 163, 74, 0.3);
 }
+
+/* ==========================================================================
+   데이터 관리 (Data Management) 전용 Kendo Popup & DropDownList 초록색 테마
+   - 팝업 테두리, 포커스 링, 선택 항목 배경색을 시그니처 초록색(#16a34a)으로 통일
+   ========================================================================== */
+html[data-theme="dataManagement"] .k-animation-container .k-popup,
+html[data-theme="data-management"] .k-animation-container .k-popup,
+body[data-theme="dataManagement"] .k-animation-container .k-popup,
+body[data-theme="data-management"] .k-animation-container .k-popup,
+.k-animation-container:has(.logic-dropdown-popup.data-management) .k-popup,
+.logic-dropdown-popup.data-management {
+    border: 1px solid var(--dm-primary-border, #86efac) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+    animation: none !important;
+    transition: none !important;
+}
+
+html[data-theme="dataManagement"] .k-animation-container .k-list-item.k-selected,
+html[data-theme="data-management"] .k-animation-container .k-list-item.k-selected,
+body[data-theme="dataManagement"] .k-animation-container .k-list-item.k-selected,
+body[data-theme="data-management"] .k-animation-container .k-list-item.k-selected,
+.logic-dropdown-popup.data-management .k-list-item.k-selected,
+.logic-dropdown-popup.data-management .k-list-item.k-state-selected {
+    background-color: var(--dm-primary-light, #f0fdf4) !important;
+    color: var(--dm-primary, #16a34a) !important;
+    font-weight: 700 !important;
+}
+
+/* 데이터 관리 드롭다운 마우스 오버(Hover) 시 초록색 하이라이트 */
+html[data-theme="dataManagement"] .k-animation-container .k-list-item:hover:not(.k-selected),
+html[data-theme="data-management"] .k-animation-container .k-list-item:hover:not(.k-selected),
+html[data-theme="dataManagement"] .k-popup .k-list-item:hover:not(.k-selected),
+html[data-theme="data-management"] .k-popup .k-list-item:hover:not(.k-selected),
+body[data-theme="dataManagement"] .k-animation-container .k-list-item:hover:not(.k-selected),
+body[data-theme="data-management"] .k-animation-container .k-list-item:hover:not(.k-selected),
+body[data-theme="dataManagement"] .k-popup .k-list-item:hover:not(.k-selected),
+body[data-theme="data-management"] .k-popup .k-list-item:hover:not(.k-selected),
+.logic-dropdown-popup.data-management .k-list-item:hover:not(.k-selected),
+.logic-dropdown-popup.data-management .k-list-item.k-focus:not(.k-selected),
+.logic-dropdown-popup.data-management .k-list-item.k-state-hover:not(.k-selected) {
+    background-color: #f0fdf4 !important;
+    color: #16a34a !important;
+}
+
+/* 드롭다운 팝업 스크롤바: 기본 회색(#cbd5e1) 유지 */
+.k-animation-container .k-list-content::-webkit-scrollbar-thumb,
+.logic-dropdown-popup .k-list-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-radius: 4px;
+}
+.k-animation-container .k-list-content::-webkit-scrollbar-thumb:hover,
+.logic-dropdown-popup .k-list-content::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8 !important;
+}
+
+/* 드롭다운 포커스 시 초록색 포커스 링 */
+[data-theme="dataManagement"] .k-dropdownlist:focus-within,
+[data-theme="data-management"] .k-dropdownlist:focus-within,
+[data-theme="dataManagement"] .k-picker:focus-within,
+[data-theme="data-management"] .k-picker:focus-within {
+    border-color: var(--dm-primary, #16a34a) !important;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15) !important;
+}
+
+/* 드롭다운 화살표/아이콘 초록색 */
+[data-theme="dataManagement"] .k-dropdownlist svg,
+[data-theme="data-management"] .k-dropdownlist svg,
+[data-theme="dataManagement"] .k-picker svg,
+[data-theme="data-management"] .k-picker svg,
+[data-theme="dataManagement"] .k-dropdownlist svg.lucide,
+[data-theme="data-management"] .k-dropdownlist svg.lucide {
+    color: var(--dm-primary, #16a34a) !important;
+    stroke: var(--dm-primary, #16a34a) !important;
+}

@@ -802,24 +802,14 @@ td.stub-cell-selected .dp-mini-dropdown {
     min-height: 24px !important;
 }
 .dp-mini-dropdown-popup.k-popup,
-.dp-custom-popup.k-popup {
-    animation: dpFadeIn 0.12s cubic-bezier(0, 0, 0.2, 1) !important;
-}
-@keyframes dpFadeIn {
-    0% {
-        opacity: 0;
-        transform: translateY(-4px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+.dp-custom-popup.k-popup,
 .dp-custom-popup {
+    animation: none !important;
+    transition: none !important;
     border-radius: 8px !important;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04) !important;
     padding: 4px 0 !important;
-    border: 1px solid var(--primary-color, var(--srt-accent-600)) !important;
+    border: 1px solid var(--srt-primary-300, #93c5fd) !important;
 }
 .dp-tooltip-clean-popup,
 .dp-tooltip-clean-popup.k-animation-container,
@@ -861,6 +851,14 @@ td.stub-cell-selected .dp-mini-dropdown {
 .dp-mini-dropdown .k-button-icon,
 .dp-mini-dropdown .k-icon {
     font-size: 14px !important;
+}
+.dp-mini-dropdown svg,
+.dp-mini-dropdown svg path,
+.dp-compact-stub-grid .dp-mini-dropdown svg,
+.dp-compact-stub-grid .dp-mini-dropdown svg path {
+    fill: none !important;
+    stroke: var(--srt-primary-600, #2563eb) !important;
+    stroke-width: 2.2px !important;
 }
 `;
 if (typeof document !== 'undefined') {
@@ -1123,7 +1121,7 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
                     </span>
                 </div>
                 <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', paddingRight: '2px', flexShrink: 0, pointerEvents: 'none' }}>
-                    <ChevronDown size={14} color="var(--srt-primary-600)" />
+                    <ChevronDown size={14} strokeWidth={2.2} color="var(--srt-primary-600)" />
                 </span>
             </div>
             {show && (
@@ -1311,7 +1309,7 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
                     </span>
                 </div>
                 <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', paddingRight: '2px', flexShrink: 0, pointerEvents: 'none' }}>
-                    <ChevronDown size={14} color="var(--srt-primary-600)" />
+                    <ChevronDown size={14} strokeWidth={2.2} color="var(--srt-primary-600)" />
                 </span>
             </div>
             {show && (
@@ -1526,7 +1524,7 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
                         </span>
                     </div>
                     <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', paddingRight: '2px', flexShrink: 0, pointerEvents: 'none' }}>
-                        <ChevronDown size={14} color="var(--srt-primary-600)" />
+                        <ChevronDown size={14} strokeWidth={2.2} color="var(--srt-primary-600)" />
                     </span>
                 </div>
                 {show && (

@@ -1739,6 +1739,21 @@
 .dp-mini-dropdown .k-input-button {
     min-height: 22px !important;
     padding: 0 4px !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    -webkit-mask: none !important;
+    mask: none !important;
+    border: none !important;
+}
+
+/* 스터브 그리드 내 드롭다운 V자 체크/셰브론 아이콘 (두 번째 사진 스타일) */
+.dp-mini-dropdown svg,
+.dp-mini-dropdown svg path,
+.dp-compact-stub-grid .dp-mini-dropdown svg,
+.dp-compact-stub-grid .dp-mini-dropdown svg path {
+    fill: none !important;
+    stroke: var(--srt-primary-600, #2563eb) !important;
+    stroke-width: 2.2px !important;
 }
 
 /* Fix Orange Focus Ring */
@@ -1892,10 +1907,12 @@
 
 /* Custom Popup Dropdown Items */
 .dp-mini-dropdown-popup {
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 4px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid var(--srt-primary-300, #93c5fd) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04) !important;
     padding: 2px 0 !important;
+    animation: none !important;
+    transition: none !important;
 }
 
 .dp-mini-dropdown-popup .k-list-item,

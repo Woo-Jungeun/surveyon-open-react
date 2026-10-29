@@ -1372,14 +1372,20 @@ input:checked+.slider:before {
 }
 
 /* Popup Theme Variables (Popups often render outside the main overlay) */
-.logic-dropdown-popup.data-management {
+.logic-dropdown-popup.data-management,
+.logic-dropdown-popup.data-management.k-popup,
+.k-animation-container .logic-dropdown-popup.data-management,
+.k-animation-container:has(.logic-dropdown-popup.data-management) .k-popup {
     --dm-primary: #16a34a;
     --dm-primary-light: #f0fdf4;
+    border: 1px solid #86efac !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04) !important;
 }
 
 .logic-dropdown-popup.data-dashboard {
     --dm-primary: #3b82f6;
     --dm-primary-light: #eff6ff;
+    border: 1px solid #93c5fd !important;
 }
 
 .logic-dropdown-popup .k-list-item {
@@ -1389,12 +1395,20 @@ input:checked+.slider:before {
     transition: background 0.1s ease, color 0.1s ease;
 }
 
-/* 호버/포커스 상태 (연하고 부드러운 회색) */
+/* 호버/포커스 상태 (데이터관리: 은은한 연초록 배경 + 초록색 글씨) */
+.logic-dropdown-popup.data-management .k-list-item:hover,
+.logic-dropdown-popup.data-management .k-list-item.k-focus,
+.logic-dropdown-popup.data-management .k-list-item.k-state-hover {
+    background-color: #f0fdf4 !important;
+    color: #16a34a !important;
+    box-shadow: none !important;
+}
+
 .logic-dropdown-popup .k-list-item:hover,
 .logic-dropdown-popup .k-list-item.k-focus,
 .logic-dropdown-popup .k-list-item.k-state-hover {
-    background-color: #f1f5f9 !important;
-    color: #0f172a !important;
+    background-color: #f0fdf4 !important;
+    color: #16a34a !important;
     box-shadow: none !important;
 }
 
