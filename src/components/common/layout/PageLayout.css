@@ -131,7 +131,7 @@
     white-space: nowrap;
 }
 
-/* 설문온 시그니처: 제목 앞 파란색 세로 막대 */
+/* 설문온 시그니처: 제목 앞 테마별 세로 막대 */
 .page-header-title::before {
     content: '';
     display: block;
@@ -140,6 +140,27 @@
     background: var(--ds-primary, var(--srt-primary-500, #3b82f6));
     border-radius: 2px;
     flex-shrink: 0;
+}
+
+[data-theme="fieldManagement"] .page-header-title::before,
+[data-theme="field-management"] .page-header-title::before {
+    background: #1e3a8a !important;
+}
+
+[data-theme="dataManagement"] .page-header-title::before,
+[data-theme="data-management"] .page-header-title::before {
+    background: #16a34a !important;
+}
+
+[data-theme="aiOpen"] .page-header-title::before,
+[data-theme="aiOpenAnalysis"] .page-header-title::before,
+[data-theme="ai-analysis"] .page-header-title::before {
+    background: #ff6b35 !important;
+}
+
+[data-theme="hsrt"] .page-header-title::before,
+[data-theme="data-dashboard"] .page-header-title::before {
+    background: var(--srt-primary-500, #3b82f6) !important;
 }
 
 .page-header-actions {

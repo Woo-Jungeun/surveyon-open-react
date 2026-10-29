@@ -42,6 +42,22 @@
     border-radius: 2px;
 }
 
+[data-theme="fieldManagement"] .data-header-title::before,
+[data-theme="field-management"] .data-header-title::before {
+    background: #1e3a8a !important;
+}
+
+[data-theme="dataManagement"] .data-header-title::before,
+[data-theme="data-management"] .data-header-title::before {
+    background: #16a34a !important;
+}
+
+[data-theme="aiOpen"] .data-header-title::before,
+[data-theme="aiOpenAnalysis"] .data-header-title::before,
+[data-theme="ai-analysis"] .data-header-title::before {
+    background: #ff6b35 !important;
+}
+
 /* Search Box */
 .data-header-search {
     position: relative;

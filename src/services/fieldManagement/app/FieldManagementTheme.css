@@ -33,6 +33,15 @@
     --ds-primary-border: var(--fm-primary-border);
 }
 
+/* 실사관리 헤더 타이틀 세로 막대 고유 색상 (#1e3a8a) */
+[data-theme="fieldManagement"] .page-header-title::before,
+[data-theme="field-management"] .page-header-title::before,
+[data-theme="fieldManagement"] .data-header-title::before,
+[data-theme="field-management"] .data-header-title::before {
+    background: #1e3a8a !important;
+}
+
+[data-theme="fieldManagement"] .k-grid,
 [data-theme="field-management"] .k-grid {
     border: none;
     font-size: 13px;
@@ -91,12 +100,14 @@
     outline: none;
 }
 
+[data-theme="fieldManagement"] .data-header,
 [data-theme="field-management"] .data-header {
     margin-bottom: 24px;
     padding-bottom: 16px;
     border-bottom: 1px solid var(--fm-border);
 }
 
+[data-theme="fieldManagement"] .data-header h2,
 [data-theme="field-management"] .data-header h2 {
     font-size: 22px;
     font-weight: 800;
