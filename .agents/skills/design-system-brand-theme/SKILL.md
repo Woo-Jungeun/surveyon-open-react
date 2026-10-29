@@ -200,3 +200,34 @@ PROJECT_BRAND_THEME
    - URL 입력 시 백엔드 헤드리스 브라우저가 실제 CSS 수집
    - 비전 AI가 색상별 UI 역할(메인/보조/배경) 자동 매핑
 
+---
+
+## 11. ⚠️ 테마 & 공통 레이아웃 개발/유지보수 시 필수 주의사항 (Checklist)
+
+> 공통 테마(`surveyon-theme.css`) 및 공통 레이아웃(`AppLayout`, `AppSidebar`) 적용 후 실제 발생했던 이슈들과 재발 방지 개발 수칙입니다.
+
+### 1. CSS 선택자 가중치(Specificity) 관리 & 하드코딩 색상 금지
+- **원인**: `surveyon-theme.css`에 `html[data-theme="hsrt"] .k-animation-container` 등 `!important`가 포함된 고가중치 전역 규칙이 정의되어 있음.
+- **주의사항**:
+  - 하위 컴포넌트나 개별 CSS 파일에서 `#eff6ff`, `#1d4ed8` 등의 **Hex 코드를 직접 쓰면 브랜드 테마 색상이 덮어씌워져 안 먹히는 버그가 발생**함.
+  - 반드시 `var(--srt-primary-50, #eff6ff)`, `var(--srt-primary-700, #1d4ed8)`, `var(--primary-color)`처럼 **CSS 변수와 fallback 형태**로 작성할 것.
+  - 브랜드 색상 전용 스타일은 `html[data-srt-brand]` 속성을 포함하여 가중치를 충분히 확보할 것.
+
+### 2. Kendo UI 포털(Portal) 팝업 동작 특성 & 오픈 속도 최적화
+- **DOM 위치 특성**:
+  - Kendo `DropDownList`, `ComboBox`, `Tooltip` 등은 컴포넌트 내부 DOM이 아니라 `document.body` 직속 자식(`.k-animation-container`)으로 렌더링됨.
+  - 따라서 컴포넌트 로컬 CSS(Scoped)나 단순 부모 선택자로는 스타일이 적용되지 않으며, `html[data-srt-brand] .k-animation-container ...` 형태로 전역 관리해야 함.
+- **오픈 딜레이(버벅임) 방지 원칙**:
+  - 그리드 내부 드롭다운에 `opened={state}`나 `onOpen={() => setState(...)}` 같은 React Controlled State를 부모 대형 모달에 연결하면, **드롭다운 클릭 1회마다 수천 라인의 부모 컴포넌트 전체가 리렌더링되어 0.5~1초의 심각한 오픈 지연이 발생**함.
+  - 드롭다운은 기본 Uncontrolled로 두고, `popupSettings={{ animate: false }}`를 적용해 네이티브 0ms 즉각 팝업되도록 할 것.
+- **스크롤 시 닫기 구현 시 주의사항**:
+  - 팝업 컨테이너에 `element.style.display = 'none'`을 인라인으로 강제 주입하면 다음 클릭 시 팝업이 안 열리는 영구 오염 버그 발생.
+  - 닫을 때는 반드시 브라우저 외부 클릭 이벤트(`document.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))`)와 `activeElement.blur()`를 사용하여 Kendo가 스스로 정상 클린업 후 닫히도록 처리할 것.
+
+### 3. `AppSidebar.jsx` 단일화 컴포넌트 유지보수 주의점
+- **집중된 책임 관리**:
+  - 4대 서비스(H-SRT, 데이터관리, AI오픈, 실사관리)의 모든 사이드바 로직이 `AppSidebar.jsx` 1개로 단일화되었음.
+  - 특정 서비스 전용 기능(예: 데이터관리의 기준일시 새로고침, 잔액 표시 등)을 수정할 때 다른 서비스의 사이드바 동작에 영향이 가지 않도록 `service === '...'` 조건 분기 범위를 엄격하게 격리할 것.
+- **라우트 연결**:
+  - 각 서비스의 메인 라우터는 `MainWrapperView` 없이 `AppLayout`을 직접 사용하며, `service` prop(`'hsrt' | 'dataManagement' | 'aiOpen' | 'fieldManagement'`)을 올바르게 전달할 것.
+
