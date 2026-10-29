@@ -1,10 +1,34 @@
-/* Grid Row Cursor Pointer */
+/* Grid Row Cursor Pointer & Row Hover / Selection (설문온 고유 보라색 테마 유지) */
+.ps-modal-container .k-grid tbody tr,
 .ps-modal-content .k-grid tbody tr {
     cursor: pointer !important;
 }
 
-.ps-modal-content .k-grid tbody tr:hover {
+.ps-modal-container .k-grid tbody tr:hover,
+.ps-modal-container .k-grid tbody tr:hover td,
+.ps-modal-container .k-grid .k-grid-content tr:hover td,
+.ps-modal-container .k-grid .k-table-row:hover td,
+.ps-modal-container .k-grid tr:hover td,
+.ps-modal-content .k-grid tbody tr:hover,
+.ps-modal-content .k-grid tbody tr:hover td,
+.ps-modal-content .k-grid .k-grid-content tr:hover td,
+.ps-modal-content .k-grid .k-table-row:hover td,
+.ps-modal-content .k-grid tr:hover td {
     background-color: #F9F8FF !important;
+}
+
+.ps-modal-container .k-grid tr.k-selected > td,
+.ps-modal-container .k-grid tr.k-state-selected > td,
+.ps-modal-container .k-grid tr[aria-selected="true"] > td,
+.ps-modal-container .k-grid td.k-selected,
+.ps-modal-container .k-grid td.k-state-selected,
+.ps-modal-content .k-grid tr.k-selected > td,
+.ps-modal-content .k-grid tr.k-state-selected > td,
+.ps-modal-content .k-grid tr[aria-selected="true"] > td,
+.ps-modal-content .k-grid td.k-selected,
+.ps-modal-content .k-grid td.k-state-selected {
+    background-color: #F3F1FF !important;
+    color: #333 !important;
 }
 
 .ps-modal-overlay {

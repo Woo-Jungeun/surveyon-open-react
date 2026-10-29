@@ -87,16 +87,13 @@
 [data-theme="data-dashboard"] .k-grid tr.k-selected>td,
 [data-theme="data-dashboard"] .k-grid tr.k-selected td,
 [data-theme="data-dashboard"] .k-grid .k-table-row.k-selected,
-[data-theme="data-dashboard"] .k-grid .k-table-row.k-selected>td,
-.k-grid tr.k-selected>td,
-.k-grid .k-table-row.k-selected>td {
+[data-theme="data-dashboard"] .k-grid .k-table-row.k-selected>td {
     background-color: var(--srt-primary-50, var(--ds-primary-light, #eff6ff)) !important;
     color: var(--ds-text-main) !important;
 }
 
 [data-theme="data-dashboard"] .k-grid tr.k-selected:hover>td,
-[data-theme="data-dashboard"] .k-grid .k-table-row.k-selected:hover>td,
-.k-grid tr.k-selected:hover>td {
+[data-theme="data-dashboard"] .k-grid .k-table-row.k-selected:hover>td {
     background-color: var(--srt-primary-100, #dbeafe) !important;
 }
 

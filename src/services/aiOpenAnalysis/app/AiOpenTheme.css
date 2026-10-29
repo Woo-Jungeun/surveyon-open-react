@@ -88,6 +88,41 @@
     background-color: #fff7ed !important;
 }
 
+/* 프로젝트 선택 팝업 모달 내부 그리드: 설문온 공통 보라색 테마(#F9F8FF, #F3F1FF) 보장 */
+[data-theme="aiOpen"] .ps-modal-container .k-grid-content tr:hover,
+[data-theme="aiOpen"] .ps-modal-container .k-grid-content tr:hover td,
+[data-theme="aiOpen"] .ps-modal-container .k-grid tr:hover,
+[data-theme="aiOpen"] .ps-modal-container .k-grid tr:hover td,
+[data-theme="aiOpen"] .ps-modal-container .k-grid tbody tr:hover td,
+[data-theme="aiOpen"] .ps-modal-content .k-grid-content tr:hover td,
+[data-theme="aiOpenAnalysis"] .ps-modal-container .k-grid-content tr:hover,
+[data-theme="aiOpenAnalysis"] .ps-modal-container .k-grid-content tr:hover td,
+[data-theme="aiOpenAnalysis"] .ps-modal-container .k-grid tr:hover,
+[data-theme="aiOpenAnalysis"] .ps-modal-container .k-grid tr:hover td,
+[data-theme="ai-open-analysis"] .ps-modal-container .k-grid-content tr:hover,
+[data-theme="ai-open-analysis"] .ps-modal-container .k-grid-content tr:hover td,
+[data-theme="ai-analysis"] .ps-modal-container .k-grid-content tr:hover,
+[data-theme="ai-analysis"] .ps-modal-container .k-grid-content tr:hover td {
+    background-color: #F9F8FF !important;
+}
+
+[data-theme="aiOpen"] .ps-modal-container .k-grid td.k-state-selected,
+[data-theme="aiOpen"] .ps-modal-container .k-grid tr.k-state-selected>td,
+[data-theme="aiOpen"] .ps-modal-container .k-grid tr.k-selected>td,
+[data-theme="aiOpen"] .ps-modal-container .k-grid td.k-selected,
+[data-theme="aiOpen"] .ps-modal-container .k-grid tr[aria-selected="true"]>td,
+[data-theme="aiOpenAnalysis"] .ps-modal-container .k-grid td.k-state-selected,
+[data-theme="aiOpenAnalysis"] .ps-modal-container .k-grid tr.k-state-selected>td,
+[data-theme="aiOpenAnalysis"] .ps-modal-container .k-grid tr.k-selected>td,
+[data-theme="aiOpenAnalysis"] .ps-modal-container .k-grid td.k-selected,
+[data-theme="ai-open-analysis"] .ps-modal-container .k-grid td.k-state-selected,
+[data-theme="ai-open-analysis"] .ps-modal-container .k-grid tr.k-state-selected>td,
+[data-theme="ai-analysis"] .ps-modal-container .k-grid td.k-state-selected,
+[data-theme="ai-analysis"] .ps-modal-container .k-grid tr.k-state-selected>td {
+    background-color: #F3F1FF !important;
+    color: #333 !important;
+}
+
 [data-theme="aiOpen"] .k-grid-content td,
 [data-theme="aiOpenAnalysis"] .k-grid-content td,
 [data-theme="ai-open-analysis"] .k-grid-content td,
