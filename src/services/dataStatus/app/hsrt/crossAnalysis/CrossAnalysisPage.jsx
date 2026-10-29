@@ -2217,6 +2217,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 const aliasMap = {
                     show_n: "format_show_n",
                     show_percent: "format_show_percent",
+                    bracket_all_n: "format_bracket_all_n",
+                    format_bracket_all_n: "format_bracket_all_n",
                     n_digits: "format_n_round",
                     percent_digits: "format_percent_round",
                     mean_digits: "format_mean_round",
@@ -2489,6 +2491,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     var_digits: fetchedUi?.var_digits ?? uiSettingsRef.current?.var_digits ?? 2,
                     zero_display: fetchedUi?.zero_display || uiSettingsRef.current?.zero_display || "0",
                     empty_display: fetchedUi?.empty_display || uiSettingsRef.current?.empty_display || "blank",
+                    format_bracket_all_n: isInitialSetupRef.current
+                        ? !!(fetchedUi?.format_bracket_all_n ?? fetchedUi?.bracket_all_n ?? ctxPayload.display_policy?.format_bracket_all_n ?? ctxPayload.display_policy?.bracket_all_n ?? false)
+                        : !!(uiSettingsRef.current?.format_bracket_all_n ?? uiSettingsRef.current?.bracket_all_n ?? false),
+                    bracket_all_n: isInitialSetupRef.current
+                        ? !!(fetchedUi?.format_bracket_all_n ?? fetchedUi?.bracket_all_n ?? ctxPayload.display_policy?.format_bracket_all_n ?? ctxPayload.display_policy?.bracket_all_n ?? false)
+                        : !!(uiSettingsRef.current?.format_bracket_all_n ?? uiSettingsRef.current?.bracket_all_n ?? false),
                     base_prefix: isInitialSetupRef.current ? (fetchedUi?.base_prefix ?? "(") : (uiSettingsRef.current?.base_prefix ?? "("),
                     base_postfix: isInitialSetupRef.current ? (fetchedUi?.base_postfix ?? ")") : (uiSettingsRef.current?.base_postfix ?? ")"),
                     ...sigPolicy
@@ -3024,6 +3032,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     var_digits: uiSettings?.var_digits ?? 2,
                     zero_display: uiSettings?.zero_display || "0",
                     empty_display: uiSettings?.empty_display || "blank",
+                    format_bracket_all_n: !!(uiSettings?.format_bracket_all_n ?? uiSettings?.bracket_all_n ?? false),
+                    bracket_all_n: !!(uiSettings?.format_bracket_all_n ?? uiSettings?.bracket_all_n ?? false),
                     show_base_parenthesis: excelShowBaseParenthesis,
                     base_prefix: excelShowBaseParenthesis ? "(" : "",
                     base_postfix: excelShowBaseParenthesis ? ")" : "",

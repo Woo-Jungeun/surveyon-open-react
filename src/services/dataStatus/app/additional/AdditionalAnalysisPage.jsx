@@ -151,6 +151,8 @@ const buildDisplayPolicy = (currentDp, ctxUi) => {
         is_transpose: dp.is_transpose ?? ctx.is_transpose ?? false,
         show_n: dp.show_n !== false,
         show_percent: dp.show_percent !== false,
+        format_bracket_all_n: !!(dp.format_bracket_all_n ?? dp.bracket_all_n ?? ctx.format_bracket_all_n ?? ctx.bracket_all_n ?? false),
+        bracket_all_n: !!(dp.format_bracket_all_n ?? dp.bracket_all_n ?? ctx.format_bracket_all_n ?? ctx.bracket_all_n ?? false),
         percent_symbol: dp.percent_symbol ?? ctx.percent_symbol ?? ctx.format_percent_symbol ?? false,
         percent_as_column: dp.percent_as_column ?? ctx.percent_as_column ?? ctx.format_percent_as_column ?? false,
         stub_group_layout: dp.stub_group_layout || ctx.stub_group_layout || "merge",

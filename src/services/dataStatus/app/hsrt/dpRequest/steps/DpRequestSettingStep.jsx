@@ -556,6 +556,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             hide_zero_banners: true,
             hide_zero_stubs: true,
             is_transpose: false,
+            format_bracket_all_n: false,
             stat_label_mean: 'Mean',
             stat_label_median: 'Median',
             stat_label_mode: 'Mode',
@@ -656,6 +657,11 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 if (ui.is_transpose !== undefined && ui.is_transpose !== null) initDisplay.is_transpose = ui.is_transpose;
                 else if (ui.format_is_transpose !== undefined && ui.format_is_transpose !== null) initDisplay.is_transpose = ui.format_is_transpose;
                 else if (policy && policy.is_transpose !== undefined && policy.is_transpose !== null) initDisplay.is_transpose = policy.is_transpose;
+
+                if (ui.format_bracket_all_n !== undefined && ui.format_bracket_all_n !== null) initDisplay.format_bracket_all_n = ui.format_bracket_all_n;
+                else if (ui.bracket_all_n !== undefined && ui.bracket_all_n !== null) initDisplay.format_bracket_all_n = ui.bracket_all_n;
+                else if (policy && policy.format_bracket_all_n !== undefined && policy.format_bracket_all_n !== null) initDisplay.format_bracket_all_n = policy.format_bracket_all_n;
+                else if (policy && policy.bracket_all_n !== undefined && policy.bracket_all_n !== null) initDisplay.format_bracket_all_n = policy.bracket_all_n;
 
                 initDisplay.stat_label_mean = ui.stat_label_mean ?? ui.stat_labels?.mean ?? 'Mean';
                 initDisplay.stat_label_median = ui.stat_label_median ?? ui.stat_labels?.median ?? 'Median';
@@ -1370,6 +1376,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     base_prefix: settings.display.show_base_parenthesis ? "(" : "",
                     base_postfix: settings.display.show_base_parenthesis ? ")" : "",
                     percent_symbol: settings.display.percent_symbol,
+                    format_bracket_all_n: !!settings.display.format_bracket_all_n,
+                    bracket_all_n: !!settings.display.format_bracket_all_n,
                 },
                 display_policy: {
                     show_n: settings.display.show_n,
@@ -1390,6 +1398,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     base_prefix: settings.display.show_base_parenthesis ? "(" : "",
                     base_postfix: settings.display.show_base_parenthesis ? ")" : "",
                     percent_symbol: settings.display.percent_symbol,
+                    format_bracket_all_n: !!settings.display.format_bracket_all_n,
+                    bracket_all_n: !!settings.display.format_bracket_all_n,
                     percent_as_column: settings.render.format_percent_as_column,
                     stub_group_layout: settings.render.stub_group_layout,
                 },

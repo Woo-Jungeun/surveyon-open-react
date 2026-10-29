@@ -261,6 +261,8 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 base_prefix: settings.display.show_base_parenthesis ? "(" : "",
                 base_postfix: settings.display.show_base_parenthesis ? ")" : "",
                 percent_symbol: settings.display.percent_symbol,
+                format_bracket_all_n: !!settings.display.format_bracket_all_n,
+                bracket_all_n: !!settings.display.format_bracket_all_n,
             },
             display_policy: {
                 show_n: settings.display.show_n,
@@ -281,6 +283,8 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 base_prefix: settings.display.show_base_parenthesis ? "(" : "",
                 base_postfix: settings.display.show_base_parenthesis ? ")" : "",
                 percent_symbol: settings.display.percent_symbol,
+                format_bracket_all_n: !!settings.display.format_bracket_all_n,
+                bracket_all_n: !!settings.display.format_bracket_all_n,
                 percent_as_column: settings.render.format_percent_as_column,
                 stub_group_layout: settings.render.stub_group_layout,
                 sig_exclude_column_under_n: settings.display.sig_exclude_column_under_n !== undefined ? Number(settings.display.sig_exclude_column_under_n) : 0,
@@ -1054,11 +1058,12 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         ))}
                                     </div>
 
-                                    {/* 2행: 나머지 2개 (2분할) */}
+                                    {/* 2행: 나머지 2개 (2분할) - TODO: 내일 재확인 예정 (N빈도전체 괄호 임시 주석 처리) */}
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                                         {[
                                             { label: '엑셀 출력 % 기호 부착', field: 'percent_symbol' },
-                                            { label: 'Base 기본 (괄호)', field: 'show_base_parenthesis' }
+                                            { label: 'Base 기본 (괄호)', field: 'show_base_parenthesis' },
+                                            // { label: 'N빈도전체 (괄호)', field: 'format_bracket_all_n' } // 내일 다시 확인 후 주석 해제 (해제 시 gridTemplateColumns: '1fr 1fr 1fr'로 변경)
                                         ].map(item => (
                                             <div
                                                 key={item.field}
