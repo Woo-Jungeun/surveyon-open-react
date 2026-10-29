@@ -65,6 +65,21 @@
     --text-main: #1f2937;
     --text-sub: #6b7280;
     --border-color: #e5e7eb;
+
+    /* Design System Shared Shadows */
+    --ds-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --ds-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --ds-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --ds-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --ds-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+    /* Design System Shared Neutral & Layout */
+    --ds-bg: #f8fafc;
+    --ds-page-bg: #f8fafc;
+    --ds-surface: #ffffff;
+    --ds-border: #e2e8f0;
+    --ds-text-main: #1e293b;
+    --ds-text-sub: #64748b;
 }
 
 /* 1-1. H-SRT (Data Dashboard / H-SRT : 블루 계열 / 화이트라벨 브랜드 연동) */
@@ -104,10 +119,18 @@
     --dm-primary-border: #dcfce7;
     --dm-text-main: #1e293b;
     --dm-border: #e2e8f0;
+    --dm-bg: #f8fafc;
+    --dm-surface: #ffffff;
+    --dm-shadow-sm: var(--ds-shadow-sm);
+    --dm-shadow: var(--ds-shadow);
+    --dm-shadow-lg: var(--ds-shadow-lg);
 
     /* 재사용 공통 컴포넌트 변수 매핑 */
     --ds-primary: #16a34a;
     --ds-primary-hover: #15803d;
+    --ds-border: #e2e8f0;
+    --ds-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --ds-page-bg: #f8fafc;
 }
 
 /* 1-3. 실사관리 (Field Management : 딥 네이비 계열) */

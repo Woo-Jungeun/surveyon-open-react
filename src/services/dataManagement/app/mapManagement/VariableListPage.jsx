@@ -4,7 +4,7 @@ import { MapManagementPageApi } from '@/services/dataManagement/app/mapManagemen
 /**
  * 변수 목록 창 (로직체크 [변수 목록] 버튼으로 여는 전용 페이지)
  * - 주소: /variable_list?pn={pn}&user={user}
- * - POST /map/variables/titles { pn, user } → resultjson.items[{ variable, question, tableTitle, type }]
+ * - POST /map/variables/titles { pn, user } → resultjson.items[{ variable, question, tableTitle, type, spssName }]
  * - 찾기는 받은 목록에서만 거른다 (서버 재호출 X) · [새로고침]은 같은 API 재호출 (찾기 글자 유지)
  */
 
@@ -67,6 +67,7 @@ export default function VariableListPage() {
         if (!q) return all;
         return all.filter(v =>
             (v.variable || '').toLowerCase().includes(q) ||
+            (v.spssName || '').toLowerCase().includes(q) ||
             (v.question || '').toLowerCase().includes(q) ||
             (v.tableTitle || '').toLowerCase().includes(q)
         );
@@ -80,18 +81,20 @@ export default function VariableListPage() {
         <table className="vl-table">
             <thead>
                 <tr>
-                    <th style={{ width: '110px' }}>변수명</th>
+                    <th style={{ width: '100px' }}>변수명</th>
+                    <th style={{ width: '110px' }}>SPSS명</th>
                     <th>문항</th>
-                    <th style={{ width: '28%' }}>표제목</th>
-                    <th style={{ width: '110px', textAlign: 'center' }}>변수 유형</th>
+                    <th style={{ width: '26%' }}>표제목</th>
+                    <th style={{ width: '95px', textAlign: 'center' }}>변수 유형</th>
                 </tr>
             </thead>
             <tbody>
                 {filtered.map((v, idx) => (
                     <tr key={`${v.variable}-${idx}`}>
                         <td className="vl-vn">{v.variable}</td>
+                        <td className="vl-spss" title={v.spssName || ''}>{v.spssName || ''}</td>
                         <td className="vl-q" title={v.question || ''}>{v.question}</td>
-                        <td>{v.tableTitle || ''}</td>
+                        <td title={v.tableTitle || ''}>{v.tableTitle || ''}</td>
                         <td style={{ textAlign: 'center' }}><TypeBadge type={v.type} /></td>
                     </tr>
                 ))}
@@ -112,7 +115,7 @@ export default function VariableListPage() {
                 .vl-cnt{font-size:12.5px;font-weight:600;color:#64748b;white-space:nowrap}
                 .vl-cnt strong{color:#16a34a}
                 .vl-right{display:flex;align-items:center;gap:10px;margin-left:auto}
-                .vl-search{width:320px;display:flex;align-items:center;gap:8px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:0 12px;height:34px;transition:border-color .15s}
+                .vl-search{width:340px;display:flex;align-items:center;gap:8px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:0 12px;height:34px;transition:border-color .15s}
                 .vl-search:focus-within{border-color:#16a34a;background:#fff}
                 .vl-search input{flex:1;background:transparent;border:none;outline:none;font-size:12.5px;color:#1e293b}
                 .vl-search input::placeholder{color:#94a3b8}
@@ -130,6 +133,8 @@ export default function VariableListPage() {
                 .vl-table tbody tr:hover td{background:#f0fdf4}
                 .vl-vn{font-weight:700;color:#15803d !important}
                 .vl-table tbody tr:hover td.vl-vn{color:#166534 !important}
+                .vl-spss{font-weight:600;color:#0369a1 !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+                .vl-table tbody tr:hover td.vl-spss{color:#075985 !important}
                 .vl-q{color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;word-break:normal !important}
                 .vl-badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:800;text-transform:lowercase;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
                 .vl-empty{display:flex;align-items:center;justify-content:center;padding:80px 20px;color:#94a3b8;font-size:13px;font-weight:600}
@@ -154,7 +159,7 @@ export default function VariableListPage() {
                         <svg width="14" height="14" fill="none" stroke="#94a3b8" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
                         <input
                             id="vl-search-input"
-                            placeholder="변수명 · 문항 · 표제목 검색"
+                            placeholder="변수명 · SPSS명 · 문항 · 표제목 검색"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                         />

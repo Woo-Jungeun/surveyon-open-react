@@ -172,6 +172,11 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                     message: serverMsg
                 });
 
+                const extraMessages = rawRes?.resultjson?.messages || res?.messages;
+                if (Array.isArray(extraMessages) && extraMessages.length > 0) {
+                    modal.showAlert('알림', extraMessages.join('\n'));
+                }
+
                 if (appliedCount > 0 || versionId > 0 || String(rawRes?.success) === '777') {
                     setXmlState('applied');
                     if (refreshData) refreshData();
@@ -642,17 +647,23 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
 
             if (String(res?.success) === '777') {
                 const versionId = res?.resultjson?.versionId ?? res?.versionId;
+                const extraMessages = res?.resultjson?.messages;
                 if (versionId === 0) {
                     setIsApplied(true);
                     setAppliedVersionId(0);
-                    modal.showAlert('알림', res?.message || '바뀐 게 없습니다.', null, () => {
+                    const zeroMsg = (Array.isArray(extraMessages) && extraMessages.length > 0)
+                        ? extraMessages.join('\n')
+                        : (res?.message || '바뀐 게 없습니다.');
+                    modal.showAlert('알림', zeroMsg, null, () => {
                         if (refreshData) refreshData();
                     });
                     return;
                 }
                 setAppliedVersionId(versionId);
                 const appliedCount = res?.resultjson?.applied ?? validationResult.changedRows ?? 0;
-                const msg = res?.message || `${appliedCount}행을 반영했습니다.`;
+                const msg = (Array.isArray(extraMessages) && extraMessages.length > 0)
+                    ? extraMessages.join('\n')
+                    : (res?.message || `${appliedCount}행을 반영했습니다.`);
 
                 setIsApplied(true);
 

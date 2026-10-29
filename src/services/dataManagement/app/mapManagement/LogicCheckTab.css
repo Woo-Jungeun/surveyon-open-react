@@ -639,8 +639,8 @@ button.lc-btn-primary {
 }
 
 .lc-vr-icon.err-icon {
-    color: #f43f5e;
-    font-weight: 900;
+    color: #f43f5e !important;
+    font-weight: 900 !important;
 }
 
 .lc-vr-label {
@@ -2167,6 +2167,8 @@ table.lc-logic-help tbody { display: table; width: 100%; table-layout: fixed; }
     flex-shrink: 0 !important;
     display: inline-flex !important;
     align-items: center !important;
+    justify-content: center !important;
+    color: #0284c7 !important;
 }
 
 .lc-vr-sub {
@@ -2295,10 +2297,9 @@ table.lc-logic-help tbody { display: table; width: 100%; table-layout: fixed; }
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
-    flex: 1 !important;
+    flex: 0 1 auto !important;
     min-width: 0 !important;
     line-height: 1.35 !important;
-    padding-right: 4px !important;
 }
 
 .lc-q-sub {

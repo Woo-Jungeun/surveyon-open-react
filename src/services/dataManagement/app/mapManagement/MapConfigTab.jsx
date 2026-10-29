@@ -1207,9 +1207,10 @@ const MapConfigTab = ({
 
     const mappingColumns = useMemo(() => {
         const commonPrefix = [
-            { field: 'drag', title: '순서\n변경', width: '50px', cell: DragCell },
-            { field: 'add', title: '추가', width: '50px' },
-            { field: 'sysName', title: '변수명', width: '100px' },
+            { field: 'drag', title: '순서\n변경', width: '42px', cell: DragCell },
+            { field: 'add', title: '추가', width: '42px' },
+            { field: 'sysName', title: '변수명', width: '85px' },
+            { field: 'spssName', title: 'SPSS명', width: '80px' },
         ];
 
         let cols = [];
@@ -1221,7 +1222,6 @@ const MapConfigTab = ({
                 { field: 'reLabel', title: '표제목', width: '180px', headerCell: CustomReLabelHeaderCell },
                 { field: 'excludeCode', title: '분석제외\n코드', width: '90px' },
                 { field: 'decimal', title: '소수점\n자리수', width: '75px' },
-                { field: 'spssName', title: 'SPSS\n변수명', width: '90px' },
                 { field: 'type', title: '변수 유형', width: '100px' },
                 { field: 'minQuestions', title: '문항\n최소갯수', width: '80px' },
                 { field: 'etcOpen', title: '기타\n오픈정의', width: '140px' },
@@ -1230,22 +1230,22 @@ const MapConfigTab = ({
                 { field: 'verificationVar', title: '검증\n문항', width: '70px' },
                 { field: 'excludeOutput', title: '출력\n제외', width: '70px' },
                 { field: 'memo', title: '메모', width: '180px' },
-                { field: 'delete', title: '삭제', width: '50px' }
+                { field: 'delete', title: '삭제', width: '42px' }
             ];
         } else {
             cols = [
                 ...commonPrefix,
-                { field: 'startPos', title: '시작\n자리수', width: '90px' },
-                { field: 'valLen', title: '보기\n자리수', width: '90px' },
-                { field: 'valCnt', title: '보기\n갯수', width: '85px' },
-                { field: 'totalLen', title: '총\n자리수', width: '90px' },
-                { field: 'etcOpen', title: '기타\n오픈정의', width: '140px' },
-                { field: 'logic', title: '로직체크', width: '130px' },
-                { field: 'label', title: '문항', width: '220px' },
-                { field: 'decimal', title: '소수점\n자리수', width: '90px' },
-                { field: 'type', title: '변수\n유형', width: '120px' },
-                { field: 'minQuestions', title: '문항\n최소갯수', width: '100px' },
-                { field: 'delete', title: '삭제', width: '50px' }
+                { field: 'startPos', title: '시작\n자리수', width: '65px' },
+                { field: 'valLen', title: '보기\n자리수', width: '60px' },
+                { field: 'valCnt', title: '보기\n갯수', width: '55px' },
+                { field: 'totalLen', title: '총\n자리수', width: '60px' },
+                { field: 'etcOpen', title: '기타\n오픈정의', width: '105px' },
+                { field: 'logic', title: '로직체크', width: '115px' },
+                { field: 'label', title: '문항', width: '190px' },
+                { field: 'decimal', title: '소수점\n자리수', width: '60px' },
+                { field: 'type', title: '변수\n유형', width: '95px' },
+                { field: 'minQuestions', title: '문항\n최소갯수', width: '65px' },
+                { field: 'delete', title: '삭제', width: '42px' }
             ];
         }
 
@@ -1255,7 +1255,7 @@ const MapConfigTab = ({
         const silsaSelectionCol = {
             field: 'isSilsa',
             title: '실사 이관',
-            width: '75px',
+            width: '65px',
             cell: SilsaSelectionCell,
             headerCell: SilsaSelectionHeaderCell
         };
@@ -1263,7 +1263,7 @@ const MapConfigTab = ({
         const selectionCol = {
             field: 'isBaked',
             title: 'SRT 이관',
-            width: '75px',
+            width: '65px',
             cell: BakedSelectionCell,
             headerCell: BakedSelectionHeaderCell
         };
@@ -1288,7 +1288,7 @@ const MapConfigTab = ({
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '16px', position: 'relative' }}>
                         <input
                             type="text"
-                            placeholder="변수명 또는 문항 검색"
+                            placeholder="변수명 · SPSS명 · 문항 검색"
                             value={searchQuery || ''}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             style={{
@@ -1297,7 +1297,7 @@ const MapConfigTab = ({
                                 fontSize: '13px',
                                 border: '1px solid #cbd5e1',
                                 borderRadius: '4px',
-                                width: '200px',
+                                width: '220px',
                                 outline: 'none',
                                 background: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2364748b\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Ccircle cx=\'11\' cy=\'11\' r=\'8\'%3E%3C/circle%3E%3Cline x1=\'21\' y1=\'21\' x2=\'16.65\' y2=\'16.65\'%3E%3C/line%3E%3C/svg%3E") no-repeat 8px center',
                                 backgroundColor: '#fff'

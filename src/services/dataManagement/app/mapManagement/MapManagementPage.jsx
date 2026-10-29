@@ -218,6 +218,7 @@ const MapManagementPage = () => {
         return variables.filter(v =>
             (v.sysName && String(v.sysName).toLowerCase().includes(q)) ||
             (v.name && String(v.name).toLowerCase().includes(q)) ||
+            (v.spssName && String(v.spssName).toLowerCase().includes(q)) ||
             (v.label && String(v.label).toLowerCase().includes(q)) ||
             (v.reLabel && String(v.reLabel).toLowerCase().includes(q))
         );
@@ -549,6 +550,7 @@ const MapManagementPage = () => {
             }
 
             // 수정된 기존 행 + 삭제: update API 호출
+            let updateResult = null;
             if (modifiedRows.length > 0 || deletedIds.length > 0) {
                 const updatePayload = {
                     pn,
@@ -556,7 +558,7 @@ const MapManagementPage = () => {
                     updated: modifiedRows.map(v => toPayload(v, false)),
                     deleted: deletedIds,
                 };
-                const updateResult = await updateMapVariables.mutateAsync(updatePayload);
+                updateResult = await updateMapVariables.mutateAsync(updatePayload);
                 if (!(String(updateResult?.success) === '777' || updateResult?.success === true)) {
                     updateSuccess = false;
                     const errorMsg = updateResult?.errortext || updateResult?.errorcontent || updateResult?.message;
@@ -576,7 +578,14 @@ const MapManagementPage = () => {
                 } catch (err) {
                     console.error("Map sync error:", err);
                 }
-                if (showSuccessModal) modal.showAlert("알림", "저장되었습니다.");
+                if (showSuccessModal) {
+                    const extraMessages = updateResult?.resultjson?.messages;
+                    if (Array.isArray(extraMessages) && extraMessages.length > 0) {
+                        modal.showAlert("알림", extraMessages.join('\n'));
+                    } else {
+                        modal.showAlert("알림", "저장되었습니다.");
+                    }
+                }
                 return true;
             } else {
                 modal.showErrorAlert("에러", "저장에 실패했습니다.");

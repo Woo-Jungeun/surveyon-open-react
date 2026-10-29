@@ -13,9 +13,11 @@
 
 /* 2. 데이터관리 전용 카드 스타일 */
 [data-theme="dataManagement"] .variable-page-card,
-[data-theme="data-management"] .variable-page-card {
+[data-theme="data-management"] .variable-page-card,
+[data-theme="dataManagement"] .variable-page-content,
+[data-theme="data-management"] .variable-page-content {
     background: #ffffff;
-    border-radius: 12px;
+    border-radius: 16px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     border: 1px solid var(--dm-border, #e2e8f0);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
