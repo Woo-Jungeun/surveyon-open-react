@@ -532,7 +532,7 @@ const ConditionHeaderCell = (props) => {
     );
 };
 
-const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimalN, decimalPct, uiSettings, projectNum, overviewPayload, userId, styleCss, evaluateChartData, selectedXInfo, filterExpression, defaultBannerId, selectedModel, globalAiSummaryOpen, globalAiResult, globalAiRunning }) => {
+const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimalN, decimalPct, uiSettings, projectNum, overviewPayload, userId, styleCss, evaluateChartData, selectedXInfo, filterExpression, defaultBannerId, selectedModel, globalAiSummaryOpen, globalAiResult, globalAiRunning, isTranspose: propIsTranspose }) => {
     const [localAiSummaryOpen, setLocalAiSummaryOpen] = useState(false);
     const isAiSummaryOpen = globalAiSummaryOpen || localAiSummaryOpen;
 
@@ -587,6 +587,9 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     const bannerVarKey = useMemo(() => bannerVarList.join(','), [bannerVarList]);
 
     const isTranspose = useMemo(() => {
+        if (propIsTranspose !== undefined && propIsTranspose !== null) {
+            return Boolean(propIsTranspose);
+        }
         return Boolean(
             uiSettings?.is_transpose ??
             uiSettings?.display_policy?.is_transpose ??
@@ -595,7 +598,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
             overviewPayload?.ui_settings?.is_transpose ??
             false
         );
-    }, [uiSettings, overviewPayload]);
+    }, [propIsTranspose, uiSettings, overviewPayload]);
 
     const [aiSummaryData, setAiSummaryData] = useState(null);
     const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
@@ -890,7 +893,9 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
             if (!banner?.id) return;
 
-            const stub = [banner.id];
+            const stub = (Array.isArray(banner.raw?.stub) && banner.raw.stub.length > 0)
+                ? banner.raw.stub
+                : [banner.id];
 
             if (!stub.length || !bannerVarList.length) {
                 // console.warn("fetchChartData diagnostic - early return due to empty stub or bannerVarList", { stub, bannerVarList });
@@ -902,16 +907,23 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                 setIsChartLoading(true);
                 const pageId = sessionStorage.getItem('pageId');
 
+                // 행/열 변경(isTranspose)이 true일 경우 차트 API 테이블 요청 시 stub와 banner를 서로 맞바꿔 전송
+                const finalStub = isTranspose ? bannerVarList : stub;
+                const finalBanner = isTranspose ? stub : bannerVarList;
+
                 const payload = {
                     pageid: pageId,
                     user: userId,
                     table: {
                         id: banner.id,
-                        stub: isTranspose ? bannerVarList : stub,
-                        banner: isTranspose ? stub : bannerVarList
+                        stub: finalStub,
+                        banner: finalBanner
                     },
                     weight_col: uiSettings?.weight_variable || null,
-                    filter_expression: filterExpression || ""
+                    filter_expression: filterExpression || "",
+                    display_policy: {
+                        is_transpose: isTranspose
+                    }
                 };
 
                 const res = await evaluateChartData.mutateAsync(payload);
@@ -4638,6 +4650,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 globalAiSummaryOpen={globalAiSummaryOpen}
                                 globalAiResult={globalAiResults[banner.id] || null}
                                 globalAiRunning={globalAiRunning}
+                                isTranspose={isTranspose}
                             />
                         ))}
                     </div>
