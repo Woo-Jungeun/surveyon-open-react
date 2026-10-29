@@ -5,7 +5,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: #F5F6FA;
+    background: var(--ds-page-bg, #f1f5f9);
     /* Soft gray background */
     position: relative;
 }

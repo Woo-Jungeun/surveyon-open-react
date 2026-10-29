@@ -3641,7 +3641,8 @@ const AdditionalAnalysisPage = () => {
                         gap: isConfigOpen ? '8px' : '16px',
                         borderRadius: '8px',
                         boxShadow: 'none',
-                        border: '1px solid #cbd5e1'
+                        border: '1px solid #cbd5e1',
+                        background: 'var(--ds-page-bg, #f1f5f9)'
                     }}>
                         {tables.length === 0 ? (
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', minHeight: '350px' }}>

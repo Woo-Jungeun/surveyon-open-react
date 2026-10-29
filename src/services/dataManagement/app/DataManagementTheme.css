@@ -25,6 +25,7 @@
 }
 
 /* Global Layout Background */
+[data-theme="dataManagement"],
 [data-theme="data-management"] {
     background-color: var(--dm-bg);
     color: var(--dm-text-main);

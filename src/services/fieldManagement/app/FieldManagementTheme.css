@@ -21,6 +21,7 @@
 }
 
 /* Global Layout Background */
+[data-theme="fieldManagement"],
 [data-theme="field-management"] {
     background-color: var(--fm-bg);
     color: var(--fm-text-main);

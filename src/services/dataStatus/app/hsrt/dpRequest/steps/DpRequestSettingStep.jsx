@@ -1478,7 +1478,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     };
     // 0. 데이터 필터 탭 (범용 필터)
     const renderDataFilterTab = () => (
-        <div className="dp-setting-section" style={{ padding: '20px 24px', background: '#F1F5F9', boxSizing: 'border-box', minHeight: '100%' }}>
+        <div className="dp-setting-section" style={{ padding: '20px 24px', background: 'var(--ds-page-bg, #f1f5f9)', boxSizing: 'border-box', minHeight: '100%' }}>
             <DataFilterCard
                 variables={filterVariables}
                 badges={dataFilterBadges}
@@ -1520,7 +1520,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const renderWeightSettingsTab = () => (
         <div className="dp-setting-section" onClick={handleCloseWeightEdit} style={{
             padding: '20px 24px',
-            background: '#F1F5F9',
+            background: 'var(--ds-page-bg, #f1f5f9)',
             boxSizing: 'border-box',
             width: '100%',
             maxWidth: '100%',

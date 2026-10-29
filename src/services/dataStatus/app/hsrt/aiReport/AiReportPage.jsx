@@ -1596,7 +1596,7 @@ const AiReportPage = () => {
             </DataHeader>
 
             {/* 단계별 내용 */}
-            <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', background: '#f1f5f9' }}>
+            <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', background: 'var(--ds-page-bg, #f1f5f9)' }}>
                 {renderContent()}
             </div>
         </div>

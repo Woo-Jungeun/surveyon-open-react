@@ -1056,7 +1056,7 @@ const AiDataPage = () => {
 
 
     return (
-        <div className="ai-data-page" style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f1f5f9', overflow: 'hidden' }}>
+        <div className="ai-data-page" style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--ds-page-bg, #f1f5f9)', overflow: 'hidden' }}>
             <DataHeader title="AI 데이터 생성" />
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px', padding: '12px', boxSizing: 'border-box', minHeight: 0, overflowY: 'auto' }}>

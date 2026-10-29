@@ -52,7 +52,7 @@
     flex-direction: column;
     height: 100vh;
     /* Lock height to viewport */
-    background: #f1f5f9;
+    background: var(--ds-page-bg, #f1f5f9);
     overflow: hidden;
     /* Prevent entire page from scrolling */
 }

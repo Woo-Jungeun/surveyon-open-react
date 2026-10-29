@@ -829,7 +829,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
     return (
         <div className="dp-setting-section" style={{
             padding: '20px 24px',
-            background: '#F1F5F9',
+            background: 'var(--ds-page-bg, #f1f5f9)',
             minHeight: '100%',
             display: 'flex',
             flexDirection: 'row',

@@ -10,7 +10,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: #f1f5f9;
+    background: var(--ds-page-bg, #f1f5f9);
     position: relative;
     overflow: hidden;
 }
