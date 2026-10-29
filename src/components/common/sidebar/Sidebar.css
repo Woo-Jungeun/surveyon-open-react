@@ -125,6 +125,18 @@
     margin: 0 0 2px 0;
 }
 
+/* 접힌(Collapsed) 상태에서 활성(Active) 메뉴 공통 스타일 (1번 스타일로 통일) */
+.common-sidebar.collapsed .nav-link.active {
+    border-radius: 0 8px 8px 0 !important;
+    border-left-width: 4px !important;
+    border-left-style: solid !important;
+    border-left-color: var(--sidebar-active-bar, #2563eb) !important;
+    background: var(--sidebar-active-bg, #eff6ff) !important;
+    color: var(--sidebar-active-color, #2563eb) !important;
+    box-shadow: none !important;
+    padding: 10px !important;
+}
+
 .common-sidebar.collapsed .sidebar-footer {
     padding: 20px 10px;
 }
@@ -667,24 +679,68 @@
     color: #111827;
 }
 
-/* Themes - Sub Menu (Original Style) */
-.purple .nav-link.active {
-    background: #F3F1FF;
-    color: #5A4BFF;
+/* =========================================================
+   [공통] 사이드바 메뉴 활성(Active) 상태 기본 스타일 (1번 스타일 규격)
+   ========================================================= */
+.common-sidebar .nav-link.active {
     font-weight: 700;
-    border-left-color: #5A4BFF;
-    border-radius: 0 8px 8px 0;
-    box-shadow: none;
+    border-radius: 0 8px 8px 0 !important;
+    border-left: 4px solid var(--sidebar-active-bar, #2563eb) !important;
+    background: var(--sidebar-active-bg, #eff6ff) !important;
+    color: var(--sidebar-active-color, #2563eb) !important;
+    box-shadow: none !important;
 }
 
-.blue .nav-link.active {
-    background: var(--srt-primary-50, #eff6ff);
-    color: var(--srt-primary-500, #3b82f6);
-    font-weight: 700;
-    border-left-color: var(--srt-primary-500, #3b82f6);
-    border-radius: 0 8px 8px 0;
-    box-shadow: none;
+/* 1. Purple (설문온 기본) */
+.common-sidebar.purple,
+.common-sidebar.theme-purple {
+    --sidebar-active-bar: #5A4BFF;
+    --sidebar-active-bg: #F3F1FF;
+    --sidebar-active-color: #5A4BFF;
 }
+
+/* 2. Blue (H-SRT) */
+.common-sidebar.blue,
+.common-sidebar.theme-blue,
+.common-sidebar[data-theme="data-dashboard"] {
+    --sidebar-active-bar: var(--srt-primary-500, #3b82f6);
+    --sidebar-active-bg: var(--srt-primary-50, #eff6ff);
+    --sidebar-active-color: var(--srt-primary-600, #2563eb);
+}
+
+/* 3. Green (데이터관리) */
+.common-sidebar.green,
+.common-sidebar.theme-green,
+.common-sidebar[data-theme="green"],
+.common-sidebar[data-theme="dataManagement"],
+.common-sidebar[data-theme="data-management"] {
+    --sidebar-active-bar: var(--dm-primary, #16a34a);
+    --sidebar-active-bg: #f0fdf4;
+    --sidebar-active-color: var(--dm-primary, #16a34a);
+}
+
+/* 4. Orange (AI 오픈분석) */
+.common-sidebar.orange,
+.common-sidebar.theme-orange,
+.common-sidebar[data-theme="orange"],
+.common-sidebar[data-theme="aiOpen"],
+.common-sidebar[data-theme="ai-open-analysis"] {
+    --sidebar-active-bar: #ea580c;
+    --sidebar-active-bg: #fff7ed;
+    --sidebar-active-color: #ea580c;
+}
+
+/* 5. Navy (실사관리) */
+.common-sidebar.navy,
+.common-sidebar.theme-navy,
+.common-sidebar[data-theme="navy"],
+.common-sidebar[data-theme="fieldManagement"],
+.common-sidebar[data-theme="field-management"] {
+    --sidebar-active-bar: #1e3a8a;
+    --sidebar-active-bg: #eff6ff;
+    --sidebar-active-color: #1e3a8a;
+}
+
 
 /* Themes - Main Menu (Enhanced Style) */
 .purple .nav-link.main-nav-link.active {
@@ -1266,11 +1322,12 @@
 }
 
 .navy .nav-link.active {
-    color: #1e3a8a;
-    background: #e0e7ff;
+    background: var(--sidebar-active-bg, #eff6ff) !important;
+    color: var(--sidebar-active-color, #1e3a8a) !important;
     font-weight: 700;
-    border-left: 3px solid #1e3a8a;
-    padding-left: 11px;
+    border-left: 4px solid var(--sidebar-active-bar, #1e3a8a) !important;
+    border-radius: 0 8px 8px 0 !important;
+    box-shadow: none !important;
 }
 
 .navy .menu-bar-refresh-btn:hover {
