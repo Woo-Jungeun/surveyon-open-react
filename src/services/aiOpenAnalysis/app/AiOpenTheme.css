@@ -1,0 +1,220 @@
+/* AI Open Analysis Global Theme (Orange Theme) */
+
+:root {
+    /* Primary Colors - Orange 계열 */
+    --ao-primary: #ea580c;        /* orange-600 */
+    --ao-primary-hover: #c2410c;  /* orange-700 */
+    --ao-primary-light: #fff7ed;  /* orange-50 */
+    --ao-primary-border: #fed7aa; /* orange-200 */
+
+    /* Neutral Colors */
+    --ao-bg: #f8fafc;
+    --ao-surface: #ffffff;
+    --ao-text-main: #1e293b;
+    --ao-text-sub: #64748b;
+    --ao-border: #e2e8f0;
+
+    /* Shadows */
+    --ao-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --ao-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --ao-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Global Layout Background */
+[data-theme="aiOpen"],
+[data-theme="aiOpenAnalysis"],
+[data-theme="ai-open-analysis"],
+[data-theme="ai-analysis"] {
+    background-color: var(--ao-bg);
+    color: var(--ao-text-main);
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    /* Map internal theme vars so reused components get styled properly */
+    --ds-primary: var(--ao-primary);
+    --ds-primary-hover: var(--ao-primary-hover);
+    --ds-primary-light: var(--ao-primary-light);
+    --ds-primary-border: var(--ao-primary-border);
+}
+
+/* AI 오픈분석 헤더 타이틀 앞 세로 막대 고유 색상 (#ea580c) */
+[data-theme="aiOpen"] .page-header-title::before,
+[data-theme="aiOpenAnalysis"] .page-header-title::before,
+[data-theme="ai-open-analysis"] .page-header-title::before,
+[data-theme="ai-analysis"] .page-header-title::before,
+[data-theme="aiOpen"] .data-header-title::before,
+[data-theme="aiOpenAnalysis"] .data-header-title::before,
+[data-theme="ai-open-analysis"] .data-header-title::before,
+[data-theme="ai-analysis"] .data-header-title::before {
+    background: #ea580c !important;
+}
+
+/* Kendo Grid Customization for AI Open */
+[data-theme="aiOpen"] .k-grid,
+[data-theme="aiOpenAnalysis"] .k-grid,
+[data-theme="ai-open-analysis"] .k-grid,
+[data-theme="ai-analysis"] .k-grid {
+    border: none;
+    font-size: 13px;
+    color: var(--ao-text-main);
+}
+
+[data-theme="aiOpen"] .k-grid-header,
+[data-theme="aiOpenAnalysis"] .k-grid-header,
+[data-theme="ai-open-analysis"] .k-grid-header,
+[data-theme="ai-analysis"] .k-grid-header {
+    background-color: var(--ao-primary-light);
+    border-bottom: 2px solid var(--ao-primary-border);
+}
+
+[data-theme="aiOpen"] .k-grid-header .k-header,
+[data-theme="aiOpenAnalysis"] .k-grid-header .k-header,
+[data-theme="ai-open-analysis"] .k-grid-header .k-header,
+[data-theme="ai-analysis"] .k-grid-header .k-header {
+    background-color: transparent;
+    color: var(--ao-text-main);
+    font-weight: 700;
+    border-color: var(--ao-border);
+    padding: 12px 8px;
+    text-align: center;
+}
+
+[data-theme="aiOpen"] .k-grid-content tr:not(.k-grouping-row):hover,
+[data-theme="aiOpen"] .k-grid-content tr:not(.k-grouping-row):hover td,
+[data-theme="aiOpenAnalysis"] .k-grid-content tr:not(.k-grouping-row):hover,
+[data-theme="aiOpenAnalysis"] .k-grid-content tr:not(.k-grouping-row):hover td,
+[data-theme="ai-open-analysis"] .k-grid-content tr:not(.k-grouping-row):hover,
+[data-theme="ai-open-analysis"] .k-grid-content tr:not(.k-grouping-row):hover td,
+[data-theme="ai-analysis"] .k-grid-content tr:not(.k-grouping-row):hover,
+[data-theme="ai-analysis"] .k-grid-content tr:not(.k-grouping-row):hover td {
+    background-color: #fff7ed !important;
+}
+
+[data-theme="aiOpen"] .k-grid-content td,
+[data-theme="aiOpenAnalysis"] .k-grid-content td,
+[data-theme="ai-open-analysis"] .k-grid-content td,
+[data-theme="ai-analysis"] .k-grid-content td {
+    border-color: var(--ao-border);
+    padding: 10px 12px;
+    vertical-align: middle;
+}
+
+[data-theme="aiOpen"] .k-grid-content tr.k-alt,
+[data-theme="aiOpenAnalysis"] .k-grid-content tr.k-alt,
+[data-theme="ai-open-analysis"] .k-grid-content tr.k-alt,
+[data-theme="ai-analysis"] .k-grid-content tr.k-alt {
+    background-color: #fcfcfc;
+}
+
+[data-theme="aiOpen"] .k-grid td.k-state-selected,
+[data-theme="aiOpen"] .k-grid tr.k-state-selected>td,
+[data-theme="aiOpenAnalysis"] .k-grid td.k-state-selected,
+[data-theme="aiOpenAnalysis"] .k-grid tr.k-state-selected>td,
+[data-theme="ai-open-analysis"] .k-grid td.k-state-selected,
+[data-theme="ai-open-analysis"] .k-grid tr.k-state-selected>td,
+[data-theme="ai-analysis"] .k-grid td.k-state-selected,
+[data-theme="ai-analysis"] .k-grid tr.k-state-selected>td {
+    background-color: var(--ao-primary-light) !important;
+    color: var(--ao-text-main);
+}
+
+/* Input & Select Focus Styles */
+[data-theme="aiOpen"] input[type="text"]:not(.login-input),
+[data-theme="aiOpen"] select,
+[data-theme="aiOpen"] .k-dropdown,
+[data-theme="aiOpenAnalysis"] input[type="text"]:not(.login-input),
+[data-theme="aiOpenAnalysis"] select,
+[data-theme="aiOpenAnalysis"] .k-dropdown,
+[data-theme="ai-open-analysis"] input[type="text"]:not(.login-input),
+[data-theme="ai-open-analysis"] select,
+[data-theme="ai-open-analysis"] .k-dropdown,
+[data-theme="ai-analysis"] input[type="text"]:not(.login-input),
+[data-theme="ai-analysis"] select,
+[data-theme="ai-analysis"] .k-dropdown {
+    border: 1px solid var(--ao-border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    transition: all 0.2s;
+    background-color: #fff;
+}
+
+[data-theme="aiOpen"] input[type="text"]:not(.login-input):focus,
+[data-theme="aiOpen"] select:focus,
+[data-theme="aiOpen"] .k-dropdown:focus-within,
+[data-theme="aiOpenAnalysis"] input[type="text"]:not(.login-input):focus,
+[data-theme="aiOpenAnalysis"] select:focus,
+[data-theme="aiOpenAnalysis"] .k-dropdown:focus-within,
+[data-theme="ai-open-analysis"] input[type="text"]:not(.login-input):focus,
+[data-theme="ai-open-analysis"] select:focus,
+[data-theme="ai-open-analysis"] .k-dropdown:focus-within,
+[data-theme="ai-analysis"] input[type="text"]:not(.login-input):focus,
+[data-theme="ai-analysis"] select:focus,
+[data-theme="ai-analysis"] .k-dropdown:focus-within {
+    border-color: var(--ao-primary);
+    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15);
+    outline: none;
+}
+
+/* Header Container */
+[data-theme="aiOpen"] .data-header,
+[data-theme="aiOpenAnalysis"] .data-header,
+[data-theme="ai-open-analysis"] .data-header,
+[data-theme="ai-analysis"] .data-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--ao-border);
+}
+
+[data-theme="aiOpen"] .data-header h2,
+[data-theme="aiOpenAnalysis"] .data-header h2,
+[data-theme="ai-open-analysis"] .data-header h2,
+[data-theme="ai-analysis"] .data-header h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--ao-text-main);
+    letter-spacing: -0.5px;
+}
+
+/* Scrollbars */
+[data-theme="aiOpen"] ::-webkit-scrollbar,
+[data-theme="aiOpenAnalysis"] ::-webkit-scrollbar,
+[data-theme="ai-open-analysis"] ::-webkit-scrollbar,
+[data-theme="ai-analysis"] ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+[data-theme="aiOpen"] ::-webkit-scrollbar-track,
+[data-theme="aiOpenAnalysis"] ::-webkit-scrollbar-track,
+[data-theme="ai-open-analysis"] ::-webkit-scrollbar-track,
+[data-theme="ai-analysis"] ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+[data-theme="aiOpen"] ::-webkit-scrollbar-thumb,
+[data-theme="aiOpenAnalysis"] ::-webkit-scrollbar-thumb,
+[data-theme="ai-open-analysis"] ::-webkit-scrollbar-thumb,
+[data-theme="ai-analysis"] ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+[data-theme="aiOpen"] ::-webkit-scrollbar-thumb:hover,
+[data-theme="aiOpenAnalysis"] ::-webkit-scrollbar-thumb:hover,
+[data-theme="ai-open-analysis"] ::-webkit-scrollbar-thumb:hover,
+[data-theme="ai-analysis"] ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* 사이드바 데이터 기준 일시 새로고침 버튼 호버: 주황 */
+.common-sidebar.orange .menu-bar-refresh-icon-btn:hover,
+.common-sidebar[data-theme="aiOpen"] .menu-bar-refresh-icon-btn:hover,
+.common-sidebar[data-theme="aiOpenAnalysis"] .menu-bar-refresh-icon-btn:hover {
+    background: #fff7ed !important;
+    border-color: #fed7aa !important;
+    color: #ea580c !important;
+}
+.common-sidebar.orange .menu-bar-refresh-icon-btn:hover svg,
+.common-sidebar[data-theme="aiOpen"] .menu-bar-refresh-icon-btn:hover svg,
+.common-sidebar[data-theme="aiOpenAnalysis"] .menu-bar-refresh-icon-btn:hover svg {
+    stroke: #ea580c !important;
+    color: #ea580c !important;
+}

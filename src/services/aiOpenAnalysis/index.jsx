@@ -11,6 +11,7 @@ import ProRegisterWrapperView from "./views/proRegister/ProRegisterWrapperView.j
 import ProPermissionWrapperView from "./views/proPermission/ProPermissionWrapperView.jsx";
 import ProKeyWrapperView from "./views/proKey/ProKeyWrapperView.jsx";
 import TokenUsageWrapperView from "./views/tokenUsage/TokenUsageWrapperView.jsx";
+import "./app/AiOpenTheme.css"; // Global Theme Import
 
 import ProjectListLayout from "@/services/mainList/layout/ProjectListLayout.jsx";
 

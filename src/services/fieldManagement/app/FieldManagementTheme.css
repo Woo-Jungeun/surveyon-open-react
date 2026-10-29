@@ -48,11 +48,13 @@
     color: var(--fm-text-main);
 }
 
+[data-theme="fieldManagement"] .k-grid-header,
 [data-theme="field-management"] .k-grid-header {
     background-color: var(--fm-primary-light);
     border-bottom: 2px solid var(--fm-primary-border);
 }
 
+[data-theme="fieldManagement"] .k-grid-header .k-header,
 [data-theme="field-management"] .k-grid-header .k-header {
     background-color: transparent;
     color: var(--fm-text-main);
@@ -62,27 +64,35 @@
     text-align: center;
 }
 
+[data-theme="fieldManagement"] .k-grid-content tr:not(.k-grouping-row):hover,
 [data-theme="field-management"] .k-grid-content tr:not(.k-grouping-row):hover {
     background-color: #f1f5f9 !important;
 }
 
+[data-theme="fieldManagement"] .k-grid-content td,
 [data-theme="field-management"] .k-grid-content td {
     border-color: var(--fm-border);
     padding: 10px 12px;
     vertical-align: middle;
 }
 
+[data-theme="fieldManagement"] .k-grid-content tr.k-alt,
 [data-theme="field-management"] .k-grid-content tr.k-alt {
     background-color: #fcfcfc;
 }
 
+[data-theme="fieldManagement"] .k-grid td.k-state-selected,
+[data-theme="fieldManagement"] .k-grid tr.k-state-selected>td,
 [data-theme="field-management"] .k-grid td.k-state-selected,
 [data-theme="field-management"] .k-grid tr.k-state-selected>td {
     background-color: var(--fm-primary-light) !important;
     color: var(--fm-text-main);
 }
 
-[data-theme="field-management"] input[type="text"],
+[data-theme="fieldManagement"] input[type="text"]:not(.login-input),
+[data-theme="fieldManagement"] select,
+[data-theme="fieldManagement"] .k-dropdown,
+[data-theme="field-management"] input[type="text"]:not(.login-input),
 [data-theme="field-management"] select,
 [data-theme="field-management"] .k-dropdown {
     border: 1px solid var(--fm-border);
@@ -92,7 +102,10 @@
     background-color: #fff;
 }
 
-[data-theme="field-management"] input[type="text"]:focus,
+[data-theme="fieldManagement"] input[type="text"]:not(.login-input):focus,
+[data-theme="fieldManagement"] select:focus,
+[data-theme="fieldManagement"] .k-dropdown:focus-within,
+[data-theme="field-management"] input[type="text"]:not(.login-input):focus,
 [data-theme="field-management"] select:focus,
 [data-theme="field-management"] .k-dropdown:focus-within {
     border-color: var(--fm-primary);
@@ -115,24 +128,30 @@
     letter-spacing: -0.5px;
 }
 
+[data-theme="fieldManagement"] ::-webkit-scrollbar,
 [data-theme="field-management"] ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
+[data-theme="fieldManagement"] ::-webkit-scrollbar-track,
 [data-theme="field-management"] ::-webkit-scrollbar-track {
     background: transparent;
 }
 
+[data-theme="fieldManagement"] ::-webkit-scrollbar-thumb,
 [data-theme="field-management"] ::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 4px;
 }
 
+[data-theme="fieldManagement"] ::-webkit-scrollbar-thumb:hover,
 [data-theme="field-management"] ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
 
+[data-theme="fieldManagement"] .lucide-trash2,
+[data-theme="fieldManagement"] .lucide-trash-2,
 [data-theme="field-management"] .lucide-trash2,
 [data-theme="field-management"] .lucide-trash-2 {
     stroke: #64748b !important;
@@ -145,7 +164,8 @@
     border-color: #cbd5e1 !important;
     color: #0f172a !important;
 }
+
 .common-sidebar .menu-bar-refresh-icon-btn:hover svg {
     stroke: #0f172a !important;
     color: #0f172a !important;
-}
+}

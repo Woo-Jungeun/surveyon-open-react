@@ -180,8 +180,35 @@
 
 .login-input:focus {
     background: white;
-    border-color: #818cf8;
+    border-color: #818cf8 !important;
     outline: none;
+}
+
+/* 글씨가 한 글자라도 채워졌을 때 (빈 칸이 아닐 때) 살구빛(#FFF7ED) 배경 적용 */
+.login-input:not(:placeholder-shown) {
+    background-color: #FFF7ED !important;
+    -webkit-box-shadow: 0 0 0 1000px #FFF7ED inset !important;
+    box-shadow: 0 0 0 1000px #FFF7ED inset !important;
+}
+
+/* 글씨가 채워진 상태에서 포커스될 때도 살구빛 배경 유지 + 보라색 테두리 */
+.login-input:not(:placeholder-shown):focus {
+    background-color: #FFF7ED !important;
+    border-color: #818cf8 !important;
+    -webkit-box-shadow: 0 0 0 1000px #FFF7ED inset !important;
+    box-shadow: 0 0 0 1000px #FFF7ED inset !important;
+    outline: none;
+}
+
+/* 브라우저 자동완성(Autofill) 시에도 살구빛(#FFF7ED) 배경 적용 */
+.login-input:-webkit-autofill,
+.login-input:-webkit-autofill:hover,
+.login-input:-webkit-autofill:focus,
+.login-input:-webkit-autofill:active {
+    -webkit-text-fill-color: #000 !important;
+    -webkit-box-shadow: 0 0 0 1000px #FFF7ED inset !important;
+    box-shadow: 0 0 0 1000px #FFF7ED inset !important;
+    transition: background-color 5000s ease-in-out 0s;
 }
 
 /* =========================================
