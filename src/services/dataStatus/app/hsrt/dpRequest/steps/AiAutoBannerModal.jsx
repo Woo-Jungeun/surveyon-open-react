@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { modalContext } from '@/components/common/Modal.jsx';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import * as XLSX from 'xlsx';
-import { X, Sparkles, Upload, RotateCw, Plus, Trash2, FileText } from 'lucide-react';
+import { X, Sparkles, Upload, RotateCw, Plus, Trash2, FileText, ExternalLink } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 
 const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanner, currentBannerLabel, defaultNewBannerName }) => {
@@ -25,6 +25,18 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
     const fileInputRef = useRef(null);
     const timerRef = useRef(null);
     const pollIntervalRef = useRef(null);
+
+    // 문항리스트 뷰어 새창 열기
+    const handleOpenQuestionsInfo = useCallback(() => {
+        const pageId = sessionStorage.getItem('pageId') || '';
+        const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '';
+        const user = auth?.user?.userId || '';
+        window.open(
+            `/questions-info?pageId=${encodeURIComponent(pageId)}&pn=${encodeURIComponent(pn)}&user=${encodeURIComponent(user)}`,
+            'questions_info_popup',
+            'width=1320,height=880,scrollbars=yes,resizable=yes'
+        );
+    }, [auth?.user?.userId]);
 
     // 1. 모달 오픈/클로즈 상태 변경 시 기존 데이터 전면 초기화 및 AI 모델 목록 로드
     useEffect(() => {
@@ -110,7 +122,7 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                 try {
                     const data = new Uint8Array(evt.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    
+
                     // 시트 이름에 'banner', '배너', '베너'가 포함된 것을 찾음 (대소문자 무시)
                     let targetSheetName = workbook.SheetNames.find(name => {
                         const lowerName = name.toLowerCase();
@@ -398,18 +410,41 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                             엑셀 파일이나 텍스트를 입력하면 내부 AI가 설문 문항을 분석하여 대/중/소분류와 조건식을 자동으로 구성합니다.
                         </div>
                     </div>
-                    <button
-                        onClick={onClose}
-                        style={{
-                            background: 'none', border: 'none', cursor: 'pointer',
-                            color: '#64748b', padding: '6px', borderRadius: '6px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                        <X size={20} />
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button
+                            onClick={handleOpenQuestionsInfo}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                padding: '6px 12px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                color: 'var(--srt-primary-700, #3730a3)',
+                                backgroundColor: 'var(--srt-primary-50, #eef2ff)',
+                                border: '1px solid var(--srt-primary-200, #c7d2fe)',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s'
+                            }}
+                            title="문항 번호, 질문명, 보기 및 조건식을 참고할 수 있는 새창을 엽니다."
+                        >
+                            <ExternalLink size={13} />
+                            <span>문항리스트 뷰어</span>
+                        </button>
+                        <button
+                            onClick={onClose}
+                            style={{
+                                background: 'none', border: 'none', cursor: 'pointer',
+                                color: '#64748b', padding: '6px', borderRadius: '6px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                            <X size={20} />
+                        </button>
+                    </div>
                 </div>
 
                 {/* 2. Modal Body (2 Columns Split) */}
@@ -558,6 +593,18 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
 
                             {/* Top Right Buttons inside Panel 2 */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <button
+                                    onClick={handleOpenQuestionsInfo}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '5px',
+                                        padding: '4px 10px', fontSize: '11.5px', fontWeight: 600,
+                                        color: '#334155', backgroundColor: '#F8FAFC',
+                                        border: '1px solid #CBD5E1', borderRadius: '6px', cursor: 'pointer'
+                                    }}
+                                    title="문항 번호, 질문명, 보기 및 조건식을 참고할 수 있는 새창을 엽니다."
+                                >
+                                    <ExternalLink size={12} /> 문항리스트 참고
+                                </button>
                                 <button
                                     onClick={handleRecalculate}
                                     disabled={isRecalculating || items.length === 0}

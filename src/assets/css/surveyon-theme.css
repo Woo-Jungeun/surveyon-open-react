@@ -528,13 +528,13 @@ html body .ps-modal-container .k-grid .k-table-row.k-selected:hover > .k-table-t
 }
 
 /* AI 오픈분석: 오렌지 포커스 */
-[data-theme="aiOpen"] input[type="text"]:not(.login-input):focus,
+[data-theme="aiOpen"] input[type="text"]:not(.login-input):not(.q-search-input):focus,
 [data-theme="aiOpen"] select:focus,
 [data-theme="aiOpen"] .k-dropdown:focus-within,
-[data-theme="aiOpenAnalysis"] input[type="text"]:not(.login-input):focus,
+[data-theme="aiOpenAnalysis"] input[type="text"]:not(.login-input):not(.q-search-input):focus,
 [data-theme="aiOpenAnalysis"] select:focus,
 [data-theme="aiOpenAnalysis"] .k-dropdown:focus-within,
-[data-theme="ai-open-analysis"] input[type="text"]:not(.login-input):focus,
+[data-theme="ai-open-analysis"] input[type="text"]:not(.login-input):not(.q-search-input):focus,
 [data-theme="ai-open-analysis"] select:focus,
 [data-theme="ai-open-analysis"] .k-dropdown:focus-within {
     border-color: #FDBA74 !important;
