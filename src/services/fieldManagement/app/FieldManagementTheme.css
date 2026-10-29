@@ -127,3 +127,14 @@
     stroke: #64748b !important;
     color: #64748b !important;
 }
+
+/* 사이드바 데이터 기준 일시 새로고침 버튼 호버: 남색 */
+.common-sidebar .menu-bar-refresh-icon-btn:hover {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+.common-sidebar .menu-bar-refresh-icon-btn:hover svg {
+    stroke: #0f172a !important;
+    color: #0f172a !important;
+}

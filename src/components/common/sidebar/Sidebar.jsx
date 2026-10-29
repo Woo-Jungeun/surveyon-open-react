@@ -225,7 +225,7 @@ const Sidebar = ({
 
     return (
         <>
-            <aside className={`common-sidebar ${theme} ${isCollapsed ? "collapsed" : ""}`} data-theme={theme === "blue" ? "data-dashboard" : ""}>
+            <aside className={`common-sidebar ${theme} theme-${theme} ${isCollapsed ? "collapsed" : ""}`} data-theme={theme === "blue" ? "data-dashboard" : theme}>
                 {/* Header Area */}
                 <div className="sidebar-header">
                     <div className="header-top" style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>

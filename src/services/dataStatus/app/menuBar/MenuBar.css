@@ -352,13 +352,62 @@
     flex-shrink: 0 !important;
 }
 
-.common-sidebar .menu-bar-refresh-icon-btn:hover {
-    background: var(--srt-primary-50) !important;
-    border-color: var(--srt-primary-200) !important;
-    color: var(--srt-primary-600) !important;
+/* 기본 / H-SRT (Blue) */
+.common-sidebar .menu-bar-refresh-icon-btn:hover,
+.common-sidebar.blue .menu-bar-refresh-icon-btn:hover,
+.common-sidebar[data-theme="data-dashboard"] .menu-bar-refresh-icon-btn:hover {
+    background: #eff6ff !important;
+    border-color: #bfdbfe !important;
+    color: #2563eb !important;
+}
+.common-sidebar .menu-bar-refresh-icon-btn:hover svg,
+.common-sidebar.blue .menu-bar-refresh-icon-btn:hover svg,
+.common-sidebar[data-theme="data-dashboard"] .menu-bar-refresh-icon-btn:hover svg {
+    stroke: #2563eb !important;
+    color: #2563eb !important;
 }
 
+/* 데이터관리 (Green) */
+.common-sidebar.green .menu-bar-refresh-icon-btn:hover,
+.common-sidebar.theme-green .menu-bar-refresh-icon-btn:hover,
+.common-sidebar[data-theme="green"] .menu-bar-refresh-icon-btn:hover,
+[data-theme="dataManagement"] .common-sidebar .menu-bar-refresh-icon-btn:hover,
+[data-theme="data-management"] .common-sidebar .menu-bar-refresh-icon-btn:hover {
+    background: #f0fdf4 !important;
+    border-color: #86efac !important;
+    color: #16a34a !important;
+}
+.common-sidebar.green .menu-bar-refresh-icon-btn:hover svg,
+.common-sidebar.theme-green .menu-bar-refresh-icon-btn:hover svg,
+.common-sidebar[data-theme="green"] .menu-bar-refresh-icon-btn:hover svg,
+[data-theme="dataManagement"] .common-sidebar .menu-bar-refresh-icon-btn:hover svg,
+[data-theme="data-management"] .common-sidebar .menu-bar-refresh-icon-btn:hover svg {
+    stroke: #16a34a !important;
+    color: #16a34a !important;
+}
+
+/* 실사관리 (Navy) */
+.common-sidebar.navy .menu-bar-refresh-icon-btn:hover,
+.common-sidebar.theme-navy .menu-bar-refresh-icon-btn:hover,
+.common-sidebar[data-theme="navy"] .menu-bar-refresh-icon-btn:hover,
+[data-theme="fieldManagement"] .common-sidebar .menu-bar-refresh-icon-btn:hover,
+[data-theme="field-management"] .common-sidebar .menu-bar-refresh-icon-btn:hover {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+.common-sidebar.navy .menu-bar-refresh-icon-btn:hover svg,
+.common-sidebar.theme-navy .menu-bar-refresh-icon-btn:hover svg,
+.common-sidebar[data-theme="navy"] .menu-bar-refresh-icon-btn:hover svg,
+[data-theme="fieldManagement"] .common-sidebar .menu-bar-refresh-icon-btn:hover svg,
+[data-theme="field-management"] .common-sidebar .menu-bar-refresh-icon-btn:hover svg {
+    stroke: #0f172a !important;
+    color: #0f172a !important;
+}
+
+
 .common-sidebar .menu-bar-refresh-icon-btn svg {
+
     display: block !important;
     transition: transform 0.25s ease !important;
 }

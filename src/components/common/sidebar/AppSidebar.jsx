@@ -210,10 +210,11 @@ const AppSidebar = ({ service, onOpenProjectModal }) => {
   }, [currentMode, auth?.user?.userId, pageState.merge_pn]);
 
   useEffect(() => {
-    if (currentMode === "hsrt" && mergePn) {
+    if ((currentMode === "hsrt" || currentMode === "dataManagement") && mergePn) {
       fetchDataInfo(mergePn);
     }
   }, [currentMode, auth?.user?.userId, mergePn]);
+
 
   // H-SRT 대시보드 자동 선택
   useEffect(() => {
@@ -302,7 +303,11 @@ const AppSidebar = ({ service, onOpenProjectModal }) => {
     }
     try {
       loadingSpinner.show();
-      const bakeTarget = currentMode === "fieldManagement" ? "mng" : "srt";
+      const bakeTarget = currentMode === "fieldManagement"
+        ? "mng"
+        : currentMode === "dataManagement"
+          ? "both"
+          : "srt";
       const result = await syncMap.mutateAsync({ user: userId, pn, bakeTarget });
       if (String(result?.success) === '777') {
         modal.showAlert("알림", "데이터 새로고침이 성공적으로 완료되었습니다.");
@@ -494,6 +499,7 @@ const AppSidebar = ({ service, onOpenProjectModal }) => {
         console.warn("Project select error", e);
       }
     } else if (currentMode === "dataManagement") {
+      if (project.merge_pn) fetchDataInfo(project.merge_pn);
       window.dispatchEvent(new Event("pageSelected"));
       navigate("/data_management/setting/map");
     } else if (currentMode === "aiOpen") {
@@ -772,6 +778,28 @@ const AppSidebar = ({ service, onOpenProjectModal }) => {
     }
 
     computedMenuGroups = mgmtItems;
+
+    computedExtraActions = (
+      <div className="menu-bar-actions">
+        <div className="menu-bar-refresh-card">
+          <div className="menu-bar-refresh-card-left" title="현재 데이터 관리에 반영된 데이터의 수집 기준 일시입니다.">
+            <span className="menu-bar-refresh-label">데이터 기준 일시</span>
+            <div className="menu-bar-refresh-time-row">
+              <Clock size={12} strokeWidth={2.2} className="menu-bar-clock-icon" />
+              <span className="menu-bar-time-text">{formatDate(pageInfo.processedAt)}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="menu-bar-refresh-icon-btn"
+            onClick={handleRefresh}
+            title="최신 응답 데이터를 반영하여 데이터 관리를 새로고침합니다."
+          >
+            <RefreshCw size={13} className={(syncMap?.isLoading || syncMap?.isPending) ? "spin" : ""} />
+          </button>
+        </div>
+      </div>
+    );
   }
   // 3) AI 오픈분석 모드 (Orange 테마)
   else if (currentMode === "aiOpen") {

@@ -243,3 +243,14 @@ body[data-theme="data-management"] .k-popup .k-list-item:hover:not(.k-selected),
     color: var(--dm-primary, #16a34a) !important;
     stroke: var(--dm-primary, #16a34a) !important;
 }
+
+/* 사이드바 데이터 기준 일시 새로고침 버튼 호버: 초록색 */
+.common-sidebar .menu-bar-refresh-icon-btn:hover {
+    background: #f0fdf4 !important;
+    border-color: #86efac !important;
+    color: #16a34a !important;
+}
+.common-sidebar .menu-bar-refresh-icon-btn:hover svg {
+    stroke: #16a34a !important;
+    color: #16a34a !important;
+}
