@@ -503,7 +503,18 @@ const AppSidebar = ({ service, onOpenProjectModal }) => {
       window.dispatchEvent(new Event("pageSelected"));
       navigate("/data_management/setting/map");
     } else if (currentMode === "aiOpen") {
-      navigate('/ai_open_analysis/pro_list');
+      sessionStorage.setItem("qnum", "");
+      sessionStorage.setItem("project_lock", "");
+      window.dispatchEvent(new Event("pageSelected"));
+      navigate('/ai_open_analysis/pro_list', {
+        state: {
+          projectnum: project.projectnum,
+          projectname: project.projectname,
+          servername: project.servername,
+          projectpof: project.projectpof
+        },
+        replace: true
+      });
     } else if (currentMode === "fieldManagement") {
       if (project.merge_pn) {
         fetchDataInfo(project.merge_pn);
@@ -951,10 +962,11 @@ const AppSidebar = ({ service, onOpenProjectModal }) => {
     }
   }, [currentMode, pageState.myRole, location.pathname, auth?.user]);
 
-  // 공통 프로젝트 정보 카드 props
   const projectInfoData = {
     title: pageInfo.title,
-    subTitle: sessionStorage.getItem("merge_pn") || sessionStorage.getItem("projectpof") || "ID 미지정",
+    subTitle: currentMode === "aiOpen"
+      ? (sessionStorage.getItem("projectnum") || sessionStorage.getItem("projectpof") || "ID 미지정")
+      : (sessionStorage.getItem("merge_pn") || sessionStorage.getItem("projectpof") || "ID 미지정"),
     onSettingsClick: (isHsrtCustomer && currentMode === "hsrt") ? undefined : () => {
       if (onOpenProjectModal) {
         onOpenProjectModal();

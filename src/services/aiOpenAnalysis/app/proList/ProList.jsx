@@ -33,18 +33,38 @@ const ProList = () => {
     const [projectnum, setProjectnum] = useState(() =>
         projectnumFromState ?? sessionStorage.getItem("projectnum") ?? ""   //프로젝트 번호 없으면 세션에서 가져옴
     );
+
+    // [1] 사이드바/모달에서 프로젝트 변경 시(pageSelected 이벤트) 즉시 새 프로젝트로 재조회
+    useEffect(() => {
+        const handlePageSelected = () => {
+            const newPn = sessionStorage.getItem("projectnum") || "";
+            if (newPn) {
+                setProjectnum(newPn);
+                setGridDataKey(k => k + 1);
+                setTimeStamp(Date.now());
+            }
+        };
+
+        window.addEventListener("pageSelected", handlePageSelected);
+        return () => window.removeEventListener("pageSelected", handlePageSelected);
+    }, []);
+
+    // [2] location.state 변경 시 프로젝트 정보 갱신
     useEffect(() => {
         if (projectnumFromState) {
             setProjectnum(projectnumFromState);
             sessionStorage.setItem("projectnum", projectnumFromState);
-            sessionStorage.setItem("projectname", state?.projectname);
-            sessionStorage.setItem("servername", state?.servername);
-            sessionStorage.setItem("projectpof", state?.projectpof);
+            if (state?.projectname) sessionStorage.setItem("projectname", state.projectname);
+            if (state?.servername) sessionStorage.setItem("servername", state.servername);
+            if (state?.projectpof) sessionStorage.setItem("projectpof", state.projectpof);
+            setGridDataKey(k => k + 1);
+            setTimeStamp(Date.now());
         }
         // 문항 목록 진입 시, 이전 문항 선택 정보 초기화
         sessionStorage.setItem("qnum", "");
         sessionStorage.setItem("project_lock", "");
-    }, [projectnumFromState]);
+    }, [projectnumFromState, state]);
+
 
     // 정렬/필터를 controlled
     const [sort, setSort] = useState([]);
@@ -370,7 +390,7 @@ const ProList = () => {
 
     return (
         <GridData
-            key={gridDataKey}
+            key={`${gridDataKey}_${projectnum}`}
             dataItemKey={DATA_ITEM_KEY}
             rowNumber={"no"}
             rowNumberOrder="desc"
