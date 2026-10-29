@@ -34,9 +34,9 @@
 }
 
 /* 4. Kendo Popup Container (H-SRT 드롭다운 팝업) */
-html[data-theme="hsrt"] .k-animation-container .k-popup,
-html[data-theme="data-dashboard"] .k-animation-container .k-popup,
-body[data-theme="data-dashboard"] .k-animation-container .k-popup {
+html[data-theme="hsrt"] .k-animation-container .k-popup:not(.dp-tooltip-clean-popup),
+html[data-theme="data-dashboard"] .k-animation-container .k-popup:not(.dp-tooltip-clean-popup),
+body[data-theme="data-dashboard"] .k-animation-container .k-popup:not(.dp-tooltip-clean-popup) {
     border: 1px solid var(--srt-primary-300, #93c5fd) !important;
     border-radius: 8px !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;

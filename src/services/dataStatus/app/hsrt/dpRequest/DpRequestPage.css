@@ -2323,3 +2323,27 @@
     opacity: 1 !important;
     font-weight: 400 !important;
 }
+
+/* 스터브 그리드 헤더 설명팁(다중 선택 팁) Kendo 팝업 컨테이너 완전 투명화 (이중 테두리 방지) */
+html[data-theme] .k-animation-container .k-popup.dp-tooltip-clean-popup,
+body[data-theme] .k-animation-container .k-popup.dp-tooltip-clean-popup,
+html .k-animation-container .k-popup.dp-tooltip-clean-popup,
+body .k-animation-container .k-popup.dp-tooltip-clean-popup,
+.k-animation-container:has(.dp-tooltip-clean-popup),
+.k-animation-container:has(.dp-tooltip-clean-popup) .k-popup,
+.k-animation-container .dp-tooltip-clean-popup,
+.dp-tooltip-clean-popup,
+.dp-tooltip-clean-popup.k-animation-container,
+.dp-tooltip-clean-popup .k-popup,
+.dp-tooltip-clean-popup.k-popup,
+.dp-tooltip-clean-popup .k-child-animation-container {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    outline: none !important;
+    overflow: visible !important;
+    animation: none !important;
+    transition: none !important;
+}

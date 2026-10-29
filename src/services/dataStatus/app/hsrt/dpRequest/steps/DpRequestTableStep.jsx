@@ -811,6 +811,13 @@ td.stub-cell-selected .dp-mini-dropdown {
     padding: 4px 0 !important;
     border: 1px solid var(--srt-primary-300, #93c5fd) !important;
 }
+html[data-theme] .k-animation-container .k-popup.dp-tooltip-clean-popup,
+body[data-theme] .k-animation-container .k-popup.dp-tooltip-clean-popup,
+html .k-animation-container .k-popup.dp-tooltip-clean-popup,
+body .k-animation-container .k-popup.dp-tooltip-clean-popup,
+.k-animation-container:has(.dp-tooltip-clean-popup),
+.k-animation-container:has(.dp-tooltip-clean-popup) .k-popup,
+.k-animation-container .dp-tooltip-clean-popup,
 .dp-tooltip-clean-popup,
 .dp-tooltip-clean-popup.k-animation-container,
 .dp-tooltip-clean-popup .k-popup,
@@ -821,6 +828,8 @@ td.stub-cell-selected .dp-mini-dropdown {
     border: none !important;
     box-shadow: none !important;
     padding: 0 !important;
+    outline: none !important;
+    overflow: visible !important;
     animation: none !important;
     transition: none !important;
 }

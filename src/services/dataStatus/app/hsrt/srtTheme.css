@@ -110,13 +110,13 @@ html[data-srt-brand] [data-theme] {
    Kendo UI Portal (DropdownList Popup) 전역 브랜드 테마 연동
    - Kendo Popup은 <body> 직계 자식으로 렌더링되므로 :root / html 범위에서 직접 제어
    -------------------------------------------------------------------------- */
-html[data-theme="hsrt"] .k-animation-container .k-popup,
+html[data-theme="hsrt"] .k-animation-container .k-popup:not(.dp-tooltip-clean-popup),
 html[data-theme="hsrt"] .k-animation-container .k-list-container,
-html[data-theme="data-dashboard"] .k-animation-container .k-popup,
+html[data-theme="data-dashboard"] .k-animation-container .k-popup:not(.dp-tooltip-clean-popup),
 html[data-theme="data-dashboard"] .k-animation-container .k-list-container,
-body[data-theme="hsrt"] .k-animation-container .k-popup,
+body[data-theme="hsrt"] .k-animation-container .k-popup:not(.dp-tooltip-clean-popup),
 body[data-theme="hsrt"] .k-animation-container .k-list-container,
-body[data-theme="data-dashboard"] .k-animation-container .k-popup,
+body[data-theme="data-dashboard"] .k-animation-container .k-popup:not(.dp-tooltip-clean-popup),
 body[data-theme="data-dashboard"] .k-animation-container .k-list-container {
     border: 1px solid var(--srt-primary-300, #93c5fd) !important;
     border-radius: 8px !important;
