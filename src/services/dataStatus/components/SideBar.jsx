@@ -11,7 +11,11 @@ const SideBar = ({ items, selectedId, onItemClick, title, totalCount, headerActi
                 <div className="sidebar-title-row" style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', height: '48px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: isOpen ? 'space-between' : 'center' }}>
                     {isOpen && title ? (
                         <>
-                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#475569' }}>{title} ({totalCount !== undefined ? totalCount : items.length})</span>
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#475569' }}>
+                                {title} ({totalCount !== undefined && totalCount !== null
+                                    ? (isNaN(Number(totalCount)) ? totalCount : Number(totalCount).toLocaleString())
+                                    : (items?.length || 0).toLocaleString()})
+                            </span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 {headerAction}
                                 <button
@@ -138,7 +142,7 @@ const SideBar = ({ items, selectedId, onItemClick, title, totalCount, headerActi
                         <ChevronLeft size={16} />
                     </button>
                     <div className="sidebar-page-info">
-                        <span>{currentPage}</span> / <span>{totalPages}</span>
+                        <span>{currentPage !== undefined && !isNaN(Number(currentPage)) ? Number(currentPage).toLocaleString() : currentPage}</span> / <span>{totalPages !== undefined && !isNaN(Number(totalPages)) ? Number(totalPages).toLocaleString() : totalPages}</span>
                     </div>
                     <button
                         className="sidebar-page-btn"

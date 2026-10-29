@@ -927,7 +927,9 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                                                 const count = row[col.key] ?? 0;
                                                 const pctRaw = row[`${col.key}_pct`];
                                                 const pct = pctRaw !== undefined && !isNaN(Number(pctRaw)) ? Number(pctRaw).toFixed(decimalPct) : pctRaw;
-                                                const formattedCount = count !== undefined && !isNaN(Number(count)) ? Number(count).toFixed(decimalN) : count;
+                                                const formattedCount = count !== undefined && !isNaN(Number(count))
+                                                    ? Number(count).toLocaleString(undefined, { minimumFractionDigits: decimalN, maximumFractionDigits: decimalN })
+                                                    : count;
                                                 return (
                                                     <td key={col.key}>
                                                         {displayMode === 'all' && (
@@ -946,9 +948,9 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
                                                     </td>
                                                 );
                                             }) : (
-                                                <td>{row.total}</td>
+                                                <td>{row.total !== undefined && row.total !== null && !isNaN(Number(row.total)) ? Number(row.total).toLocaleString() : (row.total ?? '-')}</td>
                                             )}
-                                            <td>{row.total}</td>
+                                            <td>{row.total !== undefined && row.total !== null && !isNaN(Number(row.total)) ? Number(row.total).toLocaleString() : (row.total ?? '-')}</td>
                                         </tr>
                                     ))
                                 )}

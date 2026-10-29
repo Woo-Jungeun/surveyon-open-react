@@ -4418,7 +4418,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         )}
                         <div className="dp-sidebar custom-scrollbar" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
                             <div className="dp-sidebar-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '8px' }}>
-                                <span>테이블 목록 ({totalTables})</span>
+                                <span>테이블 목록 ({totalTables !== undefined && totalTables !== null ? (isNaN(Number(totalTables)) ? totalTables : Number(totalTables).toLocaleString()) : 0})</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     <button className="dp-sidebar-toggle-btn-compact" onClick={() => setIsBannerSidebarOpen(false)} style={{ display: 'flex', alignItems: 'center' }}>
                                         <ChevronLeft size={16} />
