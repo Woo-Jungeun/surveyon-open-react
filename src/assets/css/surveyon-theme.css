@@ -1,0 +1,709 @@
+@charset "utf-8";
+
+/**
+ * ==============================================================================
+ * 설문온(SulmunOn) 디자인 시스템 통합 테마 (surveyon-theme.css)
+ * ==============================================================================
+ * 
+ * [설문온 메뉴 및 색상 체계]
+ * - 0. 설문온 메인 공통 (Main / Base)   : 보라 계열 (#5A4BFF) - 로그인, 프로젝트선택, 메인 전체
+ * - 1. H-SRT (Data Dashboard / H-SRT) : 블루 계열 (#1e3a8a / #3b82f6)
+ * - 2. 데이터관리 (Data Management)     : 초록 계열 (#16a34a / Emerald)
+ * - 3. 실사관리 (Field Management)      : 딥 네이비 계열 (#1e3a8a)
+ * - 4. AI 오픈분석 (AI Open Analysis)   : 오렌지 계열 (#F97316)
+ * 
+ * [목차]
+ * 1. 테마 변수 시스템 (CSS Custom Properties)
+ *    - 1-0. 설문온 메인/공통 기본 테마 (보라 계열)
+ *    - 1-1. H-SRT (블루 계열)
+ *    - 1-2. 데이터관리 (초록 계열)
+ *    - 1-3. 실사관리 (딥 네이비 계열)
+ *    - 1-4. AI 오픈분석 (오렌지 계열)
+ * 
+ * 2. 전역 예외 보호 규칙 (Global Shield Rules)
+ *    - 2-1. 프로젝트 선택 모달 (.ps-modal-container) 보라색 테마 절대 유지
+ *    - 2-2. 로그인 인풋 (.login-input) 보라색 포커스 테두리 보호
+ * 
+ * 3. Kendo Grid 공통 테마 스타일
+ *    - 3-1. 헤더 (Header)
+ *    - 3-2. 행 호버 (Row Hover) - 프로젝트 팝업 보라색 보호
+ *    - 3-3. 행 선택 (Row Selection) - 프로젝트 팝업 보라색 보호
+ *    - 3-4. 교차 행 배경 (Zebra Striping)
+ * 
+ * 4. 폼 컨트롤 공통 스타일 (Form Controls)
+ *    - 4-1. 인풋(Input), 셀렉트(Select), 드롭다운(Dropdown) 포커스 링
+ * 
+ * 5. 버튼 & 액션 컴포넌트 (Buttons)
+ *    - 5-1. Primary 버튼 및 호버
+ *    - 5-2. H-SRT 행 추가 아이콘 버튼 (.dp-grid-add-row-btn)
+ * 
+ * 6. 탭 & 네비게이션 (Tabs & Navigation)
+ *    - 6-1. Kendo TabStrip 활성 탭 인디케이터
+ * 
+ * 7. 상태 배지 & 태그 (Status Badges)
+ * 
+ * 8. 스크롤바 & 유틸리티 (Scrollbar & Utilities)
+ * ==============================================================================
+ */
+
+
+/* ==============================================================================
+ * 1. 테마 변수 시스템 (Theme Variables)
+ * ============================================================================== */
+
+/* 1-0. 설문온 메인 공통 기본 테마 (보라 계열 - 로그인, 프로젝트선택, 전체 메인 기본값) */
+:root {
+    --primary-color: #5A4BFF;
+    --primary-hover: #4838e6;
+    --primary-focus: #3727cc;
+    --primary-light: #F3F1FF;
+    --primary-border: #7B6FFF;
+    --primary-bg-hover: #F9F8FF;
+    --primary-bg-selected: #F3F1FF;
+
+    /* Base Neutral */
+    --text-main: #1f2937;
+    --text-sub: #6b7280;
+    --border-color: #e5e7eb;
+}
+
+/* 1-1. H-SRT (Data Dashboard / H-SRT : 블루 계열 / 화이트라벨 브랜드 연동) */
+[data-theme="data-dashboard"] {
+    --primary-color: var(--srt-brand, var(--srt-primary-500, #3b82f6));
+    --primary-hover: var(--srt-primary-600, #2563eb);
+    --primary-focus: var(--srt-primary-700, #1d4ed8);
+    --primary-light: var(--srt-primary-50, #eff6ff);
+    --primary-border: var(--srt-primary-400, #60a5fa);
+    --primary-bg-hover: var(--srt-primary-50, #eff6ff);
+    --primary-bg-selected: var(--srt-primary-100, #dbeafe);
+
+    --ds-primary: var(--srt-brand, var(--srt-primary-500, #3b82f6));
+    --ds-primary-hover: var(--srt-primary-600, #2563eb);
+    --ds-primary-focus: var(--srt-primary-700, #1d4ed8);
+    --ds-primary-light: var(--srt-primary-50, #eff6ff);
+    --ds-primary-border: var(--srt-primary-200, #bfdbfe);
+    --ds-text-main: #1f2937;
+    --ds-border: #e5e7eb;
+}
+
+/* 1-2. 데이터관리 (Data Management : 초록 계열) */
+[data-theme="dataManagement"],
+[data-theme="data-management"] {
+    --primary-color: #16a34a;
+    --primary-hover: #15803d;
+    --primary-focus: #166534;
+    --primary-light: #f0fdf4;
+    --primary-border: #86efac;
+    --primary-bg-hover: #f0fdf4;
+    --primary-bg-selected: #dcfce7;
+
+    --dm-primary: #16a34a;
+    --dm-primary-hover: #15803d;
+    --dm-primary-focus: #166534;
+    --dm-primary-light: #f0fdf4;
+    --dm-primary-border: #dcfce7;
+    --dm-text-main: #1e293b;
+    --dm-border: #e2e8f0;
+
+    /* 재사용 공통 컴포넌트 변수 매핑 */
+    --ds-primary: #16a34a;
+    --ds-primary-hover: #15803d;
+}
+
+/* 1-3. 실사관리 (Field Management : 딥 네이비 계열) */
+[data-theme="fieldManagement"],
+[data-theme="field-management"] {
+    --primary-color: #1e3a8a;
+    --primary-hover: #172554;
+    --primary-focus: #1e3a8a;
+    --primary-light: #eff6ff;
+    --primary-border: #3b82f6;
+    --primary-bg-hover: #eff6ff;
+    --primary-bg-selected: #dbeafe;
+
+    --fm-primary: #1e3a8a;
+    --fm-primary-hover: #172554;
+    --fm-primary-focus: #1e3a8a;
+    --fm-primary-light: #eff6ff;
+    --fm-primary-border: #3b82f6;
+    --fm-text-main: #1f2937;
+    --fm-border: #e5e7eb;
+
+    /* 재사용 공통 컴포넌트 변수 매핑 (실사관리 딥네이비 적용) */
+    --ds-primary: #1e3a8a;
+    --ds-primary-hover: #172554;
+}
+
+/* 1-4. AI 오픈분석 (AI Open Analysis : 오렌지 계열) */
+[data-theme="aiOpen"],
+[data-theme="aiOpenAnalysis"],
+[data-theme="ai-open-analysis"],
+[data-theme="ai-analysis"] {
+    --primary-color: #F97316;
+    --primary-hover: #EA580C;
+    --primary-focus: #C2410C;
+    --primary-light: #FFEDD5;
+    --primary-border: #FDBA74;
+    --primary-bg-hover: #FFF7ED;
+    --primary-bg-selected: #FFEDD5;
+
+    --ao-primary: #F97316;
+    --ao-primary-hover: #EA580C;
+    --ao-primary-focus: #C2410C;
+    --ao-primary-light: #FFEDD5;
+    --ao-primary-border: #FDBA74;
+    --ao-text-main: #1f2937;
+    --ao-border: #e5e7eb;
+}
+
+
+/* ==============================================================================
+ * 2. 전역 예외 보호 규칙 (Global Shield Rules)
+ * ============================================================================== */
+
+/* 2-1. 프로젝트 선택 모달 (.ps-modal-container): 설문온 공통 고유 보라색 테마 보장 */
+.ps-modal-container .k-grid tbody tr,
+.ps-modal-content .k-grid tbody tr {
+    cursor: pointer !important;
+}
+
+.ps-modal-container .k-grid tbody tr:hover,
+.ps-modal-container .k-grid tbody tr:hover td,
+.ps-modal-container .k-grid .k-grid-content tr:hover td,
+.ps-modal-container .k-grid .k-table-row:hover td,
+.ps-modal-container .k-grid tr:hover td,
+.ps-modal-content .k-grid tbody tr:hover,
+.ps-modal-content .k-grid tbody tr:hover td,
+.ps-modal-content .k-grid .k-grid-content tr:hover td,
+.ps-modal-content .k-grid .k-table-row:hover td,
+.ps-modal-content .k-grid tr:hover td {
+    background-color: #F9F8FF !important;
+}
+
+.ps-modal-container .k-grid tr.k-selected>td,
+.ps-modal-container .k-grid tr.k-state-selected>td,
+.ps-modal-container .k-grid tr[aria-selected="true"]>td,
+.ps-modal-container .k-grid td.k-selected,
+.ps-modal-container .k-grid td.k-state-selected,
+.ps-modal-content .k-grid tr.k-selected>td,
+.ps-modal-content .k-grid tr.k-state-selected>td,
+.ps-modal-content .k-grid tr[aria-selected="true"]>td,
+.ps-modal-content .k-grid td.k-selected,
+.ps-modal-content .k-grid td.k-state-selected {
+    background-color: #F3F1FF !important;
+    color: #333 !important;
+}
+
+/* 2-2. 로그인 인풋 (.login-input): 테마 전파 차단 및 고유 살구빛 배경/보라색 테두리 보호 */
+.login-input {
+    background-color: #f9fafb !important;
+    border-color: #d1d5db !important;
+}
+
+.login-input:not(:placeholder-shown),
+.login-input:-webkit-autofill,
+.login-input:-webkit-autofill:hover,
+.login-input:-webkit-autofill:focus {
+    box-shadow: 0 0 0 1000px #FFF7ED inset !important;
+    -webkit-box-shadow: 0 0 0 1000px #FFF7ED inset !important;
+    border-color: #cbd5e1 !important;
+}
+
+.login-input:focus {
+    border-color: #818cf8 !important;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25) !important;
+    outline: none !important;
+}
+
+.login-input:not(:placeholder-shown):focus,
+.login-input:-webkit-autofill:focus {
+    box-shadow: 0 0 0 1000px #FFF7ED inset, 0 0 0 3px rgba(129, 140, 248, 0.25) !important;
+    -webkit-box-shadow: 0 0 0 1000px #FFF7ED inset, 0 0 0 3px rgba(129, 140, 248, 0.25) !important;
+}
+
+
+/* ==============================================================================
+ * 3. Kendo Grid 공통 테마 스타일
+ * ============================================================================== */
+
+/* 3-1. 그리드 헤더 (Header) */
+[data-theme="data-dashboard"] .k-grid-header,
+[data-theme="dataManagement"] .k-grid-header,
+[data-theme="data-management"] .k-grid-header,
+[data-theme="fieldManagement"] .k-grid-header,
+[data-theme="field-management"] .k-grid-header,
+[data-theme="aiOpen"] .k-grid-header,
+[data-theme="aiOpenAnalysis"] .k-grid-header,
+[data-theme="ai-open-analysis"] .k-grid-header {
+    background-color: #f8fafc;
+    border-bottom: 2px solid var(--primary-border);
+}
+
+[data-theme="data-dashboard"] .k-grid-header .k-header,
+[data-theme="dataManagement"] .k-grid-header .k-header,
+[data-theme="data-management"] .k-grid-header .k-header,
+[data-theme="fieldManagement"] .k-grid-header .k-header,
+[data-theme="field-management"] .k-grid-header .k-header,
+[data-theme="aiOpen"] .k-grid-header .k-header,
+[data-theme="aiOpenAnalysis"] .k-grid-header .k-header,
+[data-theme="ai-open-analysis"] .k-grid-header .k-header {
+    background-color: transparent;
+    color: #1f2937;
+    font-weight: 700;
+    border-color: #e5e7eb;
+    padding: 12px 8px;
+    text-align: center;
+}
+
+/* 3-2. 그리드 행 호버 (Row Hover) - 본체 화면(.app-layout-content)에만 적용하여 팝업 모달 침범 원천 차단 */
+[data-theme="data-dashboard"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover,
+[data-theme="data-dashboard"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover td,
+[data-theme="data-dashboard"] .app-layout-content .k-grid tr:hover {
+    background-color: var(--srt-hover-bg, #f1f5f9) !important;
+}
+
+/* 데이터관리: 초록 계열 호버 */
+[data-theme="dataManagement"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover,
+[data-theme="dataManagement"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover td,
+[data-theme="data-management"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover,
+[data-theme="data-management"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover td {
+    background-color: #f0fdf4 !important;
+}
+
+/* 실사관리: 딥 네이비/블루 계열 호버 */
+[data-theme="fieldManagement"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover,
+[data-theme="fieldManagement"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover td,
+[data-theme="field-management"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover,
+[data-theme="field-management"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover td {
+    background-color: #eff6ff !important;
+}
+
+/* AI 오픈분석: 오렌지 계열 호버 */
+[data-theme="aiOpen"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover,
+[data-theme="aiOpen"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover td,
+[data-theme="aiOpenAnalysis"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover,
+[data-theme="aiOpenAnalysis"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover td,
+[data-theme="ai-open-analysis"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover,
+[data-theme="ai-open-analysis"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover td {
+    background-color: #FFF7ED !important;
+}
+
+/* 3-3. 그리드 행 선택 (Row Selection) - 본체 화면(.app-layout-content)에만 적용 */
+[data-theme="data-dashboard"] .app-layout-content .k-grid td.k-state-selected,
+[data-theme="data-dashboard"] .app-layout-content .k-grid tr.k-state-selected>td,
+[data-theme="data-dashboard"] .app-layout-content .k-grid td.k-selected,
+[data-theme="data-dashboard"] .app-layout-content .k-grid tr.k-selected>td,
+[data-theme="data-dashboard"] .app-layout-content .k-grid .k-table-row.k-selected>td {
+    background-color: var(--srt-primary-50, #eff6ff) !important;
+    color: #1f2937 !important;
+}
+
+/* 데이터관리: 초록 계열 선택 */
+[data-theme="dataManagement"] .app-layout-content .k-grid td.k-state-selected,
+[data-theme="dataManagement"] .app-layout-content .k-grid tr.k-state-selected>td,
+[data-theme="data-management"] .app-layout-content .k-grid td.k-state-selected,
+[data-theme="data-management"] .app-layout-content .k-grid tr.k-state-selected>td {
+    background-color: #dcfce7 !important;
+    color: #166534 !important;
+}
+
+/* 실사관리: 블루 계열 선택 */
+[data-theme="fieldManagement"] .app-layout-content .k-grid td.k-state-selected,
+[data-theme="fieldManagement"] .app-layout-content .k-grid tr.k-state-selected>td,
+[data-theme="field-management"] .app-layout-content .k-grid td.k-state-selected,
+[data-theme="field-management"] .app-layout-content .k-grid tr.k-state-selected>td {
+    background-color: #eff6ff !important;
+    color: #1f2937 !important;
+}
+
+/* AI 오픈분석: 오렌지 계열 선택 */
+[data-theme="aiOpen"] .app-layout-content .k-grid td.k-state-selected,
+[data-theme="aiOpen"] .app-layout-content .k-grid tr.k-state-selected>td,
+[data-theme="aiOpenAnalysis"] .app-layout-content .k-grid td.k-state-selected,
+[data-theme="aiOpenAnalysis"] .app-layout-content .k-grid tr.k-state-selected>td,
+[data-theme="ai-open-analysis"] .app-layout-content .k-grid td.k-state-selected,
+[data-theme="ai-open-analysis"] .app-layout-content .k-grid tr.k-state-selected>td {
+    background-color: #FFEDD5 !important;
+    color: #1f2937 !important;
+}
+
+/* 3-4. 프로젝트 선택 모달 (.ps-modal-container): 어떤 화면/어떤 테마에서도 무조건 보라색 고정 (최우선 순위) */
+html body .ps-modal-container .k-grid tbody tr,
+html body .ps-modal-container .k-grid .k-table-tbody tr,
+html body .ps-modal-content .k-grid tbody tr,
+html body .ps-modal-content .k-grid .k-table-tbody tr {
+    cursor: pointer !important;
+}
+
+/* 행 호버 (Hover) - 연보라색 #F9F8FF 완전 고정 (행 및 모든 셀) */
+html body .ps-modal-overlay .ps-modal-container .k-grid tr:hover,
+html body .ps-modal-overlay .ps-modal-container .k-grid tr:hover > td,
+html body .ps-modal-overlay .ps-modal-container .k-grid tr:hover > .k-table-td,
+html body .ps-modal-overlay .ps-modal-container .k-grid .k-table-row:hover,
+html body .ps-modal-overlay .ps-modal-container .k-grid .k-table-row:hover > td,
+html body .ps-modal-overlay .ps-modal-container .k-grid .k-table-row:hover > .k-table-td,
+html body .ps-modal-container .k-grid tbody tr:hover,
+html body .ps-modal-container .k-grid tbody tr:hover td,
+html body .ps-modal-container .k-grid tbody tr:hover > .k-table-td,
+html body .ps-modal-container .k-grid .k-grid-content tr:hover td,
+html body .ps-modal-container .k-grid .k-grid-content tr:hover > .k-table-td,
+html body .ps-modal-container .k-grid .k-table-row:hover,
+html body .ps-modal-container .k-grid .k-table-row:hover td,
+html body .ps-modal-container .k-grid .k-table-row:hover > .k-table-td,
+html body .ps-modal-container .k-grid tr:hover,
+html body .ps-modal-container .k-grid tr:hover td,
+html body .ps-modal-container .k-grid tr:hover > td,
+html body .ps-modal-container .k-grid tr:hover > .k-table-td,
+html body .ps-modal-content .k-grid tr:hover,
+html body .ps-modal-content .k-grid tr:hover td,
+html body .ps-modal-content .k-grid tr:hover > td,
+html body .ps-modal-content .k-grid tr:hover > .k-table-td,
+html body .ps-modal-content .k-grid .k-table-row:hover,
+html body .ps-modal-content .k-grid .k-table-row:hover td,
+html body .ps-modal-content .k-grid .k-table-row:hover > .k-table-td {
+    background-color: #F9F8FF !important;
+    background: #F9F8FF !important;
+}
+
+/* 행 선택 (Selected / Highlight) - 보라색 #F3F1FF 완전 고정 (행 및 모든 셀) */
+html body .ps-modal-overlay .ps-modal-container .k-grid tr.k-selected,
+html body .ps-modal-overlay .ps-modal-container .k-grid tr.k-selected > td,
+html body .ps-modal-overlay .ps-modal-container .k-grid tr.k-selected > .k-table-td,
+html body .ps-modal-overlay .ps-modal-container .k-grid tr.k-state-selected,
+html body .ps-modal-overlay .ps-modal-container .k-grid tr.k-state-selected > td,
+html body .ps-modal-overlay .ps-modal-container .k-grid tr.k-state-selected > .k-table-td,
+html body .ps-modal-overlay .ps-modal-container .k-grid tr[aria-selected="true"],
+html body .ps-modal-overlay .ps-modal-container .k-grid tr[aria-selected="true"] > td,
+html body .ps-modal-overlay .ps-modal-container .k-grid tr[aria-selected="true"] > .k-table-td,
+html body .ps-modal-overlay .ps-modal-container .k-grid .k-table-row.k-selected,
+html body .ps-modal-overlay .ps-modal-container .k-grid .k-table-row.k-selected > td,
+html body .ps-modal-overlay .ps-modal-container .k-grid .k-table-row.k-selected > .k-table-td,
+html body .ps-modal-container .k-grid tr.k-selected,
+html body .ps-modal-container .k-grid tr.k-selected > td,
+html body .ps-modal-container .k-grid tr.k-selected > .k-table-td,
+html body .ps-modal-container .k-grid tr.k-state-selected,
+html body .ps-modal-container .k-grid tr.k-state-selected > td,
+html body .ps-modal-container .k-grid tr.k-state-selected > .k-table-td,
+html body .ps-modal-container .k-grid tr[aria-selected="true"],
+html body .ps-modal-container .k-grid tr[aria-selected="true"] > td,
+html body .ps-modal-container .k-grid tr[aria-selected="true"] > .k-table-td,
+html body .ps-modal-container .k-grid .k-table-row.k-selected,
+html body .ps-modal-container .k-grid .k-table-row.k-selected > td,
+html body .ps-modal-container .k-grid .k-table-row.k-selected > .k-table-td,
+html body .ps-modal-container .k-grid td.k-selected,
+html body .ps-modal-container .k-grid td.k-state-selected,
+html body .ps-modal-container .k-grid .k-table-td.k-selected,
+html body .ps-modal-container #grid_01 tr.k-selected,
+html body .ps-modal-container #grid_01 tr.k-selected > td,
+html body .ps-modal-container #grid_01 tr.k-selected > .k-table-td,
+html body .ps-modal-container #grid_01 tr.k-state-selected,
+html body .ps-modal-container #grid_01 tr.k-state-selected > td,
+html body .ps-modal-container #grid_01 tr.k-state-selected > .k-table-td,
+html body .ps-modal-container #grid_01 tr[aria-selected="true"],
+html body .ps-modal-container #grid_01 tr[aria-selected="true"] > td,
+html body .ps-modal-container #grid_01 tr[aria-selected="true"] > .k-table-td,
+html body .ps-modal-container #grid_01 .k-table-row.k-selected,
+html body .ps-modal-container #grid_01 .k-table-row.k-selected > td,
+html body .ps-modal-container #grid_01 .k-table-row.k-selected > .k-table-td,
+html body .ps-modal-container #grid_01 .k-table-tbody tr.k-selected,
+html body .ps-modal-container #grid_01 .k-table-tbody tr.k-selected > td,
+html body .ps-modal-container #grid_01 .k-table-tbody tr.k-selected > .k-table-td,
+html body .ps-modal-container #grid_01 .k-table-tbody tr.k-table-row.k-selected,
+html body .ps-modal-container #grid_01 .k-table-tbody tr.k-table-row.k-selected > td,
+html body .ps-modal-container #grid_01 .k-table-tbody tr.k-table-row.k-selected > .k-table-td,
+html body .ps-modal-container #grid_01 .k-table-tbody tr[aria-selected="true"],
+html body .ps-modal-container #grid_01 .k-table-tbody tr[aria-selected="true"] > td,
+html body .ps-modal-container #grid_01 .k-table-tbody tr[aria-selected="true"] > .k-table-td,
+html body .ps-modal-container #grid_01 td.k-selected,
+html body .ps-modal-container #grid_01 td.k-state-selected,
+html body .ps-modal-container #grid_01 .k-table-td.k-selected,
+html body .ps-modal-content .k-grid tr.k-selected,
+html body .ps-modal-content .k-grid tr.k-selected > td,
+html body .ps-modal-content .k-grid tr.k-selected > .k-table-td,
+html body .ps-modal-content .k-grid tr.k-state-selected,
+html body .ps-modal-content .k-grid tr.k-state-selected > td,
+html body .ps-modal-content .k-grid tr.k-state-selected > .k-table-td,
+html body .ps-modal-content .k-grid tr[aria-selected="true"],
+html body .ps-modal-content .k-grid tr[aria-selected="true"] > td,
+html body .ps-modal-content .k-grid tr[aria-selected="true"] > .k-table-td,
+html body .ps-modal-content .k-grid .k-table-row.k-selected,
+html body .ps-modal-content .k-grid .k-table-row.k-selected > td,
+html body .ps-modal-content .k-grid .k-table-row.k-selected > .k-table-td,
+html body .ps-modal-content .k-grid td.k-selected,
+html body .ps-modal-content .k-grid td.k-state-selected,
+html body .ps-modal-content .k-grid .k-table-td.k-selected {
+    background-color: #F3F1FF !important;
+    background: #F3F1FF !important;
+    color: #1f2937 !important;
+}
+
+/* 선택된 행에 마우스 호버 시에도 보라 톤 유지 */
+html body .ps-modal-overlay .ps-modal-container .k-grid tr.k-selected:hover,
+html body .ps-modal-overlay .ps-modal-container .k-grid tr.k-selected:hover > td,
+html body .ps-modal-overlay .ps-modal-container .k-grid tr.k-selected:hover > .k-table-td,
+html body .ps-modal-container .k-grid tr.k-selected:hover,
+html body .ps-modal-container .k-grid tr.k-selected:hover > td,
+html body .ps-modal-container .k-grid tr.k-selected:hover > .k-table-td,
+html body .ps-modal-container .k-grid .k-table-row.k-selected:hover,
+html body .ps-modal-container .k-grid .k-table-row.k-selected:hover > td,
+html body .ps-modal-container .k-grid .k-table-row.k-selected:hover > .k-table-td {
+    background-color: #EBE7FF !important;
+    background: #EBE7FF !important;
+    color: #1f2937 !important;
+}
+
+/* 3-5. 교차 행 배경 (Zebra Striping) */
+.k-grid-content tr.k-alt {
+    background-color: #fcfcfc;
+}
+
+.k-grid-content td {
+    border-color: #e5e7eb;
+    padding: 10px 12px;
+    vertical-align: middle;
+}
+
+
+/* ==============================================================================
+ * 4. 폼 컨트롤 공통 스타일 (Form Controls)
+ * ============================================================================== */
+
+/* 4-1. 인풋 & 드롭다운 포커스 스타일 (.login-input 제외) */
+[data-theme="data-dashboard"] input[type="text"]:not(.login-input):focus,
+[data-theme="data-dashboard"] select:focus,
+[data-theme="data-dashboard"] .k-dropdown:focus-within {
+    border-color: var(--primary-border) !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+    outline: none;
+}
+
+/* 데이터관리: 초록 계열 포커스 */
+[data-theme="dataManagement"] input[type="text"]:not(.login-input):focus,
+[data-theme="dataManagement"] select:focus,
+[data-theme="dataManagement"] .k-dropdown:focus-within,
+[data-theme="data-management"] input[type="text"]:not(.login-input):focus,
+[data-theme="data-management"] select:focus,
+[data-theme="data-management"] .k-dropdown:focus-within {
+    border-color: #16a34a !important;
+    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2) !important;
+    outline: none;
+}
+
+/* 실사관리: 딥 네이비 포커스 */
+[data-theme="fieldManagement"] input[type="text"]:not(.login-input):focus,
+[data-theme="fieldManagement"] select:focus,
+[data-theme="fieldManagement"] .k-dropdown:focus-within,
+[data-theme="field-management"] input[type="text"]:not(.login-input):focus,
+[data-theme="field-management"] select:focus,
+[data-theme="field-management"] .k-dropdown:focus-within {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.2) !important;
+    outline: none;
+}
+
+/* AI 오픈분석: 오렌지 포커스 */
+[data-theme="aiOpen"] input[type="text"]:not(.login-input):focus,
+[data-theme="aiOpen"] select:focus,
+[data-theme="aiOpen"] .k-dropdown:focus-within,
+[data-theme="aiOpenAnalysis"] input[type="text"]:not(.login-input):focus,
+[data-theme="aiOpenAnalysis"] select:focus,
+[data-theme="aiOpenAnalysis"] .k-dropdown:focus-within,
+[data-theme="ai-open-analysis"] input[type="text"]:not(.login-input):focus,
+[data-theme="ai-open-analysis"] select:focus,
+[data-theme="ai-open-analysis"] .k-dropdown:focus-within {
+    border-color: #FDBA74 !important;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2) !important;
+    outline: none;
+}
+
+
+/* ==============================================================================
+ * 5. 버튼 & 액션 컴포넌트 (Buttons)
+ * ============================================================================== */
+
+/* 5-1. Primary 버튼 */
+[data-theme="data-dashboard"] .btn-primary,
+[data-theme="data-dashboard"] .k-button-solid-primary,
+[data-theme="data-dashboard"] .cmn-btn-primary {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: #fff !important;
+}
+
+/* 데이터관리: 초록 버튼 */
+[data-theme="dataManagement"] .btn-primary,
+[data-theme="dataManagement"] .k-button-solid-primary,
+[data-theme="dataManagement"] .cmn-btn-primary,
+[data-theme="data-management"] .btn-primary,
+[data-theme="data-management"] .k-button-solid-primary,
+[data-theme="data-management"] .cmn-btn-primary {
+    background-color: #16a34a !important;
+    border-color: #16a34a !important;
+    color: #fff !important;
+}
+
+/* 실사관리: 딥 네이비 버튼 */
+[data-theme="fieldManagement"] .btn-primary,
+[data-theme="fieldManagement"] .k-button-solid-primary,
+[data-theme="fieldManagement"] .cmn-btn-primary,
+[data-theme="field-management"] .btn-primary,
+[data-theme="field-management"] .k-button-solid-primary,
+[data-theme="field-management"] .cmn-btn-primary {
+    background-color: #1e3a8a !important;
+    border-color: #1e3a8a !important;
+    color: #fff !important;
+}
+
+/* AI 오픈분석: 오렌지 버튼 */
+[data-theme="aiOpen"] .btn-primary,
+[data-theme="aiOpen"] .k-button-solid-primary,
+[data-theme="aiOpen"] .cmn-btn-primary,
+[data-theme="aiOpenAnalysis"] .btn-primary,
+[data-theme="aiOpenAnalysis"] .k-button-solid-primary,
+[data-theme="aiOpenAnalysis"] .cmn-btn-primary,
+[data-theme="ai-open-analysis"] .btn-primary,
+[data-theme="ai-open-analysis"] .k-button-solid-primary,
+[data-theme="ai-open-analysis"] .cmn-btn-primary {
+    background-color: #F97316 !important;
+    border-color: #F97316 !important;
+    color: #fff !important;
+}
+
+[data-theme="data-dashboard"] .btn-primary:hover,
+[data-theme="data-dashboard"] .k-button-solid-primary:hover,
+[data-theme="data-dashboard"] .cmn-btn-primary:hover {
+    background-color: var(--primary-hover) !important;
+}
+
+[data-theme="dataManagement"] .btn-primary:hover,
+[data-theme="dataManagement"] .k-button-solid-primary:hover,
+[data-theme="dataManagement"] .cmn-btn-primary:hover,
+[data-theme="data-management"] .btn-primary:hover,
+[data-theme="data-management"] .k-button-solid-primary:hover,
+[data-theme="data-management"] .cmn-btn-primary:hover {
+    background-color: #15803d !important;
+}
+
+[data-theme="fieldManagement"] .btn-primary:hover,
+[data-theme="fieldManagement"] .k-button-solid-primary:hover,
+[data-theme="fieldManagement"] .cmn-btn-primary:hover,
+[data-theme="field-management"] .btn-primary:hover,
+[data-theme="field-management"] .k-button-solid-primary:hover,
+[data-theme="field-management"] .cmn-btn-primary:hover {
+    background-color: #172554 !important;
+}
+
+[data-theme="aiOpen"] .btn-primary:hover,
+[data-theme="aiOpen"] .k-button-solid-primary:hover,
+[data-theme="aiOpen"] .cmn-btn-primary:hover,
+[data-theme="aiOpenAnalysis"] .btn-primary:hover,
+[data-theme="aiOpenAnalysis"] .k-button-solid-primary:hover,
+[data-theme="aiOpenAnalysis"] .cmn-btn-primary:hover,
+[data-theme="ai-open-analysis"] .btn-primary:hover,
+[data-theme="ai-open-analysis"] .k-button-solid-primary:hover,
+[data-theme="ai-open-analysis"] .cmn-btn-primary:hover {
+    background-color: #EA580C !important;
+}
+
+/* 5-2. 프로젝트 선택/등록 모달 내부의 모든 Primary 버튼은 무조건 설문온 보라색(#7c3aed) 고정 */
+html body .ps-modal-container button[type="submit"],
+html body .ps-modal-container form button[type="submit"],
+html body .ps-modal-container .pro-enter-submit-btn,
+html body .ps-modal-container .k-button-solid-primary,
+html body .ps-modal-container .btn-primary,
+html body .ps-modal-container .cmn_btn.btn_orange,
+html body .ps-modal-container .btn_orange,
+html [data-theme] .ps-modal-container button[type="submit"],
+html [data-theme] .ps-modal-container .pro-enter-submit-btn,
+html [data-theme] .ps-modal-container .k-button-solid-primary,
+body [data-theme] .ps-modal-container button[type="submit"],
+body [data-theme] .ps-modal-container .pro-enter-submit-btn,
+body [data-theme] .ps-modal-container .k-button-solid-primary,
+[data-theme] .ps-modal-container button[type="submit"],
+[data-theme] .ps-modal-container .pro-enter-submit-btn,
+[data-theme] .ps-modal-container .k-button-solid-primary {
+    background-color: #7c3aed !important;
+    background: #7c3aed !important;
+    border-color: #7c3aed !important;
+    color: #fff !important;
+}
+
+html body .ps-modal-container button[type="submit"]:hover,
+html body .ps-modal-container form button[type="submit"]:hover,
+html body .ps-modal-container .pro-enter-submit-btn:hover,
+html body .ps-modal-container .k-button-solid-primary:hover,
+html body .ps-modal-container .btn-primary:hover,
+html body .ps-modal-container .cmn_btn.btn_orange:hover,
+html body .ps-modal-container .btn_orange:hover,
+html [data-theme] .ps-modal-container button[type="submit"]:hover,
+html [data-theme] .ps-modal-container .pro-enter-submit-btn:hover,
+html [data-theme] .ps-modal-container .k-button-solid-primary:hover,
+body [data-theme] .ps-modal-container button[type="submit"]:hover,
+body [data-theme] .ps-modal-container .pro-enter-submit-btn:hover,
+body [data-theme] .ps-modal-container .k-button-solid-primary:hover,
+[data-theme] .ps-modal-container button[type="submit"]:hover,
+[data-theme] .ps-modal-container .pro-enter-submit-btn:hover,
+[data-theme] .ps-modal-container .k-button-solid-primary:hover {
+    background-color: #6D28D9 !important;
+    background: #6D28D9 !important;
+    border-color: #6D28D9 !important;
+    color: #fff !important;
+}
+
+/* 5-3. H-SRT 행 추가/복사 Plus 아이콘 */
+.dp-grid-add-row-btn,
+.dp-grid-add-row-btn svg,
+.dp-grid-add-row-btn svg line,
+.dp-grid-add-row-btn svg path {
+    stroke: var(--srt-primary-500, #3b82f6) !important;
+    color: var(--srt-primary-500, #3b82f6) !important;
+}
+
+
+/* ==============================================================================
+ * 6. 탭 & 네비게이션 (Tabs & Navigation)
+ * ============================================================================== */
+
+.k-tabstrip-items .k-item.k-state-active,
+.k-tabstrip-items .k-item.k-active {
+    color: var(--primary-color) !important;
+    border-bottom: 2px solid var(--primary-color) !important;
+    font-weight: 700;
+}
+
+
+/* ==============================================================================
+ * 7. 상태 배지 & 태그 (Status Badges)
+ * ============================================================================== */
+
+.status-badge.primary {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-border);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+
+/* ==============================================================================
+ * 8. 스크롤바 & 유틸리티 (Scrollbar & Utilities)
+ * ============================================================================== */
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}

@@ -110,32 +110,32 @@
   --kendo-selected-bg: transparent !important;
 }
 
-/* Kendo Grid 기본 선택 색상을 연한 색상으로 통일 */
-#grid_01 .k-table-tbody tr.k-selected,
-#grid_01 .k-table-tbody tr.k-table-row.k-selected,
-#grid_01 .k-table-tbody tr[aria-selected="true"] {
+/* Kendo Grid 기본 선택 색상을 연한 색상으로 통일 (옵션설정 화면 내부 전용) */
+.ai-content-area #grid_01 .k-table-tbody tr.k-selected,
+.ai-content-area #grid_01 .k-table-tbody tr.k-table-row.k-selected,
+.ai-content-area #grid_01 .k-table-tbody tr[aria-selected="true"] {
   background: var(--grid-hl) !important;
 }
 
-#grid_01 .k-table-tbody tr.k-selected>td,
-#grid_01 .k-table-tbody tr.k-table-row.k-selected>td,
-#grid_01 .k-table-tbody tr[aria-selected="true"]>td {
+.ai-content-area #grid_01 .k-table-tbody tr.k-selected>td,
+.ai-content-area #grid_01 .k-table-tbody tr.k-table-row.k-selected>td,
+.ai-content-area #grid_01 .k-table-tbody tr[aria-selected="true"]>td {
   background: var(--grid-hl) !important;
 }
 
-/* 모든 행을 연한 색으로 강제 통일 */
-#grid_01 .k-table-tbody tr.row-active,
-#grid_01 .k-table-tbody tr.lv3-row-selected,
-#grid_01 .k-table-tbody tr.k-selected,
-#grid_01 .k-table-tbody tr.k-table-row.k-selected,
-#grid_01 .k-table-tbody tr[aria-selected="true"] {
+/* 모든 행을 연한 색으로 강제 통일 (옵션설정 화면 내부 전용) */
+.ai-content-area #grid_01 .k-table-tbody tr.row-active,
+.ai-content-area #grid_01 .k-table-tbody tr.lv3-row-selected,
+.ai-content-area #grid_01 .k-table-tbody tr.k-selected,
+.ai-content-area #grid_01 .k-table-tbody tr.k-table-row.k-selected,
+.ai-content-area #grid_01 .k-table-tbody tr[aria-selected="true"] {
   background-color: #FFF0E0 !important;
 }
 
-#grid_01 .k-table-tbody tr.row-active>td,
-#grid_01 .k-table-tbody tr.lv3-row-selected>td,
-#grid_01 .k-table-tbody tr.k-selected>td,
-#grid_01 .k-table-tbody tr[aria-selected="true"]>td {
+.ai-content-area #grid_01 .k-table-tbody tr.row-active>td,
+.ai-content-area #grid_01 .k-table-tbody tr.lv3-row-selected>td,
+.ai-content-area #grid_01 .k-table-tbody tr.k-selected>td,
+.ai-content-area #grid_01 .k-table-tbody tr[aria-selected="true"]>td {
   background-color: #FFF0E0 !important;
 }
 

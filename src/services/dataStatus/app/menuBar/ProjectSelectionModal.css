@@ -1,34 +1,127 @@
 /* Grid Row Cursor Pointer & Row Hover / Selection (설문온 고유 보라색 테마 유지) */
 .ps-modal-container .k-grid tbody tr,
-.ps-modal-content .k-grid tbody tr {
+.ps-modal-container .k-grid .k-table-tbody tr,
+.ps-modal-container #grid_01 tbody tr,
+.ps-modal-container #grid_01 .k-table-tbody tr,
+.ps-modal-content .k-grid tbody tr,
+.ps-modal-content .k-grid .k-table-tbody tr {
     cursor: pointer !important;
 }
 
+/* 행 호버 (Hover) - 연보라색 #F9F8FF 고정 */
 .ps-modal-container .k-grid tbody tr:hover,
 .ps-modal-container .k-grid tbody tr:hover td,
+.ps-modal-container .k-grid tbody tr:hover > .k-table-td,
 .ps-modal-container .k-grid .k-grid-content tr:hover td,
+.ps-modal-container .k-grid .k-grid-content tr:hover > .k-table-td,
 .ps-modal-container .k-grid .k-table-row:hover td,
+.ps-modal-container .k-grid .k-table-row:hover > .k-table-td,
 .ps-modal-container .k-grid tr:hover td,
+.ps-modal-container .k-grid tr:hover > td,
+.ps-modal-container .k-grid tr:hover > .k-table-td,
+.ps-modal-container .k-grid .k-table-tbody > .k-table-row:hover > td,
+.ps-modal-container .k-grid .k-table-tbody > .k-table-row:hover > .k-table-td,
+.ps-modal-container #grid_01 tr:hover,
+.ps-modal-container #grid_01 tr:hover td,
+.ps-modal-container #grid_01 tr:hover > td,
+.ps-modal-container #grid_01 tr:hover > .k-table-td,
+.ps-modal-container #grid_01 .k-table-row:hover,
+.ps-modal-container #grid_01 .k-table-row:hover td,
+.ps-modal-container #grid_01 .k-table-row:hover > td,
+.ps-modal-container #grid_01 .k-table-row:hover > .k-table-td,
 .ps-modal-content .k-grid tbody tr:hover,
 .ps-modal-content .k-grid tbody tr:hover td,
+.ps-modal-content .k-grid tbody tr:hover > .k-table-td,
 .ps-modal-content .k-grid .k-grid-content tr:hover td,
+.ps-modal-content .k-grid .k-grid-content tr:hover > .k-table-td,
 .ps-modal-content .k-grid .k-table-row:hover td,
-.ps-modal-content .k-grid tr:hover td {
+.ps-modal-content .k-grid .k-table-row:hover > .k-table-td,
+.ps-modal-content .k-grid tr:hover td,
+.ps-modal-content .k-grid tr:hover > td,
+.ps-modal-content .k-grid tr:hover > .k-table-td {
     background-color: #F9F8FF !important;
+    background: #F9F8FF !important;
 }
 
+/* 행 선택 (Selected / Highlight) - 보라색 #F3F1FF 고정 (프로젝트 선택 + 프로젝트 등록 탭 #grid_01 완전 포함) */
+.ps-modal-container .k-grid tr.k-selected,
 .ps-modal-container .k-grid tr.k-selected > td,
+.ps-modal-container .k-grid tr.k-selected > .k-table-td,
+.ps-modal-container .k-grid tr.k-state-selected,
 .ps-modal-container .k-grid tr.k-state-selected > td,
+.ps-modal-container .k-grid tr.k-state-selected > .k-table-td,
+.ps-modal-container .k-grid tr[aria-selected="true"],
 .ps-modal-container .k-grid tr[aria-selected="true"] > td,
+.ps-modal-container .k-grid tr[aria-selected="true"] > .k-table-td,
+.ps-modal-container .k-grid .k-table-row.k-selected,
+.ps-modal-container .k-grid .k-table-row.k-selected > td,
+.ps-modal-container .k-grid .k-table-row.k-selected > .k-table-td,
 .ps-modal-container .k-grid td.k-selected,
 .ps-modal-container .k-grid td.k-state-selected,
+.ps-modal-container .k-grid .k-table-td.k-selected,
+.ps-modal-container #grid_01 tr.k-selected,
+.ps-modal-container #grid_01 tr.k-selected > td,
+.ps-modal-container #grid_01 tr.k-selected > .k-table-td,
+.ps-modal-container #grid_01 tr.k-state-selected,
+.ps-modal-container #grid_01 tr.k-state-selected > td,
+.ps-modal-container #grid_01 tr.k-state-selected > .k-table-td,
+.ps-modal-container #grid_01 tr[aria-selected="true"],
+.ps-modal-container #grid_01 tr[aria-selected="true"] > td,
+.ps-modal-container #grid_01 tr[aria-selected="true"] > .k-table-td,
+.ps-modal-container #grid_01 .k-table-row.k-selected,
+.ps-modal-container #grid_01 .k-table-row.k-selected > td,
+.ps-modal-container #grid_01 .k-table-row.k-selected > .k-table-td,
+.ps-modal-container #grid_01 .k-table-tbody tr.k-selected,
+.ps-modal-container #grid_01 .k-table-tbody tr.k-selected > td,
+.ps-modal-container #grid_01 .k-table-tbody tr.k-selected > .k-table-td,
+.ps-modal-container #grid_01 .k-table-tbody tr.k-table-row.k-selected,
+.ps-modal-container #grid_01 .k-table-tbody tr.k-table-row.k-selected > td,
+.ps-modal-container #grid_01 .k-table-tbody tr.k-table-row.k-selected > .k-table-td,
+.ps-modal-container #grid_01 .k-table-tbody tr[aria-selected="true"],
+.ps-modal-container #grid_01 .k-table-tbody tr[aria-selected="true"] > td,
+.ps-modal-container #grid_01 .k-table-tbody tr[aria-selected="true"] > .k-table-td,
+.ps-modal-container #grid_01 td.k-selected,
+.ps-modal-container #grid_01 td.k-state-selected,
+.ps-modal-container #grid_01 .k-table-td.k-selected,
+.ps-modal-content .k-grid tr.k-selected,
 .ps-modal-content .k-grid tr.k-selected > td,
+.ps-modal-content .k-grid tr.k-selected > .k-table-td,
+.ps-modal-content .k-grid tr.k-state-selected,
 .ps-modal-content .k-grid tr.k-state-selected > td,
+.ps-modal-content .k-grid tr.k-state-selected > .k-table-td,
+.ps-modal-content .k-grid tr[aria-selected="true"],
 .ps-modal-content .k-grid tr[aria-selected="true"] > td,
+.ps-modal-content .k-grid tr[aria-selected="true"] > .k-table-td,
+.ps-modal-content .k-grid .k-table-row.k-selected,
+.ps-modal-content .k-grid .k-table-row.k-selected > td,
+.ps-modal-content .k-grid .k-table-row.k-selected > .k-table-td,
 .ps-modal-content .k-grid td.k-selected,
-.ps-modal-content .k-grid td.k-state-selected {
+.ps-modal-content .k-grid td.k-state-selected,
+.ps-modal-content .k-grid .k-table-td.k-selected {
     background-color: #F3F1FF !important;
-    color: #333 !important;
+    background: #F3F1FF !important;
+    color: #1f2937 !important;
+}
+
+/* 선택된 행에 마우스 호버 시에도 보라 톤 유지 */
+.ps-modal-container .k-grid tr.k-selected:hover,
+.ps-modal-container .k-grid tr.k-selected:hover > td,
+.ps-modal-container .k-grid tr.k-selected:hover > .k-table-td,
+.ps-modal-container .k-grid .k-table-row.k-selected:hover,
+.ps-modal-container .k-grid .k-table-row.k-selected:hover > td,
+.ps-modal-container .k-grid .k-table-row.k-selected:hover > .k-table-td,
+.ps-modal-container #grid_01 tr.k-selected:hover,
+.ps-modal-container #grid_01 tr.k-selected:hover > td,
+.ps-modal-container #grid_01 tr.k-selected:hover > .k-table-td,
+.ps-modal-container #grid_01 .k-table-row.k-selected:hover,
+.ps-modal-container #grid_01 .k-table-row.k-selected:hover > td,
+.ps-modal-container #grid_01 .k-table-row.k-selected:hover > .k-table-td,
+.ps-modal-content .k-grid tr.k-selected:hover,
+.ps-modal-content .k-grid tr.k-selected:hover > td,
+.ps-modal-content .k-grid tr.k-selected:hover > .k-table-td {
+    background-color: #EBE7FF !important;
+    background: #EBE7FF !important;
+    color: #1f2937 !important;
 }
 
 .ps-modal-overlay {
@@ -356,17 +449,27 @@
 .ps-modal-container .data-header-btn-primary,
 .ps-modal-container .k-button-solid-primary,
 .ps-modal-container .cmn_btn.btn_orange,
-.ps-modal-container .btn_orange {
-    background-color: #7C3AED !important;
-    border-color: #7C3AED !important;
+.ps-modal-container .btn_orange,
+.ps-modal-container .pro-enter-submit-btn,
+.ps-modal-container button[type="submit"],
+.ps-modal-container form button[type="submit"] {
+    background-color: #7c3aed !important;
+    background: #7c3aed !important;
+    border-color: #7c3aed !important;
+    color: #fff !important;
 }
 
 .ps-modal-container .data-header-btn-primary:hover,
 .ps-modal-container .k-button-solid-primary:hover,
 .ps-modal-container .cmn_btn.btn_orange:hover,
-.ps-modal-container .btn_orange:hover {
+.ps-modal-container .btn_orange:hover,
+.ps-modal-container .pro-enter-submit-btn:hover,
+.ps-modal-container button[type="submit"]:hover,
+.ps-modal-container form button[type="submit"]:hover {
     background-color: #6D28D9 !important;
+    background: #6D28D9 !important;
     border-color: #6D28D9 !important;
+    color: #fff !important;
 }
 
 /* Tab Buttons */
@@ -487,6 +590,69 @@ body:has(.ps-modal-overlay) .k-list-scroller,
 body:has(.ps-modal-overlay) .k-list,
 body:has(.ps-modal-overlay) .k-popup.k-list-container {
     border-color: #7C3AED !important;
+}
+
+/* ExcelColumnMenu buttons / inputs inside global Popup (when modal is open) */
+body:has(.ps-modal-overlay) .k-popup .k-button-solid-primary,
+body:has(.ps-modal-overlay) .k-animation-container .k-button-solid-primary {
+    background-color: #7C3AED !important;
+    border-color: #7C3AED !important;
+}
+
+body:has(.ps-modal-overlay) .k-popup .k-button-solid-primary:hover,
+body:has(.ps-modal-overlay) .k-animation-container .k-button-solid-primary:hover {
+    background-color: #6D28D9 !important;
+    border-color: #6D28D9 !important;
+}
+
+body:has(.ps-modal-overlay) .k-popup .k-input,
+body:has(.ps-modal-overlay) .k-popup .k-input-solid,
+body:has(.ps-modal-overlay) .k-animation-container .k-input,
+body:has(.ps-modal-overlay) .k-animation-container .k-input-solid {
+    border-color: #7C3AED !important;
+}
+
+body:has(.ps-modal-overlay) .k-popup .k-input:focus,
+body:has(.ps-modal-overlay) .k-popup .k-input-solid:focus,
+body:has(.ps-modal-overlay) .k-popup .k-input:focus-within,
+body:has(.ps-modal-overlay) .k-popup .k-input-solid:focus-within,
+body:has(.ps-modal-overlay) .k-animation-container .k-input:focus,
+body:has(.ps-modal-overlay) .k-animation-container .k-input-solid:focus,
+body:has(.ps-modal-overlay) .k-animation-container .k-input:focus-within,
+body:has(.ps-modal-overlay) .k-animation-container .k-input-solid:focus-within {
+    border-color: #7C3AED !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
+}
+
+/* Override Data Management theme leaking into inner inputs and causing green inner borders */
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container input[type="text"],
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container input[type="text"]:focus,
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container .k-input-inner,
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container .k-input-inner:focus,
+[data-theme="dataManagement"] .ps-modal-container .pro-enter-new-container input[type="text"],
+[data-theme="dataManagement"] .ps-modal-container .pro-enter-new-container input[type="text"]:focus,
+[data-theme="dataManagement"] .ps-modal-container .pro-enter-new-container .k-input-inner,
+[data-theme="dataManagement"] .ps-modal-container .pro-enter-new-container .k-input-inner:focus {
+    background: transparent !important;
+}
+
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container .k-input-solid,
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container .k-combobox,
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container .k-dropdown,
+[data-theme="dataManagement"] .ps-modal-container .pro-enter-new-container .k-input-solid,
+[data-theme="dataManagement"] .ps-modal-container .pro-enter-new-container .k-combobox,
+[data-theme="dataManagement"] .ps-modal-container .pro-enter-new-container .k-dropdown {
+    border-color: #ddd !important;
+}
+
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container .k-input-solid:focus-within,
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container .k-combobox:focus-within,
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container .k-dropdown:focus-within,
+[data-theme="dataManagement"] .ps-modal-container .pro-enter-new-container .k-input-solid:focus-within,
+[data-theme="dataManagement"] .ps-modal-container .pro-enter-new-container .k-combobox:focus-within,
+[data-theme="dataManagement"] .ps-modal-container .pro-enter-new-container .k-dropdown:focus-within {
+    border-color: #7C3AED !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
 }
 
 /* Grid/Data Container Border */

@@ -318,6 +318,16 @@
 .project-list-page .k-grid .k-selected,
 .project-list-page .k-grid .k-state-selected,
 .project-list-page .k-grid .k-table-row.k-selected:hover>.k-table-td,
+.ps-modal-container .k-grid .k-table-row.k-selected,
+.ps-modal-container .k-grid .k-table-row.k-selected>td,
+.ps-modal-container .k-grid .k-table-row.k-selected>.k-table-td,
+.ps-modal-container .k-grid .k-table-td.k-selected,
+.ps-modal-container .k-grid td.k-selected,
+.ps-modal-container .k-grid tr.k-selected,
+.ps-modal-container .k-grid tr.k-selected:hover,
+.ps-modal-container .k-grid .k-selected,
+.ps-modal-container .k-grid .k-state-selected,
+.ps-modal-container .k-grid .k-table-row.k-selected:hover>.k-table-td,
 /* Specific override for #grid_01 which might be affected by OptionSetting.css */
 .project-list-page #grid_01 .k-table-tbody tr.row-active,
 .project-list-page #grid_01 .k-table-tbody tr.lv3-row-selected,
@@ -327,14 +337,25 @@
 .project-list-page #grid_01 .k-table-tbody tr.row-active>td,
 .project-list-page #grid_01 .k-table-tbody tr.lv3-row-selected>td,
 .project-list-page #grid_01 .k-table-tbody tr.k-selected>td,
-.project-list-page #grid_01 .k-table-tbody tr[aria-selected="true"]>td {
+.project-list-page #grid_01 .k-table-tbody tr[aria-selected="true"]>td,
+.ps-modal-container #grid_01 .k-table-tbody tr.row-active,
+.ps-modal-container #grid_01 .k-table-tbody tr.lv3-row-selected,
+.ps-modal-container #grid_01 .k-table-tbody tr.k-selected,
+.ps-modal-container #grid_01 .k-table-tbody tr.k-table-row.k-selected,
+.ps-modal-container #grid_01 .k-table-tbody tr[aria-selected="true"],
+.ps-modal-container #grid_01 .k-table-tbody tr.row-active>td,
+.ps-modal-container #grid_01 .k-table-tbody tr.lv3-row-selected>td,
+.ps-modal-container #grid_01 .k-table-tbody tr.k-selected>td,
+.ps-modal-container #grid_01 .k-table-tbody tr[aria-selected="true"]>td {
     background-color: #F3F1FF !important;
     background: #F3F1FF !important;
     color: inherit !important;
 }
 
 .project-list-page .k-grid .k-table-row:hover:not(.k-selected),
-.project-list-page .k-grid tr:hover:not(.k-selected) {
+.project-list-page .k-grid tr:hover:not(.k-selected),
+.ps-modal-container .k-grid .k-table-row:hover:not(.k-selected),
+.ps-modal-container .k-grid tr:hover:not(.k-selected) {
     background-color: #F9F8FF !important;
     background: #F9F8FF !important;
 }

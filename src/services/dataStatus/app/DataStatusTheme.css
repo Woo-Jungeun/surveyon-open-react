@@ -1,291 +1,43 @@
-/* Data Status Project Global Theme */
+@charset "utf-8";
+
+/**
+ * ==============================================================================
+ * H-SRT (Data Dashboard) 전용 테마 확장 (DataStatusTheme.css)
+ * ==============================================================================
+ * - 설문온 공통 테마(surveyon-theme.css)를 기반으로 동작합니다.
+ * - H-SRT 고객사 화이트라벨 브랜드 테마(srtTheme.css) 및 고유 컴포넌트 스타일을 포함합니다.
+ */
+
+/* 1. 공통 테마 및 H-SRT 화이트라벨 임포트 */
+@import '@/assets/css/surveyon-theme.css';
 @import './hsrt/srtTheme.css';
 
-:root {
-    /* Primary Colors - SRT 브랜드 테마와 연동 (기본값: 세련된 블루 계열) */
-    --ds-primary: var(--srt-primary-500, #3b82f6);
-    --ds-primary-hover: var(--srt-primary-600, #2563eb);
-    --ds-primary-light: var(--srt-primary-50, #eff6ff);
-    --ds-primary-border: var(--srt-primary-200, #bfdbfe);
-
-    /* Neutral Colors */
-    --ds-bg: #f8fafc;
-    --ds-surface: #ffffff;
-    --ds-text-main: #1e293b;
-    --ds-text-sub: #64748b;
-    --ds-border: #e2e8f0;
-
-    /* Shadows */
-    --ds-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --ds-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --ds-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-/* Global Layout Background */
-[data-theme="data-dashboard"] {
-    background-color: var(--ds-bg);
-    color: var(--ds-text-main);
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-}
-
-/* Card Style Enhancement */
-/* [data-theme="data-dashboard"] .recoding-card, */
+/* 2. H-SRT 전용 카드 스타일 */
 [data-theme="data-dashboard"] .variable-page-card,
 [data-theme="data-dashboard"] .data-viewer-page,
 [data-theme="data-dashboard"] .quota-page-card,
-/* Assuming QuotaPage uses this */
-[data-theme="data-dashboard"] .aggregation-card
-
-/* Assuming AggregationPage uses this */
-    {
-    background: var(--ds-surface);
+[data-theme="data-dashboard"] .aggregation-card {
+    background: #ffffff;
     border-radius: 12px;
-    box-shadow: var(--ds-shadow);
-    border: 1px solid var(--ds-border);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--ds-border, #e2e8f0);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Kendo Grid Customization for Data Status */
-[data-theme="data-dashboard"] .k-grid {
-    border: none;
-    font-size: 13px;
-    color: var(--ds-text-main);
-}
-
-
-
-[data-theme="data-dashboard"] .k-grid-header .k-header {
-    background-color: transparent;
-    color: var(--ds-text-main);
-    font-weight: 700;
-    border-color: var(--ds-border);
-    padding: 12px 8px;
-    text-align: center;
-}
-
-/* Grid Body */
-[data-theme="data-dashboard"] .k-grid-content tr:not(.k-grouping-row):hover,
-[data-theme="data-dashboard"] .k-grid tr:hover {
-    background-color: var(--srt-hover-bg, #f1f5f9) !important;
-}
-
-[data-theme="data-dashboard"] .k-grid-content td {
-    border-color: var(--ds-border);
-    padding: 10px 12px;
-    vertical-align: middle;
-}
-
-[data-theme="data-dashboard"] .k-grid-content tr.k-alt {
-    background-color: #fcfcfc;
-}
-
-/* Grid Selection (최신 Kendo React 및 레거시 셀렉터 모두 대응) */
-[data-theme="data-dashboard"] .k-grid td.k-state-selected,
-[data-theme="data-dashboard"] .k-grid tr.k-state-selected>td,
-[data-theme="data-dashboard"] .k-grid td.k-selected,
-[data-theme="data-dashboard"] .k-grid tr.k-selected,
-[data-theme="data-dashboard"] .k-grid tr.k-selected>td,
-[data-theme="data-dashboard"] .k-grid tr.k-selected td,
-[data-theme="data-dashboard"] .k-grid .k-table-row.k-selected,
-[data-theme="data-dashboard"] .k-grid .k-table-row.k-selected>td {
-    background-color: var(--srt-primary-50, var(--ds-primary-light, #eff6ff)) !important;
-    color: var(--ds-text-main) !important;
-}
-
-[data-theme="data-dashboard"] .k-grid tr.k-selected:hover>td,
-[data-theme="data-dashboard"] .k-grid .k-table-row.k-selected:hover>td {
-    background-color: var(--srt-primary-100, #dbeafe) !important;
-}
-
-/* 행 추가/복사 Plus 아이콘 */
-.dp-grid-add-row-btn,
-.dp-grid-add-row-btn svg,
-.dp-grid-add-row-btn svg line,
-.dp-grid-add-row-btn svg path {
-    stroke: var(--srt-primary-500, #3b82f6) !important;
-    color: var(--srt-primary-500, #3b82f6) !important;
-}
-
-.dp-grid-add-row-btn:hover {
-    background-color: var(--srt-primary-50, #eff6ff) !important;
-}
-
-/* Input Fields Enhancement */
-[data-theme="data-dashboard"] input[type="text"],
-[data-theme="data-dashboard"] select,
-[data-theme="data-dashboard"] .k-dropdown {
-    border: 1px solid var(--ds-border);
-    border-radius: 6px;
-    padding: 8px 12px;
-    transition: all 0.2s;
-    background-color: #fff;
-}
-
-[data-theme="data-dashboard"] input[type="text"]:focus,
-[data-theme="data-dashboard"] select:focus,
-[data-theme="data-dashboard"] .k-dropdown:focus-within,
-[data-theme="data-dashboard"] .k-dropdownlist:focus-within,
-[data-theme="data-dashboard"] .k-picker:focus-within,
-[data-theme="data-dashboard"] .k-dropdownlist.k-focus,
-[data-theme="data-dashboard"] .k-picker.k-focus {
-    border-color: var(--srt-primary-500, var(--ds-primary)) !important;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--srt-primary-500, var(--ds-primary)) 20%, transparent) !important;
-    outline: none;
-}
-
-/* Kendo Dropdown Arrow Mask Button & SVG Icon Brand Theming */
-[data-theme="data-dashboard"] .k-dropdownlist.k-picker > button:not(.dp-mini-dropdown *),
-[data-theme="data-dashboard"] .k-dropdownlist > button:not(.dp-mini-dropdown *),
-[data-theme="data-dashboard"] .k-picker > button:not(.dp-mini-dropdown *),
-[data-theme="data-dashboard"] .k-combobox > button:not(.dp-mini-dropdown *),
-[data-theme="data-dashboard"] .k-dropdownlist .k-input-button:not(.dp-mini-dropdown *),
-[data-theme="data-dashboard"] .k-picker .k-input-button:not(.dp-mini-dropdown *),
-[data-theme="data-dashboard"] .k-dropdownlist .k-button:not(.dp-mini-dropdown *),
-[data-theme="data-dashboard"] .k-picker .k-button:not(.dp-mini-dropdown *) {
-    background-color: var(--srt-primary-600, var(--ds-primary)) !important;
-}
-
-/* Lucide stroke-based icons (ChevronDown, Check 등) - 스터브 그리드 및 미니 드롭다운에만 한정 적용 */
+/* 3. H-SRT 스터브 그리드 및 미니 드롭다운 아이콘 */
 .dp-mini-dropdown svg.lucide,
 .dp-mini-dropdown svg.lucide *,
-.dp-mini-dropdown svg,
-.dp-mini-dropdown svg *,
 .dp-compact-stub-grid .dp-mini-dropdown svg,
 .dp-compact-stub-grid .dp-mini-dropdown svg * {
     fill: none !important;
     stroke: var(--srt-primary-600, var(--ds-primary, #2563eb)) !important;
 }
 
-/* 버튼 내 아이콘 색상은 버튼 글자색(currentColor)을 정상 계승 */
-button svg.lucide,
-.data-header-btn svg,
-.data-header-btn svg.lucide {
-    stroke: currentColor !important;
-    color: currentColor !important;
-}
-
-.data-header-btn-primary svg,
-.data-header-btn-primary svg.lucide {
-    stroke: #ffffff !important;
-    color: #ffffff !important;
-}
-
-
-[data-theme="data-dashboard"] .k-dropdownlist:not(.dp-mini-dropdown) .k-icon,
-[data-theme="data-dashboard"] .k-picker:not(.dp-mini-dropdown) .k-icon,
-[data-theme="data-dashboard"] .k-dropdownlist:not(.dp-mini-dropdown) .k-svg-icon:not(.lucide),
-[data-theme="data-dashboard"] .k-picker:not(.dp-mini-dropdown) .k-svg-icon:not(.lucide),
-[data-theme="data-dashboard"] .k-dropdownlist:not(.dp-mini-dropdown) svg:not(.lucide) path,
-[data-theme="data-dashboard"] .k-picker:not(.dp-mini-dropdown) svg:not(.lucide) path,
-.dp-add-question-dropdown .k-input-button svg,
-.dp-add-question-dropdown .k-input-button svg * {
-    color: var(--srt-primary-600, var(--ds-primary)) !important;
-    fill: var(--srt-primary-600, var(--ds-primary)) !important;
-}
-
-/* Kendo Popup Container (H-SRT 전용 대응) */
+/* 4. Kendo Popup Container (H-SRT 드롭다운 팝업) */
 html[data-theme="hsrt"] .k-animation-container .k-popup,
-html[data-theme="hsrt"] .k-animation-container .k-list-container,
 html[data-theme="data-dashboard"] .k-animation-container .k-popup,
-html[data-theme="data-dashboard"] .k-animation-container .k-list-container,
-body[data-theme="hsrt"] .k-animation-container .k-popup,
-body[data-theme="hsrt"] .k-animation-container .k-list-container,
-body[data-theme="data-dashboard"] .k-animation-container .k-popup,
-body[data-theme="data-dashboard"] .k-animation-container .k-list-container {
+body[data-theme="data-dashboard"] .k-animation-container .k-popup {
     border: 1px solid var(--srt-primary-300, #93c5fd) !important;
     border-radius: 8px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04) !important;
-    animation: none !important;
-    transition: none !important;
-}
-
-html[data-theme="hsrt"] .k-animation-container .k-list-item.k-selected,
-html[data-theme="hsrt"] .k-popup .k-list-item.k-selected,
-html[data-theme="data-dashboard"] .k-animation-container .k-list-item.k-selected,
-html[data-theme="data-dashboard"] .k-popup .k-list-item.k-selected,
-body[data-theme="hsrt"] .k-animation-container .k-list-item.k-selected,
-body[data-theme="hsrt"] .k-popup .k-list-item.k-selected,
-body[data-theme="data-dashboard"] .k-animation-container .k-list-item.k-selected,
-body[data-theme="data-dashboard"] .k-popup .k-list-item.k-selected {
-    background-color: var(--srt-primary-50, #eff6ff) !important;
-    color: var(--srt-primary-700, #1d4ed8) !important;
-    font-weight: 700 !important;
-}
-
-html[data-theme="hsrt"] .k-animation-container .k-list-item:hover:not(.k-selected),
-html[data-theme="hsrt"] .k-popup .k-list-item:hover:not(.k-selected),
-html[data-theme="data-dashboard"] .k-animation-container .k-list-item:hover:not(.k-selected),
-html[data-theme="data-dashboard"] .k-popup .k-list-item:hover:not(.k-selected),
-body[data-theme="hsrt"] .k-animation-container .k-list-item:hover:not(.k-selected),
-body[data-theme="hsrt"] .k-popup .k-list-item:hover:not(.k-selected),
-body[data-theme="data-dashboard"] .k-animation-container .k-list-item:hover:not(.k-selected),
-body[data-theme="data-dashboard"] .k-popup .k-list-item:hover:not(.k-selected) {
-    background-color: var(--srt-primary-25, #f8fbff) !important;
-    color: var(--srt-primary-600, #2563eb) !important;
-}
-
-/* Dropdown Popup Scrollbar: 기본 회색(#cbd5e1) 유지 */
-.k-animation-container .k-list-content::-webkit-scrollbar-thumb {
-    background: #cbd5e1 !important;
-    border-radius: 4px;
-}
-.k-animation-container .k-list-content::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8 !important;
-}
-
-/* Buttons Enhancement */
-[data-theme="data-dashboard"] button {
-    transition: all 0.2s;
-}
-
-[data-theme="data-dashboard"] button:active {
-    transform: translateY(1px);
-}
-
-/* Data Header Enhancement */
-[data-theme="data-dashboard"] .data-header {
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--ds-border);
-}
-
-[data-theme="data-dashboard"] .data-header h2 {
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--ds-text-main);
-    letter-spacing: -0.5px;
-}
-
-/* Scrollbar Styling */
-[data-theme="data-dashboard"] ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-[data-theme="data-dashboard"] ::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-[data-theme="data-dashboard"] ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
-}
-
-[data-theme="data-dashboard"] ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-/* Global Trash Icon Style */
-[data-theme="data-dashboard"] .lucide-trash2,
-[data-theme="data-dashboard"] .lucide-trash-2 {
-    stroke: #64748b !important;
-    color: #64748b !important;
-}
-
-/* Global Native Checkbox & Radio */
-[data-theme="data-dashboard"] input[type="checkbox"],
-[data-theme="data-dashboard"] input[type="radio"],
-input[type="checkbox"],
-input[type="radio"] {
-    accent-color: var(--srt-primary-600, var(--ds-primary)) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }

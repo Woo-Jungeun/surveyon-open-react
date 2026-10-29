@@ -191,23 +191,29 @@ const ProEnterTab3 = (props) => {
 
                 {/* Submit Button */}
                 <div style={{ marginTop: '10px' }}>
-                    <Button
+                    <button
                         type="submit"
-                        themeColor="primary"
                         disabled={loading}
+                        className="pro-enter-submit-btn"
                         style={{
                             width: '100%',
                             height: '46px',
                             fontSize: '15px',
                             fontWeight: '600',
                             borderRadius: '6px',
-                            backgroundColor: '#5A4BFF',
+                            backgroundColor: '#7c3aed',
                             border: 'none',
-                            color: '#fff'
+                            color: '#fff',
+                            cursor: loading ? 'not-allowed' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s ease',
+                            outline: 'none'
                         }}
                     >
                         {loading ? "등록 중..." : "등록하기"}
-                    </Button>
+                    </button>
                 </div>
             </form>
         </div>

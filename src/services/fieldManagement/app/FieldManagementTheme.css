@@ -1,171 +1,20 @@
-/* Field Management Global Theme */
+@charset "utf-8";
 
-:root {
-    /* Primary Colors - Navy 계열 */
-    --fm-primary: #1e3a8a;
-    --fm-primary-hover: #1e40af;
-    --fm-primary-light: #e0e7ff;
-    --fm-primary-border: #c7d2fe;
+/**
+ * ==============================================================================
+ * 실사관리 (Field Management) 전용 테마 확장 (FieldManagementTheme.css)
+ * ==============================================================================
+ * - 설문온 공통 테마(surveyon-theme.css)의 딥 네이비(#1e3a8a)를 기반으로 동작합니다.
+ * - 실사관리 화면 전용 헤더 및 고유 컴포넌트 스타일을 포함합니다.
+ */
 
-    /* Neutral Colors */
-    --fm-bg: #f8fafc;
-    --fm-surface: #ffffff;
-    --fm-text-main: #1e293b;
-    --fm-text-sub: #64748b;
-    --fm-border: #e2e8f0;
+/* 1. 공통 테마 임포트 */
+@import '@/assets/css/surveyon-theme.css';
 
-    /* Shadows */
-    --fm-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --fm-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --fm-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-/* Global Layout Background */
-[data-theme="fieldManagement"],
-[data-theme="field-management"] {
-    background-color: var(--fm-bg);
-    color: var(--fm-text-main);
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-    /* Map internal theme vars so reused components get styled properly */
-    --ds-primary: var(--fm-primary);
-    --ds-primary-hover: var(--fm-primary-hover);
-    --ds-primary-light: var(--fm-primary-light);
-    --ds-primary-border: var(--fm-primary-border);
-}
-
-/* 실사관리 헤더 타이틀 세로 막대 고유 색상 (#1e3a8a) */
+/* 2. 실사관리 헤더 타이틀 앞 세로 막대 고유 색상 (#1e3a8a) */
 [data-theme="fieldManagement"] .page-header-title::before,
 [data-theme="field-management"] .page-header-title::before,
 [data-theme="fieldManagement"] .data-header-title::before,
 [data-theme="field-management"] .data-header-title::before {
     background: #1e3a8a !important;
-}
-
-[data-theme="fieldManagement"] .k-grid,
-[data-theme="field-management"] .k-grid {
-    border: none;
-    font-size: 13px;
-    color: var(--fm-text-main);
-}
-
-[data-theme="fieldManagement"] .k-grid-header,
-[data-theme="field-management"] .k-grid-header {
-    background-color: var(--fm-primary-light);
-    border-bottom: 2px solid var(--fm-primary-border);
-}
-
-[data-theme="fieldManagement"] .k-grid-header .k-header,
-[data-theme="field-management"] .k-grid-header .k-header {
-    background-color: transparent;
-    color: var(--fm-text-main);
-    font-weight: 700;
-    border-color: var(--fm-border);
-    padding: 12px 8px;
-    text-align: center;
-}
-
-[data-theme="fieldManagement"] .k-grid-content tr:not(.k-grouping-row):hover,
-[data-theme="field-management"] .k-grid-content tr:not(.k-grouping-row):hover {
-    background-color: #f1f5f9 !important;
-}
-
-[data-theme="fieldManagement"] .k-grid-content td,
-[data-theme="field-management"] .k-grid-content td {
-    border-color: var(--fm-border);
-    padding: 10px 12px;
-    vertical-align: middle;
-}
-
-[data-theme="fieldManagement"] .k-grid-content tr.k-alt,
-[data-theme="field-management"] .k-grid-content tr.k-alt {
-    background-color: #fcfcfc;
-}
-
-[data-theme="fieldManagement"] .k-grid td.k-state-selected,
-[data-theme="fieldManagement"] .k-grid tr.k-state-selected>td,
-[data-theme="field-management"] .k-grid td.k-state-selected,
-[data-theme="field-management"] .k-grid tr.k-state-selected>td {
-    background-color: var(--fm-primary-light) !important;
-    color: var(--fm-text-main);
-}
-
-[data-theme="fieldManagement"] input[type="text"]:not(.login-input),
-[data-theme="fieldManagement"] select,
-[data-theme="fieldManagement"] .k-dropdown,
-[data-theme="field-management"] input[type="text"]:not(.login-input),
-[data-theme="field-management"] select,
-[data-theme="field-management"] .k-dropdown {
-    border: 1px solid var(--fm-border);
-    border-radius: 6px;
-    padding: 8px 12px;
-    transition: all 0.2s;
-    background-color: #fff;
-}
-
-[data-theme="fieldManagement"] input[type="text"]:not(.login-input):focus,
-[data-theme="fieldManagement"] select:focus,
-[data-theme="fieldManagement"] .k-dropdown:focus-within,
-[data-theme="field-management"] input[type="text"]:not(.login-input):focus,
-[data-theme="field-management"] select:focus,
-[data-theme="field-management"] .k-dropdown:focus-within {
-    border-color: var(--fm-primary);
-    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
-    outline: none;
-}
-
-[data-theme="fieldManagement"] .data-header,
-[data-theme="field-management"] .data-header {
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--fm-border);
-}
-
-[data-theme="fieldManagement"] .data-header h2,
-[data-theme="field-management"] .data-header h2 {
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--fm-text-main);
-    letter-spacing: -0.5px;
-}
-
-[data-theme="fieldManagement"] ::-webkit-scrollbar,
-[data-theme="field-management"] ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-[data-theme="fieldManagement"] ::-webkit-scrollbar-track,
-[data-theme="field-management"] ::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-[data-theme="fieldManagement"] ::-webkit-scrollbar-thumb,
-[data-theme="field-management"] ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
-}
-
-[data-theme="fieldManagement"] ::-webkit-scrollbar-thumb:hover,
-[data-theme="field-management"] ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-[data-theme="fieldManagement"] .lucide-trash2,
-[data-theme="fieldManagement"] .lucide-trash-2,
-[data-theme="field-management"] .lucide-trash2,
-[data-theme="field-management"] .lucide-trash-2 {
-    stroke: #64748b !important;
-    color: #64748b !important;
-}
-
-/* 사이드바 데이터 기준 일시 새로고침 버튼 호버: 남색 */
-.common-sidebar .menu-bar-refresh-icon-btn:hover {
-    background: #f1f5f9 !important;
-    border-color: #cbd5e1 !important;
-    color: #0f172a !important;
-}
-
-.common-sidebar .menu-bar-refresh-icon-btn:hover svg {
-    stroke: #0f172a !important;
-    color: #0f172a !important;
 }
