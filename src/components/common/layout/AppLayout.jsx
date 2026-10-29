@@ -41,6 +41,15 @@ const AppLayout = ({
         if (typeof document !== 'undefined') {
             document.documentElement.setAttribute('data-theme', resolvedTheme);
             document.body.setAttribute('data-theme', resolvedTheme);
+
+            // 브랜드 테스트 잔여 속성 및 변수 정리
+            document.documentElement.removeAttribute('data-srt-brand');
+            document.documentElement.style.removeProperty('--srt-brand');
+            document.documentElement.style.removeProperty('--srt-brand-secondary');
+            document.documentElement.style.removeProperty('--srt-brand-accent');
+            try {
+                localStorage.removeItem('srtBrandTest');
+            } catch (e) {}
         }
     }, [resolvedTheme]);
 

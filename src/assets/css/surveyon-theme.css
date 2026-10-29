@@ -471,9 +471,12 @@ html body .ps-modal-container .k-grid .k-table-row.k-selected:hover > .k-table-t
 /* 4-1. 인풋 & 드롭다운 포커스 스타일 (.login-input 제외) */
 [data-theme="data-dashboard"] input[type="text"]:not(.login-input):focus,
 [data-theme="data-dashboard"] select:focus,
-[data-theme="data-dashboard"] .k-dropdown:focus-within {
-    border-color: var(--primary-border) !important;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+[data-theme="data-dashboard"] .k-dropdown:focus-within,
+[data-theme="hsrt"] input[type="text"]:not(.login-input):focus,
+[data-theme="hsrt"] select:focus,
+[data-theme="hsrt"] .k-dropdown:focus-within {
+    border-color: var(--primary-border, #3b82f6) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color, #3b82f6) 20%, transparent) !important;
     outline: none;
 }
 
@@ -514,6 +517,64 @@ html body .ps-modal-container .k-grid .k-table-row.k-selected:hover > .k-table-t
     border-color: #FDBA74 !important;
     box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2) !important;
     outline: none;
+}
+
+/* 4-2. Kendo 드롭다운/콤보박스 선택 팝업 공통 테마 (일반 툴팁/모달 침범 방지를 위해 리스트 컨테이너로 한정) */
+html[data-theme="hsrt"] .k-animation-container .k-list-container,
+html[data-theme="hsrt"] .k-animation-container .k-dropdownlist-popup,
+html[data-theme="data-dashboard"] .k-animation-container .k-list-container,
+html[data-theme="data-dashboard"] .k-animation-container .k-dropdownlist-popup,
+body[data-theme="hsrt"] .k-animation-container .k-list-container,
+body[data-theme="data-dashboard"] .k-animation-container .k-list-container {
+    border: 1px solid var(--srt-primary-300, #93c5fd) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+html[data-theme="hsrt"] .k-animation-container .k-list-item.k-selected,
+html[data-theme="data-dashboard"] .k-animation-container .k-list-item.k-selected,
+body[data-theme="hsrt"] .k-animation-container .k-list-item.k-selected,
+body[data-theme="data-dashboard"] .k-animation-container .k-list-item.k-selected {
+    background-color: var(--srt-primary-50, #eff6ff) !important;
+    color: var(--srt-primary-700, #1d4ed8) !important;
+    font-weight: 700 !important;
+}
+
+html[data-theme="hsrt"] .k-animation-container .k-list-item:hover:not(.k-selected),
+html[data-theme="data-dashboard"] .k-animation-container .k-list-item:hover:not(.k-selected),
+body[data-theme="hsrt"] .k-animation-container .k-list-item:hover:not(.k-selected),
+body[data-theme="data-dashboard"] .k-animation-container .k-list-item:hover:not(.k-selected) {
+    background-color: var(--srt-primary-25, #f8fbff) !important;
+    color: var(--srt-primary-600, #2563eb) !important;
+}
+
+/* 4-3. [고객사 브랜드 테마] data-srt-brand 활성화 시 드롭다운 팝업에 브랜드 색상 100% 강제 연동 */
+html[data-srt-brand] .k-animation-container .k-list-container,
+html[data-srt-brand] .k-animation-container .k-dropdownlist-popup,
+html[data-srt-brand] .k-animation-container .dp-mini-dropdown-popup,
+html[data-srt-brand] .dp-mini-dropdown-popup.k-popup,
+body[data-srt-brand] .k-animation-container .k-list-container,
+body[data-srt-brand] .k-animation-container .k-dropdownlist-popup {
+    border: 1px solid var(--srt-primary-300) !important;
+}
+
+html[data-srt-brand] .k-animation-container .k-list-item.k-selected,
+html[data-srt-brand] .k-popup .k-list-item.k-selected,
+html[data-srt-brand] .dp-mini-dropdown-popup .k-list-item.k-selected,
+html[data-srt-brand] .dp-mini-dropdown-popup .k-item.k-state-selected,
+body[data-srt-brand] .k-animation-container .k-list-item.k-selected {
+    background-color: var(--srt-primary-100) !important;
+    color: var(--srt-primary-700) !important;
+    font-weight: 700 !important;
+}
+
+html[data-srt-brand] .k-animation-container .k-list-item:hover:not(.k-selected),
+html[data-srt-brand] .k-popup .k-list-item:hover:not(.k-selected),
+html[data-srt-brand] .dp-mini-dropdown-popup .k-list-item:hover:not(.k-selected),
+html[data-srt-brand] .dp-mini-dropdown-popup .k-item.k-state-hover,
+body[data-srt-brand] .k-animation-container .k-list-item:hover:not(.k-selected) {
+    background-color: var(--srt-primary-50) !important;
+    color: var(--srt-primary-600) !important;
 }
 
 

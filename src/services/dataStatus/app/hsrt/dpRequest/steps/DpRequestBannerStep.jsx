@@ -2737,16 +2737,16 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             borderRadius: '6px',
                                             border: 'none',
                                             color: '#FFFFFF',
-                                            background: '#4f80ff',
+                                            background: 'var(--srt-primary-600, #4f80ff)',
                                             fontSize: '12px',
                                             fontWeight: 700,
                                             cursor: 'pointer',
-                                            boxShadow: '0 2px 4px rgba(79, 128, 255, 0.3)',
+                                            boxShadow: '0 2px 4px color-mix(in srgb, var(--srt-primary-600, #4f80ff) 30%, transparent)',
                                             transition: 'all 0.15s',
                                             boxSizing: 'border-box'
                                         }}
-                                        onMouseOver={(e) => { e.currentTarget.style.opacity = '0.9'; }}
-                                        onMouseOut={(e) => { e.currentTarget.style.opacity = '1'; }}
+                                        onMouseOver={(e) => { e.currentTarget.style.background = 'var(--srt-primary-700, #3b66d9)'; }}
+                                        onMouseOut={(e) => { e.currentTarget.style.background = 'var(--srt-primary-600, #4f80ff)'; }}
                                     >
                                         <Sparkles size={13} /> 자동 배너생성
                                     </button>

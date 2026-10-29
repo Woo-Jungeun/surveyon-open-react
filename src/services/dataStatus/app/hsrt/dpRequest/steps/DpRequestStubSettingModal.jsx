@@ -1501,6 +1501,45 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
         }
     }, [show, rowData]);
 
+    // 그리드 밖으로 벗어났을 때만 즉시 닫기 (React 리렌더링 0회로 속도 극대화)
+    useEffect(() => {
+        if (!show) return;
+
+        const checkDropdownOutOfGrid = () => {
+            const openPopup = document.querySelector('.k-animation-container-shown, .dp-mini-dropdown-popup.k-popup');
+            if (!openPopup) return;
+
+            // 현재 포커스된 열린 드롭다운 찾기
+            const activeDropdown = document.querySelector('.dp-mini-dropdown.k-focus, .dp-mini-dropdown:focus-within, .k-dropdownlist.k-focus');
+            if (!activeDropdown) return;
+
+            const gridContent = activeDropdown.closest('.k-grid-content') || document.querySelector('.k-grid-content');
+            if (!gridContent) return;
+
+            const gridRect = gridContent.getBoundingClientRect();
+            const anchorRect = activeDropdown.getBoundingClientRect();
+
+            // 해당 셀이 그리드 헤더 위 또는 하단 아래로 완전히 벗어났을 때만 닫기
+            const isOutOfGrid = (anchorRect.bottom <= gridRect.top + 2) || (anchorRect.top >= gridRect.bottom - 2);
+
+            if (isOutOfGrid) {
+                if (document.activeElement && document.activeElement.blur) {
+                    document.activeElement.blur();
+                }
+                // Kendo 표준 외부 클릭 이벤트를 트리거하여 정상 클린업 & 닫기
+                document.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
+                document.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, view: window }));
+            }
+        };
+
+        window.addEventListener('scroll', checkDropdownOutOfGrid, true);
+        window.addEventListener('wheel', checkDropdownOutOfGrid, { capture: true, passive: true });
+        return () => {
+            window.removeEventListener('scroll', checkDropdownOutOfGrid, true);
+            window.removeEventListener('wheel', checkDropdownOutOfGrid, { capture: true });
+        };
+    }, [show]);
+
     const applyBaseColorGlobally = () => {
         let formattedColor = baseGlobalColor.trim();
         if (formattedColor && !formattedColor.startsWith('#')) {
@@ -1841,7 +1880,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                         <td style={{ padding: '4px' }}>
                                             <DropDownList
                                                 className="k-dropdown-solid dp-mini-dropdown"
-                                                popupSettings={{ className: "dp-mini-dropdown-popup" }}
+                                                popupSettings={{ className: "dp-mini-dropdown-popup", animate: false }}
                                                 data={STUB_TYPE_OPTIONS}
                                                 value={normalizeDisplayType(p.dataItem.type)}
                                                 onChange={(e) => handleCategoryCellUpdate(p.dataIndex, 'type', e.value)}

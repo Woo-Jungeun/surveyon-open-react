@@ -14,11 +14,15 @@ import "./SrtBrandTester.css";
 const STORAGE_KEY = "srtBrandTest";
 
 const PRESETS = [
-    { key: "default", label: "기본 (설문온)", primary: null },
-    { key: "mcdonalds", label: "맥도날드", primary: "#DA291C", secondary: "#F2A900", accent: "#27251F" },
-    { key: "starbucks", label: "스타벅스", primary: "#00704A", secondary: "#1E3932", accent: "#CBA258" },
-    { key: "samsung", label: "삼성", primary: "#1428A0", secondary: "#0689D8", accent: "#000000" },
-    { key: "custom", label: "직접 지정", primary: "#7C3AED", secondary: "#0EA5E9", accent: "#F43F5E" },
+    { key: "default", label: "기본 (설문온 블루)", primary: null },
+    { key: "mcdonalds", label: "맥도날드 (레드)", primary: "#DA291C", secondary: "#FFC72C", accent: "#27251F" },
+    { key: "starbucks", label: "스타벅스 (그린)", primary: "#00704A", secondary: "#1E3932", accent: "#CBA258" },
+    { key: "samsung", label: "삼성 (딥블루)", primary: "#1428A0", secondary: "#0689D8", accent: "#000000" },
+    { key: "hyundai", label: "현대자동차 (네이비)", primary: "#002C5F", secondary: "#00AAD2", accent: "#E4002B" },
+    { key: "kurly", label: "마켓컬리 (퍼플)", primary: "#5F0080", secondary: "#8B32AB", accent: "#BD76CC" },
+    { key: "naver", label: "네이버 (초록)", primary: "#03C75A", secondary: "#1EC800", accent: "#000000" },
+    { key: "coupang", label: "쿠팡 (레드)", primary: "#E02020", secondary: "#F27800", accent: "#333333" },
+    { key: "custom", label: "직접 지정 (Color Picker)", primary: "#7C3AED", secondary: "#0EA5E9", accent: "#F43F5E" },
 ];
 
 const VARS = ["--srt-brand", "--srt-brand-secondary", "--srt-brand-accent"];
@@ -69,9 +73,26 @@ const SrtBrandTester = () => {
         <div className={`srt-brand-tester ${open ? "open" : ""}`}>
             {open && (
                 <div className="srt-brand-tester-panel">
-                    <div className="srt-brand-tester-title">
-                        브랜드 색 테스트 <span>(개발 전용)</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <div className="srt-brand-tester-title" style={{ margin: 0 }}>
+                            🎨 브랜드 테마 테스트 <span>(화이트라벨)</span>
+                        </div>
+                        <button
+                            onClick={() => setOpen(false)}
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: '16px',
+                                color: '#94a3b8',
+                                padding: '2px 6px',
+                                lineHeight: 1
+                            }}
+                        >
+                            ✕
+                        </button>
                     </div>
+
                     <div className="srt-brand-tester-presets">
                         {PRESETS.map((p) => (
                             <button
@@ -92,6 +113,7 @@ const SrtBrandTester = () => {
                             </button>
                         ))}
                     </div>
+
                     {state.key === "custom" && (
                         <div className="srt-brand-tester-custom">
                             {[
@@ -111,13 +133,13 @@ const SrtBrandTester = () => {
                         </div>
                     )}
                     <p className="srt-brand-tester-note">
-                        ※ 현재 브랜드 변수가 적용된 화면: DP의뢰서. 나머지 화면·좌측 메뉴는 아직 기존 색.
+                        💡 선택 시 H-SRT 전체(버튼, 그리드 호버/선택, 드롭다운, 헤더 등)에 즉시 실시간 반영됩니다.
                     </p>
                 </div>
             )}
-            <button className="srt-brand-tester-toggle" onClick={() => setOpen((v) => !v)} title="브랜드 색 테스트">
+            <button className="srt-brand-tester-toggle" onClick={() => setOpen((v) => !v)} title="고객사 브랜드 색상 실시간 변경 테스트">
                 <i style={{ background: brand.primary || "#2563eb" }} />
-                {open ? "닫기" : `브랜드: ${preset.label}`}
+                {open ? "패널 닫기" : `🎨 브랜드: ${preset.label}`}
             </button>
         </div>
     );
