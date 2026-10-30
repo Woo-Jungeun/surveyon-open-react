@@ -1058,12 +1058,12 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         ))}
                                     </div>
 
-                                    {/* 2행: 나머지 2개 (2분할) - TODO: 내일 재확인 예정 (N빈도전체 괄호 임시 주석 처리) */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                    {/* 2행: 기호 및 괄호 표시 (3분할) */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                                         {[
                                             { label: '엑셀 출력 % 기호 부착', field: 'percent_symbol' },
                                             { label: 'Base 기본 (괄호)', field: 'show_base_parenthesis' },
-                                            // { label: 'N빈도전체 (괄호)', field: 'format_bracket_all_n' } // 내일 다시 확인 후 주석 해제 (해제 시 gridTemplateColumns: '1fr 1fr 1fr'로 변경)
+                                            { label: 'N빈도전체 (괄호)', field: 'format_bracket_all_n' }
                                         ].map(item => (
                                             <div
                                                 key={item.field}
