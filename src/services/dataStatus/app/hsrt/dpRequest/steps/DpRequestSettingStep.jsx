@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, createContext, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { AlertCircle, Info, Trash2, ChevronLeft, ChevronRight, Search, Plus, X } from 'lucide-react';
+import { AlertCircle, Info, Trash2, ChevronLeft, ChevronRight, ChevronDown, Search, Plus, X, Sparkles, Download, RefreshCw, ArrowUpDown, CheckCircle2, FileSpreadsheet, Upload, Clipboard, Check } from 'lucide-react';
 
 import { Input } from '@progress/kendo-react-inputs';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
@@ -132,7 +132,7 @@ const PidCell = (props) => {
 
 const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getTableRenderContext, getTableDetail, saveTableSettings, getBaseVariableList, getRecodedOverview, reapplyPreset, getRecodedPlain, getWeightPidList, getNextWeightId, deleteWeight, saveWeightSetPid, previewFilter, getOverviewContext } = DpRequestPageApi();
+    const { getTableRenderContext, getTableDetail, saveTableSettings, getBaseVariableList, getRecodedOverview, reapplyPreset, getRecodedPlain, getWeightPidList, getNextWeightId, deleteWeight, saveWeightSetPid, extractColumnWeightValues, previewFilter, getOverviewContext } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -166,6 +166,18 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [isBulkWeightModalOpen, setIsBulkWeightModalOpen] = useState(false);
     const [bulkWeightValuesText, setBulkWeightValuesText] = useState('');
     const [isTextareaFocused, setIsTextareaFocused] = useState(false);
+
+    // --- 가중치 우측 매칭 패널 및 문항 컬럼 추출 상태 ---
+    const [variableList, setVariableList] = useState([]);
+    const [weightRightTab, setWeightRightTab] = useState('column'); // 'column' | 'csv' | 'paste'
+    const [weightColumnSearch, setWeightColumnSearch] = useState('');
+    const [selectedColumnId, setSelectedColumnId] = useState('');
+    const [extractLoading, setExtractLoading] = useState(false);
+    const [extractedWeightData, setExtractedWeightData] = useState(null);
+    const [columnExtractError, setColumnExtractError] = useState(null);
+    const [matchedColumnName, setMatchedColumnName] = useState('');
+    const [pidSortDir, setPidSortDir] = useState('asc');
+    const [pasteAreaText, setPasteAreaText] = useState('');
 
     const weightDropdownData = useMemo(() => {
         const list = [{ text: '없음', value: '없음' }];
@@ -204,6 +216,13 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
         setCurrentWeightInfo(w.info || []);
         originalWeightInfoRef.current = JSON.parse(JSON.stringify(w.info || []));
         setWeightSort([]);
+        setMatchedColumnName('');
+        setSelectedColumnId('');
+        setExtractedWeightData(null);
+        setColumnExtractError(null);
+        setWeightRightTab('column');
+        setPasteAreaText('');
+        setWeightColumnSearch('');
     };
 
     const handleUpdateWeightField = (field, val) => {
@@ -396,6 +415,13 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             setCurrentWeightType('single');
             setCurrentWeightInfo(newInfo);
             originalWeightInfoRef.current = JSON.parse(JSON.stringify(newInfo || []));
+            setMatchedColumnName('');
+            setSelectedColumnId('');
+            setExtractedWeightData(null);
+            setColumnExtractError(null);
+            setWeightRightTab('column');
+            setPasteAreaText('');
+            setWeightColumnSearch('');
             if (onUnsavedChange) onUnsavedChange(true);
         } catch (err) {
             console.error("Failed to load PID list or fetch new weight ID:", err);
@@ -463,6 +489,292 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             (w.label || '').toLowerCase().includes(search) || (w.id || '').toLowerCase().includes(search)
         );
     }, [weights, weightSearch]);
+
+    // 문항(변수) 컬럼 필터링
+    const filteredVariables = useMemo(() => {
+        if (!weightColumnSearch.trim()) return variableList;
+        const s = weightColumnSearch.toLowerCase().trim();
+        return variableList.filter(v => {
+            const id = String(v.name || v.spss_name || v.id || '').toLowerCase();
+            const label = String(v.label || v.title || '').toLowerCase();
+            return id.includes(s) || label.includes(s);
+        });
+    }, [variableList, weightColumnSearch]);
+
+    // 문항 컬럼 선택 시 가중치 추출 API 호출
+    const handleSelectColumnForWeight = async (v) => {
+        const colId = v.name || v.spss_name || v.id;
+        setSelectedColumnId(colId);
+        setColumnExtractError(null);
+
+        const pageId = sessionStorage.getItem('pageId');
+        if (!pageId || !auth?.user?.userId) return;
+
+        setExtractLoading(true);
+        try {
+            const res = await extractColumnWeightValues.mutateAsync({
+                pageid: pageId,
+                user: auth.user.userId,
+                column_id: colId,
+                pid_column: 'PID'
+            });
+
+            const resData = res?.resultjson || res?.data?.resultjson || res;
+            const outerSuccess = String(res?.success || '');
+            const innerSuccess = String(resData?.success || '');
+
+            // 최상위 success가 777이더라도 내부 resultjson.success가 777이 아니면 오류 처리
+            if (outerSuccess === '777' && (innerSuccess === '777' || innerSuccess === '')) {
+                setExtractedWeightData(resData);
+                setColumnExtractError(null);
+            } else {
+                setExtractedWeightData(null);
+
+                // 777 내의 703 또는 기타 에러 메시지 정리
+                let errorMsg = resData?.message || res?.message || "가중치 값 추출에 실패했습니다.";
+
+                if (innerSuccess === '703') {
+                    if (errorMsg.includes('not found in dataset') || errorMsg.includes('not found')) {
+                        errorMsg = `선택하신 문항 컬럼('${colId}')이 데이터셋(SAV) 파일에 존재하지 않습니다.`;
+                    } else {
+                        errorMsg = `데이터셋에서 문항('${colId}')을 찾을 수 없습니다. (${errorMsg})`;
+                    }
+                } else if (innerSuccess === '701' || innerSuccess === '702') {
+                    errorMsg = `가중치 데이터 추출 중 오류가 발생했습니다. (${errorMsg})`;
+                }
+
+                setColumnExtractError(errorMsg);
+            }
+        } catch (err) {
+            console.error("Failed to extract column weight values:", err);
+            const fallbackMsg = "선택 문항에서 가중치를 추출하는 중 오류가 발생했습니다.";
+            setColumnExtractError(fallbackMsg);
+            setExtractedWeightData(null);
+        } finally {
+            setExtractLoading(false);
+        }
+    };
+
+    // 추출된 가중치 값을 현재 그리드에 적용
+    const handleApplyExtractedWeight = () => {
+        if (!extractedWeightData || !extractedWeightData.pid_values) {
+            modal.showAlert("알림", "추출된 가중치 데이터가 없습니다. 먼저 문항을 선택해 주세요.");
+            return;
+        }
+
+        const pidMap = extractedWeightData.pid_values;
+        let matchedCount = 0;
+
+        const newInfo = currentWeightInfo.map(item => {
+            const pidKey = String(item.label);
+            if (pidMap[pidKey] !== undefined && pidMap[pidKey] !== null) {
+                matchedCount++;
+                const val = Number(pidMap[pidKey]);
+                return {
+                    ...item,
+                    value: isNaN(val) ? '' : val
+                };
+            }
+            return item;
+        });
+
+        updateWeightInfo(newInfo);
+        setMatchedColumnName(extractedWeightData.source_column || selectedColumnId);
+
+        // 가중치 라벨이 비어있으면 자동 생성 (예: 가중치_SQ3. 거주 지역)
+        if (!currentWeightLabel || currentWeightLabel.startsWith('new_')) {
+            const colLabel = extractedWeightData.column_label || extractedWeightData.source_column || selectedColumnId;
+            const newLabel = `가중치_${colLabel}`;
+            handleUpdateWeightField('label', newLabel);
+        }
+
+        if (onUnsavedChange) onUnsavedChange(true);
+        modal.showAlert("성공", extractedWeightData.message || `${matchedCount.toLocaleString()}건의 가중치값이 정상 매칭되었습니다.`);
+    };
+
+    // [수정 및 반영] 개별 저장
+    const handleSaveCurrentWeight = async () => {
+        const pageId = sessionStorage.getItem('pageId');
+        if (!pageId || !auth?.user?.userId || !selectedWeightId) return;
+
+        loadingSpinner.show();
+        try {
+            const pidValues = {};
+            currentWeightInfo.forEach(opt => {
+                if (opt.label) {
+                    if (opt.value === '' || opt.value === undefined || opt.value === null) {
+                        pidValues[String(opt.label)] = null;
+                    } else {
+                        const numVal = Number(opt.value);
+                        pidValues[String(opt.label)] = isNaN(numVal) ? null : numVal;
+                    }
+                }
+            });
+
+            const savePayload = {
+                pageid: pageId,
+                weight_variable_label: currentWeightLabel || '',
+                weight_variable_name: currentWeightId,
+                pid_values: pidValues,
+                user: auth.user.userId
+            };
+
+            const res = await saveWeightSetPid.mutateAsync(savePayload);
+            if (String(res?.success) === '777' || res?.data?.success === '777') {
+                modal.showAlert("알림", "가중치 설정이 성공적으로 저장 및 반영되었습니다.");
+                originalWeightInfoRef.current = JSON.parse(JSON.stringify(currentWeightInfo || []));
+                if (onUnsavedChange) onUnsavedChange(false);
+            } else {
+                modal.showAlert("알림", res?.message || "가중치 설정이 반영되었습니다.");
+            }
+        } catch (err) {
+            console.error("Failed to save weight:", err);
+            modal.showAlert("오류", "가중치 저장에 실패했습니다.");
+        } finally {
+            loadingSpinner.hide();
+        }
+    };
+
+    // [1.0 초기화]
+    const handleResetWeightToOne = () => {
+        modal.showConfirm("알림", "모든 응답자의 가중치 비율을 1.0으로 초기화하시겠습니까?", {
+            btns: [
+                { title: "취소", click: () => { } },
+                {
+                    title: "초기화",
+                    click: () => {
+                        const resetInfo = currentWeightInfo.map(item => ({
+                            ...item,
+                            value: 1.0
+                        }));
+                        updateWeightInfo(resetInfo);
+                        setMatchedColumnName('');
+                        if (onUnsavedChange) onUnsavedChange(true);
+                        modal.showAlert("알림", "가중치 비율이 1.0으로 초기화되었습니다.");
+                    }
+                }
+            ]
+        });
+    };
+
+    // [PID 정렬]
+    const handleTogglePidSort = () => {
+        const nextDir = pidSortDir === 'asc' ? 'desc' : 'asc';
+        setPidSortDir(nextDir);
+        const sorted = [...currentWeightInfo].sort((a, b) => {
+            const numA = Number(a.label);
+            const numB = Number(b.label);
+            if (!isNaN(numA) && !isNaN(numB)) {
+                return nextDir === 'asc' ? numA - numB : numB - numA;
+            }
+            return nextDir === 'asc'
+                ? String(a.label).localeCompare(String(b.label))
+                : String(b.label).localeCompare(String(a.label));
+        });
+        updateWeightInfo(sorted);
+    };
+
+    // [템플릿 받기]
+    const handleDownloadTemplate = () => {
+        if (!currentWeightInfo || currentWeightInfo.length === 0) {
+            modal.showAlert("알림", "다운로드할 응답자(PID) 데이터가 없습니다.");
+            return;
+        }
+        const header = "pid,weight\n";
+        const rows = currentWeightInfo.map(item => `${item.label},${item.value !== '' && item.value !== null && item.value !== undefined ? item.value : '1.0'}`).join("\n");
+        const blob = new Blob(["\uFEFF" + header + rows], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `가중치_템플릿_${currentWeightId || 'weight'}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    // [붙여넣기 탭 적용]
+    const handleApplyPasteWeight = () => {
+        if (!pasteAreaText.trim()) {
+            modal.showAlert("알림", "붙여넣을 데이터를 입력해 주세요.");
+            return;
+        }
+        const lines = pasteAreaText.split(/\r?\n/).filter(line => line.trim().length > 0);
+        const parsedMap = new Map();
+        lines.forEach(line => {
+            const parts = line.split(/[\t,;]+/).map(p => p.trim());
+            if (parts.length >= 2) {
+                const pid = parts[0];
+                const val = Number(parts[1]);
+                if (pid && !isNaN(val)) parsedMap.set(pid, val);
+            } else if (parts.length === 1) {
+                const val = Number(parts[0]);
+                if (!isNaN(val)) parsedMap.set('INDEX_ONLY_' + parsedMap.size, val);
+            }
+        });
+
+        const hasPidMapping = Array.from(parsedMap.keys()).some(k => !k.startsWith('INDEX_ONLY_'));
+        let updatedInfo = [];
+        if (hasPidMapping) {
+            updatedInfo = currentWeightInfo.map(item => {
+                if (parsedMap.has(item.label)) {
+                    return { ...item, value: parsedMap.get(item.label) };
+                }
+                return item;
+            });
+        } else {
+            const valuesArray = Array.from(parsedMap.values());
+            updatedInfo = currentWeightInfo.map((item, idx) => {
+                if (idx < valuesArray.length) {
+                    return { ...item, value: valuesArray[idx] };
+                }
+                return item;
+            });
+        }
+        updateWeightInfo(updatedInfo);
+        setMatchedColumnName('');
+        setPasteAreaText('');
+        if (onUnsavedChange) onUnsavedChange(true);
+        modal.showAlert("알림", "가중치 데이터가 적용되었습니다.");
+    };
+
+    // [CSV 업로드 탭 적용]
+    const handleCsvFileUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const text = event.target?.result;
+            if (typeof text !== 'string') return;
+            const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
+            const parsedMap = new Map();
+            lines.forEach((line, idx) => {
+                if (idx === 0 && (line.toLowerCase().includes('pid') || line.toLowerCase().includes('weight'))) {
+                    return; // 헤더 행 제외
+                }
+                const parts = line.split(/[\t,;]+/).map(p => p.trim());
+                if (parts.length >= 2) {
+                    const pid = parts[0];
+                    const val = Number(parts[1]);
+                    if (pid && !isNaN(val)) parsedMap.set(pid, val);
+                }
+            });
+
+            let matchCnt = 0;
+            const updatedInfo = currentWeightInfo.map(item => {
+                if (parsedMap.has(item.label)) {
+                    matchCnt++;
+                    return { ...item, value: parsedMap.get(item.label) };
+                }
+                return item;
+            });
+            updateWeightInfo(updatedInfo);
+            setMatchedColumnName(file.name.replace(/\.[^/.]+$/, ''));
+            if (onUnsavedChange) onUnsavedChange(true);
+            modal.showAlert("알림", `${matchCnt.toLocaleString()}건의 가중치 데이터가 파일에서 매칭되었습니다.`);
+            e.target.value = '';
+        };
+        reader.readAsText(file, 'utf-8');
+    };
 
     const handleCloseWeightEdit = () => {
         setCurrentWeightInfo(prev => prev.map(it => ({ ...it, inEdit: false })));
@@ -888,6 +1200,17 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             }
 
             const actualVarList = varList?.resultjson || varList?.data?.resultjson || varList;
+            let baseList = [];
+            if (String(varList?.success) === '777' && varList?.resultjson) {
+                const raw = varList.resultjson;
+                baseList = Array.isArray(raw) ? raw : Object.values(raw);
+            } else if (Array.isArray(actualVarList)) {
+                baseList = actualVarList;
+            } else if (actualVarList && typeof actualVarList === 'object') {
+                baseList = Object.values(actualVarList);
+            }
+            setVariableList(baseList);
+
             // 범용 필터 목록: 교차분석/추가분석과 동일하게 overview/context 의 base_variables 사용
             getOverviewContext.mutateAsync({ pageid: pageId, user: auth.user.userId })
                 .then(ctxRes => {
@@ -895,8 +1218,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     setFilterVariables(toFilterVariables(ctx.base_variables));
                 })
                 .catch(e => console.error('Failed to load filter variables:', e));
-            if (Array.isArray(actualVarList)) {
-                const weightOpt = ['없음', ...actualVarList.map(v => v.name || v.label)];
+            if (baseList.length > 0 || Array.isArray(actualVarList)) {
+                const listToUse = baseList.length > 0 ? baseList : actualVarList;
+                const weightOpt = ['없음', ...listToUse.map(v => v.name || v.label)];
                 setWeightOptions(weightOpt);
 
                 // 초기 히스토리 기준점 설정 (서버 데이터)
@@ -1558,6 +1882,36 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 .dp-table-container .k-grid tbody tr:hover td:not(.changed-cell) {
                     background-color: var(--srt-secondary-100) !important;
                 }
+
+                /* 기본 가중치 변수 드롭다운 화살표 표시 */
+                .dp-setting-card .k-dropdownlist .k-input-button {
+                    position: relative;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 28px;
+                    min-width: 28px;
+                    background: transparent !important;
+                    border: none !important;
+                    cursor: pointer;
+                }
+                .dp-setting-card .k-dropdownlist .k-input-button > * {
+                    display: none !important;
+                }
+                .dp-setting-card .k-dropdownlist .k-input-button::after {
+                    content: '';
+                    display: block;
+                    width: 6px;
+                    height: 6px;
+                    border-right: 1.8px solid var(--srt-primary-600, #3B82F6);
+                    border-bottom: 1.8px solid var(--srt-primary-600, #3B82F6);
+                    transform: translateY(-2px) rotate(45deg);
+                    pointer-events: none;
+                    transition: all 0.15s ease;
+                }
+                .dp-setting-card .k-dropdownlist:hover .k-input-button::after {
+                    border-color: var(--srt-primary-700, #1D4ED8);
+                }
             `}</style>
             {/* 기본 Weight 변수 카드 */}
             <div className="dp-setting-card" style={{ flexShrink: 0, marginBottom: '0px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px' }}>
@@ -1565,17 +1919,31 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: '#334155', fontSize: '13px' }}>
                         기본 가중치 변수
                     </div>
-                    <DropDownList
-                        style={{ width: '220px', fontSize: '13px' }}
-                        data={weightDropdownData}
-                        textField="text"
-                        dataItemKey="value"
-                        value={weightDropdownData.find(item => item.value === (settings.weight_variable || '없음')) || weightDropdownData[0]}
-                        onChange={(e) => {
-                            setSettings({ ...settings, weight_variable: e.value.value });
-                            if (onUnsavedChange) onUnsavedChange(true);
-                        }}
-                    />
+                    <div style={{ position: 'relative', width: '220px', display: 'inline-flex', alignItems: 'center' }}>
+                        <DropDownList
+                            style={{ width: '100%', fontSize: '13px' }}
+                            data={weightDropdownData}
+                            textField="text"
+                            dataItemKey="value"
+                            value={weightDropdownData.find(item => item.value === (settings.weight_variable || '없음')) || weightDropdownData[0]}
+                            onChange={(e) => {
+                                setSettings({ ...settings, weight_variable: e.value.value });
+                                if (onUnsavedChange) onUnsavedChange(true);
+                            }}
+                        />
+                        <ChevronDown
+                            size={16}
+                            color="#64748B"
+                            style={{
+                                position: 'absolute',
+                                right: '10px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                pointerEvents: 'none',
+                                zIndex: 3
+                            }}
+                        />
+                    </div>
                     {settings.weight_variable === '없음' && (
                         <span style={{ color: '#DC2626', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
                             <AlertCircle size={13} /> 가중치 변수가 지정되지 않았습니다.
@@ -1649,69 +2017,658 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     )}
                 </div>
 
-                {/* 콘텐츠 영역 */}
-                <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                {/* 콘텐츠 영역 (중앙 PID 편집 그리드 + 우측 문항 매칭 사이드 패널) */}
+                <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'row', minHeight: 0, minWidth: 0, border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', background: '#FFFFFF', overflow: 'hidden' }}>
                     {selectedWeightId ? (
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                            <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px', paddingTop: '16px' }}>
-                                <div className="dp-content-label-edit" style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1, minWidth: 0 }}>
+                        <>
+                            {/* 중앙 PID별 가중치 수정 & 그리드 */}
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, minWidth: 0, borderRight: '1px solid #E2E8F0' }}>
+                                {/* 상단 헤더: 가중치 라벨 */}
+                                <div style={{
+                                    padding: '12px 20px',
+                                    borderBottom: '1px solid #E2E8F0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    background: '#FFFFFF',
+                                    flexShrink: 0,
+                                    gap: '12px'
+                                }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>가중치 라벨</span>
+                                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#1E293B', whiteSpace: 'nowrap' }}>가중치 라벨</span>
                                         <input
                                             type="text"
                                             value={currentWeightLabel}
                                             onChange={(e) => handleUpdateWeightField('label', e.target.value)}
-                                            className="dp-input"
-                                            style={{ width: '280px', height: '32px', padding: '0 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', outline: 'none' }}
+                                            placeholder="가중치 라벨 입력"
+                                            style={{
+                                                width: '240px',
+                                                height: '32px',
+                                                padding: '0 10px',
+                                                border: '1px solid #CBD5E1',
+                                                borderRadius: '6px',
+                                                fontSize: '12.5px',
+                                                outline: 'none'
+                                            }}
                                         />
                                     </div>
-                                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500, userSelect: 'none' }}>
-                                        💡 입력창 중 하나를 선택해 엑셀 열을 붙여넣기(Ctrl+V)하면 아래로 자동 채워집니다.
-                                    </span>
                                 </div>
-                                <button
-                                    onClick={handleOpenBulkWeightModal}
-                                    style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '6px',
-                                        height: '28px',
-                                        padding: '0 12px',
-                                        borderRadius: '6px',
-                                        border: '1px solid #cbd5e1',
-                                        color: '#475569',
-                                        background: '#FFFFFF',
-                                        fontSize: '12px',
-                                        fontWeight: 600,
-                                        cursor: 'pointer',
-                                        transition: 'all 0.15s',
-                                        boxSizing: 'border-box'
-                                    }}
-                                    onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
-                                    onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
-                                >
-                                    가중치 비율 일괄 편집
-                                </button>
+
+                                {/* 중간 툴바: 응답자 데이터 목록 & 상단 액션 버튼들 */}
+                                <div style={{
+                                    padding: '10px 18px',
+                                    borderBottom: '1px solid #E2E8F0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    background: '#F8FAFC',
+                                    flexShrink: 0
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#1E293B' }}>
+                                            응답자 데이터 목록 <span style={{ fontSize: '12px', fontWeight: 500, color: '#64748B' }}>(총 {currentWeightInfo.length.toLocaleString()}건)</span>
+                                        </span>
+                                        {matchedColumnName && (
+                                            <span style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                padding: '2px 8px',
+                                                borderRadius: '12px',
+                                                fontSize: '11px',
+                                                fontWeight: 600,
+                                                background: '#ECFDF5',
+                                                color: '#059669',
+                                                border: '1px solid #A7F3D0'
+                                            }}>
+                                                <CheckCircle2 size={12} /> {matchedColumnName} 매칭됨
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <button
+                                            onClick={handleResetWeightToOne}
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                height: '26px',
+                                                padding: '0 8px',
+                                                borderRadius: '5px',
+                                                border: '1px solid #CBD5E1',
+                                                background: '#FFFFFF',
+                                                fontSize: '11.5px',
+                                                fontWeight: 600,
+                                                color: '#475569',
+                                                cursor: 'pointer'
+                                            }}
+                                            title="모든 가중치를 1.0으로 초기화"
+                                        >
+                                            <RefreshCw size={12} /> 1.0 초기화
+                                        </button>
+                                        <button
+                                            onClick={handleDownloadTemplate}
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                height: '26px',
+                                                padding: '0 8px',
+                                                borderRadius: '5px',
+                                                border: '1px solid #CBD5E1',
+                                                background: '#FFFFFF',
+                                                fontSize: '11.5px',
+                                                fontWeight: 600,
+                                                color: '#475569',
+                                                cursor: 'pointer'
+                                            }}
+                                            title="현재 PID가 담긴 CSV 템플릿 다운로드"
+                                        >
+                                            <Download size={12} /> 템플릿 받기
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* 그리드 영역 */}
+                                <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                                    <WeightContext.Provider value={{ currentWeightInfo, updateWeightInfo, onUnsavedChange, originalWeightInfoRef }}>
+                                        <KendoGridV2
+                                            data={currentWeightInfo}
+                                            showNo showNoRecordsAddBtn={false} editField="inEdit"
+                                            onDataChange={updateWeightInfo}
+                                            onRowClick={handleWeightRowClick}
+                                            sortable={true}
+                                            sort={weightSort}
+                                            onSortChange={handleWeightSortChange}
+                                            style={{ flex: 1, height: '100%', width: '100%' }}
+                                        >
+                                            <Column field="label" title="pid" width="200px" cell={PidCell} />
+                                            <Column field="value" title="가중치 비율" cell={NumericEditCell} />
+                                        </KendoGridV2>
+                                    </WeightContext.Provider>
+                                </div>
                             </div>
-                            <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                                <WeightContext.Provider value={{ currentWeightInfo, updateWeightInfo, onUnsavedChange, originalWeightInfoRef }}>
-                                    <KendoGridV2
-                                        data={currentWeightInfo}
-                                        showNo showNoRecordsAddBtn={false} editField="inEdit"
-                                        onDataChange={updateWeightInfo}
-                                        onRowClick={handleWeightRowClick}
-                                        sortable={true}
-                                        sort={weightSort}
-                                        onSortChange={handleWeightSortChange}
-                                        style={{ flex: 1, height: '100%', width: '100%' }}
-                                    >
-                                        <Column field="label" title="pid" width="200px" cell={PidCell} />
-                                        <Column field="value" title="가중치 비율" cell={NumericEditCell} />
-                                    </KendoGridV2>
-                                </WeightContext.Provider>
+
+                            {/* 우측 사이드 패널: 문항 컬럼 / CSV 업로드 / 붙여넣기 */}
+                            <div style={{
+                                width: '350px',
+                                flexShrink: 0,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                background: '#FFFFFF',
+                                minHeight: 0
+                            }}>
+                                {/* 상단 탭 3개: 세그먼트 컨트롤 형태 [문항 컬럼] [CSV 업로드] [붙여넣기] */}
+                                <div style={{
+                                    padding: '10px 14px',
+                                    borderBottom: '1px solid #E2E8F0',
+                                    background: '#FFFFFF',
+                                    flexShrink: 0
+                                }}>
+                                    <div style={{
+                                        display: 'flex',
+                                        background: '#F1F5F9',
+                                        borderRadius: '8px',
+                                        padding: '3px',
+                                        gap: '2px'
+                                    }}>
+                                        <button
+                                            onClick={() => setWeightRightTab('column')}
+                                            style={{
+                                                flex: 1,
+                                                padding: '7px 0',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                background: weightRightTab === 'column' ? '#FFFFFF' : 'transparent',
+                                                color: weightRightTab === 'column' ? 'var(--srt-primary-700, #1D4ED8)' : '#64748B',
+                                                boxShadow: weightRightTab === 'column' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                                                fontSize: '12px',
+                                                fontWeight: weightRightTab === 'column' ? 700 : 500,
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '5px',
+                                                transition: 'all 0.15s ease'
+                                            }}
+                                        >
+                                            <FileSpreadsheet size={13} /> 문항 컬럼
+                                        </button>
+                                        <button
+                                            onClick={() => setWeightRightTab('csv')}
+                                            style={{
+                                                flex: 1,
+                                                padding: '7px 0',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                background: weightRightTab === 'csv' ? '#FFFFFF' : 'transparent',
+                                                color: weightRightTab === 'csv' ? 'var(--srt-primary-700, #1D4ED8)' : '#64748B',
+                                                boxShadow: weightRightTab === 'csv' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                                                fontSize: '12px',
+                                                fontWeight: weightRightTab === 'csv' ? 700 : 500,
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '5px',
+                                                transition: 'all 0.15s ease'
+                                            }}
+                                        >
+                                            <Upload size={13} /> CSV 업로드
+                                        </button>
+                                        <button
+                                            onClick={() => setWeightRightTab('paste')}
+                                            style={{
+                                                flex: 1,
+                                                padding: '7px 0',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                background: weightRightTab === 'paste' ? '#FFFFFF' : 'transparent',
+                                                color: weightRightTab === 'paste' ? 'var(--srt-primary-700, #1D4ED8)' : '#64748B',
+                                                boxShadow: weightRightTab === 'paste' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                                                fontSize: '12px',
+                                                fontWeight: weightRightTab === 'paste' ? 700 : 500,
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '5px',
+                                                transition: 'all 0.15s ease'
+                                            }}
+                                        >
+                                            <Clipboard size={13} /> 붙여넣기
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* 패널 콘텐츠 영역 (하단 플로팅 챗봇 아이콘 간섭 방지를 위해 paddingBottom 36px 적용) */}
+                                <div style={{ flex: 1, overflowY: 'auto', padding: '14px 14px 36px 14px', display: 'flex', flexDirection: 'column', gap: '12px', minHeight: 0 }}>
+                                    {/* 1. 문항 컬럼 탭 */}
+                                    {weightRightTab === 'column' && (
+                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', minHeight: 0 }}>
+                                            {/* 헤더 */}
+                                            <div style={{ fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>
+                                                문항 컬럼에서 자동 매칭
+                                            </div>
+
+                                            {/* 설명 문구 */}
+                                            <div style={{ fontSize: '11.5px', color: '#64748B', lineHeight: 1.45, fontWeight: 500 }}>
+                                                데이터셋에 이미 가중치 수치가 기입된 문항을 선택하면, 별도 입력 없이 각 응답자(PID)별 가중치값을 자동으로 매칭합니다.
+                                            </div>
+
+                                            {/* 검색창 */}
+                                            <div style={{ position: 'relative' }}>
+                                                <Search size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                                                <input
+                                                    type="text"
+                                                    value={weightColumnSearch}
+                                                    onChange={(e) => setWeightColumnSearch(e.target.value)}
+                                                    placeholder="문항명 또는 변수 ID를 검색하세요."
+                                                    style={{
+                                                        width: '100%',
+                                                        padding: '7px 10px 7px 28px',
+                                                        border: '1px solid #CBD5E1',
+                                                        borderRadius: '6px',
+                                                        fontSize: '12px',
+                                                        outline: 'none',
+                                                        boxSizing: 'border-box',
+                                                        background: '#FFFFFF'
+                                                    }}
+                                                />
+                                            </div>
+
+                                            {/* 문항 목록 리스트 (flex: 1로 시원하게 확장) */}
+                                            <div style={{
+                                                flex: 1,
+                                                minHeight: '220px',
+                                                overflowY: 'auto',
+                                                border: '1px solid #E2E8F0',
+                                                borderRadius: '8px',
+                                                background: '#F8FAFC',
+                                                padding: '6px',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '3px'
+                                            }}>
+                                                {extractLoading ? (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '140px', gap: '8px', color: '#64748B', fontSize: '12px' }}>
+                                                        <RefreshCw size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                                                        가중치 값 추출 및 통계 분석 중...
+                                                    </div>
+                                                ) : filteredVariables.length === 0 ? (
+                                                    <div style={{ padding: '36px 12px', textAlign: 'center', color: '#94A3B8', fontSize: '12px' }}>
+                                                        검색 결과가 없습니다.
+                                                    </div>
+                                                ) : (
+                                                    filteredVariables.map((v, idx) => {
+                                                        const varId = v.name || v.spss_name || v.id;
+                                                        const varLabel = v.label || v.title || v.name || v.id;
+                                                        const isSelected = selectedColumnId === varId;
+
+                                                        return (
+                                                            <div
+                                                                key={varId || idx}
+                                                                onClick={() => handleSelectColumnForWeight(v)}
+                                                                title={`[${varId}] ${varLabel}`}
+                                                                style={{
+                                                                    padding: '5px 8px',
+                                                                    borderRadius: '6px',
+                                                                    cursor: 'pointer',
+                                                                    fontSize: '11.5px',
+                                                                    lineHeight: 1.35,
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '7px',
+                                                                    background: isSelected ? 'var(--srt-primary-50, #EFF6FF)' : '#FFFFFF',
+                                                                    border: isSelected ? '1.5px solid var(--srt-primary-500, #3B82F6)' : '1px solid #E2E8F0',
+                                                                    color: isSelected ? 'var(--srt-primary-700, #1D4ED8)' : '#334155',
+                                                                    fontWeight: isSelected ? 700 : 500,
+                                                                    transition: 'all 0.12s'
+                                                                }}
+                                                                onMouseEnter={(e) => {
+                                                                    if (!isSelected) {
+                                                                        e.currentTarget.style.background = '#F1F5F9';
+                                                                        e.currentTarget.style.borderColor = '#CBD5E1';
+                                                                    }
+                                                                }}
+                                                                onMouseLeave={(e) => {
+                                                                    if (!isSelected) {
+                                                                        e.currentTarget.style.background = '#FFFFFF';
+                                                                        e.currentTarget.style.borderColor = '#E2E8F0';
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <span style={{
+                                                                    fontSize: '10.5px',
+                                                                    fontWeight: 700,
+                                                                    padding: '1px 5px',
+                                                                    borderRadius: '4px',
+                                                                    background: isSelected ? '#DBEAFE' : '#F1F5F9',
+                                                                    color: isSelected ? '#1D4ED8' : '#475569',
+                                                                    whiteSpace: 'nowrap'
+                                                                }}>
+                                                                    {varId}
+                                                                </span>
+                                                                <span
+                                                                    title={varLabel}
+                                                                    style={{
+                                                                        flex: 1,
+                                                                        fontSize: '11.5px',
+                                                                        overflow: 'hidden',
+                                                                        textOverflow: 'ellipsis',
+                                                                        whiteSpace: 'nowrap'
+                                                                    }}
+                                                                >
+                                                                    {varLabel}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })
+                                                )}
+                                            </div>
+
+                                            {/* 하단 인터랙션 영역: 문항 선택 여부에 따른 맞춤 UI */}
+                                            {extractedWeightData ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    {/* 하단 요약 카드 (추출 통계) */}
+                                                    <div style={{
+                                                        background: '#F8FAFC',
+                                                        border: '1px solid #E2E8F0',
+                                                        borderRadius: '8px',
+                                                        padding: '10px 12px',
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        gap: '8px'
+                                                    }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                                                            <span
+                                                                title={`매칭 요약: ${extractedWeightData.column_label || extractedWeightData.source_column || selectedColumnId}`}
+                                                                style={{
+                                                                    fontSize: '11.5px',
+                                                                    fontWeight: 700,
+                                                                    color: '#1E293B',
+                                                                    overflow: 'hidden',
+                                                                    textOverflow: 'ellipsis',
+                                                                    whiteSpace: 'nowrap',
+                                                                    flex: 1,
+                                                                    cursor: 'default'
+                                                                }}
+                                                            >
+                                                                매칭 요약: {extractedWeightData.column_label || extractedWeightData.source_column}
+                                                            </span>
+                                                            <span style={{
+                                                                fontSize: '11px',
+                                                                fontWeight: 700,
+                                                                color: '#059669',
+                                                                background: '#ECFDF5',
+                                                                padding: '1px 6px',
+                                                                borderRadius: '4px',
+                                                                border: '1px solid #A7F3D0'
+                                                            }}>
+                                                                {extractedWeightData.matched_count?.toLocaleString()} / {extractedWeightData.total_rows?.toLocaleString()}건
+                                                            </span>
+                                                        </div>
+
+                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                                                            <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '6px', padding: '5px 4px', textAlign: 'center' }}>
+                                                                <div style={{ fontSize: '10px', color: '#64748B', fontWeight: 600 }}>최소값</div>
+                                                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#0F172A', marginTop: '1px' }}>
+                                                                    {extractedWeightData.min !== null && extractedWeightData.min !== undefined ? Number(extractedWeightData.min).toFixed(4).replace(/\.?0+$/, '') || '0' : '-'}
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '6px', padding: '5px 4px', textAlign: 'center' }}>
+                                                                <div style={{ fontSize: '10px', color: '#64748B', fontWeight: 600 }}>최대값</div>
+                                                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#0F172A', marginTop: '1px' }}>
+                                                                    {extractedWeightData.max !== null && extractedWeightData.max !== undefined ? Number(extractedWeightData.max).toFixed(4).replace(/\.?0+$/, '') || '0' : '-'}
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '6px', padding: '5px 4px', textAlign: 'center' }}>
+                                                                <div style={{ fontSize: '10px', color: '#64748B', fontWeight: 600 }}>평균값</div>
+                                                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#0F172A', marginTop: '1px' }}>
+                                                                    {extractedWeightData.mean !== null && extractedWeightData.mean !== undefined ? Number(extractedWeightData.mean).toFixed(4) : '-'}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {extractedWeightData.missing_count > 0 && (
+                                                            <div style={{ fontSize: '10px', color: '#DC2626', fontWeight: 500 }}>
+                                                                ※ 결측치 {extractedWeightData.missing_count.toLocaleString()}건 제외됨
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* 활성화된 적용 버튼 (문항명 표시) */}
+                                                    <button
+                                                        onClick={handleApplyExtractedWeight}
+                                                        style={{
+                                                            width: '100%',
+                                                            height: '38px',
+                                                            borderRadius: '7px',
+                                                            border: 'none',
+                                                            background: 'var(--srt-primary-600, #2563EB)',
+                                                            color: '#FFFFFF',
+                                                            fontSize: '12.5px',
+                                                            fontWeight: 700,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            gap: '6px',
+                                                            cursor: 'pointer',
+                                                            boxShadow: '0 2px 4px rgba(37,99,235,0.2)',
+                                                            transition: 'all 0.15s ease'
+                                                        }}
+                                                        onMouseEnter={(e) => e.currentTarget.style.opacity = '0.92'}
+                                                        onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                                                    >
+                                                        [{selectedColumnId}] 값으로 가중치 적용
+                                                    </button>
+                                                </div>
+                                            ) : columnExtractError ? (
+                                                <div style={{
+                                                    padding: '10px 12px',
+                                                    background: '#FEF2F2',
+                                                    border: '1px solid #FECACA',
+                                                    borderRadius: '6px',
+                                                    fontSize: '11.5px',
+                                                    color: '#DC2626',
+                                                    textAlign: 'center',
+                                                    fontWeight: 500,
+                                                    lineHeight: 1.45
+                                                }}>
+                                                    ⚠️ {columnExtractError}
+                                                </div>
+                                            ) : (
+                                                <div style={{
+                                                    padding: '10px 12px',
+                                                    background: '#F8FAFC',
+                                                    border: '1px dashed #CBD5E1',
+                                                    borderRadius: '6px',
+                                                    fontSize: '11.5px',
+                                                    color: '#64748B',
+                                                    textAlign: 'center',
+                                                    fontWeight: 500
+                                                }}>
+                                                    목록에서 가중치 값이 입력된 문항을 선택해 주세요.
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* 2. CSV 업로드 탭 */}
+                                    {weightRightTab === 'csv' && (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', flex: 1 }}>
+                                            <div>
+                                                <div style={{ fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>CSV 파일에서 가중치 매칭</div>
+                                                <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '3px', lineHeight: 1.45 }}>
+                                                    PID와 가중치 비율 열이 포함된 CSV 파일을 업로드하면 자동으로 매핑됩니다.
+                                                </div>
+                                            </div>
+
+                                            <label style={{
+                                                border: '2px dashed #CBD5E1',
+                                                borderRadius: '8px',
+                                                padding: '36px 16px',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '10px',
+                                                cursor: 'pointer',
+                                                background: '#F8FAFC',
+                                                transition: 'all 0.15s ease'
+                                            }}
+                                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--srt-primary-500, #3B82F6)'; e.currentTarget.style.background = '#EFF6FF'; }}
+                                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#CBD5E1'; e.currentTarget.style.background = '#F8FAFC'; }}
+                                            >
+                                                <Upload size={28} color="var(--srt-primary-600, #2563EB)" />
+                                                <span style={{ fontSize: '12.5px', fontWeight: 600, color: '#334155' }}>CSV 파일 선택 또는 드래그</span>
+                                                <span style={{ fontSize: '11px', color: '#94A3B8' }}>지원 포맷: .csv, .txt</span>
+                                                <input type="file" accept=".csv,.txt" onChange={handleCsvFileUpload} style={{ display: 'none' }} />
+                                            </label>
+
+                                            <div style={{
+                                                background: '#F8FAFC',
+                                                border: '1px solid #E2E8F0',
+                                                borderRadius: '8px',
+                                                padding: '12px 14px',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '10px'
+                                            }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <Info size={14} color="#3B82F6" />
+                                                    <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#1E293B' }}>CSV 작성 형식</span>
+                                                </div>
+
+                                                <div style={{ fontSize: '11.5px', color: '#64748B', lineHeight: 1.5 }}>
+                                                    첫 행에 반드시 <code style={{ background: '#E2E8F0', padding: '1px 5px', borderRadius: '4px', color: '#0F172A', fontWeight: 600 }}>pid</code>와 <code style={{ background: '#E2E8F0', padding: '1px 5px', borderRadius: '4px', color: '#0F172A', fontWeight: 600 }}>weight</code> 헤더가 포함되어야 합니다.
+                                                </div>
+
+                                                {/* 스프레드시트 느낌의 미니 표 프리뷰 */}
+                                                <div style={{
+                                                    background: '#FFFFFF',
+                                                    border: '1px solid #CBD5E1',
+                                                    borderRadius: '6px',
+                                                    overflow: 'hidden',
+                                                    fontSize: '11px',
+                                                    fontFamily: 'monospace'
+                                                }}>
+                                                    {/* 표 헤더 행 */}
+                                                    <div style={{
+                                                        display: 'grid',
+                                                        gridTemplateColumns: '1fr 1fr',
+                                                        background: '#F1F5F9',
+                                                        padding: '6px 12px',
+                                                        fontWeight: 700,
+                                                        color: '#334155',
+                                                        borderBottom: '1px solid #E2E8F0'
+                                                    }}>
+                                                        <span>pid</span>
+                                                        <span>weight</span>
+                                                    </div>
+                                                    {/* 표 데이터 행 1 */}
+                                                    <div style={{
+                                                        display: 'grid',
+                                                        gridTemplateColumns: '1fr 1fr',
+                                                        padding: '5px 12px',
+                                                        color: '#64748B',
+                                                        borderBottom: '1px solid #F1F5F9'
+                                                    }}>
+                                                        <span>10001</span>
+                                                        <span>1.25</span>
+                                                    </div>
+                                                    {/* 표 데이터 행 2 */}
+                                                    <div style={{
+                                                        display: 'grid',
+                                                        gridTemplateColumns: '1fr 1fr',
+                                                        padding: '5px 12px',
+                                                        color: '#64748B'
+                                                    }}>
+                                                        <span>10002</span>
+                                                        <span>0.80</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* 템플릿 연계 팁 */}
+                                                <div style={{
+                                                    fontSize: '11px',
+                                                    color: '#64748B',
+                                                    lineHeight: 1.4
+                                                }}>
+                                                    ※ 상단 툴바의 <strong>[템플릿 받기]</strong>로 현재 PID가 채워진 CSV를 바로 다운받으실 수 있습니다.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* 3. 붙여넣기 탭 (flex: 1로 세로 넉넉하게 확장) */}
+                                    {weightRightTab === 'paste' && (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, minHeight: 0 }}>
+                                            <style>{`
+                                                .dp-weight-paste-textarea::placeholder {
+                                                    color: #94A3B8 !important;
+                                                    opacity: 0.65 !important;
+                                                    font-weight: 400 !important;
+                                                }
+                                            `}</style>
+                                            <div>
+                                                <div style={{ fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>엑셀 데이터 붙여넣기</div>
+                                                <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '3px', lineHeight: 1.45 }}>
+                                                    엑셀에서 <code>[PID, 가중치]</code> 두 열 또는 <code>[가중치]</code> 한 열을 복사하여 아래에 붙여넣으세요.
+                                                </div>
+                                            </div>
+
+                                            <textarea
+                                                className="dp-weight-paste-textarea"
+                                                value={pasteAreaText}
+                                                onChange={(e) => setPasteAreaText(e.target.value)}
+                                                placeholder={`[입력 예시]\n10001\t1.5\n10002\t2.0\n10003\t0.8`}
+                                                style={{
+                                                    flex: 1,
+                                                    minHeight: '240px',
+                                                    width: '100%',
+                                                    padding: '10px 12px',
+                                                    border: '1px solid #CBD5E1',
+                                                    borderRadius: '6px',
+                                                    fontSize: '11.5px',
+                                                    fontFamily: 'monospace',
+                                                    color: '#1E293B',
+                                                    outline: 'none',
+                                                    resize: 'none',
+                                                    boxSizing: 'border-box',
+                                                    background: '#FAFAFA'
+                                                }}
+                                            />
+
+                                            <button
+                                                onClick={handleApplyPasteWeight}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '38px',
+                                                    borderRadius: '7px',
+                                                    border: 'none',
+                                                    background: 'var(--srt-primary-600, #3B82F6)',
+                                                    color: '#FFFFFF',
+                                                    fontSize: '12.5px',
+                                                    fontWeight: 700,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: '6px',
+                                                    cursor: 'pointer',
+                                                    boxShadow: '0 2px 4px rgba(59,130,246,0.2)',
+                                                    transition: 'all 0.15s ease'
+                                                }}
+                                                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.92'}
+                                                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                                            >
+                                                <Clipboard size={14} /> 붙여넣은 값 가중치에 적용
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
+                        </>
                     ) : (
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '14px', gap: '8px' }}>
                             <Info size={24} />

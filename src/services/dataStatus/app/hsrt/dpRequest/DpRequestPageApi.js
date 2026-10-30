@@ -171,6 +171,11 @@ export function DpRequestPageApi() {
         }
     );
 
+    /** 문항(컬럼) 선택 기반 PID별 가중치값 추출 및 요약 통계 조회 */
+    const extractColumnWeightValues = useMutation(
+        async (data) => await api.post(data, "/weight/extract-column-values", "API_BASE_URL_DATASTATUS")
+    );
+
     /** 신규 스터브 생성 API */
     const createStub = useMutation(
         async (data) => await api.post(data, "/dp-request/recoded/stubs/create", "API_BASE_URL_DATASTATUS"),
@@ -404,6 +409,7 @@ export function DpRequestPageApi() {
         getNextWeightId,
         deleteWeight,
         saveWeightSetPid,
+        extractColumnWeightValues,
         autoGenerateLogic,
         getAiModels,
         autoGenerateBannerAsync,
