@@ -17,8 +17,8 @@ const WATERFALL_MODE_OPTIONS = [
 ];
 
 const ENCODING_OPTIONS = [
-    { text: 'UTF-8 with BOM (최신 SPSS 권장)', value: 'utf-8' },
-    { text: 'CP949 (구버전 한글 깨짐 시)', value: 'cp949' }
+    { text: 'CP949 (구버전 한글 깨짐 시)', value: 'cp949' },
+    { text: 'UTF-8 with BOM (최신 SPSS 권장)', value: 'utf-8' }
 ];
 
 /**
@@ -48,7 +48,7 @@ const SpssSyntaxExportModal = ({
     // 2. 신텍스 옵션
     const [multiFormat, setMultiFormat] = useState('dichotomy');
     const [waterfallMode, setWaterfallMode] = useState('do_if');
-    const [encoding, setEncoding] = useState('utf-8');
+    const [encoding, setEncoding] = useState('cp949');
 
     // 3. 신텍스 결과 상태
     const [syntaxContent, setSyntaxContent] = useState('');

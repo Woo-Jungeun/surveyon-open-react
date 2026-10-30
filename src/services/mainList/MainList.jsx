@@ -25,15 +25,26 @@ import { Search, Pin, RotateCw } from 'lucide-react';
 const DateTimeCell = (props) => {
     const val = props.dataItem[props.field] || "";
     const parts = val.split(" ");
+
+    const handleCellClick = (e) => {
+        if (props.onRowClick) {
+            props.onRowClick({
+                dataItem: props.dataItem,
+                syntheticEvent: e,
+                nativeEvent: e.nativeEvent || e
+            });
+        }
+    };
+
     if (parts.length >= 2) {
         return (
-            <td colSpan={props.colSpan} className={props.className} style={{ ...props.style, textAlign: 'center', lineHeight: '1.3' }}>
+            <td colSpan={props.colSpan} className={props.className} style={{ ...props.style, textAlign: 'center', lineHeight: '1.3', cursor: 'pointer' }} onClick={handleCellClick}>
                 <div style={{ fontSize: '12px' }}>{parts[0]}</div>
                 <div style={{ fontSize: '11px', color: '#666' }}>{parts.slice(1).join(" ")}</div>
             </td>
         );
     }
-    return <td colSpan={props.colSpan} className={props.className} style={{ ...props.style, textAlign: 'center', fontSize: '12px' }}>{val}</td>;
+    return <td colSpan={props.colSpan} className={props.className} style={{ ...props.style, textAlign: 'center', fontSize: '12px', cursor: 'pointer' }} onClick={handleCellClick}>{val}</td>;
 };
 
 // 상단 고정(Pin) 커스텀 셀
@@ -77,23 +88,17 @@ const PinCell = (props) => {
                         width: '26px',
                         height: '26px',
                         borderRadius: '4px',
-                        border: isPinned ? '1px solid #C4B5FD' : '1px solid transparent',
-                        backgroundColor: isPinned ? '#F5F3FF' : 'transparent',
+                        border: 'none',
+                        backgroundColor: 'transparent',
                         cursor: 'pointer',
                         padding: 0,
                         transition: 'all 0.15s ease-in-out'
                     }}
                     onMouseEnter={(e) => {
-                        if (!isPinned) {
-                            e.currentTarget.style.backgroundColor = '#F5F3FF';
-                            e.currentTarget.style.borderColor = '#DDD6FE';
-                        }
+                        e.currentTarget.style.backgroundColor = '#EDE9FE';
                     }}
                     onMouseLeave={(e) => {
-                        if (!isPinned) {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.borderColor = 'transparent';
-                        }
+                        e.currentTarget.style.backgroundColor = 'transparent';
                     }}
                 >
                     <Pin
@@ -114,13 +119,26 @@ const PinCell = (props) => {
 // 프로젝트명 커스텀 셀 (최신 등록 프로젝트 뱃지 표출 - 보라색 메인 테마 적용)
 const ProjectNameCell = (props) => {
     const val = props.dataItem[props.field] || "";
-    const isLatest = props.latestProjectNum && props.dataItem.projectnum === props.latestProjectNum;
+    const isLatest = props.isLatest !== undefined
+        ? props.isLatest
+        : (props.latestProjectNum && props.dataItem.projectnum === props.latestProjectNum);
+
+    const handleCellClick = (e) => {
+        if (props.onRowClick) {
+            props.onRowClick({
+                dataItem: props.dataItem,
+                syntheticEvent: e,
+                nativeEvent: e.nativeEvent || e
+            });
+        }
+    };
 
     return (
         <td
             colSpan={props.colSpan}
             className={props.className}
-            style={{ ...props.style, textAlign: 'left', paddingRight: '12px' }}
+            style={{ ...props.style, textAlign: 'left', paddingRight: '12px', minWidth: '220px', cursor: 'pointer' }}
+            onClick={handleCellClick}
         >
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', width: '100%' }}>
                 <span
@@ -286,22 +304,24 @@ const GridRenderer = (props) => {
         window.requestAnimationFrame(step);
     }, [syncProgress?.percent]);
 
-    // 최신 등록 프로젝트 판별 (register_date 기준 최댓값)
-    const latestProjectNum = useMemo(() => {
+    // 등록일(register_date) 기준 현재(오늘)로부터 일주일(7일) 이내 등록된 최신 프로젝트 Set
+    const latestProjectSet = useMemo(() => {
         const list = dataState?.data || [];
-        if (!list.length) return null;
-        let latest = null;
-        let maxTime = -Infinity;
+        const set = new Set();
+        if (!list.length) return set;
+
+        const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+        const now = Date.now();
+
         for (const item of list) {
             if (!item.register_date) continue;
-            const dateStr = String(item.register_date).replace(/-/g, '/');
-            const time = new Date(dateStr).getTime();
-            if (!isNaN(time) && time > maxTime) {
-                maxTime = time;
-                latest = item.projectnum;
+            const time = new Date(String(item.register_date).replace(/-/g, '/')).getTime();
+            if (!isNaN(time) && (now - time) >= 0 && (now - time) <= SEVEN_DAYS_MS) {
+                set.add(item.projectnum);
             }
         }
-        return latest;
+
+        return set;
     }, [dataState?.data]);
 
     // 로컬 검색 필터링 및 상단 고정(topyn === 'y') 우선 정렬
@@ -372,6 +392,12 @@ const GridRenderer = (props) => {
                 .pinned-project-row:hover,
                 .k-grid tr.pinned-project-row:hover {
                     background-color: #EDE9FE !important;
+                }
+                .cmn_grid tbody tr {
+                    cursor: pointer;
+                }
+                .cmn_grid tbody tr td.pin-cell-td {
+                    cursor: default;
                 }
             `}</style>
             {syncProgress && (
@@ -544,11 +570,17 @@ const GridRenderer = (props) => {
                                 cellComponent = (cellProps) => (
                                     <ProjectNameCell
                                         {...cellProps}
-                                        latestProjectNum={latestProjectNum}
+                                        isLatest={latestProjectSet.has(cellProps.dataItem?.projectnum)}
+                                        onRowClick={onRowClick}
                                     />
                                 );
                             } else if (c.field === 'project_update_date' || c.field === 'register_date') {
-                                cellComponent = DateTimeCell;
+                                cellComponent = (cellProps) => (
+                                    <DateTimeCell
+                                        {...cellProps}
+                                        onRowClick={onRowClick}
+                                    />
+                                );
                             }
 
                             return (
@@ -606,7 +638,7 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
             { field: "no", title: "no", show: true, editable: false, width: "60px", allowHide: false },
             { field: "projectpof", title: "프로젝트\n번호", show: true, editable: false, width: "120px", allowHide: false },
             { field: "projectnum", title: "웹프로젝트\n번호", show: true, editable: false, width: "130px", allowHide: false },
-            { field: "projectname", title: "프로젝트명", show: true, editable: false, width: "280px", allowHide: false },
+            { field: "projectname", title: "프로젝트명", show: true, editable: false, allowHide: false },
             { field: "register_userid", title: "등록자명", show: true, editable: false, width: "80px", allowHide: false },
             { field: "register_date", title: "등록일", show: true, editable: false, width: "110px", allowHide: false },
             { field: "servername", title: "오픈\n서버정보", show: true, editable: false, width: "90px", allowHide: false },
