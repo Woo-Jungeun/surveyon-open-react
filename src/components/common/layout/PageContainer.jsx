@@ -28,6 +28,7 @@ import './PageLayout.css';
  * @param {React.ReactNode} children - 4번 메인 작업영역 본문
  */
 const PageContainer = forwardRef(({
+    id = "page-container",
     title,
     infoTooltip,
     headerActions,
@@ -53,6 +54,7 @@ const PageContainer = forwardRef(({
     return (
         <main
             ref={ref}
+            id={id}
             className={`page-container ${className}`}
             style={style}
             {...rest}
@@ -77,6 +79,7 @@ const PageContainer = forwardRef(({
 
             {/* 4번 영역: 메인 작업영역 */}
             <div
+                id="page-content"
                 className={`page-content ${contentPadding ? 'page-content-padded' : ''} ${scrollable ? 'page-content-scrollable' : ''} ${contentClassName}`}
                 style={contentStyle}
             >

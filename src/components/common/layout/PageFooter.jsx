@@ -7,9 +7,11 @@ import FooterSection from "@/services/homePage/FooterSection";
  * @param {string} [className=""] - 추가 커스텀 클래스
  * @param {React.CSSProperties} [style] - 인라인 스타일 (기본값: height 40px, padding 0 20px)
  */
-const PageFooter = ({ className = "", style = {} }) => {
+const PageFooter = ({ id = "app-footer", className = "", style = {} }) => {
     return (
         <FooterSection
+            id={id}
+            className={className}
             style={{
                 height: '40px',
                 padding: '0 20px',

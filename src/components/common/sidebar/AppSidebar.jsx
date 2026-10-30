@@ -36,7 +36,7 @@ import "@/services/dataStatus/app/menuBar/MenuBar.css";
  * 대메뉴(서비스)별 고유 색상, 로고, 메뉴 및 전용 기능(잔액, 대시보드 선택 등)을
  * 완벽하게 유지하면서 단일 파일로 일원화 관리합니다.
  */
-const AppSidebar = ({ service, onOpenProjectModal }) => {
+const AppSidebar = ({ service, onOpenProjectModal, id = "app-sidebar", ...restSidebarProps }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const modal = useContext(modalContext);
@@ -1008,6 +1008,7 @@ const AppSidebar = ({ service, onOpenProjectModal }) => {
   return (
     <>
       <Sidebar
+        id={id}
         brand={computedBrand}
         menuGroups={computedMenuGroups}
         projectInfo={projectInfoData}
@@ -1016,6 +1017,7 @@ const AppSidebar = ({ service, onOpenProjectModal }) => {
         moduleItems={moduleItems}
         extraActions={computedExtraActions}
         bottomActions={computedBottomActions}
+        {...restSidebarProps}
       />
 
       {/* 신규 데이터 모달 */}

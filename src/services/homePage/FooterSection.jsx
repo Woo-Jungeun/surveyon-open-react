@@ -1,9 +1,9 @@
 import React from "react";
 import logoRed from "@/assets/images/logo_red.png";
 
-const FooterSection = ({ style }) => {
+const FooterSection = ({ id = "app-footer", className = "", style }) => {
   return (
-    <footer className="hp-footer" style={{ boxSizing: 'border-box', ...style }}>
+    <footer id={id} className={`hp-footer ${className}`.trim()} style={{ boxSizing: 'border-box', ...style }}>
       <div className="hp-footer-inner">
         <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <img src={logoRed} alt="설문온" style={{ height: '30px' }} />

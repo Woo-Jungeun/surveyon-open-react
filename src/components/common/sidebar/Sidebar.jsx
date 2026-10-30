@@ -23,6 +23,7 @@ import "./Sidebar.css";
  * @param {ReactNode} bottomActions - 푸터 상단에 추가할 컨텐츠
  */
 const Sidebar = ({
+    id = "app-sidebar",
     brand,
     menuGroups = [],
     projectInfo,
@@ -30,7 +31,8 @@ const Sidebar = ({
     moduleItems = [],
     extraActions,
     bottomActions,
-    pageInfo
+    pageInfo,
+    ...rest
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -225,9 +227,9 @@ const Sidebar = ({
 
     return (
         <>
-            <aside className={`common-sidebar ${theme} theme-${theme} ${isCollapsed ? "collapsed" : ""}`} data-theme={theme === "blue" ? "data-dashboard" : theme}>
+            <aside id={id} className={`common-sidebar ${theme} theme-${theme} ${isCollapsed ? "collapsed" : ""}`} data-theme={theme === "blue" ? "data-dashboard" : theme} {...rest}>
                 {/* Header Area */}
-                <div className="sidebar-header">
+                <div id="app-sidebar-header" className="sidebar-header">
                     <div className="header-top" style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>
                         {!isHsrtCustomer && (
                             <>
@@ -348,7 +350,7 @@ const Sidebar = ({
                 )}
 
                 {/* Navigation Menu (Scrollable) */}
-                <nav className="sidebar-nav">
+                <nav id="app-sidebar-nav" className="sidebar-nav">
                     {/* Extra Actions (데이터 신규등록 등) - Scrollable */}
                     {extraActions && <div className="extra-actions-wrapper">{extraActions}</div>}
 
@@ -602,7 +604,7 @@ const Sidebar = ({
                 </nav>
 
                 {/* Footer / User Area */}
-                <div className="sidebar-footer" ref={userRef}>
+                <div id="app-sidebar-footer" className="sidebar-footer" ref={userRef}>
                     <div className="user-wrap">
                         {userOpen && (
                             <div className="user-dropdown">

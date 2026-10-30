@@ -22,6 +22,7 @@ import './PageLayout.css';
  * @param {React.CSSProperties} [style] - 인라인 스타일
  */
 const PageHeader = ({
+    id = "page-header",
     title,
     infoTooltip,
     actions,
@@ -36,7 +37,8 @@ const PageHeader = ({
     onDelete,
     deleteLabel = "삭제",
     className = "",
-    style = {}
+    style = {},
+    ...rest
 }) => {
     const [showTooltip, setShowTooltip] = useState(false);
     const tooltipRef = useRef(null);
@@ -54,9 +56,9 @@ const PageHeader = ({
     }, [showTooltip]);
 
     return (
-        <header className={`page-header ${className}`} style={style}>
+        <header id={id} className={`page-header ${className}`} style={style} {...rest}>
             {/* 좌측 영역: 타이틀 + 툴팁 + 검색 */}
-            <div className="page-header-left">
+            <div id="page-header-left" className="page-header-left">
                 <h2 className="page-header-title">
                     {title}
                     {infoTooltip && (
@@ -138,6 +140,7 @@ const PageHeader = ({
                     <div className="page-header-search">
                         <Search size={15} className="page-header-search-icon" />
                         <input
+                            id="page-search-input"
                             type="text"
                             placeholder={searchPlaceholder}
                             onChange={(e) => onSearch(e.target.value)}
@@ -148,12 +151,13 @@ const PageHeader = ({
             </div>
 
             {/* 우측 영역: 액션 버튼 그룹 */}
-            <div className="page-header-actions">
+            <div id="page-header-actions" className="page-header-actions">
                 {actions}
                 {children}
 
                 {onAdd && (
                     <button
+                        id="page-header-add-btn"
                         type="button"
                         onClick={onAdd}
                         className="cmn-btn cmn-btn-outline"
@@ -165,6 +169,7 @@ const PageHeader = ({
 
                 {onDelete && (
                     <button
+                        id="page-header-delete-btn"
                         type="button"
                         onClick={onDelete}
                         className="cmn-btn cmn-btn-danger"
@@ -176,6 +181,7 @@ const PageHeader = ({
 
                 {onSave && (
                     <button
+                        id="page-header-save-btn"
                         type="button"
                         onClick={saveDisabled ? undefined : onSave}
                         disabled={saveDisabled}

@@ -96,6 +96,29 @@ export default MyServicePage;
 - `className="cmn-btn cmn-btn-outline"`: 테두리 버튼
 - `className="cmn-btn cmn-btn-danger"`: 위험/삭제 전용 빨간 버튼
 
+### 🎯 크롤링 및 E2E 테스트 자동화용 고유 ID 규격
+화면 자동화 테스트(Selenium, Playwright, Puppeteer 등) 및 데이터 크롤링을 위해 모든 공통 레이아웃 컴포넌트의 핵심 영역에 표준 고유 `id`가 부여되어 있습니다:
+
+| 컴포넌트 | 대상 태그 / 영역 | 기본 부여 `id` | 설명 및 테스트 활용 |
+| :--- | :--- | :--- | :--- |
+| **`AppLayout`** | 전체 루트 프레임 | `id="app-root"` | 최상위 컨테이너 (`id` prop으로 커스텀 가능) |
+| **`AppLayout`** | 메인 우측 섹션 | `id="app-layout-main"` | 사이드바를 제외한 우측 전체 레이아웃 |
+| **`AppLayout`** | 페이지 본문 래퍼 | `id="app-main-content"` | 라우터 Outlet/페이지가 렌더링되는 중앙 영역 |
+| **`PageContainer`** | 화면 최상위 `<main>` | `id="page-container"` | 개별 화면 최상위 컨테이너 (`id` prop 가능) |
+| **`PageContainer`** | 실제 작업 본문 | `id="page-content"` | 그리드/테이블이 위치하는 메인 스크롤 캔버스 |
+| **`PageHeader`** | 상단 타이틀 바 | `id="page-header"` | 상단 바 전체 (`id` prop 가능) |
+| **`PageHeader`** | 좌측 타이틀 영역 | `id="page-header-left"` | 제목 및 도움말 툴팁 |
+| **`PageHeader`** | 검색창 input | `id="page-search-input"` | 검색어 자동 입력 및 조회 테스트 |
+| **`PageHeader`** | 우측 액션 버튼 모음 | `id="page-header-actions"` | 버튼 모음 래퍼 |
+| **`PageHeader`** | [추가] 버튼 | `id="page-header-add-btn"` | 신규 행/데이터 추가 버튼 클릭 |
+| **`PageHeader`** | [삭제] 버튼 | `id="page-header-delete-btn"` | 선택 행/데이터 삭제 버튼 클릭 |
+| **`PageHeader`** | [저장] 버튼 | `id="page-header-save-btn"` | 저장/적용 버튼 클릭 |
+| **`AppSidebar`** | 사이드바 `<aside>` | `id="app-sidebar"` | 좌측 네비게이션 바 전체 |
+| **`AppSidebar`** | 사이드바 헤더 | `id="app-sidebar-header"` | 홈 버튼, 모듈 스위처 메뉴, 로고 영역 |
+| **`AppSidebar`** | 사이드바 메뉴 네비 | `id="app-sidebar-nav"` | 전체 스크롤 메뉴 리스트 |
+| **`AppSidebar`** | 사이드바 푸터 | `id="app-sidebar-footer"` | 사용자 프로필 및 로그아웃 영역 |
+| **`PageFooter`** | 하단 푸터 `<footer>` | `id="app-footer"` | 카피라이트 및 시스템 운영 상태 |
+
 ---
 
 ## 3. 통합 사이드바 (`AppSidebar`) 및 메뉴 구성

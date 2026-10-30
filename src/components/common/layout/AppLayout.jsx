@@ -18,6 +18,7 @@ import './PageLayout.css';
  * @param {React.CSSProperties} [style] - 인라인 스타일
  */
 const AppLayout = ({
+    id = "app-root",
     service = 'hsrt',
     hideFooter = false,
     hideSidebar = false,
@@ -55,6 +56,7 @@ const AppLayout = ({
 
     return (
         <div
+            id={id}
             className={`app-layout-root ${className}`}
             style={style}
             data-theme={resolvedTheme}
@@ -64,13 +66,13 @@ const AppLayout = ({
             {!hideSidebar && <AppSidebar service={service} {...sidebarProps} />}
 
             {/* 메인 섹션 */}
-            <section className="app-layout-main">
-                <div className="app-layout-content">
+            <section id="app-layout-main" className="app-layout-main">
+                <div id="app-main-content" className="app-layout-content">
                     {children || <Outlet />}
                 </div>
 
                 {/* 3번 영역: 하단 공통 푸터 */}
-                {!hideFooter && <PageFooter />}
+                {!hideFooter && <PageFooter id="app-footer" />}
             </section>
         </div>
     );
