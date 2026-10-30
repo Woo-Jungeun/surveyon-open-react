@@ -1054,6 +1054,10 @@ const MapManagementPage = () => {
                 <CustomDownloadModal
                     isOpen={customDownloadModalOpen}
                     onClose={() => setCustomDownloadModalOpen(false)}
+                    onCloseAll={() => {
+                        setCustomDownloadModalOpen(false);
+                        setDownloadModalOpen(false);
+                    }}
                     variables={variables}
                     customFilterInfo={customFilterInfo}
                     onApplyCustomFilter={(info) => setCustomFilterInfo(info)}

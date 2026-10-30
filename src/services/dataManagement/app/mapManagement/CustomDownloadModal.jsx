@@ -84,6 +84,7 @@ const SUB_FORMAT_OPTIONS = [
 const CustomDownloadModal = ({
     isOpen,
     onClose,
+    onCloseAll,
     variables = [],
     customFilterInfo = null,
     onApplyCustomFilter,
@@ -91,6 +92,14 @@ const CustomDownloadModal = ({
 }) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
+
+    const handleCloseAll = () => {
+        if (onCloseAll) {
+            onCloseAll();
+        } else if (onClose) {
+            onClose();
+        }
+    };
 
     const {
         exportStates,
@@ -630,7 +639,7 @@ const CustomDownloadModal = ({
 
             window.location.href = `surveyonexport://run?${p.toString()}`;
 
-            // ④ 2초마다 구동 확인 (POST /export/supply/tool/status) — 10초 안에 started/alive 가 없으면 설치 안내
+            // ④ PC 도구 구동 확인 (POST /export/supply/tool/status)
             let remain = 10;
             let finished = false;
             let lastDownloadUrl = '';
@@ -640,29 +649,57 @@ const CustomDownloadModal = ({
                 setCheckingTool(false);
             };
 
-            countdownTimerRef.current = setInterval(() => {
+            const isToolRunning = (res) => {
+                if (!res) return false;
+                const rj = res.resultjson || {};
+                const checkVal = (v) => v === true || v === 'true' || v === 1 || v === '1';
+                if (checkVal(rj.started) || checkVal(rj.alive) || checkVal(rj.running) || checkVal(rj.isStarted)) return true;
+                if (checkVal(res.started) || checkVal(res.alive) || checkVal(res.running) || checkVal(res.isStarted)) return true;
+                const st = String(rj.status || res.status || '').toLowerCase();
+                if (['started', 'running', 'working', 'progress', 'processing'].includes(st)) return true;
+                return false;
+            };
+
+            const statusPayload = { pn: modalPn, user: userId, ticket };
+
+            countdownTimerRef.current = setInterval(async () => {
                 remain -= 1;
                 setCountdown(Math.max(0, remain));
                 if (remain <= 0 && !finished) {
-                    finish();
-                    showToolInstallGuide(lastDownloadUrl || `${host.replace(/\/+$/, '')}/export/supply/tool/download`);
+                    // 시간 만료 직전 최신 상태 1회 추가 확인 (경합 방지)
+                    try {
+                        const finalRes = await exportSupplyToolStatus.mutateAsync(statusPayload);
+                        if (finished) return;
+                        if (isToolRunning(finalRes)) {
+                            finish();
+                            modal.showAlert("알림", "PC 내보내기 도구 창에서 작업이 진행됩니다.");
+                            handleCloseAll();
+                            return;
+                        }
+                    } catch (e) { }
+
+                    if (!finished) {
+                        finish();
+                        showToolInstallGuide(lastDownloadUrl || `${host.replace(/\/+$/, '')}/export/supply/tool/download`);
+                    }
                 }
             }, 1000);
 
             toolPollTimerRef.current = setInterval(async () => {
                 try {
-                    const statusRes = await exportSupplyToolStatus.mutateAsync({ pn: modalPn, user: userId });
+                    const statusRes = await exportSupplyToolStatus.mutateAsync(statusPayload);
                     if (finished) return;
                     const rj = statusRes?.resultjson || {};
                     if (rj.downloadUrl || statusRes?.downloadUrl) lastDownloadUrl = rj.downloadUrl || statusRes.downloadUrl;
-                    if (String(statusRes?.success) === '777' && (rj.started || rj.alive || statusRes?.started)) {
+                    if (isToolRunning(statusRes)) {
                         finish();
                         modal.showAlert("알림", "PC 내보내기 도구 창에서 작업이 진행됩니다.");
+                        handleCloseAll();
                     }
                 } catch (e) {
                     console.warn("exportSupplyToolStatus error:", e);
                 }
-            }, 2000);
+            }, 1500);
 
         } catch (err) {
             stopToolWatch();
@@ -966,11 +1003,8 @@ const CustomDownloadModal = ({
                 a.remove();
                 URL.revokeObjectURL(downloadUrl);
 
-                if (refound === '1') {
-                    modal.showAlert("알림", `확인 뒤 데이터가 바뀌어 다시 찾았습니다 ─ ${matchedCount || checkResult?.count}건`);
-                } else if (matchedCount) {
-                    modal.showAlert("알림", `받았습니다 ─ ${matchedCount}건`);
-                }
+                modal.showAlert("알림", "커스텀 다운로드가 완료되었습니다.");
+                handleCloseAll();
                 return;
             }
 
@@ -1837,21 +1871,6 @@ const CustomDownloadModal = ({
                                     <span className="cd-filename-text">
                                         {/\.zip$/i.test(fileStem) ? fileStem : `${fileStem}.zip`}
                                     </span>
-                                </div>
-                            )}
-
-                            {/* 안내 및 환경 권장사항 뱃지 (PC 도구 사유는 버튼 아래 reason 으로 대체) */}
-                            {statusMode === 'ready' && checkResult && !(isToolMode && estimate?.reason) && (
-                                <div className="cd-environment-notice-badge">
-                                    {isToolMode ? (
-                                        <div className="cd-env-tool-notice">
-                                            <strong>PC 도구 생성 권장:</strong> 응답 {checkResult.count.toLocaleString()}건은 서버 직접 생성 한도를 초과하여 전용 PC 내보내기 도구로 내려받습니다.
-                                        </div>
-                                    ) : (
-                                        <div className="cd-env-server-notice">
-                                            <strong>서버 직접 생성:</strong> 응답 {checkResult.count.toLocaleString()}건{checkResult.fieldCount ? ` · 필드 ${checkResult.fieldCount.toLocaleString()}개` : ''}로 즉시 브라우저에서 다운로드할 수 있습니다.
-                                        </div>
-                                    )}
                                 </div>
                             )}
                         </div>

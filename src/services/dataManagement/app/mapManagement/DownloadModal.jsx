@@ -242,6 +242,17 @@ const DownloadModal = ({ isOpen, onClose, onCustomDownload, customFilterInfo = n
                 setCountdown(prev => Math.max(0, prev - 1));
             }, 1000);
 
+            const isToolRunning = (res) => {
+                if (!res) return false;
+                const rj = res.resultjson || {};
+                const checkVal = (v) => v === true || v === 'true' || v === 1 || v === '1';
+                if (checkVal(rj.started) || checkVal(rj.alive) || checkVal(rj.running) || checkVal(rj.isStarted)) return true;
+                if (checkVal(res.started) || checkVal(res.alive) || checkVal(res.running) || checkVal(res.isStarted)) return true;
+                const st = String(rj.status || res.status || '').toLowerCase();
+                if (['started', 'running', 'working', 'progress', 'processing'].includes(st)) return true;
+                return false;
+            };
+
             // ③ 10초 뒤 1회 구동 확인 (POST /export/supply/tool/status)
             setTimeout(async () => {
                 if (countdownTimerRef.current) {
@@ -252,11 +263,12 @@ const DownloadModal = ({ isOpen, onClose, onCustomDownload, customFilterInfo = n
                 setDownloading(false);
 
                 try {
-                    const statusRes = await exportSupplyToolStatus.mutateAsync({ pn, user: userId });
-                    const isStarted = statusRes?.resultjson?.started ?? statusRes?.started ?? false;
+                    const statusRes = await exportSupplyToolStatus.mutateAsync({ pn, user: userId, ticket });
+                    const isStarted = isToolRunning(statusRes);
 
                     if (isStarted) {
                         modal.showAlert("알림", "PC 내보내기 도구 창에서 작업이 진행됩니다.");
+                        handleCloseModal();
                     } else {
                         const downloadUrl = statusRes?.resultjson?.downloadUrl || statusRes?.downloadUrl || `${host.replace(/\/+$/, '')}/export/supply/tool/download`;
                         modal.showConfirm(
@@ -453,6 +465,8 @@ const DownloadModal = ({ isOpen, onClose, onCustomDownload, customFilterInfo = n
                 if (signalrConn) {
                     try { signalrConn.stop(); } catch (e) { }
                 }
+                modal.showAlert("알림", "다운로드가 완료되었습니다.");
+                handleCloseModal();
                 return;
             }
 
@@ -544,6 +558,7 @@ const DownloadModal = ({ isOpen, onClose, onCustomDownload, customFilterInfo = n
             fileBlob: null,
             filename: ''
         });
+        modal.showAlert("알림", "다운로드가 완료되었습니다.");
         handleCloseModal();
     };
 
