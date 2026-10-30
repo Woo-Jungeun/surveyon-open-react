@@ -177,7 +177,20 @@ export function MainListApi() {
         }
     );
 
+    // 상단 고정 토글 API
+    const toggleProjectTop = useMutation(
+        async ({ user, projectnum, topyn }) => {
+            return await api.post({
+                gb: "top_toggle",
+                user: user,
+                projectnum: projectnum,
+                topyn: topyn
+            }, "/project/top_toggle", "API_BASE_URL_OPENAI");
+        }
+    );
+
     return {
-        mainListData
+        mainListData,
+        toggleProjectTop
     };
 }

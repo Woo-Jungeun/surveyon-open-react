@@ -11,7 +11,7 @@ import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import GridDataCount from "@/components/common/grid/GridDataCount";
 import { process } from "@progress/kendo-data-query";
 import DataHeader from "@/services/dataStatus/components/DataHeader";
-import { Search } from 'lucide-react';
+import { Search, Pin, RotateCw } from 'lucide-react';
 
 
 /**
@@ -36,6 +36,129 @@ const DateTimeCell = (props) => {
     return <td colSpan={props.colSpan} className={props.className} style={{ ...props.style, textAlign: 'center', fontSize: '12px' }}>{val}</td>;
 };
 
+// 상단 고정(Pin) 커스텀 셀
+const PinCell = (props) => {
+    const { dataItem, onTogglePin, isToggling } = props;
+    const isPinned = dataItem?.topyn === 'y';
+
+    const handleClick = (e) => {
+        e.stopPropagation();
+        if (isToggling) return; // 통신 중 중복 클릭 방지
+        if (onTogglePin) {
+            onTogglePin(dataItem);
+        }
+    };
+
+    return (
+        <td
+            colSpan={props.colSpan}
+            className={`${props.className || ''} pin-cell-td`}
+            onClick={(e) => {
+                // 고정 컬럼 셀 클릭 시 행 선택(프로젝트 선택/이동) 이벤트 방지
+                e.stopPropagation();
+            }}
+            style={{
+                ...props.style,
+                textAlign: 'center',
+                padding: '4px 0',
+                verticalAlign: 'middle',
+                cursor: 'default'
+            }}
+        >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <button
+                    type="button"
+                    title={isPinned ? "상단 고정 해제" : "상단 고정"}
+                    onClick={handleClick}
+                    style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '26px',
+                        height: '26px',
+                        borderRadius: '4px',
+                        border: isPinned ? '1px solid #C4B5FD' : '1px solid transparent',
+                        backgroundColor: isPinned ? '#F5F3FF' : 'transparent',
+                        cursor: 'pointer',
+                        padding: 0,
+                        transition: 'all 0.15s ease-in-out'
+                    }}
+                    onMouseEnter={(e) => {
+                        if (!isPinned) {
+                            e.currentTarget.style.backgroundColor = '#F5F3FF';
+                            e.currentTarget.style.borderColor = '#DDD6FE';
+                        }
+                    }}
+                    onMouseLeave={(e) => {
+                        if (!isPinned) {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.borderColor = 'transparent';
+                        }
+                    }}
+                >
+                    <Pin
+                        size={15}
+                        color={isPinned ? '#5A4BFF' : '#94A3B8'}
+                        fill={isPinned ? '#5A4BFF' : 'none'}
+                        style={{
+                            transform: isPinned ? 'rotate(45deg)' : 'none',
+                            transition: 'all 0.15s ease'
+                        }}
+                    />
+                </button>
+            </div>
+        </td>
+    );
+};
+
+// 프로젝트명 커스텀 셀 (최신 등록 프로젝트 뱃지 표출 - 보라색 메인 테마 적용)
+const ProjectNameCell = (props) => {
+    const val = props.dataItem[props.field] || "";
+    const isLatest = props.latestProjectNum && props.dataItem.projectnum === props.latestProjectNum;
+
+    return (
+        <td
+            colSpan={props.colSpan}
+            className={props.className}
+            style={{ ...props.style, textAlign: 'left' }}
+        >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+                <span
+                    style={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        fontWeight: 400,
+                        color: 'inherit'
+                    }}
+                    title={val}
+                >
+                    {val}
+                </span>
+                {isLatest && (
+                    <span
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            padding: '1px 6px',
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            lineHeight: '13px',
+                            color: '#5A4BFF',
+                            backgroundColor: '#EDE9FE',
+                            border: '1px solid #C4B5FD',
+                            borderRadius: '4px',
+                            flexShrink: 0
+                        }}
+                    >
+                        최신
+                    </span>
+                )}
+            </div>
+        </td>
+    );
+};
+
 // grid rendering 
 const GridRenderer = (props) => {
     const {
@@ -43,6 +166,7 @@ const GridRenderer = (props) => {
         setSelectedState,
         idGetter,
         dataState,
+        setDataState,
         dataItemKey,
         selectedField,
         searchText,
@@ -53,11 +177,88 @@ const GridRenderer = (props) => {
         onRowClick,
         gridSkip,
         setGridSkip,
-        syncProgress
+        syncProgress,
+        toggleProjectTop,
+        userId,
+        handleSearch,
+        isLoading
     } = props;
 
     // Number animation matching SurveyTestProgressModal.jsx
     const [displayNum, setDisplayNum] = useState(0);
+    const [togglingProjectNum, setTogglingProjectNum] = useState(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    // 프로젝트 목록 새로고침 핸들러
+    const handleRefresh = useCallback(async () => {
+        if (isRefreshing || !handleSearch) return;
+        setIsRefreshing(true);
+        try {
+            await handleSearch({
+                params: {
+                    user: userId || "",
+                    gb: "list"
+                }
+            });
+        } finally {
+            setTimeout(() => {
+                setIsRefreshing(false);
+            }, 600);
+        }
+    }, [isRefreshing, handleSearch, userId]);
+
+    // 상단 고정 토글 핸들러
+    const handleTogglePin = useCallback(async (item) => {
+        if (!item?.projectnum || togglingProjectNum) return;
+
+        const currentTopYn = item.topyn === 'y' ? 'y' : 'n';
+        const nextTopYn = currentTopYn === 'y' ? 'n' : 'y';
+        const projectnum = item.projectnum;
+
+        setTogglingProjectNum(projectnum);
+
+        // 1. 낙관적 업데이트 (즉시 UI 반영)
+        if (setDataState) {
+            setDataState(prev => {
+                const nextList = (prev.data || []).map(p => {
+                    if (p.projectnum === projectnum) {
+                        return { ...p, topyn: nextTopYn };
+                    }
+                    return p;
+                });
+                return { ...prev, data: nextList };
+            });
+        }
+
+        try {
+            const res = await toggleProjectTop.mutateAsync({
+                user: userId || "",
+                projectnum: projectnum,
+                topyn: nextTopYn
+            });
+
+            if (String(res?.success) !== '777') {
+                throw new Error(res?.message || res?.Message || "상단 고정 설정에 실패했습니다.");
+            }
+        } catch (err) {
+            console.error("toggleProjectTop failed:", err);
+            // 실패 시 롤백
+            if (setDataState) {
+                setDataState(prev => {
+                    const rollbackList = (prev.data || []).map(p => {
+                        if (p.projectnum === projectnum) {
+                            return { ...p, topyn: currentTopYn };
+                        }
+                        return p;
+                    });
+                    return { ...prev, data: rollbackList };
+                });
+            }
+            alert(err?.message || "상단 고정 처리 중 오류가 발생했습니다.");
+        } finally {
+            setTogglingProjectNum(null);
+        }
+    }, [userId, togglingProjectNum, toggleProjectTop, setDataState]);
 
     useEffect(() => {
         if (!syncProgress) {
@@ -82,23 +283,94 @@ const GridRenderer = (props) => {
         window.requestAnimationFrame(step);
     }, [syncProgress?.percent]);
 
-    // 로컬 검색 필터링
+    // 최신 등록 프로젝트 판별 (register_date 기준 최댓값)
+    const latestProjectNum = useMemo(() => {
+        const list = dataState?.data || [];
+        if (!list.length) return null;
+        let latest = null;
+        let maxTime = -Infinity;
+        for (const item of list) {
+            if (!item.register_date) continue;
+            const dateStr = String(item.register_date).replace(/-/g, '/');
+            const time = new Date(dateStr).getTime();
+            if (!isNaN(time) && time > maxTime) {
+                maxTime = time;
+                latest = item.projectnum;
+            }
+        }
+        return latest;
+    }, [dataState?.data]);
+
+    // 로컬 검색 필터링 및 상단 고정(topyn === 'y') 우선 정렬
     const filteredData = useMemo(() => {
         const list = dataState?.data || [];
-        if (!searchText.trim()) return list;
-        const query = searchText.toLowerCase().trim();
-        return list.filter(item => {
-            const projectPof = (item.projectpof || '').toLowerCase();
-            const projectNum = (item.projectnum || '').toLowerCase();
-            const projectName = (item.projectname || '').toLowerCase();
-            const registerUser = (item.register_userid || item.register_username || item.register_name || '').toLowerCase();
-            const projectUseName = (item.project_use_name || item.project_user_name || '').toLowerCase();
-            return projectPof.includes(query) || projectNum.includes(query) || projectName.includes(query) || registerUser.includes(query) || projectUseName.includes(query);
-        });
-    }, [dataState?.data, searchText]);
+        let result = list;
+        if (searchText.trim()) {
+            const query = searchText.toLowerCase().trim();
+            result = list.filter(item => {
+                const projectPof = (item.projectpof || '').toLowerCase();
+                const projectNum = (item.projectnum || '').toLowerCase();
+                const projectName = (item.projectname || '').toLowerCase();
+                const registerUser = (item.register_userid || item.register_username || item.register_name || '').toLowerCase();
+                const projectUseName = (item.project_use_name || item.project_user_name || '').toLowerCase();
+                return projectPof.includes(query) || projectNum.includes(query) || projectName.includes(query) || registerUser.includes(query) || projectUseName.includes(query);
+            });
+        }
+
+        // 상단 고정 항목과 일반 항목 분리
+        const pinned = [];
+        const unpinned = [];
+        for (const item of result) {
+            if (item.topyn === 'y') {
+                pinned.push(item);
+            } else {
+                unpinned.push(item);
+            }
+        }
+
+        // 정렬 조건 적용 시 고정 항목과 일반 항목 각각 내부에서 정렬 유지
+        if (sort && sort.length > 0) {
+            const sortedPinned = process(pinned, { sort }).data;
+            const sortedUnpinned = process(unpinned, { sort }).data;
+            return [...sortedPinned, ...sortedUnpinned];
+        }
+
+        return [...pinned, ...unpinned];
+    }, [dataState?.data, searchText, sort]);
+
+    // 상단 고정(Pin) 프로젝트 행 강조 렌더러 (설문온 메인 보라색 테마)
+    const rowRender = useCallback((trElement, rowProps) => {
+        const isPinned = rowProps.dataItem?.topyn === 'y';
+        if (isPinned) {
+            const existingStyle = trElement.props.style || {};
+            const existingClassName = trElement.props.className || '';
+            return React.cloneElement(
+                trElement,
+                {
+                    ...trElement.props,
+                    className: `${existingClassName} pinned-project-row`.trim(),
+                    style: {
+                        ...existingStyle,
+                        backgroundColor: '#F5F3FF', // 상단 고정 행 은은한 보라색 틴트 배경
+                    }
+                },
+                trElement.props.children
+            );
+        }
+        return trElement;
+    }, []);
 
     return (
         <div className="grid-wrapper" style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", position: "relative" }}>
+            <style>{`
+                .pinned-project-row {
+                    background-color: #F5F3FF !important;
+                }
+                .pinned-project-row:hover,
+                .k-grid tr.pinned-project-row:hover {
+                    background-color: #EDE9FE !important;
+                }
+            `}</style>
             {syncProgress && (
                 <div className="sync-progress-overlay">
                     <div className="sync-progress-card">
@@ -121,9 +393,33 @@ const GridRenderer = (props) => {
                 </div>
             )}
             <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                <div style={{ padding: '12px 16px', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexShrink: 0 }}>
-                    <div style={{ position: 'relative', width: '460px' }}>
-                        <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 1 }} />
+                <div style={{
+                    padding: '12px 20px',
+                    background: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '16px',
+                    flexShrink: 0,
+                    borderBottom: '1px solid #F1F5F9'
+                }}>
+                    {/* 좌측: 건수 표시 */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#64748B', minWidth: '130px' }}>
+                        <span>전체</span>
+                        <strong style={{ color: '#5A4BFF', fontWeight: 700 }}>
+                            {dataState?.data?.length || 0}
+                        </strong>
+                        <span>건</span>
+                        {searchText.trim() && (
+                            <span style={{ fontSize: '12px', color: '#94A3B8' }}>
+                                (검색 {filteredData.length}건)
+                            </span>
+                        )}
+                    </div>
+
+                    {/* 중앙: 검색창 */}
+                    <div style={{ position: 'relative', width: '460px', maxWidth: '100%' }}>
+                        <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 1 }} />
                         <input
                             type="text"
                             placeholder="프로젝트명, 번호, 담당자를 검색하세요"
@@ -134,24 +430,74 @@ const GridRenderer = (props) => {
                             }}
                             style={{
                                 width: '100%',
-                                height: '32px',
-                                padding: '6px 12px 6px 32px',
+                                height: '34px',
+                                padding: '6px 12px 6px 34px',
                                 border: '1px solid #cbd5e1',
-                                borderRadius: '6px',
+                                borderRadius: '8px',
                                 fontSize: '13px',
                                 outline: 'none',
                                 boxSizing: 'border-box',
                                 transition: 'all 0.15s ease-in-out'
                             }}
                             onFocus={(e) => {
-                                e.target.style.borderColor = '#7C3AED';
-                                e.target.style.boxShadow = '0 0 0 3px rgba(124, 58, 237, 0.12)';
+                                e.target.style.borderColor = '#5A4BFF';
+                                e.target.style.boxShadow = '0 0 0 3px rgba(90, 75, 255, 0.12)';
                             }}
                             onBlur={(e) => {
                                 e.target.style.borderColor = '#cbd5e1';
                                 e.target.style.boxShadow = 'none';
                             }}
                         />
+                    </div>
+
+                    {/* 우측: 새로고침 버튼 */}
+                    <div style={{ minWidth: '130px', display: 'flex', justifyContent: 'flex-end' }}>
+                        <button
+                            type="button"
+                            title="프로젝트 목록 새로고침"
+                            onClick={handleRefresh}
+                            disabled={isRefreshing || isLoading}
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                height: '34px',
+                                padding: '0 12px',
+                                borderRadius: '8px',
+                                border: '1px solid #E2E8F0',
+                                backgroundColor: '#fff',
+                                color: '#475569',
+                                fontSize: '13px',
+                                fontWeight: 500,
+                                cursor: isRefreshing || isLoading ? 'default' : 'pointer',
+                                transition: 'all 0.15s ease-in-out',
+                                outline: 'none',
+                                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
+                            }}
+                            onMouseEnter={(e) => {
+                                if (!isRefreshing && !isLoading) {
+                                    e.currentTarget.style.borderColor = '#5A4BFF';
+                                    e.currentTarget.style.color = '#5A4BFF';
+                                    e.currentTarget.style.backgroundColor = '#F5F3FF';
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (!isRefreshing && !isLoading) {
+                                    e.currentTarget.style.borderColor = '#E2E8F0';
+                                    e.currentTarget.style.color = '#475569';
+                                    e.currentTarget.style.backgroundColor = '#fff';
+                                }
+                            }}
+                        >
+                            <RotateCw
+                                size={14}
+                                style={{
+                                    transform: isRefreshing || isLoading ? 'rotate(360deg)' : 'none',
+                                    transition: isRefreshing || isLoading ? 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)' : 'none'
+                                }}
+                            />
+                            <span>새로고침</span>
+                        </button>
                     </div>
                 </div>
                 <div className="cmn_grid singlehead" style={{ flex: 1, height: "100%", overflow: "hidden" }}>
@@ -173,6 +519,7 @@ const GridRenderer = (props) => {
                             },
                             sort,
                             onRowClick,
+                            rowRender,
                             scrollable: "virtual",
                             rowHeight: 40,
                             pageSize: 50,
@@ -181,6 +528,26 @@ const GridRenderer = (props) => {
                         }}
                     >
                         {columns.filter(c => c.show !== false).map((c) => {
+                            let cellComponent = undefined;
+                            if (c.field === 'topyn') {
+                                cellComponent = (cellProps) => (
+                                    <PinCell
+                                        {...cellProps}
+                                        onTogglePin={handleTogglePin}
+                                        isToggling={togglingProjectNum === cellProps.dataItem?.projectnum}
+                                    />
+                                );
+                            } else if (c.field === 'projectname') {
+                                cellComponent = (cellProps) => (
+                                    <ProjectNameCell
+                                        {...cellProps}
+                                        latestProjectNum={latestProjectNum}
+                                    />
+                                );
+                            } else if (c.field === 'project_update_date' || c.field === 'register_date') {
+                                cellComponent = DateTimeCell;
+                            }
+
                             return (
                                 <Column
                                     key={c.field}
@@ -189,11 +556,7 @@ const GridRenderer = (props) => {
                                     width={c.width}
                                     editable={c.editable}
                                     headerClassName="k-header-center"
-                                    cell={
-                                        c.field === 'project_update_date' || c.field === 'register_date'
-                                            ? DateTimeCell
-                                            : undefined
-                                    }
+                                    cell={cellComponent}
                                 />
                             );
                         })}
@@ -232,10 +595,11 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
         };
     }, []);
 
-    const { mainListData } = MainListApi();
+    const { mainListData, toggleProjectTop } = MainListApi();
 
     const [columns, setColumns] = useState(() =>
         [
+            { field: "topyn", title: "고정", show: true, editable: false, width: "55px", allowHide: false },
             { field: "no", title: "no", show: true, editable: false, width: "60px", allowHide: false },
             { field: "projectpof", title: "프로젝트\n번호", show: true, editable: false, width: "120px", allowHide: false },
             { field: "projectnum", title: "웹프로젝트\n번호", show: true, editable: false, width: "130px", allowHide: false },
@@ -263,6 +627,12 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
     const from = getFromSource();
 
     const onRowClick = useCallback((e) => {
+        // 고정(topyn) 컬럼의 셀 또는 핀 버튼을 클릭한 경우 행 선택 이벤트 무시
+        const target = e?.syntheticEvent?.target || e?.nativeEvent?.target || e?.target;
+        if (target && target.closest && target.closest('.pin-cell-td')) {
+            return;
+        }
+
         const { projectnum, projectname, servername, projectpof, merge_pn, merge_pn_text, usergroup } = e.dataItem;
 
         // 어떤 모드(팝업/페이지 전환)에서든 프로젝트가 선택되면 공통적으로 세션 최신화
@@ -356,6 +726,8 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
                             gridSkip={gridSkip}
                             setGridSkip={setGridSkip}
                             syncProgress={syncProgress}
+                            toggleProjectTop={toggleProjectTop}
+                            userId={auth?.user?.userId || ""}
                         />
                     )}
                 />
