@@ -116,10 +116,16 @@ const AppSidebar = ({ service, onOpenProjectModal }) => {
     if (!userId || !pn) return;
     try {
       const result = await getDataInfo.mutateAsync({ user: userId, pn });
-      if (String(result?.success) === '777') {
-        const rawDate = currentMode === "fieldManagement"
-          ? result.resultjson.mngParquetBakedAt
-          : result.resultjson.parquetBakedAt;
+      if (String(result?.success) === '777' && result?.resultjson) {
+        let rawDate = null;
+        if (currentMode === "hsrt") {
+          rawDate = result.resultjson.parquetBakedAt;
+        } else if (currentMode === "fieldManagement") {
+          rawDate = result.resultjson.mngParquetBakedAt;
+        } else if (currentMode === "dataManagement") {
+          rawDate = result.resultjson.answersSyncedAt;
+        }
+
         setPageInfo(prev => ({
           ...prev,
           processedAt: formatDate(rawDate)
