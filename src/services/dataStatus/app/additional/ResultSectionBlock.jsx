@@ -247,14 +247,15 @@ export const ResultSectionBlock = ({
                     user: userId,
                     table: {
                         id: resultData?.table_id || 'T1',
-                        stub: isTranspose ? (xInfo || []) : stub,
-                        banner: isTranspose ? stub : (xInfo || [])
+                        stub: stub,
+                        banner: xInfo || []
                     },
                     weight_col: weightCol || null,
                     filter_expression: filterExpression || "",
                     display_policy: {
                         show_n: displayMode === 'all' || displayMode === 'value',
-                        show_percent: displayMode === 'all' || displayMode === 'percent'
+                        show_percent: displayMode === 'all' || displayMode === 'percent',
+                        is_transpose: isTranspose
                     }
                 };
 

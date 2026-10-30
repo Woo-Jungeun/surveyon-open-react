@@ -907,17 +907,13 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                 setIsChartLoading(true);
                 const pageId = sessionStorage.getItem('pageId');
 
-                // 행/열 변경(isTranspose)이 true일 경우 차트 API 테이블 요청 시 stub와 banner를 서로 맞바꿔 전송
-                const finalStub = isTranspose ? bannerVarList : stub;
-                const finalBanner = isTranspose ? stub : bannerVarList;
-
                 const payload = {
                     pageid: pageId,
                     user: userId,
                     table: {
                         id: banner.id,
-                        stub: finalStub,
-                        banner: finalBanner
+                        stub: stub,
+                        banner: bannerVarList
                     },
                     weight_col: uiSettings?.weight_variable || null,
                     filter_expression: filterExpression || "",
