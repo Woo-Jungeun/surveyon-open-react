@@ -1341,6 +1341,30 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     const headerActions = (
         <>
+            {/* 1. 조건/문항 생성 보조 도구 그룹 */}
+            <button
+                type="button"
+                onClick={() => setIsAiModalOpen(true)}
+                className="cmn-btn cmn-btn-outline"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+                <Sparkles size={14} />
+                <span>AI조건식 자동생성</span>
+            </button>
+            <button
+                type="button"
+                onClick={() => setIsCartesianModalOpen(true)}
+                className="cmn-btn cmn-btn-outline"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+                <Wand2 size={14} />
+                <span>변수 조합기 (자동생성)</span>
+            </button>
+
+            {/* 세로 구분선 1: 생성 도구 | 내보내기 */}
+            <div style={{ width: '1px', height: '18px', backgroundColor: '#cbd5e1', margin: '0 4px', alignSelf: 'center' }} />
+
+            {/* 2. 내보내기(Export) 도구 그룹 */}
             <button
                 type="button"
                 onClick={() => setIsSpssModalOpen(true)}
@@ -1350,22 +1374,9 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 <FileCode size={14} />
                 <span>SPSS 신텍스(.sps) 추출</span>
             </button>
-            <button
-                type="button"
-                onClick={() => setIsAiModalOpen(true)}
-                className="cmn-btn cmn-btn-outline"
-            >
-                <Sparkles size={14} />
-                <span>AI조건식 자동생성</span>
-            </button>
-            <button
-                type="button"
-                onClick={() => setIsCartesianModalOpen(true)}
-                className="cmn-btn cmn-btn-outline"
-            >
-                <Wand2 size={14} />
-                <span>변수 조합기 (자동생성)</span>
-            </button>
+
+            {/* 세로 구분선 2: 내보내기 | 최종 저장 */}
+            <div style={{ width: '1px', height: '18px', backgroundColor: '#cbd5e1', margin: '0 4px', alignSelf: 'center' }} />
         </>
     );
 
