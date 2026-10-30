@@ -8,7 +8,7 @@
 /** 변수 객체에서 spss_name 추출 (top-level → metadata.spss_name) */
 export const getSpss = (v) => {
     if (!v || typeof v !== 'object') return '';
-    const raw = v.spss_name ?? v.metadata?.spss_name ?? '';
+    const raw = v.spss_name ?? v.spssName ?? v.metadata?.spss_name ?? '';
     return typeof raw === 'string' ? raw.trim() : (raw ? String(raw) : '');
 };
 

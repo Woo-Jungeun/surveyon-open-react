@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Trash2, Plus, X, HelpCircle, Filter, Check, ChevronDown } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { RecodingPageApi } from '@/services/dataStatus/app/recoding/RecodingPageApi';
@@ -130,6 +130,59 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
     ]);
     const [categoryLogicOp, setCategoryLogicOp] = useState('OR');
 
+    // 변수 드롭다운 목록: text를 SQ(q) 형태로 포맷하고, value를 spss_name 기준으로 설정
+    const kendoVarOptions = useMemo(() => {
+        const list = [];
+        (variablesList || []).forEach(v => {
+            const rawType = (v.type || '').toLowerCase();
+            let color = v.color || 'default';
+            if (!v.color && v.type) {
+                if (rawType.includes('single')) color = 'single';
+                else if (rawType.includes('multi')) color = 'multi';
+                else if (rawType.includes('dummy')) color = 'dummy';
+                else if (rawType.includes('open')) color = 'open';
+            }
+
+            // spssName 추출: spssName -> spss_name -> metadata.spss_name -> label 접두어
+            const spss = (v.spssName ?? v.spss_name ?? v.metadata?.spss_name ?? '').trim()
+                || (typeof v.label === 'string' && v.label.trim().match(/^([A-Za-z]+[0-9_]*)[.\s_-]/)?.[1])
+                || '';
+
+            const sys = v.sysName || v.name || v.id || '';
+            const varValue = spss || sys || v.id; // 만들어지는 식의 변수명은 spss_name 기준 사용
+
+            // q (SQ) -> SQ(q) 형태로 표출
+            const displayText = v.label
+                ? `${v.label} (${sys})`
+                : (spss && spss !== sys ? `${spss} (${sys})` : sys);
+
+            list.push({
+                text: displayText,
+                value: varValue,
+                spssName: spss,
+                sysName: sys,
+                id: v.id,
+                rawName: v.name || '',
+                type: v.type,
+                color: color,
+                info: v.info || v.labels
+            });
+        });
+        return list;
+    }, [variablesList]);
+
+    const findVarOption = useCallback((name) => {
+        if (!name) return null;
+        const lower = String(name).trim().toLowerCase();
+        return kendoVarOptions.find(item =>
+            (item.value ? String(item.value).toLowerCase() : '') === lower ||
+            (item.spssName ? String(item.spssName).toLowerCase() : '') === lower ||
+            (item.sysName ? String(item.sysName).toLowerCase() : '') === lower ||
+            (item.id != null ? String(item.id).toLowerCase() : '') === lower ||
+            (item.rawName ? String(item.rawName).toLowerCase() : '') === lower
+        );
+    }, [kendoVarOptions]);
+
     const parseLogicString = (logicStr) => {
         const defaultState = [
             { id: Date.now(), logicOp: 'AND', conditions: [{ varName: '', operator: '==', value: '' }] }
@@ -195,8 +248,9 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                             rawVarName = rawVarName.replace(/\[.*?\]$/, '');
                         }
                     }
+                    const matched = findVarOption(rawVarName);
                     return {
-                        varName: rawVarName,
+                        varName: matched ? matched.value : rawVarName,
                         operator: op,
                         value: '',
                         ranks: ranks.length > 0 ? ranks : undefined
@@ -230,14 +284,17 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                         }
                     }
 
+                    const matched = findVarOption(rawVarName);
                     return {
-                        varName: rawVarName,
+                        varName: matched ? matched.value : rawVarName,
                         operator: op,
                         value: val,
                         ranks: ranks.length > 0 ? ranks : undefined
                     };
                 }
-                return { varName: t.replace(/[()]/g, '').trim(), operator: '==', value: '' };
+                const raw = t.replace(/[()]/g, '').trim();
+                const matched = findVarOption(raw);
+                return { varName: matched ? matched.value : raw, operator: '==', value: '' };
             }).filter(c => c.varName !== '');
 
             if (parsedConditions.length === 0) {
@@ -567,6 +624,12 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                                         baseName = c.varName.replace(/\[.*\]$/, '');
                                     }
 
+                                    // 만들어지는 식의 변수명을 spss_name 기준으로 변환
+                                    const opt = findVarOption(baseName);
+                                    if (opt && opt.value) {
+                                        baseName = opt.value;
+                                    }
+
                                     if (currentRanks && currentRanks.length > 0) {
                                         // "q70[0,1] in [10]" 형태로 포맷
                                         const combinedRanks = currentRanks.map(r => r.replace('[', '').replace(']', '')).join(',');
@@ -721,27 +784,6 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
         );
     };
 
-    const activeList = variablesList;
-    const kendoVarOptions = [];
-    activeList.forEach(v => {
-        const rawType = (v.type || '').toLowerCase();
-        let color = v.color || 'default';
-        if (!v.color && v.type) {
-            if (rawType.includes('single')) color = 'single';
-            else if (rawType.includes('multi')) color = 'multi';
-            else if (rawType.includes('dummy')) color = 'dummy';
-            else if (rawType.includes('open')) color = 'open';
-        }
-
-        kendoVarOptions.push({
-            text: v.label ? `${v.sysName || v.id} (${v.label})` : (v.sysName || v.id),
-            value: v.sysName || v.id,
-            type: v.type,
-            color: color,
-            info: v.info || v.labels
-        });
-    });
-
     const getOperatorOptions = (varName) => {
         const defaultOps = [
             { text: '== (같음)', value: '==' },
@@ -758,7 +800,7 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
 
         if (!varName) return defaultOps;
 
-        const matchedVar = kendoVarOptions.find(item => item.value === varName);
+        const matchedVar = findVarOption(varName);
         if (!matchedVar) return defaultOps;
 
         const rawType = (matchedVar.type || '').toLowerCase();
@@ -1044,7 +1086,7 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                                                 {set.conditions.map((cond, condIndex) => (
                                                     <div key={condIndex} className="cond-row-cbp">
                                                         {(() => {
-                                                            const matchedVar = kendoVarOptions.find(item => item.value === cond.varName);
+                                                            const matchedVar = findVarOption(cond.varName);
                                                             let showRankToggles = false;
                                                             let isOpenVar = false;
                                                             let opts = [];
@@ -1070,7 +1112,7 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                                                                             defaultItem={{ text: "문항 선택", value: "" }}
                                                                             itemRender={DropDownItemRender}
                                                                             valueRender={DropDownValueRender}
-                                                                            value={cond.varName ? (kendoVarOptions.find(item => item.value === cond.varName) || { text: cond.varName, value: cond.varName }) : { text: "문항 선택", value: "" }}
+                                                                            value={cond.varName ? (findVarOption(cond.varName) || { text: cond.varName, value: cond.varName }) : { text: "문항 선택", value: "" }}
                                                                             onChange={(e) => {
                                                                                 const newVarName = e.value ? e.value.value : "";
                                                                                 const newCats = [...categories];

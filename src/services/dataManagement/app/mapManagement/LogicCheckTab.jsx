@@ -138,6 +138,8 @@ function findLogicVars(text, variables) {
     (variables || []).forEach(v => {
         if (v.name) byName.set(String(v.name).toLowerCase(), v);
         if (v.sysName && !byName.has(String(v.sysName).toLowerCase())) byName.set(String(v.sysName).toLowerCase(), v);
+        const spss = (v.spssName ?? v.spss_name ?? '').trim();
+        if (spss && !byName.has(String(spss).toLowerCase())) byName.set(String(spss).toLowerCase(), v);
     });
     const out = [];
     const seen = new Set();
