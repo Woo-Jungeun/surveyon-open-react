@@ -1063,7 +1063,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         {[
                                             { label: '엑셀 출력 % 기호 부착', field: 'percent_symbol' },
                                             { label: 'Base 기본 (괄호)', field: 'show_base_parenthesis' },
-                                            { label: 'N빈도전체 (괄호)', field: 'format_bracket_all_n' }
+                                            { label: 'N빈도 전체 (괄호)', field: 'format_bracket_all_n' }
                                         ].map(item => (
                                             <div
                                                 key={item.field}
