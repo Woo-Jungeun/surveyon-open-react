@@ -27,6 +27,16 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/variables/computed/list", "API_BASE_URL_DATASTATUS")
     );
 
+    /** 계산(리코딩) 문항 SPSS 신텍스 본문 조회 */
+    const getComputedSpssSyntax = useMutation(
+        async (data) => await api.post(data, "/variables/computed/spss-syntax", "API_BASE_URL_DATASTATUS")
+    );
+
+    /** 계산(리코딩) 문항 SPSS 신텍스 파일 다운로드 */
+    const downloadComputedSpssSyntax = useMutation(
+        async (data) => await api.file(data, "/variables/computed/spss-syntax/download", "API_BASE_URL_DATASTATUS")
+    );
+
     /** 기본 문항 추가 (merge) */
     const saveBaseVariableMerge = useMutation(
         async (data) => await api.post(data, "/variables/base/merge", "API_BASE_URL_DATASTATUS"),
@@ -353,6 +363,8 @@ export function DpRequestPageApi() {
         getBaseVariableList,
         getNextBaseVariableId,
         getComputedVariableList,
+        getComputedSpssSyntax,
+        downloadComputedSpssSyntax,
         saveBaseVariableMerge,
         recomputeComputedVariables,
         deleteBaseVariable,

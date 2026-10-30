@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, createContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Trash2, Search, ChevronLeft, ChevronRight, Wand2, Plus, Info, Sparkles, RotateCcw } from 'lucide-react';
+import { Trash2, Search, ChevronLeft, ChevronRight, Wand2, Plus, Info, Sparkles, RotateCcw, FileCode } from 'lucide-react';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -11,6 +11,7 @@ import CartesianGeneratorModal from "./CartesianGeneratorModal";
 import { getSpss } from "../../common/spssName";
 import BulkEditConditionsModal from "./BulkEditConditionsModal";
 import AiConditionGeneratorModal from "./AiConditionGeneratorModal";
+import SpssSyntaxExportModal from "./SpssSyntaxExportModal";
 import { Button } from "@/components/ui/button";
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import Toast from "@/components/common/Toast";
@@ -704,6 +705,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     const [isCartesianModalOpen, setIsCartesianModalOpen] = useState(false);
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+    const [isSpssModalOpen, setIsSpssModalOpen] = useState(false);
     const [banners, setBanners] = useState([]);
     const [deletedIds, setDeletedIds] = useState([]); // 삭제 대기 중인 기존 문항 ID 목록
     const [selectedBanner, setSelectedBanner] = useState('');
@@ -1341,6 +1343,15 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         <>
             <button
                 type="button"
+                onClick={() => setIsSpssModalOpen(true)}
+                className="cmn-btn cmn-btn-outline"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+                <FileCode size={14} />
+                <span>SPSS 신텍스(.sps) 추출</span>
+            </button>
+            <button
+                type="button"
                 onClick={() => setIsAiModalOpen(true)}
                 className="cmn-btn cmn-btn-outline"
             >
@@ -1582,6 +1593,14 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 show={toast.show}
                 message={toast.message}
                 onClose={() => setToast({ ...toast, show: false })}
+            />
+            <SpssSyntaxExportModal
+                show={isSpssModalOpen}
+                onClose={() => setIsSpssModalOpen(false)}
+                banners={banners}
+                currentBannerId={selectedBanner}
+                pageId={sessionStorage.getItem('pageId') || ''}
+                userId={auth?.user?.userId || ''}
             />
         </PageContainer>
     );
