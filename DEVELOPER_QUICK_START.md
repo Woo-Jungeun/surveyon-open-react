@@ -6,44 +6,71 @@
 ---
 
 ## 📌 목차
-1. [프로젝트 초기 설정 (3분)](#1-프로젝트-초기-설정-3분)
-2. [필수 환경 설정 파일](#2-필수-환경-설정-파일)
+1. [프로젝트 초기 설정 (패키지 설치)](#1-프로젝트-초기-설정-패키지-설치)
+2. [필수 환경 설정 (라이센스, 폰트, 프록시)](#2-필수-환경-설정-라이센스-폰트-프록시)
 3. [엔트리포인트 템플릿 (`main.jsx` & `App.jsx`)](#3-엔트리포인트-템플릿-mainjsx--appjsx)
 4. [표준 화면 개발 템플릿 (`PageContainer` & Kendo Grid)](#4-표준-화면-개발-템플릿-pagecontainer--kendo-grid)
-5. [공통 API 통신 및 토큰 연동 (`api.get` / `api.post`)](#5-공통-api-통신-및-토큰-연동-apiget--apipost)
-6. [공통 버튼 규격 (`cmn-btn`)](#6-공통-버튼-규격-cmn-btn)
+5. [공통 버튼 규격 (`cmn-btn`)](#5-공통-버튼-규격-cmn-btn)
+6. [공통 API 통신 및 토큰 연동 (`api.get` / `api.post`)](#6-공통-api-통신-및-토큰-연동-apiget--apipost)
 7. [전역 모달 및 로딩 스피너 사용법](#7-전역-모달-및-로딩-스피너-사용법)
-8. [자주 묻는 질문 (FAQ)](#8-자주-묻는-질문-faq)
+8. [실전 트러블슈팅 및 FAQ](#8-실전-트러블슈팅-및-faq)
 
 ---
 
-## 1. 프로젝트 초기 설정 (3분)
+## 1. 프로젝트 초기 설정 (패키지 설치)
 
-### 1) 공통 패키지 설치
-터미널에서 아래 명령어로 설문온 공통 라이브러리를 설치합니다:
+### 1) 신규 Vite 프로젝트 생성 (신규 프로젝트 시)
+```bash
+npm create vite@latest my-surveyon-app -- --template react
+cd my-surveyon-app
+```
+
+### 2) 설문온 공통 패키지 설치
+터미널에서 아래 명령어로 사내 공통 라이브러리를 설치합니다:
 ```bash
 # 사내 Git 저장소 기반 패키지 설치
 npm install git+https://github.com/woojungeun97/surveyon-common.git
-```
-
-### 2) Kendo UI 라이선스 활성화
-1. 프로젝트 루트 디렉토리에 **`telerik-license.txt`** 파일을 배치합니다.
-2. 터미널에서 라이선스 활성화 명령을 실행합니다:
-   ```bash
-   npx kendo-ui-license activate
-   ```
-   *(※ 활성화 완료 시 Kendo 워터마크 배너가 표시되지 않습니다.)*
-
-### 3) 로컬 개발 서버 실행
-```bash
-npm run dev
+npm install
 ```
 
 ---
 
-## 2. 필수 환경 설정 파일
+## 2. 필수 환경 설정 (라이센스, 폰트, 프록시)
 
-### 1) `vite.config.js` (CORS 프록시 & `@/` 경로 별칭)
+### 1) Kendo UI 라이선스 설정 (워터마크 영구 제거)
+프로젝트 루트 디렉토리에 **`.env`** 파일을 생성하고 라이선스 키를 등록합니다 (가장 확실하고 권장되는 방법):
+
+```env
+TELERIK_LICENSE=eyJhbGciOiJSUzI1NiIsInR5cCI6IlRlbGVyaWsgTGljZW5zZSBLZXkifQ.eyJ0eXBlIjoidGVsZXJpay1saWNlbnNlIiwibGljZW5zZUlkIjoiYjJjNzhkN2ItYzg0YS00MDI4LWEwN2EtNjhkMWFkZmYxNDMzIiwidXNlcklkIjoiOWEyZmM4MjMtNzM0Mi00NDAyLTliODgtMGMxMmNjMzQxNWMyIiwiaWF0IjoxNzU1ODI0MzUyLCJsaWNlbnNlcyI6WyJleUpoYkdjaU9pSlNVekkxTmlJc0luUjVjQ0k2SWxSbGJHVnlhV3NnVEdsalpXNXpaU0JGZG1sa1pXNWpaU0o5LmV5SmpiMlJsSWpvaVMwVk9SRTlWU1ZKRlFVTlVJaXdpZEhsd1pTSTZJbkJsY25CbGRIVmhiQ0lzSW1WNGNHbHlZWFJwYjI0aU9qRTNPRGN6TURZNE1UWXNJblZ6WlhKSlpDSTZJamxoTW1aak9ESXpMVGN6TkRJdE5EUXdNaTA1WWpnNExUQmpNVEpqWXpNME1UVmpNaUlzSW14cFkyVnVjMlZKWkNJNkltSXlZemM0WkRkaUxXTTROR0V0TkRBeU9DMWhNRGRoTFRZNFpERmhaR1ptTVRRek15SjkuWmlWaXdTNUQ4ZjQ3OXRtLVE2TExSUzhRZmJiamFBSEJKbzVyOFR1cFZ1aXRhUVd4TmUzcks1SWQ3OVVBQU5yZXBONnFQZ29xc3MwbmRETThwbWRyZ3hCV2FjT2tnakdCUVpKY29aR3YtTUVHZnlTdXo0aGZLOU5NTkJiWTRoQTI2Nld1dkRvdDJ5TU9ZSEJ0UTQ0ZDdCZGowdDYwRzh1U1VHMGZaVExEMDE2UndlXzRFaC1jelZ0RXBDcWJvVmp1WWR4TDc0ZTAtMG15SURYcmk5NDZ1RmsyZTU5X2JMSGVBLWQwOXlNRjAtaTM1RGE2ZTk5bTgwRWhFc0RsVE56bl9hcUlfdjJLc0NNNXdnR1RVd0p3N1Q1OThwa2QtaFFIVi1pRHV2Y3BacWRaeWQ3T05GQ0E5aTRST0puU2k2MDFIUVVsUkQ4a19EZ1FrWE5Hbko5bVRnIiwiZXlKaGJHY2lPaUpTVXpJMU5pSXNJblI1Y0NJNklsUmxiR1Z5YVdzZ1RHbGpaVzV6WlNCRmRtbGtaVzVqWlNKOS5leUowZVhCbElqb2lkWE5oWjJVaUxDSjFjMlZ5U1dRaU9pSTVZVEptWXpneU15MDNNelF5TFRRME1ESXRPV0k0T0Mwd1l6RXlZMk16TkRFMVl6SWlMQ0pzYVdObGJuTmxTV1FpT2lKaU1tTTNPR1EzWWkxak9EUmhMVFF3TWpndFlUQTNZUzAyT0dReFlXUm1aakUwTXpNaWZRLkYxX1pqdXBMYmJoT3RhWkdHSkFJbGw0VVdBUElfby11Y2E2eWp4MFprUUFEOV9RMi1BTVdBSUgwcmI0WTctRXdkZF9JZ0RkRnNqSUlrR2ZVVW1SUnNUZFFyMTJMLWVsZFlBRGtWbkVfREk5MEJ6Y1ZkY1ktdTlIVUxXeHViUnJwMHJVWHlMWGhzTVhXY1NDWUxrVEVtQ3FZdHlJVzNIQ29yZFA3TWZPQ3hxS1pnamsxdEU1TlJFZDJQT251WTkxU0ZySnRxdm8xaDdHS2Y2Tjd3OWRCaHdwRGh1MVRQTGtPdTFlMEhOVmZaSkRQU0o1TlZsaHlSZEd0ZnJQZVVzNmdHMFNPUWNLLXhOSkhHeml6NXlUUnNCSzAxUEE4YmVPTXhFSlhmNTY0UGZUOXdFTW9IMUR3TVZRLW5sUmpxc0dTTHVCY3d0RXVpVXFjdlAwZHotem1RUSJdLCJwcm9kdWN0cyI6W3siY29kZSI6IktFTkRPVUlSRUFDVCIsImxpY2Vuc2VFeHBpcmF0aW9uRGF0ZSI6MTc4NzMwNjgxNiwidHJpYWwiOmZhbHNlfV0sImF1ZCI6ImgqKioqKkBoKiouYyoua3IiLCJsaWNlbnNlSG9sZGVyIjoiaCoqKioqQGgqKi5jKi5rciIsImludGVncml0eSI6IjZBWVdiSW1kR3FheU8xU3VMR2x3YlRKekF5d3k0d2dsUmtCaEN6d2U5YkE9In0.kIscrb35V04rqLXLZLyrZD088UTpK3v6IXEoJGqhCDo4OpiHAwepHIzM57X-tcJnRXAxL1bwElzhRzZqbbio2PIOJv0jA67tLIxv3girK0U5Q1LdiSLRfsX9KQ8AJHexKp-qqAeRi2qD6fnDMixi-NYee348Qh9ECpQpsuHOvcKPf1CsTiZ7EVM1A3cLwY57uBysZfSzWf9laQQ3FU92zZBe29WZN9LESicpTH_aYQJ8VXPtYbiyVmF7AxIkcEbH3AENNCr1el92XQoC76T92RXkvPxZagpx2biAZEKM_Z0faBNHyDytpCOVmC275ClI5Mj2Xo3kZnI1QKpvOPEbpQ
+```
+
+또한 프로젝트 루트에 `telerik-license.txt` 파일을 두고 터미널에서 1회 활성화합니다:
+```bash
+npx kendo-ui-license activate
+```
+> [!IMPORTANT]
+> 개발 서버(`npm run dev`)가 켜져 있는 상태에서 활성화 명령을 실행하면 Vite 캐시로 인해 워터마크가 계속 남아있을 수 있습니다. 반드시 **개발 서버를 종료(`Ctrl+C`)한 후 다시 `npm run dev`를 실행**하세요.
+
+---
+
+### 2) 폰트 설정 (`index.html`)
+설문온 표준 서체인 **Pretendard** 웹폰트를 `index.html`의 `<head>` 태그 안에 추가합니다:
+
+```html
+<!-- index.html <head> 내부 -->
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+```
+
+그리고 `src/index.css`에 기본 폰트를 지정합니다:
+```css
+html, body, #root, button, input, select, textarea, .k-grid {
+  font-family: "Pretendard", "Noto Sans KR", -apple-system, sans-serif !important;
+}
+```
+
+---
+
+### 3) `vite.config.js` (CORS 프록시 & `@/` 경로 별칭)
 백엔드 API와의 통신 및 `@/` 경로 참조를 위해 아래 설정을 적용합니다:
 
 ```javascript
@@ -77,17 +104,17 @@ export default defineConfig({
 });
 ```
 
-### 2) `public/config.js` (런타임 API 서버 주소 분기)
-`public/config.js` 파일이 위치해야 화면에서 접속 도메인에 따라 백엔드 API 주소를 자동으로 인식합니다:
-- **테스트 환경**: `https://stest.hrc.kr/APIs/...`
-- **운영 환경**: `https://s.hrc.kr/APIs/...`
+> [!TIP]
+> **API 서버 도메인 설정 안내**:  
+> `surveyon-common`의 `api` 모듈에는 설문온 표준 API 엔드포인트(`https://stest.hrc.kr/APIs/...`)가 기본 내장되어 있어 별도의 `public/config.js` 없이도 즉시 통신이 가능합니다.  
+> 만약 접속 도메인별 런타임 분기가 필요한 경우에만 `public/config.js`를 사용하세요.
 
 ---
 
 ## 3. 엔트리포인트 템플릿 (`main.jsx` & `App.jsx`)
 
 ### 1) `src/main.jsx`
-Redux 스토어, 테마 CSS, Kendo 한글 로케일, 전역 모달을 초기화하는 엔트리 파일입니다.
+Redux 스토어, 테마 CSS, Kendo 한글 로케일, 전역 모달을 초기화합니다.
 
 ```jsx
 import React from 'react';
@@ -103,11 +130,11 @@ import { store, persistor, ModalProvider, LoadingProvider } from 'surveyon-commo
 import kendoLanguage from 'surveyon-common/config/kendo/language.json';
 import App from './App';
 
-// 테마, 기본 리셋, Kendo 기본 스타일 import
+// 테마 및 Kendo 기본 스타일 import
 import 'surveyon-common/assets/css/surveyon-theme.css';
 import '@progress/kendo-theme-default/dist/all.css';
 
-// Kendo 그리드/필터/달력 한글 언어팩 적용
+// Kendo 한글 언어팩 적용
 loadMessages(kendoLanguage, 'ko');
 const queryClient = new QueryClient();
 
@@ -151,9 +178,9 @@ function App() {
         - 'aiOpen'          : AI 오픈분석 (오렌지 테마)
         - 'fieldManagement' : 실사관리 (네이비 테마)
       */}
-      <Route element={<AppLayout service="dataManagement" />}>
+      <Route element={<AppLayout service="fieldManagement" />}>
         <Route path="/" element={<MyScreenPage />} />
-        <Route path="/my_screen" element={<MyScreenPage />} />
+        <Route path="/field_management" element={<MyScreenPage />} />
       </Route>
     </Routes>
   );
@@ -166,13 +193,13 @@ export default App;
 
 ## 4. 표준 화면 개발 템플릿 (`PageContainer` & Kendo Grid)
 
-설문온의 모든 화면은 `<PageContainer>`로 감싸며, Kendo Grid는 상위 높이를 100% 채우도록 작성합니다.
+설문온의 모든 화면은 `<PageContainer>`로 감싸며, 본문 그리드는 화면 높이를 100% 채우도록 작성합니다.
 
 ```jsx
 import React, { useState, useContext } from 'react';
 import { PageContainer, modalContext, loadingSpinnerContext } from 'surveyon-common';
 import { Grid, GridColumn } from '@progress/kendo-react-grid';
-import { Plus, Download } from 'lucide-react';
+import { Plus, Download, Trash2 } from 'lucide-react';
 
 const MyScreenPage = () => {
   const modal = useContext(modalContext);
@@ -211,10 +238,15 @@ const MyScreenPage = () => {
     });
   };
 
+  // 삭제 버튼 콜백
+  const handleDelete = () => {
+    modal.showConfirm('삭제 확인', '선택한 항목을 삭제하시겠습니까?');
+  };
+
   return (
     <PageContainer
-      title="데이터 맵 관리"
-      infoTooltip="프로젝트 변수 매핑 및 데이터 설정을 관리하는 화면입니다."
+      title="실사 진행 현황"
+      infoTooltip="실사 프로젝트 진행 상태 및 필드 데이터를 관리하는 화면입니다."
       onSearch={handleSearch}
       searchPlaceholder="조사명 검색..."
       onSave={handleSave}
@@ -227,12 +259,15 @@ const MyScreenPage = () => {
           </button>
           <button type="button" className="cmn-btn cmn-btn-secondary">
             <Download size={15} />
-            <span>엑셀 다운로드</span>
+            <span>다운로드</span>
+          </button>
+          <button type="button" className="cmn-btn cmn-btn-danger" onClick={handleDelete}>
+            <Trash2 size={15} />
+            <span>삭제</span>
           </button>
         </>
       }
     >
-      {/* 4번 메인 작업영역: 높이 100% 핏 */}
       <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}>
         <Grid
           data={dataList}
@@ -255,10 +290,24 @@ export default MyScreenPage;
 
 ---
 
-## 5. 공통 API 통신 및 토큰 연동 (`api.get` / `api.post`)
+## 5. 공통 버튼 규격 (`cmn-btn`)
+
+버튼은 반드시 `PageLayout.css`에 선언된 공통 클래스를 사용해야 서비스 테마 색상이 자동으로 반영됩니다:
+
+| 클래스명 | 용도 | 스타일 특징 |
+| :--- | :--- | :--- |
+| `cmn-btn cmn-btn-primary` | **핵심 실행 (저장, 완료, 조회)** | 대메뉴 테마 메인 색상 채움 |
+| `cmn-btn cmn-btn-outline` | **주요 액션 (+추가, 생성, 실행)** | 흰색 배경 + 테마 컬러 테두리 |
+| `cmn-btn cmn-btn-secondary` | **보조 액션 (취소, 닫기, 목록)** | 흰색 배경 + 소프트 그레이 테두리 |
+| `cmn-btn cmn-btn-danger` | **위험 액션 (삭제, 제거)** | 흰색 배경 + 레드 테두리 (**호버 시에도 빨간색 글자/아이콘 완벽 유지**) |
+| `cmn-btn-sm` | **소형 사이즈 (그리드 내부용)** | 높이 28px, 폰트 12px |
+
+---
+
+## 6. 공통 API 통신 및 토큰 연동 (`api.get` / `api.post`)
 
 설문온 백엔드와의 통신은 `surveyon-common`의 `api` 모듈을 사용합니다.
-요청 시 브라우저 쿠키의 **로그인 토큰(`TOKEN`), `X-Auth-Token`, `X-User-Id`, `hrc`(AES256 암호화)**가 **자동으로 헤더에 첨부**되며, 401 세션 만료 시 로그인 창으로 자동 안내됩니다.
+요청 시 브라우저 쿠키의 **로그인 토큰(`TOKEN`), `X-Auth-Token`, `X-User-Id`, `hrc`(AES256 암호화)**가 **자동으로 헤더에 첨부**됩니다.
 
 ```jsx
 import React, { useState, useEffect, useContext } from 'react';
@@ -269,12 +318,16 @@ export const MyDataService = () => {
   const loading = useContext(loadingSpinnerContext);
   const modal = useContext(modalContext);
 
-  // 1. 목록 조회 (GET / POST)
+  // 1. 목록 조회 (POST / GET)
   const fetchList = async () => {
     try {
       loading.show();
-      // api.get(params, url, serviceType) 또는 api.post(body, url, serviceType)
-      const res = await api.post({ projectnum: 'P2026_001' }, '/datasets/list', 'API_BASE_URL_DATASTATUS');
+      // 서비스 키를 전달하거나 전체 API 경로(/APIs/d/...)를 직접 전달할 수 있습니다.
+      // - 'API_BASE_URL_DATAMANAGEMENT' : /APIs/d
+      // - 'API_BASE_URL_DATASTATUS'     : /APIs/s
+      // - 'API_BASE_URL_OPENAI'         : /APIs/o
+      // - 'API_BASE_URL_BOARD'          : /APIs/n
+      const res = await api.post({ projectnum: 'P2026_001' }, '/data/info', 'API_BASE_URL_DATAMANAGEMENT');
       if (res?.success === '777' || res?.data) {
         setList(res.data || res.output || []);
       }
@@ -285,36 +338,11 @@ export const MyDataService = () => {
     }
   };
 
-  // 2. 파일 다운로드 (Blob POST)
-  const handleDownload = async () => {
-    const response = await api.file({ fileId: 123 }, '/files/download');
-    const blob = new Blob([response.data]);
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = '결과보고서.xlsx';
-    a.click();
-  };
-
   useEffect(() => {
     fetchList();
   }, []);
 };
 ```
-
----
-
-## 6. 공통 버튼 규격 (`cmn-btn`)
-
-버튼은 반드시 `PageLayout.css`에 선언된 공통 클래스를 사용해야 서비스 테마 색상이 자동으로 반영됩니다:
-
-| 클래스명 | 용도 | 스타일 특징 |
-| :--- | :--- | :--- |
-| `cmn-btn cmn-btn-primary` | **핵심 실행 (저장, 완료, 조회)** | 대메뉴 테마 메인 색상 채움 |
-| `cmn-btn cmn-btn-outline` | **주요 액션 (+추가, 생성, 실행)** | 흰색 배경 + 테마 컬러 테두리 |
-| `cmn-btn cmn-btn-secondary` | **보조 액션 (취소, 닫기, 목록)** | 흰색 배경 + 소프트 그레이 테두리 |
-| `cmn-btn cmn-btn-danger` | **위험 액션 (삭제, 제거)** | 흰색 배경 + 레드 테두리/호버 |
-| `cmn-btn-sm` | **소형 사이즈 (그리드 내부용)** | 높이 28px, 폰트 12px |
 
 ---
 
@@ -340,33 +368,29 @@ function SampleComponent() {
     modal.showErrorAlert('오류', '데이터를 불러올 수 없습니다.');
   };
 
-  // 3. 로딩 스피너 제어
-  const callApiWithLoading = async () => {
-    try {
-      loading.show();
-      await fetch('/api/data');
-    } finally {
-      loading.hide();
-    }
+  // 3. 확인 팝업 (Confirm)
+  const showConfirm = () => {
+    modal.showConfirm('확인', '진행하시겠습니까?');
   };
 }
 ```
 
 ---
 
-## 8. 자주 묻는 질문 (FAQ)
+## 8. 실전 트러블슈팅 및 FAQ
 
-### Q1. Kendo 배너(워터마크)가 화면에 표시됩니다.
-- 프로젝트 루트에 `telerik-license.txt` 파일이 있는지 확인하세요.
-- 터미널에서 `npx kendo-ui-license activate`를 실행한 후 개발 서버를 재시작(`npm run dev`)하세요.
+### Q1. Kendo 배너(워터마크)가 화면에 계속 표시됩니다.
+- 프로젝트 루트에 `.env` 파일을 만들고 `TELERIK_LICENSE=...` 키가 올바르게 들어있는지 확인하세요.
+- 터미널에서 `npx kendo-ui-license activate`를 실행하세요.
+- **가장 중요**: 활성화 후 **기존 Vite 개발 서버(`npm run dev`)를 완전히 종료(`Ctrl+C`)했다가 다시 실행**해야 캐시가 갱신됩니다.
 
-### Q2. Kendo Grid의 행 선택/호버 색상이 안 바뀝니다.
-- 최상단 `<html>` 또는 `<AppLayout service="...">`에 올바른 서비스 키(`hsrt`, `dataManagement`, `aiOpen`, `fieldManagement`)가 지정되어 있는지 확인하세요.
+### Q2. 폰트가 깨지거나 시스템 기본 폰트로 나옵니다.
+- `index.html`의 `<head>` 태그에 Pretendard 웹폰트 `<link>` 태그가 추가되어 있는지 확인하세요.
+- `src/index.css`에 `font-family: "Pretendard", sans-serif !important;`가 선언되어 있는지 확인하세요.
 
-### Q3. API 호출 시 로그인 토큰이나 인증 헤더는 어떻게 처리하나요?
-- `surveyon-common`의 `api` 모듈(`api.get`, `api.post` 등)을 사용하면 브라우저 쿠키의 `TOKEN`, `X-Auth-Token` 및 `X-User-Id`가 **인터셉터를 통해 자동으로 실려 전송**됩니다.
-- 개발자가 직접 매번 헤더에 토큰을 심을 필요가 없습니다.
+### Q3. API 호출 시 405 Method Not Allowed 또는 /o/... 로 요청이 날아갑니다.
+- `surveyon-common` 최신 버전을 사용하고 있는지 확인하세요 (`npm update surveyon-common`).
+- `api.post(body, '/data/info', 'API_BASE_URL_DATAMANAGEMENT')`처럼 3번째 인자에 서비스 키를 넘기거나, `api.post(body, '/APIs/d/data/info')`로 정확한 API 경로를 지정하세요.
 
-### Q4. 다른 서비스 화면으로 이동할 때 로그인이 풀리지 않나요?
-- 설문온의 모든 프론트엔드 서비스는 동일 도메인(Nginx 라우팅 분기) 하에서 구동되므로, `window.location.href = '/field_management'` 등으로 이동해도 **동일한 인증 쿠키와 세션을 공유하므로 로그인이 절대 풀리지 않습니다.**
-
+### Q4. 삭제 버튼(`cmn-btn-danger`)에 마우스를 올리면 글씨가 검정색으로 바뀝니다.
+- 최신 `surveyon-common` 패키지에서는 호버 시에도 빨간색(`#dc2626`) 및 아이콘 색상이 고정되도록 수정되었습니다. 터미널에서 `npm update surveyon-common`을 실행하세요.

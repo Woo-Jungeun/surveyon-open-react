@@ -1,14 +1,12 @@
 import { combineReducers } from "redux";
 import { persistReducer } from "redux-persist";
-import { CookieStorage } from "redux-persist-cookie-storage";
+import { CookieStorage } from "@/common/redux/store/CookieStorage.js";
 import { auth } from "@/common/redux/reducer/AuthReducer";
-import Cookies from 'cookies-js'
-import storage from "redux-persist/lib/storage";
+import Cookies from 'cookies-js';
 
 const persistConfig = {
     key: 'root@iksanbms',
     storage: new CookieStorage(Cookies/*, options */) ,
-    //storage,
     whiteList : []
 };
 

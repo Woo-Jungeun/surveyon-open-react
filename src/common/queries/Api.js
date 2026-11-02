@@ -1,18 +1,43 @@
 import { apiAxios } from "@/config/axios/Axios.jsx";
 import moment from "moment";
 
-const VITE_DEFAULT_PATH = (typeof window !== 'undefined' && window.API_CONFIG?.DEFAULT_PATH) || "/o";
+const DEFAULT_API_CONFIG = {
+    EX_API_BASE_URL: "https://son.hrc.kr/o",
+    API_BASE_URL_OPENAI: "https://stest.hrc.kr/APIs/o",
+    API_BASE_URL_BOARD: "https://stest.hrc.kr/APIs/n",
+    API_BASE_URL_DATASTATUS: "https://stest.hrc.kr/APIs/s",
+    API_BASE_URL_DATAMANAGEMENT: "https://stest.hrc.kr/APIs/d",
+    SIGNALR_PATH: "signalr",
+    DEFAULT_PATH: "/o"
+};
+
+const getApiConfig = () => {
+    if (typeof window !== 'undefined' && window.API_CONFIG) {
+        return { ...DEFAULT_API_CONFIG, ...window.API_CONFIG };
+    }
+    return DEFAULT_API_CONFIG;
+};
 
 // URL이 '/api'로 시작하거나 'http'로 시작하면 그대로 사용
 // type이 지정되면 해당 config 값 사용
 // 그 외에는 EX_API_BASE_URL (또는 기존 로직) 사용
 const join = (p, type) => {
-    const path = String(p);
-    if (path.startsWith("http")) return path;
+    const rawPath = String(p || '');
+    if (rawPath.startsWith("http")) return rawPath;
+
+    // 만약 이미 /APIs 나 APIs/ 로 시작하는 전체 경로라면 그대로 프록시 태움
+    if (rawPath.startsWith("/APIs") || rawPath.startsWith("/api")) {
+        return rawPath;
+    }
+    if (rawPath.startsWith("APIs/") || rawPath.startsWith("api/")) {
+        return '/' + rawPath;
+    }
+
+    const config = getApiConfig();
 
     // 1. 명시적 type 지정 시
-    if (type && window.API_CONFIG?.[type]) {
-        let base = window.API_CONFIG[type];
+    if (type && config[type]) {
+        let base = config[type];
         // DEV 환경이고 base가 http로 시작하면, origin 제거하여 프록시 태움
         if (import.meta.env.DEV && base.startsWith("http")) {
             try {
@@ -22,11 +47,11 @@ const join = (p, type) => {
                 // invalid url, ignore
             }
         }
-        return base.replace(/\/+$/, '') + '/' + path.replace(/^\/+/, '');
+        return base.replace(/\/+$/, '') + '/' + rawPath.replace(/^\/+/, '');
     }
 
-    // 2. 기본 (EX_API_BASE_URL 또는 VITE_DEFAULT_PATH)
-    let exBase = window.API_CONFIG?.EX_API_BASE_URL;
+    // 2. 기본 (EX_API_BASE_URL 또는 DEFAULT_PATH)
+    let exBase = config.EX_API_BASE_URL;
     if (exBase) {
         // DEV 환경 처리
         if (import.meta.env.DEV && exBase.startsWith("http")) {
@@ -37,10 +62,11 @@ const join = (p, type) => {
                 // invalid url, ignore
             }
         }
-        return exBase.replace(/\/+$/, '') + '/' + path.replace(/^\/+/, '');
+        return exBase.replace(/\/+$/, '') + '/' + rawPath.replace(/^\/+/, '');
     }
 
-    return VITE_DEFAULT_PATH.replace(/\/+$/, '') + '/' + path.replace(/^\/+/, '');
+    const defaultPath = config.DEFAULT_PATH || "/o";
+    return defaultPath.replace(/\/+$/, '') + '/' + rawPath.replace(/^\/+/, '');
 };
 
 export default {
