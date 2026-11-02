@@ -388,15 +388,30 @@
 }
 
 /* [Danger 버튼] - 삭제 등 */
+.cmn-btn.cmn-btn-danger,
 .cmn-btn-danger {
-    border: 1px solid #fecaca;
-    background: #ffffff;
-    color: #ef4444;
+    border: 1px solid #fecaca !important;
+    background: #ffffff !important;
+    color: #ef4444 !important;
 }
 
+.cmn-btn.cmn-btn-danger *,
+.cmn-btn-danger * {
+    color: #ef4444 !important;
+    stroke: #ef4444 !important;
+}
+
+.cmn-btn.cmn-btn-danger:hover,
 .cmn-btn-danger:hover {
-    background: #fef2f2;
-    border-color: #ef4444;
+    background: #fef2f2 !important;
+    border-color: #ef4444 !important;
+    color: #dc2626 !important;
+}
+
+.cmn-btn.cmn-btn-danger:hover *,
+.cmn-btn-danger:hover * {
+    color: #dc2626 !important;
+    stroke: #dc2626 !important;
 }
 
 /* 소형 버튼 (height 28px) */
