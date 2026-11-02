@@ -23,7 +23,7 @@
 터미널에서 아래 명령어로 설문온 공통 라이브러리를 설치합니다:
 ```bash
 # 사내 Git 저장소 기반 패키지 설치
-npm install git+https://[사내Git주소]/surveyon-common.git
+npm install git+https://github.com/woojungeun97/surveyon-common.git
 ```
 
 ### 2) Kendo UI 라이선스 활성화
