@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { modalContext } from '@/components/common/Modal.jsx';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import * as XLSX from 'xlsx';
-import { X, Sparkles, Upload, RotateCw, Plus, Trash2, FileText, ExternalLink } from 'lucide-react';
+import { X, Sparkles, Upload, RotateCw, Plus, Trash2, FileText, ExternalLink, ClipboardList } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 
 const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanner, currentBannerLabel, defaultNewBannerName }) => {
@@ -411,26 +411,28 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                         </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {/* 문항리스트 뷰어 아이콘 버튼 (ClipboardList) */}
                         <button
+                            type="button"
                             onClick={handleOpenQuestionsInfo}
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '5px',
-                                padding: '6px 12px',
-                                fontSize: '12px',
-                                fontWeight: 600,
+                                justifyContent: 'center',
+                                width: '32px',
+                                height: '32px',
                                 color: 'var(--srt-primary-700, #3730a3)',
                                 backgroundColor: 'var(--srt-primary-50, #eef2ff)',
                                 border: '1px solid var(--srt-primary-200, #c7d2fe)',
                                 borderRadius: '6px',
                                 cursor: 'pointer',
-                                transition: 'all 0.15s'
+                                transition: 'all 0.15s ease'
                             }}
-                            title="문항 번호, 질문명, 보기 및 조건식을 참고할 수 있는 새창을 엽니다."
+                            title="문항리스트 뷰어 (새창)"
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--srt-primary-100, #e0e7ff)'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--srt-primary-50, #eef2ff)'}
                         >
-                            <ExternalLink size={13} />
-                            <span>문항리스트 뷰어</span>
+                            <ClipboardList size={16} />
                         </button>
                         <button
                             onClick={onClose}
@@ -593,18 +595,6 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
 
                             {/* Top Right Buttons inside Panel 2 */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <button
-                                    onClick={handleOpenQuestionsInfo}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: '5px',
-                                        padding: '4px 10px', fontSize: '11.5px', fontWeight: 600,
-                                        color: '#334155', backgroundColor: '#F8FAFC',
-                                        border: '1px solid #CBD5E1', borderRadius: '6px', cursor: 'pointer'
-                                    }}
-                                    title="문항 번호, 질문명, 보기 및 조건식을 참고할 수 있는 새창을 엽니다."
-                                >
-                                    <ExternalLink size={12} /> 문항리스트 참고
-                                </button>
                                 <button
                                     onClick={handleRecalculate}
                                     disabled={isRecalculating || items.length === 0}

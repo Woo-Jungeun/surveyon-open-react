@@ -2,7 +2,7 @@ import React, { useCallback, useState, useContext, useEffect, useRef } from 'rea
 import { useSelector } from 'react-redux';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { ColorPicker } from '@progress/kendo-react-inputs';
-import { X, GripVertical, Plus, Trash2, Save, Copy, Check, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, GripVertical, Plus, Trash2, Save, Copy, Check, Info, ChevronDown, ChevronUp, ClipboardList } from 'lucide-react';
 import { Popup } from '@progress/kendo-react-popup';
 import '@/components/common/popup/ConditionBuilderPopup.css';
 import KendoGridV2 from '@/components/kendo/KendoGridV2';
@@ -1451,6 +1451,18 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
     const { saveRecodedSet } = DpRequestPageApi();
     const [isRankOutputsOpen, setIsRankOutputsOpen] = useState(true);
 
+    // 문항리스트 뷰어 새창 열기
+    const handleOpenQuestionsInfo = useCallback(() => {
+        const pageId = sessionStorage.getItem('pageId') || '';
+        const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '';
+        const user = auth?.user?.userId || '';
+        window.open(
+            `/questions-info?pageId=${encodeURIComponent(pageId)}&pn=${encodeURIComponent(pn)}&user=${encodeURIComponent(user)}`,
+            'questions_info_popup',
+            'width=1320,height=880,scrollbars=yes,resizable=yes'
+        );
+    }, [auth?.user?.userId]);
+
     const sortOptions = [
         { text: '설문지순', value: 'none' },
         { text: '내림차순', value: 'n_desc' }
@@ -1626,7 +1638,29 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                             <Info size={14} color="var(--srt-primary-500)" />
                         </div>
                     </div>
-                    <div className="header-actions-cbp">
+                    <div className="header-actions-cbp" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button
+                            type="button"
+                            onClick={handleOpenQuestionsInfo}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: '32px',
+                                height: '32px',
+                                color: 'var(--srt-primary-700, #3730a3)',
+                                backgroundColor: 'var(--srt-primary-50, #eef2ff)',
+                                border: '1px solid var(--srt-primary-200, #c7d2fe)',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease'
+                            }}
+                            title="문항리스트 뷰어 (새창)"
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--srt-primary-100, #e0e7ff)'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--srt-primary-50, #eef2ff)'}
+                        >
+                            <ClipboardList size={16} />
+                        </button>
                         <button onClick={onClose} className="close-btn-cbp"><X size={20} /></button>
                     </div>
                 </div>

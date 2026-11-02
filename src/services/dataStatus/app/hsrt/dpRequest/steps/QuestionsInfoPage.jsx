@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Search, Copy, Check, ChevronDown, ChevronUp, X, Layers, ExternalLink } from 'lucide-react';
+import { Search, Copy, Check, ChevronDown, ChevronUp, X, Layers, ExternalLink, ClipboardList } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import { getSpss } from '../../../common/spssName';
 import '@/services/dataStatus/app/hsrt/srtTheme.css';
@@ -257,13 +257,14 @@ export default function QuestionsInfoPage() {
                         width: '26px',
                         height: '26px',
                         borderRadius: '6px',
-                        backgroundColor: '#EEF2FF',
-                        color: '#4F46E5',
+                        backgroundColor: '#EFF6FF',
+                        color: '#2563EB',
+                        border: '1px solid #DBEAFE',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
                     }}>
-                        <Layers size={15} />
+                        <ClipboardList size={15} />
                     </div>
                     <span style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap' }}>
                         문항 정보 조회

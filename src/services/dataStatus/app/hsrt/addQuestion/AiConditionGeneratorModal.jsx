@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { X, Trash2, Plus, Sparkles, Play } from 'lucide-react';
+import { X, Trash2, Plus, Sparkles, Play, ClipboardList } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { modalContext } from "@/components/common/Modal.jsx";
 import '@/components/common/popup/ConditionBuilderPopup.css';
@@ -12,6 +12,17 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
     const [generatedRules, setGeneratedRules] = useState([]);
     const [generatedType, setGeneratedType] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
+
+    // 문항리스트 뷰어 새창 열기
+    const handleOpenQuestionsInfo = () => {
+        const pageId = sessionStorage.getItem('pageId') || '';
+        const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '';
+        window.open(
+            `/questions-info?pageId=${encodeURIComponent(pageId)}&pn=${encodeURIComponent(pn)}&user=${encodeURIComponent(user || '')}`,
+            'questions_info_popup',
+            'width=1320,height=880,scrollbars=yes,resizable=yes'
+        );
+    };
 
     useEffect(() => {
         if (show) {
@@ -123,7 +134,29 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
                             자연어로 조건 설명을 입력하면 내부 로컬 LLM이 페이지의 문항 및 보기 라벨들을 분석하여 매핑 조건식 행을 자동으로 생성해 줍니다.
                         </p>
                     </div>
-                    <div className="header-actions-cbp">
+                    <div className="header-actions-cbp" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button
+                            type="button"
+                            onClick={handleOpenQuestionsInfo}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: '32px',
+                                height: '32px',
+                                color: 'var(--srt-primary-700, #3730a3)',
+                                backgroundColor: 'var(--srt-primary-50, #eef2ff)',
+                                border: '1px solid var(--srt-primary-200, #c7d2fe)',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease'
+                            }}
+                            title="문항리스트 뷰어 (새창)"
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--srt-primary-100, #e0e7ff)'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--srt-primary-50, #eef2ff)'}
+                        >
+                            <ClipboardList size={16} />
+                        </button>
                         <button onClick={onClose} className="close-btn-cbp"><X size={20} /></button>
                     </div>
                 </div>

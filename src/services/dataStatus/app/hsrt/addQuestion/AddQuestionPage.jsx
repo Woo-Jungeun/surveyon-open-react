@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, createContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Trash2, Search, ChevronLeft, ChevronRight, Wand2, Plus, Info, Sparkles, RotateCcw, FileCode } from 'lucide-react';
+import { Trash2, Search, ChevronLeft, ChevronRight, Wand2, Plus, Info, Sparkles, RotateCcw, FileCode, ClipboardList } from 'lucide-react';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -702,6 +702,18 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     const isHistoryAction = useRef(false);
 
     useImperativeHandle(ref, () => ({ save: async () => await handleSaveBanner() }));
+
+    // 문항리스트 뷰어 새창 열기
+    const handleOpenQuestionsInfo = useCallback(() => {
+        const pageId = sessionStorage.getItem('pageId') || '';
+        const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '';
+        const user = auth?.user?.userId || '';
+        window.open(
+            `/questions-info?pageId=${encodeURIComponent(pageId)}&pn=${encodeURIComponent(pn)}&user=${encodeURIComponent(user)}`,
+            'questions_info_popup',
+            'width=1320,height=880,scrollbars=yes,resizable=yes'
+        );
+    }, [auth?.user?.userId]);
 
     const [isCartesianModalOpen, setIsCartesianModalOpen] = useState(false);
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -1532,7 +1544,30 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                             <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500, userSelect: 'none' }}>
                                 💡 입력창 중 하나를 선택해 엑셀 열을 붙여넣기(Ctrl+V)하면 아래로 자동 채워집니다.
                             </span>
-                            <div style={{ display: 'flex', gap: '8px' }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <button
+                                    type="button"
+                                    onClick={handleOpenQuestionsInfo}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: '28px',
+                                        height: '28px',
+                                        color: 'var(--srt-primary-700, #3730a3)',
+                                        backgroundColor: 'var(--srt-primary-50, #eef2ff)',
+                                        border: '1px solid var(--srt-primary-200, #c7d2fe)',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.15s ease',
+                                        boxSizing: 'border-box'
+                                    }}
+                                    title="문항리스트 뷰어 (새창)"
+                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--srt-primary-100, #e0e7ff)'}
+                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--srt-primary-50, #eef2ff)'}
+                                >
+                                    <ClipboardList size={14} />
+                                </button>
                                 <button
                                     type="button"
                                     onClick={() => setIsBulkEditModalOpen(true)}
