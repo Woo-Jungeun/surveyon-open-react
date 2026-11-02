@@ -484,15 +484,15 @@ const AiReportContentStep = ({
                                             padding: '0 12px',
                                             fontSize: '12px',
                                             fontWeight: 600,
-                                            backgroundColor: 'var(--srt-primary-600)',
+                                            backgroundColor: 'var(--srt-primary-500)',
                                             color: '#ffffff',
                                             border: 'none',
                                             borderRadius: '6px',
                                             cursor: 'pointer',
                                             transition: 'all 0.15s ease'
                                         }}
-                                        onMouseOver={(e) => { e.target.style.backgroundColor = 'var(--srt-primary-700)'; }}
-                                        onMouseOut={(e) => { e.target.style.backgroundColor = 'var(--srt-primary-600)'; }}
+                                        onMouseOver={(e) => { e.target.style.backgroundColor = 'var(--srt-primary-600)'; }}
+                                        onMouseOut={(e) => { e.target.style.backgroundColor = 'var(--srt-primary-500)'; }}
                                     >
                                         저장
                                     </button>
@@ -734,15 +734,15 @@ const AiReportContentStep = ({
                                                 padding: '0 12px',
                                                 fontSize: '12px',
                                                 fontWeight: 600,
-                                                backgroundColor: 'var(--srt-primary-600)',
+                                                backgroundColor: 'var(--srt-primary-500)',
                                                 color: '#ffffff',
                                                 border: 'none',
                                                 borderRadius: '6px',
                                                 cursor: 'pointer',
                                                 transition: 'all 0.15s ease'
                                             }}
-                                            onMouseOver={(e) => { e.target.style.backgroundColor = 'var(--srt-primary-700)'; }}
-                                            onMouseOut={(e) => { e.target.style.backgroundColor = 'var(--srt-primary-600)'; }}
+                                            onMouseOver={(e) => { e.target.style.backgroundColor = 'var(--srt-primary-600)'; }}
+                                            onMouseOut={(e) => { e.target.style.backgroundColor = 'var(--srt-primary-500)'; }}
                                         >
                                             저장
                                         </button>

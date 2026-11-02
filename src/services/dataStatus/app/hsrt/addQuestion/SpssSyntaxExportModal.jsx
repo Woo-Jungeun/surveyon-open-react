@@ -336,7 +336,7 @@ const SpssSyntaxExportModal = ({
                                             width: '8px',
                                             height: '8px',
                                             borderRadius: '50%',
-                                            backgroundColor: 'var(--srt-primary-600, #2563eb)'
+                                            backgroundColor: 'var(--srt-primary-500, #3b82f6)'
                                         }} />
                                     )}
                                 </div>
@@ -367,7 +367,7 @@ const SpssSyntaxExportModal = ({
                                             width: '16px',
                                             height: '16px',
                                             borderRadius: '50%',
-                                            border: isCurrent ? '1.5px solid var(--srt-primary-600, #2563eb)' : '1.5px solid #94a3b8',
+                                            border: isCurrent ? '1.5px solid var(--srt-primary-500, #3b82f6)' : '1.5px solid #94a3b8',
                                             backgroundColor: '#ffffff',
                                             display: 'flex',
                                             alignItems: 'center',
@@ -380,7 +380,7 @@ const SpssSyntaxExportModal = ({
                                                     width: '8px',
                                                     height: '8px',
                                                     borderRadius: '50%',
-                                                    backgroundColor: 'var(--srt-primary-600, #2563eb)'
+                                                    backgroundColor: 'var(--srt-primary-500, #3b82f6)'
                                                 }} />
                                             )}
                                         </div>
@@ -400,7 +400,7 @@ const SpssSyntaxExportModal = ({
                                     width: '16px',
                                     height: '16px',
                                     borderRadius: '50%',
-                                    border: targetMode === 'custom' ? '1.5px solid var(--srt-primary-600, #2563eb)' : '1.5px solid #94a3b8',
+                                    border: targetMode === 'custom' ? '1.5px solid var(--srt-primary-500, #3b82f6)' : '1.5px solid #94a3b8',
                                     backgroundColor: '#ffffff',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -413,7 +413,7 @@ const SpssSyntaxExportModal = ({
                                             width: '8px',
                                             height: '8px',
                                             borderRadius: '50%',
-                                            backgroundColor: 'var(--srt-primary-600, #2563eb)'
+                                            backgroundColor: 'var(--srt-primary-500, #3b82f6)'
                                         }} />
                                     )}
                                 </div>
@@ -937,8 +937,8 @@ const SpssSyntaxExportModal = ({
                             onClick={handleDownload}
                             disabled={!syntaxContent || isLoading || isDownloading}
                             style={{
-                                background: 'var(--srt-primary-600, #2563eb)',
-                                borderColor: 'var(--srt-primary-600, #2563eb)',
+                                background: 'var(--srt-primary-500, #3b82f6)',
+                                borderColor: 'var(--srt-primary-500, #3b82f6)',
                                 color: '#ffffff',
                                 display: 'inline-flex',
                                 alignItems: 'center',
@@ -951,7 +951,20 @@ const SpssSyntaxExportModal = ({
                                 fontWeight: 600,
                                 opacity: (!syntaxContent || isLoading || isDownloading) ? 0.5 : 1,
                                 cursor: (!syntaxContent || isLoading || isDownloading) ? 'default' : 'pointer',
-                                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                                transition: 'all 0.15s ease'
+                            }}
+                            onMouseOver={(e) => {
+                                if (syntaxContent && !isLoading && !isDownloading) {
+                                    e.currentTarget.style.background = 'var(--srt-primary-600, #2563eb)';
+                                    e.currentTarget.style.borderColor = 'var(--srt-primary-600, #2563eb)';
+                                }
+                            }}
+                            onMouseOut={(e) => {
+                                if (syntaxContent && !isLoading && !isDownloading) {
+                                    e.currentTarget.style.background = 'var(--srt-primary-500, #3b82f6)';
+                                    e.currentTarget.style.borderColor = 'var(--srt-primary-500, #3b82f6)';
+                                }
                             }}
                         >
                             {isDownloading ? (

@@ -157,12 +157,12 @@ const AiConditionGeneratorModal = ({ show, onClose, onApply, autoGenerateLogic, 
                                 disabled={isGenerating}
                                 style={{
                                     width: '100%', height: '36px', border: 'none', borderRadius: '4px',
-                                    background: 'var(--srt-primary-600)', color: '#ffffff', fontSize: '13px', fontWeight: 600,
+                                    background: 'var(--srt-primary-500)', color: '#ffffff', fontSize: '13px', fontWeight: 600,
                                     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     gap: '6px', transition: 'background 0.15s', marginTop: '19px'
                                 }}
-                                onMouseOver={(e) => { if (!isGenerating) e.currentTarget.style.background = 'var(--srt-primary-700)'; }}
-                                onMouseOut={(e) => { if (!isGenerating) e.currentTarget.style.background = 'var(--srt-primary-600)'; }}
+                                onMouseOver={(e) => { if (!isGenerating) e.currentTarget.style.background = 'var(--srt-primary-600)'; }}
+                                onMouseOut={(e) => { if (!isGenerating) e.currentTarget.style.background = 'var(--srt-primary-500)'; }}
                             >
                                 {isGenerating ? (
                                     <>

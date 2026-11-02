@@ -90,14 +90,14 @@
 }
 
 .pl-action-btn.primary {
-    background: var(--srt-primary-600, #1472ff);
-    border-color: var(--srt-primary-600, #1472ff);
+    background: var(--srt-primary-500, #3b82f6);
+    border-color: var(--srt-primary-500, #3b82f6);
     color: var(--srt-on-primary, #fff);
 }
 
 .pl-action-btn.primary:hover {
-    background: var(--srt-primary-700, #0d5be3);
-    border-color: var(--srt-primary-700, #0d5be3);
+    background: var(--srt-primary-600, #2563eb);
+    border-color: var(--srt-primary-600, #2563eb);
 }
 
 .pl-edit-input {

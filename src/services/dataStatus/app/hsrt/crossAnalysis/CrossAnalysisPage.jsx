@@ -3987,7 +3987,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            background: 'var(--srt-primary-600)',
+                                            background: 'var(--srt-primary-500)',
                                             color: '#ffffff',
                                             border: 'none',
                                             borderRadius: '6px',
@@ -3998,10 +3998,10 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             transition: 'background-color 0.2s',
                                         }}
                                         onMouseOver={(e) => {
-                                            e.currentTarget.style.background = 'var(--srt-primary-700)';
+                                            e.currentTarget.style.background = 'var(--srt-primary-600)';
                                         }}
                                         onMouseOut={(e) => {
-                                            e.currentTarget.style.background = 'var(--srt-primary-600)';
+                                            e.currentTarget.style.background = 'var(--srt-primary-500)';
                                         }}
                                     >
                                         적용
@@ -4490,7 +4490,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         style={{
                                             height: '32px',
                                             padding: '0 10px',
-                                            background: 'var(--srt-primary-600)',
+                                            background: 'var(--srt-primary-500)',
                                             color: '#ffffff',
                                             border: 'none',
                                             borderRadius: '6px',
@@ -4504,8 +4504,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             flexShrink: 0,
                                             transition: 'background 0.15s'
                                         }}
-                                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--srt-primary-700)'}
-                                        onMouseLeave={(e) => e.currentTarget.style.background = 'var(--srt-primary-600)'}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--srt-primary-600)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'var(--srt-primary-500)'}
                                     >
                                         검색
                                     </button>
@@ -5058,9 +5058,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     setIsExcelModalOpen(false);
                                     await handleExcelExport();
                                 }}
-                                onMouseOver={(e) => e.target.style.background = 'var(--srt-primary-700)'}
-                                onMouseOut={(e) => e.target.style.background = 'var(--srt-primary-600)'}
-                                style={{ padding: '10px 24px', background: 'var(--srt-primary-600)', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, transition: 'background 0.2s' }}
+                                onMouseOver={(e) => e.target.style.background = 'var(--srt-primary-600)'}
+                                onMouseOut={(e) => e.target.style.background = 'var(--srt-primary-500)'}
+                                style={{ padding: '10px 24px', background: 'var(--srt-primary-500)', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, transition: 'background 0.2s' }}
                             >
                                 다운로드
                             </button>

@@ -4234,9 +4234,9 @@ const AdditionalAnalysisPage = () => {
                                     setIsExcelModalOpen(false);
                                     await handleExcelExport();
                                 }}
-                                onMouseOver={(e) => e.target.style.background = 'var(--srt-primary-700)'}
-                                onMouseOut={(e) => e.target.style.background = 'var(--srt-primary-600)'}
-                                style={{ padding: '10px 24px', background: 'var(--srt-primary-600)', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, transition: 'background 0.2s' }}
+                                onMouseOver={(e) => e.target.style.background = 'var(--srt-primary-600)'}
+                                onMouseOut={(e) => e.target.style.background = 'var(--srt-primary-500)'}
+                                style={{ padding: '10px 24px', background: 'var(--srt-primary-500)', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, transition: 'background 0.2s' }}
                             >
                                 다운로드
                             </button>

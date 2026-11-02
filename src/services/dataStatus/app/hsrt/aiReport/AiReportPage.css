@@ -646,7 +646,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    background: var(--srt-primary-600);
+    background: var(--srt-primary-500);
     color: #ffffff;
     border: none;
     border-radius: 6px;
@@ -656,6 +656,11 @@
     font-weight: 700;
     cursor: pointer;
     box-sizing: border-box;
+    transition: background 0.15s ease;
+}
+
+.ai-add-category-btn:hover {
+    background: var(--srt-primary-600);
 }
 
 .ai-category-toggle-tabs {

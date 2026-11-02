@@ -157,7 +157,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    background: var(--srt-primary-600);
+    background: var(--srt-primary-500);
     color: #ffffff;
     border: none;
     padding: 8px 16px;
@@ -169,7 +169,7 @@
 }
 
 .dp-primary-btn:hover {
-    background: var(--srt-primary-700);
+    background: var(--srt-primary-600);
 }
 
 /* Accordion */

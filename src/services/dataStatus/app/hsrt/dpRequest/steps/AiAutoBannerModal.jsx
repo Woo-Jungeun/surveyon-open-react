@@ -894,10 +894,13 @@ const AiAutoBannerModal = ({ isOpen, onClose, onApplyToCurrent, onCreateNewBanne
                                     onClick={handleConfirmCreateNew}
                                     style={{
                                         padding: '7px 18px', fontSize: '12.5px', fontWeight: 700,
-                                        color: '#ffffff', backgroundColor: 'var(--srt-primary-600)',
+                                        color: '#ffffff', backgroundColor: 'var(--srt-primary-500)',
                                         border: 'none', borderRadius: '6px', cursor: 'pointer',
-                                        boxShadow: '0 2px 4px color-mix(in srgb, var(--srt-primary-600) 25%, transparent)'
+                                        boxShadow: '0 2px 4px color-mix(in srgb, var(--srt-primary-500) 25%, transparent)',
+                                        transition: 'all 0.15s ease'
                                     }}
+                                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'var(--srt-primary-600)'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'var(--srt-primary-500)'; }}
                                 >
                                     생성 완료
                                 </button>

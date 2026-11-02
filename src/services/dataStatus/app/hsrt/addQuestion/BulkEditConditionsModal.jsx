@@ -214,14 +214,14 @@ const BulkEditConditionsModal = ({ show, currentInfo, onClose, onApply }) => {
                             border: 'none',
                             borderRadius: '6px',
                             color: '#ffffff',
-                            background: 'var(--srt-primary-600)',
+                            background: 'var(--srt-primary-500)',
                             fontSize: '13px',
                             fontWeight: 600,
                             cursor: 'pointer',
                             transition: 'all 0.15s'
                         }}
-                        onMouseOver={(e) => { e.currentTarget.style.background = 'var(--srt-primary-700)'; }}
-                        onMouseOut={(e) => { e.currentTarget.style.background = 'var(--srt-primary-600)'; }}
+                        onMouseOver={(e) => { e.currentTarget.style.background = 'var(--srt-primary-600)'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.background = 'var(--srt-primary-500)'; }}
                     >
                         일괄 적용
                     </button>

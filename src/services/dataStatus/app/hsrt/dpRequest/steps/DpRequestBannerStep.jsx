@@ -897,14 +897,17 @@ const BannerActionFooter = memo(({ onCreateBanner, name, onNameChange }) => {
                     fontSize: '13px',
                     fontWeight: 600,
                     borderRadius: '6px',
-                    background: 'var(--srt-primary-600)',
+                    background: 'var(--srt-primary-500)',
                     color: '#fff',
                     border: 'none',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    transition: 'all 0.15s ease'
                 }}
+                onMouseOver={(e) => { e.currentTarget.style.background = 'var(--srt-primary-600)'; }}
+                onMouseOut={(e) => { e.currentTarget.style.background = 'var(--srt-primary-500)'; }}
             >
                 배너 생성
             </button>
@@ -2737,16 +2740,16 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             borderRadius: '6px',
                                             border: 'none',
                                             color: '#FFFFFF',
-                                            background: 'var(--srt-primary-600, #4f80ff)',
+                                            background: 'var(--srt-primary-500, #3b82f6)',
                                             fontSize: '12px',
                                             fontWeight: 700,
                                             cursor: 'pointer',
-                                            boxShadow: '0 2px 4px color-mix(in srgb, var(--srt-primary-600, #4f80ff) 30%, transparent)',
+                                            boxShadow: '0 2px 4px color-mix(in srgb, var(--srt-primary-500, #3b82f6) 30%, transparent)',
                                             transition: 'all 0.15s',
                                             boxSizing: 'border-box'
                                         }}
-                                        onMouseOver={(e) => { e.currentTarget.style.background = 'var(--srt-primary-700, #3b66d9)'; }}
-                                        onMouseOut={(e) => { e.currentTarget.style.background = 'var(--srt-primary-600, #4f80ff)'; }}
+                                        onMouseOver={(e) => { e.currentTarget.style.background = 'var(--srt-primary-600, #2563eb)'; }}
+                                        onMouseOut={(e) => { e.currentTarget.style.background = 'var(--srt-primary-500, #3b82f6)'; }}
                                     >
                                         <Sparkles size={13} /> 자동 배너생성
                                     </button>

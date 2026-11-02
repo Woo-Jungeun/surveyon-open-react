@@ -625,11 +625,11 @@ modal.showAlert('알림', `'${band.label}' 밴드에 지정된 값이 없습니�
                         onClick={handleConfirm}
                         style={{
                             padding: '7px 20px', fontSize: '12.5px', borderRadius: '4px', border: 'none',
-                            background: 'var(--srt-primary-600)', color: '#ffffff',
+                            background: 'var(--srt-primary-500)', color: '#ffffff',
                             fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.15s'
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--srt-primary-700)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--srt-primary-600)'; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--srt-primary-600)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--srt-primary-500)'; }}
                     >
                         <span>{mode === 'edit' ? '저장하기' : '요약표 생성하기'}</span>
                     </button>
