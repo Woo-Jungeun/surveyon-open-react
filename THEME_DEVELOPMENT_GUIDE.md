@@ -93,8 +93,76 @@ export default MyServicePage;
 `PageLayout.css`에 내장된 공통 버튼 클래스로, 서비스 테마 색상을 자동으로 반영합니다:
 - `className="cmn-btn cmn-btn-primary"`: 서비스 메인 색상 채움 버튼
 - `className="cmn-btn cmn-btn-secondary"`: 연한 회색 보조 버튼
-- `className="cmn-btn cmn-btn-outline"`: 테두리 버튼
+- `className="cmn-btn cmn-btn-outline"`: 테두리 버튼 (시그니처 라인)
 - `className="cmn-btn cmn-btn-danger"`: 위험/삭제 전용 빨간 버튼
+- `className="cmn-btn cmn-btn-sm"`: 28px 소형 버튼
+
+```jsx
+// 버튼 실무 사용 예시
+<button type="button" className="cmn-btn cmn-btn-primary" onClick={handleSave}>
+  <Save size={15} />
+  <span>저장</span>
+</button>
+<button type="button" className="cmn-btn cmn-btn-outline" onClick={handleAdd}>
+  <Plus size={15} />
+  <span>행 추가</span>
+</button>
+```
+
+### 📊 Kendo Grid 높이 100% 핏(Fit) 배치 공식
+화면 크기에 맞춰 그리드가 스크롤 영역을 꽉 채우도록 작성하는 표준 규격입니다:
+```jsx
+<PageContainer title="사용자 목록" contentPadding={true}>
+  {/* wrapper에 height: 100% 및 flex: 1 부여 */}
+  <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Grid
+      style={{ height: '100%' }}
+      data={dataList}
+      pageable={true}
+      sortable={true}
+    >
+      <GridColumn field="id" title="번호" width="80px" />
+      <GridColumn field="name" title="이름" />
+      <GridColumn field="role" title="권한" />
+    </Grid>
+  </div>
+</PageContainer>
+```
+> **자동 테마 연동**: `surveyon-theme.css`가 적용되어 있으므로 그리드의 헤더, 행 호버(Hover), 행 선택(`k-selected`) 색상이 대메뉴 테마에 맞춰 **자동으로 100% 연동**됩니다.
+
+### 🔔 전역 모달(Modal) & 로딩 스피너(LoadingSpinner) 사용법
+설문온 표준 알림/확인 팝업은 브라우저 기본 `alert()` 대신 `modalContext`를 사용합니다:
+```jsx
+import { useContext } from 'react';
+import { modalContext, loadingSpinnerContext } from 'surveyon-common';
+
+const MyPage = () => {
+  const modal = useContext(modalContext);
+  const loading = useContext(loadingSpinnerContext);
+
+  const onSubmit = async () => {
+    modal.showConfirm("확인", "정말 저장하시겠습니까?", {
+      btns: [
+        { title: "취소", background: "#75849a" },
+        {
+          title: "저장",
+          click: async () => {
+            try {
+              loading.show();
+              await saveData();
+              modal.showAlert("알림", "성공적으로 저장되었습니다.");
+            } catch (e) {
+              modal.showErrorAlert("오류", "저장에 실패했습니다.");
+            } finally {
+              loading.hide();
+            }
+          }
+        }
+      ]
+    });
+  };
+};
+```
 
 ### 🎯 크롤링 및 E2E 테스트 자동화용 고유 ID 규격
 화면 자동화 테스트(Selenium, Playwright, Puppeteer 등) 및 데이터 크롤링을 위해 모든 공통 레이아웃 컴포넌트의 핵심 영역에 표준 고유 `id`가 부여되어 있습니다:
@@ -118,6 +186,8 @@ export default MyServicePage;
 | **`AppSidebar`** | 사이드바 메뉴 네비 | `id="app-sidebar-nav"` | 전체 스크롤 메뉴 리스트 |
 | **`AppSidebar`** | 사이드바 푸터 | `id="app-sidebar-footer"` | 사용자 프로필 및 로그아웃 영역 |
 | **`PageFooter`** | 하단 푸터 `<footer>` | `id="app-footer"` | 카피라이트 및 시스템 운영 상태 |
+
+---
 
 ---
 
@@ -307,3 +377,8 @@ export default defineConfig({
 ### 3. 스크롤 시 드롭다운 닫기 구현 시 DOM 오염 주의
 - 팝업 컨테이너에 `style.display = 'none'`을 강제로 주입하면 다음 클릭 시 팝업이 다시 열리지 않는 버그가 생깁니다.
 - 브라우저 외부 클릭 이벤트(`mousedown`, `pointerdown`)와 `blur()`를 dispatch하여 Kendo가 자체적으로 정상 클린업 후 닫히도록 해야 합니다.
+
+### 4. 백엔드 통신 시 인증 토큰 자동 첨부 (`api` 모듈 사용)
+- `surveyon-common`의 `api` 모듈(`api.get`, `api.post`, `api.file`)을 사용하면 브라우저 쿠키의 `TOKEN`, `X-Auth-Token` 및 `X-User-Id`가 자동으로 첨부됩니다.
+- 개별 화면에서 매번 Axios 인스턴스를 새로 생성하거나 토큰 헤더를 수동으로 심지 마세요.
+

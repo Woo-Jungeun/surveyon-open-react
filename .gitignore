@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Standalone Shared Package
+surveyon-common/
+scratch/
