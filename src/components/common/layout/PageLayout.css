@@ -498,3 +498,62 @@
     background: #94a3b8 !important;
 }
 
+/* ==========================================================================
+   설문온 공통 하단 푸터 (PageFooter / FooterSection 표준 규격)
+   ========================================================================== */
+.hp-footer {
+    width: 100%;
+    height: 40px !important;
+    min-height: 40px;
+    position: relative;
+    background: #ffffff;
+    border-top: 1px solid var(--ds-border, #e2e8f0);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 20px !important;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.hp-footer-inner {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #64748b;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+
+.hp-footer-inner p {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.hp-footer-inner p img {
+    height: 22px;
+    vertical-align: middle;
+}
+
+.hp-footer-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.hp-status-dot {
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border-radius: 50%;
+    display: inline-block;
+}
+
