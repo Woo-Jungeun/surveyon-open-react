@@ -1,4 +1,7 @@
 @charset "utf-8";
+@import "./reset.css";
+@import "./common.css";
+@import "./kendo_custom.css";
 
 /**
  * ==============================================================================
@@ -83,6 +86,7 @@
 }
 
 /* 1-1. H-SRT (Data Dashboard / H-SRT : 블루 계열 / 화이트라벨 브랜드 연동) */
+[data-theme="hsrt"],
 [data-theme="data-dashboard"] {
     --primary-color: var(--srt-brand, var(--srt-primary-500, #3b82f6));
     --primary-hover: var(--srt-primary-600, #2563eb);
@@ -250,6 +254,7 @@
  * ============================================================================== */
 
 /* 3-1. 그리드 헤더 (Header) */
+[data-theme="hsrt"] .k-grid-header,
 [data-theme="data-dashboard"] .k-grid-header,
 [data-theme="dataManagement"] .k-grid-header,
 [data-theme="data-management"] .k-grid-header,
@@ -262,6 +267,7 @@
     border-bottom: 2px solid var(--primary-border);
 }
 
+[data-theme="hsrt"] .k-grid-header .k-header,
 [data-theme="data-dashboard"] .k-grid-header .k-header,
 [data-theme="dataManagement"] .k-grid-header .k-header,
 [data-theme="data-management"] .k-grid-header .k-header,
@@ -279,6 +285,9 @@
 }
 
 /* 3-2. 그리드 행 호버 (Row Hover) - 본체 화면(.app-layout-content)에만 적용하여 팝업 모달 침범 원천 차단 */
+[data-theme="hsrt"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover,
+[data-theme="hsrt"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover td,
+[data-theme="hsrt"] .app-layout-content .k-grid tr:hover,
 [data-theme="data-dashboard"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover,
 [data-theme="data-dashboard"] .app-layout-content .k-grid-content tr:not(.k-grouping-row):hover td,
 [data-theme="data-dashboard"] .app-layout-content .k-grid tr:hover {
@@ -311,43 +320,78 @@
     background-color: #FFF7ED !important;
 }
 
-/* 3-3. 그리드 행 선택 (Row Selection) - 본체 화면(.app-layout-content)에만 적용 */
+/* 3-3. 그리드 행 선택 (Row Selection) - Kendo v7(.k-selected) 및 구버전(.k-state-selected) 모두 대응 */
+[data-theme="hsrt"] .app-layout-content .k-grid td.k-state-selected,
+[data-theme="hsrt"] .app-layout-content .k-grid tr.k-state-selected > td,
+[data-theme="hsrt"] .app-layout-content .k-grid td.k-selected,
+[data-theme="hsrt"] .app-layout-content .k-grid tr.k-selected > td,
+[data-theme="hsrt"] .app-layout-content .k-grid .k-table-row.k-selected > td,
+[data-theme="hsrt"] .app-layout-content .k-grid .k-table-row.k-selected > .k-table-td,
 [data-theme="data-dashboard"] .app-layout-content .k-grid td.k-state-selected,
-[data-theme="data-dashboard"] .app-layout-content .k-grid tr.k-state-selected>td,
+[data-theme="data-dashboard"] .app-layout-content .k-grid tr.k-state-selected > td,
 [data-theme="data-dashboard"] .app-layout-content .k-grid td.k-selected,
-[data-theme="data-dashboard"] .app-layout-content .k-grid tr.k-selected>td,
-[data-theme="data-dashboard"] .app-layout-content .k-grid .k-table-row.k-selected>td {
-    background-color: var(--srt-primary-50, #eff6ff) !important;
-    color: #1f2937 !important;
+[data-theme="data-dashboard"] .app-layout-content .k-grid tr.k-selected > td,
+[data-theme="data-dashboard"] .app-layout-content .k-grid .k-table-row.k-selected > td,
+[data-theme="data-dashboard"] .app-layout-content .k-grid .k-table-row.k-selected > .k-table-td {
+    background-color: var(--primary-bg-selected, var(--srt-primary-50, #eff6ff)) !important;
+    color: var(--ds-text-main, #1f2937) !important;
 }
 
 /* 데이터관리: 초록 계열 선택 */
 [data-theme="dataManagement"] .app-layout-content .k-grid td.k-state-selected,
-[data-theme="dataManagement"] .app-layout-content .k-grid tr.k-state-selected>td,
+[data-theme="dataManagement"] .app-layout-content .k-grid tr.k-state-selected > td,
+[data-theme="dataManagement"] .app-layout-content .k-grid td.k-selected,
+[data-theme="dataManagement"] .app-layout-content .k-grid tr.k-selected > td,
+[data-theme="dataManagement"] .app-layout-content .k-grid .k-table-row.k-selected > td,
+[data-theme="dataManagement"] .app-layout-content .k-grid .k-table-row.k-selected > .k-table-td,
 [data-theme="data-management"] .app-layout-content .k-grid td.k-state-selected,
-[data-theme="data-management"] .app-layout-content .k-grid tr.k-state-selected>td {
-    background-color: #dcfce7 !important;
-    color: #166534 !important;
+[data-theme="data-management"] .app-layout-content .k-grid tr.k-state-selected > td,
+[data-theme="data-management"] .app-layout-content .k-grid td.k-selected,
+[data-theme="data-management"] .app-layout-content .k-grid tr.k-selected > td,
+[data-theme="data-management"] .app-layout-content .k-grid .k-table-row.k-selected > td,
+[data-theme="data-management"] .app-layout-content .k-grid .k-table-row.k-selected > .k-table-td {
+    background-color: var(--primary-bg-selected, #dcfce7) !important;
+    color: var(--ds-text-main, #166534) !important;
 }
 
 /* 실사관리: 블루 계열 선택 */
 [data-theme="fieldManagement"] .app-layout-content .k-grid td.k-state-selected,
-[data-theme="fieldManagement"] .app-layout-content .k-grid tr.k-state-selected>td,
+[data-theme="fieldManagement"] .app-layout-content .k-grid tr.k-state-selected > td,
+[data-theme="fieldManagement"] .app-layout-content .k-grid td.k-selected,
+[data-theme="fieldManagement"] .app-layout-content .k-grid tr.k-selected > td,
+[data-theme="fieldManagement"] .app-layout-content .k-grid .k-table-row.k-selected > td,
+[data-theme="fieldManagement"] .app-layout-content .k-grid .k-table-row.k-selected > .k-table-td,
 [data-theme="field-management"] .app-layout-content .k-grid td.k-state-selected,
-[data-theme="field-management"] .app-layout-content .k-grid tr.k-state-selected>td {
-    background-color: #eff6ff !important;
-    color: #1f2937 !important;
+[data-theme="field-management"] .app-layout-content .k-grid tr.k-state-selected > td,
+[data-theme="field-management"] .app-layout-content .k-grid td.k-selected,
+[data-theme="field-management"] .app-layout-content .k-grid tr.k-selected > td,
+[data-theme="field-management"] .app-layout-content .k-grid .k-table-row.k-selected > td,
+[data-theme="field-management"] .app-layout-content .k-grid .k-table-row.k-selected > .k-table-td {
+    background-color: var(--primary-bg-selected, #dbeafe) !important;
+    color: var(--ds-text-main, #1f2937) !important;
 }
 
 /* AI 오픈분석: 오렌지 계열 선택 */
 [data-theme="aiOpen"] .app-layout-content .k-grid td.k-state-selected,
-[data-theme="aiOpen"] .app-layout-content .k-grid tr.k-state-selected>td,
+[data-theme="aiOpen"] .app-layout-content .k-grid tr.k-state-selected > td,
+[data-theme="aiOpen"] .app-layout-content .k-grid td.k-selected,
+[data-theme="aiOpen"] .app-layout-content .k-grid tr.k-selected > td,
+[data-theme="aiOpen"] .app-layout-content .k-grid .k-table-row.k-selected > td,
+[data-theme="aiOpen"] .app-layout-content .k-grid .k-table-row.k-selected > .k-table-td,
 [data-theme="aiOpenAnalysis"] .app-layout-content .k-grid td.k-state-selected,
-[data-theme="aiOpenAnalysis"] .app-layout-content .k-grid tr.k-state-selected>td,
+[data-theme="aiOpenAnalysis"] .app-layout-content .k-grid tr.k-state-selected > td,
+[data-theme="aiOpenAnalysis"] .app-layout-content .k-grid td.k-selected,
+[data-theme="aiOpenAnalysis"] .app-layout-content .k-grid tr.k-selected > td,
+[data-theme="aiOpenAnalysis"] .app-layout-content .k-grid .k-table-row.k-selected > td,
+[data-theme="aiOpenAnalysis"] .app-layout-content .k-grid .k-table-row.k-selected > .k-table-td,
 [data-theme="ai-open-analysis"] .app-layout-content .k-grid td.k-state-selected,
-[data-theme="ai-open-analysis"] .app-layout-content .k-grid tr.k-state-selected>td {
-    background-color: #FFEDD5 !important;
-    color: #1f2937 !important;
+[data-theme="ai-open-analysis"] .app-layout-content .k-grid tr.k-state-selected > td,
+[data-theme="ai-open-analysis"] .app-layout-content .k-grid td.k-selected,
+[data-theme="ai-open-analysis"] .app-layout-content .k-grid tr.k-selected > td,
+[data-theme="ai-open-analysis"] .app-layout-content .k-grid .k-table-row.k-selected > td,
+[data-theme="ai-open-analysis"] .app-layout-content .k-grid .k-table-row.k-selected > .k-table-td {
+    background-color: var(--primary-bg-selected, #FFEDD5) !important;
+    color: var(--ds-text-main, #1f2937) !important;
 }
 
 /* 3-4. 프로젝트 선택 모달 (.ps-modal-container): 어떤 화면/어떤 테마에서도 무조건 보라색 고정 (최우선 순위) */
@@ -606,6 +650,9 @@ body[data-srt-brand] .k-animation-container .k-list-item:hover:not(.k-selected) 
  * ============================================================================== */
 
 /* 5-1. Primary 버튼 */
+[data-theme="hsrt"] .btn-primary,
+[data-theme="hsrt"] .k-button-solid-primary,
+[data-theme="hsrt"] .cmn-btn-primary,
 [data-theme="data-dashboard"] .btn-primary,
 [data-theme="data-dashboard"] .k-button-solid-primary,
 [data-theme="data-dashboard"] .cmn-btn-primary {
@@ -653,6 +700,9 @@ body[data-srt-brand] .k-animation-container .k-list-item:hover:not(.k-selected) 
     color: #fff !important;
 }
 
+[data-theme="hsrt"] .btn-primary:hover,
+[data-theme="hsrt"] .k-button-solid-primary:hover,
+[data-theme="hsrt"] .cmn-btn-primary:hover,
 [data-theme="data-dashboard"] .btn-primary:hover,
 [data-theme="data-dashboard"] .k-button-solid-primary:hover,
 [data-theme="data-dashboard"] .cmn-btn-primary:hover {

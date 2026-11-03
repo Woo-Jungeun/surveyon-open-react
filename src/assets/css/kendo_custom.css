@@ -507,6 +507,34 @@ div.k-grid-header {
   mask-size: 12px 10px;
 }
 
+/* 헤더 체크박스 부분 선택(:indeterminate) 테마 색상 연동 */
+.k-table .k-checkbox-wrap .k-checkbox[type='checkbox']:indeterminate,
+.k-checkbox:indeterminate {
+  border: 1px solid var(--primary-color) !important;
+  background-color: #fff !important;
+  background-image: none !important;
+  position: relative;
+}
+
+.k-table .k-checkbox-wrap .k-checkbox[type='checkbox']:indeterminate::before,
+.k-checkbox:indeterminate::before {
+  content: "";
+  display: block;
+  width: 10px;
+  height: 2px;
+  background-color: var(--primary-color);
+  margin: auto;
+  position: absolute;
+  inset: 0;
+  border-radius: 1px;
+}
+
+/* 그리드 헤더 정렬 화살표(↑/↓) 테마 색상 연동 */
+.k-grid-header .k-sort-icon,
+.k-grid-header .k-sort-order {
+  color: var(--primary-color) !important;
+}
+
 .k-table .k-checkbox-wrap .k-checkbox[type='checkbox']:focus {
   box-shadow: none;
 }

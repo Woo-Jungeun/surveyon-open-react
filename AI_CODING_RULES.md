@@ -24,7 +24,7 @@
 - ❌ **Axios 직접 생성 금지**: 반드시 `surveyon-common`의 `api` 모듈(`api.get`, `api.post`)을 사용하며, 응답 성공 판별은 `String(res?.success) === '777'`, 실제 데이터 추출은 **`res.resultjson`** 필드를 기준으로 처리하십시오.
 - ❌ **임의의 HTML `<table>` 또는 타 그리드 라이브러리 사용 금지**: 모든 목록/테이블/데이터 그리드 화면은 반드시 **Kendo React Grid (`@progress/kendo-react-grid`의 `<Grid>`, `<GridColumn>` 또는 `surveyon-common`의 `KendoGrid`, `KendoGridV2`)**를 사용하십시오.
 - ✅ **모든 신규 페이지는 `<PageContainer>`로 래핑**: 화면 높이 100% 핏을 반드시 유지해야 합니다.
-- ✅ **신규 프로젝트 구성 시 React 18(`^18.2.0`) 고정, `.env` 및 `main.jsx`에 Kendo 라이센스(`import '@progress/kendo-licensing'`) 등록, `surveyon-theme.css` 필수 import** (Vite 기본 `index.css`로 원본 `SpoqaHanSansNeo` 폰트나 버튼 `padding: 0` 리셋을 덮어쓰지 마십시오).
+- ✅ **신규 프로젝트 구성 시 React 18(`^18.2.0`) 고정, `.env` 및 `main.jsx`에 Kendo 라이센스(`import '@progress/kendo-licensing'`) 등록, CSS import 순서(`all.css` 먼저 → `surveyon-theme.css` 나중) 엄수** (순서가 바뀌면 Kendo 기본 다홍색 `#ff6358`이 테마 선택색을 덮어씁니다).
 - ✅ **크롤링 및 자동화 테스트용 고유 `id` 속성 필수 부여**: 표준 ID 체계를 누락하지 마십시오.
 
 ---
@@ -74,8 +74,14 @@ TELERIK_LICENSE=eyJhbGciOiJSUzI1NiIsInR5cCI6IlRlbGVyaWsgTGljZW5zZSBLZXkifQ...
 ```
 `npx kendo-ui-license activate` 실행 후 개발 서버를 반드시 재시작하여 워터마크를 제거합니다.
 
-### 1-3. 설문온 표준 폰트(`SpoqaHanSansNeo`) 및 글로벌 리셋 유지
-`main.jsx`에서 `import 'surveyon-common/assets/css/surveyon-theme.css';`를 호출하면 `reset.css`(`SpoqaHanSansNeo` 폰트, `button { padding: 0 }`, `line-height: 1.5`, `letter-spacing: -0.56px`)와 `common.css`, `kendo_custom.css`가 자동으로 로드됩니다.
+### 1-3. 설문온 표준 폰트(`SpoqaHanSansNeo`), 글로벌 리셋 및 CSS Import 순서 (필수)
+`main.jsx`에서 스타일을 불러올 때 반드시 **`@progress/kendo-theme-default/dist/all.css`를 먼저 import하고, 그 아래에 `surveyon-common/assets/css/surveyon-theme.css`를 import**해야 합니다:
+```jsx
+// ✅ 올바른 CSS import 순서 (main.jsx)
+import '@progress/kendo-theme-default/dist/all.css';
+import 'surveyon-common/assets/css/surveyon-theme.css';
+```
+- ❌ **`surveyon-theme.css`를 `all.css`보다 먼저 import 금지**: 뒤에 로드된 `all.css`가 Kendo Grid 선택 행(`.k-selected`) 스타일을 Kendo 기본 다홍/살구색(`#ff6358`)으로 덮어쓰게 됩니다.
 - ❌ `index.css` 등에 `font-family: ... !important`를 임의로 추가하여 원본 `SpoqaHanSansNeo` 서체를 덮어쓰지 마십시오.
 - ❌ Vite 초기 템플릿의 `index.css`, `App.css` 기본 스타일(버튼 패딩, 배경색 등)은 반드시 제거하십시오.
 
@@ -163,7 +169,7 @@ import { PageContainer } from 'surveyon-common';
 
 ### 3-1. Kendo React Grid 필수 사용 규격
 - 목록, 데이터 조회, 표 형태의 UI를 구현할 때는 일반 HTML `<table>`이나 외부 테이블 라이브러리를 사용하지 말고 **반드시 `@progress/kendo-react-grid`의 `<Grid>`, `<GridColumn>`** (또는 `surveyon-common`에서 제공하는 `KendoGrid`, `KendoGridV2`, `ExcelColumnMenu`, `GridDataCount`)을 사용하십시오.
-- `surveyon-theme.css`(`kendo_custom.css` 포함)가 로드되어 있으므로, `<Grid>` 사용 시 대메뉴별 테마 색상(행 호버, 체크박스/행 선택 하이라이트, 헤더 스타일)이 자동으로 적용됩니다.
+- `surveyon-theme.css`(`kendo_custom.css` 포함)가 로드되어 있으므로, `<Grid>` 및 `<GridDataCount>` 사용 시 대메뉴별 테마 색상(행 호버, 행 선택 `.k-selected`, 체크박스 `:checked` / 부분선택 `:indeterminate`, 정렬 화살표 `.k-sort-icon`, 건수 숫자 `.grid-data-count__number`)이 자동으로 `var(--primary-color)`에 연동됩니다. (임의로 주황색/다홍색 등을 하드코딩하지 마십시오.)
 - 그리드를 감싸는 컨테이너와 `<Grid>`에는 반드시 `style={{ height: '100%' }}`를 부여하여 `<PageContainer>` 내부 영역에 꽉 차고 그리드 내부 스크롤이 동작하도록 구성하십시오.
 
 ---

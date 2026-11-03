@@ -151,9 +151,10 @@ import { store, persistor, ModalProvider, LoadingProvider } from 'surveyon-commo
 import kendoLanguage from 'surveyon-common/config/kendo/language.json';
 import App from './App';
 
-// 테마 및 Kendo 기본 스타일 import
-import 'surveyon-common/assets/css/surveyon-theme.css';
+// [중요] 반드시 Kendo 기본 스타일(all.css)을 먼저 import하고, 그 아래에 surveyon-theme.css를 import하세요.
+// 순서가 바뀌면 Kendo 기본 선택색(다홍/살구색 #ff6358)이 설문온 대메뉴 테마 선택색을 덮어씁니다.
 import '@progress/kendo-theme-default/dist/all.css';
+import 'surveyon-common/assets/css/surveyon-theme.css';
 
 // Kendo CLDR 데이터 및 한글 언어팩 적용
 load(
@@ -494,3 +495,7 @@ function SampleComponent() {
 
 ### Q4. 삭제 버튼(`cmn-btn-danger`)에 마우스를 올리면 글씨가 검정색으로 바뀝니다.
 - 최신 `surveyon-common` 패키지에서는 호버 시에도 빨간색(`#dc2626`) 및 아이콘 색상이 고정되도록 수정되었습니다. 터미널에서 `npm update surveyon-common`을 실행하세요.
+
+### Q5. Kendo Grid에서 행/체크박스 선택, 부분선택(`-`), 정렬 화살표(`↑`), 건수 표시(`GridDataCount`)가 테마 색상 대신 다홍색/주황색으로 나옵니다.
+- `src/main.jsx`에서 CSS import 순서가 역전되었을 때 발생합니다. 반드시 **`@progress/kendo-theme-default/dist/all.css`를 먼저 import하고, 그 다음 줄에 `surveyon-common/assets/css/surveyon-theme.css`를 import**하세요.
+- 또한 Kendo Grid v7의 `.k-selected`, 체크박스 `:indeterminate`, 정렬 아이콘(`.k-sort-icon`), `GridDataCount`의 `var(--primary-color)` 연동이 모두 반영된 최신 `surveyon-common`을 사용하도록 `npm update surveyon-common`을 실행하세요.
