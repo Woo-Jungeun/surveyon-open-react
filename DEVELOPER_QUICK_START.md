@@ -2,28 +2,37 @@
 
 > **이 문서는 설문온 신규 서비스 또는 화면을 개발하는 개발자를 위한 실전 퀵스타트 가이드입니다.**  
 > 아래 순서대로 설정을 마치면 **5분 안에 설문온 표준 레이아웃과 테마가 적용된 개발 환경을 구축**할 수 있습니다.
+>
+> **📚 설문온 공식 문서 읽는 순서 (3대 가이드)**
+> 1. **`DEVELOPER_QUICK_START.md` (본 문서)**: 프로젝트 설치 → 환경 세팅 → 기본 화면·API·모달 템플릿 따라 하기
+> 2. **`AI_CODING_RULES.md`**: AI 에이전트(Cursor, Antigravity, Claude 등)에게 코드 작성을 지시할 때 반드시 읽혀야 하는 **엄격한 제약조건(Strict Rules)**
+> 3. **`THEME_DEVELOPMENT_GUIDE.md`**: 4대 테마 CSS 변수 상세, 크롤링 ID 전체 명세표, Jenkins CI/CD 및 Nginx 멀티서버 배포 아키텍처 심화 레퍼런스
 
 ---
 
 ## 📌 목차
 1. [프로젝트 초기 설정 (패키지 설치)](#1-프로젝트-초기-설정-패키지-설치)
 2. [필수 환경 설정 (라이센스, 폰트, 프록시)](#2-필수-환경-설정-라이센스-폰트-프록시)
-3. [엔트리포인트 템플릿 (`main.jsx` & `App.jsx` & 메뉴 커스텀)](#3-엔트리포인트-템플릿-mainjsx--appjsx)
+3. [엔트리포인트 템플릿 (`main.jsx` & `App.jsx`)](#3-엔트리포인트-템플릿-mainjsx--appjsx)
 4. [표준 화면 개발 템플릿 (`PageContainer` & Kendo Grid)](#4-표준-화면-개발-템플릿-pagecontainer--kendo-grid)
 5. [공통 버튼 규격 (`cmn-btn`)](#5-공통-버튼-규격-cmn-btn)
 6. [공통 API 통신 및 토큰 연동 (`api.get` / `api.post`)](#6-공통-api-통신-및-토큰-연동-apiget--apipost)
 7. [전역 모달 및 로딩 스피너 사용법](#7-전역-모달-및-로딩-스피너-사용법)
-8. [대메뉴별 화면 분리 개발 및 같은 창(URL) 연동 가이드](#8-대메뉴별-화면-분리-개발-및-같은-창url-연동-가이드)
+8. [서비스별 분리 개발 및 라우팅 연동 안내](#8-서비스별-분리-개발-및-라우팅-연동-안내)
 9. [실전 트러블슈팅 및 FAQ](#9-실전-트러블슈팅-및-faq)
 
 ---
 
 ## 1. 프로젝트 초기 설정 (패키지 설치)
 
-### 1) 신규 Vite 프로젝트 생성 (신규 프로젝트 시)
+### 1) 신규 Vite 프로젝트 생성 및 React 18 버전 고정
+최신 `npm create vite@latest`는 React 19를 기본 설치하므로, `surveyon-common` 및 Kendo UI 호환을 위해 **`react`, `react-dom`을 반드시 `^18.2.0`으로 맞춰서 설치**합니다:
 ```bash
 npm create vite@latest my-surveyon-app -- --template react
 cd my-surveyon-app
+
+# React 18 버전 고정 (React 19 사용 금지)
+npm install react@^18.2.0 react-dom@^18.2.0
 ```
 
 ### 2) 설문온 공통 패키지 설치
@@ -31,7 +40,6 @@ cd my-surveyon-app
 ```bash
 # 사내 Git 저장소 기반 패키지 설치
 npm install git+https://github.com/woojungeun97/surveyon-common.git
-npm install
 ```
 
 ---
@@ -62,13 +70,13 @@ npx kendo-ui-license activate
 
 ---
 
-### 3) `vite.config.js` (CORS 프록시 & `@/` 경로 별칭)
-백엔드 API와의 통신 및 `@/` 경로 참조를 위해 아래 설정을 적용합니다:
+### 3) `vite.config.js` (ESM 호환, 훅 충돌 방지 & CORS 프록시)
+최신 Vite(ESM `"type": "module"`) 환경에서 `__dirname` 에러가 나지 않도록 `fileURLToPath`를 사용하고, Git 패키지 연동 시 React 훅 충돌을 방지하는 `resolve.dedupe` 및 `optimizeDeps.include`를 함께 설정합니다:
 
 ```javascript
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
+import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
   // [중요] 통합 서버(Nginx/프록시) 하위 경로 연동 시 JS/CSS 에셋 충돌 방지를 위해
@@ -77,8 +85,12 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-    }
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+    dedupe: ['react', 'react-dom', 'react-router-dom', 'react-redux'],
+  },
+  optimizeDeps: {
+    include: ['prop-types'],
   },
   server: {
     port: 5173,
@@ -112,6 +124,7 @@ export default defineConfig({
 Redux 스토어, 테마 CSS, Kendo 한글 로케일 및 CLDR 데이터(`load`), 전역 모달을 초기화합니다.
 
 ```jsx
+import '@progress/kendo-licensing';
 import React, { Fragment } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -272,7 +285,7 @@ const MyScreenPage = () => {
   const handleSave = async () => {
     modal.showConfirm('확인', '현재 설정을 저장하시겠습니까?', {
       btns: [
-        { title: '취소', background: '#75849a' },
+        { title: '취소' },
         {
           title: '저장',
           click: async () => {
@@ -281,7 +294,8 @@ const MyScreenPage = () => {
               // API 저장 로직 수행
               modal.showAlert('알림', '성공적으로 저장되었습니다.');
             } catch (err) {
-              modal.showErrorAlert('오류', '저장 처리 중 문제가 발생했습니다.');
+              // 첫 번째 인자는 에러코드(status), 두 번째 인자는 에러 메시지
+              modal.showErrorAlert('ERR', '저장 처리 중 문제가 발생했습니다.');
             } finally {
               loading.hide();
             }
@@ -381,18 +395,24 @@ export const MyDataService = () => {
       // - 'API_BASE_URL_OPENAI'         : /APIs/o
       // - 'API_BASE_URL_BOARD'          : /APIs/n
       const res = await api.post({ projectnum: 'P2026_001' }, '/data/info', 'API_BASE_URL_DATAMANAGEMENT');
-      if (res?.success === '777' || res?.data) {
-        setList(res.data || res.output || []);
+      if (String(res?.success) === '777') {
+        // 설문온 백엔드 표준 응답 데이터는 res.resultjson에 담겨 반환됩니다.
+        setList(res?.resultjson || []);
+      } else {
+        // 첫 번째 인자는 에러코드(status), 두 번째 인자는 에러 메시지
+        modal.showErrorAlert(String(res?.success || 'ERR'), res?.message || '데이터 조회에 실패했습니다.');
       }
     } catch (err) {
-      modal.showErrorAlert('오류', '데이터를 불러오는 중 문제가 발생했습니다.');
+      modal.showErrorAlert('ERR', '데이터를 불러오는 중 문제가 발생했습니다.');
     } finally {
       loading.hide();
     }
   };
 
+  // [주의] useEffect / useCallback 의존성 배열에 loading, modal을 넣으면 무한 루프가 발생하므로 절대 넣지 마세요.
   useEffect(() => {
     fetchList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 };
 ```
@@ -401,7 +421,9 @@ export const MyDataService = () => {
 
 ## 7. 전역 모달 및 로딩 스피너 사용법
 
-브라우저 기본 `window.alert()` 대신 전역 Context를 사용합니다.
+브라우저 기본 `window.alert()` 대신 전역 Context를 사용합니다.  
+> [!WARNING]
+> **`loading` · `modal` 의존성 배열 추가 금지**: `LoadingProvider`·`ModalProvider` 상태가 변경될 때마다 Context 객체가 새로 생성될 수 있으므로 `useEffect`나 `useCallback`의 의존성 배열에 `[loading, modal]`을 절대 넣지 마세요 (무한 API 호출 발생).
 
 ```jsx
 import { useContext } from 'react';
@@ -411,19 +433,24 @@ function SampleComponent() {
   const modal = useContext(modalContext);
   const loading = useContext(loadingSpinnerContext);
 
-  // 1. 단순 알림창
+  // 1. 단순 알림창 (title, content)
   const showAlert = () => {
     modal.showAlert('알림', '처리가 완료되었습니다.');
   };
 
-  // 2. 오류 팝업
+  // 2. 오류 팝업 (첫 번째 인자는 에러코드 status, 두 번째 인자는 메시지 — 제목 '오류'는 자동 고정)
   const showError = () => {
-    modal.showErrorAlert('오류', '데이터를 불러올 수 없습니다.');
+    modal.showErrorAlert('ERR_01', '데이터를 불러올 수 없습니다.');
   };
 
   // 3. 확인 팝업 (Confirm)
   const showConfirm = () => {
-    modal.showConfirm('확인', '진행하시겠습니까?');
+    modal.showConfirm('확인', '진행하시겠습니까?', {
+      btns: [
+        { title: '취소' },
+        { title: '확인', click: () => { /* 확인 시 실행 로직 */ } }
+      ]
+    });
   };
 }
 ```

@@ -1,7 +1,8 @@
-# 🚀 설문온(SulmunOn) 프론트엔드 통합 개발 가이드
+# 🚀 설문온(SulmunOn) 프론트엔드 통합 개발 가이드 (심화 레퍼런스)
 
-> **이 문서 하나로 설문온 프론트엔드의 테마, 공통 레이아웃, 사이드바, Kendo 라이선스, 로그인 토큰 유지, 대메뉴 연동/배포까지 모든 개발 규격을 확인하실 수 있습니다.**  
-> **최종 갱신일**: 2026-10-29
+> **이 문서는 설문온 프론트엔드의 4대 테마 토큰, 크롤링/E2E 자동화 테스트용 표준 ID 전체 명세, Kendo CI/CD 라이선스, 인증 쿠키/세션 구조, Nginx 멀티서버 배포 아키텍처를 다루는 심화 레퍼런스 문서입니다.**  
+> - 빠른 초기 세팅 및 코드 템플릿은 **`DEVELOPER_QUICK_START.md`**를 먼저 확인하세요.  
+> - AI 코딩 에이전트용 핵심 제약조건은 **`AI_CODING_RULES.md`**를 참고하세요.
 
 ---
 
@@ -29,9 +30,9 @@
 | **실사관리** | `fieldManagement` | 딥 네이비 (`#1E3A8A`) | 프로젝트 실사 진행 현황 및 응답자 통계 |
 
 ### 테마 CSS 적용 방법
-1. 앱 진입점(`main.jsx` 또는 `App.jsx`) 최상단에 공통 테마 단 1줄 import:
+1. 앱 진입점(`main.jsx`) 최상단에 공통 테마 단 1줄 import:
    ```javascript
-   import '@/assets/css/surveyon-theme.css';
+   import 'surveyon-common/assets/css/surveyon-theme.css';
    ```
 2. **색상 작성 원칙 (절대 규칙)**:
    - CSS나 JSX 인라인 스타일에서 `#16a34a`, `#2563eb` 등 Hex 색상을 직접 쓰지 마세요.
@@ -63,7 +64,7 @@
 ### 실전 화면 개발 예시 코드
 ```jsx
 import React from 'react';
-import { PageContainer } from '@/components/common/layout';
+import { PageContainer } from 'surveyon-common';
 
 const MyServicePage = () => {
     return (
@@ -143,7 +144,7 @@ const MyPage = () => {
   const onSubmit = async () => {
     modal.showConfirm("확인", "정말 저장하시겠습니까?", {
       btns: [
-        { title: "취소", background: "#75849a" },
+        { title: "취소" },
         {
           title: "저장",
           click: async () => {
@@ -152,7 +153,8 @@ const MyPage = () => {
               await saveData();
               modal.showAlert("알림", "성공적으로 저장되었습니다.");
             } catch (e) {
-              modal.showErrorAlert("오류", "저장에 실패했습니다.");
+              // 첫 번째 인자는 에러코드(status), 두 번째 인자는 에러 메시지
+              modal.showErrorAlert("ERR", "저장에 실패했습니다.");
             } finally {
               loading.hide();
             }
@@ -221,9 +223,38 @@ function App() {
 }
 ```
 
-### 사이드바 메뉴 수정/추가 규칙
-- 메뉴 목록이나 서브메뉴를 추가할 때는 `src/components/common/sidebar/AppSidebar.jsx`의 메뉴 정의 배열을 수정합니다.
-- 특정 서비스 전용 기능(예: 데이터관리의 기준일시 새로고침, 잔액 조회 등)을 작업할 때는 `if (service === 'dataManagement')` 와 같이 조건 분기하여 다른 서비스에 사이드이펙트가 없도록 격리합니다.
+### 사이드바 메뉴 커스터마이징 규칙 (`node_modules` 수정 금지)
+- 공통 패키지(`surveyon-common`) 설치 환경에서는 `node_modules` 내부의 `AppSidebar.jsx`를 직접 수정하지 않습니다.
+- 각 프로젝트의 `src/App.jsx`에서 `<AppLayout service="..." sidebarProps={{ brand, menuGroups }} />` 형태로 `sidebarProps`를 전달하여 해당 서비스의 좌측 메뉴와 로고 클릭 이동 경로를 오버라이드합니다:
+```jsx
+const sidebarProps = useMemo(() => ({
+  brand: {
+    title: '실사관리',
+    onClick: () => navigate('/field_management/main'),
+  },
+  menuGroups: [
+    {
+      label: '',
+      items: [
+        { label: '문항별집계', path: '/field_management/main', icon: Grid },
+        { label: '쿼터관리', icon: ClipboardList, isPending: true },
+      ],
+    },
+  ],
+}), [navigate]);
+
+<Route element={<AppLayout service="fieldManagement" sidebarProps={sidebarProps} />}>
+  <Route path="/" element={<Navigate to="/field_management/main" replace />} />
+  <Route path="/field_management" element={<Navigate to="/field_management/main" replace />} />
+  <Route path="/field_management/main" element={<MainPage />} />
+  <Route path="/field_management/*" element={<Navigate to="/field_management/main" replace />} />
+</Route>
+```
+- **서비스별 표준 베이스 경로 및 메인/사이드바(☰) 기본 진입 경로**:
+  - `hsrt` (H-SRT): 베이스 `/data_status` / 진입 경로 `/data_status`
+  - `dataManagement` (데이터관리): 베이스 `/data_management` / 진입 경로 `/data_management`, `/data_management/setting/map`
+  - `aiOpen` (AI오픈분석): 베이스 `/ai_open_analysis` / 진입 경로 `/ai_open_analysis`
+  - `fieldManagement` (실사관리): 베이스 `/field_management` / 진입 경로 `/field_management`, `/field_management/analysis/progress`
 
 ---
 
@@ -276,24 +307,16 @@ Jenkins 빌드 머신이나 Docker 배포 환경에서는 다음 중 하나로 �
   - `groupcode`: 설문 그룹 코드
   - `merge_pn`: 병합 프로젝트 번호
 
-### 2) API 요청 시 토큰 주입 규격 (Axios Interceptor)
-타 개발자가 신규 API 통신을 작성할 때는 쿠키에서 토큰을 꺼내 헤더에 주입해야 합니다:
+### 2) API 요청 시 토큰 자동 주입 및 응답 규격 (`surveyon-common` 내장 `api`)
+신규 API 통신을 작성할 때는 Axios 인스턴스를 직접 생성하지 않고 `surveyon-common`의 `api` 모듈을 사용합니다. 내부 인터셉터(`Axios.jsx`)가 쿠키의 `TOKEN`, `X-Auth-Token`, `X-User-Id`, `hrc`(AES256 암호화) 헤더를 자동으로 주입합니다:
 ```javascript
-import Cookies from 'js-cookie';
-import axios from 'axios';
+import { api } from 'surveyon-common';
 
-const apiClient = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL,
-});
-
-apiClient.interceptors.request.use((config) => {
-    const token = Cookies.get('X-Auth-Token') || Cookies.get('TOKEN');
-    if (token) {
-        config.headers['X-Auth-Token'] = token;
-        config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
-});
+// 서비스 키('API_BASE_URL_DATAMANAGEMENT', 'API_BASE_URL_DATASTATUS', 'API_BASE_URL_OPENAI', 'API_BASE_URL_BOARD') 지정 호출
+const res = await api.post({ projectnum: 'P2026_001' }, '/data/info', 'API_BASE_URL_DATAMANAGEMENT');
+if (String(res?.success) === '777') {
+    const list = res?.resultjson ?? [];
+}
 ```
 
 ---

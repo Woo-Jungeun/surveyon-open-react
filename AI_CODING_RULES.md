@@ -1,18 +1,30 @@
 # 🤖 설문온(SulmunOn) AI 코딩 에이전트 지침서 (AI Coding Rules)
 
 > **이 문서는 Antigravity, Cursor, Copilot, Claude 등 AI 코딩 어시스턴트가 설문온 프론트엔드 코드를 작성하거나 리팩토링할 때 반드시 준수해야 하는 엄격한 제약조건(Strict Constraints)과 표준 규격입니다.**  
-> AI는 설문온 코드를 생성할 때 아래 규칙을 100% 준수해야 합니다.
+> AI는 코드 작성 전 **`DEVELOPER_QUICK_START.md` (1순위: 세팅 및 코드 템플릿) → `AI_CODING_RULES.md` (2순위: 본 문서의 필수 제약조건) → `THEME_DEVELOPMENT_GUIDE.md` (3순위: 크롤링 ID 상세표 및 배포 아키텍처)** 순서로 숙지하고 아래 규칙을 100% 준수해야 합니다.
+
+---
+
+## 📌 목차 (작업 흐름 순서)
+1. [프로젝트 초기 구성 규칙 (React 18, Vite ESM, 라이센스, 폰트)](#1-프로젝트-초기-구성-규칙-project-setup-constraints)
+2. [테마 및 색상 시스템 규칙 (Hex 금지 & CSS 변수)](#2-테마-및-색상-시스템-규칙-color-constraints)
+3. [화면 레이아웃, 크롤링 ID 및 Kendo Grid 필수 규칙](#3-화면-레이아웃-및-크롤링-id-규칙-layout--id-standards)
+4. [공통 버튼 규격 (`cmn-btn`)](#4-공통-버튼-규격-cmn-btn)
+5. [공통 API 통신 및 응답 규격 (`api`, `resultjson`)](#5-공통-api-통신-및-응답-규격-api-resultjson)
+6. [전역 모달 & 로딩 스피너 규칙 (무한루프 방지 필수)](#6-전역-모달--로딩-스피너-규칙-무한루프-방지-필수)
+7. [서비스별 분리 개발 및 라우팅/사이드바 메뉴 규칙 (`sidebarProps`)](#7-서비스별-분리-개발-및-라우팅-규칙-service-routing--custom-menu)
 
 ---
 
 ## 📌 핵심 제약조건 요약 (Critical Rules)
-- ❌ **Hex 색상 직접 작성 절대 금지**: `#16a34a`, `#2563eb` 등 Hex 컬러를 CSS나 JSX style에 하드코딩하지 마십시오.
-- ❌ **브라우저 기본 `alert()` / `confirm()` 절대 금지**: 반드시 `modalContext`의 `showAlert()`, `showConfirm()`을 사용하십시오.
+- ❌ **`useEffect` / `useCallback` 의존성 배열에 `loading`, `modal` 추가 절대 금지 (가장 중요)**: `LoadingProvider`·`ModalProvider` 상태가 변경(`loading.show()` / `hide()`)될 때마다 Context 객체 참조가 바뀌어 **무한 API 호출 루프**에 빠집니다. 의존성 배열에서 `loading`, `modal`은 반드시 제외(`[]` 고정 또는 `useRef` 활용)하십시오.
+- ❌ **Hex 색상 직접 작성 절대 금지**: `#16a34a`, `#2563eb` 등 Hex 컬러를 CSS나 JSX style, 모달 버튼 옵션 등에 하드코딩하지 마십시오.
+- ❌ **브라우저 기본 `alert()` / `confirm()` 절대 금지**: 반드시 `modalContext`의 `showAlert()`, `showConfirm()`, `showErrorAlert(status, msg)`를 사용하십시오. (`showErrorAlert`의 첫 번째 인자는 제목이 아니라 **에러코드 `status`**입니다.)
 - ❌ **임의의 버튼 스타일 작성 금지**: 반드시 사전 정의된 `cmn-btn` 클래스를 사용하십시오.
-- ❌ **Axios 직접 생성 금지**: 반드시 `surveyon-common`의 `api` 모듈(`api.get`, `api.post`)을 사용하십시오.
+- ❌ **Axios 직접 생성 금지**: 반드시 `surveyon-common`의 `api` 모듈(`api.get`, `api.post`)을 사용하며, 응답 성공 판별은 `String(res?.success) === '777'`, 실제 데이터 추출은 **`res.resultjson`** 필드를 기준으로 처리하십시오.
 - ❌ **임의의 HTML `<table>` 또는 타 그리드 라이브러리 사용 금지**: 모든 목록/테이블/데이터 그리드 화면은 반드시 **Kendo React Grid (`@progress/kendo-react-grid`의 `<Grid>`, `<GridColumn>` 또는 `surveyon-common`의 `KendoGrid`, `KendoGridV2`)**를 사용하십시오.
 - ✅ **모든 신규 페이지는 `<PageContainer>`로 래핑**: 화면 높이 100% 핏을 반드시 유지해야 합니다.
-- ✅ **신규 프로젝트 구성 시 `.env`에 Kendo 라이센스 등록 및 `surveyon-theme.css` 필수 import** (Vite 기본 `index.css`로 원본 `SpoqaHanSansNeo` 폰트나 버튼 `padding: 0` 리셋을 덮어쓰지 마십시오).
+- ✅ **신규 프로젝트 구성 시 React 18(`^18.2.0`) 고정, `.env` 및 `main.jsx`에 Kendo 라이센스(`import '@progress/kendo-licensing'`) 등록, `surveyon-theme.css` 필수 import** (Vite 기본 `index.css`로 원본 `SpoqaHanSansNeo` 폰트나 버튼 `padding: 0` 리셋을 덮어쓰지 마십시오).
 - ✅ **크롤링 및 자동화 테스트용 고유 `id` 속성 필수 부여**: 표준 ID 체계를 누락하지 마십시오.
 
 ---
@@ -21,14 +33,48 @@
 
 AI가 설문온 신규 프로젝트 또는 화면을 구성할 때 반드시 다음 규칙을 기본으로 적용해야 합니다:
 
-### 1-1. Kendo 라이센스 및 환경 변수
-루트 디렉토리에 `.env` 파일을 생성하고 Telerik 라이센스를 등록합니다:
+### 1-1. React 18 버전 고정 및 `vite.config.js` (ESM 호환 & 훅 충돌 방지)
+최신 `npm create vite@latest`는 React 19와 ESM(`"type": "module"`)을 기본 생성합니다. `surveyon-common` 및 Kendo UI 호환을 위해 다음 3가지를 반드시 지켜야 합니다:
+1. **`react`, `react-dom`은 반드시 `^18.2.0` 버전으로 설치** (React 19 사용 금지):
+   ```bash
+   npm install react@^18.2.0 react-dom@^18.2.0
+   ```
+2. **`vite.config.js` 표준 설정** (`fileURLToPath` 기반 ESM 경로 설정, `resolve.dedupe`, `optimizeDeps.include`):
+   ```javascript
+   import { defineConfig } from 'vite';
+   import react from '@vitejs/plugin-react';
+   import { fileURLToPath, URL } from 'node:url';
+
+   export default defineConfig({
+     base: '/field_management/', // 담당 서비스 표준 베이스 경로
+     plugins: [react()],
+     resolve: {
+       alias: {
+         '@': fileURLToPath(new URL('./src', import.meta.url)),
+       },
+       dedupe: ['react', 'react-dom', 'react-router-dom', 'react-redux'],
+     },
+     optimizeDeps: {
+       include: ['prop-types'],
+     },
+     server: {
+       port: 5173,
+       proxy: {
+         '^/APIs': { target: 'https://stest.hrc.kr', changeOrigin: true, secure: false },
+         '^/o': { target: 'https://stest.hrc.kr', changeOrigin: true, secure: false },
+       },
+     },
+   });
+   ```
+
+### 1-2. Kendo 라이센스 및 환경 변수
+루트 디렉토리에 `.env` 파일을 생성하고 Telerik 라이센스를 등록하며, `src/main.jsx` 최상단에 `import '@progress/kendo-licensing';`을 포함합니다:
 ```env
 TELERIK_LICENSE=eyJhbGciOiJSUzI1NiIsInR5cCI6IlRlbGVyaWsgTGljZW5zZSBLZXkifQ...
 ```
-라이센스 활성화 후 개발 서버를 반드시 재시작하여 워터마크를 제거합니다.
+`npx kendo-ui-license activate` 실행 후 개발 서버를 반드시 재시작하여 워터마크를 제거합니다.
 
-### 1-2. 설문온 표준 폰트(`SpoqaHanSansNeo`) 및 글로벌 리셋 유지
+### 1-3. 설문온 표준 폰트(`SpoqaHanSansNeo`) 및 글로벌 리셋 유지
 `main.jsx`에서 `import 'surveyon-common/assets/css/surveyon-theme.css';`를 호출하면 `reset.css`(`SpoqaHanSansNeo` 폰트, `button { padding: 0 }`, `line-height: 1.5`, `letter-spacing: -0.56px`)와 `common.css`, `kendo_custom.css`가 자동으로 로드됩니다.
 - ❌ `index.css` 등에 `font-family: ... !important`를 임의로 추가하여 원본 `SpoqaHanSansNeo` 서체를 덮어쓰지 마십시오.
 - ❌ Vite 초기 템플릿의 `index.css`, `App.css` 기본 스타일(버튼 패딩, 배경색 등)은 반드시 제거하십시오.
@@ -136,10 +182,12 @@ AI는 버튼을 생성할 때 반드시 아래 4대 표준 버튼 클래스 중 
 
 ---
 
-## 5. 공통 API 통신 및 토큰 연동 규칙 (`api`)
+## 5. 공통 API 통신 및 응답 규격 (`api`, `resultjson`)
 
 백엔드 통신 시 Axios 인스턴스를 직접 생성하지 말고, 반드시 `surveyon-common`의 `api` 모듈을 사용하십시오.
 
+### 5-1. 실제 API 응답 구조 (`success === '777'`, `resultjson`)
+- 설문온 백엔드는 정상 처리 시 **`String(res?.success) === '777'`**을 반환하며, 실제 결과 데이터는 **`res.resultjson`** 필드에 담겨 옵니다 (`res.data`가 아님에 주의).
 ```jsx
 import { api, modalContext, loadingSpinnerContext } from 'surveyon-common';
 
@@ -150,30 +198,80 @@ import { api, modalContext, loadingSpinnerContext } from 'surveyon-common';
 // - 'API_BASE_URL_BOARD'          : 공지/문의 (/APIs/n)
 const res = await api.post({ projectnum: 'P2026_001' }, '/data/info', 'API_BASE_URL_DATAMANAGEMENT');
 
+if (String(res?.success) === '777') {
+  const resultData = res?.resultjson ?? [];
+  setDataList(Array.isArray(resultData) ? resultData : []);
+} else {
+  // 첫 번째 인자는 에러코드(status), 두 번째 인자는 에러 메시지
+  modal.showErrorAlert(String(res?.success || 'ERR'), res?.message || '데이터 조회에 실패했습니다.');
+}
+
 // 2. 또는 전체 API 경로를 직접 전달하는 방식
-const res = await api.get({ id: 123 }, '/APIs/d/data/detail');
+const detailRes = await api.get({ id: 123 }, '/APIs/d/data/detail');
 ```
 
 ---
 
-## 6. 전역 모달 & 로딩 스피너 규칙
+## 6. 전역 모달 & 로딩 스피너 규칙 (무한루프 방지 필수)
 
-브라우저 기본 `alert()`, `confirm()`을 사용하면 디자인 통일성이 깨집니다. 반드시 Context를 주입받아 사용하십시오:
+브라우저 기본 `alert()`, `confirm()`을 사용하면 디자인 통일성이 깨집니다. 반드시 Context를 주입받아 사용하십시오.
+
+### 6-1. ⚠️ `loading` · `modal` Context 무한루프 주의사항 (필독)
+- `LoadingProvider`와 `ModalProvider`는 내부 상태가 바뀔 때(`loading.show()` / `loading.hide()` 등) 리렌더링되며 새 Context 객체를 내려줄 수 있습니다.
+- 따라서 **`useEffect`나 `useCallback`의 의존성 배열(dependency array)에 `loading`이나 `modal`을 절대 넣지 마십시오.** 의존성 배열에 넣으면 API 호출 시 `loading.show()`가 실행되면서 `useEffect`가 재실행되어 **즉시 무한 API 호출 루프**에 빠집니다.
 
 ```jsx
 const modal = useContext(modalContext);
 const loading = useContext(loadingSpinnerContext);
 
-// 알림창
+// ❌ 잘못된 예시 (무한 API 호출 발생!)
+const fetchList = useCallback(async () => {
+  loading.show();
+  // ...
+  loading.hide();
+}, [loading, modal]); // <-- 절대 금지!
+
+// ✅ 올바른 예시 (의존성 배열에서 loading, modal 제외)
+const fetchList = useCallback(async () => {
+  try {
+    loading.show();
+    const res = await api.post({ projectnum }, '/data/info', 'API_BASE_URL_DATAMANAGEMENT');
+    if (String(res?.success) === '777') {
+      setDataList(res?.resultjson || []);
+    } else {
+      modal.showErrorAlert(String(res?.success || 'ERR'), res?.message || '조회에 실패했습니다.');
+    }
+  } catch (err) {
+    modal.showErrorAlert('ERR', '서버 통신 중 오류가 발생했습니다.');
+  } finally {
+    loading.hide();
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [projectnum]);
+
+useEffect(() => {
+  fetchList();
+}, [fetchList]);
+```
+
+### 6-2. 모달 호출 규격 (`showAlert`, `showErrorAlert`, `showConfirm`)
+- **`modal.showErrorAlert(status, msg)` 인자 규격 주의**:
+  - 오류 팝업의 제목(`'오류'`)은 `Modal.jsx` 내부에서 자동 고정됩니다.
+  - **첫 번째 인자는 에러코드(`status`)**, **두 번째 인자는 에러 메시지(`msg`)**입니다 (`status === '777'`이면 자동으로 무시됨).
+  - ❌ `modal.showErrorAlert('오류', '메시지')` (잘못된 호출: 에러코드 자리에 `'오류'`가 표시됨)
+  - ✅ `modal.showErrorAlert(String(res?.success || 'ERR'), res?.message || '처리 중 오류가 발생했습니다.')`
+
+```jsx
+// 1. 일반 알림창 (title, content)
 modal.showAlert('알림', '성공적으로 처리되었습니다.');
 
-// 오류창
-modal.showErrorAlert('오류', '처리 중 오류가 발생했습니다.');
+// 2. 오류창 (status 에러코드, msg 에러메시지)
+modal.showErrorAlert(String(res?.success || 'ERR'), res?.message || '처리 중 오류가 발생했습니다.');
 
-// 확인창
+// 3. 확인창 (Hex 색상 하드코딩 없이 title과 click만 지정)
 modal.showConfirm('확인', '계속 진행하시겠습니까?', {
   btns: [
-    { title: '취소', background: '#75849a' },
+    { title: '취소' },
     { title: '확인', click: async () => { /* 실행 로직 */ } }
   ]
 });
