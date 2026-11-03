@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import AppSidebar from '@/components/common/sidebar/AppSidebar';
 import PageFooter from './PageFooter';
+import faviconSvg from '@/assets/images/favicon.svg';
 import './PageLayout.css';
 
 /**
@@ -42,6 +43,20 @@ const AppLayout = ({
         if (typeof document !== 'undefined') {
             document.documentElement.setAttribute('data-theme', resolvedTheme);
             document.body.setAttribute('data-theme', resolvedTheme);
+
+            // 설문온 공통 파비콘 및 기본 탭 타이틀 자동 적용
+            let faviconLink = document.querySelector("link[rel~='icon']");
+            if (!faviconLink) {
+                faviconLink = document.createElement('link');
+                faviconLink.rel = 'icon';
+                document.head.appendChild(faviconLink);
+            }
+            faviconLink.type = 'image/svg+xml';
+            faviconLink.href = faviconSvg;
+
+            if (!document.title || document.title === 'Vite + React' || document.title.startsWith('surveyon-')) {
+                document.title = '설문온';
+            }
 
             // 브랜드 테스트 잔여 속성 및 변수 정리
             document.documentElement.removeAttribute('data-srt-brand');

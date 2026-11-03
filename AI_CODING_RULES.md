@@ -169,3 +169,44 @@ modal.showConfirm('확인', '계속 진행하시겠습니까?', {
   ]
 });
 ```
+
+---
+
+## 7. 서비스별 분리 개발 및 라우팅 규칙 (Service Routing & Custom Menu)
+
+설문온은 각 대메뉴 서비스를 개별 프로젝트로 분리하여 개발하며, **같은 도메인 아래에서 새 창(`window.open`)이 아닌 같은 창 URL 이동(`window.location.href`)**으로 서비스 간 이동을 처리합니다.
+
+### 7-1. 설문온 대메뉴 서비스 키 및 기본 경로 규격
+| 서비스명 | `service` prop 값 | 표준 베이스 경로 | 테마 색상 |
+| :--- | :--- | :--- | :--- |
+| **H-SRT** | `'hsrt'` | `/data_status` | 블루 (`#3b82f6`) |
+| **데이터관리** | `'dataManagement'` | `/data_management` | 그린 (`#16a34a`) |
+| **AI오픈분석** | `'aiOpen'` | `/ai_open_analysis` | 오렌지 (`#F97316`) |
+| **실사관리** | `'fieldManagement'` | `/field_management` | 네이비 (`#1E3A8A`) |
+
+### 7-2. 좌측 사이드바 메뉴 구성 규칙 (`sidebarProps`)
+- `surveyon-common` 패키지의 원본 코드를 직접 수정하지 말고, 각 프로젝트의 `App.jsx`에서 `<AppLayout>`의 `sidebarProps={{ brand, menuGroups }}`를 통해 해당 서비스의 좌측 메뉴를 정의하십시오.
+```jsx
+const sidebarProps = useMemo(() => ({
+  brand: {
+    title: '서비스명',
+    onClick: () => navigate('/서비스경로/메인화면'),
+  },
+  menuGroups: [
+    {
+      label: '카테고리명', // 생략 가능 ('')
+      items: [
+        { label: '메뉴 1', path: '/서비스경로/menu1', icon: IconComponent },
+        { label: '메뉴 2 (준비중)', icon: IconComponent, isPending: true },
+      ],
+    },
+  ],
+}), [navigate]);
+
+<Route element={<AppLayout service="서비스키" sidebarProps={sidebarProps} />}>
+```
+
+### 7-3. 서비스 내부 이동 vs 타 서비스 이동 구분
+- **현재 프로젝트(같은 대메뉴) 내부 화면 간 이동**: React Router의 `navigate()`를 사용하십시오.
+- **설문온 메인 홈(`/`) 또는 다른 대메뉴 서비스로 이동**: 새 창(`window.open`)을 띄우지 말고 반드시 **`window.location.href = '/경로'`**를 사용하여 같은 창(탭)에서 이동하십시오. (동일 도메인 및 동일 탭을 유지해야 쿠키 `TOKEN`과 `sessionStorage`의 프로젝트 선택 정보가 공유됩니다.)
+- `surveyon-common`의 공통 사이드바(`AppSidebar`, `Sidebar`)에는 홈 이동(`/`), 로그아웃(`/login`), 타 대메뉴 전환 시 `window.location.href` 이동이 기본 내장되어 있으므로 이를 임의로 변경하지 마십시오.

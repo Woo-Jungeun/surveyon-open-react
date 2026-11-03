@@ -8,12 +8,13 @@
 ## 📌 목차
 1. [프로젝트 초기 설정 (패키지 설치)](#1-프로젝트-초기-설정-패키지-설치)
 2. [필수 환경 설정 (라이센스, 폰트, 프록시)](#2-필수-환경-설정-라이센스-폰트-프록시)
-3. [엔트리포인트 템플릿 (`main.jsx` & `App.jsx`)](#3-엔트리포인트-템플릿-mainjsx--appjsx)
+3. [엔트리포인트 템플릿 (`main.jsx` & `App.jsx` & 메뉴 커스텀)](#3-엔트리포인트-템플릿-mainjsx--appjsx)
 4. [표준 화면 개발 템플릿 (`PageContainer` & Kendo Grid)](#4-표준-화면-개발-템플릿-pagecontainer--kendo-grid)
 5. [공통 버튼 규격 (`cmn-btn`)](#5-공통-버튼-규격-cmn-btn)
 6. [공통 API 통신 및 토큰 연동 (`api.get` / `api.post`)](#6-공통-api-통신-및-토큰-연동-apiget--apipost)
 7. [전역 모달 및 로딩 스피너 사용법](#7-전역-모달-및-로딩-스피너-사용법)
-8. [실전 트러블슈팅 및 FAQ](#8-실전-트러블슈팅-및-faq)
+8. [대메뉴별 화면 분리 개발 및 같은 창(URL) 연동 가이드](#8-대메뉴별-화면-분리-개발-및-같은-창url-연동-가이드)
+9. [실전 트러블슈팅 및 FAQ](#9-실전-트러블슈팅-및-faq)
 
 ---
 
@@ -179,16 +180,42 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 );
 ```
 
-### 2) `src/App.jsx`
-서비스 테마 키를 전달하여 사이드바와 레이아웃을 연결합니다.
+### 2) `src/App.jsx` (기본 사용 및 좌측 메뉴 커스텀)
+서비스 테마 키(`service`)를 전달하여 사이드바와 레이아웃을 연결합니다.  
+해당 프로젝트만의 좌측 메뉴 구성이나 로고 클릭 동작을 바꾸고 싶다면 `sidebarProps={{ brand, menuGroups }}`를 전달하여 기본 메뉴를 덮어쓸 수 있습니다.
 
 ```jsx
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { useMemo } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AppLayout } from 'surveyon-common';
+import { Grid, ClipboardList, Trash2 } from 'lucide-react';
 import MyScreenPage from './pages/MyScreenPage';
 
 function App() {
+  const navigate = useNavigate();
+
+  // (선택) 프로젝트별 좌측 사이드바 메뉴 커스텀
+  // 생략 시 surveyon-common에 내장된 해당 서비스의 기본 메뉴가 표시됩니다.
+  const sidebarProps = useMemo(
+    () => ({
+      brand: {
+        title: '서비스명',
+        onClick: () => navigate('/my_service/main'),
+      },
+      menuGroups: [
+        {
+          label: '기본 메뉴', // 그룹 소제목 (불필요 시 '' 빈 문자열)
+          items: [
+            { label: '화면 1', path: '/my_service/main', icon: Grid },
+            { label: '화면 2', path: '/my_service/sub', icon: ClipboardList },
+            { label: '준비중 메뉴', icon: Trash2, isPending: true }, // isPending: true 시 '서비스 준비 중입니다' 알림 표시
+          ],
+        },
+      ],
+    }),
+    [navigate]
+  );
+
   return (
     <Routes>
       {/* 
@@ -198,9 +225,10 @@ function App() {
         - 'aiOpen'          : AI 오픈분석 (오렌지 테마)
         - 'fieldManagement' : 실사관리 (네이비 테마)
       */}
-      <Route element={<AppLayout service="fieldManagement" />}>
-        <Route path="/" element={<MyScreenPage />} />
-        <Route path="/field_management" element={<MyScreenPage />} />
+      <Route element={<AppLayout service="fieldManagement" sidebarProps={sidebarProps} />}>
+        <Route path="/" element={<Navigate to="/field_management/analysis/progress" replace />} />
+        <Route path="/field_management" element={<Navigate to="/field_management/analysis/progress" replace />} />
+        <Route path="/field_management/analysis/progress" element={<MyScreenPage />} />
       </Route>
     </Routes>
   );
@@ -397,7 +425,27 @@ function SampleComponent() {
 
 ---
 
-## 8. 실전 트러블슈팅 및 FAQ
+## 8. 서비스별 분리 개발 및 라우팅 연동 안내
+
+설문온은 각 대메뉴 서비스를 개별 프로젝트로 분리하여 개발한 뒤, **동일 도메인 아래에서 경로(Path) 기반으로 분기하여 같은 창(URL 이동)**으로 연결합니다.
+
+### 1) 대메뉴 서비스 키 및 표준 경로 규격
+| 서비스명 | `<AppLayout service="...">` | 표준 라우트 경로 | 테마 색상 |
+| :--- | :--- | :--- | :--- |
+| **H-SRT** | `'hsrt'` | `/data_status/...` | 블루 (`#3b82f6`) |
+| **데이터관리** | `'dataManagement'` | `/data_management/...` | 그린 (`#16a34a`) |
+| **AI오픈분석** | `'aiOpen'` | `/ai_open_analysis/...` | 오렌지 (`#F97316`) |
+| **실사관리** | `'fieldManagement'` | `/field_management/...` | 네이비 (`#1E3A8A`) |
+
+### 2) 공통 사이드바에 내장된 서비스 간 이동 및 세션 공유
+같은 도메인 아래에서 같은 창(탭)으로 이동하므로 **로그인 쿠키(`TOKEN`), `redux-persist` 상태, 선택된 프로젝트 정보(`sessionStorage.projectnum`, `merge_pn` 등)가 별도 처리 없이 자동으로 공유**됩니다.
+- **현재 서비스 내부 메뉴 이동**: React Router의 `navigate()`로 동작합니다.
+- **좌측 상단 🏠 홈 버튼 / ☰ 타 서비스 이동 / 로그아웃**: `surveyon-common` 내부에서 자동으로 `window.location.href`를 통해 해당 서비스 경로로 같은 창 이동을 수행합니다.
+- **서버 하위 경로 배포 시**: 각 프로젝트의 `vite.config.js`에 담당 서비스의 `base` 경로(예: `base: '/data_management/'`)를 설정하여 빌드합니다.
+
+---
+
+## 9. 실전 트러블슈팅 및 FAQ
 
 ### Q1. Kendo 배너(워터마크)가 화면에 계속 표시됩니다.
 - 프로젝트 루트에 `.env` 파일을 만들고 `TELERIK_LICENSE=...` 키가 올바르게 들어있는지 확인하세요.
