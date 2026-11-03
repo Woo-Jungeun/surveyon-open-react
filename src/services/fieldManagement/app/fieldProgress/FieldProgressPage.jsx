@@ -1667,9 +1667,17 @@ const FieldProgressPage = () => {
                     // total이 없을 경우 추측 (임시)
                     setTotalQuestions(1000);
                 }
+            } else if (String(result?.success) === '761') {
+                const errorMsg = result?.message || result?.Message || result?.resultjson?.message || result?.resultjson?.errorcontent || result?.errorcontent || "데이터 조회 중 오류가 발생했습니다.";
+                modal.showAlert("알림", errorMsg);
             }
         } catch (error) {
             console.error("Aggregation Variable Fetch Error:", error);
+            const errData = error?.response?.data;
+            if (String(errData?.success) === '761' || error?.response?.status === 761) {
+                const errorMsg = errData?.message || errData?.Message || errData?.resultjson?.message || errData?.resultjson?.errorcontent || errData?.errorcontent || "데이터 조회 중 오류가 발생했습니다.";
+                modal.showAlert("알림", errorMsg);
+            }
         } finally {
             isFetchingListRef.current = false;
         }
@@ -1855,9 +1863,17 @@ const FieldProgressPage = () => {
                         q.id === qId ? { ...q, html: updatedTable.html } : q
                     ));
                 }
+            } else if (String(result?.success) === '761') {
+                const errorMsg = result?.message || result?.Message || result?.resultjson?.message || result?.resultjson?.errorcontent || result?.errorcontent || "데이터 조회 중 오류가 발생했습니다.";
+                modal.showAlert("알림", errorMsg);
             }
         } catch (e) {
             console.error("Failed to refetch table HTML for display mode change", e);
+            const errData = e?.response?.data;
+            if (String(errData?.success) === '761' || e?.response?.status === 761) {
+                const errorMsg = errData?.message || errData?.Message || errData?.resultjson?.message || errData?.resultjson?.errorcontent || errData?.errorcontent || "데이터 조회 중 오류가 발생했습니다.";
+                modal.showAlert("알림", errorMsg);
+            }
         }
     };
 
