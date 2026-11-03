@@ -114,19 +114,32 @@ export default defineConfig({
 ## 3. 엔트리포인트 템플릿 (`main.jsx` & `App.jsx`)
 
 ### 1) `src/main.jsx`
-Redux 스토어, 테마 CSS, Kendo 한글 로케일, 전역 모달을 초기화합니다.
+Redux 스토어, 테마 CSS, Kendo 한글 로케일 및 CLDR 데이터(`load`), 전역 모달을 초기화합니다.
 
 ```jsx
-import React from 'react';
+import React, { Fragment } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import { IntlProvider, LocalizationProvider, loadMessages } from '@progress/kendo-react-intl';
 import { QueryClient, QueryClientProvider } from 'react-query';
 
+// Kendo React 한글 로케일 및 CLDR 데이터 관련
+import { IntlProvider, LocalizationProvider, loadMessages, load } from '@progress/kendo-react-intl';
+import likelySubtags from 'cldr-core/supplemental/likelySubtags.json';
+import currencyData from 'cldr-core/supplemental/currencyData.json';
+import weekData from 'cldr-core/supplemental/weekData.json';
+import bgNumbers from 'cldr-numbers-full/main/ko/numbers.json';
+import bgLocalCurrency from 'cldr-numbers-full/main/ko/currencies.json';
+import bgCaGregorian from 'cldr-dates-full/main/ko/ca-gregorian.json';
+import bgDateFields from 'cldr-dates-full/main/ko/dateFields.json';
+import deNumbers from 'cldr-numbers-full/main/de/numbers.json';
+import deLocalCurrency from 'cldr-numbers-full/main/de/currencies.json';
+import deCaGregorian from 'cldr-dates-full/main/de/ca-gregorian.json';
+import deDateFields from 'cldr-dates-full/main/de/dateFields.json';
+
 // 설문온 공통 코어 모듈
-import { store, persistor, ModalProvider, LoadingProvider } from 'surveyon-common';
+import { store, persistor, ModalProvider, LoadingProvider, WindowPopupProvider, ThemeProvider } from 'surveyon-common';
 import kendoLanguage from 'surveyon-common/config/kendo/language.json';
 import App from './App';
 
@@ -134,28 +147,48 @@ import App from './App';
 import 'surveyon-common/assets/css/surveyon-theme.css';
 import '@progress/kendo-theme-default/dist/all.css';
 
-// Kendo 한글 언어팩 적용
+// Kendo CLDR 데이터 및 한글 언어팩 적용
+load(
+  likelySubtags,
+  currencyData,
+  weekData,
+  bgLocalCurrency,
+  bgNumbers,
+  bgCaGregorian,
+  bgDateFields,
+  deLocalCurrency,
+  deNumbers,
+  deCaGregorian,
+  deDateFields
+);
 loadMessages(kendoLanguage, 'ko');
+
 const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <Provider store={store}>
-    <PersistGate persistor={persistor}>
-      <LocalizationProvider language="ko">
-        <IntlProvider locale="ko-KR">
-          <LoadingProvider>
-            <QueryClientProvider client={queryClient}>
-              <BrowserRouter>
-                <ModalProvider>
-                  <App />
-                </ModalProvider>
-              </BrowserRouter>
-            </QueryClientProvider>
-          </LoadingProvider>
-        </IntlProvider>
-      </LocalizationProvider>
-    </PersistGate>
-  </Provider>
+  <Fragment>
+    <Provider store={store}>
+      <PersistGate persistor={persistor}>
+        <LocalizationProvider language="ko">
+          <IntlProvider locale="ko-KR">
+            <LoadingProvider>
+              <QueryClientProvider client={queryClient}>
+                <BrowserRouter>
+                  <ThemeProvider>
+                    <ModalProvider>
+                      <WindowPopupProvider>
+                        <App />
+                      </WindowPopupProvider>
+                    </ModalProvider>
+                  </ThemeProvider>
+                </BrowserRouter>
+              </QueryClientProvider>
+            </LoadingProvider>
+          </IntlProvider>
+        </LocalizationProvider>
+      </PersistGate>
+    </Provider>
+  </Fragment>
 );
 ```
 
