@@ -71,6 +71,9 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
+  // [중요] 통합 서버(Nginx/프록시) 하위 경로 연동 시 JS/CSS 에셋 충돌 방지를 위해
+  // 담당 서비스의 표준 베이스 경로를 지정합니다. (예: '/data_status/', '/data_management/', '/ai_open_analysis/', '/field_management/')
+  base: '/field_management/',
   plugins: [react()],
   resolve: {
     alias: {
@@ -229,6 +232,8 @@ function App() {
         <Route path="/" element={<Navigate to="/field_management/analysis/progress" replace />} />
         <Route path="/field_management" element={<Navigate to="/field_management/analysis/progress" replace />} />
         <Route path="/field_management/analysis/progress" element={<MyScreenPage />} />
+        {/* 메인 홈이나 공통 사이드바(☰)에서 기본 진입 경로로 넘어올 때 첫 화면으로 연결되도록 와일드카드 리다이렉트 추가 */}
+        <Route path="/field_management/*" element={<Navigate to="/field_management/analysis/progress" replace />} />
       </Route>
     </Routes>
   );
@@ -430,12 +435,12 @@ function SampleComponent() {
 설문온은 각 대메뉴 서비스를 개별 프로젝트로 분리하여 개발한 뒤, **동일 도메인 아래에서 경로(Path) 기반으로 분기하여 같은 창(URL 이동)**으로 연결합니다.
 
 ### 1) 대메뉴 서비스 키 및 표준 경로 규격
-| 서비스명 | `<AppLayout service="...">` | 표준 라우트 경로 | 테마 색상 |
-| :--- | :--- | :--- | :--- |
-| **H-SRT** | `'hsrt'` | `/data_status/...` | 블루 (`#3b82f6`) |
-| **데이터관리** | `'dataManagement'` | `/data_management/...` | 그린 (`#16a34a`) |
-| **AI오픈분석** | `'aiOpen'` | `/ai_open_analysis/...` | 오렌지 (`#F97316`) |
-| **실사관리** | `'fieldManagement'` | `/field_management/...` | 네이비 (`#1E3A8A`) |
+| 서비스명 | `<AppLayout service="...">` | `vite.config.js` `base` 설정 | 메인/사이드바(☰) 기본 진입 경로 | 테마 색상 |
+| :--- | :--- | :--- | :--- | :--- |
+| **H-SRT** | `'hsrt'` | `'/data_status/'` | `/data_status` | 블루 (`#3b82f6`) |
+| **데이터관리** | `'dataManagement'` | `'/data_management/'` | `/data_management`, `/data_management/setting/map` | 그린 (`#16a34a`) |
+| **AI오픈분석** | `'aiOpen'` | `'/ai_open_analysis/'` | `/ai_open_analysis` | 오렌지 (`#F97316`) |
+| **실사관리** | `'fieldManagement'` | `'/field_management/'` | `/field_management`, `/field_management/analysis/progress` | 네이비 (`#1E3A8A`) |
 
 ### 2) 공통 사이드바에 내장된 서비스 간 이동 및 세션 공유
 같은 도메인 아래에서 같은 창(탭)으로 이동하므로 **로그인 쿠키(`TOKEN`), `redux-persist` 상태, 선택된 프로젝트 정보(`sessionStorage.projectnum`, `merge_pn` 등)가 별도 처리 없이 자동으로 공유**됩니다.

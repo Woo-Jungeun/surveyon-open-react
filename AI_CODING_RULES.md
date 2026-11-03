@@ -177,12 +177,15 @@ modal.showConfirm('확인', '계속 진행하시겠습니까?', {
 설문온은 각 대메뉴 서비스를 개별 프로젝트로 분리하여 개발하며, **같은 도메인 아래에서 새 창(`window.open`)이 아닌 같은 창 URL 이동(`window.location.href`)**으로 서비스 간 이동을 처리합니다.
 
 ### 7-1. 설문온 대메뉴 서비스 키 및 기본 경로 규격
-| 서비스명 | `service` prop 값 | 표준 베이스 경로 | 테마 색상 |
-| :--- | :--- | :--- | :--- |
-| **H-SRT** | `'hsrt'` | `/data_status` | 블루 (`#3b82f6`) |
-| **데이터관리** | `'dataManagement'` | `/data_management` | 그린 (`#16a34a`) |
-| **AI오픈분석** | `'aiOpen'` | `/ai_open_analysis` | 오렌지 (`#F97316`) |
-| **실사관리** | `'fieldManagement'` | `/field_management` | 네이비 (`#1E3A8A`) |
+| 서비스명 | `service` prop 값 | `vite.config.js` `base` 설정 | 메인 홈 / 사이드바(☰) 진입 경로 | 테마 색상 |
+| :--- | :--- | :--- | :--- | :--- |
+| **H-SRT** | `'hsrt'` | `'/data_status/'` | `/data_status` | 블루 (`#3b82f6`) |
+| **데이터관리** | `'dataManagement'` | `'/data_management/'` | `/data_management`, `/data_management/setting/map` | 그린 (`#16a34a`) |
+| **AI오픈분석** | `'aiOpen'` | `'/ai_open_analysis/'` | `/ai_open_analysis` | 오렌지 (`#F97316`) |
+| **실사관리** | `'fieldManagement'` | `'/field_management/'` | `/field_management`, `/field_management/analysis/progress` | 네이비 (`#1E3A8A`) |
+
+- **필수 설정 1 (`vite.config.js` `base`)**: 통합 도메인/프록시 환경에서 메인 서버와 JS/CSS 에셋 경로가 충돌하지 않도록 `vite.config.js`에 `base: '/<표준베이스경로>/'` (예: `base: '/field_management/'`)를 반드시 설정하십시오.
+- **필수 설정 2 (`App.jsx` 진입 경로 리다이렉트)**: 설문온 메인 홈이나 공통 사이드바(☰ 대메뉴 전환)에서 클릭해 넘어올 때 위 표의 **진입 경로**로 이동하므로, 프로젝트의 첫 화면 경로가 다른 경우(예: `/field_management/main`)에도 빈 화면이 뜨지 않도록 기본 진입 경로 및 와일드카드(`<Route path="/<표준베이스경로>/*" element={<Navigate to="첫화면경로" replace />} />`) 리다이렉트를 반드시 함께 등록하십시오.
 
 ### 7-2. 좌측 사이드바 메뉴 구성 규칙 (`sidebarProps`)
 - `surveyon-common` 패키지의 원본 코드를 직접 수정하지 말고, 각 프로젝트의 `App.jsx`에서 `<AppLayout>`의 `sidebarProps={{ brand, menuGroups }}`를 통해 해당 서비스의 좌측 메뉴를 정의하십시오.
