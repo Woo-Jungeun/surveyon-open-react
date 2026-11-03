@@ -53,20 +53,11 @@ npx kendo-ui-license activate
 
 ---
 
-### 2) 폰트 설정 (`index.html`)
-설문온 표준 서체인 **Pretendard** 웹폰트를 `index.html`의 `<head>` 태그 안에 추가합니다:
+### 2) 글로벌 스타일 및 폰트 (`reset.css` & `SpoqaHanSansNeo`)
+`surveyon-common/assets/css/surveyon-theme.css`를 import하면 설문온 표준 서체인 **SpoqaHanSansNeo**와 `reset.css`(버튼 패딩/라인높이/자간 리셋), `common.css`, `kendo_custom.css`가 자동으로 함께 적용됩니다.
 
-```html
-<!-- index.html <head> 내부 -->
-<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-```
-
-그리고 `src/index.css`에 기본 폰트를 지정합니다:
-```css
-html, body, #root, button, input, select, textarea, .k-grid {
-  font-family: "Pretendard", "Noto Sans KR", -apple-system, sans-serif !important;
-}
-```
+> [!CAUTION]
+> Vite 초기 생성 시 기본으로 들어있는 `src/index.css`나 `src/App.css`에 `font-family: ... !important`나 `button { padding: ... }` 같은 스타일이 남아있으면 원본 서체(`SpoqaHanSansNeo`)와 사이드바 레이아웃이 깨집니다. **Vite 기본 `index.css`와 `App.css`의 내용은 비우거나 제거**하세요.
 
 ---
 
@@ -139,7 +130,7 @@ import deCaGregorian from 'cldr-dates-full/main/de/ca-gregorian.json';
 import deDateFields from 'cldr-dates-full/main/de/dateFields.json';
 
 // 설문온 공통 코어 모듈
-import { store, persistor, ModalProvider, LoadingProvider, WindowPopupProvider, ThemeProvider } from 'surveyon-common';
+import { store, persistor, ModalProvider, LoadingProvider } from 'surveyon-common';
 import kendoLanguage from 'surveyon-common/config/kendo/language.json';
 import App from './App';
 
@@ -174,13 +165,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <LoadingProvider>
               <QueryClientProvider client={queryClient}>
                 <BrowserRouter>
-                  <ThemeProvider>
-                    <ModalProvider>
-                      <WindowPopupProvider>
-                        <App />
-                      </WindowPopupProvider>
-                    </ModalProvider>
-                  </ThemeProvider>
+                  <ModalProvider>
+                    <App />
+                  </ModalProvider>
                 </BrowserRouter>
               </QueryClientProvider>
             </LoadingProvider>
@@ -417,9 +404,9 @@ function SampleComponent() {
 - 터미널에서 `npx kendo-ui-license activate`를 실행하세요.
 - **가장 중요**: 활성화 후 **기존 Vite 개발 서버(`npm run dev`)를 완전히 종료(`Ctrl+C`)했다가 다시 실행**해야 캐시가 갱신됩니다.
 
-### Q2. 폰트가 깨지거나 시스템 기본 폰트로 나옵니다.
-- `index.html`의 `<head>` 태그에 Pretendard 웹폰트 `<link>` 태그가 추가되어 있는지 확인하세요.
-- `src/index.css`에 `font-family: "Pretendard", sans-serif !important;`가 선언되어 있는지 확인하세요.
+### Q2. 폰트가 깨지거나 사이드바 `<` 접기 버튼이 찌그러집니다.
+- `main.jsx`에 `import 'surveyon-common/assets/css/surveyon-theme.css';`가 포함되어 있는지 확인하세요 (`SpoqaHanSansNeo` 서체 및 `reset.css` 버튼 패딩 리셋이 내장되어 있습니다).
+- Vite 기본 템플릿의 `src/index.css`나 `src/App.css`에 `font-family: ... !important`나 `button { padding: ... }` 스타일이 남아있다면 제거하세요.
 
 ### Q3. API 호출 시 405 Method Not Allowed 또는 /o/... 로 요청이 날아갑니다.
 - `surveyon-common` 최신 버전을 사용하고 있는지 확인하세요 (`npm update surveyon-common`).

@@ -11,14 +11,14 @@
 - ❌ **임의의 버튼 스타일 작성 금지**: 반드시 사전 정의된 `cmn-btn` 클래스를 사용하십시오.
 - ❌ **Axios 직접 생성 금지**: 반드시 `surveyon-common`의 `api` 모듈(`api.get`, `api.post`)을 사용하십시오.
 - ✅ **모든 신규 페이지는 `<PageContainer>`로 래핑**: 화면 높이 100% 핏을 반드시 유지해야 합니다.
-- ✅ **신규 프로젝트 구성 시 `.env`에 Kendo 라이센스 등록 및 Pretendard 폰트 태그 필수 삽입**.
+- ✅ **신규 프로젝트 구성 시 `.env`에 Kendo 라이센스 등록 및 `surveyon-theme.css` 필수 import** (Vite 기본 `index.css`로 원본 `SpoqaHanSansNeo` 폰트나 버튼 `padding: 0` 리셋을 덮어쓰지 마십시오).
 - ✅ **크롤링 및 자동화 테스트용 고유 `id` 속성 필수 부여**: 표준 ID 체계를 누락하지 마십시오.
 
 ---
 
 ## 1. 프로젝트 초기 구성 규칙 (Project Setup Constraints)
 
-AI가 설문온 신규 프로젝트 또는 화면을 구성할 때 반드시 다음 3가지를 기본으로 적용해야 합니다:
+AI가 설문온 신규 프로젝트 또는 화면을 구성할 때 반드시 다음 규칙을 기본으로 적용해야 합니다:
 
 ### 1-1. Kendo 라이센스 및 환경 변수
 루트 디렉토리에 `.env` 파일을 생성하고 Telerik 라이센스를 등록합니다:
@@ -27,16 +27,10 @@ TELERIK_LICENSE=eyJhbGciOiJSUzI1NiIsInR5cCI6IlRlbGVyaWsgTGljZW5zZSBLZXkifQ...
 ```
 라이센스 활성화 후 개발 서버를 반드시 재시작하여 워터마크를 제거합니다.
 
-### 1-2. Pretendard 한글 폰트 적용
-`index.html`의 `<head>` 태그 안에 웹폰트를 필수 삽입하고 전역 CSS에 폰트를 지정합니다:
-```html
-<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-```
-```css
-html, body, #root, button, input, select, textarea, .k-grid {
-  font-family: "Pretendard", "Noto Sans KR", -apple-system, sans-serif !important;
-}
-```
+### 1-2. 설문온 표준 폰트(`SpoqaHanSansNeo`) 및 글로벌 리셋 유지
+`main.jsx`에서 `import 'surveyon-common/assets/css/surveyon-theme.css';`를 호출하면 `reset.css`(`SpoqaHanSansNeo` 폰트, `button { padding: 0 }`, `line-height: 1.5`, `letter-spacing: -0.56px`)와 `common.css`, `kendo_custom.css`가 자동으로 로드됩니다.
+- ❌ `index.css` 등에 `font-family: ... !important`를 임의로 추가하여 원본 `SpoqaHanSansNeo` 서체를 덮어쓰지 마십시오.
+- ❌ Vite 초기 템플릿의 `index.css`, `App.css` 기본 스타일(버튼 패딩, 배경색 등)은 반드시 제거하십시오.
 
 ---
 
