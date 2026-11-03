@@ -36,7 +36,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
 
     // XML 가져오기 탭 (Tab 2) 전용 상태
     const xmlFileInputRef = useRef(null);
-    const [xmlState, setXmlState] = useState('idle'); // 'idle' | 'validating' | 'success' | 'deleted' | 'different_survey' | 'applied' | 'no_change'
+    const [xmlState, setXmlState] = useState('idle'); // 'idle' | 'validating' | 'success' | 'deleted' | 'different_survey' | 'error' | 'applied' | 'no_change'
     const [xmlFile, setXmlFile] = useState(null);
     const [xmlDragging, setXmlDragging] = useState(false);
     const [xmlValidationResult, setXmlValidationResult] = useState(null);
@@ -67,23 +67,50 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
             formData.append('file', file);
 
             const rawRes = await validateXml.mutateAsync(formData);
-            const res = rawRes?.resultjson || rawRes?.data || rawRes;
+            const successCode = String(rawRes?.success ?? '');
 
-            if (res) {
-                setXmlValidationResult(res);
-                if (res.fileErrors && Array.isArray(res.fileErrors) && res.fileErrors.length > 0) {
-                    setXmlState('different_survey');
-                } else if ((res.added || 0) === 0 && (res.updated || 0) === 0 && (res.deleted || 0) === 0 && (!res.deletedList || res.deletedList.length === 0)) {
-                    setXmlState('no_change');
-                } else if ((res.deleted || 0) > 0 || (res.deletedList && res.deletedList.length > 0)) {
-                    setXmlState('deleted');
-                } else {
-                    setXmlState('success');
+            if (successCode === '777') {
+                const res = rawRes?.resultjson || rawRes?.data || rawRes;
+                if (res) {
+                    setXmlValidationResult(res);
+                    if (res.fileErrors && Array.isArray(res.fileErrors) && res.fileErrors.length > 0) {
+                        setXmlState('error');
+                    } else if ((res.added || 0) === 0 && (res.updated || 0) === 0 && (res.deleted || 0) === 0 && (!res.deletedList || res.deletedList.length === 0)) {
+                        setXmlState('no_change');
+                    } else if ((res.deleted || 0) > 0 || (res.deletedList && res.deletedList.length > 0)) {
+                        setXmlState('deleted');
+                    } else {
+                        setXmlState('success');
+                    }
+                    return;
                 }
+            } else {
+                // success가 "777"이 아닌 경우 (902: 파일 문제, 904: 서버 문제 등)
+                // 실패 응답은 숫자 0이나 "바뀐 것 없음"으로 그리지 않고, resultjson.errorcontent를 그대로 보여줌
+                const errMsg = rawRes?.resultjson?.errorcontent || rawRes?.errorcontent || rawRes?.message || 'XML 검사에 실패했습니다.';
+                setXmlValidationResult({
+                    errorCode: successCode,
+                    errorcontent: errMsg,
+                    fileErrors: [errMsg]
+                });
+                setXmlState('error');
                 return;
             }
         } catch (err) {
             console.error("XML validate API failed:", err);
+            const errMsg = err?.response?.data?.resultjson?.errorcontent
+                || err?.response?.data?.errorcontent
+                || err?.response?.data?.message
+                || err?.message
+                || 'XML 검사 처리 중 오류가 발생했습니다.';
+            const errCode = String(err?.response?.data?.success || 'ERR');
+            setXmlValidationResult({
+                errorCode: errCode,
+                errorcontent: errMsg,
+                fileErrors: [errMsg]
+            });
+            setXmlState('error');
+            return;
         }
 
         // Mock fallback if backend API is not live in dev environment
@@ -159,9 +186,10 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
             formData.append('file', xmlFile);
 
             const rawRes = await applyXml.mutateAsync(formData);
-            const res = rawRes?.resultjson || rawRes?.data || rawRes;
+            const successCode = String(rawRes?.success ?? '');
 
-            if (String(rawRes?.success) === '777' || res) {
+            if (successCode === '777') {
+                const res = rawRes?.resultjson || rawRes?.data || rawRes;
                 const versionId = res?.versionId ?? res?.version_id ?? rawRes?.versionId ?? 0;
                 const appliedCount = (res?.added || 0) + (res?.updated || 0) + (res?.deleted || 0);
                 const serverMsg = rawRes?.message || res?.message || `${appliedCount}건을 반영했습니다.`;
@@ -177,21 +205,26 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                     modal.showAlert('알림', extraMessages.join('\n'));
                 }
 
-                if (appliedCount > 0 || versionId > 0 || String(rawRes?.success) === '777') {
-                    setXmlState('applied');
-                    if (refreshData) refreshData();
-                    fetchVersionsList();
-                    if (openOpenTypeCheckModal) {
-                        openOpenTypeCheckModal();
-                    }
-                } else {
-                    setXmlState('no_change');
+                setXmlState('applied');
+                if (refreshData) refreshData();
+                fetchVersionsList();
+                if (openOpenTypeCheckModal) {
+                    openOpenTypeCheckModal();
                 }
+                return;
+            } else {
+                // 실패 응답 (902, 904 등) -> errorcontent를 그대로 표시
+                const errMsg = rawRes?.resultjson?.errorcontent || rawRes?.errorcontent || rawRes?.message || 'XML 적용 처리에 실패했습니다.';
+                modal.showErrorAlert('오류', errMsg);
                 return;
             }
         } catch (err) {
             console.error("XML apply API failed:", err);
-            const errMsg = err?.response?.data?.message || err?.message || 'XML 적용 처리 중 오류가 발생했습니다.';
+            const errMsg = err?.response?.data?.resultjson?.errorcontent
+                || err?.response?.data?.errorcontent
+                || err?.response?.data?.message
+                || err?.message
+                || 'XML 적용 처리 중 오류가 발생했습니다.';
             modal.showErrorAlert('오류', errMsg);
         } finally {
             setIsXmlApplying(false);
@@ -601,19 +634,31 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
 
         try {
             const res = await validateExcel.mutateAsync(formData);
+            const successCode = String(res?.success ?? '');
 
-            if (String(res?.success) === '777') {
+            if (successCode === '777') {
                 setValidationResult(res.resultjson || res);
             } else {
-                const errMsg = res?.resultjson?.errorcontent || res?.message || '검사 처리 중 오류가 발생했습니다.';
+                // 실패 응답 (902: 엑셀 파일 자체 오류, 904: 서버 오류 등)
+                // "바뀐 것 없음"이나 0개 행으로 그리지 않고 errorcontent를 그대로 전달
+                const errMsg = res?.resultjson?.errorcontent || res?.errorcontent || res?.message || '검사 처리 중 오류가 발생했습니다.';
                 setValidationResult({
+                    errorCode: successCode,
+                    errorcontent: errMsg,
                     fileErrors: [errMsg]
                 });
             }
         } catch (err) {
             console.error("검사 API 호출 오류:", err);
-            const errMsg = err?.response?.data?.message || err?.message || '검사 처리 중 오류가 발생했습니다.';
+            const errMsg = err?.response?.data?.resultjson?.errorcontent
+                || err?.response?.data?.errorcontent
+                || err?.response?.data?.message 
+                || err?.message 
+                || '검사 처리 중 오류가 발생했습니다.';
+            const errCode = String(err?.response?.data?.success || 'ERR');
             setValidationResult({
+                errorCode: errCode,
+                errorcontent: errMsg,
                 fileErrors: [errMsg]
             });
         } finally {
@@ -673,12 +718,17 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                 });
                 fetchVersionsList();
             } else {
-                const errorMsg = res?.resultjson?.errorcontent || res?.message || '적용 처리 중 오류가 발생했습니다.';
+                // 실패 응답: 엑셀 읽기=902, 서버 문제=904 ("일부만 반영됐을 수 있으니 맵을 확인" 등)
+                const errorMsg = res?.resultjson?.errorcontent || res?.errorcontent || res?.message || '적용 처리 중 오류가 발생했습니다.';
                 modal.showErrorAlert('오류', errorMsg);
             }
         } catch (err) {
             console.error("적용 API 호출 오류:", err);
-            const errorMsg = err?.response?.data?.message || err?.message || '적용 처리 중 오류가 발생했습니다.';
+            const errorMsg = err?.response?.data?.resultjson?.errorcontent
+                || err?.response?.data?.errorcontent
+                || err?.response?.data?.message 
+                || err?.message 
+                || '적용 처리 중 오류가 발생했습니다.';
             modal.showErrorAlert('오류', errorMsg);
         } finally {
             setIsApplying(false);
@@ -711,7 +761,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
         '멀티값변경', '오픈머지제외', '소수점자리수', '문항최소갯수', '분석제외코드', '기타오픈정의', '로직체크', '메모'
     ];
 
-    const hasFileErrors = validationResult?.fileErrors && validationResult.fileErrors.length > 0;
+    const hasFileErrors = !!(validationResult?.errorcontent || (validationResult?.fileErrors && validationResult.fileErrors.length > 0));
     const changedRowsCount = validationResult?.changedRows || 0;
     const isApplyDisabled = !selectedFile || isValidating || isApplying || isApplied || hasFileErrors || changedRowsCount === 0;
 
@@ -966,14 +1016,44 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                         )}
 
                                         {!isValidating && validationResult && (
-                                            <div style={{ padding: '8px 12px', background: (validationResult.changedRows || 0) > 0 ? '#f0faf5' : '#f8fafc', border: `1px solid ${(validationResult.changedRows || 0) > 0 ? '#bbf7d0' : '#e2e8f0'}`, borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                    <CheckCircle2 size={16} color="#16a34a" />
-                                                    <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#15803d' }}>
-                                                        총 {validationResult.changedRows || 0}개 행이 변경됩니다
-                                                    </span>
-                                                </div>
-                                            </div>
+                                            <>
+                                                {/* 검사 실패/오류 상태 (errorcontent 또는 fileErrors가 있는 경우: 902, 904 등) */}
+                                                {(validationResult.errorcontent || (validationResult.fileErrors && validationResult.fileErrors.length > 0)) ? (
+                                                    <div style={{
+                                                        background: '#fff1f2',
+                                                        border: '1.5px solid #fecdd3',
+                                                        borderRadius: '6px',
+                                                        padding: '12px 14px',
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        gap: '6px'
+                                                    }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <AlertTriangle size={16} color="#be123c" style={{ flexShrink: 0 }} />
+                                                            <strong style={{ fontSize: '13px', color: '#be123c', fontWeight: 'bold' }}>
+                                                                {validationResult.errorCode === '902'
+                                                                    ? '엑셀 파일 오류'
+                                                                    : validationResult.errorCode === '904'
+                                                                    ? '서버 처리 오류'
+                                                                    : '엑셀 파일 검사 실패'}
+                                                            </strong>
+                                                        </div>
+                                                        <div style={{ fontSize: '12.5px', color: '#9f1239', lineHeight: '1.5', paddingLeft: '22px', whiteSpace: 'pre-wrap' }}>
+                                                            {validationResult.errorcontent || validationResult.fileErrors?.join('\n')}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    /* 정상 검사 완료 상태 */
+                                                    <div style={{ padding: '8px 12px', background: (validationResult.changedRows || 0) > 0 ? '#f0faf5' : '#f8fafc', border: `1px solid ${(validationResult.changedRows || 0) > 0 ? '#bbf7d0' : '#e2e8f0'}`, borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <CheckCircle2 size={16} color="#16a34a" />
+                                                            <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#15803d' }}>
+                                                                총 {validationResult.changedRows || 0}개 행이 변경됩니다
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                 )}
@@ -1292,14 +1372,24 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                             </div>
                                         </div>
 
-                                        {/* 서버 경고 메시지 카트 (warnings) */}
-                                        {xmlValidationResult?.warnings && xmlValidationResult.warnings.length > 0 && (
+                                        {/* 서버 경고 메시지 카드 (warnings) */}
+                                        {xmlValidationResult?.warnings && (
+                                            Array.isArray(xmlValidationResult.warnings)
+                                                ? xmlValidationResult.warnings.length > 0
+                                                : !!xmlValidationResult.warnings
+                                        ) && (
                                             <div style={{ background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '8px', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                {xmlValidationResult.warnings.map((warn, idx) => (
-                                                    <span key={idx} style={{ fontSize: '12.5px', color: '#be123c', lineHeight: '1.5', fontWeight: '600' }}>
-                                                        ⚠ {warn}
+                                                {Array.isArray(xmlValidationResult.warnings) ? (
+                                                    xmlValidationResult.warnings.map((warn, idx) => (
+                                                        <span key={idx} style={{ fontSize: '12.5px', color: '#be123c', lineHeight: '1.5', fontWeight: '600' }}>
+                                                            ⚠ {warn}
+                                                        </span>
+                                                    ))
+                                                ) : (
+                                                    <span style={{ fontSize: '12.5px', color: '#be123c', lineHeight: '1.5', fontWeight: '600' }}>
+                                                        ⚠ {xmlValidationResult.warnings}
                                                     </span>
-                                                ))}
+                                                )}
                                             </div>
                                         )}
 
@@ -1547,8 +1637,8 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                 </div>
                             )}
 
-                            {/* STATE 5: 파일 오류 (fileErrors / different_survey) */}
-                            {xmlState === 'different_survey' && (
+                            {/* STATE 5: 파일 오류 또는 서버 처리 실패 (error / different_survey) */}
+                            {(xmlState === 'different_survey' || xmlState === 'error') && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     {/* 선택된 파일 바 */}
                                     <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1576,10 +1666,10 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                         </button>
                                     </div>
 
-                                    {/* 오류 경고 카드 */}
+                                    {/* 오류 경고 카드 (resultjson.errorcontent 그대로 표시) */}
                                     <div style={{
                                         background: '#fff1f2',
-                                        border: '1px solid #fecdd3',
+                                        border: '1.5px solid #fecdd3',
                                         borderRadius: '8px',
                                         padding: '16px 18px',
                                         display: 'flex',
@@ -1589,12 +1679,20 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <AlertTriangle size={18} color="#be123c" style={{ flexShrink: 0 }} />
                                             <strong style={{ fontSize: '14.5px', color: '#be123c', fontWeight: 'bold' }}>
-                                                현재 설문과 다른 XML 파일입니다 (반영 불가)
+                                                {xmlValidationResult?.errorCode === '902'
+                                                    ? 'XML 파일 형식 오류'
+                                                    : xmlValidationResult?.errorCode === '904'
+                                                    ? '서버 처리 오류'
+                                                    : 'XML 파일 검사 실패'}
                                             </strong>
                                         </div>
 
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '4px' }}>
-                                            {xmlValidationResult?.fileErrors && xmlValidationResult.fileErrors.length > 0 ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingLeft: '4px' }}>
+                                            {xmlValidationResult?.errorcontent ? (
+                                                <span style={{ fontSize: '13px', color: '#9f1239', lineHeight: '1.6', fontWeight: '500', whiteSpace: 'pre-wrap' }}>
+                                                    {xmlValidationResult.errorcontent}
+                                                </span>
+                                            ) : xmlValidationResult?.fileErrors && xmlValidationResult.fileErrors.length > 0 ? (
                                                 xmlValidationResult.fileErrors.map((err, idx) => (
                                                     <span key={idx} style={{ fontSize: '12.5px', color: '#9f1239', lineHeight: '1.5' }}>
                                                         • {err}
@@ -1602,7 +1700,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                                 ))
                                             ) : (
                                                 <span style={{ fontSize: '12.5px', color: '#9f1239', lineHeight: '1.5' }}>
-                                                    • 이 파일은 설문 <strong style={{ fontSize: 'inherit', color: '#be123c' }}>{currentPn}</strong> 의 것이 아닙니다. (다른 설문 파일 또는 형식이 맞지 않음)
+                                                    • 파일 검사에 실패했습니다. 파일 형식과 내용을 확인해 주세요.
                                                 </span>
                                             )}
                                         </div>
@@ -2448,7 +2546,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                             </button>
                         )}
 
-                        {activeTab === 2 && (xmlState === 'idle' || xmlState === 'different_survey' || xmlState === 'applied' || xmlState === 'no_change') && (
+                        {activeTab === 2 && (xmlState === 'idle' || xmlState === 'different_survey' || xmlState === 'error' || xmlState === 'applied' || xmlState === 'no_change') && (
                             <button
                                 type="button"
                                 disabled
@@ -2465,7 +2563,7 @@ const BatchMapEditModal = ({ isOpen, onClose, pn, variables = [], hasChanges = f
                                     opacity: 0.8
                                 }}
                             >
-                                {xmlState === 'applied' ? '적용됨' : xmlState === 'no_change' ? '적용 (0개)' : '적용'}
+                                {xmlState === 'applied' ? '적용됨' : xmlState === 'no_change' ? '적용 (0개)' : (xmlState === 'error' || xmlState === 'different_survey') ? '적용 불가' : '적용'}
                             </button>
                         )}
 
