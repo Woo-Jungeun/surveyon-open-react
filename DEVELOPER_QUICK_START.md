@@ -39,7 +39,7 @@ npm install react@^18.2.0 react-dom@^18.2.0
 터미널에서 아래 명령어로 사내 공통 라이브러리를 설치합니다:
 ```bash
 # 사내 Git 저장소 기반 패키지 설치
-npm install git+https://github.com/woojungeun97/surveyon-common.git
+npm install git+https://github.com/woojungeun97/surveyon-theme.git
 ```
 
 ---
