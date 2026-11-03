@@ -10,6 +10,7 @@
 - ❌ **브라우저 기본 `alert()` / `confirm()` 절대 금지**: 반드시 `modalContext`의 `showAlert()`, `showConfirm()`을 사용하십시오.
 - ❌ **임의의 버튼 스타일 작성 금지**: 반드시 사전 정의된 `cmn-btn` 클래스를 사용하십시오.
 - ❌ **Axios 직접 생성 금지**: 반드시 `surveyon-common`의 `api` 모듈(`api.get`, `api.post`)을 사용하십시오.
+- ❌ **임의의 HTML `<table>` 또는 타 그리드 라이브러리 사용 금지**: 모든 목록/테이블/데이터 그리드 화면은 반드시 **Kendo React Grid (`@progress/kendo-react-grid`의 `<Grid>`, `<GridColumn>` 또는 `surveyon-common`의 `KendoGrid`, `KendoGridV2`)**를 사용하십시오.
 - ✅ **모든 신규 페이지는 `<PageContainer>`로 래핑**: 화면 높이 100% 핏을 반드시 유지해야 합니다.
 - ✅ **신규 프로젝트 구성 시 `.env`에 Kendo 라이센스 등록 및 `surveyon-theme.css` 필수 import** (Vite 기본 `index.css`로 원본 `SpoqaHanSansNeo` 폰트나 버튼 `padding: 0` 리셋을 덮어쓰지 마십시오).
 - ✅ **크롤링 및 자동화 테스트용 고유 `id` 속성 필수 부여**: 표준 ID 체계를 누락하지 마십시오.
@@ -104,12 +105,20 @@ import { PageContainer } from 'surveyon-common';
     </>
   }
 >
-  {/* 본문 영역 (반드시 height 100% 핏) */}
+  {/* 본문 영역 (반드시 height 100% 핏 & Kendo React Grid 필수 사용) */}
   <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}>
-    <Grid style={{ height: '100%' }} ... />
+    <Grid data={dataList} style={{ height: '100%' }} pageable={true} sortable={true}>
+      <GridColumn field="id" title="번호" width="80px" className="text-center" />
+      <GridColumn field="title" title="조사명" />
+    </Grid>
   </div>
 </PageContainer>
 ```
+
+### 3-1. Kendo React Grid 필수 사용 규격
+- 목록, 데이터 조회, 표 형태의 UI를 구현할 때는 일반 HTML `<table>`이나 외부 테이블 라이브러리를 사용하지 말고 **반드시 `@progress/kendo-react-grid`의 `<Grid>`, `<GridColumn>`** (또는 `surveyon-common`에서 제공하는 `KendoGrid`, `KendoGridV2`, `ExcelColumnMenu`, `GridDataCount`)을 사용하십시오.
+- `surveyon-theme.css`(`kendo_custom.css` 포함)가 로드되어 있으므로, `<Grid>` 사용 시 대메뉴별 테마 색상(행 호버, 체크박스/행 선택 하이라이트, 헤더 스타일)이 자동으로 적용됩니다.
+- 그리드를 감싸는 컨테이너와 `<Grid>`에는 반드시 `style={{ height: '100%' }}`를 부여하여 `<PageContainer>` 내부 영역에 꽉 차고 그리드 내부 스크롤이 동작하도록 구성하십시오.
 
 ---
 
