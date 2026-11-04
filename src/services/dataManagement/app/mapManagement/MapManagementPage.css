@@ -2025,4 +2025,76 @@ input:checked+.slider:before {
 }
 .upload-modal-content {
     font-size: 13px;
-}
+}
+
+/* SAV 데이터 등록 모달 내 변수 유형 Kendo DropDownList 화살표 복원 및 컴팩트 스타일 */
+.sav-type-dropdown.k-dropdownlist {
+    height: 28px !important;
+    min-height: 28px !important;
+    border-radius: 6px !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    font-size: 12px !important;
+    box-shadow: none !important;
+}
+
+.sav-type-dropdown.k-dropdownlist:focus,
+.sav-type-dropdown.k-dropdownlist.k-focus,
+.sav-type-dropdown.k-dropdownlist:focus-within {
+    border-color: #16a34a !important;
+    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2) !important;
+}
+
+.sav-type-dropdown.k-dropdownlist .k-input-inner {
+    padding: 0 6px 0 8px !important;
+    font-size: 12px !important;
+    height: 26px !important;
+    line-height: 26px !important;
+    color: #1e293b !important;
+}
+
+/* Kendo 드롭다운 화살표 버튼 복원 (kendo_custom.css의 svg display: none 및 mask 문제 해결) */
+.sav-type-dropdown.k-dropdownlist .k-input-button,
+.sav-type-dropdown.k-dropdownlist.k-picker>button {
+    width: 24px !important;
+    min-width: 24px !important;
+    height: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    mask: none !important;
+    -webkit-mask: none !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justifyContent: center !important;
+    cursor: pointer !important;
+}
+
+.sav-type-dropdown.k-dropdownlist .k-input-button svg,
+.sav-type-dropdown.k-dropdownlist .k-button-icon svg,
+.sav-type-dropdown.k-dropdownlist.k-picker>button svg {
+    display: block !important;
+    width: 14px !important;
+    height: 14px !important;
+    fill: #475569 !important;
+    color: #475569 !important;
+}
+
+.sav-type-dropdown.k-dropdownlist .k-input-button path,
+.sav-type-dropdown.k-dropdownlist .k-button-icon path {
+    display: block !important;
+    fill: #475569 !important;
+}
+
+/* 혹시 SVG가 없을 경우를 대비한 CSS chevron 화살표 폴백 */
+.sav-type-dropdown.k-dropdownlist .k-input-button .k-svg-icon:empty::after,
+.sav-type-dropdown.k-dropdownlist .k-input-button:empty::after {
+    content: '' !important;
+    display: inline-block !important;
+    width: 6px !important;
+    height: 6px !important;
+    border-right: 1.5px solid #475569 !important;
+    border-bottom: 1.5px solid #475569 !important;
+    transform: rotate(45deg) !important;
+    margin-bottom: 2px !important;
+}

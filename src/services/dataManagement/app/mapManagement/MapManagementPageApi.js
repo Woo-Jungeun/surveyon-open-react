@@ -359,6 +359,11 @@ export function MapManagementPageApi() {
         // }
     );
 
+    /** SAV 칸 분석 및 묶음 추천 (선택) */
+    const getSavColumns = useMutation(
+        async (formData) => await api.form(formData, "/data/sav/columns", {}, "API_BASE_URL_DATAMANAGEMENT")
+    );
+
     /** SAV 등록/업데이트 적용 (2단계) */
     const applySav = useMutation(
         async (data) => await api.post(data, "/data/sav/apply", "API_BASE_URL_DATAMANAGEMENT"),
@@ -370,6 +375,7 @@ export function MapManagementPageApi() {
 
     return {
         getMapVariables,
+        getSavColumns,
         srtTransfer,
         createMapVariables,
         updateMapVariables,
