@@ -62,11 +62,18 @@ npx kendo-ui-license activate
 
 ---
 
-### 2) 글로벌 스타일 및 폰트 (`reset.css` & `SpoqaHanSansNeo`)
+### 2) 글로벌 스타일, 폰트 (`reset.css` & `SpoqaHanSansNeo`) 및 `index.html` 설정
 `surveyon-common/assets/css/surveyon-theme.css`를 import하면 설문온 표준 서체인 **SpoqaHanSansNeo**와 `reset.css`(버튼 패딩/라인높이/자간 리셋), `common.css`, `kendo_custom.css`가 자동으로 함께 적용됩니다.
 
-> [!CAUTION]
-> Vite 초기 생성 시 기본으로 들어있는 `src/index.css`나 `src/App.css`에 `font-family: ... !important`나 `button { padding: ... }` 같은 스타일이 남아있으면 원본 서체(`SpoqaHanSansNeo`)와 사이드바 레이아웃이 깨집니다. **Vite 기본 `index.css`와 `App.css`의 내용은 비우거나 제거**하세요.
+1. **`index.html` 초기 타이틀 및 `/favicon.ico` 404 방지 설정**:  
+   `<AppLayout>`이 마운트될 때 설문온 공식 파비콘(`favicon.svg`)과 `<title>설문온</title>`을 자동 주입하지만, JS 실행 직전 브라우저가 기본 `/favicon.ico`를 요청해 콘솔 404가 남는 것을 방지하려면 `index.html`의 `<head>`를 아래와 같이 맞춰주세요:
+   ```html
+   <link rel="icon" href="data:," />
+   <title>설문온</title>
+   ```
+2. **Vite 기본 CSS 초기화 (필수)**:
+   > [!CAUTION]
+   > Vite 초기 생성 시 기본으로 들어있는 `src/index.css`나 `src/App.css`에 `font-family: ... !important`나 `button { padding: ... }` 같은 스타일이 남아있으면 원본 서체(`SpoqaHanSansNeo`)와 사이드바 레이아웃이 깨집니다. **Vite 기본 `index.css`와 `App.css`의 내용은 비우거나 제거**하세요.
 
 ---
 
@@ -90,7 +97,18 @@ export default defineConfig({
     dedupe: ['react', 'react-dom', 'react-router-dom', 'react-redux'],
   },
   optimizeDeps: {
-    include: ['prop-types'],
+    exclude: ['surveyon-common'],
+    include: [
+      'prop-types',
+      'crypto-js',
+      'moment',
+      'html2canvas',
+      'axios',
+      'react-cookie',
+      'redux',
+      'redux-persist',
+      '@reduxjs/toolkit',
+    ],
   },
   server: {
     port: 5173,
@@ -105,6 +123,12 @@ export default defineConfig({
         target: 'https://stest.hrc.kr',
         changeOrigin: true,
         secure: false,
+      },
+      // 프로젝트 신규 등록(POF 조회)용 H-PRO API 프록시
+      '/api': {
+        target: 'https://hpropublic.hrcglobal.com',
+        changeOrigin: true,
+        secure: true,
       }
     }
   }
@@ -256,11 +280,30 @@ function App() {
 export default App;
 ```
 
+> [!NOTE]
+> **`<AppLayout>`에 기본 내장된 공통 기능 (별도 구현 불필요)**
+> - **프로젝트 선택/등록 모달 (`ProjectSelectionModal`)**: 좌측 사이드바 상단의 **[프로젝트 변경]** 버튼을 클릭하면 프로젝트 목록 조회, 신규 등록(POF 연동), 프로젝트 병합 팝업이 자동으로 열립니다.
+> - **플로팅 AI 챗봇 (`SurveyonAssistant`)**: 화면 우측 하단에 설문온 AI 챗봇 아이콘과 대화창이 자동으로 표시됩니다 (특정 화면에서 숨기려면 `<AppLayout hideAssistant={true}>` 전달).
+> - **공식 파비콘 및 탭 타이틀**: 브라우저 탭의 설문온 아이콘(`favicon.svg`)과 기본 타이틀(`설문온`)이 자동 적용됩니다.
+
 ---
 
 ## 4. 표준 화면 개발 템플릿 (`PageContainer` & Kendo Grid)
 
 설문온의 모든 화면은 `<PageContainer>`로 감싸며, 본문 그리드는 화면 높이를 100% 채우도록 작성합니다.
+
+### 1) `surveyon-common`에서 바로 import 가능한 공통 컴포넌트 & API 목록
+직접 구현하지 않고 `import { ... } from 'surveyon-common'`으로 즉시 꺼내 쓸 수 있는 모듈입니다:
+
+| 분류 | Export 명칭 | 설명 및 용도 |
+| :--- | :--- | :--- |
+| **레이아웃** | `AppLayout`, `PageContainer`, `PageHeader`, `PageFooter`, `AppSidebar` | 4대 대메뉴 표준 프레임, 상단 타이틀/검색/액션 바, 좌측 사이드바 |
+| **그리드 & 유틸** | `KendoGrid`, `KendoGridV2`, `KendoGridV3`, `GridData`, `ExcelColumnMenu`, `GridDataCount` | 설문온 표준 Kendo Grid 래퍼, 엑셀식 컬럼 필터 메뉴, 상단 `전체 N건 \| 선택 N건` 카운터 |
+| **공통 모달 & 챗봇** | `ProjectSelectionModal`, `ProPermissionModal`, `NewDataModal`, `PageListPopup`, `SurveyonAssistant` | 프로젝트 선택/등록 모달, 권한 관리 모달, 데이터 추가 모달, H-SRT 페이지 설정 팝업, AI 챗봇 |
+| **전역 상태 & 통신** | `api`, `store`, `persistor`, `ModalProvider`, `modalContext`, `LoadingProvider`, `loadingSpinnerContext` | 토큰 자동 주입 Axios 래퍼, Redux Persist 스토어(싱글톤), 전역 알림/확인 모달 및 로딩바 |
+| **내장 API 훅** | `MainListApi`, `ProEnterApi`, `ProPermissionApi`, `VariablePageApi`, `ChatApi` | 프로젝트 목록/등록/권한, 변수/페이지 설정, AI 챗봇 백엔드 통신 훅 |
+
+### 2) 기본 화면 코드 예시 (`MyScreenPage.jsx`)
 
 ```jsx
 import React, { useState, useContext } from 'react';
@@ -499,3 +542,7 @@ function SampleComponent() {
 ### Q5. Kendo Grid에서 행/체크박스 선택, 부분선택(`-`), 정렬 화살표(`↑`), 건수 표시(`GridDataCount`)가 테마 색상 대신 다홍색/주황색으로 나옵니다.
 - `src/main.jsx`에서 CSS import 순서가 역전되었을 때 발생합니다. 반드시 **`@progress/kendo-theme-default/dist/all.css`를 먼저 import하고, 그 다음 줄에 `surveyon-common/assets/css/surveyon-theme.css`를 import**하세요.
 - 또한 Kendo Grid v7의 `.k-selected`, 체크박스 `:indeterminate`, 정렬 아이콘(`.k-sort-icon`), `GridDataCount`의 `var(--primary-color)` 연동이 모두 반영된 최신 `surveyon-common`을 사용하도록 `npm update surveyon-common`을 실행하세요.
+
+### Q6. `does not provide an export named 'default'` 에러가 나거나 모달/스피너 Context가 동작하지 않습니다.
+- `vite.config.js`의 `optimizeDeps`에 `exclude: ['surveyon-common']`과 `include: ['prop-types', 'crypto-js', 'moment', 'html2canvas', 'axios', 'react-cookie', 'redux', 'redux-persist', '@reduxjs/toolkit']`가 모두 설정되어 있는지 확인하세요 (본 문서 [2-3절 `vite.config.js` 템플릿](#3-viteconfigjs-esm-호환-훅-충돌-방지--cors-프록시) 참고).
+- 설정 변경 후에는 `node_modules/.vite` 캐시를 지우거나 `npx vite --force`로 개발 서버를 재시작하세요.

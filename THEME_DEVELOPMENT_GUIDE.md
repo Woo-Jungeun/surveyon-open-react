@@ -30,8 +30,9 @@
 | **실사관리** | `fieldManagement` | 딥 네이비 (`#1E3A8A`) | 프로젝트 실사 진행 현황 및 응답자 통계 |
 
 ### 테마 CSS 적용 방법
-1. 앱 진입점(`main.jsx`) 최상단에 공통 테마 단 1줄 import:
+1. 앱 진입점(`main.jsx`)에서 반드시 **Kendo 기본 스타일(`all.css`)을 먼저 로드한 뒤 `surveyon-theme.css`를 import**:
    ```javascript
+   import '@progress/kendo-theme-default/dist/all.css';
    import 'surveyon-common/assets/css/surveyon-theme.css';
    ```
 2. **색상 작성 원칙 (절대 규칙)**:
@@ -55,11 +56,12 @@
 
 설문온의 모든 화면은 **사이드바(좌측) + 헤더(20px 타이틀/툴바) + 본문(100% 핏) + 푸터(하단)**의 통일된 규격 프레임을 사용합니다.
 
-### 컴포넌트 위치: `src/components/common/layout/`
-- `AppLayout.jsx`: 4대 서비스 공통 뼈대 (사이드바 + 메인 + 푸터)
+### 공통 패키지 내장 레이아웃 및 글로벌 컴포넌트
+- `AppLayout.jsx`: 4대 서비스 공통 뼈대 (사이드바 + 메인 + 푸터 + 프로젝트 선택/등록 모달 `ProjectSelectionModal` + 우측 하단 플로팅 AI 챗봇 `SurveyonAssistant` + 설문온 파비콘/타이틀 자동 주입)
 - `PageContainer.jsx`: 화면 내부 높이 100% 규격 및 내부 패딩/스크롤 컨테이너
 - `PageHeader.jsx`: 공통 상단 타이틀 바 & 검색창/저장버튼 액션 툴바
 - `PageFooter.jsx`: 공통 하단 푸터
+- `KendoGrid` / `KendoGridV2` / `KendoGridV3` / `GridDataCount` / `ExcelColumnMenu`: 설문온 표준 그리드 래퍼 및 건수 표시/엑셀 필터 컴포넌트
 
 ### 실전 화면 개발 예시 코드
 ```jsx
@@ -202,7 +204,7 @@ const MyPage = () => {
 
 ```jsx
 import { Routes, Route } from 'react-router-dom';
-import { AppLayout } from '@/components/common/layout';
+import { AppLayout } from 'surveyon-common';
 import MyDataPage from '@/services/dataManagement/MyDataPage';
 
 function App() {
@@ -332,7 +334,7 @@ if (String(res?.success) === '777') {
    - 개발자의 소스를 `src/services/신규메뉴명/` 에 배치
 2. **라우터 등록 (`src/App.jsx`)**:
    ```jsx
-   import { AppLayout } from '@/components/common/layout';
+   import { AppLayout } from 'surveyon-common';
    import NewMenuPage from '@/services/newMenu/NewMenuPage';
 
    <Route element={<AppLayout service="dataManagement" />}>
