@@ -44,7 +44,8 @@ async function checkFrontendVersion() {
     lastVersionCheck = now;
 
     try {
-        const res = await fetch('/index.html?_t=' + now, { 
+        const basePath = currentScriptUrl.split('/assets/')[0] || '';
+        const res = await fetch(`${basePath}/index.html?_t=${now}`, { 
             method: 'GET', 
             headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' } 
         });

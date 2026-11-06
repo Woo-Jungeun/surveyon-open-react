@@ -111,7 +111,8 @@ const Sidebar = ({
                 });
                 if (!currentScriptUrl) return;
                 
-                const res = await fetch('/index.html?_t=' + Date.now(), { headers: { 'Cache-Control': 'no-cache' } });
+                const basePath = currentScriptUrl.split('/assets/')[0] || '';
+                const res = await fetch(`${basePath}/index.html?_t=${Date.now()}`, { headers: { 'Cache-Control': 'no-cache' } });
                 const text = await res.text();
                 const match = text.match(/<script[^>]+src="([^"]+index-[^"]+\.js)"/);
                 if (match) {
