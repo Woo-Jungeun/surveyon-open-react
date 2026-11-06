@@ -96,7 +96,7 @@ import 'surveyon-common/assets/css/surveyon-theme.css';
 ```
 - ❌ **`surveyon-theme.css`를 `all.css`보다 먼저 import 금지**: 뒤에 로드된 `all.css`가 Kendo Grid 선택 행(`.k-selected`) 스타일을 Kendo 기본 다홍/살구색(`#ff6358`)으로 덮어쓰게 됩니다.
 - ❌ `index.css` 등에 `font-family: ... !important`를 임의로 추가하여 원본 `SpoqaHanSansNeo` 서체를 덮어쓰지 마십시오.
-- ❌ Vite 초기 템플릿의 `index.css`, `App.css` 기본 스타일(버튼 패딩, 배경색 등)은 반드시 제거하고, `index.html`의 `<head>`에는 초기 `/favicon.ico` 404 방지를 위해 `<link rel="icon" href="data:," />`와 `<title>설문온</title>`을 설정하십시오.
+- ❌ Vite 초기 템플릿의 `index.css`, `App.css` 기본 스타일(버튼 패딩, 배경색 등)은 반드시 제거하고, `node_modules/surveyon-common/assets/images/favicon.svg`를 `public/favicon.svg`로 복사한 뒤 `index.html`의 `<head>`에 `<link rel="icon" type="image/svg+xml" href="/favicon.svg" />`와 `<title>설문온</title>`을 설정하십시오 (`href="data:,"` 같은 빈 아이콘 설정 금지).
 
 ---
 

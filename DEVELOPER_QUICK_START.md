@@ -65,10 +65,10 @@ npx kendo-ui-license activate
 ### 2) 글로벌 스타일, 폰트 (`reset.css` & `SpoqaHanSansNeo`) 및 `index.html` 설정
 `surveyon-common/assets/css/surveyon-theme.css`를 import하면 설문온 표준 서체인 **SpoqaHanSansNeo**와 `reset.css`(버튼 패딩/라인높이/자간 리셋), `common.css`, `kendo_custom.css`가 자동으로 함께 적용됩니다.
 
-1. **`index.html` 초기 타이틀 및 `/favicon.ico` 404 방지 설정**:  
-   `<AppLayout>`이 마운트될 때 설문온 공식 파비콘(`favicon.svg`)과 `<title>설문온</title>`을 자동 주입하지만, JS 실행 직전 브라우저가 기본 `/favicon.ico`를 요청해 콘솔 404가 남는 것을 방지하려면 `index.html`의 `<head>`를 아래와 같이 맞춰주세요:
+1. **`index.html` 초기 타이틀 및 파비콘 설정**:  
+   `<AppLayout>`이 마운트될 때 설문온 공식 파비콘(Data URI)과 `<title>설문온</title>`을 자동 주입합니다. 초기 로딩 시 `/favicon.ico` 404 로그 없이 처음부터 설문온 아이콘이 표시되도록 `node_modules/surveyon-common/assets/images/favicon.svg`를 `public/favicon.svg`로 복사하고 `index.html`의 `<head>`를 아래와 같이 설정하세요:
    ```html
-   <link rel="icon" href="data:," />
+   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
    <title>설문온</title>
    ```
 2. **Vite 기본 CSS 초기화 (필수)**:
