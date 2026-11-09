@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import {
-    Home, ChevronRight, ChevronLeft, User, LogOut, Menu, Clock, ChevronDown, Settings, ShieldCheck, BookOpen, Lock, Check
+    Home, ChevronRight, ChevronLeft, User, LogOut, Menu, Clock, ChevronDown, Settings, ShieldCheck, BookOpen, Lock, Check, Palette
 } from "lucide-react";
 import { useNavigate, useLocation, NavLink, Link } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -32,6 +32,7 @@ const Sidebar = ({
     extraActions,
     bottomActions,
     pageInfo,
+    onOpenBrandTheme,
     ...rest
 }) => {
     const navigate = useNavigate();
@@ -110,7 +111,7 @@ const Sidebar = ({
                     if (s.src && s.src.includes('/assets/index-')) currentScriptUrl = s.src;
                 });
                 if (!currentScriptUrl) return;
-                
+
                 const basePath = currentScriptUrl.split('/assets/')[0] || '';
                 const res = await fetch(`${basePath}/index.html?_t=${Date.now()}`, { headers: { 'Cache-Control': 'no-cache' } });
                 const text = await res.text();
@@ -121,7 +122,7 @@ const Sidebar = ({
                         window.location.reload(); // 메뉴 이동 시에는 토스트 띄우지 않고 바로 새로고침
                     }
                 }
-            } catch (e) {}
+            } catch (e) { }
         };
         checkVersionAndReload();
     }, [location.pathname]);
@@ -619,6 +620,18 @@ const Sidebar = ({
                                     <button className="permission-btn" onClick={handleGoPermission}>
                                         <ShieldCheck size={16} />
                                         <span>권한 관리</span>
+                                    </button>
+                                )}
+                                {!isHsrtCustomer && onOpenBrandTheme && (
+                                    <button
+                                        className="permission-btn"
+                                        onClick={() => {
+                                            setUserOpen(false);
+                                            onOpenBrandTheme();
+                                        }}
+                                    >
+                                        <Palette size={16} />
+                                        <span>브랜드 테마 설정</span>
                                     </button>
                                 )}
                                 <button className="logout-btn" onClick={handleLogout}>

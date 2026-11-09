@@ -47,17 +47,16 @@
 
 /* --------------------------------------------------------------------------
    고객사 브랜드 적용 (html 에 data-srt-brand 속성이 있을 때만 동작)
-   --srt-brand (필수), --srt-brand-secondary / --srt-brand-accent (선택)
+   --srt-brand (필수), --srt-brand-secondary / --srt-brand-accent / --srt-brand-surface (선택)
+   ※ JS에서 :root에 주입한 --srt-brand-secondary, --srt-brand-accent가 덮어써지지 않도록
+      고정 대입을 제거하고 fallback(var(--srt-brand-secondary, var(--srt-brand)))으로 참조합니다.
    -------------------------------------------------------------------------- */
 :root[data-srt-brand] {
-    --srt-brand-secondary: var(--srt-brand);
-    --srt-brand-accent: var(--srt-brand);
-
-    --srt-primary-25: color-mix(in srgb, var(--srt-brand) 3%, white);
-    --srt-primary-50: color-mix(in srgb, var(--srt-brand) 7%, white);
-    --srt-primary-100: color-mix(in srgb, var(--srt-brand) 15%, white);
-    --srt-primary-200: color-mix(in srgb, var(--srt-brand) 28%, white);
-    --srt-primary-300: color-mix(in srgb, var(--srt-brand) 45%, white);
+    --srt-primary-25: color-mix(in srgb, var(--srt-brand-surface, white) 70%, color-mix(in srgb, var(--srt-brand) 8%, white));
+    --srt-primary-50: color-mix(in srgb, var(--srt-brand-surface, white) 55%, color-mix(in srgb, var(--srt-brand) 14%, white));
+    --srt-primary-100: color-mix(in srgb, var(--srt-brand) 16%, white);
+    --srt-primary-200: color-mix(in srgb, var(--srt-brand) 30%, white);
+    --srt-primary-300: color-mix(in srgb, var(--srt-brand) 48%, white);
     --srt-primary-400: color-mix(in srgb, var(--srt-brand) 70%, white);
     --srt-primary-500: color-mix(in srgb, var(--srt-brand) 88%, white);
     --srt-primary-600: var(--srt-brand);
@@ -66,12 +65,15 @@
     --srt-primary-900: color-mix(in srgb, var(--srt-brand) 55%, black);
     --srt-primary-950: color-mix(in srgb, var(--srt-brand) 40%, black);
 
-    --srt-secondary-100: color-mix(in srgb, var(--srt-brand-secondary) 15%, white);
-    --srt-secondary-200: color-mix(in srgb, var(--srt-brand-secondary) 30%, white);
-    --srt-secondary-600: var(--srt-brand-secondary);
+    --srt-secondary-50: color-mix(in srgb, var(--srt-brand-secondary, var(--srt-brand)) 12%, white);
+    --srt-secondary-100: color-mix(in srgb, var(--srt-brand-secondary, var(--srt-brand)) 22%, white);
+    --srt-secondary-200: color-mix(in srgb, var(--srt-brand-secondary, var(--srt-brand)) 38%, white);
+    --srt-secondary-500: color-mix(in srgb, var(--srt-brand-secondary, var(--srt-brand)) 88%, black);
+    --srt-secondary-600: var(--srt-brand-secondary, var(--srt-brand));
+    --srt-secondary-700: color-mix(in srgb, var(--srt-brand-secondary, var(--srt-brand)) 75%, black);
 
-    --srt-accent-500: color-mix(in srgb, var(--srt-brand-accent) 85%, white);
-    --srt-accent-600: var(--srt-brand-accent);
+    --srt-accent-500: color-mix(in srgb, var(--srt-brand-accent, var(--srt-brand)) 85%, white);
+    --srt-accent-600: var(--srt-brand-accent, var(--srt-brand));
 
     --srt-hover-bg: var(--srt-primary-50);
 }
@@ -104,6 +106,7 @@ html[data-srt-brand] [data-theme] {
     --primary-text-dark: var(--srt-primary-800) !important;
 
     --header-bg-gradient: linear-gradient(to right, color-mix(in srgb, var(--srt-brand) 8%, transparent), color-mix(in srgb, var(--srt-brand) 15%, transparent)) !important;
+    font-family: var(--srt-font-family, 'Spoqa Han Sans Neo', 'Noto Sans KR', sans-serif);
 }
 
 /* --------------------------------------------------------------------------
@@ -233,13 +236,13 @@ html[data-srt-brand] [data-theme="data-dashboard"] .k-grid-content tr:not(.k-gro
 }
 
 html[data-srt-brand] .k-grid td.k-selected,
-html[data-srt-brand] .k-grid .k-table-row.k-selected > td,
+html[data-srt-brand] .k-grid .k-table-row.k-selected>td,
 html[data-srt-brand] .k-grid .k-table-td.k-selected,
-html[data-srt-brand] .k-grid .k-table-row.k-selected > .k-table-td,
+html[data-srt-brand] .k-grid .k-table-row.k-selected>.k-table-td,
 html[data-srt-brand] [data-theme="data-dashboard"] .k-grid td.k-state-selected,
-html[data-srt-brand] [data-theme="data-dashboard"] .k-grid tr.k-state-selected > td,
+html[data-srt-brand] [data-theme="data-dashboard"] .k-grid tr.k-state-selected>td,
 html[data-srt-brand] [data-theme="data-dashboard"] .k-grid td.k-selected,
-html[data-srt-brand] [data-theme="data-dashboard"] .k-grid tr.k-selected > td {
+html[data-srt-brand] [data-theme="data-dashboard"] .k-grid tr.k-selected>td {
     background-color: var(--srt-primary-100) !important;
 }
 
@@ -250,24 +253,24 @@ html[data-srt-brand] .ps-modal-container .k-grid .k-table-row:hover,
 html[data-srt-brand] .ps-modal-container .k-grid .k-table-row:hover td,
 html[data-srt-brand] .ps-modal-container .k-grid tr:hover:not(.k-selected),
 html[data-srt-brand] .ps-modal-container .k-grid tr:hover:not(.k-selected) td,
-html[data-srt-brand] .ps-modal-container .k-grid .k-table-tbody > .k-table-row:not(.k-detail-row):hover:not(.k-selected) td {
+html[data-srt-brand] .ps-modal-container .k-grid .k-table-tbody>.k-table-row:not(.k-detail-row):hover:not(.k-selected) td {
     background-color: #F9F8FF !important;
     background: #F9F8FF !important;
 }
 
 html[data-srt-brand] .ps-modal-container .k-grid td.k-selected,
-html[data-srt-brand] .ps-modal-container .k-grid .k-table-row.k-selected > td,
+html[data-srt-brand] .ps-modal-container .k-grid .k-table-row.k-selected>td,
 html[data-srt-brand] .ps-modal-container .k-grid .k-table-td.k-selected,
-html[data-srt-brand] .ps-modal-container .k-grid .k-table-row.k-selected > .k-table-td,
+html[data-srt-brand] .ps-modal-container .k-grid .k-table-row.k-selected>.k-table-td,
 html[data-srt-brand] .ps-modal-container .k-grid .k-table-row.k-selected,
 html[data-srt-brand] .ps-modal-container .k-grid tr.k-selected,
-html[data-srt-brand] .ps-modal-container .k-grid tr.k-selected > td,
+html[data-srt-brand] .ps-modal-container .k-grid tr.k-selected>td,
 html[data-srt-brand] .ps-modal-container .k-grid tr[aria-selected="true"],
-html[data-srt-brand] .ps-modal-container .k-grid tr[aria-selected="true"] > td,
+html[data-srt-brand] .ps-modal-container .k-grid tr[aria-selected="true"]>td,
 html[data-srt-brand] .ps-modal-container .k-grid tr:active,
-html[data-srt-brand] .ps-modal-container .k-grid tr:active > td,
+html[data-srt-brand] .ps-modal-container .k-grid tr:active>td,
 html[data-srt-brand] .ps-modal-container .k-grid .k-table-row:active,
-html[data-srt-brand] .ps-modal-container .k-grid .k-table-row:active > td {
+html[data-srt-brand] .ps-modal-container .k-grid .k-table-row:active>td {
     background-color: #F3F1FF !important;
     background: #F3F1FF !important;
 }
@@ -322,10 +325,10 @@ html[data-srt-brand] .ps-modal-container {
     --primary-color: #5A4BFF !important;
 }
 
-html[data-srt-brand] .ps-modal-container .k-dropdownlist.k-picker > button,
-html[data-srt-brand] .ps-modal-container .k-dropdownlist > button,
-html[data-srt-brand] .ps-modal-container .k-picker > button,
-html[data-srt-brand] .ps-modal-container .k-combobox > button,
+html[data-srt-brand] .ps-modal-container .k-dropdownlist.k-picker>button,
+html[data-srt-brand] .ps-modal-container .k-dropdownlist>button,
+html[data-srt-brand] .ps-modal-container .k-picker>button,
+html[data-srt-brand] .ps-modal-container .k-combobox>button,
 html[data-srt-brand] .ps-modal-container .k-dropdownlist .k-input-button,
 html[data-srt-brand] .ps-modal-container .k-picker .k-input-button,
 html[data-srt-brand] .ps-modal-container .k-combobox .k-input-button,
@@ -610,6 +613,86 @@ html[data-srt-brand] .pl-edit-input:focus {
     box-shadow: 0 0 0 2px var(--srt-primary-200) !important;
 }
 
+/* --------------------------------------------------------------------------
+   멀티 컬러(Primary · Secondary · Surface) 역할별 UI 디테일 연동
+   - 미리보기 화면과 실제 H-SRT 화면(사이드바, DP의뢰서 스텝퍼, 그리드 배지/헤더)이
+     동일한 색상 비율로 표현되도록 Secondary(보조)와 Surface(배경)를 명시적으로 배분
+   -------------------------------------------------------------------------- */
 
+/* 1) 좌측 사이드바: 보조색을 섞지 않고 Primary(메인) + Surface(배경) + 기본 무채색으로 깔끔하게 통일 */
+html[data-srt-brand] .common-sidebar.blue .project-info-card {
+    background: var(--srt-primary-50) !important;
+    border-color: var(--srt-primary-200) !important;
+}
 
+html[data-srt-brand] .common-sidebar.blue .project-id-badge {
+    background: var(--srt-primary-100) !important;
+    color: var(--srt-primary-600) !important;
+    border: none !important;
+}
 
+html[data-srt-brand] .common-sidebar.blue .nav-link.main-nav-link.active {
+    background: var(--srt-primary-50) !important;
+    color: var(--srt-primary-600) !important;
+    border-left-color: var(--srt-primary-600) !important;
+}
+
+html[data-srt-brand] .common-sidebar.blue .sub-nav-link.active {
+    background: var(--srt-primary-50) !important;
+    color: var(--srt-primary-600) !important;
+}
+
+html[data-srt-brand] .common-sidebar.blue .sub-nav-link.active .sub-nav-step-badge {
+    background: var(--srt-primary-100) !important;
+    border-color: var(--srt-primary-500) !important;
+    color: var(--srt-primary-600) !important;
+}
+
+/* 2) DP의뢰서 상단 스텝퍼: 완료 단계는 Secondary(보조색), 현재 활성 단계는 Primary(메인색) */
+html[data-srt-brand] .dp-step-compact.done:not(.active) {
+    background: var(--srt-secondary-50) !important;
+    color: var(--srt-secondary-700) !important;
+}
+
+html[data-srt-brand] .dp-step-compact.done:not(.active) .dp-step-num-compact {
+    background: var(--srt-secondary-600) !important;
+    color: #ffffff !important;
+}
+
+html[data-srt-brand] .dp-step-compact.done:not(.active) .dp-step-text {
+    color: var(--srt-secondary-700) !important;
+}
+
+html[data-srt-brand] .dp-step-line-compact.done {
+    background: var(--srt-secondary-600) !important;
+    opacity: 0.45 !important;
+}
+
+html[data-srt-brand] .dp-step-compact.active {
+    background: var(--srt-primary-100) !important;
+    color: var(--srt-primary-800) !important;
+}
+
+html[data-srt-brand] .dp-step-compact.active .dp-step-num-compact {
+    background: var(--srt-primary-600) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 3px var(--srt-secondary-200) !important;
+}
+
+/* 3) 그리드 헤더(Surface 틴트) 및 문항 유형 배지(Secondary · Primary 투톤 조화) */
+html[data-srt-brand] .dp-excel-grid-v2.k-grid .k-header {
+    background: var(--srt-primary-25) !important;
+    border-bottom-color: var(--srt-secondary-200) !important;
+}
+
+html[data-srt-brand] .question-type-badge.single {
+    background: var(--srt-secondary-50) !important;
+    color: var(--srt-secondary-700) !important;
+    border-color: var(--srt-secondary-200) !important;
+}
+
+html[data-srt-brand] .question-type-badge.multi {
+    background: var(--srt-primary-50) !important;
+    color: var(--srt-primary-700) !important;
+    border-color: var(--srt-primary-200) !important;
+}

@@ -59,14 +59,15 @@ const AppLayout = ({
                 document.title = '설문온';
             }
 
-            // 브랜드 테스트 잔여 속성 및 변수 정리
-            document.documentElement.removeAttribute('data-srt-brand');
-            document.documentElement.style.removeProperty('--srt-brand');
-            document.documentElement.style.removeProperty('--srt-brand-secondary');
-            document.documentElement.style.removeProperty('--srt-brand-accent');
-            try {
-                localStorage.removeItem('srtBrandTest');
-            } catch (e) {}
+            // H-SRT가 아닌 다른 대메뉴로 전환할 때만 브랜드 테마 속성을 해제합니다.
+            if (resolvedTheme !== 'hsrt') {
+                document.documentElement.removeAttribute('data-srt-brand');
+                document.documentElement.style.removeProperty('--srt-brand');
+                document.documentElement.style.removeProperty('--srt-brand-secondary');
+                document.documentElement.style.removeProperty('--srt-brand-accent');
+                document.documentElement.style.removeProperty('--srt-font-family');
+                document.body.style.removeProperty('font-family');
+            }
         }
     }, [resolvedTheme]);
 

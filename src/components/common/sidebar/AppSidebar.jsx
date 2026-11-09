@@ -7,7 +7,7 @@ import Sidebar from "./Sidebar";
 import {
   Info, Database, Wrench, FileText, Target, BarChart3, Grid,
   Table, ClipboardList, Sparkles, Upload, RefreshCw, Clock, Users, BrainCircuit, ShieldCheck, Columns, LayoutDashboard, PlusCircle, FileCog, Wand2,
-  Map as MapIcon, ClipboardCheck, Sparkle, Trash2
+  Map as MapIcon, ClipboardCheck, Sparkle, Trash2, Palette
 } from "lucide-react";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -16,6 +16,7 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import NewDataModal from "@/services/dataStatus/app/menuBar/NewDataModal";
 import ProjectSelectionModal from "@/services/dataStatus/app/menuBar/ProjectSelectionModal";
 import PageListPopup from "@/services/dataStatus/app/variable/PageListPopup";
+import BrandThemeModal, { loadAndApplySavedBrandTheme } from "@/services/dataStatus/app/menuBar/BrandThemeModal";
 import { MenuBarApi as DataStatusMenuBarApi } from "@/services/dataStatus/app/menuBar/MenuBarApi";
 import { VariablePageApi } from "@/services/dataStatus/app/variable/VariablePageApi";
 import { DpRequestPageApi } from "@/services/dataStatus/app/hsrt/dpRequest/DpRequestPageApi";
@@ -72,7 +73,16 @@ const AppSidebar = ({ service, onOpenProjectModal, id = "app-sidebar", ...restSi
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isNewDataModalOpen, setIsNewDataModalOpen] = useState(false);
   const [isPageListPopupOpen, setIsPageListPopupOpen] = useState(false);
+  const [isBrandThemeModalOpen, setIsBrandThemeModalOpen] = useState(false);
   const [pageListData, setPageListData] = useState([]);
+
+  // H-SRT 모드일 때 프로젝트별 저장된 고객사 브랜드 테마 자동 로드 및 적용
+  useEffect(() => {
+    if (currentMode === "hsrt") {
+      const targetPn = projectnum || mergePn;
+      loadAndApplySavedBrandTheme(targetPn);
+    }
+  }, [currentMode, projectnum, mergePn]);
 
   // =========================================================
   // [A] H-SRT 전용 로직 (대시보드 선택, 최종시간, 새로고침 등)
@@ -742,7 +752,7 @@ const AppSidebar = ({ service, onOpenProjectModal, id = "app-sidebar", ...restSi
       });
     }
 
-    // 2단 카드: 좌측 라벨+시간, 우측 세로 중앙 새로고침 버튼 (원본 디자인 100% 일치)
+    // 2단 카드: 좌측 라벨+시간, 우측 세로 중앙 새로고침 버튼
     computedExtraActions = isHsrtCustomer ? null : (
       <div className="menu-bar-actions">
         <div className="menu-bar-refresh-card">
@@ -1005,6 +1015,8 @@ const AppSidebar = ({ service, onOpenProjectModal, id = "app-sidebar", ...restSi
     onClick: isHsrtCustomer ? undefined : handleOpenPageList
   } : undefined;
 
+  const isJewooUser = String(auth?.user?.userId || "").trim().toLowerCase() === "jewoo";
+
   return (
     <>
       <Sidebar
@@ -1017,6 +1029,7 @@ const AppSidebar = ({ service, onOpenProjectModal, id = "app-sidebar", ...restSi
         moduleItems={moduleItems}
         extraActions={computedExtraActions}
         bottomActions={computedBottomActions}
+        onOpenBrandTheme={currentMode === "hsrt" && isJewooUser ? () => setIsBrandThemeModalOpen(true) : undefined}
         {...restSidebarProps}
       />
 
@@ -1050,6 +1063,16 @@ const AppSidebar = ({ service, onOpenProjectModal, id = "app-sidebar", ...restSi
           data={pageListData}
           onClose={() => setIsPageListPopupOpen(false)}
           onSelect={handlePageSelect}
+        />
+      )}
+
+      {/* H-SRT 고객사 브랜드 테마 설정 모달 */}
+      {isBrandThemeModalOpen && (
+        <BrandThemeModal
+          isOpen={isBrandThemeModalOpen}
+          onClose={() => setIsBrandThemeModalOpen(false)}
+          projectnum={projectnum || mergePn}
+          projectname={pageInfo.title || projectname}
         />
       )}
     </>
