@@ -106,7 +106,7 @@ const VariableCardItem = React.memo(({
             </label>
             <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px', marginBottom: '3px' }}>
-                    <span className="v-name" style={{ margin: 0, fontWeight: 700, fontSize: '13px', color: '#0f172a', cursor: 'pointer' }} title={v.sysName}>{v.sysName}</span>
+                    <span className="v-name" style={{ margin: 0, fontWeight: 700, fontSize: '13px', color: '#0f172a', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }} title={v.label || '레이블 없음'}>{v.label || '레이블 없음'}</span>
                     {badgeText && (
                         <span style={{
                             fontSize: '10.5px',
@@ -133,9 +133,7 @@ const VariableCardItem = React.memo(({
                         </span>
                     )}
                 </div>
-                <div className="v-label" style={{ fontSize: '11.5px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={v.label || '레이블 없음'}>
-                    {v.label || '레이블 없음'}
-                </div>
+                <div className="v-label" style={{ fontSize: '11.5px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={v.spssName}>{v.spssName}</div>
             </div>
         </div>
     );
@@ -502,6 +500,7 @@ const ViewLabelTab = ({
             const q = sidebarSearchQuery.toLowerCase();
             result = result.filter(v =>
                 v.sysName?.toLowerCase().includes(q) ||
+                v.spssName?.toLowerCase().includes(q) ||
                 v.label?.toLowerCase().includes(q)
             );
         }
@@ -1030,7 +1029,7 @@ const ViewLabelTab = ({
                     <div className="detail-header">
                         <div className="v-info-title">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                <span style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{selectedVariable?.sysName}</span>
+                                <span style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{selectedVariable?.label || '레이블 없음'}</span>
                                 {currentVarIssueInfo && (
                                     <span style={{
                                         fontSize: '11px',
@@ -1169,7 +1168,7 @@ const ViewLabelTab = ({
                                     </>
                                 )}
                             </div>
-                            <span className="v-info-label" style={{ fontSize: '12px', color: '#64748b', marginTop: '3px' }}>{selectedVariable?.label}</span>
+                            <span className="v-info-label" style={{ fontSize: '12px', color: '#64748b', marginTop: '3px' }}>{selectedVariable?.spssName}</span>
                         </div>
                         <button
                             className="add-value-btn"
