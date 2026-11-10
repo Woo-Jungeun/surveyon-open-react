@@ -1432,8 +1432,8 @@ const LogicCheckTab = ({
         if (!opts.revert && prevLogic != null && normLogic(prevLogic) !== normLogic(savedLogic)) {
             modal?.showConfirm?.('알림', msg, {
                 btns: [
+                    { title: '↺ 되돌리기', className: 'lc-revert-modal-btn', click: () => saveLogicRef.current?.(newItem, mapVar, prevLogic, undefined, { revert: true }) },
                     { title: '닫기', click: () => { } },
-                    { title: '되돌리기', click: () => saveLogicRef.current?.(newItem, mapVar, prevLogic, undefined, { revert: true }) },
                 ],
             });
         } else {

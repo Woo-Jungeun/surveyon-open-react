@@ -412,7 +412,7 @@ function Modal(props) {
                                                     {
                                                         props.btns.map((item, idx) => {
                                                             return <Button key={idx}
-                                                                className={"btnM " + (idx != props.btns.length - 1 ? "btnTxt type01" : "")}
+                                                                className={"btnM " + (item.className ? item.className : (idx != props.btns.length - 1 ? "btnTxt type01" : ""))} style={item.style}
                                                                 themeColor={idx != props.btns.length - 1 ? null : "primary"}
                                                                 onClick={(event) => {
                                                                     if ((item.click !== null || item.click !== undefined) && item.click instanceof Function) {
