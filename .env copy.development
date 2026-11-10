@@ -1,0 +1,12 @@
+# npm run dev
+VITE_PROXY_URL=https://son.hrc.kr
+#VITE_PROXY_URL=https://stest.hrc.kr #(테스트서버)
+VITE_PROXY_URL_OTHER=https://stest.hrc.kr
+# 로컬 surveyon-aiopen-api 연동 시 아래 주석 해제 (https 프로필: https://localhost:7262 / http 프로필: http://localhost:5130)
+VITE_PROXY_URL_AIOPEN=https://localhost:7262
+VITE_API_BASE_URL=
+VITE_DEFAULT_PATH=/o
+# VITE_DEFAULT_PATH=https://son.hrc.kr/o
+VITE_AES_KEY=cGZeWyxlli5N4FRSwMAsbbRoNzJEhFko
+VITE_AES_IV=cGZeWyxlli5N4FRS
+VITE_SIGNALR_PATH=signalr
