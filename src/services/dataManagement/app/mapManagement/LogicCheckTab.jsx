@@ -156,6 +156,103 @@ function findLogicVars(text, variables) {
 }
 const normLogic = (s) => String(s || '').replace(/\s+/g, ' ').trim();
 
+/** 참조 변수 보기 칩 목록 — 한 줄 폭에 맞춰 자동으로 채우고 넘칠 때만 [전체보기 ∨] 표시 */
+function RefOptionsList({ labels, isExpanded, onToggle }) {
+    const wrapRef = useRef(null);
+    const measureRef = useRef(null);
+    const [fitCount, setFitCount] = useState(labels.length);
+
+    useEffect(() => {
+        const calc = () => {
+            const wrap = wrapRef.current;
+            const measure = measureRef.current;
+            if (!wrap || !measure) return;
+            const maxW = wrap.clientWidth;
+            if (!maxW) return;
+            const nodes = Array.from(measure.children);
+            const gap = 6;
+            let totalW = 0;
+            nodes.forEach((n, idx) => {
+                totalW += n.offsetWidth + (idx > 0 ? gap : 0);
+            });
+            if (totalW <= maxW) {
+                setFitCount(labels.length);
+                return;
+            }
+            const btnW = 76; // [전체보기 ∨] 버튼 폭 + 여유
+            const availW = Math.max(60, maxW - btnW);
+            let used = 0;
+            let cnt = 0;
+            for (let i = 0; i < nodes.length; i++) {
+                const w = nodes[i].offsetWidth + (i > 0 ? gap : 0);
+                if (used + w > availW && i > 0) break;
+                used += w;
+                cnt++;
+            }
+            setFitCount(Math.max(1, cnt));
+        };
+        calc();
+        window.addEventListener('resize', calc);
+        return () => window.removeEventListener('resize', calc);
+    }, [labels]);
+
+    const hasMore = fitCount < labels.length;
+    const visibleLabels = isExpanded || !hasMore ? labels : labels.slice(0, fitCount);
+
+    return (
+        <span ref={wrapRef} className="ref-opts" style={{ position: 'relative' }}>
+            {/* 폭 측정용 숨김 줄 */}
+            <span
+                ref={measureRef}
+                aria-hidden="true"
+                style={{
+                    position: 'absolute',
+                    visibility: 'hidden',
+                    pointerEvents: 'none',
+                    left: 0,
+                    top: 0,
+                    display: 'inline-flex',
+                    gap: '6px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    maxWidth: '100%'
+                }}
+            >
+                {labels.map(l => (
+                    <span key={l.code} className="ref-opt"><b>{l.code}</b> {l.label}</span>
+                ))}
+            </span>
+            {visibleLabels.map(l => (
+                <span key={l.code} className="ref-opt"><b>{l.code}</b> {l.label}</span>
+            ))}
+            {hasMore && (
+                <button
+                    type="button"
+                    onClick={onToggle}
+                    title={isExpanded ? '접기' : '전체보기'}
+                    style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '2px',
+                        padding: '1px 7px',
+                        border: '1px solid var(--dm-primary, #16a34a)',
+                        borderRadius: '6px',
+                        background: 'var(--dm-primary-light, #f0fdf4)',
+                        color: 'var(--dm-primary, #16a34a)',
+                        fontSize: '11.5px',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        lineHeight: 1.4
+                    }}
+                >
+                    <span>{isExpanded ? '접기' : '전체보기'}</span>
+                    <ChevronDown size={12} style={{ transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }} />
+                </button>
+            )}
+        </span>
+    );
+}
+
 /** 로직 넣기 / 수정 창 (기획서 팝업) */
 function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCancel, onSave }) {
     const varName = item.variable || item.sysName;
@@ -169,6 +266,7 @@ function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCanc
     const [builderOpen, setBuilderOpen] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+    const [expandedRefVars, setExpandedRefVars] = useState({});
     const current = String(mapVar?.logic || item.logic || '').trim();
 
     useEffect(() => {
@@ -231,7 +329,7 @@ function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCanc
     }, [builderOpen]);
 
     return (
-        <div className="variable-modal-overlay" data-theme="data-management" onClick={requestClose}>
+        <div className="variable-modal-overlay" data-theme="data-management">
             <div className="lc-dialog lc-logic-dialog" role="dialog" aria-labelledby="lc-logic-title" onClick={e => e.stopPropagation()}>
                 <div className="variable-modal-header">
                     <div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
@@ -327,7 +425,7 @@ function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCanc
                         if (!refs.length) return null;
                         const shownRefs = refs.slice(0, 5);
                         return (
-                            <ul className="lc-logic-refs">
+                            <ul className="lc-logic-refs" style={Object.values(expandedRefVars).some(Boolean) ? { maxHeight: '220px' } : undefined}>
                                 {shownRefs.map(v => {
                                     if (v._missing) {
                                         return (
@@ -338,18 +436,45 @@ function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCanc
                                         );
                                     }
                                     const labels = v.labels || [];
+                                    const refKey = v.id ?? v.name;
+                                    const isExpanded = !!expandedRefVars[refKey];
+                                    const visibleLabels = [];
                                     return (
                                         <li key={v.id ?? v.name}>
                                             <span className="ref-name">{(v.spssName || '').trim() || v.name || v.sysName}</span>
                                             {v.type && <span className="ref-type">{String(v.type).toLowerCase()}</span>}
                                             <span className="ref-label" title={v.label || ''}>{v.label || ''}</span>
                                             {labels.length > 0 && (
-                                                <span className="ref-opts">
-                                                    {labels.slice(0, 6).map(l => (
+                                                <RefOptionsList labels={labels} isExpanded={isExpanded} onToggle={() => setExpandedRefVars(prev => ({ ...prev, [refKey]: !prev[refKey] }))} />
+                                            )}
+                                            {false && (
+                                                <span>
+                                                    {visibleLabels.map(l => (
                                                         <span key={l.code} className="ref-opt"><b>{l.code}</b> {l.label}</span>
                                                     ))}
                                                     {labels.length > 6 && (
-                                                        <span className="ref-more" title={labels.map(l => `${l.code} ${l.label}`).join('\n')}>+{labels.length - 6}</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setExpandedRefVars(prev => ({ ...prev, [refKey]: !prev[refKey] }))}
+                                                            title={isExpanded ? '접기' : '전체보기'}
+                                                            style={{
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                gap: '2px',
+                                                                padding: '1px 7px',
+                                                                border: '1px solid var(--dm-primary, #16a34a)',
+                                                                borderRadius: '6px',
+                                                                background: 'var(--dm-primary-light, #f0fdf4)',
+                                                                color: 'var(--dm-primary, #16a34a)',
+                                                                fontSize: '11.5px',
+                                                                fontWeight: 500,
+                                                                cursor: 'pointer',
+                                                                lineHeight: 1.4
+                                                            }}
+                                                        >
+                                                            <span>{isExpanded ? '접기' : '전체보기'}</span>
+                                                            <ChevronDown size={12} style={{ transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }} />
+                                                        </button>
                                                     )}
                                                 </span>
                                             )}
@@ -424,7 +549,7 @@ function AutoFillDialog({ initialRestart = false, logicCount = 0, totalCount = 0
         },
     ];
     return (
-        <div className="variable-modal-overlay" data-theme="data-management" onClick={onCancel}>
+        <div className="variable-modal-overlay" data-theme="data-management">
             <div className="lc-dialog" role="dialog" aria-labelledby="lc-autofill-title" onClick={e => e.stopPropagation()}>
                 <div className="variable-modal-header">
                     <div style={{ display: 'flex', alignItems: 'center' }}>
