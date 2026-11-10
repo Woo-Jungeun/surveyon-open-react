@@ -2951,7 +2951,7 @@ table.lc-logic-help tbody {
 
 /* 식에 쓴 변수 — 네 줄 넘으면 스크롤 */
 .lc-logic-refs {
-    max-height: 128px;
+    max-height: 220px;
     overflow-y: auto;
 }
 

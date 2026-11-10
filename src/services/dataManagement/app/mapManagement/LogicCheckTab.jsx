@@ -179,7 +179,7 @@ function RefOptionsList({ labels, isExpanded, onToggle }) {
                 setFitCount(labels.length);
                 return;
             }
-            const btnW = 76; // [전체보기 ∨] 버튼 폭 + 여유
+            const btnW = 86; // [전체보기 ∨] 버튼 폭 + 여유
             const availW = Math.max(60, maxW - btnW);
             let used = 0;
             let cnt = 0;
@@ -192,8 +192,8 @@ function RefOptionsList({ labels, isExpanded, onToggle }) {
             setFitCount(Math.max(1, cnt));
         };
         calc();
-        window.addEventListener('resize', calc);
-        return () => window.removeEventListener('resize', calc);
+        const ro = typeof ResizeObserver !== 'undefined' && wrapRef.current ? new ResizeObserver(calc) : null; if (ro && wrapRef.current) ro.observe(wrapRef.current); window.addEventListener('resize', calc);
+        return () => { ro?.disconnect(); window.removeEventListener('resize', calc); };
     }, [labels]);
 
     const hasMore = fitCount < labels.length;
