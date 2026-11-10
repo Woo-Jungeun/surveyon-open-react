@@ -120,49 +120,47 @@ const InfoSection = () => {
               )}
             </div>
 
-            {/* AI솔루션팀 전용 관리자 메뉴 */}
-            {auth?.user?.userGroup === "AI솔루션팀" && (
-              <div className="hp-user-wrap" ref={adminDropdownRef}>
-                <button
-                  type="button"
-                  className="hp-user-btn"
-                  onClick={() => setAdminOpen((v) => !v)}
-                  title="관리자 메뉴"
-                  style={{ padding: '8px' }}
-                >
-                  <Settings className="hp-user-icon" style={{ width: '18px', height: '18px' }} />
-                </button>
+            {/* 관리자 메뉴 */}
+            <div className="hp-user-wrap" ref={adminDropdownRef}>
+              <button
+                type="button"
+                className="hp-user-btn"
+                onClick={() => setAdminOpen((v) => !v)}
+                title="관리자 메뉴"
+                style={{ padding: '8px' }}
+              >
+                <Settings className="hp-user-icon" style={{ width: '18px', height: '18px' }} />
+              </button>
 
-                {adminOpen && (
-                  <div className="hp-admin-dropdown">
-                    <button
-                      className="hp-dd-item"
-                      onClick={() => {
-                        const getCookie = (name) => {
-                          const matches = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"));
-                          return matches ? decodeURIComponent(matches[1]) : undefined;
-                        };
-                        const token = getCookie("TOKEN");
-                        const xAuthToken = getCookie("X-Auth-Token");
-                        const userId = auth?.user?.userId || sessionStorage.getItem("userId");
+              {adminOpen && (
+                <div className="hp-admin-dropdown">
+                  <button
+                    className="hp-dd-item"
+                    onClick={() => {
+                      const getCookie = (name) => {
+                        const matches = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"));
+                        return matches ? decodeURIComponent(matches[1]) : undefined;
+                      };
+                      const token = getCookie("TOKEN");
+                      const xAuthToken = getCookie("X-Auth-Token");
+                      const userId = auth?.user?.userId || sessionStorage.getItem("userId");
 
-                        if (token) sessionStorage.setItem("Authorization", `Bearer ${token}`);
-                        if (xAuthToken) sessionStorage.setItem("X-Auth-Token", xAuthToken);
-                        if (userId) {
-                          sessionStorage.setItem("X-User-Id", userId);
-                          sessionStorage.setItem("hrc", AES256.Crypto.encryptAES256(String(userId)));
-                        }
+                      if (token) sessionStorage.setItem("Authorization", `Bearer ${token}`);
+                      if (xAuthToken) sessionStorage.setItem("X-Auth-Token", xAuthToken);
+                      if (userId) {
+                        sessionStorage.setItem("X-User-Id", userId);
+                        sessionStorage.setItem("hrc", AES256.Crypto.encryptAES256(String(userId)));
+                      }
 
-                        window.open("/APIs/m/UI/index", "_blank");
-                      }}
-                    >
-                      <ClipboardList size={18} />
-                      <span>사용자 매뉴얼 가이드</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+                      window.open("/APIs/m/UI/index", "_blank");
+                    }}
+                  >
+                    <ClipboardList size={18} />
+                    <span>사용자 매뉴얼 가이드</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
