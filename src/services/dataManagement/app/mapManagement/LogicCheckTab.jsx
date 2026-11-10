@@ -159,6 +159,7 @@ const normLogic = (s) => String(s || '').replace(/\s+/g, ' ').trim();
 /** 로직 넣기 / 수정 창 (기획서 팝업) */
 function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCancel, onSave }) {
     const varName = item.variable || item.sysName;
+    const dispName = (item.spssName || mapVar?.spssName || '').trim() || varName;
     const isEdit = !!item.hasLogic;
     const [text, setText] = useState(mapVar?.logic || item.logic || '');
     const [info, setInfo] = useState(mapVar?.logicInfo);
@@ -193,7 +194,7 @@ function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCanc
         }
         // 비워서 저장 = 로직 지우기 → 한 번 묻기
         if (!normLogic(text)) {
-            const ok = await new Promise(resolve => modal?.showConfirm?.('알림', `${varName} 의 로직을 지울까요?\n지우면 이 문항은 판정하지 않습니다.`, {
+            const ok = await new Promise(resolve => modal?.showConfirm?.('알림', `${dispName} 의 로직을 지울까요?\n지우면 이 문항은 판정하지 않습니다.`, {
                 btns: [
                     { title: '취소', click: () => resolve(false) },
                     { title: '지우기', click: () => resolve(true) },
@@ -236,7 +237,7 @@ function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCanc
                     <div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
                         <div style={{ width: '4px', height: '18px', backgroundColor: 'var(--dm-primary)', borderRadius: '4px', marginRight: '8px', flexShrink: 0 }}></div>
                         <h3 id="lc-logic-title" className="variable-modal-title">
-                            {isEdit ? '로직 수정' : '로직 넣기'} - {varName}
+                            {isEdit ? '로직 수정' : '로직 넣기'} - {dispName}
                         </h3>
                         {(item.title || item.label) && (
                             <span className="lc-logic-dialog-sub" title={item.title || item.label}>{item.title || item.label}</span>
@@ -339,7 +340,7 @@ function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCanc
                                     const labels = v.labels || [];
                                     return (
                                         <li key={v.id ?? v.name}>
-                                            <span className="ref-name">{v.name || v.sysName}</span>
+                                            <span className="ref-name">{(v.spssName || '').trim() || v.name || v.sysName}</span>
                                             {v.type && <span className="ref-type">{String(v.type).toLowerCase()}</span>}
                                             <span className="ref-label" title={v.label || ''}>{v.label || ''}</span>
                                             {labels.length > 0 && (
@@ -391,7 +392,7 @@ function LogicEditDialog({ item, mapVar, variables, auth, pn, loadSyntax, onCanc
                         variablesList={variables}
                         initialLogic={text.replace(/\s*\n\s*/g, ' ').trim()}
                         initialInfo={info}
-                        title={`로직 검수 설정 - ${varName}`}
+                        title={`로직 검수 설정 - ${dispName}`}
                         onClose={() => setBuilderOpen(false)}
                         onSave={(_id, logicStr, _label, newInfo) => {
                             setText(logicStr || '');
@@ -677,16 +678,17 @@ const VarRow = React.memo(function VarRow({ item, isActive, isUnreadable, checke
     const bRest = Math.max(0, 100 - bAnswered - bMissing - bUnexpected);
     const noData = item.status == null || !item.hasLogic || isUnreadable || item.status === 'noResponse';
     const varName = item.variable || item.sysName || '';
+    const dispName = (item.spssName || '').trim() || varName;
     const label = (item.label || item.title || '').trim();
-    const hasLabel = !!label && label !== varName;
-    const mainTitle = label || varName;
+    const hasLabel = !!label && label !== dispName;
+    const mainTitle = label || dispName;
 
     return (
         <div
             className={`lc-tbl-row${isActive ? ' active' : ''}${item.status === 'error' ? ' err' : ''}`}
             onClick={onClick}
             data-var={varName}
-            title={label ? `${label} (${varName})` : varName}
+            title={label ? `${label} (${dispName})` : dispName}
         >
             {/* 1. 문항: 레이블 중점 (상단) + 작은 변수명 (하단) */}
             {/* 1. 문항: 레이블 중점 (상단) + 작은 변수명 (하단) + 세로 중앙 TIP 뱃지 */}
@@ -699,7 +701,7 @@ const VarRow = React.memo(function VarRow({ item, isActive, isUnreadable, checke
                     </div>
                     {hasLabel && (
                         <div className="lc-q-sub">
-                            <span className="lc-q-var">{varName}</span>
+                            <span className="lc-q-var">{dispName}</span>
                         </div>
                     )}
                 </div>
@@ -1089,22 +1091,31 @@ const LogicCheckTab = ({
 
         // 변수 맵에서 라벨 매핑 보완 (judgeResult에 없는 경우 대비)
         const varMap = new Map();
+        const spssMap = new Map();
         (variables || []).forEach(v => {
             const k1 = v.name;
             const k2 = v.sysName;
             const lbl = v.label || v.title || '';
             if (k1 && lbl && !varMap.has(k1)) varMap.set(k1, lbl);
             if (k2 && lbl && !varMap.has(k2)) varMap.set(k2, lbl);
+            const spss = (v.spssName || '').trim();
+            if (k1 && spss && !spssMap.has(k1)) spssMap.set(k1, spss);
+            if (k2 && spss && !spssMap.has(k2)) spssMap.set(k2, spss);
         });
 
         // 언리더블은 별도 플래그 및 라벨 보완
         const unreadableSet = new Set((unreadable || []).map(u => u.variable));
+        (unreadable || []).forEach(u => {
+            const uSpss = (u.spssName || '').trim();
+            if (u.variable && uSpss && !spssMap.has(u.variable)) spssMap.set(u.variable, uSpss);
+        });
         const enriched = items.map(it => {
             const vKey = it.variable || it.sysName;
             const fallbackLabel = varMap.get(vKey) || '';
             return {
                 ...it,
                 label: (it.label || it.title || fallbackLabel).trim(),
+                spssName: (it.spssName || spssMap.get(vKey) || '').trim(),
                 _unreadable: unreadableSet.has(it.variable),
             };
         });
@@ -1123,6 +1134,7 @@ const LogicCheckTab = ({
             const q = listSearch.toLowerCase();
             filtered = filtered.filter(it =>
                 (it.variable || '').toLowerCase().includes(q) ||
+                (it.spssName || '').toLowerCase().includes(q) ||
                 (it.title || it.label || '').toLowerCase().includes(q) ||
                 (it.logic || '').toLowerCase().includes(q)
             );
@@ -1260,9 +1272,11 @@ const LogicCheckTab = ({
 
         // 판정 결과에서 그 문항 한 줄만 바꿔 끼우기 (✎ 고침 · 다시 판정 전)
         const same = (x) => (x?.variable || x?.sysName) === variable;
+        const resolvedSpssName = (rj.spssName || rj.item?.spssName || item.spssName || mapVar?.spssName || '').trim();
+        const dispName = resolvedSpssName || variable;
         const newItem = rj.item
-            ? { ...rj.item, _fixed: true }
-            : { ...item, _unreadable: false, hasLogic: !isClear, logic: savedLogic, status: isClear ? undefined : item.status, _fixed: true };
+            ? { ...rj.item, spssName: resolvedSpssName || rj.item.spssName, _fixed: true }
+            : { ...item, spssName: resolvedSpssName || item.spssName, _unreadable: false, hasLogic: !isClear, logic: savedLogic, status: isClear ? undefined : item.status, _fixed: true };
         delete newItem._unreadable;
         setJudgeResult(prev => {
             if (!prev) return prev;
@@ -1288,7 +1302,7 @@ const LogicCheckTab = ({
         const msg = opts.revert
             ? `되돌렸습니다${statusText ? ` · ${statusText}` : ''}`
             : isClear ? '로직을 지웠습니다.'
-                : `저장하고 ${variable} 만 다시 판정했습니다 · ${statusText}`;
+                : `저장하고 ${dispName} 만 다시 판정했습니다 · ${statusText}`;
         const prevLogic = rj.previousLogic;
         if (!opts.revert && prevLogic != null && normLogic(prevLogic) !== normLogic(savedLogic)) {
             modal?.showConfirm?.('알림', msg, {
@@ -1423,6 +1437,9 @@ const LogicCheckTab = ({
         if (!detail || !selectedVar) return;
         const variable = detail.variable || selectedVar.variable || selectedVar.sysName;
         const condVars = detail.conditionVariables || [];
+        const condSpssNames = detail.conditionSpssNames || [];
+        const dispVar = (detail.spssName || selectedVar?.spssName || '').trim() || variable;
+        const dispCondVars = condVars.map((c, ci) => (condSpssNames[ci] || '').trim() || c);
         const total = detail.total ?? (detail.rows || []).length;
         const useLocal = codeFilter || total <= 5000;
         try {
@@ -1448,7 +1465,7 @@ const LogicCheckTab = ({
             // 엑셀에 붙일 표
             let columns, rows;
             if (useLocal) {
-                columns = ['PID', variable, ...condVars];
+                columns = ['PID', dispVar, ...dispCondVars];
                 rows = filteredRows.map(r => [r.pid, r.value ?? '', ...condVars.map(c => r.conditions?.[c] ?? '')]);
             } else if (copyCacheRef.current[cacheKey]) {
                 ({ columns, rows } = copyCacheRef.current[cacheKey]);
@@ -1458,7 +1475,9 @@ const LogicCheckTab = ({
                 try { res = await fetchCheckLogicDetail?.({ pn, user: userId, variable, kind: detailKind, copyRows: true }); }
                 finally { loadingSpinner?.hide?.(); }
                 if (String(res?.success) !== '777') throw new Error(res?.resultjson?.errorcontent || res?.errorcontent || '');
-                columns = res.resultjson?.columns || [];
+                const rawCols = res.resultjson?.columns || [];
+                const spssCols = res.resultjson?.spssColumns || [];
+                columns = spssCols.length > 0 ? spssCols.map((sc, idx) => (sc || '').trim() || rawCols[idx] || '') : rawCols;
                 rows = res.resultjson?.rows || [];
                 copyCacheRef.current[cacheKey] = { columns, rows };
             }
@@ -1669,6 +1688,9 @@ const LogicCheckTab = ({
         if (!selectedKind && !codeFilter && (detail.total ?? detail.rows.length) === 0) return null; // 정상 문항 — 자리표
         const variable = detail.variable || selectedVar?.variable || selectedVar?.sysName;
         const condVars = detail.conditionVariables || [];
+        const condSpssNames = detail.conditionSpssNames || [];
+        const dispVar = (detail.spssName || selectedVar?.spssName || '').trim() || variable;
+        const dispCondVars = condVars.map((c, ci) => (condSpssNames[ci] || '').trim() || c);
         const rows = filteredRows;
         const total = detail.total ?? rows.length;
         const kindLabel = {
@@ -1720,8 +1742,8 @@ const LogicCheckTab = ({
                                 <tr>
                                     <th style={{ width: '44px' }}>#</th>
                                     <th>PID</th>
-                                    <th>{variable} <span className="lc-th-sub">이 문항</span></th>
-                                    {condVars.map(c => <th key={c}>{c} <span className="lc-th-sub">조건</span></th>)}
+                                    <th>{dispVar} <span className="lc-th-sub">이 문항</span></th>
+                                    {condVars.map((c, ci) => <th key={c}>{dispCondVars[ci]} <span className="lc-th-sub">조건</span></th>)}
                                 </tr>
                             </thead>
                             <tbody>
@@ -1796,7 +1818,7 @@ const LogicCheckTab = ({
                     onGoTo={(target, isSkip) => {
                         // 변수명 그대로 → 없으면 문항 번호("문12")로 제목 앞부분을 찾음
                         let name = target;
-                        if (!variables.some(v => v.name === target || v.sysName === target)) {
+                        if (!variables.some(v => v.name === target || v.sysName === target || v.spssName === target)) {
                             const esc = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                             const re = new RegExp(`^${esc}(?![0-9-])`);
                             const hit = variables.find(v => re.test(String(v.label || '').trim()));
@@ -2118,10 +2140,10 @@ const LogicCheckTab = ({
                                                 <ChevronRight size={16} />
                                             </button>
                                         )}
-                                        <span className="lc-detail-varname">{selectedVar.variable || selectedVar.sysName}</span>
+                                        <span className="lc-detail-varname" title={selectedVar.title || selectedVar.label || ''} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '360px', paddingRight: '4px' }}>{selectedVar.title || selectedVar.label || ''}</span>
                                         <span className={`lc-detail-type t-${String(selectedVar.type || '').toLowerCase()}`}>{selectedVar.type || ''}</span>
-                                        <span className="lc-detail-title" title={selectedVar.title || selectedVar.label || ''}>
-                                            {selectedVar.title || selectedVar.label || ''}
+                                        <span className="lc-detail-title" style={{ flexShrink: 0, overflow: 'visible', paddingRight: '6px' }} title={(detail?.spssName || selectedVar.spssName || '').trim() || selectedVar.variable || selectedVar.sysName || ''}>
+                                            {(detail?.spssName || selectedVar.spssName || '').trim() || selectedVar.variable || selectedVar.sysName || ''}
                                         </span>
                                         {summaryText && (
                                             <span className="lc-detail-summary" style={{

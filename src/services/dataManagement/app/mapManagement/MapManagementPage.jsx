@@ -233,7 +233,7 @@ const MapManagementPage = () => {
     const goToVariableFromLogic = (name) => {
         const key = String(name || '').trim();
         if (!key) return false;
-        const v = variables.find(x => x.name === key || x.sysName === key);
+        const v = variables.find(x => x.name === key || x.sysName === key || x.spssName === key);
         if (!v) return false;
         setActiveTab('mapping');
         handleMappingSearchChange(v.name || v.sysName);

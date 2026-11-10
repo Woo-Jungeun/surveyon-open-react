@@ -236,9 +236,9 @@ const OpenTypeCheckModal = ({ isOpen, onClose, refreshData }) => {
                                         >
                                             <td 
                                                 style={{ padding: '12px 14px', fontWeight: '600', color: '#0f172a', fontFamily: 'monospace', fontSize: '13.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: 'pointer' }}
-                                                title={row.variable || '—'}
+                                                title={(row.spssName || '').trim() || row.variable || '—'}
                                             >
-                                                {row.variable}
+                                                {(row.spssName || '').trim() || row.variable}
                                             </td>
                                             <td style={{ padding: '12px 14px', color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                 <span

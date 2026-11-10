@@ -133,7 +133,7 @@ const VariableCardItem = React.memo(({
                         </span>
                     )}
                 </div>
-                <div className="v-label" style={{ fontSize: '11.5px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={v.spssName}>{v.spssName}</div>
+                <div className="v-label" style={{ fontSize: '11.5px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={(v.spssName || '').trim() || v.sysName}>{(v.spssName || '').trim() || v.sysName}</div>
             </div>
         </div>
     );
@@ -484,6 +484,7 @@ const ViewLabelTab = ({
         labelCheckResult.variables.forEach(item => {
             map.set(item.variableId, item);
             if (item.name) map.set(item.name, item);
+            if (item.spssName) map.set(item.spssName, item);
         });
         return map;
     }, [labelCheckResult]);
@@ -1109,7 +1110,7 @@ const ViewLabelTab = ({
                                                         >
                                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '6px' }}>
                                                                 <span style={{ fontSize: '12.5px', fontWeight: '700', color: '#0f172a' }}>
-                                                                    {selectedVariable?.sysName} 문제 항목 목록 ({issues.length}건)
+                                                                    {(selectedVariable?.spssName || '').trim() || selectedVariable?.sysName} 문제 항목 목록 ({issues.length}건)
                                                                 </span>
                                                                 <button
                                                                     type="button"
@@ -1168,7 +1169,7 @@ const ViewLabelTab = ({
                                     </>
                                 )}
                             </div>
-                            <span className="v-info-label" style={{ fontSize: '12px', color: '#64748b', marginTop: '3px' }}>{selectedVariable?.spssName}</span>
+                            <span className="v-info-label" style={{ fontSize: '12px', color: '#64748b', marginTop: '3px' }}>{(selectedVariable?.spssName || '').trim() || selectedVariable?.sysName}</span>
                         </div>
                         <button
                             className="add-value-btn"
