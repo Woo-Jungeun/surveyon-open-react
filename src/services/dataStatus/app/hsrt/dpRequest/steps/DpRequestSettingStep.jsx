@@ -14,6 +14,12 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
 import { useRef } from 'react';
+import {
+    consumePendingBrandTableTheme,
+    getSavedBrandTableTheme,
+    normalizeTableThemeJson,
+    generateTableThemeFromBrand
+} from "@/services/dataStatus/app/menuBar/BrandThemeModal.jsx";
 
 // Helper to determine order score for band labels
 const getBandScore = (label) => {
@@ -1070,6 +1076,18 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     display: initDisplay
                 };
 
+                const currentPn = sessionStorage.getItem('projectnum') || '';
+                const pendingBrandColors = consumePendingBrandTableTheme(currentPn);
+                if (pendingBrandColors) {
+                    nextSettings.render = { ...nextSettings.render, ...pendingBrandColors };
+                    if (onUnsavedChange) onUnsavedChange(true);
+                } else if (!ui.theme_primary) {
+                    const savedBrand = getSavedBrandTableTheme(currentPn);
+                    if (savedBrand && !savedBrand.isDefault && savedBrand.tableThemeJson) {
+                        nextSettings.render = { ...nextSettings.render, ...savedBrand.tableThemeJson };
+                    }
+                }
+
                 setSettings(nextSettings);
 
                 if (actualTableDetail?.scale_presets) {
@@ -1262,7 +1280,36 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
         fetchInitialData();
         const handlePageUpdate = () => fetchInitialData();
         window.addEventListener("pageSelected", handlePageUpdate);
-        return () => window.removeEventListener("pageSelected", handlePageUpdate);
+        const handleBrandThemeUpdated = (e) => {
+            const d = e?.detail;
+            if (!d) return;
+            const currentPn = sessionStorage.getItem('projectnum') || '';
+            consumePendingBrandTableTheme(currentPn);
+            const tableColors =
+                d.tableThemeJson ||
+                generateTableThemeFromBrand(d.primary, d.secondary, d.surface);
+            if (tableColors && typeof tableColors === 'object') {
+                setSettings((prev) => ({
+                    ...prev,
+                    render: {
+                        ...prev.render,
+                        ...normalizeTableThemeJson(tableColors, d.primary, d.secondary, d.surface),
+                    },
+                }));
+                if (onUnsavedChange) onUnsavedChange(true);
+            }
+        };
+        const wrappedBrandThemeUpdated = (e) => {
+            handleBrandThemeUpdated(e);
+            if (e?.detail?.tableSaved && onUnsavedChange) {
+                onUnsavedChange(false);
+            }
+        };
+        window.addEventListener("srtBrandThemeUpdated", wrappedBrandThemeUpdated);
+        return () => {
+            window.removeEventListener("pageSelected", handlePageUpdate);
+            window.removeEventListener("srtBrandThemeUpdated", wrappedBrandThemeUpdated);
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [auth?.user?.userId]);
 

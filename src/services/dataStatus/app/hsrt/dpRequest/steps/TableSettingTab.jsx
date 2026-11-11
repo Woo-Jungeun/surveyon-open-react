@@ -4,6 +4,12 @@ import { Layout, Type, Palette, Eye, ChevronDown, ChevronUp, RotateCcw } from 'l
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import { TABLE_THEME_PRESETS } from './TableThemePresets';
 import { modalContext } from "@/components/common/Modal.jsx";
+import {
+    getSavedBrandTableTheme,
+    generateTableThemeFromBrand,
+    normalizeTableThemeJson
+} from "@/services/dataStatus/app/menuBar/BrandThemeModal.jsx";
+import { fetchProjectBrandThemeFromApi } from "@/services/dataStatus/app/menuBar/BrandThemeApi.js";
 
 const ColorInput = React.memo(({ value, onChange, width = '105px', textWidth = '65px', padding = '3px 6px', gap = '6px' }) => {
     const [localValue, setLocalValue] = useState(value || '');
@@ -147,6 +153,60 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
     const auth = useSelector((store) => store.auth);
     const { getOverviewStyled, getStyleExamples } = DpRequestPageApi();
     const pageId = sessionStorage.getItem('pageId');
+    const [brandPreset, setBrandPreset] = useState(() =>
+        getSavedBrandTableTheme(sessionStorage.getItem('projectnum'))
+    );
+
+    useEffect(() => {
+        const syncBrand = () => {
+            const pn = sessionStorage.getItem('projectnum') || '';
+            const localBrand = getSavedBrandTableTheme(pn);
+            setBrandPreset(localBrand);
+            if (pn) {
+                fetchProjectBrandThemeFromApi(pn, auth?.user?.userId).then((dbTheme) => {
+                    if (!dbTheme) return;
+                    const p = dbTheme.primary || dbTheme.primary_color || '#2563EB';
+                    const s = dbTheme.secondary || dbTheme.secondary_color || p || '#3B82F6';
+                    const sf = dbTheme.surface || dbTheme.surface_color || '#EFF6FF';
+                    const tJson =
+                        dbTheme.tableThemeJson ||
+                        dbTheme.table_theme_json ||
+                        generateTableThemeFromBrand(p, s, sf);
+                    setBrandPreset({
+                        primary: p,
+                        secondary: s,
+                        surface: sf,
+                        isDefault: Boolean(dbTheme.isDefault ?? dbTheme.is_default),
+                        tableThemeJson: normalizeTableThemeJson(tJson, p, s, sf),
+                    });
+                });
+            }
+        };
+
+        syncBrand();
+        const handleBrandUpdated = (e) => {
+            const d = e?.detail;
+            if (d && d.primary) {
+                setBrandPreset({
+                    primary: d.primary,
+                    secondary: d.secondary || d.primary,
+                    surface: d.surface || '#EFF6FF',
+                    isDefault: Boolean(d.isDefault),
+                    tableThemeJson:
+                        d.tableThemeJson ||
+                        generateTableThemeFromBrand(d.primary, d.secondary, d.surface),
+                });
+            } else {
+                syncBrand();
+            }
+        };
+        window.addEventListener('srtBrandThemeUpdated', handleBrandUpdated);
+        window.addEventListener('pageSelected', syncBrand);
+        return () => {
+            window.removeEventListener('srtBrandThemeUpdated', handleBrandUpdated);
+            window.removeEventListener('pageSelected', syncBrand);
+        };
+    }, [auth?.user?.userId]);
 
     const [previewTab, setPreviewTab] = useState(0); // 0: 실제 표 미리보기, 1: 스타일 예시
     const [realPreviewData, setRealPreviewData] = useState({ css: '', html: '' });
@@ -965,6 +1025,36 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                         <Palette size={15} color="#64748B" /> 빠른 테마 프리셋
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', flex: 1, justifyContent: 'flex-end', marginLeft: '16px' }}>
+                        <button
+                            type="button"
+                            style={{
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                padding: '5px 10px',
+                                borderRadius: '4px',
+                                boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
+                                cursor: 'pointer',
+                                background: brandPreset?.tableThemeJson?.theme_primary || brandPreset?.primary || '#2563EB',
+                                color: brandPreset?.tableThemeJson?.theme_primary_fg || '#FFFFFF',
+                                border: 'none',
+                                whiteSpace: 'nowrap',
+                                transition: 'all 0.15s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+                            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                            onClick={() => {
+                                const brandColors =
+                                    brandPreset?.tableThemeJson ||
+                                    generateTableThemeFromBrand(brandPreset?.primary, brandPreset?.secondary, brandPreset?.surface);
+                                const normalizedBrandColors = normalizeTableThemeJson(brandColors, brandPreset?.primary, brandPreset?.secondary, brandPreset?.surface);
+                                setSettings({ ...settings, render: { ...settings.render, ...normalizedBrandColors } });
+                                if (onUnsavedChange) onUnsavedChange(true);
+                            }}
+                            title="현재 프로젝트에 설정된 브랜드 테마의 20개 표 영역 색상을 적용합니다"
+                        >
+                            브랜드 프리셋
+                        </button>
+                        <span style={{ width: '1px', height: '16px', background: '#CBD5E1', margin: '0 2px', flexShrink: 0 }} />
                         {TABLE_THEME_PRESETS.map(preset => (
                             <button
                                 key={preset.label}
