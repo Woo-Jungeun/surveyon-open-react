@@ -1116,23 +1116,21 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
               <div className="btm-group-head">
                 <span className="btm-group-label">2. 브랜드 컬러 설정</span>
                 <div className="btm-head-actions">
-                  {uploadedImageSrc && extractedPalette.length > 0 && (
-                    <button
-                      type="button"
-                      className={`btm-head-add-btn ${isAddingPreset ? "active" : ""}`}
-                      onClick={() => setIsAddingPreset((prev) => !prev)}
-                      title="추출한 이미지 브랜드 컬러를 프리셋 목록에 추가합니다"
-                    >
-                      <Plus size={12} /> 프리셋 추가
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className={`btm-head-add-btn ${isAddingPreset ? "active" : ""}`}
+                    onClick={() => setIsAddingPreset((prev) => !prev)}
+                    title="현재 설정된 브랜드 컬러(메인·보조·배경)를 프리셋 목록에 추가합니다"
+                  >
+                    <Plus size={12} /> 프리셋 추가
+                  </button>
                   <button type="button" className="btm-reset-btn" onClick={handleResetDefault}>
                     <RotateCcw size={12} /> 설문온 기본 초기화
                   </button>
                 </div>
               </div>
 
-              {uploadedImageSrc && extractedPalette.length > 0 && isAddingPreset && (
+              {isAddingPreset && (
                 <div className="btm-preset-add-box">
                   <span className="btm-preset-dots">
                     <span className="btm-preset-circle" style={{ backgroundColor: primaryColor }} />

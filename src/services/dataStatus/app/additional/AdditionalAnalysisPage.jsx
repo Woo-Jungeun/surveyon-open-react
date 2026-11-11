@@ -2546,6 +2546,21 @@ const AdditionalAnalysisPage = () => {
         await handleRun(undefined, nextPolicy);
     };
 
+    useEffect(() => {
+        const handleBrandThemeUpdate = (e) => {
+            const detail = e?.detail || {};
+            if (detail.tableThemeJson && typeof detail.tableThemeJson === 'object') {
+                setRenderSettings(prev => (prev ? { ...prev, ...detail.tableThemeJson } : detail.tableThemeJson));
+                setContextUiSettings(prev => ({ ...prev, ...detail.tableThemeJson }));
+            }
+            if (rowVars.length > 0) {
+                handleRun(undefined, displayPolicy);
+            }
+        };
+        window.addEventListener("srtBrandThemeUpdated", handleBrandThemeUpdate);
+        return () => window.removeEventListener("srtBrandThemeUpdated", handleBrandThemeUpdate);
+    }, [rowVars, colVars, displayPolicy, filterExpression, selectedWeight, tableMode, selectedTableId]);
+
     const handleDeleteTable = async (tableId) => {
         if (!auth?.user?.userId) {
             modal.showAlert("알림", "로그인이 필요합니다.");

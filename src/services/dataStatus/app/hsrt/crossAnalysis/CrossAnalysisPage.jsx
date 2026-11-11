@@ -2689,6 +2689,21 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     const isInitialPageRender = useRef(true);
     useEffect(() => {
+        const handleBrandThemeUpdate = (e) => {
+            const detail = e?.detail || {};
+            if (detail.tableThemeJson && typeof detail.tableThemeJson === 'object') {
+                setUiSettings(prev => {
+                    const next = { ...prev, ...detail.tableThemeJson };
+                    uiSettingsRef.current = next;
+                    return next;
+                });
+            }
+            fetchCrossAnalysisData('normal', selectedBanner, currentPage, filterExpression);
+        };
+        window.addEventListener("srtBrandThemeUpdated", handleBrandThemeUpdate);
+        return () => window.removeEventListener("srtBrandThemeUpdated", handleBrandThemeUpdate);
+    }, [selectedBanner, currentPage, filterExpression]);
+    useEffect(() => {
         if (isInitialPageRender.current) {
             isInitialPageRender.current = false;
             return;
