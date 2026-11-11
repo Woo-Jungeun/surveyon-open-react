@@ -21,7 +21,17 @@ export function BrandThemeApi() {
         async (data) => await api.post(data, "/theme/presets", "API_BASE_URL_THEME")
     );
 
-    /** 4. 프로젝트별 테마 변경 이력 조회 (theme_history) */
+    /** 4. 고객사 브랜드 프리셋 추가 (theme_preset INSERT) */
+    const addBrandPreset = useMutation(
+        async (data) => await api.post(data, "/theme/presets/add", "API_BASE_URL_THEME")
+    );
+
+    /** 5. 고객사 브랜드 프리셋 삭제 (theme_preset DELETE / use_yn='N') */
+    const deleteBrandPreset = useMutation(
+        async (data) => await api.post(data, "/theme/presets/delete", "API_BASE_URL_THEME")
+    );
+
+    /** 6. 프로젝트별 테마 변경 이력 조회 (theme_history) */
     const getBrandHistory = useMutation(
         async (data) => await api.post(data, "/theme/history", "API_BASE_URL_THEME")
     );
@@ -30,6 +40,8 @@ export function BrandThemeApi() {
         getBrandTheme,
         saveBrandTheme,
         getBrandPresets,
+        addBrandPreset,
+        deleteBrandPreset,
         getBrandHistory,
     };
 }

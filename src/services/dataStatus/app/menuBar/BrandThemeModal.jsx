@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useContext } from "rea
 import { createPortal } from "react-dom";
 import { useSelector } from "react-redux";
 import {
-  Palette, Upload, RotateCcw, Check, X, Sparkles,
+  Palette, Upload, RotateCcw, Check, X, Sparkles, Plus,
   Table, BarChart3, PlusCircle, FileCog, Bell, Filter
 } from "lucide-react";
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -10,14 +10,15 @@ import { BrandThemeApi, fetchProjectBrandThemeFromApi } from "./BrandThemeApi.js
 import "./BrandThemeModal.css";
 
 const STORAGE_PREFIX = "srtBrandTheme_";
+const CUSTOM_PRESET_STORAGE_KEY = "srtBrandCustomPresets";
 
 const BRAND_PRESETS = [
-  { name: "설문온 기본", primary: "#2563EB", secondary: "#3B82F6", surface: "#EFF6FF", isDefault: true },
-  { name: "컬리 퍼플", primary: "#5F0080", secondary: "#9333EA", surface: "#F5F3FF" },
-  { name: "맥도날드", primary: "#DA291C", secondary: "#D97706", surface: "#FEF3C7" },
-  { name: "스타벅스", primary: "#00704A", secondary: "#1E3932", surface: "#ECFDF5" },
-  { name: "현대 네이비", primary: "#002C5F", secondary: "#00AAD2", surface: "#F0F9FF" },
-  { name: "LG 마젠타", primary: "#A50034", secondary: "#E11D48", surface: "#FFF1F2" },
+  { code: "SULMUNON_BLUE", name: "설문온 기본", primary: "#2563EB", secondary: "#3B82F6", surface: "#EFF6FF", isDefault: true, isSystem: true },
+  { code: "KURLY_PURPLE", name: "컬리 퍼플", primary: "#5F0080", secondary: "#9333EA", surface: "#FAF5FF", isSystem: true },
+  { code: "MCD_RED", name: "맥도날드", primary: "#DA291C", secondary: "#F59E0B", surface: "#FEF2F2", isSystem: true },
+  { code: "SBUX_GREEN", name: "스타벅스", primary: "#00704A", secondary: "#CBA258", surface: "#ECFDF5", isSystem: true },
+  { code: "HYUNDAI_NAVY", name: "현대 네이비", primary: "#002C5F", secondary: "#00AAD2", surface: "#F0F9FF", isSystem: true },
+  { code: "LG_MAGENTA", name: "LG 마젠타", primary: "#A50034", secondary: "#E11D48", surface: "#FFF1F2", isSystem: true },
 ];
 
 const FONT_OPTIONS = [
@@ -292,7 +293,7 @@ function readInitialThemeSync(projectnum) {
 const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
   const modal = useContext(modalContext);
   const auth = useSelector((store) => store.auth);
-  const { getBrandTheme, saveBrandTheme, getBrandPresets } = BrandThemeApi();
+  const { getBrandTheme, saveBrandTheme, getBrandPresets, addBrandPreset, deleteBrandPreset } = BrandThemeApi();
   const fileInputRef = useRef(null);
 
   const initialTheme = readInitialThemeSync(projectnum);
@@ -304,7 +305,16 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
 
   const [fontFamily, setFontFamily] = useState(initialTheme.fontFamily);
   const [isDefaultTheme, setIsDefaultTheme] = useState(initialTheme.isDefault);
-  const [presetList, setPresetList] = useState(BRAND_PRESETS);
+  const [presetList, setPresetList] = useState(() => {
+    try {
+      const localCustom = JSON.parse(localStorage.getItem(CUSTOM_PRESET_STORAGE_KEY) || "[]");
+      return [...BRAND_PRESETS, ...localCustom];
+    } catch (e) {
+      return BRAND_PRESETS;
+    }
+  });
+  const [isAddingPreset, setIsAddingPreset] = useState(false);
+  const [newPresetName, setNewPresetName] = useState("");
   const [isReady, setIsReady] = useState(initialTheme.hasCache);
 
   const [uploadedImageSrc, setUploadedImageSrc] = useState(null);
@@ -374,12 +384,14 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
           if (Array.isArray(list) && list.length > 0) {
             setPresetList(
               list.map((item) => ({
+                presetId: item.preset_id ?? item.presetId,
                 code: item.preset_code || item.code,
                 name: item.preset_name || item.name,
                 primary: item.primary_color || item.primary,
                 secondary: item.secondary_color || item.secondary,
                 surface: item.surface_color || item.surface,
                 isDefault: Boolean(item.is_default ?? item.isDefault),
+                isSystem: Boolean(item.is_system ?? item.isSystem),
               }))
             );
           }
@@ -455,6 +467,100 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
     setIsDefaultTheme(Boolean(preset.isDefault));
     setUploadedImageSrc(null);
     setExtractedPalette([]);
+    setIsAddingPreset(false);
+    setNewPresetName("");
+  };
+
+  const handleAddPresetSubmit = async () => {
+    const trimmed = newPresetName.trim();
+    if (!trimmed) {
+      modal?.showAlert("알림", "추가할 프리셋 이름을 입력해 주세요.");
+      return;
+    }
+
+    const userId = auth?.user?.userId || sessionStorage.getItem("userId") || "";
+    const customCode = `CUSTOM_${Date.now()}`;
+    const newItem = {
+      code: customCode,
+      name: trimmed,
+      primary: primaryColor,
+      secondary: secondaryColor,
+      surface: surfaceColor,
+      isDefault: false,
+      isSystem: false,
+    };
+
+    try {
+      const res = await addBrandPreset.mutateAsync({
+        user: userId,
+        code: customCode,
+        name: trimmed,
+        primary: primaryColor,
+        secondary: secondaryColor,
+        surface: surfaceColor,
+      });
+      if (String(res?.success) === "777" && (res?.data || res?.resultjson)) {
+        const d = res?.data || res?.resultjson;
+        newItem.presetId = d.preset_id ?? d.presetId;
+        newItem.code = d.preset_code || d.code || customCode;
+      }
+    } catch (e) {
+      // API 미반영 시에도 로컬 스토리지에 안전하게 보존
+    }
+
+    setPresetList((prev) => {
+      const next = [...prev, newItem];
+      try {
+        const onlyCustom = next.filter((p) => !p.isSystem && !p.isDefault);
+        localStorage.setItem(CUSTOM_PRESET_STORAGE_KEY, JSON.stringify(onlyCustom));
+      } catch (e) {
+        // ignore
+      }
+      return next;
+    });
+
+    setNewPresetName("");
+    setIsAddingPreset(false);
+  };
+
+  const handleDeletePreset = (preset, e) => {
+    e.stopPropagation();
+    if (preset.isSystem || preset.isDefault) return;
+
+    const doDelete = async () => {
+      const userId = auth?.user?.userId || sessionStorage.getItem("userId") || "";
+      try {
+        await deleteBrandPreset.mutateAsync({
+          user: userId,
+          presetId: preset.presetId,
+          code: preset.code,
+        });
+      } catch (err) {
+        // ignore
+      }
+
+      setPresetList((prev) => {
+        const next = prev.filter((p) => (p.code || p.name) !== (preset.code || preset.name));
+        try {
+          const onlyCustom = next.filter((p) => !p.isSystem && !p.isDefault);
+          localStorage.setItem(CUSTOM_PRESET_STORAGE_KEY, JSON.stringify(onlyCustom));
+        } catch (err) {
+          // ignore
+        }
+        return next;
+      });
+    };
+
+    if (modal?.showConfirm) {
+      modal.showConfirm("알림", `'${preset.name}' 프리셋을 삭제하시겠습니까?`, {
+        btns: [
+          { title: "취소", background: "#75849a" },
+          { title: "삭제", click: doDelete },
+        ],
+      });
+    } else {
+      doDelete();
+    }
   };
 
   const handleResetDefault = () => {
@@ -465,6 +571,8 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
     setIsDefaultTheme(true);
     setUploadedImageSrc(null);
     setExtractedPalette([]);
+    setIsAddingPreset(false);
+    setNewPresetName("");
   };
 
   const handleSaveTheme = async () => {
@@ -616,10 +724,66 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
             <div className="btm-group">
               <div className="btm-group-head">
                 <span className="btm-group-label">2. 브랜드 컬러 설정</span>
-                <button type="button" className="btm-reset-btn" onClick={handleResetDefault}>
-                  <RotateCcw size={12} /> 기본 파랑으로 초기화
-                </button>
+                <div className="btm-head-actions">
+                  {uploadedImageSrc && extractedPalette.length > 0 && (
+                    <button
+                      type="button"
+                      className={`btm-head-add-btn ${isAddingPreset ? "active" : ""}`}
+                      onClick={() => setIsAddingPreset((prev) => !prev)}
+                      title="추출한 이미지 브랜드 컬러를 프리셋 목록에 추가합니다"
+                    >
+                      <Plus size={12} /> 프리셋 추가
+                    </button>
+                  )}
+                  <button type="button" className="btm-reset-btn" onClick={handleResetDefault}>
+                    <RotateCcw size={12} /> 기본 파랑으로 초기화
+                  </button>
+                </div>
               </div>
+
+              {uploadedImageSrc && extractedPalette.length > 0 && isAddingPreset && (
+                <div className="btm-preset-add-box">
+                  <span className="btm-preset-dots">
+                    <span className="btm-preset-circle" style={{ backgroundColor: primaryColor }} />
+                    <span className="btm-preset-circle sub" style={{ backgroundColor: secondaryColor }} />
+                  </span>
+                  <input
+                    type="text"
+                    className="btm-preset-name-input"
+                    placeholder="프리셋 이름"
+                    value={newPresetName}
+                    maxLength={20}
+                    autoFocus
+                    onChange={(e) => setNewPresetName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddPresetSubmit();
+                      } else if (e.key === "Escape") {
+                        setIsAddingPreset(false);
+                        setNewPresetName("");
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="btm-preset-save-btn"
+                    onClick={handleAddPresetSubmit}
+                  >
+                    등록
+                  </button>
+                  <button
+                    type="button"
+                    className="btm-preset-cancel-btn"
+                    onClick={() => {
+                      setIsAddingPreset(false);
+                      setNewPresetName("");
+                    }}
+                  >
+                    취소
+                  </button>
+                </div>
+              )}
 
               <div className="btm-role-grid">
                 <div className="btm-role-card">
@@ -773,11 +937,14 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
                     (preset.isDefault && isDefaultTheme) ||
                     (!preset.isDefault &&
                       !isDefaultTheme &&
-                      primaryColor.toUpperCase() === preset.primary.toUpperCase());
+                      primaryColor.toUpperCase() === preset.primary.toUpperCase() &&
+                      secondaryColor.toUpperCase() === (preset.secondary || preset.primary).toUpperCase());
+                  const canDelete = !preset.isSystem && !preset.isDefault;
                   return (
-                    <button
-                      key={idx}
-                      type="button"
+                    <div
+                      key={preset.code || idx}
+                      role="button"
+                      tabIndex={0}
                       className={`btm-preset-pill ${isSelected ? "active" : ""}`}
                       onClick={() => handleSelectPreset(preset)}
                     >
@@ -785,8 +952,18 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
                         <span className="btm-preset-circle" style={{ backgroundColor: preset.primary }} />
                         <span className="btm-preset-circle sub" style={{ backgroundColor: preset.secondary }} />
                       </span>
-                      <span className="btm-preset-label">{preset.name}</span>
-                    </button>
+                      <span className="btm-preset-label" title={preset.name}>{preset.name}</span>
+                      {canDelete && (
+                        <button
+                          type="button"
+                          className="btm-preset-del-btn"
+                          onClick={(e) => handleDeletePreset(preset, e)}
+                          title={`${preset.name} 프리셋 삭제`}
+                        >
+                          <X size={11} />
+                        </button>
+                      )}
+                    </div>
                   );
                 })}
               </div>
