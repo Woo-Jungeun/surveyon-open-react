@@ -356,15 +356,15 @@
 .common-sidebar .menu-bar-refresh-icon-btn:hover,
 .common-sidebar.blue .menu-bar-refresh-icon-btn:hover,
 .common-sidebar[data-theme="data-dashboard"] .menu-bar-refresh-icon-btn:hover {
-    background: #eff6ff !important;
-    border-color: #bfdbfe !important;
-    color: #2563eb !important;
+    background: var(--srt-surface, var(--srt-primary-50, #eff6ff)) !important;
+    border-color: var(--srt-secondary-border, var(--srt-primary-200, #bfdbfe)) !important;
+    color: var(--srt-brand, var(--srt-primary-600, #2563eb)) !important;
 }
 .common-sidebar .menu-bar-refresh-icon-btn:hover svg,
 .common-sidebar.blue .menu-bar-refresh-icon-btn:hover svg,
 .common-sidebar[data-theme="data-dashboard"] .menu-bar-refresh-icon-btn:hover svg {
-    stroke: #2563eb !important;
-    color: #2563eb !important;
+    stroke: var(--srt-brand, var(--srt-primary-600, #2563eb)) !important;
+    color: var(--srt-brand, var(--srt-primary-600, #2563eb)) !important;
 }
 
 /* 데이터관리 (Green) */
