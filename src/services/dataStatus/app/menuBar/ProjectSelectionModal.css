@@ -502,12 +502,12 @@
 }
 
 /* ============ survey-loading-spinner 오버라이드 ============ */
-body:has(.ps-modal-overlay) .survey-loading-spinner::before,
-body:has(.ps-modal-overlay) .survey-loading-spinner::after {
+html body:has(.ps-modal-overlay) .survey-loading-spinner::before,
+html body:has(.ps-modal-overlay) .survey-loading-spinner::after {
     border-color: #5A4BFF !important;
 }
 
-body:has(.ps-modal-overlay) .survey-loading-spinner::after {
+html body:has(.ps-modal-overlay) .survey-loading-spinner::after {
     background:
         linear-gradient(#5A4BFF 0 0) 10px 15px / 40px 3px,
         linear-gradient(#5A4BFF 0 0) 10px 28px / 40px 3px,
@@ -516,7 +516,9 @@ body:has(.ps-modal-overlay) .survey-loading-spinner::after {
     background-repeat: no-repeat !important;
 }
 
-body:has(.ps-modal-overlay) .survey-loading-spinner .dot {
+html body:has(.ps-modal-overlay) .survey-loading-spinner .dot {
+    background-color: #5A4BFF !important;
+    box-shadow: 0 2px 8px rgba(90, 75, 255, 0.4) !important;
     background: #5A4BFF !important;
 }
 
@@ -588,11 +590,29 @@ body:has(.ps-modal-overlay) .k-popup,
 body:has(.ps-modal-overlay) .k-list-container,
 body:has(.ps-modal-overlay) .k-list-scroller,
 body:has(.ps-modal-overlay) .k-list,
+html body:has(.ps-modal-overlay) .k-animation-container .k-list-container,
+html body:has(.ps-modal-overlay) .k-animation-container .k-dropdownlist-popup,
+html body:has(.ps-modal-overlay) .k-animation-container .k-combobox-popup,
 body:has(.ps-modal-overlay) .k-popup.k-list-container {
     border-color: #7C3AED !important;
 }
 
 /* ExcelColumnMenu buttons / inputs inside global Popup (when modal is open) */
+.ps-modal-container .k-dropdownlist .k-input-button,
+.ps-modal-container .k-picker .k-input-button,
+.ps-modal-container .k-combobox .k-input-button,
+.ps-modal-container .k-dropdownlist .k-svg-icon,
+.ps-modal-container .k-picker .k-svg-icon,
+.ps-modal-container .k-combobox .k-svg-icon,
+.ps-modal-container .k-dropdownlist svg,
+.ps-modal-container .k-picker svg,
+.ps-modal-container .k-combobox svg,
+.ps-modal-container .k-dropdownlist svg path,
+.ps-modal-container .k-picker svg path,
+.ps-modal-container .k-combobox svg path {
+    color: #7C3AED !important;
+    fill: #7C3AED !important;
+}
 body:has(.ps-modal-overlay) .k-popup .k-button-solid-primary,
 body:has(.ps-modal-overlay) .k-animation-container .k-button-solid-primary {
     background-color: #7C3AED !important;
