@@ -736,7 +736,7 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
                     </button>
                   )}
                   <button type="button" className="btm-reset-btn" onClick={handleResetDefault}>
-                    <RotateCcw size={12} /> 기본 파랑으로 초기화
+                    <RotateCcw size={12} /> 설문온 기본 초기화
                   </button>
                 </div>
               </div>
@@ -746,6 +746,7 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
                   <span className="btm-preset-dots">
                     <span className="btm-preset-circle" style={{ backgroundColor: primaryColor }} />
                     <span className="btm-preset-circle sub" style={{ backgroundColor: secondaryColor }} />
+                    <span className="btm-preset-circle surface" style={{ backgroundColor: surfaceColor }} />
                   </span>
                   <input
                     type="text"
@@ -951,6 +952,7 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
                       <span className="btm-preset-dots">
                         <span className="btm-preset-circle" style={{ backgroundColor: preset.primary }} />
                         <span className="btm-preset-circle sub" style={{ backgroundColor: preset.secondary }} />
+                        <span className="btm-preset-circle surface" style={{ backgroundColor: preset.surface || "#EFF6FF" }} />
                       </span>
                       <span className="btm-preset-label" title={preset.name}>{preset.name}</span>
                       {canDelete && (
