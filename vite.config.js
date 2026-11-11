@@ -37,6 +37,32 @@ export default defineConfig(({ mode }) => {
                         secure: false,               // 자체서명/개발용 인증서면 false
                         ws: true,                    // SignalR WebSocket
                     },
+                    // 로컬 surveyon-aiopen-api 연동 설정 (VITE_PROXY_URL_AIOPEN 설정 시 활성화, 기본 http://127.0.0.1:5130)
+                    ...(env.VITE_PROXY_URL_AIOPEN
+                        ? {
+                            // 로그인(/APIs/o/Login/*, /APIs/o/login/*)은 테스트서버(stest.hrc.kr)로 보내서 TokenStore에 토큰 등록 유지
+                            "^/APIs/o/[Ll]ogin(?:/|$)": {
+                                target: (env.VITE_PROXY_URL_OTHER) ?? env.VITE_PROXY_URL,
+                                changeOrigin: true,
+                                secure: false,
+                            },
+                            // /APIs/o 요청을 로컬 백엔드(http://127.0.0.1:5130)로 전달
+                            "^/APIs/o(?:/|$)": {
+                                target: env.VITE_PROXY_URL_AIOPEN,
+                                changeOrigin: true,
+                                secure: false,
+                                ws: true, // SignalR 웹소켓 허용
+                                rewrite: (path) => path.replace(/^\/APIs\/o/, "") || "/",
+                            },
+                            // SignalR이 /hubs/worker 로 직접 호출될 경우를 대비한 웹소켓 프록시
+                            "^/hubs(?:/|$)": {
+                                target: env.VITE_PROXY_URL_AIOPEN,
+                                changeOrigin: true,
+                                ws: true,
+                                secure: false,
+                            },
+                        }
+                        : {}),
                     // /APIs 로 시작하는 요청 프록시 (BoardApi 등)
                     "^/APIs(?:/|$)": {
                         target: (env.VITE_PROXY_URL_OTHER) ?? env.VITE_PROXY_URL,
