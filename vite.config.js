@@ -63,6 +63,16 @@ export default defineConfig(({ mode }) => {
                             },
                         }
                         : {}),
+                    // 로컬 surveyon-theme-api 연동 설정 (VITE_PROXY_URL_THEME 설정 시 활성화, 기본 http://127.0.0.1:5000)
+                    ...(env.VITE_PROXY_URL_THEME
+                        ? {
+                            "^/APIs/t(?:/|$)": {
+                                target: env.VITE_PROXY_URL_THEME,
+                                changeOrigin: true,
+                                secure: false,
+                            },
+                        }
+                        : {}),
                     // /APIs 로 시작하는 요청 프록시 (BoardApi 등)
                     "^/APIs(?:/|$)": {
                         target: (env.VITE_PROXY_URL_OTHER) ?? env.VITE_PROXY_URL,

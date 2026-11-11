@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback, useContext } from "react";
 import { createPortal } from "react-dom";
+import { useSelector } from "react-redux";
 import {
   Palette, Upload, RotateCcw, Check, X, Sparkles,
   Table, BarChart3, PlusCircle, FileCog, Bell, Filter
 } from "lucide-react";
 import { modalContext } from "@/components/common/Modal.jsx";
+import { BrandThemeApi, fetchProjectBrandThemeFromApi } from "./BrandThemeApi.js";
 import "./BrandThemeModal.css";
 
 const STORAGE_PREFIX = "srtBrandTheme_";
@@ -188,37 +190,122 @@ export function applyProjectBrandTheme(themeConfig) {
   document.body.style.removeProperty("font-family");
 }
 
-export function loadAndApplySavedBrandTheme(projectnum) {
+export function loadAndApplySavedBrandTheme(projectnum, userId = "") {
   if (!projectnum) {
     applyProjectBrandTheme(null);
     return null;
   }
+
+  let cached = null;
   try {
     const raw = localStorage.getItem(`${STORAGE_PREFIX}${projectnum}`);
-    if (!raw) {
+    if (raw) {
+      cached = JSON.parse(raw);
+      applyProjectBrandTheme(cached);
+    } else {
       applyProjectBrandTheme(null);
-      return null;
     }
-    const parsed = JSON.parse(raw);
-    applyProjectBrandTheme(parsed);
-    return parsed;
   } catch (e) {
-    console.warn("Failed to load brand theme", e);
-    return null;
+    console.warn("Failed to load cached brand theme", e);
   }
+
+  // 비동기로 surveyon-theme-api(HTheme DB)에서 최신 테마 조회 및 동기화
+  fetchProjectBrandThemeFromApi(projectnum, userId).then((dbTheme) => {
+    if (!dbTheme) return;
+    const normalized = {
+      projectnum,
+      primary: dbTheme.primary || dbTheme.primary_color || "#2563EB",
+      secondary: dbTheme.secondary || dbTheme.secondary_color || dbTheme.primary || "#3B82F6",
+      surface: dbTheme.surface || dbTheme.surface_color || "#EFF6FF",
+      isDefault: Boolean(dbTheme.isDefault ?? dbTheme.is_default),
+      extractedPalette: Array.isArray(dbTheme.extractedPalette || dbTheme.extracted_palette)
+        ? (dbTheme.extractedPalette || dbTheme.extracted_palette)
+        : [],
+    };
+    try {
+      if (normalized.isDefault) {
+        localStorage.removeItem(`${STORAGE_PREFIX}${projectnum}`);
+        applyProjectBrandTheme(null);
+      } else {
+        localStorage.setItem(`${STORAGE_PREFIX}${projectnum}`, JSON.stringify(normalized));
+        applyProjectBrandTheme(normalized);
+      }
+    } catch (e) {
+      // ignore storage quota errors
+    }
+  });
+
+  return cached;
+}
+
+function readInitialThemeSync(projectnum) {
+  if (projectnum) {
+    try {
+      const raw = localStorage.getItem(`${STORAGE_PREFIX}${projectnum}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.primary) {
+          return {
+            hasCache: true,
+            primary: parsed.primary || "#2563EB",
+            secondary: parsed.secondary || parsed.primary || "#3B82F6",
+            surface: parsed.surface || "#EFF6FF",
+            fontFamily: parsed.fontFamily || FONT_OPTIONS[0].value,
+            isDefault: Boolean(parsed.isDefault),
+          };
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  if (typeof document !== "undefined") {
+    const root = document.documentElement;
+    if (root.getAttribute("data-srt-brand") === "true") {
+      const p = root.style.getPropertyValue("--srt-brand")?.trim();
+      const s = root.style.getPropertyValue("--srt-brand-secondary")?.trim();
+      const sf = root.style.getPropertyValue("--srt-brand-surface")?.trim();
+      if (p) {
+        return {
+          hasCache: true,
+          primary: p,
+          secondary: s || p,
+          surface: sf || "#EFF6FF",
+          fontFamily: FONT_OPTIONS[0].value,
+          isDefault: false,
+        };
+      }
+    }
+  }
+
+  return {
+    hasCache: false,
+    primary: "#2563EB",
+    secondary: "#3B82F6",
+    surface: "#EFF6FF",
+    fontFamily: FONT_OPTIONS[0].value,
+    isDefault: true,
+  };
 }
 
 const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
   const modal = useContext(modalContext);
+  const auth = useSelector((store) => store.auth);
+  const { getBrandTheme, saveBrandTheme, getBrandPresets } = BrandThemeApi();
   const fileInputRef = useRef(null);
 
-  const [primaryColor, setPrimaryColor] = useState("#2563EB");
-  const [secondaryColor, setSecondaryColor] = useState("#0284C7");
-  const [surfaceColor, setSurfaceColor] = useState("#EFF6FF");
+  const initialTheme = readInitialThemeSync(projectnum);
+
+  const [primaryColor, setPrimaryColor] = useState(initialTheme.primary);
+  const [secondaryColor, setSecondaryColor] = useState(initialTheme.secondary);
+  const [surfaceColor, setSurfaceColor] = useState(initialTheme.surface);
   const [activeSlot, setActiveSlot] = useState("primary");
 
-  const [fontFamily, setFontFamily] = useState(FONT_OPTIONS[0].value);
-  const [isDefaultTheme, setIsDefaultTheme] = useState(true);
+  const [fontFamily, setFontFamily] = useState(initialTheme.fontFamily);
+  const [isDefaultTheme, setIsDefaultTheme] = useState(initialTheme.isDefault);
+  const [presetList, setPresetList] = useState(BRAND_PRESETS);
+  const [isReady, setIsReady] = useState(initialTheme.hasCache);
 
   const [uploadedImageSrc, setUploadedImageSrc] = useState(null);
   const [extractedPalette, setExtractedPalette] = useState([]);
@@ -226,29 +313,79 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
 
   useEffect(() => {
     if (!isOpen) return;
+    setUploadedImageSrc(null);
+    setExtractedPalette([]);
+
+    const syncTheme = readInitialThemeSync(projectnum);
+    setPrimaryColor(syncTheme.primary);
+    setSecondaryColor(syncTheme.secondary);
+    setSurfaceColor(syncTheme.surface);
+    setFontFamily(syncTheme.fontFamily);
+    setIsDefaultTheme(syncTheme.isDefault);
+    setIsReady(syncTheme.hasCache);
+
+    const userId = auth?.user?.userId || sessionStorage.getItem("userId") || "";
+
     if (projectnum) {
-      try {
-        const saved = localStorage.getItem(`${STORAGE_PREFIX}${projectnum}`);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          setPrimaryColor(parsed.primary || "#2563EB");
-          setSecondaryColor(parsed.secondary || parsed.primary || "#3B82F6");
-          setSurfaceColor(parsed.surface || parsed.primary || "#EFF6FF");
-          setFontFamily(parsed.fontFamily || FONT_OPTIONS[0].value);
-          setIsDefaultTheme(Boolean(parsed.isDefault));
-          setUploadedImageSrc(null);
-          setExtractedPalette([]);
-          return;
-        }
-      } catch (e) {
-        // ignore
-      }
+      // DB(HTheme.theme_brand)에서 최신 프로젝트 테마 조회 완료 후 오픈
+      getBrandTheme
+        .mutateAsync({ user: userId, projectnum })
+        .then((res) => {
+          if (String(res?.success) === "777") {
+            const d = res?.data || res?.resultjson;
+            if (d) {
+              const p = d.primary || d.primary_color || "#2563EB";
+              const s = d.secondary || d.secondary_color || p || "#3B82F6";
+              const sf = d.surface || d.surface_color || "#EFF6FF";
+              const def = Boolean(d.isDefault ?? d.is_default);
+              setPrimaryColor(p);
+              setSecondaryColor(s);
+              setSurfaceColor(sf);
+              setIsDefaultTheme(def);
+              try {
+                if (def) {
+                  localStorage.removeItem(`${STORAGE_PREFIX}${projectnum}`);
+                } else {
+                  localStorage.setItem(
+                    `${STORAGE_PREFIX}${projectnum}`,
+                    JSON.stringify({ projectnum, primary: p, secondary: s, surface: sf, isDefault: false })
+                  );
+                }
+              } catch (e) {
+                // ignore
+              }
+            }
+          }
+        })
+        .catch(() => { })
+        .finally(() => {
+          setIsReady(true);
+        });
+    } else {
+      setIsReady(true);
     }
-    setPrimaryColor("#2563EB");
-    setSecondaryColor("#3B82F6");
-    setSurfaceColor("#EFF6FF");
-    setFontFamily(FONT_OPTIONS[0].value);
-    setIsDefaultTheme(true);
+
+    // DB(HTheme.theme_preset)에서 프리셋 목록 조회
+    getBrandPresets
+      .mutateAsync({ user: userId })
+      .then((res) => {
+        if (String(res?.success) === "777") {
+          const list = res?.data || res?.resultjson;
+          if (Array.isArray(list) && list.length > 0) {
+            setPresetList(
+              list.map((item) => ({
+                code: item.preset_code || item.code,
+                name: item.preset_name || item.name,
+                primary: item.primary_color || item.primary,
+                secondary: item.secondary_color || item.secondary,
+                surface: item.surface_color || item.surface,
+                isDefault: Boolean(item.is_default ?? item.isDefault),
+              }))
+            );
+          }
+        }
+      })
+      .catch(() => { });
   }, [isOpen, projectnum]);
 
   const processImageFile = useCallback((file) => {
@@ -298,7 +435,7 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
     return () => window.removeEventListener("paste", handlePaste);
   }, [isOpen, processImageFile]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !isReady) return null;
 
   const handleSelectExtractedColor = (hex) => {
     setIsDefaultTheme(false);
@@ -330,10 +467,13 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
     setExtractedPalette([]);
   };
 
-  const handleSaveTheme = () => {
+  const handleSaveTheme = async () => {
     const targetPn = projectnum || "DEFAULT";
+    const userId = auth?.user?.userId || sessionStorage.getItem("userId") || "";
     const payload = {
+      user: userId,
       projectnum: targetPn,
+      projectname: projectname || "",
       primary: primaryColor,
       secondary: secondaryColor,
       surface: surfaceColor,
@@ -344,6 +484,14 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
     };
 
     try {
+      // 1) 백엔드 API(HTheme DB: theme_brand + theme_history) 저장 호출
+      try {
+        await saveBrandTheme.mutateAsync(payload);
+      } catch (apiErr) {
+        console.warn("Brand theme API save fallback to localStorage:", apiErr);
+      }
+
+      // 2) 로컬 캐시 및 화면 즉시 반영
       if (isDefaultTheme) {
         localStorage.removeItem(`${STORAGE_PREFIX}${targetPn}`);
         applyProjectBrandTheme(null);
@@ -356,7 +504,7 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
         "알림",
         isDefaultTheme
           ? "설문온 기본(Blue) 테마로 초기화되었습니다."
-          : `현재 프로젝트(${projectname || targetPn})에 멀티 컬러 브랜드 테마가 적용되었습니다.`
+          : `현재 프로젝트(${projectname || targetPn})에 브랜드 테마가 저장 및 적용되었습니다.`
       );
       onClose();
     } catch (e) {
@@ -411,7 +559,6 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
             <div className="btm-group">
               <div className="btm-group-head">
                 <span className="btm-group-label">1. 이미지로 컬러 자동 추출</span>
-                <span className="btm-kbd-hint">Ctrl + V 붙여넣기</span>
               </div>
 
               <div
@@ -446,7 +593,7 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
                     <img src={uploadedImageSrc} alt="업로드된 캡처" className="btm-uploaded-img" />
                     <div className="btm-uploaded-overlay">
                       <Upload size={15} />
-                      <span>클릭하거나 Ctrl+V로 이미지 변경</span>
+                      <span>클릭하여 다른 이미지 업로드</span>
                     </div>
                   </div>
                 ) : (
@@ -455,43 +602,12 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
                       <Upload size={18} />
                     </div>
                     <div className="btm-drop-texts">
-                      <p className="btm-drop-main">홈페이지 캡처나 로고 이미지를 올리거나 Ctrl+V 하세요</p>
+                      <p className="btm-drop-main">홈페이지 캡처나 로고 이미지를 업로드하세요</p>
                       <p className="btm-drop-sub">메인·보조·배경 3가지 역할 색상을 자동으로 조합합니다</p>
                     </div>
                   </div>
                 )}
               </div>
-
-              {/* 추출된 컬러 팔레트 (이미지가 업로드된 상태에서만 노출) */}
-              {uploadedImageSrc && extractedPalette.length > 0 && (
-                <div className="btm-extracted-box">
-                  <div className="btm-extracted-top">
-                    <span className="btm-extracted-title">
-                      <Sparkles size={12} /> 추출된 색상 팔레트
-                    </span>
-                    <span className="btm-extracted-sub">
-                      아래 역할 카드를 선택한 뒤 원형 색상을 누르면 교체됩니다
-                    </span>
-                  </div>
-                  <div className="btm-swatch-row">
-                    {extractedPalette.map((hex, idx) => {
-                      const roleBadge = getSwatchRoleBadge(hex);
-                      return (
-                        <button
-                          key={idx}
-                          type="button"
-                          className={`btm-swatch-item ${roleBadge ? "is-assigned" : ""}`}
-                          onClick={() => handleSelectExtractedColor(hex)}
-                          title={`${hex} (${activeSlot === "primary" ? "메인" : activeSlot === "secondary" ? "보조" : "배경"} 컬러로 지정)`}
-                        >
-                          <span className="btm-swatch-circle" style={{ backgroundColor: hex }} />
-                          <span className="btm-swatch-tag">{roleBadge || hex}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="btm-divider" />
@@ -506,10 +622,7 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
               </div>
 
               <div className="btm-role-grid">
-                <div
-                  className={`btm-role-card ${activeSlot === "primary" ? "active" : ""}`}
-                  onClick={() => setActiveSlot("primary")}
-                >
+                <div className="btm-role-card">
                   <div className="btm-role-top">
                     <span className="btm-role-badge primary">메인 컬러</span>
                     <span className="btm-role-desc">주요 버튼·선택 탭</span>
@@ -535,12 +648,29 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
                       maxLength={7}
                     />
                   </div>
+                  {uploadedImageSrc && extractedPalette.length > 0 && (
+                    <div className="btm-role-swatches">
+                      {extractedPalette.map((hex, idx) => {
+                        const isMatched = primaryColor.toUpperCase() === hex.toUpperCase();
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            className={`btm-role-dot ${isMatched ? "selected" : ""}`}
+                            style={{ backgroundColor: hex }}
+                            onClick={() => {
+                              setPrimaryColor(hex);
+                              setIsDefaultTheme(false);
+                            }}
+                            title={`메인 컬러를 ${hex}로 변경`}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
-                <div
-                  className={`btm-role-card ${activeSlot === "secondary" ? "active" : ""}`}
-                  onClick={() => setActiveSlot("secondary")}
-                >
+                <div className="btm-role-card">
                   <div className="btm-role-top">
                     <span className="btm-role-badge secondary">보조 컬러</span>
                     <span className="btm-role-desc">서브 버튼·필터 칩</span>
@@ -566,12 +696,29 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
                       maxLength={7}
                     />
                   </div>
+                  {uploadedImageSrc && extractedPalette.length > 0 && (
+                    <div className="btm-role-swatches">
+                      {extractedPalette.map((hex, idx) => {
+                        const isMatched = secondaryColor.toUpperCase() === hex.toUpperCase();
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            className={`btm-role-dot ${isMatched ? "selected" : ""}`}
+                            style={{ backgroundColor: hex }}
+                            onClick={() => {
+                              setSecondaryColor(hex);
+                              setIsDefaultTheme(false);
+                            }}
+                            title={`보조 컬러를 ${hex}로 변경`}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
-                <div
-                  className={`btm-role-card ${activeSlot === "surface" ? "active" : ""}`}
-                  onClick={() => setActiveSlot("surface")}
-                >
+                <div className="btm-role-card">
                   <div className="btm-role-top">
                     <span className="btm-role-badge surface">배경 컬러</span>
                     <span className="btm-role-desc">선택 행·호버 배경</span>
@@ -597,11 +744,31 @@ const BrandThemeModal = ({ isOpen, onClose, projectnum, projectname }) => {
                       maxLength={7}
                     />
                   </div>
+                  {uploadedImageSrc && extractedPalette.length > 0 && (
+                    <div className="btm-role-swatches">
+                      {extractedPalette.map((hex, idx) => {
+                        const isMatched = surfaceColor.toUpperCase() === hex.toUpperCase();
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            className={`btm-role-dot ${isMatched ? "selected" : ""}`}
+                            style={{ backgroundColor: hex }}
+                            onClick={() => {
+                              setSurfaceColor(hex);
+                              setIsDefaultTheme(false);
+                            }}
+                            title={`배경 컬러를 ${hex}로 변경`}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="btm-preset-grid">
-                {BRAND_PRESETS.map((preset, idx) => {
+                {presetList.map((preset, idx) => {
                   const isSelected =
                     (preset.isDefault && isDefaultTheme) ||
                     (!preset.isDefault &&

@@ -80,9 +80,9 @@ const AppSidebar = ({ service, onOpenProjectModal, id = "app-sidebar", ...restSi
   useEffect(() => {
     if (currentMode === "hsrt") {
       const targetPn = projectnum || mergePn;
-      loadAndApplySavedBrandTheme(targetPn);
+      loadAndApplySavedBrandTheme(targetPn, auth?.user?.userId);
     }
-  }, [currentMode, projectnum, mergePn]);
+  }, [currentMode, projectnum, mergePn, auth?.user?.userId]);
 
   // =========================================================
   // [A] H-SRT 전용 로직 (대시보드 선택, 최종시간, 새로고침 등)

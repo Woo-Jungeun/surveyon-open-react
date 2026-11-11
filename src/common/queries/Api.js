@@ -7,6 +7,7 @@ const DEFAULT_API_CONFIG = {
     API_BASE_URL_BOARD: "https://stest.hrc.kr/APIs/n",
     API_BASE_URL_DATASTATUS: "https://stest.hrc.kr/APIs/s",
     API_BASE_URL_DATAMANAGEMENT: "https://stest.hrc.kr/APIs/d",
+    API_BASE_URL_THEME: "https://stest.hrc.kr/APIs/t",
     SIGNALR_PATH: "signalr",
     DEFAULT_PATH: "/o"
 };

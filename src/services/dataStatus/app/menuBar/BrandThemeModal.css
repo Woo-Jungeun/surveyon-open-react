@@ -335,30 +335,68 @@
 
 .btm-role-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+  width: 100%;
 }
 
 .btm-role-card {
+  min-width: 0;
   background: #f8fafc;
   border: 1.5px solid #e2e8f0;
   border-radius: 9px;
-  padding: 8px 9px;
+  padding: 8px 8px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  cursor: pointer;
   transition: all 0.15s;
+  box-sizing: border-box;
 }
 
 .btm-role-card:hover {
   border-color: #cbd5e1;
+  background: #ffffff;
 }
 
-.btm-role-card.active {
-  border-color: #0f172a;
-  background: #ffffff;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+/* 각 역할 카드 내부 추출 컬러 원형 스와치 바 */
+.btm-role-swatches {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3px;
+  padding: 6px 2px 2px 2px;
+  margin-top: 1px;
+  border-top: 1px dashed #e2e8f0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.btm-modal .btm-role-dot {
+  width: 14px !important;
+  height: 14px !important;
+  min-width: 14px !important;
+  min-height: 14px !important;
+  max-width: 14px !important;
+  max-height: 14px !important;
+  border-radius: 50% !important;
+  border: 1px solid rgba(15, 23, 42, 0.2) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  flex: 0 0 14px !important;
+  box-sizing: border-box !important;
+}
+
+.btm-modal .btm-role-dot:hover {
+  transform: scale(1.15);
+  border-color: #0f172a !important;
+}
+
+.btm-modal .btm-role-dot.selected {
+  border: 1.5px solid #ffffff !important;
+  box-shadow: 0 0 0 1.5px #0f172a !important;
+  transform: scale(1.12);
 }
 
 .btm-role-top {
