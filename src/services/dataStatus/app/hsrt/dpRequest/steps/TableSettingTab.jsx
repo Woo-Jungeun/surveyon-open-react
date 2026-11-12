@@ -151,6 +151,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
     }, [activeTab]);
 
     const auth = useSelector((store) => store.auth);
+    const isJewooUser = String(auth?.user?.userId || '').trim().toLowerCase() === 'jewoo';
     const { getOverviewStyled, getStyleExamples } = DpRequestPageApi();
     const pageId = sessionStorage.getItem('pageId');
     const [brandPreset, setBrandPreset] = useState(() =>
@@ -1025,6 +1026,8 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                         <Palette size={15} color="#64748B" /> 빠른 테마 프리셋
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', flex: 1, justifyContent: 'flex-end', marginLeft: '16px' }}>
+                        {isJewooUser && (
+                        <>
                         <button
                             type="button"
                             style={{
@@ -1055,6 +1058,8 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                             브랜드 프리셋
                         </button>
                         <span style={{ width: '1px', height: '16px', background: '#CBD5E1', margin: '0 2px', flexShrink: 0 }} />
+                        </>
+                        )}
                         {TABLE_THEME_PRESETS.map(preset => (
                             <button
                                 key={preset.label}

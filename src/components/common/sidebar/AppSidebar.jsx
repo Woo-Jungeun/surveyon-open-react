@@ -76,11 +76,14 @@ const AppSidebar = ({ service, onOpenProjectModal, id = "app-sidebar", ...restSi
   const [isBrandThemeModalOpen, setIsBrandThemeModalOpen] = useState(false);
   const [pageListData, setPageListData] = useState([]);
 
-  // H-SRT 모드일 때 프로젝트별 저장된 고객사 브랜드 테마 자동 로드 및 적용
+  // H-SRT 모드일 때 프로젝트별 저장된 고객사 브랜드 테마 자동 로드 및 적용 (현재 jewoo 계정 전용)
   useEffect(() => {
-    if (currentMode === "hsrt") {
+    const isJewoo = String(auth?.user?.userId || "").trim().toLowerCase() === "jewoo";
+    if (currentMode === "hsrt" && isJewoo) {
       const targetPn = projectnum || mergePn;
       loadAndApplySavedBrandTheme(targetPn, auth?.user?.userId);
+    } else {
+      loadAndApplySavedBrandTheme(null, auth?.user?.userId);
     }
   }, [currentMode, projectnum, mergePn, auth?.user?.userId]);
 

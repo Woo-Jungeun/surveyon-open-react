@@ -48,7 +48,8 @@ export function BrandThemeApi() {
 
 /** 컴포넌트 외부(초기 로드 시)에서 호출할 수 있는 단발성 테마 조회 함수 */
 export async function fetchProjectBrandThemeFromApi(projectnum, userId = "") {
-    if (!projectnum) return null;
+    const resolvedUser = String(userId || (typeof sessionStorage !== "undefined" ? sessionStorage.getItem("userId") : "") || "").trim().toLowerCase();
+    if (!projectnum || resolvedUser !== "jewoo") return null;
     try {
         const res = await api.post(
             { user: userId || sessionStorage.getItem("userId") || "", projectnum },
