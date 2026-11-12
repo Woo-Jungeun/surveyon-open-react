@@ -478,8 +478,7 @@ export function applyProjectBrandTheme(themeConfig) {
 }
 
 export function loadAndApplySavedBrandTheme(projectnum, userId = "") {
-  const resolvedUser = String(userId || (typeof sessionStorage !== "undefined" ? sessionStorage.getItem("userId") : "") || "").trim().toLowerCase();
-  if (!projectnum || resolvedUser !== "jewoo") {
+  if (!projectnum) {
     applyProjectBrandTheme(null);
     return null;
   }

@@ -76,10 +76,9 @@ const AppSidebar = ({ service, onOpenProjectModal, id = "app-sidebar", ...restSi
   const [isBrandThemeModalOpen, setIsBrandThemeModalOpen] = useState(false);
   const [pageListData, setPageListData] = useState([]);
 
-  // H-SRT 모드일 때 프로젝트별 저장된 고객사 브랜드 테마 자동 로드 및 적용 (현재 jewoo 계정 전용)
+  // H-SRT 모드일 때 프로젝트별 저장된 고객사 브랜드 테마 자동 로드 및 적용
   useEffect(() => {
-    const isJewoo = String(auth?.user?.userId || "").trim().toLowerCase() === "jewoo";
-    if (currentMode === "hsrt" && isJewoo) {
+    if (currentMode === "hsrt") {
       const targetPn = projectnum || mergePn;
       loadAndApplySavedBrandTheme(targetPn, auth?.user?.userId);
     } else {
@@ -1018,7 +1017,7 @@ const AppSidebar = ({ service, onOpenProjectModal, id = "app-sidebar", ...restSi
     onClick: isHsrtCustomer ? undefined : handleOpenPageList
   } : undefined;
 
-  const isJewooUser = String(auth?.user?.userId || "").trim().toLowerCase() === "jewoo";
+
 
   return (
     <>
@@ -1032,7 +1031,7 @@ const AppSidebar = ({ service, onOpenProjectModal, id = "app-sidebar", ...restSi
         moduleItems={moduleItems}
         extraActions={computedExtraActions}
         bottomActions={computedBottomActions}
-        onOpenBrandTheme={currentMode === "hsrt" && isJewooUser ? () => setIsBrandThemeModalOpen(true) : undefined}
+        onOpenBrandTheme={currentMode === "hsrt" ? () => setIsBrandThemeModalOpen(true) : undefined}
         {...restSidebarProps}
       />
 
