@@ -859,7 +859,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId, onDisplayModeChange,
             </div>
             <div className="agg-card-body">
                 {q.html ? (
-                    <div className="agg-table-container" style={{ background: '#fff', padding: '16px', boxSizing: 'border-box' }} dangerouslySetInnerHTML={{ __html: q.html }} />
+                    <div className="agg-table-container" style={{ background: '#fff', padding: 0, boxSizing: 'border-box' }} dangerouslySetInnerHTML={{ __html: q.html }} />
                 ) : (
                     <div className="agg-table-container">
                         <table className="agg-table">
