@@ -775,7 +775,7 @@ const MapManagementPage = () => {
                     title="맵 관리"
                     saveButtonLabel="변경사항 저장"
                     onSave={activeTab === 'logic' ? undefined : handleSave}  // 로직체크는 바로 저장 → 버튼 숨김
-                    saveButtonDisabled={!hasChanges}
+                    saveButtonDisabled={false}
                 >
                     {activeTab === 'mapping' && (
                         <>

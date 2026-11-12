@@ -671,7 +671,7 @@ const OptionSettingBody2 = () => {
               </button>
 
               <GridHeaderBtnPrimary
-                disabled={!canSave["1"]}
+                disabled={false}
                 onClick={onTab1SaveClick}
                 style={{ height: "32px", minWidth: "70px", justifyContent: "center", fontSize: "13px", padding: "0 12px", display: "flex", alignItems: "center", gap: "8px" }}
               >
@@ -681,7 +681,7 @@ const OptionSettingBody2 = () => {
           )}
           {tabDivision === "2" && (
             <GridHeaderBtnPrimary
-              disabled={!(canSave["2"] || stageChanged)}
+              disabled={false}
               onClick={onTab2SaveClick}
               style={{ height: "32px", minWidth: "70px", justifyContent: "center", fontSize: "13px", padding: "0 12px", display: "flex", alignItems: "center", gap: "8px" }}
             >
