@@ -439,9 +439,9 @@
    - AI오픈분석: 주황색 테두리 (#fed7aa)
    - 실사관리: 남색 테두리 (#c7d2fe)
    ========================================================================== */
-.k-animation-container .k-popup,
-.k-animation-container .k-list-container,
-.k-animation-container.k-animation-container-shown .k-popup {
+body:not(:has(.ps-modal-overlay)):not(:has(.pp-modal-overlay)) .k-animation-container .k-popup,
+body:not(:has(.ps-modal-overlay)):not(:has(.pp-modal-overlay)) .k-animation-container .k-list-container,
+body:not(:has(.ps-modal-overlay)):not(:has(.pp-modal-overlay)) .k-animation-container.k-animation-container-shown .k-popup {
     border: 1px solid var(--ds-primary-border, #cbd5e1) !important;
     border-radius: 8px !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04) !important;
