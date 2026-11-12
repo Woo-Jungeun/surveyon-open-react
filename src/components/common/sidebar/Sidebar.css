@@ -373,8 +373,8 @@
 }
 
 .blue .module-link.active {
-    background: #eff6ff;
-    color: #3b82f6;
+    background: var(--srt-primary-50, #eff6ff);
+    color: var(--srt-primary-600, #3b82f6);
 }
 
 .orange .module-link.active {
@@ -972,7 +972,7 @@
 }
 
 .blue .user-card:hover {
-    border-color: #3b82f6;
+    border-color: var(--srt-primary-500, #3b82f6);
 }
 
 .user-avatar {

@@ -409,9 +409,9 @@
 }
 
 .question-type-badge.multi {
-    background: var(--srt-primary-50);
-    color: var(--srt-primary-700);
-    border: 1px solid var(--srt-primary-100);
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #dbeafe;
 }
 
 .question-type-badge.scale {

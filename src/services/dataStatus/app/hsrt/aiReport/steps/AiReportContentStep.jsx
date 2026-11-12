@@ -201,7 +201,7 @@ const AiReportContentStep = ({
                                                 fontWeight: '800',
                                                 textTransform: 'lowercase',
                                                 ...((q.type || '').toLowerCase() === 'single' ? { background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' } :
-                                                    ((q.type || '').toLowerCase() === 'double' || (q.type || '').toLowerCase() === 'multi') ? { background: 'var(--srt-primary-50)', color: 'var(--srt-primary-700)', border: '1px solid var(--srt-primary-100)' } :
+                                                    ((q.type || '').toLowerCase() === 'double' || (q.type || '').toLowerCase() === 'multi') ? { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' } :
                                                         (q.type || '').toLowerCase() === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
                                                             (q.type || '').toLowerCase() === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
                                                                 ((q.type || '').toLowerCase() === 'open(문자)' || (q.type || '').toLowerCase() === 'open-text') ? { background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' } :

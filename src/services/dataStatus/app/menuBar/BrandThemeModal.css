@@ -1107,18 +1107,18 @@
   font-size: 10.5px;
   font-weight: 800;
   text-align: center;
-  color: color-mix(in srgb, var(--preview-secondary, #0284c7) 75%, black);
-  background: color-mix(in srgb, var(--preview-secondary, #0284c7) 14%, white);
-  border: 1px solid color-mix(in srgb, var(--preview-secondary, #0284c7) 42%, white);
+  color: #c2410c;
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
   padding: 1px 6px;
   border-radius: 4px;
   white-space: nowrap;
 }
 
 .btm-q-type.primary-badge {
-  color: color-mix(in srgb, var(--preview-brand, #2563eb) 85%, black);
-  background: color-mix(in srgb, var(--preview-surface, white) 50%, color-mix(in srgb, var(--preview-secondary, #2563eb) 22%, white));
-  border: 1px solid color-mix(in srgb, var(--preview-secondary, #2563eb) 42%, white);
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
 }
 
 .btm-q-type.muted {

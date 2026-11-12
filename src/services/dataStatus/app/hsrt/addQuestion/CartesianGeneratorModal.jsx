@@ -251,7 +251,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                                     textTransform: 'lowercase',
                                                     flexShrink: 0,
                                                     ...(v.type === 'single' ? { background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' } :
-                                                        (v.type === 'double' || v.type === 'multi') ? { background: 'var(--srt-primary-50)', color: 'var(--srt-primary-700)', border: '1px solid var(--srt-primary-100)' } :
+                                                        (v.type === 'double' || v.type === 'multi') ? { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' } :
                                                             v.type === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
                                                                 v.type === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
                                                                     { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' })
@@ -341,7 +341,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                                             textTransform: 'lowercase',
                                                             flexShrink: 0,
                                                             ...(v.type === 'single' ? { background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' } :
-                                                                (v.type === 'double' || v.type === 'multi') ? { background: 'var(--srt-primary-50)', color: 'var(--srt-primary-700)', border: '1px solid var(--srt-primary-100)' } :
+                                                                (v.type === 'double' || v.type === 'multi') ? { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' } :
                                                                     v.type === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
                                                                         v.type === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
                                                                             { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' })

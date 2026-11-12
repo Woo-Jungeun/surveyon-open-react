@@ -687,6 +687,10 @@ html[data-srt-brand] .common-sidebar.blue .sub-nav-link.active .sub-nav-step-bad
     color: var(--srt-primary-600) !important;
 }
 
+html[data-srt-brand] .common-sidebar.blue .user-card:hover {
+    border-color: var(--srt-primary-500) !important;
+}
+
 /* 2) DP의뢰서 상단 스텝퍼: 완료 단계는 Secondary(보조색), 현재 활성 단계는 Primary(메인색) */
 html[data-srt-brand] .dp-step-compact.done:not(.active) {
     background: var(--srt-secondary-50) !important;
@@ -718,20 +722,8 @@ html[data-srt-brand] .dp-step-compact.active .dp-step-num-compact {
     box-shadow: 0 0 0 3px var(--srt-secondary-200) !important;
 }
 
-/* 3) 그리드 헤더(Surface 틴트) 및 문항 유형 배지(Secondary · Primary 투톤 조화) */
+/* 3) 그리드 헤더(Surface 틴트) */
 html[data-srt-brand] .dp-excel-grid-v2.k-grid .k-header {
     background: var(--srt-primary-25) !important;
     border-bottom-color: var(--srt-secondary-200) !important;
-}
-
-html[data-srt-brand] .question-type-badge.single {
-    background: var(--srt-secondary-50) !important;
-    color: var(--srt-secondary-700) !important;
-    border-color: var(--srt-secondary-200) !important;
-}
-
-html[data-srt-brand] .question-type-badge.multi {
-    background: var(--srt-primary-50) !important;
-    color: var(--srt-primary-700) !important;
-    border-color: var(--srt-primary-200) !important;
 }
