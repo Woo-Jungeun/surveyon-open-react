@@ -622,7 +622,7 @@ const Sidebar = ({
                                         <span>권한 관리</span>
                                     </button>
                                 )}
-                                {!isHsrtCustomer && onOpenBrandTheme && (
+                                {/* {!isHsrtCustomer && onOpenBrandTheme && (
                                     <button
                                         className="permission-btn"
                                         onClick={() => {
@@ -633,7 +633,7 @@ const Sidebar = ({
                                         <Palette size={16} />
                                         <span>브랜드 테마 설정</span>
                                     </button>
-                                )}
+                                )} */}
                                 <button className="logout-btn" onClick={handleLogout}>
                                     <LogOut size={16} />
                                     <span>로그아웃</span>
