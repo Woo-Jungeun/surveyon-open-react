@@ -8,6 +8,8 @@ import ProRegisterPopup from "@/services/aiOpenAnalysis/app/proList/ProRegisterP
 import { ProRegisterApi } from "@/services/proRegister/ProRegisterApi.js";
 import ProListBatchMergePopup from "./ProListBatchMergePopup";
 import ProListBatchQuestionEditPopup from "./ProListBatchQuestionEditPopup";
+import HanqOptionModal from "./HanqOptionModal";
+import HanqProgressModal from "./HanqProgressModal";
 import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
 import GridHeaderBtnTxt from "@/components/style/button/GridHeaderBtnTxt.jsx";
 import AiDataHeader from "@/services/aiOpenAnalysis/components/AiDataHeader.jsx";
@@ -15,7 +17,7 @@ import { PERM, hasPerm, addSortProxies, GROUP_MIN_PERM, FIELD_MIN_PERM } from ".
 import GridDataCount from "@/components/common/grid/GridDataCount";
 import "./ProList.css";
 import { process } from "@progress/kendo-data-query";
-import { ChevronDown, ChevronRight, Link, Unlink, Layers, Search, X, Trash2, Plus, Minus, Edit3, Users, List, CheckCircle2, Check, Copy, AlertTriangle } from 'lucide-react';
+import { ChevronDown, ChevronRight, Link, Unlink, Layers, Search, X, Trash2, Plus, Minus, Edit3, Users, List, CheckCircle2, Check, Copy, AlertTriangle, Settings, Zap } from 'lucide-react';
 
 const DropdownMenu = ({ label, items, isPrimary }) => {
     const [open, setOpen] = useState(false);
@@ -1077,6 +1079,9 @@ const ProListGridRenderer = (props) => {
     const [showPidDiffModal, setShowPidDiffModal] = useState(false);
     const [pidDiffData, setPidDiffData] = useState(null);
     const [pidDiffTab, setPidDiffTab] = useState(0);
+    const [showHanqOptionModal, setShowHanqOptionModal] = useState(false);
+    const [showHanqProgressModal, setShowHanqProgressModal] = useState(false);
+    const [hanqTargetQuestions, setHanqTargetQuestions] = useState([]);
 
     const handleOpenPidDiffModal = useCallback(async () => {
         try {
@@ -1435,6 +1440,79 @@ const ProListGridRenderer = (props) => {
 
     const filteredCount = displayData.length;
     const isMergeRow = useCallback((row) => dupGroups.restOfGroup.has(row?.id), [dupGroups.restOfGroup]);
+
+    const handleStartHanqAnalysis = useCallback(() => {
+        const rawList = dataState?.data || [];
+        if (!rawList.length) {
+            modal.showAlert("알림", "분석할 문항이 없습니다.\n문항 목록에서 분석할 문항의 상태를 [분석]으로 설정해 주세요.");
+            return;
+        }
+
+        const isRowAnalysis = (r) => {
+            if (!r) return false;
+            if (excludedById && excludedById.has(r.id)) {
+                return !excludedById.get(r.id);
+            }
+            const u = String(r.useYN ?? "").trim();
+            return u === "분석";
+        };
+
+        const isRowIncluded = (r) => {
+            if (!r) return false;
+            if (excludedById && excludedById.has(r.id)) {
+                return !excludedById.get(r.id);
+            }
+            const u = String(r.useYN ?? "").trim();
+            return u === "분석" || u === "포함" || u === "머지";
+        };
+
+        const targets = [];
+        const visitedGroups = new Set();
+
+        rawList.forEach((item) => {
+            if (!item) return;
+
+            if (dupGroups.firstOfGroup.has(item.id) || dupGroups.restOfGroup.has(item.id)) {
+                const groupKey = norm(getMergeVal(item)) || norm(item.merge_qnum) || norm(item.qnum);
+                if (!groupKey || visitedGroups.has(groupKey)) return;
+                visitedGroups.add(groupKey);
+
+                const fullGroup = dupGroups.map.get(groupKey) || [item];
+                const head = fullGroup.find((r) => dupGroups.firstOfGroup.has(r.id)) || item;
+                const children = fullGroup.filter((r) => r.id !== head.id);
+
+                const headActive = isRowAnalysis(head);
+                const childActive = children.some((c) => isRowIncluded(c));
+
+                if (headActive || childActive) {
+                    targets.push({
+                        id: head.id,
+                        qnum: groupKey,
+                        qnum_text: head.qnum_text || groupKey,
+                        question_title: head.question_fin || head.question_origin || head.question_orig || groupKey,
+                    });
+                }
+            } else {
+                if (isRowAnalysis(item)) {
+                    const qnumVal = norm(getMergeVal(item)) || item.merge_qnum || item.qnum;
+                    targets.push({
+                        id: item.id,
+                        qnum: qnumVal,
+                        qnum_text: item.qnum_text || qnumVal,
+                        question_title: item.question_fin || item.question_origin || item.question_orig || qnumVal,
+                    });
+                }
+            }
+        });
+
+        if (targets.length === 0) {
+            modal.showAlert("알림", "분석할 문항이 없습니다.\n문항 목록에서 분석할 문항의 상태를 [분석]으로 설정해 주세요.");
+            return;
+        }
+
+        setHanqTargetQuestions(targets);
+        setShowHanqProgressModal(true);
+    }, [dataState?.data, excludedById, dupGroups, norm, getMergeVal, modal]);
 
     const getMergeChanges = useCallback(() => {
         const rows = dataState?.data ?? [];
@@ -2536,6 +2614,39 @@ const ProListGridRenderer = (props) => {
                 title="문항 목록"
                 tooltip={`문항 목록|체크박스를 이용한 선택문항 통합 & 통합해제 및 삭제 기능`}
             >
+                {/* {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (
+                    <button
+                        type="button"
+                        onClick={handleStartHanqAnalysis}
+                        style={{
+                            height: '32px',
+                            padding: '0 13px',
+                            borderRadius: '7px',
+                            border: 'none',
+                            backgroundColor: '#f97316',
+                            color: '#ffffff',
+                            fontWeight: 700,
+                            fontSize: '13px',
+                            boxShadow: '0 2px 5px rgba(249, 115, 22, 0.25)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#ea580c';
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f97316';
+                            e.currentTarget.style.transform = 'none';
+                        }}
+                    >
+                        <Zap size={14} strokeWidth={2.5} />
+                        <span>한큐분석</span>
+                    </button>
+                )} */}
                 {(!userAuth.includes("고객") && !userAuth.includes("일반") && !userAuth.includes("연구원")) && (
                     <DropdownMenu
                         label="데이터추출"
@@ -2997,6 +3108,46 @@ const ProListGridRenderer = (props) => {
                     onClose={() => setBatchEditQuestionPopupShow(false)}
                     selectedRows={batchEditQuestionRows}
                     onConfirm={handleBatchEditQuestionConfirm}
+                />
+            )}
+
+            {/* 한큐분석 공통 옵션 설정 모달 */}
+            {showHanqOptionModal && (
+                <HanqOptionModal
+                    show={showHanqOptionModal}
+                    onClose={() => setShowHanqOptionModal(false)}
+                    projectnum={projectnum}
+                    user={auth?.user?.userId || ""}
+                    targetCount={hanqTargetQuestions.length}
+                    onStartAnalysis={() => {
+                        setShowHanqOptionModal(false);
+                        setShowHanqProgressModal(true);
+                    }}
+                    sampleQnum={
+                        dataState?.data?.[0]?.merge_qnum ||
+                        dataState?.data?.[0]?.qnum ||
+                        sessionStorage.getItem("qnum") ||
+                        ""
+                    }
+                />
+            )}
+
+            {/* 한큐분석 통합 모달 (좌측: 공통 옵션 설정 / 우측: 자동 실행 큐 & 실시간 로그) */}
+            {showHanqProgressModal && (
+                <HanqProgressModal
+                    show={showHanqProgressModal}
+                    onClose={() => setShowHanqProgressModal(false)}
+                    targetQuestions={hanqTargetQuestions}
+                    projectnum={projectnum}
+                    user={auth?.user?.userId || ""}
+                    authToken={auth?.token}
+                    onRefresh={handleSearch}
+                    sampleQnum={
+                        dataState?.data?.[0]?.merge_qnum ||
+                        dataState?.data?.[0]?.qnum ||
+                        sessionStorage.getItem("qnum") ||
+                        ""
+                    }
                 />
             )}
 

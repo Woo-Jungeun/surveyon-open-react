@@ -154,6 +154,31 @@ export function ProListApi() {
         async (payload) => await api.post(payload, "/pro_list/filter_update_all", "API_BASE_URL_OPENAI")
     );
 
+    // [G-한큐1] 한큐분석 범용 옵션 조회 (POST /pro_list/option_all)
+    const getHanqOptionAll = useMutation(
+        async (payload) => await api.post(payload, "/pro_list/option_all", "API_BASE_URL_OPENAI")
+    );
+
+    // [G-한큐2] 한큐분석 범용 옵션 저장 (POST /pro_list/option_all/save)
+    const saveHanqOptionAll = useMutation(
+        async (payload) => await api.post(payload, "/pro_list/option_all/save", "API_BASE_URL_OPENAI")
+    );
+
+    // [G-한큐3] 한큐분석 워커 시작 요청 (POST /analysis/worker/start)
+    const startAnalysisWorker = useMutation(
+        async (payload) => await api.post(payload, "/analysis/worker/start", "API_BASE_URL_OPENAI")
+    );
+
+    // [G-한큐4] 한큐분석 워커 상태/로그 폴링 (GET /analysis/worker/status)
+    const getAnalysisWorkerStatus = useMutation(
+        async (params) => await api.getWithParams("/analysis/worker/status", params, "API_BASE_URL_OPENAI")
+    );
+
+    // [G-한큐5] 한큐분석 워커 강제 중지 요청 (POST /analysis/worker/stop)
+    const stopAnalysisWorker = useMutation(
+        async (payload) => await api.post(payload, "/analysis/worker/stop", "API_BASE_URL_OPENAI")
+    );
+
     // 하위 호환용 래퍼 및 가상 mutation 레퍼런스
     const updateSingleYn = toggleAnalysis;
     const unmergeGroup = allMerge;
@@ -185,6 +210,11 @@ export function ProListApi() {
         fetchFilterQnums,
         filterUpdateSingle,
         filterUpdateAll,
+        getHanqOptionAll,
+        saveHanqOptionAll,
+        startAnalysisWorker,
+        getAnalysisWorkerStatus,
+        stopAnalysisWorker,
 
         // 하위 호환용 필드
         updateSingleYn,
