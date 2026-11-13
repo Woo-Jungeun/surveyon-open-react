@@ -2623,12 +2623,12 @@ const ProListGridRenderer = (props) => {
                                 height: '32px',
                                 padding: '0 14px',
                                 borderRadius: '7px',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                background: 'linear-gradient(135deg, #f43f5e 0%, #f97316 100%)',
+                                border: 'none',
+                                backgroundColor: '#f97316',
                                 color: '#ffffff',
                                 fontWeight: 700,
                                 fontSize: '13px',
-                                boxShadow: '0 2px 8px rgba(244, 63, 94, 0.35)',
+                                boxShadow: '0 2px 5px rgba(249, 115, 22, 0.25)',
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '5px',
@@ -2636,17 +2636,15 @@ const ProListGridRenderer = (props) => {
                                 transition: 'all 0.15s ease',
                             }}
                             onMouseEnter={(e) => {
-                                e.currentTarget.style.background = 'linear-gradient(135deg, #e11d48 0%, #ea580c 100%)';
-                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(244, 63, 94, 0.45)';
-                                e.currentTarget.style.transform = 'translateY(-1px)';
+                                e.currentTarget.style.backgroundColor = '#ea580c';
+                                e.currentTarget.style.boxShadow = '0 3px 8px rgba(234, 88, 12, 0.35)';
                             }}
                             onMouseLeave={(e) => {
-                                e.currentTarget.style.background = 'linear-gradient(135deg, #f43f5e 0%, #f97316 100%)';
-                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(244, 63, 94, 0.35)';
-                                e.currentTarget.style.transform = 'none';
+                                e.currentTarget.style.backgroundColor = '#f97316';
+                                e.currentTarget.style.boxShadow = '0 2px 5px rgba(249, 115, 22, 0.25)';
                             }}
                         >
-                            <Zap size={14} strokeWidth={2.5} color="#fde047" fill="#fde047" />
+                            <Zap size={14} strokeWidth={2.5} />
                             <span>한큐분석</span>
                         </button>
                         <div style={{ width: '1px', height: '20px', backgroundColor: '#cbd5e1', margin: '0 2px', alignSelf: 'center', flexShrink: 0 }} />
@@ -2674,7 +2672,7 @@ const ProListGridRenderer = (props) => {
                     return (
                         <DropdownMenu
                             label="데이터등록"
-                            isPrimary={true}
+                            isPrimary={false}
                             items={registerItems}
                         />
                     );
