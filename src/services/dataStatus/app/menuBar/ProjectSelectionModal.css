@@ -677,16 +677,40 @@ body:has(.ps-modal-overlay) .k-animation-container .k-input-solid {
     border-color: #7C3AED !important;
 }
 
+body:has(.ps-modal-overlay) .k-popup input.k-input:focus,
+body:has(.ps-modal-overlay) .k-popup input[type="text"]:focus,
+body:has(.ps-modal-overlay) .k-popup input[type="number"]:focus,
 body:has(.ps-modal-overlay) .k-popup .k-input:focus,
+body:has(.ps-modal-overlay) .k-popup .k-input.k-focus,
 body:has(.ps-modal-overlay) .k-popup .k-input-solid:focus,
+body:has(.ps-modal-overlay) .k-popup .k-input-solid.k-focus,
 body:has(.ps-modal-overlay) .k-popup .k-input:focus-within,
 body:has(.ps-modal-overlay) .k-popup .k-input-solid:focus-within,
+body:has(.ps-modal-overlay) .k-animation-container input.k-input:focus,
+body:has(.ps-modal-overlay) .k-animation-container input[type="text"]:focus,
+body:has(.ps-modal-overlay) .k-animation-container input[type="number"]:focus,
 body:has(.ps-modal-overlay) .k-animation-container .k-input:focus,
+body:has(.ps-modal-overlay) .k-animation-container .k-input.k-focus,
 body:has(.ps-modal-overlay) .k-animation-container .k-input-solid:focus,
+body:has(.ps-modal-overlay) .k-animation-container .k-input-solid.k-focus,
 body:has(.ps-modal-overlay) .k-animation-container .k-input:focus-within,
 body:has(.ps-modal-overlay) .k-animation-container .k-input-solid:focus-within {
     border-color: #7C3AED !important;
     box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
+    outline: none !important;
+}
+
+/* Prevent inner Kendo input (.k-input-inner) inside popups/modals from showing blue/green/orange focus ring */
+.ps-modal-container .k-input-inner,
+.ps-modal-container .k-input-inner:focus,
+body:has(.ps-modal-overlay) .k-popup .k-input-inner,
+body:has(.ps-modal-overlay) .k-popup .k-input-inner:focus,
+body:has(.ps-modal-overlay) .k-animation-container .k-input-inner,
+body:has(.ps-modal-overlay) .k-animation-container .k-input-inner:focus {
+    border: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 /* Override Data Management theme leaking into inner inputs and causing green inner borders */

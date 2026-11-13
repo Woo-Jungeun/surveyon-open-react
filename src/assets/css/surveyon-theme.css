@@ -535,55 +535,155 @@ html body .ps-modal-container .k-grid .k-table-row.k-selected:hover>.k-table-td 
  * 4. 폼 컨트롤 공통 스타일 (Form Controls)
  * ============================================================================== */
 
-/* 4-1. 인풋 & 드롭다운 포커스 스타일 (.login-input 제외) */
-[data-theme="data-dashboard"] input[type="text"]:not(.login-input):focus,
-[data-theme="data-dashboard"] select:focus,
-[data-theme="data-dashboard"] .k-dropdown:focus-within,
-[data-theme="hsrt"] input[type="text"]:not(.login-input):focus,
-[data-theme="hsrt"] select:focus,
-[data-theme="hsrt"] .k-dropdown:focus-within {
+/* 4-1. 인풋 & 드롭다운 포커스 스타일 (.login-input, .k-input-inner 및 프로젝트 모달 오픈 상태 제외) */
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="data-dashboard"] input[type="text"]:not(.login-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context) [data-theme="data-dashboard"] input[type="text"]:not(.login-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="data-dashboard"] select:focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="data-dashboard"] .k-dropdown:focus-within,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="hsrt"] input[type="text"]:not(.login-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context) [data-theme="hsrt"] input[type="text"]:not(.login-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="hsrt"] select:focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="hsrt"] .k-dropdown:focus-within {
     border-color: var(--primary-border, #3b82f6) !important;
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color, #3b82f6) 20%, transparent) !important;
     outline: none;
 }
 
 /* 데이터관리: 초록 계열 포커스 */
-[data-theme="dataManagement"] input[type="text"]:not(.login-input):focus,
-[data-theme="dataManagement"] select:focus,
-[data-theme="dataManagement"] .k-dropdown:focus-within,
-[data-theme="data-management"] input[type="text"]:not(.login-input):focus,
-[data-theme="data-management"] select:focus,
-[data-theme="data-management"] .k-dropdown:focus-within {
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="dataManagement"] input[type="text"]:not(.login-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context) [data-theme="dataManagement"] input[type="text"]:not(.login-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="dataManagement"] select:focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="dataManagement"] .k-dropdown:focus-within,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="data-management"] input[type="text"]:not(.login-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context) [data-theme="data-management"] input[type="text"]:not(.login-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="data-management"] select:focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="data-management"] .k-dropdown:focus-within {
     border-color: #16a34a !important;
     box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2) !important;
     outline: none;
 }
 
 /* 실사관리: 딥 네이비 포커스 */
-[data-theme="fieldManagement"] input[type="text"]:not(.login-input):focus,
-[data-theme="fieldManagement"] select:focus,
-[data-theme="fieldManagement"] .k-dropdown:focus-within,
-[data-theme="field-management"] input[type="text"]:not(.login-input):focus,
-[data-theme="field-management"] select:focus,
-[data-theme="field-management"] .k-dropdown:focus-within {
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="fieldManagement"] input[type="text"]:not(.login-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context) [data-theme="fieldManagement"] input[type="text"]:not(.login-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="fieldManagement"] select:focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="fieldManagement"] .k-dropdown:focus-within,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="field-management"] input[type="text"]:not(.login-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context) [data-theme="field-management"] input[type="text"]:not(.login-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="field-management"] select:focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="field-management"] .k-dropdown:focus-within {
     border-color: #3b82f6 !important;
     box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.2) !important;
     outline: none;
 }
 
 /* AI 오픈분석: 오렌지 포커스 */
-[data-theme="aiOpen"] input[type="text"]:not(.login-input):not(.q-search-input):focus,
-[data-theme="aiOpen"] select:focus,
-[data-theme="aiOpen"] .k-dropdown:focus-within,
-[data-theme="aiOpenAnalysis"] input[type="text"]:not(.login-input):not(.q-search-input):focus,
-[data-theme="aiOpenAnalysis"] select:focus,
-[data-theme="aiOpenAnalysis"] .k-dropdown:focus-within,
-[data-theme="ai-open-analysis"] input[type="text"]:not(.login-input):not(.q-search-input):focus,
-[data-theme="ai-open-analysis"] select:focus,
-[data-theme="ai-open-analysis"] .k-dropdown:focus-within {
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="aiOpen"] input[type="text"]:not(.login-input):not(.q-search-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context) [data-theme="aiOpen"] input[type="text"]:not(.login-input):not(.q-search-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="aiOpen"] select:focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="aiOpen"] .k-dropdown:focus-within,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="aiOpenAnalysis"] input[type="text"]:not(.login-input):not(.q-search-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context) [data-theme="aiOpenAnalysis"] input[type="text"]:not(.login-input):not(.q-search-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="aiOpenAnalysis"] select:focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="aiOpenAnalysis"] .k-dropdown:focus-within,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="ai-open-analysis"] input[type="text"]:not(.login-input):not(.q-search-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context) [data-theme="ai-open-analysis"] input[type="text"]:not(.login-input):not(.q-search-input):not(.k-input-inner):focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="ai-open-analysis"] select:focus,
+body:not(:has(.ps-modal-overlay)):not(.purple-theme-context)[data-theme="ai-open-analysis"] .k-dropdown:focus-within {
     border-color: #FDBA74 !important;
     box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2) !important;
     outline: none;
+}
+
+/* 4-1-B. 프로젝트 선택/등록 모달 (.ps-modal-container / .project-list-page) 및 모달 오픈 시 Kendo 팝업(필터 메뉴 등) 내부 인풋은 어떤 테마에서도 무조건 설문온 보라색(#7C3AED) 고정 */
+html body:has(.ps-modal-overlay) .k-popup input.k-input,
+html body:has(.ps-modal-overlay) .k-popup .k-input,
+html body:has(.ps-modal-overlay) .k-popup .k-input-solid,
+html body:has(.ps-modal-overlay) .k-animation-container input.k-input,
+html body:has(.ps-modal-overlay) .k-animation-container .k-input,
+html body:has(.ps-modal-overlay) .k-animation-container .k-input-solid,
+html body.purple-theme-context .k-popup input.k-input,
+html body.purple-theme-context .k-popup .k-input,
+html body.purple-theme-context .k-popup .k-input-solid,
+html body.purple-theme-context .k-animation-container input.k-input,
+html body.purple-theme-context .k-animation-container .k-input,
+html body.purple-theme-context .k-animation-container .k-input-solid {
+    border-color: #7C3AED !important;
+}
+
+html body .ps-modal-container input[type="text"]:not(.k-input-inner):focus,
+html body .ps-modal-container input[type="search"]:not(.k-input-inner):focus,
+html body .ps-modal-container .k-input:focus,
+html body .ps-modal-container .k-input.k-focus,
+html body .ps-modal-container .k-input:focus-within,
+html body .ps-modal-container .k-input-solid:focus,
+html body .ps-modal-container .k-input-solid.k-focus,
+html body .ps-modal-container .k-input-solid:focus-within,
+html body .project-list-page input[type="text"]:not(.k-input-inner):focus,
+html body .project-list-page input[type="search"]:not(.k-input-inner):focus,
+html body .project-list-page .k-input:focus,
+html body .project-list-page .k-input.k-focus,
+html body .project-list-page .k-input:focus-within,
+html body .project-list-page .k-input-solid:focus,
+html body .project-list-page .k-input-solid.k-focus,
+html body .project-list-page .k-input-solid:focus-within,
+html body:has(.ps-modal-overlay) .k-popup input[type="text"]:focus,
+html body:has(.ps-modal-overlay) .k-popup input[type="number"]:focus,
+html body:has(.ps-modal-overlay) .k-popup input.k-input:focus,
+html body:has(.ps-modal-overlay) .k-popup .k-input:focus,
+html body:has(.ps-modal-overlay) .k-popup .k-input.k-focus,
+html body:has(.ps-modal-overlay) .k-popup .k-input:focus-within,
+html body:has(.ps-modal-overlay) .k-popup .k-input-solid:focus,
+html body:has(.ps-modal-overlay) .k-popup .k-input-solid.k-focus,
+html body:has(.ps-modal-overlay) .k-popup .k-input-solid:focus-within,
+html body:has(.ps-modal-overlay) .k-animation-container input[type="text"]:focus,
+html body:has(.ps-modal-overlay) .k-animation-container input[type="number"]:focus,
+html body:has(.ps-modal-overlay) .k-animation-container input.k-input:focus,
+html body:has(.ps-modal-overlay) .k-animation-container .k-input:focus,
+html body:has(.ps-modal-overlay) .k-animation-container .k-input.k-focus,
+html body:has(.ps-modal-overlay) .k-animation-container .k-input:focus-within,
+html body:has(.ps-modal-overlay) .k-animation-container .k-input-solid:focus,
+html body:has(.ps-modal-overlay) .k-animation-container .k-input-solid.k-focus,
+html body:has(.ps-modal-overlay) .k-animation-container .k-input-solid:focus-within,
+html body.purple-theme-context .k-popup input[type="text"]:focus,
+html body.purple-theme-context .k-popup input[type="number"]:focus,
+html body.purple-theme-context .k-popup input.k-input:focus,
+html body.purple-theme-context .k-popup .k-input:focus,
+html body.purple-theme-context .k-popup .k-input.k-focus,
+html body.purple-theme-context .k-popup .k-input:focus-within,
+html body.purple-theme-context .k-popup .k-input-solid:focus,
+html body.purple-theme-context .k-popup .k-input-solid.k-focus,
+html body.purple-theme-context .k-popup .k-input-solid:focus-within,
+html body.purple-theme-context .k-animation-container input[type="text"]:focus,
+html body.purple-theme-context .k-animation-container input[type="number"]:focus,
+html body.purple-theme-context .k-animation-container input.k-input:focus,
+html body.purple-theme-context .k-animation-container .k-input:focus,
+html body.purple-theme-context .k-animation-container .k-input.k-focus,
+html body.purple-theme-context .k-animation-container .k-input:focus-within,
+html body.purple-theme-context .k-animation-container .k-input-solid:focus,
+html body.purple-theme-context .k-animation-container .k-input-solid.k-focus,
+html body.purple-theme-context .k-animation-container .k-input-solid:focus-within {
+    border-color: #7C3AED !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
+    outline: none !important;
+}
+
+html body .ps-modal-container .k-input-inner,
+html body .ps-modal-container .k-input-inner:focus,
+html body .project-list-page .k-input-inner,
+html body .project-list-page .k-input-inner:focus,
+html body:has(.ps-modal-overlay) .k-popup .k-input-inner,
+html body:has(.ps-modal-overlay) .k-popup .k-input-inner:focus,
+html body:has(.ps-modal-overlay) .k-animation-container .k-input-inner,
+html body:has(.ps-modal-overlay) .k-animation-container .k-input-inner:focus,
+html body.purple-theme-context .k-popup .k-input-inner,
+html body.purple-theme-context .k-popup .k-input-inner:focus,
+html body.purple-theme-context .k-animation-container .k-input-inner,
+html body.purple-theme-context .k-animation-container .k-input-inner:focus {
+    border: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 /* 4-2. Kendo 드롭다운/콤보박스 선택 팝업 공통 테마 (일반 툴팁/모달 침범 방지를 위해 리스트 컨테이너로 한정) */

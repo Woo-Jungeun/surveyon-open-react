@@ -142,7 +142,7 @@ const ProEnterTab1 = (props) => {
                                 idGetter,                     // GridData가 만든 getter 그대로
                                 // useClientProcessing: true,                         // 클라 처리
                                 sortable: { mode: "multiple", allowUnsort: true },
-                                filterable: false,
+                                filterable: true,
                                 sort,
                                 filter,
                                 scrollable: "virtual",

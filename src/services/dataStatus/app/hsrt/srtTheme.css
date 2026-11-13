@@ -206,12 +206,13 @@ html[data-srt-brand] .k-combobox.k-focus {
 /* --------------------------------------------------------------------------
    전역 인풋(검색창, 텍스트입력 등) 브랜드 테마 연동
    - 포커스 시 하늘색 그림자 잔재 제거 및 브랜드 컬러 포커스 링 적용
+   - Kendo 내부 인풋(.k-input-inner) 및 프로젝트 선택 모달(.ps-modal-overlay) 제외
    -------------------------------------------------------------------------- */
-html[data-srt-brand] input[type="text"]:not(.login-input):not(.ps-modal-container input):focus,
-html[data-srt-brand] input[type="search"]:focus,
-html[data-srt-brand] input:not([type="checkbox"]):not([type="radio"]):not(.login-input):not(.ps-modal-container input):focus,
-html[data-srt-brand] textarea:not(.ps-modal-container textarea):focus,
-html[data-srt-brand] select:focus {
+html[data-srt-brand] body:not(:has(.ps-modal-overlay)):not(:has(.pp-modal-overlay)) input[type="text"]:not(.login-input):not(.k-input-inner):not(.ps-modal-container input):focus,
+html[data-srt-brand] body:not(:has(.ps-modal-overlay)):not(:has(.pp-modal-overlay)) input[type="search"]:not(.k-input-inner):focus,
+html[data-srt-brand] body:not(:has(.ps-modal-overlay)):not(:has(.pp-modal-overlay)) input:not([type="checkbox"]):not([type="radio"]):not(.login-input):not(.k-input-inner):not(.ps-modal-container input):focus,
+html[data-srt-brand] body:not(:has(.ps-modal-overlay)):not(:has(.pp-modal-overlay)) textarea:not(.ps-modal-container textarea):focus,
+html[data-srt-brand] body:not(:has(.ps-modal-overlay)):not(:has(.pp-modal-overlay)) select:focus {
     border-color: var(--srt-primary-500) !important;
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--srt-primary-500) 25%, transparent) !important;
     outline: none !important;
