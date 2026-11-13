@@ -29,7 +29,7 @@ const ProEnterTab1 = (props) => {
 
     const [columns, setColumns] = useState(() =>
         persistedPrefs?.columns ?? [
-            { field: "no", title: "no", show: true, editable: false, width: "60px", allowHide: false },
+            { field: "no", title: "no", show: true, editable: false, width: "70px", allowHide: false },
             { field: "pof", title: "프로젝트\n번호", show: true, editable: false, width: "120px", allowHide: false },
             { field: "projectnum", title: "웹프로젝트\n번호", show: true, editable: false, width: "130px", allowHide: false },
             { field: "questionnaireName", title: "프로젝트명", show: true, editable: false, allowHide: false },
@@ -46,6 +46,7 @@ const ProEnterTab1 = (props) => {
     // 정렬/필터를 controlled로
     const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
     const [filter, setFilter] = useState(persistedPrefs?.filter ?? null);
+    const [gridSkip, setGridSkip] = useState(0);
 
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
     const columnMenu = (menuProps) => (
@@ -61,70 +62,77 @@ const ProEnterTab1 = (props) => {
                 setColumns(next);
             }}
             filter={filter}
-            onFilterChange={(e) => setFilter(e ?? null)}
-            onSortChange={(e) => setSort(e ?? [])} // sortArr는 배열 형태
+            onFilterChange={(e) => {
+                setFilter(e ?? null);
+                setGridSkip(0);
+            }}
+            onSortChange={(e) => {
+                setSort(e ?? []);
+                setGridSkip(0);
+            }} // sortArr는 배열 형태
         />
     );
 
-    //grid rendering 
-    const GridRenderer = (props) => {
-        const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField } = props;
+    // 행 클릭 시 등록 api 
+    const onRowClick = useCallback(async (e) => {
+        try {
+            if (e.dataItem.gubunYN === "등록") return; //설문온등록여부 등록일 경우엔 return
 
-        // 행 클릭 시 등록 api 
-        const onRowClick = useCallback(async (e) => {
-            try {
-                if (e.dataItem.gubunYN === "등록") return; //설문온등록여부 등록일 경우엔 return
+            const payload = {
+                user: auth?.user?.userId || "",
+                gb: "qmlistselect",
+                projectnum: e.dataItem.projectnum,
+                pof: e.dataItem.pof,
+                questionnaireName: e.dataItem.questionnaireName,
+                servername: e.dataItem.servername
+            };
 
-                const payload = {
-                    user: auth?.user?.userId || "",
-                    gb: "qmlistselect",
-                    projectnum: e.dataItem.projectnum,
-                    pof: e.dataItem.pof,
-                    questionnaireName: e.dataItem.questionnaireName,
-                    servername: e.dataItem.servername
-                };
-
-                const res = await proEnterSaveData.mutateAsync(payload);
-                if (String(res?.success) === '766') {
-                    modal.showErrorAlert("알림", "등록된 프로젝트가 없습니다.", { themeClass: "purple-theme" });
-                    return;
-                }
-                if (String(res?.success) === '767') {
-                    modal.showErrorAlert("알림", "맵 정보가 등록되지 않았습니다. (담당웹제작자에게 문의해주세요)", { themeClass: "purple-theme" });
-                    return;
-                }
-                if (String(res?.success) === '777') {
-                    modal.showConfirm("알림", "등록이 완료되었습니다.", {
-                        themeClass: "purple-theme",
-                        btns: [{
-                            title: "확인", click: () => {
-                                sessionStorage.setItem("projectnum", "");
-                                sessionStorage.setItem("projectname", "");
-                                sessionStorage.setItem("servername", "");
-                                sessionStorage.setItem("projectpof", "");
-                                sessionStorage.setItem("merge_pn", "");
-                                sessionStorage.setItem("merge_pn_text", "");
-                                if (onSuccess) {
-                                    onSuccess();
-                                }
-                            }
-                        }],
-                    });
-                } else {
-                    modal.showErrorAlert("에러", "등록 중 오류가 발생했습니다.", { themeClass: "purple-theme" }); //오류 팝업 표출
-                }
-            } catch {
-
+            const res = await proEnterSaveData.mutateAsync(payload);
+            if (String(res?.success) === '766') {
+                modal.showErrorAlert("알림", "등록된 프로젝트가 없습니다.", { themeClass: "purple-theme" });
+                return;
             }
-        }, [navigate, from]);
+            if (String(res?.success) === '767') {
+                modal.showErrorAlert("알림", "맵 정보가 등록되지 않았습니다. (담당웹제작자에게 문의해주세요)", { themeClass: "purple-theme" });
+                return;
+            }
+            if (String(res?.success) === '777') {
+                modal.showConfirm("알림", "등록이 완료되었습니다.", {
+                    themeClass: "purple-theme",
+                    btns: [{
+                        title: "확인", click: () => {
+                            sessionStorage.setItem("projectnum", "");
+                            sessionStorage.setItem("projectname", "");
+                            sessionStorage.setItem("servername", "");
+                            sessionStorage.setItem("projectpof", "");
+                            sessionStorage.setItem("merge_pn", "");
+                            sessionStorage.setItem("merge_pn_text", "");
+                            if (onSuccess) {
+                                onSuccess();
+                            }
+                        }
+                    }],
+                });
+            } else {
+                modal.showErrorAlert("에러", "등록 중 오류가 발생했습니다.", { themeClass: "purple-theme" }); //오류 팝업 표출
+            }
+        } catch {
+
+        }
+    }, [auth?.user?.userId, proEnterSaveData, modal, onSuccess, navigate, from]);
+
+    //grid rendering 
+    const renderGrid = (gridProps) => {
+        const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField } = gridProps;
 
         return (
             <Fragment>
-                <div className="cmn_gird_wrap">
-                    <div id="grid_01" className="cmn_grid singlehead">
+                <div className="cmn_gird_wrap" style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", minHeight: 0, overflow: "hidden" }}>
+                    <div id="grid_01" className="cmn_grid singlehead" style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
                         <KendoGrid
                             parentProps={{
-                                height: "calc(100vh - 250px)",
+                                height: "100%",
+                                style: { height: "100%", flex: 1 },
                                 data: dataState?.data,       // props에서 직접 전달
                                 dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
                                 selectedState,
@@ -134,11 +142,34 @@ const ProEnterTab1 = (props) => {
                                 idGetter,                     // GridData가 만든 getter 그대로
                                 // useClientProcessing: true,                         // 클라 처리
                                 sortable: { mode: "multiple", allowUnsort: true },
-                                filterable: true,
+                                filterable: false,
                                 sort,
                                 filter,
-                                sortChange: ({ sort }) => { setSort(sort ?? []); onPrefsChange?.({ sort: sort ?? [] }); },
-                                filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
+                                scrollable: "virtual",
+                                rowHeight: 48,
+                                pageSize: 50,
+                                skip: gridSkip,
+                                onPageChange: (e) => setGridSkip(e.page.skip),
+                                sortChange: ({ sort }) => {
+                                    setSort(sort ?? []);
+                                    setGridSkip(0);
+                                    onPrefsChange?.({ sort: sort ?? [] });
+                                },
+                                filterChange: ({ filter }) => {
+                                    setFilter(filter ?? null);
+                                    setGridSkip(0);
+                                    onPrefsChange?.({ filter: filter ?? null });
+                                },
+                                cellRender: (td, cellProps) => {
+                                    if (!td || cellProps.rowType !== "data") return td;
+                                    const field = cellProps.field;
+                                    const rawVal = field && cellProps.dataItem ? cellProps.dataItem[field] : "";
+                                    const fullText = rawVal !== null && rawVal !== undefined ? String(rawVal) : "";
+                                    return React.cloneElement(td, {
+                                        ...td.props,
+                                        title: td.props?.title || fullText,
+                                    });
+                                },
                                 rowRender: (tr, rowProps) => {
                                     // 설문온등록여부가 등록이 아닐 경우 커서 포인터 
                                     return React.cloneElement(tr, {
@@ -181,7 +212,7 @@ const ProEnterTab1 = (props) => {
                                                     };
 
                                                 return (
-                                                    <td style={cellStyle}>
+                                                    <td style={cellStyle} title={value || ""}>
                                                         {value || ""}
                                                     </td>
                                                 );
@@ -206,7 +237,7 @@ const ProEnterTab1 = (props) => {
                 </div>
             </Fragment>
         );
-    }
+    };
 
     return (
         <GridData
@@ -219,7 +250,7 @@ const ProEnterTab1 = (props) => {
                 user: auth?.user?.userId || "",
                 gb: "qmlist",
             }}
-            renderItem={(props) => <GridRenderer {...props} />}
+            renderItem={renderGrid}
         />
     );
 };

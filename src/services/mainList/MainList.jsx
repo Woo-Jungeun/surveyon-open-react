@@ -38,13 +38,13 @@ const DateTimeCell = (props) => {
 
     if (parts.length >= 2) {
         return (
-            <td colSpan={props.colSpan} className={props.className} style={{ ...props.style, textAlign: 'center', lineHeight: '1.3', cursor: 'pointer' }} onClick={handleCellClick}>
+            <td colSpan={props.colSpan} className={props.className} title={val} style={{ ...props.style, textAlign: 'center', lineHeight: '1.3', cursor: 'pointer' }} onClick={handleCellClick}>
                 <div style={{ fontSize: '12px' }}>{parts[0]}</div>
                 <div style={{ fontSize: '11px', color: '#666' }}>{parts.slice(1).join(" ")}</div>
             </td>
         );
     }
-    return <td colSpan={props.colSpan} className={props.className} style={{ ...props.style, textAlign: 'center', fontSize: '12px', cursor: 'pointer' }} onClick={handleCellClick}>{val}</td>;
+    return <td colSpan={props.colSpan} className={props.className} title={val} style={{ ...props.style, textAlign: 'center', fontSize: '12px', cursor: 'pointer' }} onClick={handleCellClick}>{val}</td>;
 };
 
 // 상단 고정(Pin) 커스텀 셀
@@ -137,6 +137,7 @@ const ProjectNameCell = (props) => {
         <td
             colSpan={props.colSpan}
             className={props.className}
+            title={val}
             style={{ ...props.style, textAlign: 'left', paddingRight: '12px', minWidth: '220px', cursor: 'pointer' }}
             onClick={handleCellClick}
         >
@@ -549,6 +550,17 @@ const GridRenderer = (props) => {
                             sort,
                             onRowClick,
                             rowRender,
+                            cellRender: (td, cellProps) => {
+                                if (!td || cellProps.rowType !== "data") return td;
+                                const field = cellProps.field;
+                                if (!field || field === "topyn") return td;
+                                const rawVal = cellProps.dataItem ? cellProps.dataItem[field] : "";
+                                const fullText = rawVal !== null && rawVal !== undefined ? String(rawVal) : "";
+                                return React.cloneElement(td, {
+                                    ...td.props,
+                                    title: td.props?.title || fullText,
+                                });
+                            },
                             scrollable: "virtual",
                             rowHeight: 40,
                             pageSize: 50,
@@ -635,7 +647,7 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
     const [columns, setColumns] = useState(() =>
         [
             { field: "topyn", title: "고정", show: true, editable: false, width: "55px", allowHide: false },
-            { field: "no", title: "no", show: true, editable: false, width: "60px", allowHide: false },
+            { field: "no", title: "no", show: true, editable: false, width: "70px", allowHide: false },
             { field: "projectpof", title: "프로젝트\n번호", show: true, editable: false, width: "120px", allowHide: false },
             { field: "projectnum", title: "웹프로젝트\n번호", show: true, editable: false, width: "130px", allowHide: false },
             { field: "projectname", title: "프로젝트명", show: true, editable: false, allowHide: false },
