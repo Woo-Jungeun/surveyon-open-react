@@ -15,6 +15,7 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 // H-SRT & 데이터관리 모달 및 API
 import NewDataModal from "@/services/dataStatus/app/menuBar/NewDataModal";
 import ProjectSelectionModal from "@/services/dataStatus/app/menuBar/ProjectSelectionModal";
+import { logMenuEnter } from "@/services/mainList/MainListApi.js";
 import PageListPopup from "@/services/dataStatus/app/variable/PageListPopup";
 import BrandThemeModal, { loadAndApplySavedBrandTheme } from "@/services/dataStatus/app/menuBar/BrandThemeModal";
 import { MenuBarApi as DataStatusMenuBarApi } from "@/services/dataStatus/app/menuBar/MenuBarApi";
@@ -77,6 +78,21 @@ const AppSidebar = ({ service, onOpenProjectModal, id = "app-sidebar", ...restSi
   const [pageListData, setPageListData] = useState([]);
 
   // H-SRT 모드일 때 프로젝트별 저장된 고객사 브랜드 테마 자동 로드 및 적용
+  useEffect(() => {
+    const modeToMenuCode = {
+      hsrt: "s",
+      dataManagement: "d",
+      aiOpen: "o",
+      aiOpenAnalysis: "o",
+      fieldManagement: "a",
+      surveyCreation: "c",
+    };
+    const menuCode = modeToMenuCode[currentMode];
+    const userId = auth?.user?.userId || sessionStorage.getItem("userId") || "";
+    if (menuCode && userId && projectnum) {
+      logMenuEnter({ projectnum, menu: menuCode, user: userId });
+    }
+  }, [currentMode, projectnum, auth?.user?.userId]);
   useEffect(() => {
     if (currentMode === "hsrt") {
       const targetPn = projectnum || mergePn;
@@ -574,28 +590,28 @@ const AppSidebar = ({ service, onOpenProjectModal, id = "app-sidebar", ...restSi
       icon: <Grid size={16} />,
       path: "/data_status",
       highlight: currentMode === "hsrt",
-      onClick: () => { navigate("/data_status"); }
+      onClick: () => { logMenuEnter({ projectnum: sessionStorage.getItem("projectnum") || "", menu: "s", user: auth?.user?.userId || sessionStorage.getItem("userId") || "" }); navigate("/data_status"); }
     },
     {
       label: "데이터관리",
       icon: <Database size={16} />,
       path: "/data_management/setting/map",
       highlight: currentMode === "dataManagement",
-      onClick: () => { navigate("/data_management/setting/map"); }
+      onClick: () => { logMenuEnter({ projectnum: sessionStorage.getItem("projectnum") || "", menu: "d", user: auth?.user?.userId || sessionStorage.getItem("userId") || "" }); navigate("/data_management/setting/map"); }
     },
     {
       label: "AI오픈분석",
       icon: <BrainCircuit size={16} />,
       path: "/ai_open_analysis",
       highlight: currentMode === "aiOpen",
-      onClick: () => { navigate("/ai_open_analysis"); }
+      onClick: () => { logMenuEnter({ projectnum: sessionStorage.getItem("projectnum") || "", menu: "o", user: auth?.user?.userId || sessionStorage.getItem("userId") || "" }); navigate("/ai_open_analysis"); }
     },
     {
       label: "실사관리",
       icon: <ClipboardList size={16} />,
       path: "/field_management/analysis/progress",
       highlight: currentMode === "fieldManagement",
-      onClick: () => { navigate("/field_management/analysis/progress"); }
+      onClick: () => { logMenuEnter({ projectnum: sessionStorage.getItem("projectnum") || "", menu: "a", user: auth?.user?.userId || sessionStorage.getItem("userId") || "" }); navigate("/field_management/analysis/progress"); }
     },
     { label: "응답자관리", icon: <Users size={16} />, path: "/project", isDisabled: true },
   ];
