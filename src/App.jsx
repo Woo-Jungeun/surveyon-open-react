@@ -2,7 +2,8 @@ import { useSelector } from "react-redux";
 import Login from "@/services/login/Login.jsx";
 import HomePage from "@/services/homePage/HomePage.jsx";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { Fragment } from "react";
+import { Fragment, useEffect } from "react";
+import { logMenuEnter, resolveMenuCodeFromPath } from "@/services/mainList/MainListApi.js";
 import { useCookies } from "react-cookie";
 import PageNotFound from "@/services/aiOpenAnalysis/app/pageNotFound/PageNotFound";
 import "@/common/utils/tooltip.js";
@@ -51,6 +52,25 @@ function App() {
   }
 
   const location = useLocation();
+
+  // 설문온 메뉴 선택(진입) 시 접속 기록 남기기 (/APIs/p/Project/menu_enter)
+  useEffect(() => {
+    const pathname = location.pathname || "";
+    if (pathname === "/" || pathname === "/login" || pathname === "/cs") {
+      sessionStorage.removeItem("__lastMenuEnterKey");
+      return;
+    }
+    if (!isLoggedIn) return;
+    const userId = auth?.user?.userId || sessionStorage.getItem("userId") || "";
+    const menuCode = resolveMenuCodeFromPath(pathname);
+    if (menuCode && userId) {
+      logMenuEnter({
+        projectnum: sessionStorage.getItem("projectnum") || "",
+        menu: menuCode,
+        user: userId,
+      });
+    }
+  }, [location.pathname, isLoggedIn, auth?.user?.userId]);
   const isStandalonePopup = [
     '/questions-info',
     '/questions_info',

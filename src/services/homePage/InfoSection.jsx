@@ -9,6 +9,7 @@ import logoImg from "@/assets/images/logo_red.png";
 import { motion } from "framer-motion";
 import { logout } from "@/common/redux/action/AuthAction";
 import { LoginApi } from "@/services/login/LoginApi.js";
+import { logMenuEnter } from "@/services/mainList/MainListApi.js";
 import { AES256 } from "@/common/utils/AES256";
 
 const InfoSection = () => {
@@ -152,6 +153,7 @@ const InfoSection = () => {
                         sessionStorage.setItem("hrc", AES256.Crypto.encryptAES256(String(userId)));
                       }
 
+                      logMenuEnter({ projectnum: sessionStorage.getItem("projectnum") || "", menu: "m", user: userId, force: true });
                       window.open("/APIs/m/UI/index", "_blank");
                     }}
                   >

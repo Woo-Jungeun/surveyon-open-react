@@ -8,6 +8,7 @@ import { useCookies } from "react-cookie";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { persistor } from "@/common/redux/store/StorePersist.jsx";
 import { LoginApi } from "@/services/login/LoginApi.js";
+import { logMenuEnter } from "@/services/mainList/MainListApi.js";
 import ProPermissionModal from "./ProPermissionModal.jsx";
 import "./Sidebar.css";
 
@@ -611,7 +612,7 @@ const Sidebar = ({
                         {userOpen && (
                             <div className="user-dropdown">
                                 {!isHsrtCustomer && (
-                                    <button className="permission-btn" onClick={() => window.open("/manual", "manual", "width=1280,height=900,scrollbars=yes")}>
+                                    <button className="permission-btn" onClick={() => { logMenuEnter({ projectnum: sessionStorage.getItem("projectnum") || "", menu: "m", user: auth?.user?.userId || sessionStorage.getItem("userId") || "", force: true }); window.open("/manual", "manual", "width=1280,height=900,scrollbars=yes"); }}>
                                         <BookOpen size={16} />
                                         <span>매뉴얼</span>
                                     </button>

@@ -9,6 +9,67 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
  * @author jewoo
  * @since 2025-09-12<br />
  */
+export const resolveMenuCodeFromPath = (pathname = "", fromState = "") => {
+    const p = String(pathname || "");
+    if (p.startsWith("/survey_creation") || fromState === "survey_creation") return "c";
+    if (p.startsWith("/data_management") || fromState === "data_management") return "d";
+    if (p.startsWith("/data_status") || fromState === "data_status") return "s";
+    if (p.startsWith("/field_management") || fromState === "field_management") return "a";
+    if (p.startsWith("/ai_open_analysis") || p.startsWith("/project") || fromState === "ai_open") return "o";
+    if (p.startsWith("/board") || p.startsWith("/inquiry")) return "n";
+    if (p.startsWith("/manual") || p.startsWith("/excel_guide")) return "m";
+    return null;
+};
+
+export const logProjectEnter = async ({ projectnum, pof, user }) => {
+    if (!projectnum || !user) return null;
+    try {
+        return await api.post(
+            {
+                gb: "project_enter",
+                projectnum: String(projectnum),
+                pof: String(pof || ""),
+                user: String(user),
+            },
+            "/Project/project_enter",
+            "API_BASE_URL_PROJECT"
+        );
+    } catch (e) {
+        console.warn("[logProjectEnter] error:", e);
+        return null;
+    }
+};
+
+export const logMenuEnter = async ({ projectnum, menu, user, force = false }) => {
+    if (!menu || !user) return null;
+    const pn = String(projectnum ?? sessionStorage.getItem("projectnum") ?? "");
+    // 프로젝트 기반 메뉴(c, d, s, o, a)는 프로젝트가 선택된 상태에서만 기록
+    if (["c", "d", "s", "o", "a"].includes(menu) && !pn) return null;
+
+    const dedupKey = `${user}:${menu}:${pn}`;
+    if (!force && typeof window !== "undefined") {
+        const lastKey = sessionStorage.getItem("__lastMenuEnterKey");
+        if (lastKey === dedupKey) return null;
+        sessionStorage.setItem("__lastMenuEnterKey", dedupKey);
+    }
+
+    try {
+        return await api.post(
+            {
+                gb: "menu_enter",
+                projectnum: pn,
+                menu: String(menu),
+                user: String(user),
+            },
+            "/Project/menu_enter",
+            "API_BASE_URL_PROJECT"
+        );
+    } catch (e) {
+        console.warn("[logMenuEnter] error:", e);
+        return null;
+    }
+};
+
 export function MainListApi() {
 
     const loadingSpinner = useContext(loadingSpinnerContext);
@@ -191,6 +252,8 @@ export function MainListApi() {
 
     return {
         mainListData,
-        toggleProjectTop
+        toggleProjectTop,
+        enterProject: useMutation(async ({ projectnum, pof, user }) => await logProjectEnter({ projectnum, pof, user })),
+        enterMenu: useMutation(async ({ projectnum, menu, user, force }) => await logMenuEnter({ projectnum, menu, user, force }))
     };
 }

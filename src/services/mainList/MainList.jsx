@@ -4,7 +4,7 @@ import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
-import { MainListApi } from "./MainListApi.js";
+import { MainListApi, logProjectEnter, logMenuEnter, resolveMenuCodeFromPath } from "./MainListApi.js";
 import { useSelector, useDispatch } from "react-redux";
 import { login } from "@/common/redux/action/AuthAction";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
@@ -697,6 +697,25 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
             sessionStorage.removeItem("pageId");
             sessionStorage.removeItem("silsaPageId");
             sessionStorage.removeItem("pagetitle");
+
+            // 1) 프로젝트 선택(진입) 접속 기록 (/APIs/p/Project/project_enter)
+            const currentUserId = auth?.user?.userId || sessionStorage.getItem("userId") || "";
+            logProjectEnter({
+                projectnum,
+                pof: projectpof || e.dataItem?.pof || "",
+                user: currentUserId,
+            });
+
+            // 2) 현재 진입/선택된 대상 메뉴 접속 기록 (/APIs/p/Project/menu_enter)
+            const targetMenuCode = resolveMenuCodeFromPath(location.pathname, from);
+            if (targetMenuCode) {
+                logMenuEnter({
+                    projectnum,
+                    menu: targetMenuCode,
+                    user: currentUserId,
+                    force: true,
+                });
+            }
         }
 
         if (onProjectSelect) {
