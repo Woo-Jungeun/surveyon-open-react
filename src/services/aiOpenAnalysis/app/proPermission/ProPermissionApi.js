@@ -10,7 +10,17 @@ import api from "@/common/queries/Api.js";
 export function ProPermissionApi() {
 
     const proPermissionData = useMutation(
-        async (data) => await api.post(data?.params, "/pro_permission_api.aspx", "EX_API_BASE_URL")
+        async (data) => {
+            const res = await api.post(data?.params, "/Project", "API_BASE_URL_PROJECT");
+            if (res && res.output !== undefined && res.resultjson === undefined) {
+                res.resultjson = res.output;
+            }
+            const detailMsg = res?.output?.message || res?.resultjson?.message;
+            if (detailMsg && (!res.message || res.message === "정상 접속" || res.message === "성공")) {
+                res.message = detailMsg;
+            }
+            return res;
+        }
     );
 
     const pagesMembersSet = useMutation(

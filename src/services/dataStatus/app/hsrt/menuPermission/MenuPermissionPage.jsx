@@ -165,6 +165,7 @@ const MenuPermissionPage = () => {
                 params: {
                     gb: "worker_search",
                     user,
+                    search: searchText,
                     worker_name: searchText
                 }
             };
