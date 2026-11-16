@@ -132,11 +132,11 @@ const ProPermissionModal = ({ open, onClose }) => {
             } else {
                 modal.showErrorAlert("에러", res?.message || "등록 중 오류가 발생했습니다.", { themeClass: "purple-theme" });
             }
-        } catch (err) { 
+        } catch (err) {
             console.error("handleSubmit error", err);
-            modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다.", { themeClass: "purple-theme" }); 
-        } finally { 
-            setLoading(false); 
+            modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다.", { themeClass: "purple-theme" });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -166,9 +166,9 @@ const ProPermissionModal = ({ open, onClose }) => {
                                     }]
                                 });
                             } else { modal.showErrorAlert("에러", res?.message || "삭제 중 오류가 발생했습니다.", { themeClass: "purple-theme" }); }
-                        } catch (err) { 
+                        } catch (err) {
                             console.error("handleDeleteProject error", err);
-                            modal.showErrorAlert("오류", "삭제 요청 중 네트워크 오류가 발생했습니다.", { themeClass: "purple-theme" }); 
+                            modal.showErrorAlert("오류", "삭제 요청 중 네트워크 오류가 발생했습니다.", { themeClass: "purple-theme" });
                         }
                     }
                 }
@@ -190,9 +190,9 @@ const ProPermissionModal = ({ open, onClose }) => {
                             });
                             if (String(res?.success) === '777') { modal.showAlert("알림", "사용자가 삭제되었습니다.", { themeClass: "purple-theme" }); await fetchData(); }
                             else { modal.showErrorAlert("에러", res?.message || "삭제 중 오류가 발생했습니다.", { themeClass: "purple-theme" }); }
-                        } catch (err) { 
+                        } catch (err) {
                             console.error("handleDeleteWorker error", err);
-                            modal.showErrorAlert("오류", "삭제 요청 중 네트워크 오류가 발생했습니다.", { themeClass: "purple-theme" }); 
+                            modal.showErrorAlert("오류", "삭제 요청 중 네트워크 오류가 발생했습니다.", { themeClass: "purple-theme" });
                         }
                     }
                 }
@@ -222,7 +222,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                         {projectname && <span className="pp-modal-subtitle">— {projectname}</span>}
                     </div>
                     <div className="pp-modal-header-right">
-                        <div className="pp-delete-project-wrapper">
+                        {/* <div className="pp-delete-project-wrapper">
                             <button className="pp-btn-delete-project" onClick={handleDeleteProject}>
                                 <Trash2 size={14} />
                                 <span>프로젝트 삭제</span>
@@ -237,7 +237,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                                     삭제된 데이터는 복구할 수 없습니다.
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
                         <button className="pp-modal-close" onClick={onClose}>
                             <X size={20} />
                         </button>
