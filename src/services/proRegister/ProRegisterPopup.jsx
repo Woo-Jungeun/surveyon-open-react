@@ -35,7 +35,7 @@ const QuestionCell = memo((props) => {
   );
 
   // 일반 상태는 텍스트로 표시
-  if (!inEdit) return <td>{dataItem[field]}</td>;
+  if (!inEdit) return <td title={String(dataItem[field] ?? "")}>{dataItem[field]}</td>;
 
   // 편집 모드 input
   return (
@@ -67,7 +67,7 @@ const QuestionCell = memo((props) => {
 const ColumnCell = memo((props) => {
   const { dataItem, field } = props;
   return (
-    <td>
+    <td title={String(dataItem[field] ?? "")}>
       {dataItem[field]}
       {dataItem.isDuplicate && (
         <span style={{ color: "#ef4444", marginLeft: 8 }}>중복</span>

@@ -175,7 +175,7 @@ const ProRegisterGrid = ({ onDataLength }) => {
                       const isReg = item.is_registered === true;
                       const val = item.gb || (isReg ? "등록완료" : "신규대기");
                       return (
-                        <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '0 4px', textOverflow: 'clip' }}>
+                        <td title={String(val ?? "")} style={{ textAlign: 'center', verticalAlign: 'middle', padding: '0 4px', textOverflow: 'clip' }}>
                           <span style={{
                             display: 'inline-flex',
                             alignItems: 'center',
@@ -208,9 +208,10 @@ const ProRegisterGrid = ({ onDataLength }) => {
                     columnMenu={columnMenu}
                     cell={(cellProps) => {
                       const val = cellProps.dataItem[c.field];
+                      const displayVal = val != null && val !== "" ? `${Number(val).toLocaleString()}` : '0';
                       return (
-                        <td style={{ textAlign: 'center' }}>
-                          {val != null && val !== "" ? `${Number(val).toLocaleString()}` : '0'}
+                        <td title={displayVal} style={{ textAlign: 'center' }}>
+                          {displayVal}
                         </td>
                       );
                     }}
@@ -225,6 +226,15 @@ const ProRegisterGrid = ({ onDataLength }) => {
                   width={c.width}
                   editable={c.editable}
                   columnMenu={columnMenu}
+                  cell={(cellProps) => {
+                    const val = cellProps.dataItem?.[c.field];
+                    const text = val != null ? String(val) : "";
+                    return (
+                      <td title={text} style={c.field === "no" ? { textAlign: "center" } : undefined}>
+                        {text}
+                      </td>
+                    );
+                  }}
                 />
               );
             })}
