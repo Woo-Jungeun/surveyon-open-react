@@ -9,6 +9,7 @@
         window.API_CONFIG = {
             EX_API_BASE_URL: (hostname === 'localhost' || hostname === '127.0.0.1') ? "https://son.hrc.kr/o" : "https://stest.hrc.kr/APIx",
             API_BASE_URL_OPENAI: "https://stest.hrc.kr/APIs/o",
+            API_BASE_URL_PROJECT: "https://stest.hrc.kr/APIs/p",
             API_BASE_URL_BOARD: "https://stest.hrc.kr/APIs/n",
             API_BASE_URL_DATASTATUS: "https://stest.hrc.kr/APIs/s",
             API_BASE_URL_DATAMANAGEMENT: "https://stest.hrc.kr/APIs/d",
@@ -21,6 +22,7 @@
         window.API_CONFIG = {
             EX_API_BASE_URL: "https://son.hrc.kr/o",
             API_BASE_URL_OPENAI: "https://s.hrc.kr/APIs/o",
+            API_BASE_URL_PROJECT: "https://s.hrc.kr/APIs/p",
             API_BASE_URL_BOARD: "https://s.hrc.kr/APIs/n",
             API_BASE_URL_DATASTATUS: "https://s.hrc.kr/APIs/s",
             API_BASE_URL_DATAMANAGEMENT: "https://s.hrc.kr/APIs/d",

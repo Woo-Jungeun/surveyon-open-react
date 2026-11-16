@@ -16,7 +16,7 @@ export function ProEnterApi() {
 
     // 데이터 조회 API
     const proEnterData = useMutation(
-        async (data) => await api.post(data.params, "/project", "API_BASE_URL_OPENAI"),
+        async (data) => await api.post(data.params, "/project", "API_BASE_URL_PROJECT"),
         {
             onMutate: (vars) => {
                 loadingSpinner.show();
@@ -28,7 +28,7 @@ export function ProEnterApi() {
     );
     // 보기 등록 API
     const proEnterSaveData = useMutation(
-        async (data) => await api.post(data, "/project", "API_BASE_URL_OPENAI"),
+        async (data) => await api.post(data, "/project", "API_BASE_URL_PROJECT"),
         {
             onMutate: (vars) => {
                 loadingSpinner.show();

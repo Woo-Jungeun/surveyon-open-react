@@ -36,7 +36,7 @@ export function MainListApi() {
                     const startRes = await api.post({
                         gb: "list_start",
                         user: user
-                    }, "/project", "API_BASE_URL_OPENAI");
+                    }, "/project", "API_BASE_URL_PROJECT");
 
                     if (String(startRes?.success) !== '777') {
                         throw new Error(startRes?.Message || "동기화 시작에 실패했습니다.");
@@ -52,7 +52,7 @@ export function MainListApi() {
                         gb: "list_progress",
                         jobid: jobId,
                         user: user
-                    }, "/project", "API_BASE_URL_OPENAI");
+                    }, "/project", "API_BASE_URL_PROJECT");
 
                     if (String(firstProgressRes?.success) !== '777') {
                         throw new Error(firstProgressRes?.Message || "동기화 상태 조회에 실패했습니다.");
@@ -84,7 +84,7 @@ export function MainListApi() {
                                     gb: "list_progress",
                                     jobid: jobId,
                                     user: user
-                                }, "/project", "API_BASE_URL_OPENAI");
+                                }, "/project", "API_BASE_URL_PROJECT");
 
                                 if (String(progressRes?.success) !== '777') {
                                     clearInterval(interval);
@@ -160,7 +160,7 @@ export function MainListApi() {
                     throw err;
                 }
             } else {
-                return await api.post(params, "/project", "API_BASE_URL_OPENAI");
+                return await api.post(params, "/project", "API_BASE_URL_PROJECT");
             }
         },
         {
@@ -185,7 +185,7 @@ export function MainListApi() {
                 user: user,
                 projectnum: projectnum,
                 topyn: topyn
-            }, "/project/top_toggle", "API_BASE_URL_OPENAI");
+            }, "/project/top_toggle", "API_BASE_URL_PROJECT");
         }
     );
 

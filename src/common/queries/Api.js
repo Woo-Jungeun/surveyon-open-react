@@ -4,6 +4,7 @@ import moment from "moment";
 const DEFAULT_API_CONFIG = {
     EX_API_BASE_URL: "https://son.hrc.kr/o",
     API_BASE_URL_OPENAI: "https://stest.hrc.kr/APIs/o",
+    API_BASE_URL_PROJECT: "https://stest.hrc.kr/APIs/p",
     API_BASE_URL_BOARD: "https://stest.hrc.kr/APIs/n",
     API_BASE_URL_DATASTATUS: "https://stest.hrc.kr/APIs/s",
     API_BASE_URL_DATAMANAGEMENT: "https://stest.hrc.kr/APIs/d",
