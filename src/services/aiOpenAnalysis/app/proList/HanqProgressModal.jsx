@@ -12,6 +12,8 @@ import {
     Timer,
     Settings,
     RotateCcw,
+    ChevronDown,
+    ChevronUp,
 } from "lucide-react";
 import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -116,6 +118,7 @@ const HanqProgressModal = ({
     const [serverDefaultModel, setServerDefaultModel] = useState(DEFAULT_HANQ_OPTIONS.model_select);
     const [serverDefaultLang, setServerDefaultLang] = useState(DEFAULT_HANQ_OPTIONS.result_lang);
     const [optionsLoading, setOptionsLoading] = useState(false);
+    const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
     // ---------------- 우측: 실행 큐 상태 ----------------
     // 상태: 'ready' | 'running' | 'paused' | 'completed' | 'stopped'
@@ -224,6 +227,7 @@ const HanqProgressModal = ({
         setCurrentQuestion(targetQuestions[0] || null);
         setStepStatuses({ 1: "waiting", 2: "waiting", 3: "waiting" });
         setLogs([]);
+        setShowAdvancedOptions(false);
 
         const fetchInitialOptions = async () => {
             setOptionsLoading(true);
@@ -359,22 +363,22 @@ const HanqProgressModal = ({
             const stepFlags =
                 actionType === "analyze"
                     ? {
-                          classified: "Y",
-                          opencodeCategory: "Y",
-                          response: "N",
-                          opencodeResponse: "N",
-                      }
+                        classified: "Y",
+                        opencodeCategory: "Y",
+                        response: "N",
+                        opencodeResponse: "N",
+                    }
                     : actionType === "respondent"
-                    ? {
-                          classified: "N",
-                          opencodeCategory: "N",
-                          response: "Y",
-                          opencodeResponse: "Y",
-                          recallResponse: "Y",
-                      }
-                    : {
-                          recallResponse: "Y",
-                      };
+                        ? {
+                            classified: "N",
+                            opencodeCategory: "N",
+                            response: "Y",
+                            opencodeResponse: "Y",
+                            recallResponse: "Y",
+                        }
+                        : {
+                            recallResponse: "Y",
+                        };
 
             const payload = {
                 projectnum: pn,
@@ -403,8 +407,7 @@ const HanqProgressModal = ({
                 startRes = await startAnalysisWorker.mutateAsync(payload);
             } catch (err) {
                 appendLogLine(
-                    `✖ [${question.qnum}] ${stepDef.label} 작업을 시작하지 못했습니다. (${
-                        err?.message || "요청 실패"
+                    `✖ [${question.qnum}] ${stepDef.label} 작업을 시작하지 못했습니다. (${err?.message || "요청 실패"
                     })`,
                     "error"
                 );
@@ -424,10 +427,9 @@ const HanqProgressModal = ({
 
             if (!isStartOk || !jobId) {
                 appendLogLine(
-                    `✖ [${question.qnum}] ${stepDef.label} 작업을 시작하지 못했습니다.${
-                        startRes?.message || startRes?.Message
-                            ? ` (${startRes?.message || startRes?.Message})`
-                            : ""
+                    `✖ [${question.qnum}] ${stepDef.label} 작업을 시작하지 못했습니다.${startRes?.message || startRes?.Message
+                        ? ` (${startRes?.message || startRes?.Message})`
+                        : ""
                     }`,
                     "error"
                 );
@@ -613,8 +615,7 @@ const HanqProgressModal = ({
                 "divider"
             );
             appendLogLine(
-                `[문항 ${qIdx + 1}/${targetQuestions.length}] ${question.qnum} (${
-                    question.question_title || question.qnum_text || question.qnum
+                `[문항 ${qIdx + 1}/${targetQuestions.length}] ${question.qnum} (${question.question_title || question.qnum_text || question.qnum
                 }) 한큐분석 시작`,
                 "divider"
             );
@@ -672,21 +673,24 @@ const HanqProgressModal = ({
         [targetQuestions.length, runSingleStep, appendLogLine]
     );
 
-    const buildSavePayload = () => ({
-        projectnum: projectnum || sessionStorage.getItem("projectnum") || "",
-        user: user || sessionStorage.getItem("userId") || "",
-        settings: {
-            lvcode: String(options.lvcode || "3"),
-            model_select: String(options.model_select || "GPT-5.2"),
-            result_lang: String(options.result_lang || "Korean"),
-            temperature: Number(options.temperature ?? 0.2),
-            open_item_lv1: String(options.open_item_lv1 ?? "0~50"),
-            open_item_lv2: String(options.open_item_lv2 ?? "0"),
-            open_item_lv3: String(options.open_item_lv3 ?? "0"),
-            prompt_string: String(options.prompt_string ?? ""),
-            concurrency: String(options.concurrency || "1"),
-        },
-    });
+    const buildSavePayload = () => {
+        const currentLv = Number(options.lvcode || 3);
+        return {
+            projectnum: projectnum || sessionStorage.getItem("projectnum") || "",
+            user: user || sessionStorage.getItem("userId") || "",
+            settings: {
+                lvcode: String(options.lvcode || "3"),
+                model_select: String(options.model_select || "GPT-5.2"),
+                result_lang: String(options.result_lang || "Korean"),
+                temperature: Number(options.temperature ?? 0.2),
+                open_item_lv1: String(options.open_item_lv1 ?? "0~50"),
+                open_item_lv2: currentLv >= 2 ? String(options.open_item_lv2 ?? "0") : "0",
+                open_item_lv3: currentLv >= 3 ? String(options.open_item_lv3 ?? "0") : "0",
+                prompt_string: String(options.prompt_string ?? ""),
+                concurrency: String(options.concurrency || "1"),
+            },
+        };
+    };
 
     // 옵션만 단독 저장
     const handleSaveOptionsOnly = async () => {
@@ -753,7 +757,9 @@ const HanqProgressModal = ({
         setCurrentQuestion(targetQuestions[0] || null);
         setStepStatuses({ 1: "waiting", 2: "waiting", 3: "waiting" });
         setLogs([]);
+        setShowAdvancedOptions(false);
 
+        const currentLv = Number(options.lvcode || 3);
         const activeOptions = {
             ...options,
             lvcode: String(options.lvcode || "3"),
@@ -761,8 +767,8 @@ const HanqProgressModal = ({
             result_lang: String(options.result_lang || "Korean"),
             temperature: Number(options.temperature ?? 0.2),
             open_item_lv1: String(options.open_item_lv1 ?? "0~50"),
-            open_item_lv2: String(options.open_item_lv2 ?? "0"),
-            open_item_lv3: String(options.open_item_lv3 ?? "0"),
+            open_item_lv2: currentLv >= 2 ? String(options.open_item_lv2 ?? "0") : "0",
+            open_item_lv3: currentLv >= 3 ? String(options.open_item_lv3 ?? "0") : "0",
             prompt_string: String(options.prompt_string ?? ""),
             concurrency: String(options.concurrency || "1"),
         };
@@ -1045,106 +1051,77 @@ const HanqProgressModal = ({
                 }}
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* 1. 상단 통합 헤더 (.popTit) */}
+                {/* 1. 상단 통합 헤더 (.popTit - AI오픈분석 공통 팝업 헤더 스타일 통일) */}
                 <div
                     className="popTit"
                     style={{
                         height: "auto",
                         padding: "16px 24px 14px 24px",
-                        borderBottom: "1px solid #e2e8f0",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
                     }}
                 >
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <div
+                    <div>
+                        <h3
                             style={{
-                                width: "36px",
-                                height: "36px",
-                                borderRadius: "10px",
-                                backgroundColor: "#f97316",
                                 display: "flex",
                                 alignItems: "center",
-                                justifyContent: "center",
-                                color: "#ffffff",
-                                boxShadow: "0 2px 6px rgba(249, 115, 22, 0.25)",
-                                flexShrink: 0,
+                                gap: "10px",
+                                fontSize: "20px",
+                                fontWeight: "800",
+                                color: "#0f172a",
+                                margin: 0,
+                                lineHeight: "1.3",
                             }}
                         >
-                            <Zap size={19} strokeWidth={2.4} />
-                        </div>
-                        <div>
-                            <h3
+                            한큐분석
+                            <span
                                 style={{
-                                    fontSize: "17px",
-                                    fontWeight: "800",
-                                    color: "#0f172a",
-                                    margin: 0,
-                                    display: "flex",
+                                    display: "inline-flex",
                                     alignItems: "center",
-                                    gap: "10px",
-                                    lineHeight: "1.3",
+                                    gap: "6px",
+                                    padding: "2px 10px",
+                                    borderRadius: "999px",
+                                    fontSize: "12px",
+                                    fontWeight: "700",
+                                    backgroundColor: badge.bg,
+                                    color: badge.color,
+                                    border: `1px solid ${badge.border}`,
                                 }}
                             >
-                                <span>한큐분석</span>
                                 <span
                                     style={{
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        gap: "6px",
-                                        padding: "2px 10px",
-                                        borderRadius: "999px",
-                                        fontSize: "12px",
-                                        fontWeight: "700",
-                                        backgroundColor: badge.bg,
-                                        color: badge.color,
-                                        border: `1px solid ${badge.border}`,
+                                        width: "7px",
+                                        height: "7px",
+                                        borderRadius: "50%",
+                                        backgroundColor: badge.dot,
                                     }}
-                                >
-                                    <span
-                                        style={{
-                                            width: "7px",
-                                            height: "7px",
-                                            borderRadius: "50%",
-                                            backgroundColor: badge.dot,
-                                        }}
-                                    />
-                                    {badge.label}
-                                </span>
-                            </h3>
-                            <p
-                                style={{
-                                    fontSize: "12px",
-                                    color: "#64748b",
-                                    margin: "2px 0 0 0",
-                                    fontWeight: "400",
-                                    lineHeight: "1.3",
-                                }}
-                            >
-                                좌측에서 모든 [분석] 문항에 공통 적용될 옵션을 설정·실행하고, 우측에서 실시간 진행 현황을 확인합니다.
-                            </p>
-                        </div>
+                                />
+                                {badge.label}
+                            </span>
+                        </h3>
+                        <p
+                            style={{
+                                fontSize: "12px",
+                                color: "#64748b",
+                                margin: "4px 0 0 0",
+                                fontWeight: "400",
+                                lineHeight: "1.3",
+                            }}
+                        >
+                            좌측에서 모든 [분석] 문항에 공통 적용될 옵션을 설정·실행하고, 우측에서 실시간 진행 현황을 확인합니다.
+                        </p>
                     </div>
 
-                    <button
-                        type="button"
-                        disabled={!canClose}
+                    <a
+                        className="btnClose"
                         onClick={() => canClose && onClose?.()}
                         title={canClose ? "닫기" : "분석 실행 중에는 닫을 수 없습니다"}
                         style={{
-                            background: "none",
-                            border: "none",
-                            color: canClose ? "#64748b" : "#cbd5e1",
                             cursor: canClose ? "pointer" : "not-allowed",
-                            padding: "4px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
+                            opacity: canClose ? 1 : 0.35,
                         }}
                     >
-                        <X size={20} />
-                    </button>
+                        <span className="hidden">close</span>
+                    </a>
                 </div>
 
                 {/* 2. 본문 2단 레이아웃 (.popCont) */}
@@ -1184,8 +1161,11 @@ const HanqProgressModal = ({
                             style={{
                                 display: "flex",
                                 flexDirection: "column",
-                                gap: "13px",
+                                gap: "15px",
                                 minWidth: 0,
+                                flex: 1,
+                                overflowY: "auto",
+                                paddingRight: "2px",
                             }}
                         >
                             {/* 좌측 패널 헤더 */}
@@ -1225,40 +1205,70 @@ const HanqProgressModal = ({
                                         현재 적용 중인 옵션 (실행 중 잠금)
                                     </span>
                                 ) : (
-                                    <button
-                                        type="button"
-                                        onClick={handleResetDefaults}
-                                        style={{
-                                            height: "26px",
-                                            padding: "0 9px",
-                                            borderRadius: "6px",
-                                            border: "1px solid #cbd5e1",
-                                            backgroundColor: "#ffffff",
-                                            color: "#64748b",
-                                            fontSize: "11.5px",
-                                            fontWeight: "600",
-                                            cursor: "pointer",
-                                            display: "inline-flex",
-                                            alignItems: "center",
-                                            gap: "4px",
-                                            transition: "all 0.15s ease",
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.color = "#334155";
-                                            e.currentTarget.style.borderColor = "#94a3b8";
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.color = "#64748b";
-                                            e.currentTarget.style.borderColor = "#cbd5e1";
-                                        }}
-                                    >
-                                        <RotateCcw size={11.5} />
-                                        <span>기본값 복원</span>
-                                    </button>
+                                    <div style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                                        <button
+                                            type="button"
+                                            onClick={handleResetDefaults}
+                                            style={{
+                                                height: "26px",
+                                                padding: "0 8px",
+                                                borderRadius: "6px",
+                                                border: "1px solid #cbd5e1",
+                                                backgroundColor: "#ffffff",
+                                                color: "#64748b",
+                                                fontSize: "11.5px",
+                                                fontWeight: "600",
+                                                cursor: "pointer",
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                gap: "4px",
+                                                transition: "all 0.15s ease",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.color = "#334155";
+                                                e.currentTarget.style.borderColor = "#94a3b8";
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.color = "#64748b";
+                                                e.currentTarget.style.borderColor = "#cbd5e1";
+                                            }}
+                                        >
+                                            <RotateCcw size={11} />
+                                            <span style={{ fontSize: "11.5px", lineHeight: 1 }}>기본값 복원</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleSaveOptionsOnly}
+                                            title="시작하지 않고 현재 옵션만 저장합니다"
+                                            style={{
+                                                height: "26px",
+                                                padding: "0 9px",
+                                                borderRadius: "6px",
+                                                border: "1px solid #fdba74",
+                                                backgroundColor: "#fff7ed",
+                                                color: "#ea580c",
+                                                fontSize: "11.5px",
+                                                fontWeight: "700",
+                                                lineHeight: 1,
+                                                cursor: "pointer",
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                transition: "all 0.15s ease",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.backgroundColor = "#ffedd5";
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.backgroundColor = "#fff7ed";
+                                            }}
+                                        >
+                                            옵션 저장
+                                        </button>
+                                    </div>
                                 )}
                             </div>
 
-                            {/* 1) 분류 단계 선택 */}
+                            {/* 1) 분류 단계 선택 (필수 노출) */}
                             <div style={{ pointerEvents: isBusy ? "none" : "auto" }}>
                                 <label
                                     style={{
@@ -1309,119 +1319,7 @@ const HanqProgressModal = ({
                                 </div>
                             </div>
 
-                            {/* 2) AI 모델 & 결과 언어 (Kendo CustomDropDownList) */}
-                            <div
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "1fr 1fr",
-                                    gap: "10px",
-                                    pointerEvents: isBusy ? "none" : "auto",
-                                }}
-                            >
-                                <div className="hanq-kendo-ddl-wrap">
-                                    <label
-                                        style={{
-                                            display: "block",
-                                            fontSize: "12.5px",
-                                            fontWeight: "700",
-                                            color: "#1e293b",
-                                            marginBottom: "6px",
-                                        }}
-                                    >
-                                        AI 모델
-                                    </label>
-                                    <CustomDropDownList
-                                        data={modelOptions}
-                                        textField="text"
-                                        dataItemKey="value"
-                                        defaultValue={options.model_select}
-                                        disabled={isBusy}
-                                        onChange={(e) => {
-                                            const val =
-                                                e?.value?.value ?? e?.target?.value?.value;
-                                            if (val) handleChangeOption("model_select", String(val));
-                                        }}
-                                    />
-                                </div>
-
-                                <div className="hanq-kendo-ddl-wrap">
-                                    <label
-                                        style={{
-                                            display: "block",
-                                            fontSize: "12.5px",
-                                            fontWeight: "700",
-                                            color: "#1e293b",
-                                            marginBottom: "6px",
-                                        }}
-                                    >
-                                        결과 언어
-                                    </label>
-                                    <CustomDropDownList
-                                        data={langOptions}
-                                        textField="text"
-                                        dataItemKey="value"
-                                        defaultValue={options.result_lang}
-                                        disabled={isBusy}
-                                        onChange={(e) => {
-                                            const val =
-                                                e?.value?.value ?? e?.target?.value?.value;
-                                            if (val) handleChangeOption("result_lang", String(val));
-                                        }}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* 3) 창의성 (Temperature) */}
-                            <div style={{ pointerEvents: isBusy ? "none" : "auto" }}>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                        marginBottom: "5px",
-                                    }}
-                                >
-                                    <label
-                                        style={{
-                                            fontSize: "12.5px",
-                                            fontWeight: "700",
-                                            color: "#1e293b",
-                                        }}
-                                    >
-                                        창의성 (Temperature)
-                                    </label>
-                                    <span
-                                        style={{
-                                            fontSize: "13px",
-                                            fontWeight: "800",
-                                            color: "#ea580c",
-                                        }}
-                                    >
-                                        {Number(options.temperature ?? 0.2).toFixed(1)}
-                                    </span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="1"
-                                    step="0.1"
-                                    disabled={isBusy}
-                                    value={options.temperature ?? 0.2}
-                                    onChange={(e) =>
-                                        handleChangeOption("temperature", parseFloat(e.target.value))
-                                    }
-                                    className="hanq-temp-slider"
-                                    style={{
-                                        background: `linear-gradient(to right, #f97316 0%, #f97316 ${
-                                            Number(options.temperature ?? 0.2) * 100
-                                        }%, #e2e8f0 ${
-                                            Number(options.temperature ?? 0.2) * 100
-                                        }%, #e2e8f0 100%)`,
-                                    }}
-                                />
-                            </div>
-
-                            {/* 4) 분류 개수 설정 */}
+                            {/* 2) 분류 개수 설정 (필수 노출 · 선택 단계에 따라 자동 활성/비활성) */}
                             <div style={{ pointerEvents: isBusy ? "none" : "auto" }}>
                                 <label
                                     style={{
@@ -1442,47 +1340,69 @@ const HanqProgressModal = ({
                                     }}
                                 >
                                     {[
-                                        { key: "open_item_lv1", label: "소분류" },
-                                        { key: "open_item_lv2", label: "중분류" },
-                                        { key: "open_item_lv3", label: "대분류" },
-                                    ].map((fld) => (
-                                        <div key={fld.key}>
-                                            <div
-                                                style={{
-                                                    fontSize: "11.5px",
-                                                    color: "#64748b",
-                                                    marginBottom: "3px",
-                                                    fontWeight: "500",
-                                                }}
-                                            >
-                                                {fld.label}
+                                        { key: "open_item_lv1", label: "소분류", minLv: 1 },
+                                        { key: "open_item_lv2", label: "중분류", minLv: 2 },
+                                        { key: "open_item_lv3", label: "대분류", minLv: 3 },
+                                    ].map((fld) => {
+                                        const currentLv = Number(options.lvcode || 3);
+                                        const isStageDisabled = currentLv < fld.minLv;
+                                        const isFieldDisabled = isBusy || isStageDisabled;
+
+                                        return (
+                                            <div key={fld.key}>
+                                                <div
+                                                    style={{
+                                                        fontSize: "11.5px",
+                                                        color: isStageDisabled ? "#cbd5e1" : "#64748b",
+                                                        marginBottom: "3px",
+                                                        fontWeight: "500",
+                                                        transition: "color 0.15s ease",
+                                                    }}
+                                                >
+                                                    {fld.label}
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    disabled={isFieldDisabled}
+                                                    value={isStageDisabled ? "-" : options[fld.key]}
+                                                    onChange={(e) =>
+                                                        handleChangeOption(fld.key, e.target.value)
+                                                    }
+                                                    onFocus={(e) => {
+                                                        if (!isFieldDisabled)
+                                                            e.currentTarget.style.borderColor = "#f97316";
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        e.currentTarget.style.borderColor = isStageDisabled
+                                                            ? "#e2e8f0"
+                                                            : "#cbd5e1";
+                                                    }}
+                                                    style={{
+                                                        width: "100%",
+                                                        height: "34px",
+                                                        padding: "0 10px",
+                                                        borderRadius: "8px",
+                                                        border: isStageDisabled
+                                                            ? "1px solid #e2e8f0"
+                                                            : "1px solid #cbd5e1",
+                                                        backgroundColor: isFieldDisabled
+                                                            ? "#f1f5f9"
+                                                            : "#ffffff",
+                                                        fontSize: "13px",
+                                                        color: isStageDisabled ? "#94a3b8" : "#1e293b",
+                                                        cursor: isStageDisabled ? "not-allowed" : "text",
+                                                        outline: "none",
+                                                        boxSizing: "border-box",
+                                                        transition: "all 0.15s ease",
+                                                    }}
+                                                />
                                             </div>
-                                            <input
-                                                type="text"
-                                                disabled={isBusy}
-                                                value={options[fld.key]}
-                                                onChange={(e) =>
-                                                    handleChangeOption(fld.key, e.target.value)
-                                                }
-                                                style={{
-                                                    width: "100%",
-                                                    height: "34px",
-                                                    padding: "0 10px",
-                                                    borderRadius: "8px",
-                                                    border: "1px solid #cbd5e1",
-                                                    backgroundColor: isBusy ? "#f8fafc" : "#ffffff",
-                                                    fontSize: "13px",
-                                                    color: "#1e293b",
-                                                    outline: "none",
-                                                    boxSizing: "border-box",
-                                                }}
-                                            />
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
 
-                            {/* 5) 공통 프롬프트 지침 */}
+                            {/* 3) 공통 프롬프트 지침 (필수 노출) */}
                             <div style={{ pointerEvents: isBusy ? "none" : "auto" }}>
                                 <label
                                     style={{
@@ -1490,7 +1410,7 @@ const HanqProgressModal = ({
                                         fontSize: "12.5px",
                                         fontWeight: "700",
                                         color: "#1e293b",
-                                        marginBottom: "5px",
+                                        marginBottom: "6px",
                                     }}
                                 >
                                     공통 프롬프트 지침
@@ -1517,10 +1437,16 @@ const HanqProgressModal = ({
                                         boxSizing: "border-box",
                                         fontFamily: "inherit",
                                     }}
+                                    onFocus={(e) => {
+                                        if (!isBusy) e.currentTarget.style.borderColor = "#f97316";
+                                    }}
+                                    onBlur={(e) => {
+                                        e.currentTarget.style.borderColor = "#cbd5e1";
+                                    }}
                                 />
                             </div>
 
-                            {/* 6) 한큐분석 동시 실행 방식 */}
+                            {/* 4) 한큐분석 동시 실행 방식 (필수 노출) */}
                             <div style={{ pointerEvents: isBusy ? "none" : "auto" }}>
                                 <label
                                     style={{
@@ -1528,7 +1454,7 @@ const HanqProgressModal = ({
                                         fontSize: "12.5px",
                                         fontWeight: "700",
                                         color: "#1e293b",
-                                        marginBottom: "5px",
+                                        marginBottom: "6px",
                                     }}
                                 >
                                     한큐분석 동시 실행 방식
@@ -1669,14 +1595,260 @@ const HanqProgressModal = ({
                                     })}
                                 </div>
                             </div>
+
+                            {/* 5) 상세 옵션 설정 (AI 모델 · 결과 언어 · 창의성 아코디언) */}
+                            {(() => {
+                                const langShortLabel =
+                                    langOptions
+                                        .find((o) => String(o.value) === String(options.result_lang))
+                                        ?.text?.split(" ")[0] ||
+                                    options.result_lang ||
+                                    "한국어";
+                                const summaryText = `${options.model_select || "GPT-5.2"} · ${langShortLabel} · 창의성 ${Number(options.temperature ?? 0.2).toFixed(1)}`;
+
+                                return (
+                                    <div
+                                        style={{
+                                            borderRadius: "10px",
+                                            border: showAdvancedOptions
+                                                ? "1px solid #fdba74"
+                                                : "1px solid #e2e8f0",
+                                            backgroundColor: showAdvancedOptions
+                                                ? "#ffffff"
+                                                : "#f8fafc",
+                                            overflow: "hidden",
+                                            transition: "all 0.15s ease",
+                                        }}
+                                    >
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAdvancedOptions((prev) => !prev)}
+                                            style={{
+                                                width: "100%",
+                                                padding: "10px 12px",
+                                                border: "none",
+                                                background: "none",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "space-between",
+                                                cursor: "pointer",
+                                                textAlign: "left",
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "6px",
+                                                    whiteSpace: "nowrap",
+                                                    flexShrink: 0,
+                                                }}
+                                            >
+                                                <span
+                                                    style={{
+                                                        fontSize: "12.5px",
+                                                        fontWeight: "700",
+                                                        color: showAdvancedOptions
+                                                            ? "#ea580c"
+                                                            : "#334155",
+                                                        whiteSpace: "nowrap",
+                                                    }}
+                                                >
+                                                    상세 옵션 설정
+                                                </span>
+                                                {showAdvancedOptions && (
+                                                    <span
+                                                        style={{
+                                                            fontSize: "11px",
+                                                            color: "#94a3b8",
+                                                            fontWeight: "500",
+                                                            whiteSpace: "nowrap",
+                                                        }}
+                                                    >
+                                                        (AI 모델 · 결과 언어 · 창의성)
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div
+                                                style={{
+                                                    display: "inline-flex",
+                                                    alignItems: "center",
+                                                    gap: "6px",
+                                                    whiteSpace: "nowrap",
+                                                    flexShrink: 0,
+                                                }}
+                                            >
+                                                {!showAdvancedOptions && (
+                                                    <span
+                                                        style={{
+                                                            fontSize: "11.5px",
+                                                            fontWeight: "600",
+                                                            color: "#475569",
+                                                            backgroundColor: "#e2e8f0",
+                                                            padding: "3px 9px",
+                                                            borderRadius: "999px",
+                                                            whiteSpace: "nowrap",
+                                                        }}
+                                                    >
+                                                        {summaryText}
+                                                    </span>
+                                                )}
+                                                {showAdvancedOptions ? (
+                                                    <ChevronUp size={15} color="#ea580c" />
+                                                ) : (
+                                                    <ChevronDown size={15} color="#64748b" />
+                                                )}
+                                            </div>
+                                        </button>
+
+                                        {showAdvancedOptions && (
+                                            <div
+                                                style={{
+                                                    padding: "12px 12px 14px 12px",
+                                                    borderTop: "1px solid #f1f5f9",
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: "12px",
+                                                    pointerEvents: isBusy ? "none" : "auto",
+                                                }}
+                                            >
+                                                {/* AI 모델 & 결과 언어 */}
+                                                <div
+                                                    style={{
+                                                        display: "grid",
+                                                        gridTemplateColumns: "1fr 1fr",
+                                                        gap: "10px",
+                                                    }}
+                                                >
+                                                    <div className="hanq-kendo-ddl-wrap">
+                                                        <label
+                                                            style={{
+                                                                display: "block",
+                                                                fontSize: "12px",
+                                                                fontWeight: "700",
+                                                                color: "#1e293b",
+                                                                marginBottom: "5px",
+                                                            }}
+                                                        >
+                                                            AI 모델
+                                                        </label>
+                                                        <CustomDropDownList
+                                                            data={modelOptions}
+                                                            textField="text"
+                                                            dataItemKey="value"
+                                                            defaultValue={options.model_select}
+                                                            disabled={isBusy}
+                                                            onChange={(e) => {
+                                                                const val =
+                                                                    e?.value?.value ??
+                                                                    e?.target?.value?.value;
+                                                                if (val)
+                                                                    handleChangeOption(
+                                                                        "model_select",
+                                                                        String(val)
+                                                                    );
+                                                            }}
+                                                        />
+                                                    </div>
+
+                                                    <div className="hanq-kendo-ddl-wrap">
+                                                        <label
+                                                            style={{
+                                                                display: "block",
+                                                                fontSize: "12px",
+                                                                fontWeight: "700",
+                                                                color: "#1e293b",
+                                                                marginBottom: "5px",
+                                                            }}
+                                                        >
+                                                            결과 언어
+                                                        </label>
+                                                        <CustomDropDownList
+                                                            data={langOptions}
+                                                            textField="text"
+                                                            dataItemKey="value"
+                                                            defaultValue={options.result_lang}
+                                                            disabled={isBusy}
+                                                            onChange={(e) => {
+                                                                const val =
+                                                                    e?.value?.value ??
+                                                                    e?.target?.value?.value;
+                                                                if (val)
+                                                                    handleChangeOption(
+                                                                        "result_lang",
+                                                                        String(val)
+                                                                    );
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* 창의성 (Temperature) */}
+                                                <div>
+                                                    <div
+                                                        style={{
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "space-between",
+                                                            marginBottom: "4px",
+                                                        }}
+                                                    >
+                                                        <label
+                                                            style={{
+                                                                fontSize: "12px",
+                                                                fontWeight: "700",
+                                                                color: "#1e293b",
+                                                            }}
+                                                        >
+                                                            창의성 (Temperature)
+                                                        </label>
+                                                        <span
+                                                            style={{
+                                                                fontSize: "12.5px",
+                                                                fontWeight: "800",
+                                                                color: "#ea580c",
+                                                            }}
+                                                        >
+                                                            {Number(options.temperature ?? 0.2).toFixed(
+                                                                1
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                    <input
+                                                        type="range"
+                                                        min="0"
+                                                        max="1"
+                                                        step="0.1"
+                                                        disabled={isBusy}
+                                                        value={options.temperature ?? 0.2}
+                                                        onChange={(e) =>
+                                                            handleChangeOption(
+                                                                "temperature",
+                                                                parseFloat(e.target.value)
+                                                            )
+                                                        }
+                                                        className="hanq-temp-slider"
+                                                        style={{
+                                                            background: `linear-gradient(to right, #f97316 0%, #f97316 ${Number(options.temperature ?? 0.2) *
+                                                                100
+                                                                }%, #e2e8f0 ${Number(options.temperature ?? 0.2) *
+                                                                100
+                                                                }%, #e2e8f0 100%)`,
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })()}
                         </div>
 
-                        {/* 좌측 하단: 옵션 저장 & 한큐분석 시작 버튼 */}
+                        {/* 좌측 하단: 한큐분석 시작 원버튼 (시작 시 설정 옵션 자동 저장) */}
                         <div
                             style={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: "8px",
                                 paddingTop: "10px",
                                 borderTop: "1px solid #e2e8f0",
                             }}
@@ -1684,31 +1856,10 @@ const HanqProgressModal = ({
                             <button
                                 type="button"
                                 disabled={isBusy}
-                                onClick={handleSaveOptionsOnly}
-                                style={{
-                                    height: "38px",
-                                    padding: "0 16px",
-                                    borderRadius: "8px",
-                                    border: isBusy ? "1px solid #e2e8f0" : "1px solid #fdba74",
-                                    backgroundColor: isBusy ? "#f1f5f9" : "#fff7ed",
-                                    color: isBusy ? "#94a3b8" : "#ea580c",
-                                    fontSize: "13px",
-                                    fontWeight: "700",
-                                    cursor: isBusy ? "not-allowed" : "pointer",
-                                    flexShrink: 0,
-                                    transition: "all 0.15s ease",
-                                }}
-                            >
-                                옵션 저장
-                            </button>
-
-                            <button
-                                type="button"
-                                disabled={isBusy}
                                 onClick={handleStartExecution}
                                 style={{
-                                    flex: 1,
-                                    height: "38px",
+                                    width: "100%",
+                                    height: "40px",
                                     padding: "0 18px",
                                     borderRadius: "8px",
                                     border: "none",
@@ -1742,8 +1893,8 @@ const HanqProgressModal = ({
                                     {isBusy
                                         ? `한큐분석 진행 중 (${targetQuestions.length}문항)`
                                         : status === "completed" || status === "stopped"
-                                          ? `다시 실행 (${targetQuestions.length}문항)`
-                                          : `한큐분석 시작 (${targetQuestions.length}문항)`}
+                                            ? `다시 실행 (${targetQuestions.length}문항)`
+                                            : `한큐분석 시작 (${targetQuestions.length}문항)`}
                                 </span>
                             </button>
                         </div>
