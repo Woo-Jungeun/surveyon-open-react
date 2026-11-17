@@ -25,7 +25,7 @@ export function LoginApi() {
                 user: data?.user ?? "",
                 pass: AES256.Crypto.encryptAES256(String(data?.pass ?? "")),    //암호화
             };
-            return await api.post(payload, "/Login/check", "API_BASE_URL_OPENAI");
+            return await api.post(payload, "/Login/check", "API_BASE_URL_PROJECT");
         },
         {
             onSuccess: (res, v) => {
@@ -83,7 +83,7 @@ export function LoginApi() {
             const payload = {
                 user: data?.user ?? ""
             };
-            return await api.post(payload, "/Login/check/cs", "API_BASE_URL_OPENAI");
+            return await api.post(payload, "/Login/check/cs", "API_BASE_URL_PROJECT");
         },
         {
             onSuccess: (res, v) => {
@@ -186,7 +186,7 @@ export function LoginApi() {
      * 로그아웃 api
      * */
     const logoutMutation = useMutation(
-        async (payload) => await api.post(payload, "/Login/logout", "API_BASE_URL_OPENAI"),
+        async (payload) => await api.post(payload, "/Login/logout", "API_BASE_URL_PROJECT"),
         {
             onSuccess: (res, v) => {
                 removeCookie("X-Auth-Token", { path: "/" });
@@ -210,7 +210,7 @@ export function LoginApi() {
             const payload = {
                 user: data?.user ?? "",
             };
-            return await api.post(payload, "/Login/token/validate", "API_BASE_URL_OPENAI");
+            return await api.post(payload, "/Login/token/validate", "API_BASE_URL_PROJECT");
         },
         {
             onSuccess: async (res) => {
