@@ -3243,20 +3243,22 @@ const ProListGridRenderer = (props) => {
                                         width: '32px',
                                         height: '32px',
                                         borderRadius: '50%',
-                                        backgroundColor: '#eff6ff',
-                                        border: '1px solid #bfdbfe',
+                                        backgroundColor: '#fff7ed',
+                                        border: '1px solid #fed7aa',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        color: '#2563eb'
+                                        color: '#ea580c'
                                     }}>
                                         <Search size={16} strokeWidth={2.5} />
                                     </div>
                                     <div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <span style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>완료자 PID 비교분석</span>
+                                            <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>[{projectnum}]</span>
+
                                         </div>
-                                        <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>[{projectnum}]</span>
+
                                     </div>
                                 </div>
                                 <button
