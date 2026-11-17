@@ -25,13 +25,15 @@ export function ProListApi() {
             return await api.post(payload, "/pro_list/select", "API_BASE_URL_OPENAI");
         },
         {
-            onMutate: () => {
-                loadingSpinner?.show?.();
+            onMutate: (variables) => {
+                if (!variables?.params?.skipSpinner) loadingSpinner?.show?.();
             },
-            onSettled: () => {
-                setTimeout(() => {
-                    loadingSpinner?.hide?.();
-                }, 400);
+            onSettled: (_data, _error, variables) => {
+                if (!variables?.params?.skipSpinner) {
+                    setTimeout(() => {
+                        loadingSpinner?.hide?.();
+                    }, 400);
+                }
             }
         }
     );

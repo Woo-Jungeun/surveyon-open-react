@@ -834,7 +834,7 @@ const HanqProgressModal = ({
                 `✔ 전체 ${targetQuestions.length}개 문항의 한큐분석이 모두 완료되었습니다.`,
                 "success"
             );
-            onRefresh?.();
+            onRefresh?.({ skipSpinner: true });
         }
     };
 
@@ -900,7 +900,7 @@ const HanqProgressModal = ({
                                 }
                             }
                             activeJobsRef.current.clear();
-                            onRefresh?.();
+                            onRefresh?.({ skipSpinner: true });
                         },
                     },
                 ],
@@ -965,7 +965,7 @@ const HanqProgressModal = ({
     return (
         <article
             className="modal on"
-            style={{ zIndex: 999999 }}
+            style={{ zIndex: 9990 }}
             onClick={() => canClose && onClose?.()}
         >
             <style>{`
@@ -977,7 +977,7 @@ const HanqProgressModal = ({
                     animation: hanqSpin 1s linear infinite;
                 }
                 .k-animation-container {
-                    z-index: 1000005 !important;
+                    z-index: 9995 !important;
                 }
                 .hanq-kendo-ddl-wrap .k-dropdownlist {
                     width: 100% !important;
