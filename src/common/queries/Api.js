@@ -1,14 +1,16 @@
 import { apiAxios } from "@/config/axios/Axios.jsx";
 import moment from "moment";
 
+const isTestHost = typeof window !== 'undefined' && (window.location.hostname.includes('stest') || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const DEFAULT_API_HOST = isTestHost ? "https://stest.hrc.kr" : "https://s.hrc.kr";
 const DEFAULT_API_CONFIG = {
     EX_API_BASE_URL: "https://son.hrc.kr/o",
-    API_BASE_URL_OPENAI: "https://stest.hrc.kr/APIs/o",
-    API_BASE_URL_PROJECT: "https://stest.hrc.kr/APIs/p",
-    API_BASE_URL_BOARD: "https://stest.hrc.kr/APIs/n",
-    API_BASE_URL_DATASTATUS: "https://stest.hrc.kr/APIs/s",
-    API_BASE_URL_DATAMANAGEMENT: "https://stest.hrc.kr/APIs/d",
-    API_BASE_URL_THEME: "https://stest.hrc.kr/APIs/t",
+    API_BASE_URL_OPENAI: `${DEFAULT_API_HOST}/APIs/o`,
+    API_BASE_URL_PROJECT: `${DEFAULT_API_HOST}/APIs/p`,
+    API_BASE_URL_BOARD: `${DEFAULT_API_HOST}/APIs/n`,
+    API_BASE_URL_DATASTATUS: `${DEFAULT_API_HOST}/APIs/s`,
+    API_BASE_URL_DATAMANAGEMENT: `${DEFAULT_API_HOST}/APIs/d`,
+    API_BASE_URL_THEME: `${DEFAULT_API_HOST}/APIs/t`,
     SIGNALR_PATH: "signalr",
     DEFAULT_PATH: "/o"
 };
