@@ -1,7 +1,8 @@
 /* ProPermissionModal.css - 프로젝트 선택 팝업 스타일 기반 */
 
 /* ============ CSS 변수 전역 오버라이드 (로딩 스피너 + Kendo 검색창) ============ */
-body:has(.pp-modal-overlay),
+body:has(.pp-modal-overlay) .k-animation-container,
+body:has(.pp-modal-overlay) .survey-loading-spinner,
 .pp-modal-overlay,
 .pp-modal-container,
 body:has(.pp-modal-overlay) .k-popup {
