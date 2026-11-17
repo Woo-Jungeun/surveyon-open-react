@@ -460,6 +460,7 @@ body:has(.pp-modal-overlay) #nprogress .spinner-icon {
     color: #5A4BFF !important;
     fill: #5A4BFF !important;
 }
+
 .pp-modal-container .k-picker .k-input-button {
     background-color: #5A4BFF !important;
 }
@@ -470,6 +471,7 @@ html body:has(.pp-modal-overlay) .k-child-animation-container {
     box-shadow: none !important;
     background: transparent !important;
 }
+
 body:has(.pp-modal-overlay) .k-popup,
 html body:has(.pp-modal-overlay) .k-animation-container .k-popup,
 html body:has(.pp-modal-overlay) .k-animation-container .k-list-container,
@@ -520,14 +522,50 @@ body:has(.pp-modal-overlay) .k-list-item:hover {
 
 /* DatePicker 입력창 기본 테두리(이중 테두리) 현상 제거 */
 .pp-modal-container .k-datepicker .k-input,
-.pp-modal-container .k-datepicker .k-input-solid,
-.pp-modal-container .k-datepicker .k-input-inner {
+.pp-modal-container .k-datepicker .k-input-solid {
+    border: none !important;
+}
+
+.pp-modal-container .k-datepicker {
+    padding: 0 !important;
+}
+
+.pp-modal-container .k-datepicker .k-dateinput,
+.pp-modal-container .k-datepicker .k-input,
+.pp-modal-container .k-datepicker .k-input-solid {
+    border: none !important;
+}
+
+.pp-modal-container .k-datepicker .k-input-inner,
+.pp-modal-container .k-datepicker .k-dateinput:focus-within,
+.pp-modal-container .k-datepicker .k-input:focus-within,
+.pp-modal-container .k-datepicker .k-input-inner:focus {
     border: none !important;
     box-shadow: none !important;
     background: transparent !important;
 }
 
 /* DatePicker 텍스트 패딩 조정 (이중 테두리 제거 후 위치 보정) */
+.pp-modal-container .k-datepicker {
+    padding: 0 !important;
+}
+
+.pp-modal-container .k-datepicker .k-dateinput,
+.pp-modal-container .k-datepicker .k-input,
+.pp-modal-container .k-datepicker .k-input-solid {
+    border: none !important;
+}
+
+.pp-modal-container .k-datepicker .k-input-inner,
+.pp-modal-container .k-datepicker .k-dateinput:focus-within,
+.pp-modal-container .k-datepicker .k-input:focus-within,
+.pp-modal-container .k-datepicker .k-input-inner:focus {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    background: transparent !important;
+}
+
 .pp-modal-container .k-datepicker .k-input-inner {
     padding-left: 12px !important;
 }
@@ -549,7 +587,7 @@ body:has(.pp-modal-overlay) .k-list-item:hover {
 /* 드롭다운 필터 검색 input 포커스 테두리 주황 → 보라 */
 body:has(.pp-modal-overlay) .k-searchbox,
 body:has(.pp-modal-overlay) .k-searchbox:focus-within,
-body:has(.pp-modal-overlay) .k-input-inner:focus {
+body:has(.pp-modal-overlay) .k-searchbox:focus-within {
     border: 1px solid #7C3AED !important;
     border-color: #7C3AED !important;
     box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.18) !important;
