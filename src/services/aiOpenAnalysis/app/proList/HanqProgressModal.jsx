@@ -486,7 +486,7 @@ const HanqProgressModal = ({
                     try {
                         const token = authToken || getCookie("TOKEN") || "";
                         const conn = new signalR.HubConnectionBuilder()
-                            .withUrl("/hubs/worker", {
+                            .withUrl(`${(import.meta.env.DEV ? "/APIs/o" : (window.API_CONFIG?.API_BASE_URL_OPENAI || "/APIs/o")).replace(/\/$/, "")}/hubs/worker`, {
                                 accessTokenFactory: () => token,
                             })
                             .withAutomaticReconnect()

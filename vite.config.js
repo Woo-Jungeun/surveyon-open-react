@@ -43,6 +43,7 @@ export default defineConfig(({ mode }) => {
                             // 로그인(/APIs/o/Login/*, /APIs/o/login/*)은 테스트서버(stest.hrc.kr)로 보내서 TokenStore에 토큰 등록 유지
                             "^/APIs/o/[Ll]ogin(?:/|$)": {
                                 target: (env.VITE_PROXY_URL_OTHER) ?? env.VITE_PROXY_URL,
+                        ws: true,
                                 changeOrigin: true,
                                 secure: false,
                             },
@@ -76,6 +77,7 @@ export default defineConfig(({ mode }) => {
                     // /APIs 로 시작하는 요청 프록시 (BoardApi 등)
                     "^/APIs(?:/|$)": {
                         target: (env.VITE_PROXY_URL_OTHER) ?? env.VITE_PROXY_URL,
+                        ws: true,
                         // target: env.VITE_PROXY_URL,
                         changeOrigin: true,
                         secure: false,
