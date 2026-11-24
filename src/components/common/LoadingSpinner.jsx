@@ -3,7 +3,9 @@ import "@/assets/css/loading-spinner.css";
 
 //context 생성
 //context를 생성해야지만 전역으로 사용할 수 있음
-export const loadingSpinnerContext = createContext(null);
+export const loadingSpinnerContext =
+    globalThis.__SURVEYON_LOADING_CONTEXT__ ??
+    (globalThis.__SURVEYON_LOADING_CONTEXT__ = createContext(null));
 
 /**
  * @className : LoadingProvider

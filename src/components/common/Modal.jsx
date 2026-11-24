@@ -5,7 +5,9 @@ import { useLocation } from "react-router-dom";
 
 //context 생성
 //context를 생성해야지만 전역으로 사용할 수 있음
-export const modalContext = createContext(null);
+export const modalContext =
+    globalThis.__SURVEYON_MODAL_CONTEXT__ ??
+    (globalThis.__SURVEYON_MODAL_CONTEXT__ = createContext(null));
 
 /**
  *  Modal Provider 컴포넌트

@@ -514,7 +514,8 @@
     /* Subtle blue border for blue theme */
 }
 
-.project-title {
+.project-title,
+.common-sidebar .project-title {
     flex: 1;
     font-size: 13px;
     font-weight: 700;
@@ -530,7 +531,8 @@
     min-width: 0;
 }
 
-.blue .project-title {
+.blue .project-title,
+.common-sidebar.blue .project-title {
     color: var(--srt-primary-900, #1e3a8a);
 }
 
@@ -1289,7 +1291,8 @@
     border: 1px solid #c7d2fe;
 }
 
-.navy .project-title {
+.navy .project-title,
+.common-sidebar.navy .project-title {
     color: #1e3a8a;
 }
 
