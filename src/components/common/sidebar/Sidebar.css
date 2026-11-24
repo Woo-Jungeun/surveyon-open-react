@@ -515,15 +515,16 @@
 }
 
 .project-title {
-    font-size: 14px;
+    flex: 1;
+    font-size: 13px;
     font-weight: 700;
     color: #333;
-    line-height: 1.3;
+    line-height: 1.45;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     line-clamp: 3;
     -webkit-box-orient: vertical;
-    /* overflow: hidden; */
+    overflow: hidden;
     text-overflow: ellipsis;
     word-break: break-all;
     min-width: 0;
@@ -823,7 +824,8 @@
     font-weight: 700;
     line-height: 1;
     letter-spacing: 0;
-    padding-bottom: 1.5px; /* 글꼴 baseline으로 인해 숫자가 아래로 처지는 현상 광학적 중앙 보정 */
+    padding-bottom: 1.5px;
+    /* 글꼴 baseline으로 인해 숫자가 아래로 처지는 현상 광학적 중앙 보정 */
     font-variant-numeric: tabular-nums;
     background: #ffffff;
     color: #64748b;
@@ -1366,4 +1368,71 @@
     padding: 4px 0 16px 0 !important;
     display: flex !important;
     justify-content: center !important;
+}
+
+/* =======================================
+   H-SRT (.blue) 전 메뉴 펼침 시 세로 스크롤 방지용 간격·패딩 최적화
+======================================= */
+.common-sidebar.blue:not(.collapsed) .sidebar-header {
+    padding: 12px 16px;
+}
+
+.common-sidebar.blue:not(.collapsed) .project-info-box {
+    padding: 6px 16px 6px 16px;
+}
+
+.common-sidebar.blue:not(.collapsed) .project-info-box+.project-info-box {
+    padding-top: 0;
+    padding-bottom: 8px;
+}
+
+.common-sidebar.blue:not(.collapsed) .project-info-card {
+    padding: 8px 36px 8px 12px;
+}
+
+.common-sidebar.blue:not(.collapsed) .sidebar-nav {
+    padding-top: 8px;
+}
+
+.common-sidebar.blue:not(.collapsed) .menu-bar-actions {
+    padding: 0 16px 8px 16px;
+}
+
+.common-sidebar.blue:not(.collapsed) .menu-bar-refresh-card {
+    padding: 5px 11px !important;
+}
+
+.common-sidebar.blue:not(.collapsed) .nav-group {
+    margin-bottom: 10px;
+}
+
+.common-sidebar.blue:not(.collapsed) .nav-group:last-child {
+    margin-bottom: 4px;
+}
+
+.common-sidebar.blue:not(.collapsed) .group-header {
+    margin-bottom: 4px;
+}
+
+.common-sidebar.blue:not(.collapsed) .nav-link {
+    padding: 6px 12px;
+    margin-bottom: 1px;
+}
+
+.common-sidebar.blue:not(.collapsed) .sub-group-list {
+    margin: 1px 16px 4px 22px;
+    padding: 1px 0 1px 10px;
+    gap: 1px;
+}
+
+.common-sidebar.blue:not(.collapsed) .sub-nav-link {
+    padding: 4.5px 10px;
+}
+
+.common-sidebar.blue:not(.collapsed) .sidebar-footer {
+    padding: 10px 16px;
+}
+
+.common-sidebar.blue:not(.collapsed) .user-card {
+    padding: 8px 12px;
 }

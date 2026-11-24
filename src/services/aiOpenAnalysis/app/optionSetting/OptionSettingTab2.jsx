@@ -1,1367 +1,1564 @@
-import React, { Fragment, useState, useRef, forwardRef, useImperativeHandle, useCallback, useContext, useMemo, useEffect, useLayoutEffect } from "react";
-import { RotateCcw, Plus } from 'lucide-react';
-import GridData from "@/components/common/grid/GridData.jsx";
-import KendoGrid from "@/components/kendo/KendoGrid.jsx";
-import { GridColumn as Column } from "@progress/kendo-react-grid";
-import { OptionSettingApi } from "@/services/aiOpenAnalysis/app/optionSetting/OptionSettingApi.js";
-import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
-import { Button } from "@progress/kendo-react-buttons";
+import React, {
+    useState,
+    useRef,
+    forwardRef,
+    useImperativeHandle,
+    useCallback,
+    useContext,
+    useMemo,
+    useEffect,
+} from "react";
+import { createPortal } from "react-dom";
+import {
+    RotateCcw,
+    Plus,
+    Lock,
+    Unlock,
+    Trash2,
+    FolderInput,
+    ChevronDown,
+    Zap,
+    X,
+} from "lucide-react";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from "@/hooks/useUpdateHistory";
-import { useSelector } from "react-redux";
-import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
-import { process } from "@progress/kendo-data-query";
-import GridDataCount from "@/components/common/grid/GridDataCount";
+import {
+    cleanStr,
+    isCodeLocked,
+    getGubunCategory,
+    buildGubunAndLockPatch,
+    getNextAutoSubCode,
+    applyCodeFieldPropagation,
+    validateCodeLabelConsistency,
+    toggleThreeStageSort,
+} from "./optionSettingUtils";
+import { OsaDropDown, OsaCategoryComboInput } from "./OptionSettingKendoSelect.jsx";
+import { useOsaResizableTable } from "./useOsaResizableTable";
 
-const natKey = (v) => {
-    if (v == null) return Number.NEGATIVE_INFINITY;
-    const s = String(v).trim();
+const GUBUN_FILTER_OPTIONS = [
+    { value: "all", text: "전체" },
+    { value: "설문지", text: "설문지" },
+    { value: "자동분석", text: "자동분석" },
+    { value: "트래킹", text: "트래킹" },
+];
+
+const LOCK_FILTER_OPTIONS = [
+    { value: "all", text: "전체" },
+    { value: "unlocked", text: "수정가능" },
+    { value: "locked", text: "수정불가" },
+];
+
+const ROW_GUBUN_OPTIONS = [
+    { value: "설문지", text: "설문지" },
+    { value: "자동분석", text: "자동분석" },
+    { value: "트래킹", text: "트래킹" },
+];
+
+const keyOf = (r) =>
+    r?.__rowKey ||
+    r?._uid ||
+    `${encodeURIComponent(cleanStr(r?.lv123code))}__${encodeURIComponent(cleanStr(r?.lv3))}`;
+
+const natCompare = (aVal, bVal) => {
+    const sa = cleanStr(aVal);
+    const sb = cleanStr(bVal);
+    if (sa === "" && sb === "") return 0;
+    if (sa === "") return -1;
+    if (sb === "") return 1;
+    const na = /^-?\d+$/.test(sa) ? Number(sa) : null;
+    const nb = /^-?\d+$/.test(sb) ? Number(sb) : null;
+    if (na !== null && nb !== null) return na - nb;
+    if (na !== null) return -1;
+    if (nb !== null) return 1;
+    return sa.localeCompare(sb, "ko");
+};
+
+const natCode = (v) => {
+    const s = cleanStr(v);
+    if (!s) return Number.POSITIVE_INFINITY;
     return /^\d+$/.test(s) ? Number(s) : s.toLowerCase();
 };
 
-// 숫자처럼 정렬하고 싶은 필드
-const NAT_FIELDS = ["lv1code", "lv2code", "lv123code"];
-
-// rows에 __sort__* 필드를 붙이고, 원필드 → 프록시필드 맵을 리턴
-const addSortProxies = (rows = []) => {
-    const proxyField = {};
-    const dataWithProxies = (rows || []).map((r) => {
-        const o = { ...r };
-        for (const f of NAT_FIELDS) {
-            const pf = `__sort__${f}`;
-            o[pf] = natKey(r?.[f]);
-            proxyField[f] = pf;
-        }
-        return o;
-    });
-    return { dataWithProxies, proxyField };
-};
 /**
- * 분석 > 그리드 영역 > 보기 데이터
- *
- * @author jewoo
- * @since 2025-08-12<br />
+ * [보기 데이터] 탭 — 통합 검색(/) · 빈도순 정렬 · 대/중분류 자동완성 · 고속 편집 · 드래그 다중선택 (100% 주황색 테마)
  */
 const OptionSettingTab2 = forwardRef((props, ref) => {
-    const auth = useSelector((store) => store.auth);
-    const loadingSpinner = useContext(loadingSpinnerContext);
-    const lvCode = String(props.lvCode); // 분류 단계 코드
-    const { onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onHasEditLogChange, projectnum, qnum, qid, isLeftOpen } = props;
+    const {
+        lvCode = "3",
+        codes = [],
+        setCodes,
+        responses = [],
+        setResponses,
+        onUnsavedChange,
+        onOpenImportModal,
+        qnum,
+        project_lock,
+    } = props;
+
     const modal = useContext(modalContext);
-    const DATA_ITEM_KEY = ["lv123code", "lv3"];
-    // 스크롤 위치 저장용 ref
-    const scrollTopRef = useRef(0);
-    const scrollLeftRef = useRef(0);
+    const modalRef = useRef(modal);
+    modalRef.current = modal;
 
-    /**
-     * 숨김처리 여부 allowHide (true/false)
-     * 편집 가능 여부 editable(true/false)
-    */
-    const [columns, setColumns] = useState(() =>
-        persistedPrefs?.columns ?? [
-            { field: "no", title: "no", show: true, editable: false, width: "80px", allowHide: false },
-            // { field: "qnum", title: "문번호", show: true, editable: false, width: "100px" },
-            { field: "lv1code", title: "대분류 코드", show: true, width: "140px", allowHide: false },
-            { field: "lv1", title: "대분류", show: true, width: "210px", allowHide: false },
-            { field: "lv2code", title: "중분류 코드", show: true, width: "140px", allowHide: false },
-            { field: "lv2", title: "중분류", show: true, width: "210px", allowHide: false },
-            { field: "lv123code", title: "소분류 코드", show: true, allowHide: false, width: "140px" },
-            { field: "lv3", title: "소분류", show: true, allowHide: false, width: "210px" },
-            { field: "ex_sum", title: "집계현황", show: true, editable: false, allowHide: false, width: "150px" },
-            { field: "ex_gubun", title: "보기유형", show: true, editable: false, allowHide: false, width: "150px" },
-            { field: "delete", title: "삭제", show: true, editable: true, allowHide: false, width: "120px" },
-        ]);
+    const [sort, setSort] = useState([]);
+    const [gridSelectedCodes, setGridSelectedCodes] = useState(new Set());
+    const [explicitChecked, setExplicitChecked] = useState(false);
+    const selectedCodesRef = useRef(gridSelectedCodes);
+    selectedCodesRef.current = gridSelectedCodes;
 
-    // 단계별 강제 숨김 컬럼
-    const forcedHidden = useMemo(() => {
-        const s = new Set();
-        if (lvCode === "1") { s.add("lv1"); s.add("lv1code"); s.add("lv2"); s.add("lv2code"); }
-        else if (lvCode === "2") { s.add("lv1"); s.add("lv1code"); }
-        return s;
-    }, [lvCode]);
-
-    // 단계 컬럼 집합 (대/중분류 코드/이름)
-    const stageFields = useMemo(() =>
-        new Set(["lv1", "lv1code", "lv2", "lv2code"]), []);
-
-    // 렌더링용 값: 강제 규칙만 입혀서 사용(상태/부모는 건드리지 않음)
-    const effectiveColumns = useMemo(() => {
-        return columns.map(c => {
-            if (forcedHidden.has(c.field)) {
-                return { ...c, show: false, allowHide: false };
-            }
-            // 왼쪽 패널이 닫혀있으면 모든 단계에서 주요 컬럼 너비 제거
-            if (!isLeftOpen && ["lv3", "lv2", "lv1"].includes(c.field)) {
-                const { width, ...rest } = c;
-                return rest;
-            }
-            // 왼쪽 패널이 열려있으면 1단계일 때만 소분류/보기유형 컬럼의 width 제거
-            if (isLeftOpen && lvCode === "1" && ["lv3"].includes(c.field)) {
-                const { width, ...rest } = c;
-                return rest;
-            }
-            return c;
-        });
-    }, [columns, forcedHidden, lvCode, isLeftOpen]);
-
-    /**
-     * 단계 변경 시 컬럼 상태 정규화:
-     * - 단계 규칙으로 숨겨야 하는 컬럼: 강제 show:false
-     * - 그 외 단계 컬럼(stageFields)은, 예전에 저장된 show:false가 남아 있어도
-     *   현재 단계에서 보여야 하면 show:true로 자동 복구
-     */
     useEffect(() => {
-        setColumns(prev => {
-            let changed = false;
-            const next = prev.map(c => {
-                // 1) 단계상 강제 숨김
-                if (forcedHidden.has(c.field)) {
-                    if (c.show !== false || c.allowHide !== false) changed = true;
-                    return { ...c, show: false, allowHide: false };
-                }
-                // 2) 단계 컬럼인데 현재는 숨김으로 저장돼 있으면 보이도록 복구
-                if (stageFields.has(c.field) && c.show === false) {
-                    changed = true;
-                    return { ...c, show: true };
-                }
-                return c;
-            });
-            if (changed) onPrefsChange?.({ columns: next });
-            return next;
-        });
-        // forcedHidden이 lvCode에 의존하므로 lvCode/forcedHidden/stageFields 변경 시 동작
-    }, [lvCode, forcedHidden, stageFields, onPrefsChange]);
-
-    // 단계(lvCode) 바뀔 때 히스토리/베이스라인 상태를 새로 시작하도록 강제 초기화
-    useEffect(() => {
-        baselineDidRef.current = false;
-        baselineAfterReloadRef.current = false;
-        baselineSigRef.current = '';
-        sigStackRef.current = [];
-    }, [lvCode]);
-
-    // 정렬/필터를 controlled로
-    const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
-    const [filter, setFilter] = useState(persistedPrefs?.filter ?? null);
-
-    // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
-    const columnMenu = useCallback((menuProps) => (
-        <ExcelColumnMenu
-            {...menuProps}
-            columns={columns
-                // 단계 규칙으로 '강제 숨김' 대상만 메뉴에서 제거
-                .filter(c => !forcedHidden.has(c.field))
-            }
-            onColumnsChange={(updated) => {
-                const map = new Map(updated.map(c => [c.field, c]));
-                const next = columns.map(c => {
-                    if (forcedHidden.has(c.field)) return { ...c, show: false }; // 단계상 강제 숨김
-                    const u = map.get(c.field);
-                    return u ? { ...c, ...u } : c
-                });
-                setColumns(next);
-                onPrefsChange?.({ columns: next }); // 부모에 저장
-            }}
-            filter={filter}
-            onFilterChange={(e) => {
-                setFilter(e ?? null);
-                onPrefsChange?.({ filter: e }); // 상단에 저장 
-            }}
-            onSortChange={(e) => setSort(e ?? [])} // sortArr는 배열 형태
-
-        />
-    ), [columns, forcedHidden, stageFields, onPrefsChange, filter]);
-
-    const { optionEditData, optionSaveData, optionAnalysisStart } = OptionSettingApi();
-    const [editField] = useState("inEdit");
-
-    // GridData가 내려주는 최신 컨텍스트를 저장
-    const latestCtxRef = useRef(null);
-    const saveChangesRef = useRef(async () => false);   // 저장 로직 노출용
-
-    // 부모(OptionSettingBody.jsx) 에게 노출
-    useImperativeHandle(ref, () => ({
-        saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
-        reload: () => latestCtxRef.current?.handleSearch?.(), // 재조회
-    }));
-
-    /*-----수정 로그 관련-----*/
-    const makeTab2Signature = useCallback((rows = []) => {
-        const fields = [
-            "__pendingDelete", "lv1code", "lv1", "lv2code", "lv2",
-            "lv123code", "lv3", "ex_gubun"
-        ];
-        const keyOfRow = (r) =>
-            r?.__rowKey ??
-            `${encodeURIComponent(String(r?.lv123code ?? ""))}__${encodeURIComponent(String(r?.no ?? ""))}`;
-        const enc = (v) => String(v ?? "").trim();
-        const acc = [];
-        for (const r of rows ?? []) {
-            const k = keyOfRow(r);
-            const body = fields.map((f) => `${f}:${enc(r?.[f])}`).join(",");
-            acc.push(`${k}|${body}`);
+        if (gridSelectedCodes.size === 0 && explicitChecked) {
+            setExplicitChecked(false);
         }
-        acc.sort();
-        return acc.join("||");
+    }, [gridSelectedCodes, explicitChecked]);
+
+    // 헤더 체크박스 선택 옵션 메뉴
+    const [chkMenuOpen, setChkMenuOpen] = useState(false);
+    const [chkMenuPos, setChkMenuPos] = useState(null);
+    const chkWrapRef = useRef(null);
+    const chkMenuRef = useRef(null);
+    const tableScrollRef = useRef(null);
+    useOsaResizableTable(tableScrollRef, String(lvCode));
+
+    const pendingFocusCellRef = useRef(null);
+    const skipNextBlurCellRef = useRef(null);
+
+    // 마우스 드래그 / Shift / Ctrl 다중 선택용 Ref
+    const draggingRef = useRef(false);
+    const multiRowDragRef = useRef(false);
+    const anchorIndexRef = useRef(null);
+
+    const [colFilters, setColFilters] = useState({
+        lv1code: "",
+        lv1: "",
+        lv2code: "",
+        lv2: "",
+        lv123code: "",
+        lv3: "",
+        freq: "",
+        gubun: "all",
+        lockState: "all",
+    });
+
+    // 드래그 종료 글로벌 리스너
+    useEffect(() => {
+        const onUp = () => {
+            draggingRef.current = false;
+            multiRowDragRef.current = false;
+            document.body.classList.remove("osa-is-row-dragging");
+        };
+        window.addEventListener("mouseup", onUp);
+        return () => {
+            window.removeEventListener("mouseup", onUp);
+            document.body.classList.remove("osa-is-row-dragging");
+        };
     }, []);
 
-    const hist = useUpdateHistory(`tab2:${lvCode}`, { max: 100, signature: makeTab2Signature, });
-    const baselineDidRef = useRef(false);           // 베이스라인 이미 셋?
-    const baselineAfterReloadRef = useRef(false);   // 저장 후 재조회 베이스라인 리셋 필요?
-    const baselineSigRef = useRef('');   // 현재 베이스라인의 시그니처
-    const sigStackRef = useRef([]);      // 베이스라인 이후 커밋들의 시그니처 스택
-    /*-----수정 로그 관련-----*/
-
-    //grid rendering 
-    const GridRenderer = (props) => {
-        const {
-            dataState, setDataState, selectedState, setSelectedState, idGetter, dataItemKey, handleSearch,
-            hist, baselineDidRef, baselineAfterReloadRef, baselineSigRef, sigStackRef, makeTab2Signature, scrollTopRef, scrollLeftRef,
-            isLeftOpen
-        } = props;
-
-        const { dataWithProxies, proxyField } = useMemo(
-            () => addSortProxies(dataState?.data || []),
-            [dataState?.data]
-        );
-
-        const mappedSort = useMemo(
-            () => (sort || []).map(s => ({ ...s, field: proxyField[s.field] ?? s.field })),
-            [sort, proxyField]
-        );
-        const rememberScroll = useCallback(() => {
-            const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
-            if (grid) {
-                scrollTopRef.current = grid.scrollTop;
-                scrollLeftRef.current = grid.scrollLeft;
-            }
-        }, []);
-
-        useLayoutEffect(() => {
-            const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
-            if (!grid) return;
-            if (scrollTopRef.current > 0) {
-                grid.scrollTop = scrollTopRef.current;
-            }
-            if (scrollLeftRef.current > 0) {
-                grid.scrollLeft = scrollLeftRef.current;
-            }
-        }, [dataState?.data]);
-
-        // 필터링된 데이터 개수 계산
-        const filteredCount = useMemo(() => {
-            const result = process(dataWithProxies, { filter });
-            return result.total;
-        }, [dataWithProxies, filter]);
-
-        const COMPOSITE_KEY_FIELD = "__rowKey";  // 키값
-        const getKey = useCallback((row) => row?.__rowKey ?? makeRowKey(row), []);
-        // const qnum = dataState?.data?.[0]?.qnum ?? "";   // 문번호 저장 (행 추가 시 필요) -> 부모 prop 사용
-        latestCtxRef.current = { dataState, setDataState, selectedState, idGetter, handleSearch };    // 최신 컨텍스트 저장
-
-        // 행마다 __rowKey가 없으면 만들어서 주입 (lv123code + no 기반)
-        useLayoutEffect(() => {
-            const rows = dataState?.data ?? [];
-            if (!rows.length) return;
-            if (rows.some(r => !r?.__rowKey)) {
-                setDataState(prev => ({
-                    ...prev,
-                    data: (prev?.data ?? []).map(r =>
-                        r?.__rowKey ? r : { ...r, __rowKey: makeRowKey(r) }
-                    ),
-                }));
-            }
-        }, [dataState?.data, setDataState]);
-
-        // 데이터가 로드되면 베이스라인/스택 초기화 (저장 후 재조회 포함)
-        useEffect(() => {
-            const rowsNow = dataState?.data || [];
-            if (!rowsNow.length) return;
-            if (!baselineDidRef.current || baselineAfterReloadRef.current) {
-                hist.reset(rowsNow);
-                baselineDidRef.current = true;
-                baselineAfterReloadRef.current = false;
-                baselineSigRef.current = makeTab2Signature(rowsNow);
-                sigStackRef.current = [];
-                onUnsavedChange?.(false);
-                onHasEditLogChange?.(false);
-            }
-        }, [dataState?.data, hist, makeTab2Signature]);
-
-        // 수정로그 commit 
-        const commitSmart = useCallback((updatedRows) => {
-            const newSig = makeTab2Signature(updatedRows);
-            const stack = sigStackRef.current;
-            const top = stack[stack.length - 1] ?? null;
-            const prev = stack[stack.length - 2] ?? baselineSigRef.current;
-
-            // 1) 동일 스냅샷이면 스택/더티 변화 없음
-            if (newSig === top) {
-                onUnsavedChange?.(stack.length > 0);
-                onHasEditLogChange?.(stack.length > 0);
+    // 헤더 체크박스 메뉴 외부 클릭 닫기
+    useEffect(() => {
+        if (!chkMenuOpen) return undefined;
+        const onDocDown = (e) => {
+            if (
+                chkWrapRef.current?.contains(e.target) ||
+                chkMenuRef.current?.contains(e.target)
+            ) {
                 return;
             }
-            // 2) 베이스라인으로 완전 복귀
-            if (newSig === baselineSigRef.current) {
-                hist.reset(updatedRows);
-                stack.length = 0;
-                onUnsavedChange?.(false);
-                onHasEditLogChange?.(false);
-                return;
-            }
-            // 3) 직전 단계로의 되돌림(예: 삭제 → 취소)
-            if (newSig === prev) {
-                hist.undo();
-                stack.pop(); // 스택에서 하나 제거
-                onUnsavedChange?.(stack.length > 0); // 동기적으로 확정
-                onHasEditLogChange?.(stack.length > 0);
-                return;
-            }
-            // 4) 일반 커밋
-            hist.commit(updatedRows);
-            stack.push(newSig);
-            onUnsavedChange?.(true);
-            onHasEditLogChange?.(true);
-        }, [hist, makeTab2Signature]);
+            setChkMenuOpen(false);
+        };
+        document.addEventListener("mousedown", onDocDown);
+        return () => document.removeEventListener("mousedown", onDocDown);
+    }, [chkMenuOpen]);
 
-        // 대분류/중분류 코드값 텍스트 매핑
-        const buildMaps = (rows, codeField, textField) => {
-            const codeToText = new Map(); // code -> text
-            const textToCode = new Map(); // text(lower) -> code
-            (rows || []).forEach(r => {
-                const c = String(r?.[codeField] ?? "").trim();
-                const tRaw = String(r?.[textField] ?? "").trim();
-                const t = tRaw.toLowerCase();
-                if (c && tRaw) {
-                    if (!codeToText.has(c)) codeToText.set(c, tRaw);
-                    if (!textToCode.has(t)) textToCode.set(t, c);
+    const makeSig = useCallback((rows = []) => {
+        return (rows || [])
+            .filter((r) => !r?.__pendingDelete)
+            .map(
+                (r) =>
+                    `${keyOf(r)}:${cleanStr(r.lv1code)}:${cleanStr(r.lv1)}:${cleanStr(
+                        r.lv2code
+                    )}:${cleanStr(r.lv2)}:${cleanStr(r.lv123code)}:${cleanStr(r.lv3)}:${r.ex_gubun
+                    }:${Boolean(r.is_lock)}`
+            )
+            .join("||");
+    }, []);
+
+    const hist = useUpdateHistory(`tab2:${lvCode}`, { max: 100, signature: makeSig });
+    const baselineSigRef = useRef("");
+    const baselineInitRef = useRef(false);
+
+    useEffect(() => {
+        if (codes.length > 0 && !baselineInitRef.current) {
+            baselineInitRef.current = true;
+            hist.reset(codes);
+            baselineSigRef.current = makeSig(codes);
+        }
+    }, [codes, hist, makeSig]);
+
+    const commitCodes = useCallback(
+        (updater) => {
+            setCodes((prev) => {
+                const next = typeof updater === "function" ? updater(prev) : updater;
+                hist.commit(next);
+                onUnsavedChange?.(makeSig(next) !== baselineSigRef.current || true);
+                return next;
+            });
+        },
+        [setCodes, hist, makeSig, onUnsavedChange]
+    );
+
+    // Ctrl+Z / Ctrl+Y
+    useEffect(() => {
+        const onKey = (e) => {
+            const tag = e.target?.tagName;
+            if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+            const key = e.key?.toLowerCase?.();
+            if (!key) return;
+
+            if (e.key === "Escape" && !chkMenuOpen) {
+                setGridSelectedCodes((prev) => (prev.size > 0 ? new Set() : prev));
+                return;
+            }
+
+            if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) {
+                e.preventDefault();
+                const snap = hist.undo();
+                if (Array.isArray(snap)) {
+                    setCodes(snap);
+                    onUnsavedChange?.(makeSig(snap) !== baselineSigRef.current);
+                }
+            } else if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) {
+                e.preventDefault();
+                const snap = hist.redo?.();
+                if (Array.isArray(snap)) {
+                    setCodes(snap);
+                    onUnsavedChange?.(makeSig(snap) !== baselineSigRef.current);
+                }
+            }
+        };
+        window.addEventListener("keydown", onKey, true);
+        return () => window.removeEventListener("keydown", onKey, true);
+    }, [chkMenuOpen, hist, makeSig, onUnsavedChange, setCodes]);
+
+    useImperativeHandle(
+        ref,
+        () => ({
+            validateBeforeSave: () => validateCodeLabelConsistency(codes),
+            resetBaseline: (freshCodes) => {
+                const target = freshCodes || codes;
+                hist.reset(target);
+                baselineSigRef.current = makeSig(target);
+            },
+        }),
+        [codes, hist, makeSig]
+    );
+
+    // 응답 빈도 실시간 계산
+    const freqMap = useMemo(() => {
+        const m = new Map();
+        (responses || []).forEach((r) => {
+            if (r?.__pendingDelete) return;
+            const c = cleanStr(r.lv123code ?? r.code_num);
+            if (c) m.set(c, (m.get(c) || 0) + 1);
+        });
+        return m;
+    }, [responses]);
+
+    const activeCodes = useMemo(
+        () =>
+            (codes || [])
+                .filter((c) => !c?.__pendingDelete)
+                .map((c, idx) => {
+                    const sc = cleanStr(c.lv123code ?? c.code_num);
+                    const freq = sc ? freqMap.get(sc) || 0 : 0;
+                    const locked = isCodeLocked(c);
+                    return {
+                        ...c,
+                        no: idx + 1,
+                        lv1: cleanStr(c.lv1),
+                        lv1code: cleanStr(c.lv1code),
+                        lv2: cleanStr(c.lv2),
+                        lv2code: cleanStr(c.lv2code),
+                        lv3: cleanStr(c.lv3),
+                        _subCode: sc,
+                        _freq: freq,
+                        _locked: locked,
+                        _lockSort: locked ? "0_수정불가" : "1_수정가능",
+                        _cat: getGubunCategory(c),
+                        __rowKey: keyOf(c),
+                    };
+                }),
+        [codes, freqMap]
+    );
+
+    // 대분류·중분류 자동완성 후보 추출
+    const lv1AutoOptions = useMemo(() => {
+        const map = new Map();
+        activeCodes.forEach((c) => {
+            if (!c.lv1) return;
+            if (!map.has(c.lv1) || (!map.get(c.lv1).code && c.lv1code)) {
+                map.set(c.lv1, { name: c.lv1, code: c.lv1code });
+            }
+        });
+        return Array.from(map.values()).sort((a, b) => natCompare(a.code || a.name, b.code || b.name));
+    }, [activeCodes]);
+
+    const getLv2AutoOptionsForRow = useCallback(
+        (curLv1) => {
+            const sameLv1Map = new Map();
+            const otherMap = new Map();
+            activeCodes.forEach((c) => {
+                if (!c.lv2) return;
+                if (curLv1 && c.lv1 === curLv1) {
+                    if (!sameLv1Map.has(c.lv2) || (!sameLv1Map.get(c.lv2).code && c.lv2code)) {
+                        sameLv1Map.set(c.lv2, { name: c.lv2, code: c.lv2code });
+                    }
+                } else if (!otherMap.has(c.lv2) || (!otherMap.get(c.lv2).code && c.lv2code)) {
+                    otherMap.set(c.lv2, { name: c.lv2, code: c.lv2code });
                 }
             });
-            return [codeToText, textToCode];
+            const primary = Array.from(sameLv1Map.values()).sort((a, b) =>
+                natCompare(a.code || a.name, b.code || b.name)
+            );
+            if (primary.length > 0) return primary;
+            return Array.from(otherMap.values()).sort((a, b) =>
+                natCompare(a.code || a.name, b.code || b.name)
+            );
+        },
+        [activeCodes]
+    );
+
+    const counts = useMemo(() => {
+        const total = activeCodes.length;
+        const locked = activeCodes.filter((c) => c._locked).length;
+        return { total, locked, unlocked: total - locked };
+    }, [activeCodes]);
+
+    const filteredSortedCodes = useMemo(() => {
+        const match = (val, kw) => {
+            const needle = kw.trim().toLowerCase();
+            if (!needle) return true;
+            return String(val ?? "").toLowerCase().includes(needle);
         };
 
-        const [lv1CodeToText, lv1ToTextToCode] = useMemo(
-            () => buildMaps(dataState?.data, "lv1code", "lv1"),
-            [dataState?.data]
-        );
-        const [lv2CodeToText, lv2TextToCode] = useMemo(
-            () => buildMaps(dataState?.data, "lv2code", "lv2"),
-            [dataState?.data]
-        );
+        const list = activeCodes.filter((c) => {
+            if (!match(c.lv1code, colFilters.lv1code)) return false;
+            if (!match(c.lv1, colFilters.lv1)) return false;
+            if (!match(c.lv2code, colFilters.lv2code)) return false;
+            if (!match(c.lv2, colFilters.lv2)) return false;
+            if (!match(c._subCode, colFilters.lv123code)) return false;
+            if (!match(c.lv3, colFilters.lv3)) return false;
+            if (!match(c._freq, colFilters.freq)) return false;
+            if (colFilters.gubun !== "all" && c._cat !== colFilters.gubun) return false;
+            if (colFilters.lockState === "locked" && !c._locked) return false;
+            if (colFilters.lockState === "unlocked" && c._locked) return false;
+            return true;
+        });
 
-        // 소분류코드(lv123code) 중복 찾기 (보류삭제(__pendingDelete) 행 제외)
-        const findLv123Duplicates = useCallback((rows = []) => {
-            const map = new Map(); // code -> [행번호...]
-            (rows || []).forEach((r) => {
-                if (r?.__pendingDelete === true) return; // 🔸중복 체크 대상에서 제외
-                const code = String(r?.lv123code ?? "").trim();
-                if (!code) return;
-                const no = r?.no ?? "?";
-                if (!map.has(code)) map.set(code, []);
-                map.get(code).push(no);
-            });
-            const dups = [];
-            map.forEach((nos, code) => {
-                if (nos.length > 1) dups.push({ code, nos });
-            });
-            return dups;
-        }, []);
+        // 컬럼 정렬이 지정된 경우 우선 적용, 미지정 시 레거시(Jsonload.selectPnLb) 순서 유지
+        if (sort.length > 0) {
+            const { field, dir } = sort[0];
+            const mul = dir === "desc" ? -1 : 1;
+            return [...list].sort((a, b) => natCompare(a?.[field], b?.[field]) * mul);
+        }
 
-        const gridRootRef = useRef(null);
-        const [errorMarks, setErrorMarks] = useState(new Map());
-        // 화면에 보이는 첫 번째 에러 셀로 포커스(+부드러운 스크롤)
-        const focusFirstErrorCell = useCallback(() => {
-            // setState → 페인트 이후를 보장하기 위해 rAF 2번
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                const root = gridRootRef.current || document;
-                const td = root.querySelector('td.cell-error');
-                if (!td) return;
-                if (!td.hasAttribute('tabindex')) td.setAttribute('tabindex', '0');
-                td.focus({ preventScroll: false });
-                td.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
-            }));
-        }, []);
+        return list;
+    }, [activeCodes, colFilters, sort]);
 
-        // ["lv123code","lv3"] 기준
-        const makeRowKey = (row) =>
-            [row?.lv123code ?? "", row?.lv3 ?? ""]
-                .map(v => encodeURIComponent(String(v)))
-                .join("__");
+    // 새 보기 추가 또는 고속 편집 후 셀 포커스 복원
+    useEffect(() => {
+        const targetCell = pendingFocusCellRef.current;
+        if (!targetCell) return;
+        const el = document.querySelector(`input[data-tab2-cell="${CSS.escape(targetCell)}"]`);
+        if (el) {
+            pendingFocusCellRef.current = null;
+            el.scrollIntoView?.({ block: "nearest" });
+            el.focus();
+            el.select?.();
+        }
+    }, [filteredSortedCodes]);
 
-        // 각 행의 고유키를 계산(서버키 없을 때 __rowKey → 없으면 makeRowKey로 대체)
-        const keyOf = useCallback((row) => row?.__rowKey || makeRowKey(row), []);
+    // 고속 편집: 동일 컬럼의 이전/다음 수정가능 행으로 즉시 이동
+    const navigateEditableRow = useCallback(
+        (currentRowKey, field, delta) => {
+            const curIdx = filteredSortedCodes.findIndex((r) => r.__rowKey === currentRowKey);
+            if (curIdx === -1) return;
 
-        // 현재 rows 기준으로 lv123code 중복 셀만 __errors에 반영
-        const applyLiveDupMarks = useCallback((rows = []) => {
-            // 대상 키 집합 계산
-            const eligible = rows.filter(r =>
-                r?.__pendingDelete !== true &&
-                r?.ex_gubun !== "설문(수정불가)" &&
-                String(r?.lv123code ?? "").trim() !== ""
-            );
-            const byCode = new Map();
-            eligible.forEach(r => {
-                const code = String(r.lv123code).trim().toLowerCase();
-                const key = keyOf(r);
-                const set = byCode.get(code) ?? new Set();
-                set.add(key);
-                byCode.set(code, set);
-            });
-            const dupKeys = new Set();
-            byCode.forEach(set => { if (set.size > 1) set.forEach(k => dupKeys.add(k)); });
-
-            return rows.map(r => {
-                const k = keyOf(r);
-                const hadErr = !!r.__errors?.has?.("lv123code");
-                const willErr = dupKeys.has(k);
-                const curKinds = r.__errorKinds ?? {};
-                const hadKind = curKinds.lv123code === "dup";
-
-                // 변화 없음 → 원래 객체 그대로 반환 (포커스/에디터 보존에 매우 중요!)
-                if (hadErr === willErr && hadKind === willErr) return r;
-
-                // 변화가 있는 행만 복제해서 수정
-                const errs = new Set(r.__errors ?? []);
-                const kinds = { ...curKinds };
-                if (willErr) {
-                    errs.add("lv123code");
-                    kinds.lv123code = "dup";
-                } else {
-                    errs.delete("lv123code");
-                    delete kinds.lv123code;
-                }
-                const next = { ...r };
-                next.__errors = errs.size ? errs : undefined;
-                next.__errorKinds = Object.keys(kinds).length ? kinds : undefined;
-                return next;
-            });
-        }, [keyOf]);
-
-        const pendingTypingRef = useRef(false); // 사용자가 셀에 입력 중인지 여부를 추적하는 ref
-        const debounceTimerRef = useRef(null); // 디바운스 타이머 id를 저장하는 ref
-
-        // 타이핑 중 변경된 데이터를 실제 state에 반영하고 중복 마킹 + 히스토리 커밋까지 수행하는 함수
-        const flushTyping = useCallback(() => {
-            if (!latestCtxRef.current) return;
-            const rowsNow = latestCtxRef.current.dataState?.data || [];
-            // 중복마크 계산
-            const withDup = applyLiveDupMarks(rowsNow);
-            // 변경이 있으면 반영
-            if (withDup !== rowsNow) {
-                latestCtxRef.current.setDataState(prev => ({ ...prev, data: withDup }));
-            }
-            // 히스토리 커밋
-            commitSmart(withDup);
-            // 더 이상 대기중인 타이핑 없음 표시
-            pendingTypingRef.current = false;
-        }, [applyLiveDupMarks]);
-
-        // flushTyping을 일정 시간(1000ms) 지연 실행하기 위한 스케줄 함수
-        // 사용자가 연속으로 입력할 때 불필요하게 매번 커밋되는 걸 방지 (디바운스)
-        const scheduleFlush = useCallback(() => {
-            pendingTypingRef.current = true;     // 기존 타이머 있으면 취소
-            if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);  // 새 타이머 설정 → 1000ms 후 flushTyping 실행
-            debounceTimerRef.current = setTimeout(flushTyping, 1000);
-        }, [flushTyping]);
-
-        const flushNow = useCallback(() => {
-            if (debounceTimerRef.current) {
-                clearTimeout(debounceTimerRef.current);
-                debounceTimerRef.current = null;
-            }
-            flushTyping(); // -> commitSmart 호출됨
-        }, [flushTyping]);
-
-        //ctrl+z, ctrl+y
-        useEffect(() => {
-            const onKey = (e) => {
-                const key = e.key?.toLowerCase?.();
-                if (!key) return;
-
-                const t = e.target;
-                const isEditable =
-                    t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
-                if (isEditable) return;
-
-                // Ctrl/Cmd + Z (Undo)
-                if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) {
-                    e.preventDefault();
-                    flushNow();
-
-                    const snap = hist.undo();
-                    if (Array.isArray(snap)) {
-                        const curLen = latestCtxRef.current?.dataState?.data?.length ?? 0;
-                        // 안전장치: 현재 데이터가 있는데 빈 스냅샷으로 되돌리려 하면 무시
-                        if (snap.length === 0 && curLen > 0) return;
-
-                        setDataState((prev) => ({ ...prev, data: snap }));
-                        const dirty = makeTab2Signature(snap) !== baselineSigRef.current;
-                        onUnsavedChange?.(dirty);
-                        onHasEditLogChange?.(dirty);
-                    }
-                    return;
-                }
-
-                // Ctrl/Cmd + Y  또는 Shift + Ctrl/Cmd + Z (Redo)
-                if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) {
-                    e.preventDefault();
-                    flushNow();
-
-                    const snap = hist.redo?.();
-                    if (Array.isArray(snap)) {
-                        setDataState((prev) => ({ ...prev, data: snap }));
-                        const dirty = makeTab2Signature(snap) !== baselineSigRef.current;
-                        onUnsavedChange?.(dirty);
-                        onHasEditLogChange?.(dirty);
-                    }
-                    return;
-                }
-            };
-
-            window.addEventListener("keydown", onKey, true);
-            return () => window.removeEventListener("keydown", onKey, true);
-        }, [hist, setDataState, onUnsavedChange, makeTab2Signature, onHasEditLogChange]);
-
-        /**
-        * 코드/텍스트 동기화 공통 처리:
-        * - 코드 변경: 텍스트를 매핑해 채우고, 없으면 비움
-        * - 텍스트 변경:
-        *    · 비우면 코드도 비움
-        *    · 기존 텍스트면 기존 코드로
-        *    · 새 텍스트면 "그 행의 코드가 비어 있을 때만" max+1 한 번 배정
-        */
-        const onItemChange = useCallback((e) => {
-            const { dataItem, field, value } = e;
-            const rowKey = keyOf(dataItem);
-
-            // 에러 테두리 제거: 사용자가 값을 수정하는 즉시 해당 셀의 마크를 지움
-            setErrorMarks(prev => {
-                if (!field || !prev.has(rowKey)) return prev;
-                const next = new Map(prev);
-                const set = new Set(next.get(rowKey));
-                set.delete(field);
-                if (set.size === 0) next.delete(rowKey); else next.set(rowKey, set);
-                return next;
-            });
-
-            setDataState(prev => {
-                const rows = prev.data || [];
-                const getKey = (r) => r?.__rowKey;
-
-                // 현재 행 제외 후 해당 codeField의 숫자 최대값 + 1
-                const maxPlus1 = (codeField) => {
-                    const maxVal = Math.max(
-                        0,
-                        ...rows
-                            .filter(r => getKey(r) !== rowKey)
-                            .map(r => parseInt(String(r?.[codeField] ?? "").replace(/\D/g, ""), 10) || 0)
+            let idx = curIdx + delta;
+            while (idx >= 0 && idx < filteredSortedCodes.length) {
+                const candidate = filteredSortedCodes[idx];
+                if (!candidate._locked) {
+                    const cellId = `${candidate.__rowKey}:${field}`;
+                    const el = document.querySelector(
+                        `input[data-tab2-cell="${CSS.escape(cellId)}"]`
                     );
-                    let next = maxVal + 1;
-                    if (next >= 9997 && next <= 9999) next = 10000;
-                    return String(next);
-                };
-
-                // 처리 대상(대/중분류) 쌍을 찾음
-                const PAIRS = [
-                    { code: "lv1code", text: "lv1", codeToText: lv1CodeToText, textToCode: lv1ToTextToCode },
-                    { code: "lv2code", text: "lv2", codeToText: lv2CodeToText, textToCode: lv2TextToCode },
-                ];
-
-                const data = rows.map(r => {
-                    if (getKey(r) !== rowKey) return r;
-
-                    const next = { ...r, [field]: value };
-                    if (next.__errors?.has?.(field)) {
-                        const copy = new Set(next.__errors);
-                        copy.delete(field);
-                        next.__errors = copy.size ? copy : undefined;
+                    if (el) {
+                        el.scrollIntoView?.({ block: "nearest" });
+                        el.focus();
+                        el.select?.();
+                    } else {
+                        pendingFocusCellRef.current = cellId;
                     }
-                    if (next.__errorKinds?.[field]) {
-                        const kinds = { ...next.__errorKinds };
-                        delete kinds[field];
-                        next.__errorKinds = Object.keys(kinds).length ? kinds : undefined;
+                    return;
+                }
+                idx += delta;
+            }
+        },
+        [filteredSortedCodes]
+    );
+
+    // 필드 편집 (충돌 방지 + 동일 분류 자동 전파 + 매핑 응답 동기화)
+    const handleFieldEdit = useCallback(
+        (row, field, rawVal) => {
+            if (!row || isCodeLocked(row) || project_lock === "수정불가") return false;
+            const res = applyCodeFieldPropagation({
+                codes,
+                responses,
+                targetRow: row,
+                field,
+                rawValue: rawVal,
+                selectedCodeKeys: gridSelectedCodes,
+            });
+
+            if (!res.ok) {
+                modalRef.current?.showErrorAlert?.("알림", res.error);
+                return false;
+            }
+            if (!res.changed) return true;
+
+            commitCodes(res.nextCodes);
+            setResponses?.(res.nextResponses);
+            return true;
+        },
+        [codes, commitCodes, gridSelectedCodes, project_lock, responses, setResponses]
+    );
+
+    const handleInlineInputKeyDown = useCallback(
+        (e, row, field) => {
+            const rKey = row.__rowKey;
+            const cellId = `${rKey}:${field}`;
+
+            if (e.key === "Enter") {
+                e.preventDefault();
+                skipNextBlurCellRef.current = cellId;
+                if (handleFieldEdit(row, field, e.currentTarget.value)) {
+                    navigateEditableRow(rKey, field, e.shiftKey ? -1 : 1);
+                } else {
+                    skipNextBlurCellRef.current = null;
+                }
+                return;
+            }
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                skipNextBlurCellRef.current = cellId;
+                if (handleFieldEdit(row, field, e.currentTarget.value)) {
+                    navigateEditableRow(rKey, field, 1);
+                } else {
+                    skipNextBlurCellRef.current = null;
+                }
+                return;
+            }
+            if (e.key === "ArrowUp") {
+                e.preventDefault();
+                skipNextBlurCellRef.current = cellId;
+                if (handleFieldEdit(row, field, e.currentTarget.value)) {
+                    navigateEditableRow(rKey, field, -1);
+                } else {
+                    skipNextBlurCellRef.current = null;
+                }
+            }
+        },
+        [handleFieldEdit, navigateEditableRow]
+    );
+
+    const handleInlineInputBlur = useCallback(
+        (e, row, field) => {
+            const cellId = `${row.__rowKey}:${field}`;
+            if (skipNextBlurCellRef.current === cellId) {
+                skipNextBlurCellRef.current = null;
+                return;
+            }
+            handleFieldEdit(row, field, e.target.value);
+        },
+        [handleFieldEdit]
+    );
+
+    const handleRowGubunChange = (row, cat) => {
+        if (project_lock === "수정불가") return;
+        const targetKey = keyOf(row);
+        const curSelected = selectedCodesRef.current;
+        const isMulti = curSelected.size > 1 && curSelected.has(targetKey);
+        const patch = buildGubunAndLockPatch(cat, null);
+        commitCodes((prev) =>
+            (prev || []).map((r) => {
+                const k = keyOf(r);
+                const hit = isMulti ? curSelected.has(k) : k === targetKey;
+                return hit ? { ...r, ...patch } : r;
+            })
+        );
+    };
+
+    const handleRowLockToggle = (row) => {
+        if (project_lock === "수정불가") return;
+        const targetKey = keyOf(row);
+        const nextLocked = !isCodeLocked(row);
+        const curSelected = selectedCodesRef.current;
+        const isMulti = curSelected.size > 1 && curSelected.has(targetKey);
+        commitCodes((prev) =>
+            (prev || []).map((r) => {
+                const k = keyOf(r);
+                const hit = isMulti ? curSelected.has(k) : k === targetKey;
+                if (!hit) return r;
+                return { ...r, ...buildGubunAndLockPatch(getGubunCategory(r), nextLocked) };
+            })
+        );
+    };
+
+    const handleDeleteSingle = (row) => {
+        if (!row || project_lock === "수정불가") return;
+        const targetKey = keyOf(row);
+        if (gridSelectedCodes.size > 1 && gridSelectedCodes.has(targetKey)) {
+            handleBatchDelete();
+            return;
+        }
+        if (isCodeLocked(row)) return;
+        const targetCode = cleanStr(row.lv123code ?? row.code_num);
+
+        modalRef.current?.showConfirm?.(
+            "알림",
+            `보기 [${targetCode}] '${row.lv3 || "(미입력)"}'을(를) 삭제하시겠습니까?\n매핑된 응답은 미분류 처리됩니다.`,
+            {
+                btns: [
+                    { title: "취소" },
+                    {
+                        title: "삭제",
+                        click: () => {
+                            commitCodes((prev) =>
+                                (prev || []).filter((r) => keyOf(r) !== targetKey)
+                            );
+                            if (targetCode && setResponses) {
+                                setResponses((prevResp) =>
+                                    (prevResp || []).map((resp) =>
+                                        cleanStr(resp.lv123code) === targetCode
+                                            ? {
+                                                ...resp,
+                                                lv1: "",
+                                                lv1code: "",
+                                                lv2: "",
+                                                lv2code: "",
+                                                lv3: "",
+                                                lv3code: "",
+                                                lv123code: "",
+                                                _edited: true,
+                                            }
+                                            : resp
+                                    )
+                                );
+                            }
+                            setGridSelectedCodes((prev) => {
+                                const next = new Set(prev);
+                                next.delete(targetKey);
+                                return next;
+                            });
+                        },
+                    },
+                ],
+            }
+        );
+    };
+
+    const handleBatchDelete = () => {
+        if (gridSelectedCodes.size === 0 || project_lock === "수정불가") return;
+        const selectedRows = activeCodes.filter((r) => gridSelectedCodes.has(r.__rowKey));
+        const unlocked = selectedRows.filter((r) => !r._locked);
+        const lockedCnt = selectedRows.length - unlocked.length;
+
+        if (unlocked.length === 0) {
+            modalRef.current?.showAlert?.(
+                "알림",
+                "선택한 보기가 모두 '수정불가(잠금)' 상태이므로 삭제되지 않도록 보호됩니다."
+            );
+            return;
+        }
+
+        modalRef.current?.showConfirm?.(
+            "알림",
+            `수정가능 보기 ${unlocked.length}건을 삭제하시겠습니까?${lockedCnt > 0 ? `\n(수정불가 보기 ${lockedCnt}건은 자동 보호됩니다.)` : ""
+            }`,
+            {
+                btns: [
+                    { title: "취소" },
+                    {
+                        title: "삭제",
+                        click: () => {
+                            const delKeys = new Set(unlocked.map((r) => r.__rowKey));
+                            const delCodes = new Set(
+                                unlocked.map((r) => r._subCode).filter(Boolean)
+                            );
+                            commitCodes((prev) =>
+                                (prev || []).filter((r) => !delKeys.has(keyOf(r)))
+                            );
+                            if (delCodes.size > 0 && setResponses) {
+                                setResponses((prevResp) =>
+                                    (prevResp || []).map((resp) =>
+                                        delCodes.has(cleanStr(resp.lv123code))
+                                            ? {
+                                                ...resp,
+                                                lv1: "",
+                                                lv1code: "",
+                                                lv2: "",
+                                                lv2code: "",
+                                                lv3: "",
+                                                lv3code: "",
+                                                lv123code: "",
+                                                _edited: true,
+                                            }
+                                            : resp
+                                    )
+                                );
+                            }
+                            setGridSelectedCodes(new Set());
+                        },
+                    },
+                ],
+            }
+        );
+    };
+
+    const handleAddRow = () => {
+        if (project_lock === "수정불가") return;
+        const nextCode = getNextAutoSubCode(activeCodes);
+        const newKey = `code_new_${Date.now()}`;
+        const patch = buildGubunAndLockPatch("자동분석", false);
+        const newRow = {
+            no: activeCodes.length + 1,
+            qnum: qnum || "",
+            lv1code: "",
+            lv1: "",
+            lv2code: "",
+            lv2: "",
+            lv123code: nextCode,
+            code_num: nextCode,
+            lv3: "",
+            ...patch,
+            __rowKey: newKey,
+        };
+        pendingFocusCellRef.current = `${newKey}:lv3`;
+        commitCodes((prev) => [...(prev || []), newRow]);
+    };
+
+    const handleResetUnlocked = () => {
+        if (project_lock === "수정불가") return;
+        const unlocked = activeCodes.filter((c) => !c._locked);
+        if (unlocked.length === 0) {
+            modalRef.current?.showAlert?.("알림", "초기화할 수정가능 보기가 없습니다.");
+            return;
+        }
+        modalRef.current?.showConfirm?.(
+            "알림",
+            `수정가능 보기 ${unlocked.length}건을 모두 초기화하시겠습니까?\n(수정불가 보기 ${counts.locked}건은 보호 유지됩니다.)`,
+            {
+                btns: [
+                    { title: "취소" },
+                    {
+                        title: "초기화",
+                        click: () => {
+                            const delCodes = new Set(
+                                unlocked.map((r) => r._subCode).filter(Boolean)
+                            );
+                            commitCodes((prev) => (prev || []).filter((r) => isCodeLocked(r)));
+                            if (delCodes.size > 0 && setResponses) {
+                                setResponses((prevResp) =>
+                                    (prevResp || []).map((resp) =>
+                                        delCodes.has(cleanStr(resp.lv123code))
+                                            ? {
+                                                ...resp,
+                                                lv1: "",
+                                                lv1code: "",
+                                                lv2: "",
+                                                lv2code: "",
+                                                lv3: "",
+                                                lv3code: "",
+                                                lv123code: "",
+                                                _edited: true,
+                                            }
+                                            : resp
+                                    )
+                                );
+                            }
+                            setGridSelectedCodes(new Set());
+                        },
+                    },
+                ],
+            }
+        );
+    };
+
+    // Shift+클릭 / Ctrl+클릭 캡처 핸들러 (인풋·콤보박스·드롭다운 위에서도 다중 행 선택 즉시 동작)
+    const handleRowMouseDownCapture = useCallback(
+        (row, rowIdx, e) => {
+            if (e.button !== 0) return;
+            // Kendo DropDownList 팝업 등 document.body 포털에서 버블링된 합성 이벤트 차단
+            if (!e.currentTarget.contains(e.target)) return;
+            if (e.target.closest('input[type="checkbox"]')) return;
+
+            const rKey = row.__rowKey;
+            if (e.shiftKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                document.activeElement?.blur?.();
+                window.getSelection?.()?.removeAllRanges?.();
+                const anchor = anchorIndexRef.current != null ? anchorIndexRef.current : rowIdx;
+                if (anchorIndexRef.current == null) anchorIndexRef.current = rowIdx;
+                const start = Math.min(anchor, rowIdx);
+                const end = Math.max(anchor, rowIdx);
+                setGridSelectedCodes((prev) => {
+                    const next = e.ctrlKey || e.metaKey ? new Set(prev) : new Set();
+                    for (let i = start; i <= end; i++) {
+                        if (filteredSortedCodes[i]) next.add(filteredSortedCodes[i].__rowKey);
                     }
-                    const pair = PAIRS.find(p => p.code === field || p.text === field);
-                    if (!pair) return next; // 소분류나 다른 필드는 그대로
-
-                    const v = String(value ?? "").trim();
-
-                    // 1) 코드 입력 → 텍스트 동기화
-                    if (field === pair.code) {
-                        next[pair.text] = v ? (pair.codeToText.get(v) || "") : "";
-                        return next;
-                    }
-
-                    // 2) 텍스트 입력 → 코드 동기화
-                    if (!v) {                         // 빈 텍스트 → 코드도 비움
-                        next[pair.code] = "";
-                        return next;
-                    }
-
-                    const known = pair.textToCode.get(v.toLowerCase());
-                    if (known) {                      // 기존 텍스트 → 기존 코드로
-                        next[pair.code] = known;
-                        return next;
-                    }
-
-                    // 새 텍스트
-                    const curCode = String(r?.[pair.code] ?? "").trim();
-
-                    // 현재 코드가 다른 행에서 쓰이고 있다면 그 "기준 텍스트"를 하나 가져옴
-                    let otherText = "";
-                    if (curCode) {
-                        const other = rows.find(o =>
-                            getKey(o) !== rowKey && String(o?.[pair.code] ?? "").trim() === curCode
-                        );
-                        otherText = other ? String(other?.[pair.text] ?? "").trim() : "";
-                    }
-
-                    // (A) 코드가 없으면 → 최초 등록: max+1
-                    // (B) 코드가 있고, 그 코드의 기준 텍스트와 다르게 바꾸면 → 탈착: max+1
-                    // (C) 그 외(기준 없거나 동일) → 코드 유지 (타이핑 중 반복 증가 방지)
-                    if (!curCode || (otherText && otherText !== v)) {
-                        next[pair.code] = maxPlus1(pair.code);
-                    }
-
                     return next;
                 });
-                // 타이핑 중엔 중복마킹/히스토리 지연
-                scheduleFlush();
-                // 저장 버튼은 즉각 활성화 (사용자 버벅임 체감 방지)
-                onUnsavedChange?.(true);
-                onHasEditLogChange?.(true);
-                return { ...prev, data };
-            });
-        }, [
-            setDataState, keyOf,
-            lv1CodeToText, lv1ToTextToCode,
-            lv2CodeToText, lv2TextToCode, scheduleFlush
-        ]);
-
-        // 삭제 로직: 새 행은 즉시 제거, 기존 행은 토글 (단, 해제 시 중복이면 토글 차단)
-        const onClickDeleteCell = useCallback((cellProps) => {
-            rememberScroll(); // 스크롤 저장
-            const row = cellProps.dataItem;
-            const key = keyOf(row);
-            // 새 행은 제거
-            if (row.__isNew) {
-                setDataState(prev => {
-                    const kept = (prev.data || []).filter(r => keyOf(r) !== key);
-                    const reindexed = kept.map((r, idx) => {
-                        const next = { ...r, no: idx + 1 };
-                        next[COMPOSITE_KEY_FIELD] = makeRowKey(next);
-                        return next;
-                    });
-                    const withDup = applyLiveDupMarks(reindexed);
-                    commitSmart(withDup);
-                    return { ...prev, data: withDup };
-                });
                 return;
             }
 
-            // 삭제대기 해제(=현재 __pendingDelete 가 true) 시, 해제하면 중복 생기는지 사전검사
-            if (row.__pendingDelete === true) {
-                const prevRows = latestCtxRef.current?.dataState?.data || [];
-                // "해제"가 된 것으로 가정하고 시뮬레이션
-                const simulated = prevRows.map(r =>
-                    keyOf(r) === key ? { ...r, __pendingDelete: false } : r
-                );
-
-                // pending 제외 기준으로 중복 체크하되, 방금 해제한 행은 포함됨
-                const dups = findLv123Duplicates(simulated);
-                const code = String(row.lv123code ?? "").trim();
-                const hasDupOnTarget = !!code && dups.some(d => d.code === code);
-
-                if (hasDupOnTarget) {
-                    // 해제 금지: 행은 계속 "삭제대기(취소 버튼)" 상태 유지
-                    modal.showErrorAlert(
-                        "알림",
-                        `소분류코드 '${code}'가 이미 다른 행에 존재합니다.\n삭제 취소를 할 수 없습니다.`
-                    );
-                    return;
-                }
-            }
-
-            // 여기까지 왔으면 토글 허용
-            setDataState(prev => {
-                const next = (prev.data || []).map(r =>
-                    keyOf(r) === key
-                        ? { ...r, __pendingDelete: !r.__pendingDelete, inEdit: false }
-                        : r
-                );
-                const withDup = applyLiveDupMarks(next);
-                commitSmart(withDup);
-                return { ...prev, data: withDup };
-            });
-        }, [keyOf, findLv123Duplicates, applyLiveDupMarks]);
-
-        // 추가버튼 클릭 이벤트
-        const addButtonClick = useCallback(() => {
-            rememberScroll(); // 스크롤 저장
-            const data = Array.isArray(dataState?.data) ? [...dataState.data] : [];
-            const insertIndex = data.length;
-            const maxLv123 = Math.max(
-                0,
-                ...data.map(r => parseInt(String(r?.lv123code ?? "").replace(/\D/g, ""), 10) || 0)
-            );
-            let nextVal = maxLv123 + 1;
-            if (nextVal >= 9997 && nextVal <= 9999) nextVal = 10000;
-            const nextLv123 = String(nextVal);
-            const tmpKey =
-                (typeof crypto !== "undefined" && crypto.randomUUID)
-                    ? crypto.randomUUID()
-                    : `tmp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-            const newRow = {
-                no: insertIndex + 1,
-                qnum: qnum,
-                lv1code: "",
-                lv1: "",
-                lv2code: "",
-                lv2: "",
-                lv123code: nextLv123,
-                lv3: "",
-                ex_sum: "0",
-                ex_gubun: "분석(수정가능)",
-                inEdit: true,
-                __isNew: true,
-                __rowKey: tmpKey,
-            };
-            data.splice(insertIndex, 0, newRow);
-            const withDup = applyLiveDupMarks(data);
-            commitSmart(withDup);
-            setDataState((prev) => ({ ...prev, data: withDup }));
-
-            // 새 행 추가 후 스크롤 맨 아래로 이동
-            requestAnimationFrame(() => {
-                const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
-                if (grid) {
-                    grid.scrollTo({
-                        top: grid.scrollHeight,
-                        behavior: "smooth", // 부드럽게 이동 (깜빡임 방지)
-                    });
-                    scrollTopRef.current = grid.scrollHeight; // 다음 복원 루프용
-                }
-            });
-        }, [applyLiveDupMarks, qnum]);
-
-        // 행 클릭 시 편집기능 open
-        const onRowClick = useCallback((e) => {
-            rememberScroll();
-            const clicked = e.dataItem;
-
-            // 보기유형이 설문(수정불가)면 편집 진입 막기 
-            if (clicked?.ex_gubun === '설문(수정불가)') return;
-
-            const clickedKey = getKey(clicked);
-            setDataState(prev => ({
-                ...prev,
-                data: (prev.data || []).map(r => ({
-                    ...r,
-                    // 클릭한 행만 편집모드로, 나머지는 해제
-                    inEdit: getKey(r) === clickedKey
-                }))
-            }));
-        }, []);
-
-        /* 저장: 보류 삭제 커밋 + 번호/키 재계산 + __isNew 해제 + API 호출 */
-        const saveChanges = useCallback(async () => {
-            if (typeof document !== "undefined" && document.activeElement) {
-                document.activeElement.blur();
-            }
-
-            // 0) 현재 그리드를 기반으로 최종 데이터 생성
-            const prev = latestCtxRef.current?.dataState?.data ?? [];
-
-            // 1) 유효성 검사
-            const { ok, errors, rowMarks, rowKinds } = validateRows(prev);
-            if (!ok) {
-                // 행 객체 기준으로 바로 __errors 세팅
-                setDataState(prevState => {
-                    const nextRows = (prevState?.data || []).map(r => {
-                        const set = rowMarks.get(r);
-                        const kinds = rowKinds.get(r);
-                        if (!set) {
-                            const { __errors, ...rest } = r;
-                            return rest;              // 이전 에러 제거
-                        }
-                        return { ...r, __errors: new Set(set), __errorKinds: kinds };
-                    });
-                    //requestAnimationFrame(() => focusFirstErrorCell()); // 포커스 이동  
-                    return { ...prevState, data: nextRows };
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                document.activeElement?.blur?.();
+                anchorIndexRef.current = rowIdx;
+                setGridSelectedCodes((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(rKey)) next.delete(rKey);
+                    else next.add(rKey);
+                    return next;
                 });
-                setTimeout(() => setErrorMarks(new Map()), 150);
-                modal.showErrorAlert("알림", errors.join("\n"));
-                return false; // 저장 중단
             }
+        },
+        [filteredSortedCodes]
+    );
 
-            // 2) 보류 삭제 반영 + 재번호 + 키/플래그 정리
-            const kept = prev.filter(r => !r.__pendingDelete);         // 보류 삭제 반영
-            const normalized = kept.map((r, idx) => {
-                const next = {
-                    ...r,
-                    no: idx + 1,                   // 재번호
-                    __pendingDelete: false,        // 정리
-                    __isNew: false,                // 새 행 해제 (이제 삭제버튼 표시 가능)
-                };
-                next[COMPOSITE_KEY_FIELD] = makeRowKey(next); // 복합키 재계산
+    // 일반 마우스 클릭 / 드래그 다중 행 선택 (포털 팝업 및 입력 컨트롤 클릭 시에는 기존 다중 선택 상태 유지)
+    const handleRowMouseDown = useCallback((row, rowIdx, e) => {
+        if (e.button !== 0 || e.shiftKey || e.ctrlKey || e.metaKey) return;
+        // Kendo 팝업(.k-animation-container)이나 자동완성 포털 클릭이 React 트리로 버블링될 때 선택 초기화 방지
+        if (!e.currentTarget.contains(e.target)) return;
+        if (
+            e.target.closest("input") ||
+            e.target.closest("button") ||
+            e.target.closest("select") ||
+            e.target.closest(".k-dropdownlist") ||
+            e.target.closest(".k-picker") ||
+            e.target.closest(".osa-ac-wrap")
+        ) {
+            return;
+        }
+
+        const rKey = row.__rowKey;
+        draggingRef.current = true;
+        multiRowDragRef.current = false;
+        anchorIndexRef.current = rowIdx;
+        setExplicitChecked(false);
+        setGridSelectedCodes(new Set([rKey]));
+    }, []);
+
+    const handleRowMouseEnter = useCallback(
+        (rowIdx) => {
+            if (!draggingRef.current || anchorIndexRef.current == null) return;
+            if (rowIdx === anchorIndexRef.current && !multiRowDragRef.current) return;
+            multiRowDragRef.current = true;
+            document.body.classList.add("osa-is-row-dragging");
+            window.getSelection?.()?.removeAllRanges?.();
+            const start = Math.min(anchorIndexRef.current, rowIdx);
+            const end = Math.max(anchorIndexRef.current, rowIdx);
+            const next = new Set();
+            for (let i = start; i <= end; i++) {
+                if (filteredSortedCodes[i]) next.add(filteredSortedCodes[i].__rowKey);
+            }
+            setGridSelectedCodes(next);
+        },
+        [filteredSortedCodes]
+    );
+
+    const allChecked =
+        filteredSortedCodes.length > 0 &&
+        filteredSortedCodes.every((r) => gridSelectedCodes.has(r.__rowKey));
+
+    const toggleAll = (checked) => {
+        if (checked) {
+            setExplicitChecked(true);
+            setGridSelectedCodes(new Set(filteredSortedCodes.map((r) => r.__rowKey)));
+        } else {
+            setExplicitChecked(false);
+            setGridSelectedCodes(new Set());
+        }
+    };
+
+    const handleCheckboxClick = (e, rKey, rowIdx) => {
+        e.stopPropagation();
+        setExplicitChecked(true);
+        if (e.shiftKey && anchorIndexRef.current != null) {
+            const start = Math.min(anchorIndexRef.current, rowIdx);
+            const end = Math.max(anchorIndexRef.current, rowIdx);
+            setGridSelectedCodes((prev) => {
+                const shouldCheck = !prev.has(rKey);
+                const next = new Set(prev);
+                for (let i = start; i <= end; i++) {
+                    const k = filteredSortedCodes[i]?.__rowKey;
+                    if (!k) continue;
+                    if (shouldCheck) next.add(k);
+                    else next.delete(k);
+                }
                 return next;
             });
+            return;
+        }
 
-            // 3) 저장 API 호출
-            try {
-                loadingSpinner?.show();
-                const payload = buildSavePayload(normalized, qnum);
-                const res = await optionSaveData.mutateAsync({ ...payload, skipSpinner: true });
-                if (String(res?.success) === '777') {
-                    setErrorMarks(new Map());   //에러 초기화
-                    // modal.showAlert("알림", "소분류 드롭다운 목록이 적용되었습니다."); // 성공 팝업 표출
-                    onSaved?.();  // 미저장 플래그 해제 요청(부모)
-                    onUnsavedChange?.(false);                // 미저장 해제
-                    onHasEditLogChange?.(false);
-                    baselineAfterReloadRef.current = true;   // 재조회 후 베이스라인 재설정
-                    await handleSearch({ skipSpinner: true }); // 재조회
+        anchorIndexRef.current = rowIdx;
+        setGridSelectedCodes((prev) => {
+            const next = new Set(prev);
+            if (next.has(rKey)) next.delete(rKey);
+            else next.add(rKey);
+            return next;
+        });
+    };
 
-                    return true;  //성공
-                } else if (String(res?.success) === '762') {
-                    modal.showErrorAlert("에러", res?.message); //"보기 코드 중복, 빈값 발견"
-                    return false;
-                } else {
-                    modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
-                    return false;
-                };
-            } catch (err) {
-                modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
-                return false;   // 실패 시 그리드 상태 변경 안 함
-            } finally {
-                setTimeout(() => {
-                    loadingSpinner?.hide();
-                }, 500);
-            }
+    const renderSortBadge = (field) => {
+        const cur = sort.find((s) => s.field === field);
+        if (!cur) return <span className="osa-sort-icon">⇅</span>;
+        return <span className="osa-sort-icon active">{cur.dir === "asc" ? "↑" : "↓"}</span>;
+    };
 
-        }, [qnum]);
+    const showLv1 = String(lvCode) === "3";
+    const showLv2 = String(lvCode) === "2" || String(lvCode) === "3";
+    const hasActiveFilter =
+        Boolean(colFilters.lv1code.trim()) ||
+        Boolean(colFilters.lv1.trim()) ||
+        Boolean(colFilters.lv2code.trim()) ||
+        Boolean(colFilters.lv2.trim()) ||
+        Boolean(colFilters.lv123code.trim()) ||
+        Boolean(colFilters.lv3.trim()) ||
+        Boolean(colFilters.freq.trim()) ||
+        colFilters.gubun !== "all" ||
+        colFilters.lockState !== "all";
 
-        // 부모에서 호출할 수 있도록 ref에 연결
-        saveChangesRef.current = saveChanges;
-
-        // 보류 행 회색 처리
-        const rowRender = useCallback((trEl, rowProps) => {
-            if (!rowProps.dataItem) {
-                return trEl;   // 절대 커스텀 이벤트 넣지 말기
-            }
-            const pending = rowProps?.dataItem?.__pendingDelete === true;
-            const cls = `${trEl.props.className || ''} ${pending ? 'row-pending-delete' : ''}`;
-            return React.cloneElement(trEl, { ...trEl.props, className: cls });
-        }, []);
-
-        // 유효성 체크 (모든 행의 중복 / 빈값 검사 수행)
-        const validateRows = (allRows) => {
-            // 1) 저장 대상만 추리기: 삭제 예정 행 제외
-            const rows = (allRows || []).filter((r) => r?.__pendingDelete !== true);
-            const errors = [];
-            const rowMarks = new Map(); // WeakMap<object, Set<string>>
-            const rowKinds = new Map(); // row -> { [field]: 'required'|'dup' };
-            const mark = (row, field, message, kind) => {
-                const set = rowMarks.get(row) ?? new Set();
-                set.add(field);
-                rowMarks.set(row, set);
-
-                const kinds = rowKinds.get(row) ?? {};
-                if (kind) kinds[field] = kind;
-                rowKinds.set(row, kinds);
-
-                if (message) errors.push(message);
-            };
-            // 2) 소분류 코드/소분류만 필수
-            const requiredFields = [
-                { f: "lv123code", label: "소분류 코드" },
-                { f: "lv3", label: "소분류" },
-            ];
-
-            // 3) 필수값 체크
-            rows.forEach((r) => {
-                requiredFields.forEach(({ f, label }) => {
-                    const v = String(r?.[f] ?? "").trim();
-                    if (!v) mark(r, f, `${label}은(는) 필수입니다. (행 번호: ${r?.no ?? "?"})`, "required");
-                });
-            });
-
-            // 4) 중복 체크: 무조건 소분류코드(lv123code)만 검사
-            const codeToRows = new Map(); // code -> row[]
-            rows.forEach((r) => {
-                const c = String(r?.lv123code ?? "").trim().toLowerCase();
-                if (!c) return;
-                if (!codeToRows.has(c)) codeToRows.set(c, []);
-                codeToRows.get(c).push(r);
-            });
-            codeToRows.forEach((arr, code) => {
-                if (arr.length > 1) {
-                    const nos = arr.map(r => r?.no ?? "?").join(", ");
-                    // 해당 코드가 있는 모든 행의 'lv123code' 셀에 마크
-                    arr.forEach(r => mark(r, "lv123code", null, "dup"));
-                    errors.push(`소분류코드 '${code}'가 중복입니다. (행 번호: ${nos})`);
-                }
-            });
-            return { ok: errors.length === 0, errors, rowMarks, rowKinds };
-        };
-
-        // 컬럼 name
-        const NAMED_FIELDS = new Set([
-            "lv1", "lv1code",
-            "lv2", "lv2code",
-            "lv3", "lv123code",
-        ]);
-
-        // textarea로 쓸 '이름' 필드
-        const TEXTAREA_FIELDS = new Set(["lv1", "lv2", "lv3"]);
-        // 그리드 밖 클릭 시 무조건 닫기
-        useEffect(() => {
-            const closeAllEditors = (evt) => {
-                const root = gridRootRef.current;
-                // 그리드 영역 밖을 클릭한 경우만 닫기
-                if (root && !root.contains(evt.target)) {
-                    setDataState((prev) => ({
-                        ...prev,
-                        data: (prev.data || []).map((r) => (r.inEdit ? { ...r, inEdit: false } : r)),
-                    }));
-                }
-            };
-            // capture 단계에서 잡아주면 Kendo 내부 핸들러보다 먼저 닫힘
-            document.addEventListener("pointerdown", closeAllEditors, true);
-            return () => document.removeEventListener("pointerdown", closeAllEditors, true);
-        }, []);
-
-        const NamedTextCell = useCallback((cellProps) => {
-            const { dataItem, field } = cellProps;
-            const editable = dataItem?.inEdit && NAMED_FIELDS.has(field);
-
-            // 에러 감지
-            const hasError = dataItem?.__errors?.has?.(field);
-            const errorKind = dataItem?.__errorKinds?.[field];
-            const errorLabel = errorKind === "dup" ? "중복" : "빈값";
-
-            const rowKey = keyOf(dataItem);
-            const inputId = `${field}-${rowKey}`;   // 고유 id
-            const initialValue = dataItem?.[field] ?? "";
-
-            // blur 시점에만 상위(onItemChange)로 최종 값 전달
-            const handleBlurClose = (e) => {
-                const finalValue = e.target.value;
-
-                // 1) GridData(onItemChange)로 최종 값 전달
-                cellProps.onChange?.({
-                    dataItem,
-                    field,
-                    value: finalValue,
-                });
-
-                // 2) 편집 모드 해제
-                setDataState((prev) => ({
-                    ...prev,
-                    data: (prev.data || []).map((r) =>
-                        r.__rowKey === dataItem.__rowKey ? { ...r, inEdit: false } : r
-                    ),
-                }));
-            };
-
-            // 엔터 키 입력 시 편집 종료 (blur 유발)
-            const handleKeyDown = (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault(); // 줄바꿈 방지 (textarea)
-                    e.target.blur();    // blur 이벤트 발생 -> handleBlurClose 실행됨
-                }
-            };
-
-            // 일반 셀 (편집 아닐 때)
-            if (!editable) {
-                return (
-                    <td className={`k-table-td ${hasError ? "cell-error" : ""}`}>
-                        {dataItem?.[field] ?? ""}
-                        {hasError && <span className="cell-error-badge">{errorLabel}</span>}
-                    </td>
-                );
-            }
-
-            return (
-                <td
-                    className={`k-table-td ${hasError ? "cell-error" : ""}`}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <label htmlFor={inputId} className="hidden">
-                        {field}
-                    </label>
-
-                    {TEXTAREA_FIELDS.has(field) ? (
-                        <textarea
-                            id={inputId}
-                            name={field}
-                            // IME 보호: controlled → uncontrolled 로 변경
-                            defaultValue={initialValue}
-                            onBlur={handleBlurClose}
-                            onKeyDown={handleKeyDown}
-                            rows={1}
-                            style={{
-                                width: "100%",
-                                minHeight: 34,
-                                lineHeight: 1.4,
-                                resize: "vertical",
-                            }}
-                            className="k-textarea k-input-solid"
-                        />
-                    ) : (
-                        <input
-                            id={inputId}
-                            name={field}
-                            // value → defaultValue
-                            defaultValue={initialValue}
-                            onBlur={handleBlurClose}
-                            onKeyDown={handleKeyDown}
-                            autoComplete="on"
-                            className="k-input k-input-solid"
-                            style={{ width: "100%" }}
-                        />
-                    )}
-                    {hasError && <span className="cell-error-badge">{errorLabel}</span>}
-                </td>
-            );
-        }, [keyOf, setDataState]);
-
-        // --- API 요청 페이로드 변환: 현재 그리드 행 -> 저장 포맷 ---
-        const buildSavePayload = (rows, qnum) => {
-            // __pendingDelete 행은 제외(=실제 삭제 반영), __isNew 플래그/로컬키는 서버로 안보냄
-            const cleaned = (rows || [])
-                .filter(r => r.__pendingDelete !== true)
-                .map((r) => ({
-                    lv1: String(r.lv1 ?? ""),
-                    lv2: String(r.lv2 ?? ""),
-                    lv3: String(r.lv3 ?? ""),
-                    qnum: String(qnum ?? ""),
-                    lv1code: String(r.lv1code ?? ""),
-                    lv2code: String(r.lv2code ?? ""),
-                    lv321code: String(r.lv321code ?? ""),
-                    summary: String(r.summary ?? ""),
-                    ex_gubun: String(r.ex_gubun ?? "분석(수정가능)"),
-                    lv23code: String(r.lv23code ?? ""),
-                    lv123code: String(r.lv123code ?? ""),
-                    representative_response: String(r.representative_response ?? ""),
-                }));
-
-            return {
-                user: auth?.user?.userId || "",
-                projectnum: projectnum,
-                qnum: qnum,
-                gb: "lb",
-                lvcode: String(lvCode ?? ""),
-                data: cleaned,
-            };
-        };
-
-        // 삭제 안내 띄우기: 하나라도 __pendingDelete === true 이면 표시
-        const hasPendingDelete = useMemo(() => {
-            const rows = dataState?.data || [];
-            return rows.some(r => r?.__pendingDelete === true);
-        }, [dataState?.data]);
-
-        // 마지막 행 key (삭제대기/설문 제외) => 추가버튼 표출
-        const lastAddableKey = useMemo(() => {
-            const rows = dataState?.data || [];
-            // 뒤에서부터 훑어서 삭제대기/설문 제외한 마지막 유효 행을 찾음
-            for (let i = rows.length - 1; i >= 0; i--) {
-                const r = rows[i];
-                if (r?.__pendingDelete === true) continue;
-                return keyOf(r);
-            }
-            // 전부 삭제대기/설문이면 물리적 마지막 행을 fallback(없으면 null)
-            return rows.length ? keyOf(rows[rows.length - 1]) : null;
-        }, [dataState?.data, keyOf]);
-
-        useEffect(() => {
-            return () => {
-                if (debounceTimerRef.current) {
-                    clearTimeout(debounceTimerRef.current);
-                    debounceTimerRef.current = null;
-                }
-            };
-        }, []);
-
-        return (
-            <Fragment>
-                <div className="meta-header-layout">
-                    <div className="meta-header-left meta2">
-                        <div className="row1" style={{ color: '#888', fontSize: '13px', textAlign: 'left', marginLeft: '0', paddingLeft: '0' }}>업데이트 날짜: {dataState?.data?.[0]?.update_date ?? '-'}</div>
-                        <div className="row2" style={{ textAlign: "left", display: "flex", alignItems: "center", gap: "10px", marginTop: '4px' }}>
-                            <GridDataCount total={filteredCount} label="필터 결과" unit="건" />
-                        </div>
-                    </div>
-                    <div className="meta-header-right" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
-                        <Button
-                            themeColor="primary"
-                            className="btnM"
-                            onClick={() => {
-                                const hasAnalysisData = (dataState?.data || []).some(r => r.ex_gubun === '분석(수정가능)');
-                                if (!hasAnalysisData) {
-                                    modal.showAlert("알림", "보기유형이 분석(수정가능)인 데이터가 존재하지 않습니다.");
-                                    return;
-                                }
-
-                                modal.showConfirm("알림", "보기유형이 분석(수정가능)인 모든 보기 레이블을 삭제하시겠습니까?", {
-                                    btns: [
-                                        {
-                                            title: "취소",
-                                            className: "btnM btnTxt type01",
-                                            click: () => { }
-                                        },
-                                        {
-                                            title: "확인",
-                                            className: "btnM",
-                                            themeColor: "primary",
-                                            click: async () => {
-                                                try {
-                                                    const payload = {
-                                                        user: auth?.user?.userId || "",
-                                                        projectnum: sessionStorage.getItem("projectnum") ?? "",
-                                                        qnum: sessionStorage.getItem("qnum") ?? "",
-                                                        gb: "alldel"
-                                                    };
-                                                    const res = await optionSaveData.mutateAsync(payload);
-                                                    if (String(res?.success) === '777') {
-                                                        // 성공 시 재조회
-                                                        handleSearch();
-                                                        modal.showAlert("알림", "초기화 되었습니다.");
-                                                    } else {
-                                                        modal.showErrorAlert(res?.success || "에러", res?.message || res?.contents || "초기화 중 오류가 발생했습니다.");
-                                                    }
-                                                } catch (e) {
-                                                    modal.showErrorAlert("에러", "초기화 중 오류가 발생했습니다.");
-                                                }
-                                            }
-                                        }
-                                    ]
-                                });
-                            }}
-                        >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <RotateCcw size={16} />
-                                전체 초기화
-                            </div>
-                        </Button>
-                        <Button
-                            themeColor="primary"
-                            className="btnM"
-                            onClick={addButtonClick}
-                        >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <Plus size={16} />
-                                보기 데이터 추가
-                            </div>
-                        </Button>
-                    </div>
-                </div>
-                {/* 삭제 안내 배너 */}
-                {hasPendingDelete && (
-                    <div style={{ textAlign: "right" }}>
-                        <span
-                            style={{
-                                color: "#E74C3C",
-                                padding: "6px 10px",
-                                fontSize: 15,
-                                fontWeight: 600,
-                            }}
-                        >
-                            삭제 시 해당 코드는 응답데이터에서도 초기화됩니다.
-                        </span>
-                    </div>
-                )}
-                <div id="grid_01" className={`cmn_grid singlehead ${isLeftOpen && String(lvCode) !== "1" ? "force-scroll" : ""}`} ref={gridRootRef}>
-                    <KendoGrid
-                        // key={`lv-${lvCode}`}
-                        key="tab2-grid"
-                        parentProps={{
-                            data: dataWithProxies,
-                            dataItemKey: "__rowKey",
-                            idGetter: (r) => r.__rowKey,
-                            onProcessedDataUpdate: (arr) => {
-                                // 
-                            },
-                            editField,
-                            onItemChange,
-                            selectedState,
-                            setSelectedState,
-                            rowRender,
-                            onRowClick,
-                            // useClientProcessing: true,                      
-                            sortable: { mode: "multiple", allowUnsort: true },
-                            filterable: true,
-                            sort: mappedSort,
-                            filter: filter,
-                            sortChange: ({ sort: next }) => {
-                                const nextRaw = (next || []).map(d => {
-                                    const orig = Object.keys(proxyField).find(k => proxyField[k] === d.field);
-                                    return { ...d, field: orig || d.field };
-                                });
-                                setSort(nextRaw ?? []);
-                                onPrefsChange?.({ sort: nextRaw ?? [] });
-                            },
-                            filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
-                            pinnedBottomPredicate: (r) => r.__isNew, // 새 행은 항상 맨 아래 고정
-                            noRecordsExtra: (
-                                // 데이터가 하나도 없을 때 “추가” 버튼 표출 
-                                <Button
-                                    themeColor="primary"
-                                    className="btnM"
-                                    onClick={addButtonClick}
-                                >
-                                    + 보기 데이터 추가
-                                </Button>
-                            ),
-                        }}
-                    >
-                        {effectiveColumns.filter(c => c.show !== false).map((c) => {
-                            if (c.field === 'delete') {
-                                return (
-                                    <Column
-                                        key={c.field}
-                                        field="delete"
-                                        title={c.title}
-                                        width={c.width}
-                                        sortable={false}
-                                        columnMenu={undefined}
-                                        cell={(props) => {
-                                            const row = props.dataItem;
-
-                                            // 보기유형이 설문(수정불가)이면 삭제 버튼 숨김
-                                            if (row?.ex_gubun === '설문(수정불가)') return <td />;
-                                            const pending = props.dataItem.__pendingDelete === true;
-                                            return (
-                                                <td
-                                                    style={{ textAlign: "center" }}
-                                                    onMouseDown={(e) => e.stopPropagation()}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
-                                                    <Button
-                                                        className="btnM"
-                                                        themeColor={pending ? "secondary" : "primary"}
-                                                        onClick={() => onClickDeleteCell(props)}
-                                                        style={{ borderRadius: "8px" }}
-                                                    >
-                                                        {pending ? "취소" : "삭제"}
-                                                    </Button>
-                                                </td>
-                                            );
-                                        }}
-                                    />
-                                );
-                            }
-
-                            const useNamed = ["lv1", "lv1code", "lv2", "lv2code", "lv3", "lv123code"].includes(c.field);
-
-                            // 코드 컬럼이면 proxy 필드로 정렬
-                            if (["lv1code", "lv2code", "lv123code"].includes(c.field)) {
-                                const proxy = proxyField[c.field] ?? `__sort__${c.field}`;
-                                return (
-                                    <Column
-                                        key={c.field}
-                                        field={proxy}                    // 정렬용 필드는 proxy
-                                        title={c.title}
-                                        width={c.width}
-                                        editable={c.editable}
-                                        // 메뉴는 원래 필드 기준으로
-                                        columnMenu={(menuProps) => columnMenu({ ...menuProps, field: c.field })}
-                                        {...(useNamed ? {
-                                            // 셀은 원래 필드 이름으로 넘겨서 NamedTextCell이 lv1code 를 수정하게
-                                            cell: (cellProps) => (
-                                                <NamedTextCell {...cellProps} field={c.field} />
-                                            )
-                                        } : {})}
-                                    />
-                                );
-                            }
-
-                            if (c.field === 'ex_gubun') {
-                                return (
-                                    <Column
-                                        key={c.field}
-                                        field={c.field}
-                                        title={c.title}
-                                        width={c.width}
-                                        editable={c.editable}
-                                        headerCell={() => (
-                                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
-                                                {c.title}
-                                                <span
-                                                    className="info-icon"
-                                                    data-tooltip={`보기유형|• 설문(수정불가): 설문지 원본 보기 데이터 ('보기분석' 시 유지)\n• 분석(수정가능): 분석된 보기 데이터 ('보기분석' 시 변경)`}
-                                                ></span>
-                                            </div>
-                                        )}
-                                        cell={(props) => {
-                                            const val = props.dataItem[c.field];
-                                            return <td className="k-table-td">{val}</td>;
-                                        }}
-                                        columnMenu={columnMenu}
-                                    />
-                                );
-                            }
-
-                            // 나머지 컬럼
-                            return (
-                                <Column
-                                    key={c.field}
-                                    field={c.field}
-                                    title={c.title}
-                                    width={c.width}
-                                    editable={c.editable}
-                                    columnMenu={columnMenu}
-                                    {...(useNamed ? { cell: NamedTextCell } : {})}
-                                />
-                            );
-                        })}
-                    </KendoGrid>
-                </div>
-            </Fragment>
-        );
-    }
+    const showSelectionBar =
+        gridSelectedCodes.size > 1 || (explicitChecked && gridSelectedCodes.size > 0);
 
     return (
-        <GridData
-            dataItemKey={DATA_ITEM_KEY}
-            rowNumber={"no"}
-            searchMutation={{
-                ...optionEditData,
-                mutateAsync: async (params) => {
-                    const res = await optionEditData.mutateAsync(params);
+        <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+            {/* 서브 툴바 */}
+            <div className="osa-subtoolbar">
+                <div className="osa-subtoolbar-left">
+                    {/* 1) 조회 건수 표시 (PID별 데이터와 동일 포맷) */}
+                    <span className="osa-tab3-count">
+                        조회 건수: <b>{filteredSortedCodes.length.toLocaleString()}</b>건
+                        {hasActiveFilter && (
+                            <span style={{ marginLeft: "6px", color: "#94a3b8" }}>
+                                (전체 {counts.total.toLocaleString()}건)
+                            </span>
+                        )}
+                    </span>
 
-                    // resultjson이 빈 배열일 경우 로딩바 닫기
-                    if (Array.isArray(res?.resultjson) && res.resultjson.length === 0) {
-                        loadingSpinner.hide();
-                    }
+                    {/* 2) 다중/체크 선택 인라인 액션 그룹 */}
+                    {showSelectionBar && (
+                        <>
+                            <div className="osa-subtoolbar-divider" />
+                            <div className="osa-sel-inline-group">
+                                <span className="osa-sel-inline-text">
+                                    <b>{gridSelectedCodes.size.toLocaleString()}</b>개 선택
+                                </span>
+                                <button
+                                    type="button"
+                                    className="osa-sel-inline-clear"
+                                    title="선택 해제 (Esc)"
+                                    aria-label="선택 해제"
+                                    onClick={() => {
+                                        setExplicitChecked(false);
+                                        setGridSelectedCodes(new Set());
+                                    }}
+                                >
+                                    <X size={12.5} />
+                                </button>
+                                {project_lock !== "수정불가" && (
+                                    <button
+                                        type="button"
+                                        className="osa-sel-inline-del-btn"
+                                        title="선택한 보기 일괄 삭제"
+                                        onClick={handleBatchDelete}
+                                    >
+                                        <Trash2 size={12.5} />
+                                        <span>선택 삭제</span>
+                                    </button>
+                                )}
+                            </div>
+                        </>
+                    )}
+                </div>
 
-                    return res;
-                },
-            }}
-            editField={editField}
-            initialParams={{             /*초기파라미터 설정*/
-                user: auth?.user?.userId || "",
-                projectnum: sessionStorage.getItem("projectnum") ?? "",
-                qnum: sessionStorage.getItem("qnum") ?? "",
-                gb: "lb",
-            }}
-            renderItem={(props) => (
-                <GridRenderer
-                    {...props}
-                    hist={hist}
-                    baselineDidRef={baselineDidRef}
-                    baselineAfterReloadRef={baselineAfterReloadRef}
-                    baselineSigRef={baselineSigRef}
-                    sigStackRef={sigStackRef}
-                    makeTab2Signature={makeTab2Signature}
-                    scrollTopRef={scrollTopRef}
-                    scrollLeftRef={scrollLeftRef}
-                    isLeftOpen={isLeftOpen}
-                />
-            )}
-        />
+                {/* 우측: 보기 관리 액션 버튼 그룹 */}
+                {project_lock !== "수정불가" && (
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            marginLeft: "auto",
+                            flexShrink: 0,
+                        }}
+                    >
+                        <button
+                            type="button"
+                            className="osa-btn"
+                            style={{ height: "30px" }}
+                            onClick={onOpenImportModal}
+                        >
+                            <FolderInput size={13} />
+                            <span>보기 불러오기</span>
+                        </button>
+                        <button
+                            type="button"
+                            className="osa-icon-btn"
+                            style={{ width: "30px", height: "30px" }}
+                            title="수정가능 보기 초기화 (수정불가 보기는 유지됩니다)"
+                            aria-label="수정가능 보기 초기화"
+                            onClick={handleResetUnlocked}
+                        >
+                            <RotateCcw size={14} />
+                        </button>
+                        <button
+                            type="button"
+                            className="osa-btn osa-btn-primary"
+                            style={{ width: "30px", height: "30px", padding: 0 }}
+                            title="새 보기 추가"
+                            aria-label="새 보기 추가"
+                            onClick={handleAddRow}
+                        >
+                            <Plus size={16} strokeWidth={2.5} />
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* 보기 코드북 테이블 */}
+            <div ref={tableScrollRef} className="osa-table-scroll">
+                <table
+                    className="osa-table osa-drag-selectable"
+                    style={{ minWidth: showLv1 ? "940px" : showLv2 ? "780px" : "620px" }}
+                >
+                    <thead>
+                        <tr className="osa-th-row">
+                            <th style={{ width: "52px", textAlign: "center", padding: "6px 4px" }}>
+                                <div ref={chkWrapRef} className="osa-th-chk-wrap">
+                                    <input
+                                        type="checkbox"
+                                        checked={allChecked}
+                                        onChange={(e) => toggleAll(e.target.checked)}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="osa-th-chk-arrow"
+                                        title="조건별 빠른 선택"
+                                        onClick={() => {
+                                            const rect = chkWrapRef.current?.getBoundingClientRect();
+                                            if (rect) {
+                                                setChkMenuPos({
+                                                    left: rect.left,
+                                                    top: rect.bottom + 4,
+                                                });
+                                            }
+                                            setChkMenuOpen((v) => !v);
+                                        }}
+                                    >
+                                        <ChevronDown size={11} />
+                                    </button>
+                                </div>
+                            </th>
+                            <th style={{ width: "48px", textAlign: "center", padding: "6px 4px" }}>
+                                #
+                            </th>
+                            <th style={{ width: "118px", textAlign: "center" }}>
+                                <span
+                                    className="osa-th-sortable"
+                                    onClick={() => setSort((p) => toggleThreeStageSort(p, "_cat"))}
+                                >
+                                    보기구분 {renderSortBadge("_cat")}
+                                </span>
+                            </th>
+                            <th style={{ width: "108px", textAlign: "center" }}>
+                                <span
+                                    className="osa-th-sortable"
+                                    onClick={() =>
+                                        setSort((p) => toggleThreeStageSort(p, "_lockSort"))
+                                    }
+                                >
+                                    수정여부 {renderSortBadge("_lockSort")}
+                                </span>
+                            </th>
+                            {showLv1 && (
+                                <>
+                                    <th style={{ width: "76px", textAlign: "center" }}>
+                                        <span
+                                            className="osa-th-sortable"
+                                            onClick={() =>
+                                                setSort((p) => toggleThreeStageSort(p, "lv1code"))
+                                            }
+                                        >
+                                            대코드 {renderSortBadge("lv1code")}
+                                        </span>
+                                    </th>
+                                    <th style={{ width: "15%" }}>
+                                        <span
+                                            className="osa-th-sortable"
+                                            onClick={() =>
+                                                setSort((p) => toggleThreeStageSort(p, "lv1"))
+                                            }
+                                        >
+                                            대분류명 {renderSortBadge("lv1")}
+                                        </span>
+                                    </th>
+                                </>
+                            )}
+                            {showLv2 && (
+                                <>
+                                    <th style={{ width: "76px", textAlign: "center" }}>
+                                        <span
+                                            className="osa-th-sortable"
+                                            onClick={() =>
+                                                setSort((p) => toggleThreeStageSort(p, "lv2code"))
+                                            }
+                                        >
+                                            중코드 {renderSortBadge("lv2code")}
+                                        </span>
+                                    </th>
+                                    <th style={{ width: "15%" }}>
+                                        <span
+                                            className="osa-th-sortable"
+                                            onClick={() =>
+                                                setSort((p) => toggleThreeStageSort(p, "lv2"))
+                                            }
+                                        >
+                                            중분류명 {renderSortBadge("lv2")}
+                                        </span>
+                                    </th>
+                                </>
+                            )}
+                            <th style={{ width: "68px", textAlign: "center" }}>
+                                <span
+                                    className="osa-th-sortable"
+                                    onClick={() => setSort((p) => toggleThreeStageSort(p, "_freq"))}
+                                >
+                                    빈도 {renderSortBadge("_freq")}
+                                </span>
+                            </th>
+                            <th style={{ width: "84px", textAlign: "center" }}>
+                                <span
+                                    className="osa-th-sortable"
+                                    onClick={() =>
+                                        setSort((p) => toggleThreeStageSort(p, "_subCode"))
+                                    }
+                                >
+                                    소코드 {renderSortBadge("_subCode")}
+                                </span>
+                            </th>
+                            <th>
+                                <span
+                                    className="osa-th-sortable"
+                                    onClick={() => setSort((p) => toggleThreeStageSort(p, "lv3"))}
+                                >
+                                    소분류명 {renderSortBadge("lv3")}
+                                </span>
+                            </th>
+                            <th style={{ width: "52px", textAlign: "center" }}>삭제</th>
+                        </tr>
+
+                        {/* 2행: 인라인 열별 AND 검색 필터 */}
+                        <tr className="osa-filter-row">
+                            <th />
+                            <th />
+                            <th>
+                                <OsaDropDown
+                                    size="sm"
+                                    options={GUBUN_FILTER_OPTIONS}
+                                    value={colFilters.gubun}
+                                    onValueChange={(v) =>
+                                        setColFilters((p) => ({ ...p, gubun: v }))
+                                    }
+                                />
+                            </th>
+                            <th>
+                                <OsaDropDown
+                                    size="sm"
+                                    options={LOCK_FILTER_OPTIONS}
+                                    value={colFilters.lockState}
+                                    onValueChange={(v) =>
+                                        setColFilters((p) => ({
+                                            ...p,
+                                            lockState: v,
+                                        }))
+                                    }
+                                />
+                            </th>
+                            {showLv1 && (
+                                <>
+                                    <th>
+                                        <input
+                                            type="text"
+                                            className="osa-col-filter-input"
+                                            style={{ textAlign: "center" }}
+                                            placeholder="대코드"
+                                            value={colFilters.lv1code}
+                                            onChange={(e) =>
+                                                setColFilters((p) => ({
+                                                    ...p,
+                                                    lv1code: e.target.value,
+                                                }))
+                                            }
+                                        />
+                                    </th>
+                                    <th>
+                                        <input
+                                            type="text"
+                                            className="osa-col-filter-input"
+                                            placeholder="대분류 검색"
+                                            value={colFilters.lv1}
+                                            onChange={(e) =>
+                                                setColFilters((p) => ({
+                                                    ...p,
+                                                    lv1: e.target.value,
+                                                }))
+                                            }
+                                        />
+                                    </th>
+                                </>
+                            )}
+                            {showLv2 && (
+                                <>
+                                    <th>
+                                        <input
+                                            type="text"
+                                            className="osa-col-filter-input"
+                                            style={{ textAlign: "center" }}
+                                            placeholder="중코드"
+                                            value={colFilters.lv2code}
+                                            onChange={(e) =>
+                                                setColFilters((p) => ({
+                                                    ...p,
+                                                    lv2code: e.target.value,
+                                                }))
+                                            }
+                                        />
+                                    </th>
+                                    <th>
+                                        <input
+                                            type="text"
+                                            className="osa-col-filter-input"
+                                            placeholder="중분류 검색"
+                                            value={colFilters.lv2}
+                                            onChange={(e) =>
+                                                setColFilters((p) => ({
+                                                    ...p,
+                                                    lv2: e.target.value,
+                                                }))
+                                            }
+                                        />
+                                    </th>
+                                </>
+                            )}
+                            <th>
+                                <input
+                                    type="text"
+                                    className="osa-col-filter-input"
+                                    style={{ textAlign: "center" }}
+                                    placeholder="빈도"
+                                    value={colFilters.freq}
+                                    onChange={(e) =>
+                                        setColFilters((p) => ({ ...p, freq: e.target.value }))
+                                    }
+                                />
+                            </th>
+                            <th>
+                                <input
+                                    type="text"
+                                    className="osa-col-filter-input"
+                                    style={{ textAlign: "center" }}
+                                    placeholder="소코드"
+                                    value={colFilters.lv123code}
+                                    onChange={(e) =>
+                                        setColFilters((p) => ({
+                                            ...p,
+                                            lv123code: e.target.value,
+                                        }))
+                                    }
+                                />
+                            </th>
+                            <th>
+                                <input
+                                    type="text"
+                                    className="osa-col-filter-input"
+                                    placeholder="소분류명 검색"
+                                    value={colFilters.lv3}
+                                    onChange={(e) =>
+                                        setColFilters((p) => ({ ...p, lv3: e.target.value }))
+                                    }
+                                />
+                            </th>
+                            <th />
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {filteredSortedCodes.length === 0 ? (
+                            <tr>
+                                <td
+                                    colSpan={8 + (showLv1 ? 2 : 0) + (showLv2 ? 2 : 0)}
+                                    style={{
+                                        padding: "44px 12px",
+                                        textAlign: "center",
+                                        color: "#94a3b8",
+                                    }}
+                                >
+                                    조회된 데이터가 없습니다.
+                                </td>
+                            </tr>
+                        ) : (
+                            filteredSortedCodes.map((row, rowIdx) => {
+                                const rKey = row.__rowKey;
+                                const isChecked = gridSelectedCodes.has(rKey);
+                                const readOnly = row._locked || project_lock === "수정불가";
+
+                                return (
+                                    <tr
+                                        key={rKey}
+                                        className={`${isChecked ? "osa-row-selected" : ""} ${row._locked ? "osa-row-locked" : ""
+                                            }`.trim()}
+                                        onMouseDownCapture={(e) =>
+                                            handleRowMouseDownCapture(row, rowIdx, e)
+                                        }
+                                        onMouseDown={(e) => handleRowMouseDown(row, rowIdx, e)}
+                                        onMouseEnter={() => handleRowMouseEnter(rowIdx)}
+                                    >
+                                        <td style={{ textAlign: "center" }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={isChecked}
+                                                onChange={() => { }}
+                                                onClick={(e) =>
+                                                    handleCheckboxClick(e, rKey, rowIdx)
+                                                }
+                                            />
+                                        </td>
+                                        <td
+                                            style={{
+                                                textAlign: "center",
+                                                color: "#64748b",
+                                                userSelect: "none",
+                                            }}
+                                        >
+                                            {rowIdx + 1}
+                                        </td>
+
+                                        <td style={{ textAlign: "center", padding: "4px 6px" }}>
+                                            <OsaDropDown
+                                                size="sm"
+                                                options={ROW_GUBUN_OPTIONS}
+                                                disabled={project_lock === "수정불가"}
+                                                value={row._cat}
+                                                allowSameValueSelect={
+                                                    isChecked && gridSelectedCodes.size > 1
+                                                }
+                                                onValueChange={(v) => handleRowGubunChange(row, v)}
+                                            />
+                                        </td>
+
+                                        <td style={{ textAlign: "center", padding: "4px 6px" }}>
+                                            <button
+                                                type="button"
+                                                className={`osa-lock-toggle-btn ${row._locked ? "locked" : ""
+                                                    }`}
+                                                disabled={project_lock === "수정불가"}
+                                                onClick={() => handleRowLockToggle(row)}
+                                            >
+                                                {row._locked ? (
+                                                    <>
+                                                        <Lock size={11} />
+                                                        수정불가
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Unlock size={11} />
+                                                        수정가능
+                                                    </>
+                                                )}
+                                            </button>
+                                        </td>
+
+                                        {showLv1 && (
+                                            <>
+                                                <td>
+                                                    <input
+                                                        key={`t2_l1c_${rKey}_${row.lv1code}`}
+                                                        data-tab2-cell={`${rKey}:lv1code`}
+                                                        type="text"
+                                                        className="osa-rp-inline-input code"
+                                                        style={{ color: "#475569" }}
+                                                        placeholder="대코드"
+                                                        disabled={readOnly}
+                                                        defaultValue={row.lv1code}
+                                                        onBlur={(e) =>
+                                                            handleInlineInputBlur(e, row, "lv1code")
+                                                        }
+                                                        onKeyDown={(e) =>
+                                                            handleInlineInputKeyDown(
+                                                                e,
+                                                                row,
+                                                                "lv1code"
+                                                            )
+                                                        }
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <OsaCategoryComboInput
+                                                        value={row.lv1}
+                                                        options={lv1AutoOptions}
+                                                        placeholder="대분류명 선택/입력"
+                                                        disabled={readOnly}
+                                                        rowKey={rKey}
+                                                        field="lv1"
+                                                        forceCommitOnSame={
+                                                            isChecked && gridSelectedCodes.size > 1
+                                                        }
+                                                        onCommit={(val) =>
+                                                            handleFieldEdit(row, "lv1", val)
+                                                        }
+                                                        onNavigateRow={navigateEditableRow}
+                                                    />
+                                                </td>
+                                            </>
+                                        )}
+
+                                        {showLv2 && (
+                                            <>
+                                                <td>
+                                                    <input
+                                                        key={`t2_l2c_${rKey}_${row.lv2code}`}
+                                                        data-tab2-cell={`${rKey}:lv2code`}
+                                                        type="text"
+                                                        className="osa-rp-inline-input code"
+                                                        style={{ color: "#475569" }}
+                                                        placeholder="중코드"
+                                                        disabled={readOnly}
+                                                        defaultValue={row.lv2code}
+                                                        onBlur={(e) =>
+                                                            handleInlineInputBlur(e, row, "lv2code")
+                                                        }
+                                                        onKeyDown={(e) =>
+                                                            handleInlineInputKeyDown(
+                                                                e,
+                                                                row,
+                                                                "lv2code"
+                                                            )
+                                                        }
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <OsaCategoryComboInput
+                                                        value={row.lv2}
+                                                        options={getLv2AutoOptionsForRow(row.lv1)}
+                                                        placeholder="중분류명 선택/입력"
+                                                        disabled={readOnly}
+                                                        rowKey={rKey}
+                                                        field="lv2"
+                                                        forceCommitOnSame={
+                                                            isChecked && gridSelectedCodes.size > 1
+                                                        }
+                                                        onCommit={(val) =>
+                                                            handleFieldEdit(row, "lv2", val)
+                                                        }
+                                                        onNavigateRow={navigateEditableRow}
+                                                    />
+                                                </td>
+                                            </>
+                                        )}
+
+                                        <td style={{ textAlign: "center", userSelect: "none" }}>
+                                            <span
+                                                className={`osa-freq-badge ${row._freq === 0 ? "zero" : ""
+                                                    }`}
+                                            >
+                                                {row._freq.toLocaleString()}
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <input
+                                                key={`t2_sc_${rKey}_${row._subCode}`}
+                                                data-tab2-cell={`${rKey}:lv123code`}
+                                                type="text"
+                                                className="osa-rp-inline-input code"
+                                                disabled={readOnly}
+                                                defaultValue={row._subCode}
+                                                onBlur={(e) =>
+                                                    handleInlineInputBlur(e, row, "lv123code")
+                                                }
+                                                onKeyDown={(e) =>
+                                                    handleInlineInputKeyDown(e, row, "lv123code")
+                                                }
+                                            />
+                                        </td>
+
+                                        <td>
+                                            <input
+                                                key={`t2_l3_${rKey}_${row.lv3}`}
+                                                data-tab2-cell={`${rKey}:lv3`}
+                                                type="text"
+                                                className="osa-rp-inline-input"
+                                                placeholder="소분류명 입력"
+                                                disabled={readOnly}
+                                                defaultValue={row.lv3}
+                                                onBlur={(e) =>
+                                                    handleInlineInputBlur(e, row, "lv3")
+                                                }
+                                                onKeyDown={(e) =>
+                                                    handleInlineInputKeyDown(e, row, "lv3")
+                                                }
+                                            />
+                                        </td>
+
+                                        <td style={{ textAlign: "center" }}>
+                                            <button
+                                                type="button"
+                                                className="osa-del-icon-btn"
+                                                disabled={row._locked || project_lock === "수정불가"}
+                                                title={
+                                                    row._locked
+                                                        ? "잠금 해제 후 삭제할 수 있습니다"
+                                                        : "보기 삭제"
+                                                }
+                                                onClick={() => handleDeleteSingle(row)}
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* 하단 단축키 안내 & 보기 건수 푸터 바 (전 탭 높이·타이포그래피 통일) */}
+            <div className="osa-grid-footer">
+                <div className="osa-shortcut-bar">
+                    <span className="title">
+                        <Zap size={12} />
+                        고속 편집
+                    </span>
+                    <span>
+                        <kbd className="osa-kbd">Enter</kbd> 다음 행
+                    </span>
+                    <span>
+                        <kbd className="osa-kbd">Shift+Enter</kbd> 이전 행
+                    </span>
+                    <span>
+                        <kbd className="osa-kbd">↑ / ↓</kbd> 이동
+                    </span>
+                    <span>
+                        <kbd className="osa-kbd">Ctrl+Z</kbd> 실행취소
+                    </span>
+                    <span style={{ color: "#cbd5e1", margin: "0 2px" }}>·</span>
+                    <span style={{ color: "#94a3b8" }}>
+                        드래그 · Shift · Ctrl+클릭 다중 선택
+                    </span>
+                </div>
+            </div>
+
+            {/* 헤더 체크박스 [▾] 선택 옵션 팝오버 */}
+            {chkMenuOpen &&
+                chkMenuPos &&
+                typeof document !== "undefined" &&
+                createPortal(
+                    <div
+                        ref={chkMenuRef}
+                        className="osa-chk-menu"
+                        style={{
+                            left: `${chkMenuPos.left}px`,
+                            top: `${chkMenuPos.top}px`,
+                        }}
+                    >
+                        <button
+                            type="button"
+                            className="osa-chk-menu-item"
+                            onClick={() => {
+                                setExplicitChecked(true);
+                                setGridSelectedCodes(
+                                    new Set(filteredSortedCodes.map((r) => r.__rowKey))
+                                );
+                                setChkMenuOpen(false);
+                            }}
+                        >
+                            <span>전체 선택</span>
+                            <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+                                {filteredSortedCodes.length}
+                            </span>
+                        </button>
+                        <button
+                            type="button"
+                            className="osa-chk-menu-item"
+                            onClick={() => {
+                                setExplicitChecked(true);
+                                setGridSelectedCodes(
+                                    new Set(
+                                        filteredSortedCodes
+                                            .filter((r) => !r._locked)
+                                            .map((r) => r.__rowKey)
+                                    )
+                                );
+                                setChkMenuOpen(false);
+                            }}
+                        >
+                            <span>수정가능만 선택</span>
+                            <span style={{ fontSize: "11px", color: "#ea580c" }}>
+                                {filteredSortedCodes.filter((r) => !r._locked).length}
+                            </span>
+                        </button>
+                        <button
+                            type="button"
+                            className="osa-chk-menu-item"
+                            onClick={() => {
+                                setExplicitChecked(true);
+                                setGridSelectedCodes(
+                                    new Set(
+                                        filteredSortedCodes
+                                            .filter((r) => r._locked)
+                                            .map((r) => r.__rowKey)
+                                    )
+                                );
+                                setChkMenuOpen(false);
+                            }}
+                        >
+                            <span>수정불가만 선택</span>
+                            <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+                                {filteredSortedCodes.filter((r) => r._locked).length}
+                            </span>
+                        </button>
+                        <button
+                            type="button"
+                            className="osa-chk-menu-item"
+                            onClick={() => {
+                                setGridSelectedCodes(new Set());
+                                setChkMenuOpen(false);
+                            }}
+                        >
+                            <span>선택 해제</span>
+                        </button>
+                    </div>,
+                    document.body
+                )}
+        </div>
     );
 });
+
+OptionSettingTab2.displayName = "OptionSettingTab2";
 
 export default OptionSettingTab2;

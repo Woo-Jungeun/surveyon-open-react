@@ -106,22 +106,52 @@ const ProListBatchQuestionEditPopup = ({ show, onClose, selectedRows = [], onCon
     };
 
     return (
-        <article className="modal on" style={{ zIndex: 999999 }}>
+        <article className="modal on orange-theme" style={{ zIndex: 999999 }}>
             <div
                 className="cmn_popup"
                 style={{
                     width: "720px",
+                    maxWidth: "95vw",
                     maxHeight: "90vh",
                     display: "flex",
                     flexDirection: "column",
-                    overflow: "hidden"
+                    overflow: "hidden",
+                    borderRadius: "16px",
+                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
                 }}
             >
                 {/* 1. 공통 헤더 (.popTit) */}
                 <div className="popTit" style={{ height: "auto", padding: "16px 24px 14px 24px" }}>
                     <div>
-                        <h3 style={{ display: "flex", alignItems: "center", fontSize: "20px", fontWeight: "800", color: "#0f172a", margin: 0, lineHeight: "1.3" }}>
+                        <h3 style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "20px", fontWeight: "800", color: "#0f172a", margin: 0, lineHeight: "1.3" }}>
+                            <i
+                                aria-hidden="true"
+                                style={{
+                                    display: "inline-block",
+                                    width: "4px",
+                                    height: "20px",
+                                    borderRadius: "2px",
+                                    background: "linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%)",
+                                    boxShadow: "0 2px 4px rgba(255, 107, 53, 0.28)",
+                                    flexShrink: 0,
+                                }}
+                            />
                             문항최종 일괄 수정
+                            <span
+                                style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    padding: "2px 10px",
+                                    borderRadius: "999px",
+                                    fontSize: "12px",
+                                    fontWeight: "700",
+                                    backgroundColor: "#fff7ed",
+                                    color: "#ea580c",
+                                    border: "1px solid #fdba74",
+                                }}
+                            >
+                                {selectedRows.length}개 문항
+                            </span>
                         </h3>
                         <p style={{ fontSize: "12px", color: "#64748b", margin: "4px 0 0 0", fontWeight: "400", lineHeight: "1.3" }}>
                             선택한 <strong style={{ color: "#f97316" }}>{selectedRows.length}개 문항</strong>의 문항최종 레이블을 확인하고 개별 또는 일괄 도구로 수정할 수 있습니다.

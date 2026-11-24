@@ -5,6 +5,7 @@ import './AiDataHeader.css';
 const AiDataHeader = ({
     title,
     tooltip,
+    leftContent,
     children,
     onAdd,
     addButtonLabel = "추가",
@@ -23,6 +24,7 @@ const AiDataHeader = ({
             className={`ai-data-header-container ${className}`}
             title={title}
             infoTooltip={tooltip}
+            leftContent={leftContent}
             onAdd={onAdd}
             addLabel={addButtonLabel}
             onSave={onSave}

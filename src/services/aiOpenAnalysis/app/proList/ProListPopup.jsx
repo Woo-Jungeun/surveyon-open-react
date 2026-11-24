@@ -189,16 +189,40 @@ const ProListPopup = (parentProps) => {
   };
 
   return (
-    <article className={`modal ${modalOnOff}`}>
-      <div className="cmn_popup" style={{ width: "800px", height: "700px", maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <div className="popTit">
-          <h3 style={{ display: 'flex', alignItems: 'center' }}>
+    <article className={`modal ${modalOnOff} orange-theme`}>
+      <div className="cmn_popup" style={{ width: "800px", maxWidth: "95vw", height: "700px", maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: "16px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}>
+        <div className="popTit" style={{ height: "auto", padding: "16px 24px 14px 24px" }}>
+          <h3 style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "20px", fontWeight: "800", color: "#0f172a", margin: 0, lineHeight: "1.3" }}>
+            <i
+                aria-hidden="true"
+                style={{
+                    display: "inline-block",
+                    width: "4px",
+                    height: "20px",
+                    borderRadius: "2px",
+                    background: "linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%)",
+                    boxShadow: "0 2px 4px rgba(255, 107, 53, 0.28)",
+                    flexShrink: 0,
+                }}
+            />
             필터문항 설정
-            <span style={{ color: '#f97316', marginLeft: '8px', fontSize: '0.9em' }}>
-              [{popupMode === "single" ? (popupRow?.merge_qnum || "") : "전체"}]
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "2px 10px",
+                borderRadius: "999px",
+                fontSize: "12px",
+                fontWeight: "700",
+                backgroundColor: "#fff7ed",
+                color: "#ea580c",
+                border: "1px solid #fdba74",
+              }}
+            >
+              {popupMode === "single" ? (popupRow?.merge_qnum || "") : "전체"}
             </span>
           </h3>
-          <a className="btnClose" onClick={handleCancelButton}><span className="hidden">close</span></a>
+          <a className="btnClose" onClick={handleCancelButton} style={{ cursor: "pointer" }}><span className="hidden">close</span></a>
         </div>
 
         <div className="popCont" style={{ flex: 1, padding: "20px", display: "flex", flexDirection: "column", gap: "12px", overflow: "hidden" }}>

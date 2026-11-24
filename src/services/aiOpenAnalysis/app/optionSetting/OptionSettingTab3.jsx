@@ -1,260 +1,544 @@
-import React, { Fragment, useState, useMemo, useCallback, useContext } from "react";
-import GridData from "@/components/common/grid/GridData.jsx";
-import KendoGrid from "@/components/kendo/KendoGrid.jsx";
-import { GridColumn as Column } from "@progress/kendo-react-grid";
-import { OptionSettingApi } from "@/services/aiOpenAnalysis/app/optionSetting/OptionSettingApi.js";
-import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
-import { useSelector } from "react-redux";
-import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
-import { process } from "@progress/kendo-data-query";
-import GridDataCount from "@/components/common/grid/GridDataCount";
+import React, { useState, useMemo, useRef } from "react";
+import { RefreshCw } from "lucide-react";
+import { cleanStr, toggleThreeStageSort } from "./optionSettingUtils";
+import { OsaDropDown } from "./OptionSettingKendoSelect.jsx";
+import { useOsaResizableTable } from "./useOsaResizableTable";
 
-// 정렬 
-const natKey = (v) => {
-    if (v == null) return Number.NEGATIVE_INFINITY;
-    const s = String(v).trim();
-    return /^\d+$/.test(s) ? Number(s) : s.toLowerCase();
+const TAB3_SENTIMENT_OPTIONS = [
+    { value: "all", text: "전체" },
+    { value: "pos", text: "긍정" },
+    { value: "neg", text: "부정" },
+    { value: "neu", text: "중립" },
+];
+
+const natCompare = (aVal, bVal) => {
+    const sa = cleanStr(aVal);
+    const sb = cleanStr(bVal);
+    const na = /^\d+$/.test(sa) ? Number(sa) : null;
+    const nb = /^\d+$/.test(sb) ? Number(sb) : null;
+    if (na !== null && nb !== null) return na - nb;
+    return sa.localeCompare(sb, "ko");
 };
 
-// 정렬용 프록시를 붙일 대상 필드
-const NAT_FIELDS = ["pid", "cid"];
+const formatSentLabel = (raw) => {
+    const s = cleanStr(raw).toLowerCase();
+    if (!s) return { text: "—", cls: "empty" };
+    if (s === "pos" || s === "positive" || s === "긍정") return { text: "긍정", cls: "pos" };
+    if (s === "neg" || s === "negative" || s === "부정") return { text: "부정", cls: "neg" };
+    if (s === "neu" || s === "neutral" || s === "중립") return { text: "중립", cls: "neu" };
+    return { text: raw, cls: "neu" };
+};
 
-// rows에 __sort__* 필드를 덧붙이고, 원필드→프록시 맵을 리턴
-const addSortProxies = (rows = []) => {
-    const proxyField = {};
-    const dataWithProxies = (rows || []).map((r) => {
-        const o = { ...r };
-        for (const f of NAT_FIELDS) {
-            const pf = `__sort__${f}`;
-            o[pf] = natKey(r?.[f]);
-            proxyField[f] = pf;
+const resolveRawDate = (r) => {
+    if (!r || typeof r !== "object") return "";
+    const direct =
+        r.created_at ??
+        r.write_date ??
+        r.insert_date ??
+        r.reg_date ??
+        r.savedate ??
+        r.wdate ??
+        r.indate ??
+        r.updated_at ??
+        r.update_date ??
+        r.record_date ??
+        r.response_date ??
+        r.date;
+    const cleaned = cleanStr(direct);
+    if (cleaned) return cleaned;
+
+    for (const [k, v] of Object.entries(r)) {
+        if (/duplicate_remove/i.test(k)) continue;
+        if (/(date|time|created|updated|dt)$/i.test(k)) {
+            const sv = cleanStr(v);
+            if (sv) return sv;
         }
-        return o;
-    });
-    return { dataWithProxies, proxyField };
+    }
+    return "";
+};
+
+const formatDisplayDate = (raw) => {
+    const s = cleanStr(raw);
+    if (!s) return "";
+    const m = s.match(/^(\d{4}-\d{2}-\d{2})[T\s](\d{2}:\d{2}:\d{2})/);
+    if (m) return `${m[1]} ${m[2]}`;
+    return s;
 };
 
 /**
- * 분석 > 그리드 영역 > rawdata
- *
- * @author jewoo
- * @since 2025-08-12<br />
+ * [PID별 데이터] 탭 — 실시간 빈도(freq) 집계 · 전 컬럼 AND 검색 · PID별 데이터 새로고침 (100% 주황색 테마)
  */
-const OptionSettingTab3 = (props) => {
-    const auth = useSelector((store) => store.auth);
-    const loadingSpinner = useContext(loadingSpinnerContext);
-    const lvCode = String(props.lvCode); // 분류 단계 코드
-    const { persistedPrefs, onPrefsChange, projectnum, qnum, isLeftOpen } = props;
-    const DATA_ITEM_KEY = ["pid", "cid"];   // 다중 키 
+const OptionSettingTab3 = ({ lvCode = "3", rawdata = [], onRefreshRawdata }) => {
+    const [sort, setSort] = useState([]);
+    const [refreshing, setRefreshing] = useState(false);
+    const tableScrollRef = useRef(null);
+    useOsaResizableTable(tableScrollRef, String(lvCode));
 
-    const [columns, setColumns] = useState(() =>
-        persistedPrefs?.columns ?? [
-            { field: "pid", title: "PID", show: true, allowHide: false, width: "130px" },
-            { field: "qnum", title: "문번호", show: true, allowHide: false, width: "130px" },
-            { field: "cid", title: "멀티", show: true, allowHide: false, width: "90px" },
-            { field: "answer_origin", title: "원본 내용", show: true, allowHide: false, width: "150px" },
-            { field: "answerfin", title: "응답 내용", show: true, allowHide: false, width: "150px" },
-            { field: "lv1", title: "대분류", show: true, allowHide: false, width: "120px" },
-            { field: "lv2", title: "중분류", show: true, allowHide: false, width: "120px" },
-            { field: "lv3", title: "소분류", show: true, allowHide: false, width: "120px" },
-            { field: "sentiment", title: "sentiment", show: true, allowHide: false, width: "150px" }
-        ]);
+    const [colFilters, setColFilters] = useState({
+        pid: "",
+        cid: "",
+        answer: "",
+        l1: "",
+        l2: "",
+        freq: "",
+        code: "",
+        l3: "",
+        sent: "all",
+        date: "",
+    });
 
-    // 1단계: lv1, lv2 숨김 / 2단계: lv1 숨김 / 3단계: 숨김 없음
-    const forcedHidden = useMemo(() => {
-        const s = new Set();
-        if (lvCode === "1") { s.add("lv1"); s.add("lv1code"); s.add("lv2"); s.add("lv2code"); }
-        else if (lvCode === "2") { s.add("lv1"); s.add("lv1code"); }
-        return s;
-    }, [lvCode]);
+    const handleRefreshClick = async () => {
+        if (!onRefreshRawdata || refreshing) return;
+        setRefreshing(true);
+        try {
+            await onRefreshRawdata();
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
-    // 단계 컬럼 집합 (대/중분류 코드/이름)
-    const stageFields = useMemo(() =>
-        new Set(["lv1", "lv1code", "lv2", "lv2code"]), []);
-
-    // 렌더링용 값: 강제 규칙만 입혀서 사용(상태/부모는 건드리지 않음)
-    const effectiveColumns = useMemo(() => {
-        return columns.map(c => {
-            // 1. 강제 숨김 처리
-            if (forcedHidden.has(c.field)) {
-                return { ...c, show: false, allowHide: false };
-            }
-            // 왼쪽 패널이 닫혀있으면 모든 단계에서 주요 컬럼 너비 제거
-            if (!isLeftOpen && ["answer_origin", "answerfin", "lv1", "lv2", "lv3", "pid"].includes(c.field)) {
-                const { width, ...rest } = c;
-                return rest;
-            }
-            // 왼쪽 패널이 열려있으면 1단계일 때만 원본내용/응답내용/소분류 컬럼의 width 제거
-            if (isLeftOpen && lvCode === "1" && ["answer_origin", "answerfin", "lv3", "pid"].includes(c.field)) {
-                const { width, ...rest } = c; // width 제외
-                return rest;
-            }
-            return c;
+    // 1) 소코드(lv123code || code_num) 기준 전체 출현 빈도 실시간 Map 계산
+    const normalizedRows = useMemo(() => {
+        const freqMap = new Map();
+        (rawdata || []).forEach((r) => {
+            const c = cleanStr(r?.lv123code ?? r?.code_num ?? r?.lv3code);
+            if (c) freqMap.set(c, (freqMap.get(c) || 0) + 1);
         });
-    }, [columns, forcedHidden, lvCode, isLeftOpen]);
 
-    // 정렬/필터를 controlled로
-    const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
-    const [filter, setFilter] = useState(persistedPrefs?.filter ?? null);
+        return (rawdata || []).map((r, idx) => {
+            const code = cleanStr(r?.lv123code ?? r?.code_num ?? r?.lv3code);
+            const freq = code ? freqMap.get(code) || 0 : 0;
+            const answerText =
+                r?.answerfin ?? r?.answer_fin ?? r?.answer ?? r?.answer_origin ?? "";
+            const rawDate = resolveRawDate(r);
+            return {
+                ...r,
+                _key: `${r?.pid ?? "p"}_${r?.cid ?? 1}_${idx}`,
+                pid: cleanStr(r?.pid),
+                cid: cleanStr(r?.cid || 1),
+                answer_origin: String(r?.answer_origin ?? ""),
+                answerfin: String(answerText),
+                lv1: cleanStr(r?.lv1),
+                lv2: cleanStr(r?.lv2),
+                lv3: cleanStr(r?.lv3),
+                code,
+                freq,
+                sentiment: cleanStr(r?.sentiment),
+                rawDate,
+                date: formatDisplayDate(rawDate),
+            };
+        });
+    }, [rawdata]);
 
-    // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
-    const columnMenu = useCallback((menuProps) => (
-        <ExcelColumnMenu
-            {...menuProps}
-            columns={columns
-                // 단계 규칙으로 '강제 숨김' 대상만 메뉴에서 제거
-                .filter(c => !forcedHidden.has(c.field))
-                // 단계 컬럼도 메뉴에 표시 + 숨김 가능
-                .map(c => stageFields.has(c.field) ? { ...c, allowHide: true } : c)
+    // 2) 전 컬럼 AND 검색 필터 + 3단계 정렬
+    const filteredSorted = useMemo(() => {
+        const match = (val, kw) => {
+            const needle = kw.trim().toLowerCase();
+            if (!needle) return true;
+            return String(val ?? "").toLowerCase().includes(needle);
+        };
+
+        let list = normalizedRows.filter((r) => {
+            if (!match(r.pid, colFilters.pid)) return false;
+            if (!match(r.cid, colFilters.cid)) return false;
+            if (
+                colFilters.answer.trim() &&
+                !match(r.answer_origin, colFilters.answer) &&
+                !match(r.answerfin, colFilters.answer)
+            ) {
+                return false;
             }
-            onColumnsChange={(updated) => {
-                const map = new Map(updated.map(c => [c.field, c]));
-                const next = columns.map(c => {
-                    if (forcedHidden.has(c.field)) return { ...c, show: false }; // 단계상 강제 숨김
-                    const u = map.get(c.field);
-                    return u ? { ...c, ...u } : c
-                });
-                setColumns(next);
-                onPrefsChange?.({ columns: next }); // 부모에 저장
-            }}
-            filter={filter}
-            onFilterChange={(e) => {
-                setFilter(e ?? null);
-                onPrefsChange?.({ filter: e });  // 상단에 저장 
-            }}
-            onSortChange={(e) => setSort(e ?? [])} // sortArr는 배열 형태
-        />
-    ), [columns, forcedHidden, stageFields, onPrefsChange, filter])
+            if (!match(r.lv1, colFilters.l1)) return false;
+            if (!match(r.lv2, colFilters.l2)) return false;
+            if (!match(r.freq, colFilters.freq)) return false;
+            if (!match(r.code, colFilters.code)) return false;
+            if (!match(r.lv3, colFilters.l3)) return false;
+            if (colFilters.sent !== "all") {
+                const sInfo = formatSentLabel(r.sentiment);
+                if (colFilters.sent !== sInfo.cls) return false;
+            }
+            if (
+                colFilters.date.trim() &&
+                !match(r.date, colFilters.date) &&
+                !match(r.rawDate, colFilters.date)
+            ) {
+                return false;
+            }
+            return true;
+        });
 
-    const { optionEditData } = OptionSettingApi();
+        if (sort.length > 0) {
+            const { field, dir } = sort[0];
+            const mul = dir === "desc" ? -1 : 1;
+            list = [...list].sort((a, b) => natCompare(a?.[field], b?.[field]) * mul);
+        }
 
-    //grid rendering 
-    const GridRenderer = (props) => {
-        const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField, isLeftOpen } = props;
-        const { dataWithProxies, proxyField } = useMemo(
-            () => addSortProxies(dataState?.data || []),
-            [dataState?.data]
-        );
-        const mappedSort = useMemo(
-            () => (sort || []).map(s => ({ ...s, field: proxyField[s.field] ?? s.field })),
-            [sort, proxyField]
-        );
+        return list;
+    }, [normalizedRows, colFilters, sort]);
 
-        // 필터링된 데이터 개수 계산
-        const filteredCount = useMemo(() => {
-            const result = process(dataWithProxies, { filter });
-            return result.total;
-        }, [dataWithProxies, filter]);
+    const renderSortBadge = (field) => {
+        const cur = sort.find((s) => s.field === field);
+        if (!cur) return <span className="osa-sort-icon">⇅</span>;
+        return <span className="osa-sort-icon active">{cur.dir === "asc" ? "↑" : "↓"}</span>;
+    };
 
-        return (
-            <Fragment>
-                <div className="meta-header-layout">
-                    <div className="meta-header-left meta2">
-                        <div style={{ textAlign: "left", display: "flex", alignItems: "center", gap: "10px", marginTop: '4px' }}>
-                            <GridDataCount total={filteredCount} label="필터 결과" unit="건" />
-                        </div>
-                    </div>
-                </div>
-                <div id="grid_01" className={`cmn_grid singlehead ${isLeftOpen && String(lvCode) !== "1" ? "force-scroll" : ""}`} style={{ marginBottom: '0px' }}>
-                    <KendoGrid
-                        key={`lv-${lvCode}`}
-                        parentProps={{
-                            data: dataWithProxies,       // props에서 직접 전달
-                            dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
-                            selectedState,
-                            setSelectedState,
-                            selectedField,               //  선택 필드 전달
-                            idGetter,                     // GridData가 만든 getter 그대로
-                            onProcessedDataUpdate: (arr) => {
-                                if (arr && arr.length > 0) {
-                                    // Kendo가 실제 화면 데이터 계산 완료 → 로딩 닫기
-                                    loadingSpinner.hide();
-                                }
-                            },                        // 클라 처리
-                            sortable: { mode: "multiple", allowUnsort: true },
-                            filterable: true,
-                            sort: mappedSort,
-                            filter: filter,
-                            sortChange: ({ sort: next }) => {
-                                const nextRaw = (next || []).map(d => {
-                                    const orig = Object.keys(proxyField).find(k => proxyField[k] === d.field);
-                                    return { ...d, field: orig || d.field };
-                                });
-                                setSort(nextRaw ?? []);
-                                onPrefsChange?.({ sort: nextRaw ?? [] });
-                            },
-                            filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
-                        }}
-                    >
-                        {effectiveColumns.filter(c => c.show !== false).map((c) => {
-                            if (["pid", "cid"].includes(c.field)) {
-                                const proxy = proxyField[c.field] ?? `__sort__${c.field}`;
-                                return (
-                                    <Column
-                                        key={c.field}
-                                        field={proxy}  // 정렬용은 proxy
-                                        title={c.title}
-                                        width={c.width}
-                                        editable={c.editable}
-                                        // 메뉴에는 원래 field를 넘겨 줌
-                                        columnMenu={(menuProps) => columnMenu({ ...menuProps, field: c.field })}
-                                        cell={(p) => (
-                                            <td title={p.dataItem[c.field]}>
-                                                {p.dataItem[c.field]}
-                                            </td>
-                                        )}
-                                    />
-                                );
-                            }
-
-                            // 나머지 컬럼은 그대로
-                            return (
-                                <Column
-                                    key={c.field}
-                                    field={c.field}
-                                    title={c.title}
-                                    width={c.width}
-                                    editable={c.editable}
-                                    columnMenu={columnMenu}
-                                    cell={(p) => (
-                                        <td title={p.dataItem[c.field]}>
-                                            {p.dataItem[c.field]}
-                                        </td>
-                                    )}
-                                />
-                            );
-                        })}
-                    </KendoGrid>
-                </div>
-            </Fragment>
-        );
-    }
+    const showLv1 = String(lvCode) === "3";
+    const showLv2 = String(lvCode) === "2" || String(lvCode) === "3";
+    const hasActiveFilter =
+        Boolean(colFilters.pid.trim()) ||
+        Boolean(colFilters.cid.trim()) ||
+        Boolean(colFilters.answer.trim()) ||
+        Boolean(colFilters.l1.trim()) ||
+        Boolean(colFilters.l2.trim()) ||
+        Boolean(colFilters.freq.trim()) ||
+        Boolean(colFilters.code.trim()) ||
+        Boolean(colFilters.l3.trim()) ||
+        colFilters.sent !== "all" ||
+        Boolean(colFilters.date.trim());
 
     return (
-        <GridData
-            dataItemKey={DATA_ITEM_KEY}
-            searchMutation={{
-                ...optionEditData,
-                mutateAsync: async (params) => {
-                    const res = await optionEditData.mutateAsync(params);
+        <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+            <div className="osa-subtoolbar">
+                <div className="osa-subtoolbar-left">
+                    <span className="osa-tab3-count">
+                        조회 건수: <b>{filteredSorted.length.toLocaleString()}</b>건
+                        {hasActiveFilter && (
+                            <span style={{ marginLeft: "6px", color: "#94a3b8" }}>
+                                (전체 {normalizedRows.length.toLocaleString()}건)
+                            </span>
+                        )}
+                    </span>
+                </div>
 
-                    // resultjson이 빈 배열일 경우 로딩바 닫기
-                    if (Array.isArray(res?.resultjson) && res.resultjson.length === 0) {
-                        loadingSpinner.hide();
-                    }
+                {onRefreshRawdata && (
+                    <button
+                        type="button"
+                        className="osa-icon-btn"
+                        disabled={refreshing}
+                        style={{ width: "30px", height: "30px", marginLeft: "auto" }}
+                        title="PID별 데이터 새로고침"
+                        aria-label="PID별 데이터 새로고침"
+                        onClick={handleRefreshClick}
+                    >
+                        <RefreshCw size={14} className={refreshing ? "osa-spin" : ""} />
+                    </button>
+                )}
+            </div>
 
-                    return res;
-                },
-            }}
-            initialParams={{             /*초기파라미터 설정*/
-                user: auth?.user?.userId || "",
-                projectnum: sessionStorage.getItem("projectnum") ?? "",
-                qnum: sessionStorage.getItem("qnum") ?? "",
-                gb: "list",
-            }}
-            renderItem={(props) => <GridRenderer {...props} isLeftOpen={isLeftOpen} />}
+            <div ref={tableScrollRef} className="osa-table-scroll">
+                <table
+                    className="osa-table"
+                    style={{ minWidth: showLv1 ? "980px" : showLv2 ? "860px" : "740px" }}
+                >
+                    <thead>
+                        <tr className="osa-th-row">
+                            <th style={{ width: "48px", textAlign: "center", padding: "6px 4px" }}>
+                                #
+                            </th>
+                            <th style={{ width: "130px" }}>
+                                <span
+                                    className="osa-th-sortable"
+                                    onClick={() => setSort((p) => toggleThreeStageSort(p, "pid"))}
+                                >
+                                    PID {renderSortBadge("pid")}
+                                </span>
+                            </th>
+                            <th style={{ width: "58px", textAlign: "center", padding: "6px 4px" }}>
+                                <span
+                                    className="osa-th-sortable"
+                                    onClick={() => setSort((p) => toggleThreeStageSort(p, "cid"))}
+                                >
+                                    CID {renderSortBadge("cid")}
+                                </span>
+                            </th>
+                            <th style={{ width: "23%" }}>
+                                <span
+                                    className="osa-th-sortable"
+                                    onClick={() =>
+                                        setSort((p) => toggleThreeStageSort(p, "answerfin"))
+                                    }
+                                >
+                                    최종 응답 {renderSortBadge("answerfin")}
+                                </span>
+                            </th>
+                            {showLv1 && (
+                                <th style={{ width: "11%" }}>
+                                    <span
+                                        className="osa-th-sortable"
+                                        onClick={() =>
+                                            setSort((p) => toggleThreeStageSort(p, "lv1"))
+                                        }
+                                    >
+                                        대분류 {renderSortBadge("lv1")}
+                                    </span>
+                                </th>
+                            )}
+                            {showLv2 && (
+                                <th style={{ width: "11%" }}>
+                                    <span
+                                        className="osa-th-sortable"
+                                        onClick={() =>
+                                            setSort((p) => toggleThreeStageSort(p, "lv2"))
+                                        }
+                                    >
+                                        중분류 {renderSortBadge("lv2")}
+                                    </span>
+                                </th>
+                            )}
+                            <th style={{ width: "66px", textAlign: "center" }}>
+                                <span
+                                    className="osa-th-sortable"
+                                    onClick={() => setSort((p) => toggleThreeStageSort(p, "freq"))}
+                                >
+                                    빈도 {renderSortBadge("freq")}
+                                </span>
+                            </th>
+                            <th style={{ width: "84px", textAlign: "center" }}>
+                                <span
+                                    className="osa-th-sortable"
+                                    onClick={() => setSort((p) => toggleThreeStageSort(p, "code"))}
+                                >
+                                    소코드 {renderSortBadge("code")}
+                                </span>
+                            </th>
+                            <th>
+                                <span
+                                    className="osa-th-sortable"
+                                    onClick={() => setSort((p) => toggleThreeStageSort(p, "lv3"))}
+                                >
+                                    소분류 {renderSortBadge("lv3")}
+                                </span>
+                            </th>
+                            <th style={{ width: "92px", textAlign: "center" }}>
+                                <span
+                                    className="osa-th-sortable"
+                                    onClick={() =>
+                                        setSort((p) => toggleThreeStageSort(p, "sentiment"))
+                                    }
+                                >
+                                    감성 {renderSortBadge("sentiment")}
+                                </span>
+                            </th>
+                            <th style={{ width: "155px" }}>
+                                <span
+                                    className="osa-th-sortable"
+                                    onClick={() =>
+                                        setSort((p) => toggleThreeStageSort(p, "rawDate"))
+                                    }
+                                >
+                                    작성일 {renderSortBadge("rawDate")}
+                                </span>
+                            </th>
+                        </tr>
 
-        />
+                        {/* 2행: 전 컬럼 AND 검색 필터 */}
+                        <tr className="osa-filter-row">
+                            <th />
+                            <th>
+                                <input
+                                    type="text"
+                                    className="osa-col-filter-input"
+                                    placeholder="PID 검색"
+                                    value={colFilters.pid}
+                                    onChange={(e) =>
+                                        setColFilters((p) => ({ ...p, pid: e.target.value }))
+                                    }
+                                />
+                            </th>
+                            <th>
+                                <input
+                                    type="text"
+                                    className="osa-col-filter-input"
+                                    style={{ textAlign: "center" }}
+                                    placeholder="CID"
+                                    value={colFilters.cid}
+                                    onChange={(e) =>
+                                        setColFilters((p) => ({ ...p, cid: e.target.value }))
+                                    }
+                                />
+                            </th>
+                            <th>
+                                <input
+                                    type="text"
+                                    className="osa-col-filter-input"
+                                    placeholder="응답 검색"
+                                    value={colFilters.answer}
+                                    onChange={(e) =>
+                                        setColFilters((p) => ({ ...p, answer: e.target.value }))
+                                    }
+                                />
+                            </th>
+                            {showLv1 && (
+                                <th>
+                                    <input
+                                        type="text"
+                                        className="osa-col-filter-input"
+                                        placeholder="대분류"
+                                        value={colFilters.l1}
+                                        onChange={(e) =>
+                                            setColFilters((p) => ({ ...p, l1: e.target.value }))
+                                        }
+                                    />
+                                </th>
+                            )}
+                            {showLv2 && (
+                                <th>
+                                    <input
+                                        type="text"
+                                        className="osa-col-filter-input"
+                                        placeholder="중분류"
+                                        value={colFilters.l2}
+                                        onChange={(e) =>
+                                            setColFilters((p) => ({ ...p, l2: e.target.value }))
+                                        }
+                                    />
+                                </th>
+                            )}
+                            <th>
+                                <input
+                                    type="text"
+                                    className="osa-col-filter-input"
+                                    style={{ textAlign: "center" }}
+                                    placeholder="빈도"
+                                    value={colFilters.freq}
+                                    onChange={(e) =>
+                                        setColFilters((p) => ({ ...p, freq: e.target.value }))
+                                    }
+                                />
+                            </th>
+                            <th>
+                                <input
+                                    type="text"
+                                    className="osa-col-filter-input"
+                                    style={{ textAlign: "center" }}
+                                    placeholder="소코드"
+                                    value={colFilters.code}
+                                    onChange={(e) =>
+                                        setColFilters((p) => ({ ...p, code: e.target.value }))
+                                    }
+                                />
+                            </th>
+                            <th>
+                                <input
+                                    type="text"
+                                    className="osa-col-filter-input"
+                                    placeholder="소분류"
+                                    value={colFilters.l3}
+                                    onChange={(e) =>
+                                        setColFilters((p) => ({ ...p, l3: e.target.value }))
+                                    }
+                                />
+                            </th>
+                            <th>
+                                <OsaDropDown
+                                    size="sm"
+                                    options={TAB3_SENTIMENT_OPTIONS}
+                                    value={colFilters.sent}
+                                    onValueChange={(v) =>
+                                        setColFilters((p) => ({ ...p, sent: v }))
+                                    }
+                                />
+                            </th>
+                            <th>
+                                <input
+                                    type="text"
+                                    className="osa-col-filter-input"
+                                    placeholder="작성일"
+                                    value={colFilters.date}
+                                    onChange={(e) =>
+                                        setColFilters((p) => ({ ...p, date: e.target.value }))
+                                    }
+                                />
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {filteredSorted.length === 0 ? (
+                            <tr>
+                                <td
+                                    colSpan={9 + (showLv1 ? 1 : 0) + (showLv2 ? 1 : 0)}
+                                    style={{
+                                        padding: "44px 12px",
+                                        textAlign: "center",
+                                        color: "#94a3b8",
+                                    }}
+                                >
+                                    조회된 데이터가 없습니다.
+                                </td>
+                            </tr>
+                        ) : (
+                            filteredSorted.map((row, idx) => {
+                                const sInfo = formatSentLabel(row.sentiment);
+                                const rowNo = (idx + 1).toLocaleString();
+                                return (
+                                    <tr key={row._key}>
+                                        <td
+                                            style={{
+                                                textAlign: "center",
+                                                color: "#64748b",
+                                                fontVariantNumeric: "tabular-nums",
+                                            }}
+                                        >
+                                            {rowNo}
+                                        </td>
+                                        <td title={row.pid}>{row.pid}</td>
+                                        <td style={{ textAlign: "center", color: "#64748b" }}>
+                                            {row.cid}
+                                        </td>
+                                        <td title={row.answerfin || row.answer_origin}>
+                                            {row.answerfin || row.answer_origin || "—"}
+                                        </td>
+                                        {showLv1 && (
+                                            <td style={{ color: "#64748b" }}>{row.lv1 || "—"}</td>
+                                        )}
+                                        {showLv2 && (
+                                            <td style={{ color: "#64748b" }}>{row.lv2 || "—"}</td>
+                                        )}
+                                        <td style={{ textAlign: "center" }}>
+                                            <span
+                                                className={`osa-freq-badge ${row.freq === 0 ? "zero" : ""
+                                                    }`}
+                                            >
+                                                {row.freq.toLocaleString()}
+                                            </span>
+                                        </td>
+                                        <td
+                                            style={{
+                                                textAlign: "center",
+                                                fontWeight: row.code ? 600 : 400,
+                                                color: row.code ? "#ea580c" : "#cbd5e1",
+                                            }}
+                                        >
+                                            {row.code || "—"}
+                                        </td>
+                                        <td title={row.lv3}>{row.lv3 || "—"}</td>
+                                        <td style={{ textAlign: "center" }}>
+                                            <span
+                                                className={`osa-sent-pill ${sInfo.cls}`}
+                                                style={{ cursor: "default" }}
+                                            >
+                                                {sInfo.text}
+                                            </span>
+                                        </td>
+                                        <td
+                                            title={row.rawDate || ""}
+                                            style={{
+                                                color: "#64748b",
+                                                fontSize: "12px",
+                                                fontVariantNumeric: "tabular-nums",
+                                            }}
+                                        >
+                                            {row.date || "—"}
+                                        </td>
+                                    </tr>
+                                );
+                            })
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     );
 };
 

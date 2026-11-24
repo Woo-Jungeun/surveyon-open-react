@@ -3235,31 +3235,28 @@ const ProListGridRenderer = (props) => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
-                                padding: '18px 24px',
-                                borderBottom: '1px solid #f1f5f9'
+                                padding: '16px 24px 14px 24px',
+                                borderBottom: '1px solid #e2e8f0'
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{
-                                        width: '32px',
-                                        height: '32px',
-                                        borderRadius: '50%',
-                                        backgroundColor: '#fff7ed',
-                                        border: '1px solid #fed7aa',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        color: '#ea580c'
-                                    }}>
-                                        <Search size={16} strokeWidth={2.5} />
-                                    </div>
-                                    <div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>완료자 PID 비교분석</span>
-                                            <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>[{projectnum}]</span>
-
-                                        </div>
-
-                                    </div>
+                                    <i
+                                        aria-hidden="true"
+                                        style={{
+                                            display: "inline-block",
+                                            width: "4px",
+                                            height: "20px",
+                                            borderRadius: "2px",
+                                            background: "linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%)",
+                                            boxShadow: "0 2px 4px rgba(255, 107, 53, 0.28)",
+                                            flexShrink: 0,
+                                        }}
+                                    />
+                                    <span style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', lineHeight: 1.3 }}>완료자 PID 비교분석</span>
+                                    {projectnum && (
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 700, backgroundColor: '#fff7ed', color: '#ea580c', border: '1px solid #fdba74' }}>
+                                            {projectnum}
+                                        </span>
+                                    )}
                                 </div>
                                 <button
                                     onClick={() => setShowPidDiffModal(false)}

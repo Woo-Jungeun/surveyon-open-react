@@ -1072,6 +1072,18 @@ const HanqProgressModal = ({
                                 lineHeight: "1.3",
                             }}
                         >
+                            <i
+                                aria-hidden="true"
+                                style={{
+                                    display: "inline-block",
+                                    width: "4px",
+                                    height: "20px",
+                                    borderRadius: "2px",
+                                    background: "linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%)",
+                                    boxShadow: "0 2px 4px rgba(255, 107, 53, 0.28)",
+                                    flexShrink: 0,
+                                }}
+                            />
                             한큐분석
                             <span
                                 style={{

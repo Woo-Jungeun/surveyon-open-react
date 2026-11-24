@@ -16,8 +16,19 @@ const ProRegisterPopup = ({ popupShow, setPopupShow, onRefresh }) => {
             <div className="pr-modal-container">
                 <div className="pr-modal-header">
                     <div className="pr-header-title">
-                        <Plus size={20} className="pr-header-icon" />
-                        <span style={{ fontSize: "20px" }}>문항 등록</span>
+                        <i
+                            aria-hidden="true"
+                            style={{
+                                display: "inline-block",
+                                width: "4px",
+                                height: "20px",
+                                borderRadius: "2px",
+                                background: "linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%)",
+                                boxShadow: "0 2px 4px rgba(255, 107, 53, 0.28)",
+                                flexShrink: 0,
+                            }}
+                        />
+                        <span style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a" }}>문항 등록</span>
                     </div>
                     <button className="pr-close-btn" onClick={() => setPopupShow(false)}>
                         <X size={20} />

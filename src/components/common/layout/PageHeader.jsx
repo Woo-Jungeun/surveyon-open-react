@@ -25,6 +25,7 @@ const PageHeader = ({
     id = "page-header",
     title,
     infoTooltip,
+    leftContent,
     actions,
     children,
     onSearch,
@@ -134,6 +135,8 @@ const PageHeader = ({
                         </div>
                     )}
                 </h2>
+
+                {leftContent}
 
                 {/* 검색창 */}
                 {onSearch && (

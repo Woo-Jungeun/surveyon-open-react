@@ -1,0 +1,4298 @@
+/* AI오픈 문항 분석 화면 신규 레이아웃 스타일 (.osa-root / .osa-modal 전용 스코프 · 100% 주황색 브랜드 테마) */
+
+.osa-root {
+    --osa-orange-50: #fff7ed;
+    --osa-orange-100: #ffedd5;
+    --osa-orange-200: #fed7aa;
+    --osa-orange-300: #fdba74;
+    --osa-orange-400: #fb923c;
+    --osa-orange-500: #f97316;
+    --osa-orange-600: #ea580c;
+    --osa-orange-700: #c2410c;
+    --osa-orange-800: #9a3412;
+    --osa-border: #e2e8f0;
+    --osa-border-strong: #cbd5e1;
+    --osa-bg-page: #f8fafc;
+    --osa-bg-subtle: #f1f5f9;
+    --osa-text-main: #0f172a;
+    --osa-text-sub: #475569;
+    --osa-text-muted: #64748b;
+
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    background: var(--ds-page-bg, var(--osa-bg-page));
+    color: #1a1a1a;
+    font-family: "SpoqaHanSansNeo", "NotoSans", "Malgun Gothic", sans-serif;
+    font-weight: 400;
+    letter-spacing: -0.2px;
+    -webkit-font-smoothing: antialiased;
+    box-sizing: border-box;
+    padding: 0;
+    gap: 0;
+    overflow: hidden;
+}
+
+.osa-body-wrap {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 16px 14px;
+    gap: 8px;
+    overflow: hidden;
+}
+
+.osa-root *,
+.osa-root *::before,
+.osa-root *::after {
+    box-sizing: border-box;
+}
+
+/* 설문온 기존 체크박스/라디오 디자인 적용 (흰 배경 + 둥근 주황 테두리 + 주황 체크 아이콘) */
+.osa-root input[type="checkbox"],
+.osa-modal input[type="checkbox"] {
+    display: inline-block !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    width: 15px !important;
+    height: 15px !important;
+    border-radius: 3.5px !important;
+    border: 1.5px solid #fb923c !important;
+    background-color: #ffffff !important;
+    background-image: none !important;
+    cursor: pointer;
+    vertical-align: middle;
+    margin: 0;
+    flex-shrink: 0;
+    transition: border-color 0.14s ease, box-shadow 0.14s ease !important;
+    outline: none !important;
+}
+
+.osa-root input[type="checkbox"]:hover:not(:disabled),
+.osa-modal input[type="checkbox"]:hover:not(:disabled) {
+    border-color: #ea580c !important;
+    background-color: #fff7ed !important;
+}
+
+.osa-root input[type="checkbox"]:checked,
+.osa-modal input[type="checkbox"]:checked {
+    border: 1.5px solid #ea580c !important;
+    background-color: #ffffff !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ea580c' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 10.5px 10.5px !important;
+}
+
+.osa-root input[type="checkbox"]:disabled,
+.osa-modal input[type="checkbox"]:disabled {
+    opacity: 0.45 !important;
+    cursor: not-allowed !important;
+    border-color: #cbd5e1 !important;
+    background-color: #f8fafc !important;
+}
+
+.osa-root input[type="radio"],
+.osa-modal input[type="radio"] {
+    display: inline-block !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    width: 16px !important;
+    height: 16px !important;
+    border-radius: 50% !important;
+    border: 1.5px solid #fb923c !important;
+    background-color: #ffffff !important;
+    cursor: pointer;
+    vertical-align: middle;
+    margin: 0;
+    flex-shrink: 0;
+    outline: none !important;
+}
+
+.osa-root input[type="radio"]:checked,
+.osa-modal input[type="radio"]:checked {
+    border-color: #ea580c !important;
+    background-color: #ffffff !important;
+    background-image: radial-gradient(circle, #ea580c 42%, transparent 46%) !important;
+}
+
+/* 창의성 조절 커스텀 레인지 슬라이더 */
+.osa-root input[type="range"].osa-range-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    outline: none;
+    cursor: pointer;
+    margin: 6px 0;
+}
+
+.osa-root input[type="range"].osa-range-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--osa-orange-500);
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(249, 115, 22, 0.45);
+    cursor: pointer;
+    transition: transform 0.12s ease;
+}
+
+.osa-root input[type="range"].osa-range-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.12);
+    background: var(--osa-orange-600);
+}
+
+.osa-root input[type="range"].osa-range-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--osa-orange-500);
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(249, 115, 22, 0.45);
+    cursor: pointer;
+}
+
+/* 1. 설문온 공통 페이지 헤더 (AiDataHeader / PageHeader) 연동 스타일 */
+.osa-root header.page-header.ai-data-header-container {
+    z-index: 100 !important;
+    height: 64px;
+    min-height: 64px;
+    padding: 0 24px;
+    background: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    flex-shrink: 0;
+}
+
+.osa-root .page-header-left {
+    flex: 1;
+    min-width: 0;
+    margin-right: 12px;
+    gap: 12px;
+}
+
+.osa-root h2.page-header-title {
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    color: var(--ds-text-main, #1e293b) !important;
+    letter-spacing: -0.5px !important;
+    line-height: 1.5;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.osa-root .page-header-title::before {
+    background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%) !important;
+    box-shadow: 0 2px 4px rgba(255, 107, 53, 0.25);
+}
+
+/* reset.css의 span { font-size: 14px }가 헤더 버튼 내부 텍스트 크기를 왜곡하지 않도록 보정 */
+.osa-root .cmn-btn>span,
+.osa-root .osa-qnav-back>span,
+.osa-root .filter-toggle-btn>span:not(.info-icon) {
+    font-size: inherit;
+    font-weight: inherit;
+    color: inherit;
+    letter-spacing: inherit;
+}
+
+.osa-header-divider {
+    width: 1px;
+    height: 20px;
+    background-color: #e2e8f0;
+    margin: 0 2px;
+    flex-shrink: 0;
+}
+
+.osa-root button.osa-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.osa-root button.osa-icon-btn>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+}
+
+.osa-root button.osa-icon-btn:hover:not(:disabled) {
+    border-color: #f97316;
+    background-color: #fff7ed;
+    color: #ea580c;
+}
+
+.osa-root button.osa-icon-btn.active {
+    border-color: #f97316 !important;
+    background-color: #fff7ed !important;
+    color: #ea580c !important;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.14);
+}
+
+.osa-root button.osa-icon-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background-color: #f8fafc;
+}
+
+/* 문항 전환 네비게이터 (공통 헤더 내부 · Kendo DropDownList 연동) */
+.osa-qnav {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: -0.2px;
+}
+
+/* 헤더 내 분석 설정 통합 캡슐 바 (⚙ 분석 설정 | 간략 요약 ▾) */
+.osa-root button.osa-header-settings-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    min-width: 0;
+    max-width: 100%;
+    flex: 0 1 auto;
+    padding: 0 9px 0 10px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    cursor: pointer;
+    user-select: none;
+    overflow: hidden;
+    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.osa-root button.osa-header-settings-pill>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+}
+
+.osa-root button.osa-header-settings-pill .osa-hset-head {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    color: #1e293b;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    transition: color 0.15s ease;
+}
+
+.osa-root button.osa-header-settings-pill .osa-hset-head>span {
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    color: inherit;
+    white-space: nowrap;
+}
+
+.osa-root button.osa-header-settings-pill .osa-hset-head>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+}
+
+.osa-root button.osa-header-settings-pill .osa-hset-gear {
+    color: #f97316;
+    transition: color 0.15s ease;
+}
+
+.osa-root button.osa-header-settings-pill .osa-hset-divider {
+    width: 1px;
+    height: 13px;
+    background-color: #e2e8f0;
+    flex-shrink: 0;
+}
+
+.osa-root button.osa-header-settings-pill .osa-hset-chevron {
+    color: #64748b;
+    transition: transform 0.18s ease, color 0.15s ease;
+}
+
+.osa-root button.osa-header-settings-pill .osa-hset-text {
+    display: block;
+    min-width: 0;
+    flex: 0 1 auto;
+    padding-right: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #94a3b8 !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    line-height: 20px !important;
+    letter-spacing: -0.1px;
+    transition: color 0.15s ease;
+}
+
+.osa-root button.osa-header-settings-pill .osa-hset-text>span,
+.osa-root button.osa-header-settings-pill .osa-hset-text>i {
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    line-height: 20px !important;
+    font-style: normal;
+    color: inherit;
+    vertical-align: middle;
+    font-variant-numeric: tabular-nums;
+}
+
+.osa-root button.osa-header-settings-pill .osa-hset-text>span.osa-hset-model {
+    color: #64748b !important;
+    font-weight: 500 !important;
+}
+
+.osa-root button.osa-header-settings-pill .osa-hset-text>i.osa-hmeta-sep {
+    color: #cbd5e1 !important;
+    margin: 0 4px;
+}
+
+.osa-root button.osa-header-settings-pill .osa-hmeta-prompt-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 19px;
+    padding: 0 6px;
+    margin-left: -2px;
+    border-radius: 999px;
+    background-color: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #ea580c !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.osa-root button.osa-header-settings-pill.active .osa-hmeta-prompt-badge {
+    background-color: #ffffff;
+    border-color: #fdba74;
+    color: #c2410c !important;
+}
+
+.osa-root button.osa-header-settings-pill:hover {
+    background-color: #fffaf5;
+    border-color: #fb923c;
+}
+
+.osa-root button.osa-header-settings-pill:hover .osa-hset-head,
+.osa-root button.osa-header-settings-pill:hover .osa-hset-gear,
+.osa-root button.osa-header-settings-pill:hover .osa-hset-chevron {
+    color: #ea580c;
+}
+
+.osa-root button.osa-header-settings-pill:hover .osa-hset-text {
+    color: #64748b !important;
+}
+
+.osa-root button.osa-header-settings-pill.active {
+    background-color: #fff7ed;
+    border-color: #f97316;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.14);
+}
+
+.osa-root button.osa-header-settings-pill.active .osa-hset-head,
+.osa-root button.osa-header-settings-pill.active .osa-hset-gear,
+.osa-root button.osa-header-settings-pill.active .osa-hset-chevron {
+    color: #ea580c;
+}
+
+.osa-root button.osa-header-settings-pill.active .osa-hset-divider {
+    background-color: #fed7aa;
+}
+
+.osa-root button.osa-header-settings-pill.active .osa-hset-chevron {
+    transform: rotate(180deg);
+}
+
+.osa-root button.osa-header-settings-pill.active .osa-hset-text,
+.osa-root button.osa-header-settings-pill.active .osa-hset-text>span.osa-hset-model {
+    color: #9a3412 !important;
+}
+
+/* 톱니바퀴 클릭 시 헤더 바로 아래 펼쳐지는 상세 분석 설정 카드 (하단 워크스페이스와 좌우 16px 정렬) */
+.osa-header-drawer-slot {
+    flex-shrink: 0;
+    z-index: 90;
+}
+
+.osa-header-drawer-wrap {
+    padding: 10px 16px 0;
+}
+
+.osa-header-drawer-card {
+    background-color: #ffffff;
+    border: 1px solid var(--osa-border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+    display: grid;
+    grid-template-columns: 1.05fr 1.2fr 1.55fr;
+    gap: 0;
+    align-items: stretch;
+}
+
+.osa-drawer-col {
+    min-width: 0;
+}
+
+.osa-drawer-col:nth-child(1) {
+    padding-right: 16px;
+    border-right: 1px solid #f1f5f9;
+}
+
+.osa-drawer-col:nth-child(2) {
+    padding: 0 16px;
+    border-right: 1px solid #f1f5f9;
+}
+
+.osa-drawer-col.osa-drawer-col-params {
+    padding-left: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1.28fr;
+    column-gap: 14px;
+    row-gap: 10px;
+    align-content: space-between;
+}
+
+@media (max-width: 1280px) {
+    .osa-header-drawer-card {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .osa-drawer-col:nth-child(1),
+    .osa-drawer-col:nth-child(2) {
+        padding: 0 0 12px;
+        border-right: none;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .osa-drawer-col.osa-drawer-col-params {
+        padding-left: 0;
+    }
+}
+
+/* 헤더 내 중복코드 제거 적용 여부 상태 태그 (테두리 없는 작은 알약 형태로 버튼과 구분) */
+.osa-dup-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 22px;
+    padding: 0 9px;
+    border-radius: 999px;
+    border: none;
+    font-size: 11.5px !important;
+    line-height: 1 !important;
+    white-space: nowrap;
+    user-select: none;
+    cursor: default;
+    flex-shrink: 0;
+}
+
+.osa-dup-status-badge>span {
+    font-size: 11.5px !important;
+    line-height: 1 !important;
+    font-weight: inherit;
+    color: inherit;
+}
+
+.osa-dup-status-badge>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+}
+
+.osa-dup-status-badge.applied {
+    background-color: #fff7ed;
+    color: #ea580c;
+    font-weight: 600;
+}
+
+.osa-dup-status-badge.unapplied {
+    background-color: #f1f5f9;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.osa-dup-status-dot {
+    display: inline-block;
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50%;
+    background-color: #cbd5e1;
+    flex-shrink: 0;
+}
+
+.osa-root button.osa-qnav-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    height: 32px;
+    padding: 0 11px 0 8px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    margin-right: 4px;
+}
+
+.osa-root button.osa-qnav-back:hover {
+    background-color: #fff7ed;
+    border-color: #fdba74;
+    color: #ea580c;
+}
+
+.osa-qpos {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    background: transparent;
+    border: none;
+    font-size: 12.5px !important;
+    font-weight: 600;
+    color: #64748b;
+    margin-left: 2px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.osa-root button.osa-qnav-del-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 32px;
+    padding: 0 9px;
+    margin-left: 4px;
+    border-radius: 6px;
+    border: 1px solid #fecaca;
+    background-color: #fffafa;
+    color: #dc2626;
+    font-size: 12px !important;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+
+.osa-root button.osa-qnav-del-btn>span {
+    font-size: 12px !important;
+    font-weight: 600;
+    line-height: 1 !important;
+    color: inherit;
+}
+
+.osa-root button.osa-qnav-del-btn>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+    color: inherit;
+}
+
+.osa-root button.osa-qnav-del-btn:hover {
+    background-color: #fee2e2;
+    border-color: #f87171;
+    color: #b91c1c;
+}
+
+/* ==========================================================================
+   Kendo DropDownList 통합 스타일 (.osa-kendo-ddl & 포털 팝업 .osa-kendo-popup)
+   ========================================================================== */
+.osa-root .k-dropdownlist.osa-kendo-ddl {
+    padding: 0 !important;
+    border-radius: 6px !important;
+    border: 1px solid #cbd5e1 !important;
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    font-family: "SpoqaHanSansNeo", "NotoSans", "Malgun Gothic", sans-serif !important;
+    box-shadow: none !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl:hover:not(.k-disabled) {
+    border-color: #fb923c !important;
+    background-color: #ffffff !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl.k-focus,
+.osa-root .k-dropdownlist.osa-kendo-ddl:focus-within {
+    border-color: #f97316 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.14) !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl.k-disabled {
+    background-color: #f1f5f9 !important;
+    color: #94a3b8 !important;
+    border-color: #e2e8f0 !important;
+    opacity: 0.75 !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl.k-picker>button {
+    background-color: #f97316 !important;
+    border: none !important;
+    flex-shrink: 0 !important;
+}
+
+/* 1) 헤더 문항 네비게이터용 Kendo DropDownList */
+.osa-root .k-dropdownlist.osa-kendo-ddl-qnav {
+    height: 32px !important;
+    min-height: 32px !important;
+    width: clamp(220px, 19vw, 310px) !important;
+    max-width: 310px !important;
+    background-color: #f8fafc !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl-qnav>.k-input-inner {
+    padding: 0 4px 0 8px !important;
+    min-width: 0 !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl-qnav.k-picker>button {
+    width: 28px !important;
+    height: 30px !important;
+    -webkit-mask-size: 20px !important;
+    mask-size: 20px !important;
+}
+
+.osa-qddl-static {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 32px;
+    padding: 0 12px 0 8px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background-color: #f8fafc;
+    max-width: 310px;
+}
+
+.osa-qddl-val-inner {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    width: 100%;
+    min-width: 0;
+}
+
+.osa-qddl-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1px 7px;
+    height: 20px;
+    border-radius: 5px;
+    background-color: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #ea580c;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1;
+    flex-shrink: 0;
+    letter-spacing: -0.2px;
+}
+
+.osa-qddl-title {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #1e293b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+/* 2) 분석 설정 드로어용 표준 크기 (md) */
+.osa-root .k-dropdownlist.osa-kendo-ddl-md {
+    width: 100% !important;
+    height: 34px !important;
+    min-height: 34px !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl-md>.k-input-inner {
+    padding: 0 4px 0 10px !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl-md>.k-input-inner>.k-input-value-text {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl-md.k-picker>button {
+    width: 28px !important;
+    height: 32px !important;
+    -webkit-mask-size: 20px !important;
+    mask-size: 20px !important;
+}
+
+/* 3) 서브툴바 단계 선택용 (stage · 30px 높이 · 12.5px 균일 규격) */
+.osa-root .k-dropdownlist.osa-kendo-ddl-stage {
+    width: 142px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    border-radius: 6px !important;
+    border-color: #cbd5e1 !important;
+    background-color: #ffffff !important;
+    flex-shrink: 0 !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl-stage>.k-input-inner {
+    padding: 0 2px 0 10px !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl-stage>.k-input-inner>.k-input-value-text {
+    font-size: 12.5px !important;
+    font-weight: 500 !important;
+    color: #334155 !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl-stage.k-picker>button {
+    width: 24px !important;
+    height: 28px !important;
+    -webkit-mask-size: 17px !important;
+    mask-size: 17px !important;
+}
+
+/* 공통 헤더 분류단계 선택용 (32px 높이 정렬 · PID별데이터 탭 읽기전용 시 선명한 가독성 유지) */
+.osa-root .k-dropdownlist.osa-kendo-ddl-header-stage {
+    width: 138px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl-header-stage.k-picker>button {
+    height: 30px !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl-header-stage.k-disabled {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    opacity: 0.88 !important;
+    cursor: default !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl-header-stage.k-disabled>.k-input-inner>.k-input-value-text {
+    color: #475569 !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl-header-stage.k-disabled.k-picker>button {
+    background-color: #94a3b8 !important;
+}
+
+/* 4) 그리드 인라인 필터 & 셀 내부용 컴팩트 크기 (sm · 말줄임 방지 패딩/버튼 폭 최적화) */
+.osa-root .k-dropdownlist.osa-kendo-ddl-sm {
+    width: 100% !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    border-radius: 5px !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl-sm>.k-input-inner {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    padding: 0 2px 0 8px !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl-sm>.k-input-inner>.k-input-value-text {
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    color: #334155;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl-sm.k-picker>button {
+    width: 18px !important;
+    min-width: 18px !important;
+    height: 24px !important;
+    padding: 0 !important;
+    -webkit-mask-size: 14px !important;
+    mask-size: 14px !important;
+}
+
+/* 5) Kendo 포털 팝업 리스트 공통 스타일 (body 직속 렌더링) */
+.k-animation-container:has(.osa-kendo-popup) {
+    z-index: 100050 !important;
+}
+
+.k-animation-container:has(.osa-kendo-popup) {
+    z-index: 100080 !important;
+}
+
+.k-popup.k-dropdownlist-popup.osa-kendo-popup {
+    padding: 6px !important;
+    margin-top: 4px !important;
+    border-radius: 9px !important;
+    border: 1px solid #fdba74 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.14), 0 4px 10px -2px rgba(15, 23, 42, 0.06) !important;
+    font-family: "SpoqaHanSansNeo", "NotoSans", "Malgun Gothic", sans-serif !important;
+}
+
+.osa-kendo-popup .k-list-ul {
+    gap: 2px;
+}
+
+.osa-kendo-popup .k-list-ul .k-list-item {
+    padding: 7px 10px !important;
+    border-radius: 6px !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    color: #1e293b !important;
+    transition: background-color 0.12s ease, color 0.12s ease !important;
+}
+
+.osa-kendo-popup.osa-kendo-popup-sm .k-list-ul .k-list-item {
+    padding: 6px 9px !important;
+    font-size: 12.5px !important;
+}
+
+.osa-kendo-popup .k-list-ul .k-list-item>.k-list-item-text {
+    font-size: inherit !important;
+    width: 100%;
+}
+
+.osa-kendo-popup .k-list-ul .k-list-item:hover {
+    background-color: #fff7ed !important;
+    color: #ea580c !important;
+}
+
+.osa-kendo-popup .k-list-ul .k-list-item.k-selected,
+.osa-kendo-popup .k-list-ul .k-list-item.k-selected:hover {
+    background-color: #ffedd5 !important;
+    color: #c2410c !important;
+    font-weight: 600 !important;
+}
+
+/* 문항 네비게이터 팝업 아이템 내부 (문항번호 배지 + 문항명) */
+.osa-qddl-item-inner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+}
+
+.osa-qddl-item-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    line-height: 1.2;
+    flex-shrink: 0;
+}
+
+.osa-kendo-popup .k-list-item:hover .osa-qddl-item-badge,
+.osa-kendo-popup .k-list-item.k-selected .osa-qddl-item-badge {
+    background-color: #ffffff;
+    border-color: #fdba74;
+    color: #ea580c;
+}
+
+.osa-qddl-item-title {
+    font-size: 13px !important;
+    color: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+/* 공통 헤더 우측 버튼 (PageLayout .cmn-btn 및 기존 OptionSetting .filter-toggle-btn 규격 일치) */
+.osa-root button.cmn-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    color: #334155;
+    white-space: nowrap;
+}
+
+.osa-root button.cmn-btn:hover:not(:disabled) {
+    background-color: #f8fafc;
+    border-color: #94a3b8;
+    color: #1e293b;
+}
+
+.osa-root button.cmn-btn.active {
+    background-color: #fff7ed;
+    border-color: #f97316;
+    color: #ea580c;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.14);
+}
+
+/* 상단 헤더 [엑셀 ▾] 통합 드롭다운 팝오버 */
+.osa-excel-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 220;
+    min-width: 184px;
+    padding: 5px;
+    border-radius: 8px;
+    border: 1px solid #fdba74;
+    background-color: #ffffff;
+    box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.14), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.osa-root button.osa-excel-popover-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 32px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #1e293b;
+    font-size: 12.5px !important;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.osa-root button.osa-excel-popover-item>span {
+    font-size: 12.5px !important;
+    line-height: 1.3 !important;
+    color: inherit;
+    font-weight: inherit;
+}
+
+.osa-root button.osa-excel-popover-item>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+    color: #64748b;
+}
+
+.osa-root button.osa-excel-popover-item:hover {
+    background-color: #fff7ed;
+    color: #ea580c;
+}
+
+.osa-root button.osa-excel-popover-item:hover>svg {
+    color: #ea580c;
+}
+
+.osa-root button.filter-toggle-btn {
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0 12px;
+    background-color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.osa-root button.filter-toggle-btn:hover:not(:disabled) {
+    background-color: #f8fafc;
+    border-color: #94a3b8;
+    color: #1e293b;
+}
+
+.osa-root button.filter-toggle-btn.active {
+    background-color: #fff7ed;
+    border-color: #fdba74;
+    color: #ea580c;
+    font-weight: 600;
+}
+
+.osa-root button.filter-toggle-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.osa-unsaved-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px !important;
+    font-weight: 600;
+    color: #ea580c;
+    background: transparent;
+    border: none;
+    padding: 0 4px;
+    white-space: nowrap;
+}
+
+.osa-unsaved-dot>span {
+    font-size: 12px !important;
+    line-height: 1 !important;
+    font-weight: 600;
+    color: #ea580c;
+}
+
+.osa-unsaved-indicator {
+    position: relative;
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: #f97316;
+    flex-shrink: 0;
+    animation: osaUnsavedCore 1.8s ease-in-out infinite;
+}
+
+.osa-unsaved-indicator::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1.5px solid #f97316;
+    opacity: 0;
+    animation: osaUnsavedPing 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+    pointer-events: none;
+}
+
+@keyframes osaUnsavedPing {
+    0% {
+        transform: scale(0.55);
+        opacity: 0.85;
+    }
+
+    75%,
+    100% {
+        transform: scale(1.75);
+        opacity: 0;
+    }
+}
+
+@keyframes osaUnsavedCore {
+
+    0%,
+    100% {
+        background-color: #ea580c;
+        box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
+    }
+
+    50% {
+        background-color: #fb923c;
+        box-shadow: 0 0 6px 2px rgba(249, 115, 22, 0.45);
+    }
+}
+
+.osa-root button.osa-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 31px;
+    padding: 0 11px;
+    border-radius: 7px;
+    font-size: 12.5px;
+    font-weight: 500;
+    border: 1px solid var(--osa-border);
+    background-color: #ffffff;
+    color: #374151;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.14s ease;
+}
+
+.osa-root button.osa-btn>span:not(.info-icon) {
+    font-size: inherit !important;
+    font-weight: inherit;
+    color: inherit;
+    line-height: 1;
+    letter-spacing: inherit;
+}
+
+.osa-root button.osa-btn>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+}
+
+.osa-root button.osa-btn:hover:not(:disabled) {
+    border-color: var(--osa-orange-300);
+    background-color: var(--osa-orange-50);
+    color: var(--osa-orange-600);
+}
+
+.osa-root button.osa-btn.active {
+    border-color: #f97316 !important;
+    background-color: #fff7ed !important;
+    color: #ea580c !important;
+    font-weight: 600;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.14);
+}
+
+/* 컬럼 표시 설정 팝오버 (우측 버튼 기준 안쪽 정렬) */
+.osa-col-popover {
+    position: absolute;
+    top: 35px;
+    right: 0;
+    left: auto;
+    z-index: 100;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    padding: 6px;
+    box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.14), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+    min-width: 168px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.osa-col-popover-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3px 8px 6px;
+    margin-bottom: 2px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 11px !important;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.osa-col-popover-head>span {
+    font-size: 11px !important;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.osa-root button.osa-col-popover-reset {
+    border: none;
+    background: transparent;
+    padding: 0;
+    font-size: 11px !important;
+    font-weight: 600;
+    color: #ea580c;
+    cursor: pointer;
+}
+
+.osa-root button.osa-col-popover-reset:hover {
+    text-decoration: underline;
+}
+
+.osa-col-popover-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-size: 12.5px !important;
+    font-weight: 400;
+    color: #1e293b;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.osa-col-popover-item:hover {
+    background-color: #fff7ed;
+    color: #ea580c;
+}
+
+.osa-col-popover-item>span {
+    font-size: 12.5px !important;
+    color: inherit;
+    line-height: 1.3;
+}
+
+.osa-col-popover-item input[type="checkbox"] {
+    width: 14px !important;
+    height: 14px !important;
+    border-radius: 3.5px !important;
+}
+
+.osa-col-popover-item input[type="checkbox"]:checked {
+    background-size: 9.5px 9.5px !important;
+}
+
+.osa-root button.osa-btn:disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+}
+
+.osa-root button.osa-btn.osa-btn-excel-down {
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #15803d;
+}
+
+.osa-root button.osa-btn.osa-btn-excel-down:hover:not(:disabled) {
+    background-color: #dcfce7;
+    border-color: #86efac;
+    color: #166534;
+}
+
+.osa-root button.osa-btn.osa-btn-excel-up {
+    background-color: var(--osa-orange-50);
+    border-color: var(--osa-orange-200);
+    color: var(--osa-orange-600);
+}
+
+.osa-root button.osa-btn.osa-btn-excel-up:hover:not(:disabled) {
+    background-color: var(--osa-orange-100);
+    border-color: var(--osa-orange-300);
+    color: var(--osa-orange-700);
+}
+
+.osa-root button.osa-btn.osa-btn-primary {
+    background-color: var(--osa-orange-500) !important;
+    border-color: var(--osa-orange-500) !important;
+    color: #ffffff !important;
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(249, 115, 22, 0.25);
+}
+
+.osa-root button.osa-btn.osa-btn-primary:hover:not(:disabled) {
+    background-color: var(--osa-orange-600) !important;
+    border-color: var(--osa-orange-600) !important;
+    color: #ffffff !important;
+}
+
+/* 상단 AI 실행 추천 버튼용 소프트 주황 아웃라인 스타일 ([저장] 솔리드 버튼과 시선 분산 방지) */
+.osa-root button.osa-btn.osa-btn-accent {
+    background-color: #fff7ed !important;
+    border-color: #fb923c !important;
+    color: #ea580c !important;
+    font-weight: 600;
+}
+
+.osa-root button.osa-btn.osa-btn-accent:hover:not(:disabled) {
+    background-color: #ffedd5 !important;
+    border-color: #f97316 !important;
+    color: #c2410c !important;
+}
+
+.osa-db-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0 8px;
+    height: 28px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+.osa-db-status.synced {
+    color: #15803d;
+    background-color: #f0fdf4;
+}
+
+.osa-db-status.dirty {
+    color: var(--osa-orange-600);
+    background-color: var(--osa-orange-50);
+    border: 1px solid var(--osa-orange-200);
+}
+
+.osa-dup-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 31px;
+    padding: 0 10px;
+    border-radius: 7px;
+    border: 1px solid var(--osa-border);
+    background-color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--osa-text-sub);
+    cursor: pointer;
+    user-select: none;
+}
+
+.osa-dup-pill.active {
+    border-color: var(--osa-orange-300);
+    background-color: var(--osa-orange-50);
+    color: var(--osa-orange-700);
+}
+
+/* 2. 상단 탭 바 + 하단 그리드 통합 카드 컨테이너 */
+.osa-unified-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    border: 1px solid var(--osa-border);
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    overflow: visible;
+}
+
+.osa-settings-card {
+    position: relative;
+    z-index: 55;
+    background-color: #fcfcfd;
+    border: none;
+    border-bottom: 1px solid var(--osa-border);
+    border-radius: 10px 10px 0 0;
+    flex-shrink: 0;
+    overflow: visible;
+}
+
+/* AI 워커 실행 중: 전체 투명 오버레이(z-index: 10000)로 타 조작은 차단하되 진행 상태 필·로그·중지 영역만 클릭/스크롤 허용 */
+.osa-settings-card.is-worker-running {
+    z-index: 10010;
+    pointer-events: none;
+}
+
+.osa-settings-card.is-worker-running .osa-log-popover-anchor {
+    pointer-events: auto;
+}
+
+.osa-settings-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px 0 10px;
+    height: 46px;
+    min-height: 46px;
+    gap: 12px;
+}
+
+.osa-settings-bar-left {
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
+}
+
+.osa-root button.osa-settings-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 11px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    font-size: 12.5px !important;
+    font-weight: 600;
+    color: #334155;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 0.14s ease, background-color 0.14s ease, color 0.14s ease;
+}
+
+.osa-root button.osa-settings-toggle-btn>span {
+    font-size: 12.5px !important;
+    font-weight: 600;
+    color: inherit;
+    line-height: 1;
+}
+
+.osa-root button.osa-settings-toggle-btn>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+    color: #64748b;
+    transition: color 0.14s ease;
+}
+
+.osa-root button.osa-settings-toggle-btn.open,
+.osa-root button.osa-settings-toggle-btn:hover {
+    border-color: var(--osa-orange-300);
+    background-color: var(--osa-orange-50);
+    color: var(--osa-orange-700);
+}
+
+.osa-root button.osa-settings-toggle-btn.open>svg,
+.osa-root button.osa-settings-toggle-btn:hover>svg {
+    color: var(--osa-orange-600);
+}
+
+.osa-settings-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 3px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.12s ease;
+}
+
+.osa-settings-summary:hover {
+    background-color: #f8fafc;
+}
+
+.osa-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 20px;
+    line-height: 20px !important;
+}
+
+.osa-meta-label {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    font-size: 12.5px !important;
+    line-height: 20px !important;
+    font-weight: 500 !important;
+    color: #94a3b8 !important;
+    letter-spacing: -0.2px;
+}
+
+.osa-meta-val {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    font-size: 12.5px !important;
+    line-height: 20px !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.2px;
+}
+
+.osa-meta-val em {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    font-style: normal;
+    font-size: 12.5px !important;
+    line-height: 20px !important;
+    font-weight: 400 !important;
+    color: #64748b !important;
+    margin-right: 3px;
+}
+
+.osa-meta-dot {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    font-style: normal;
+    font-size: 12.5px !important;
+    line-height: 20px !important;
+    color: #cbd5e1 !important;
+    margin: 0 5px;
+    font-weight: 400 !important;
+}
+
+.osa-meta-sep {
+    width: 1px;
+    height: 12px;
+    background-color: #e2e8f0;
+    flex-shrink: 0;
+}
+
+.osa-meta-prompt-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background-color: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #ea580c !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    flex-shrink: 0;
+}
+
+.osa-settings-drawer {
+    border-top: 1px solid var(--osa-border);
+    padding: 12px 14px;
+    background-color: #fcfcfd;
+    display: grid;
+    grid-template-columns: 1.15fr 1.35fr 1.5fr;
+    gap: 14px;
+    align-items: stretch;
+}
+
+@media (max-width: 1280px) {
+    .osa-settings-drawer {
+        grid-template-columns: 1fr;
+    }
+}
+
+.osa-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.osa-field-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 20px;
+    min-height: 20px;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.osa-field-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px !important;
+    line-height: 1 !important;
+    font-weight: 700 !important;
+    color: #334155 !important;
+    white-space: nowrap;
+}
+
+.osa-field-subhint {
+    font-style: normal;
+    font-size: 11px !important;
+    line-height: 1 !important;
+    font-weight: 400 !important;
+    color: #94a3b8 !important;
+    white-space: nowrap;
+}
+
+.osa-root button.osa-prompt-hist-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 20px;
+    padding: 0 7px;
+    border-radius: 5px;
+    border: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+    color: #475569;
+    font-size: 11px !important;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.14s ease;
+}
+
+.osa-root button.osa-prompt-hist-btn>span {
+    font-size: 11px !important;
+    font-weight: 600;
+    line-height: 1 !important;
+    color: inherit;
+}
+
+.osa-root button.osa-prompt-hist-btn>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+}
+
+.osa-root button.osa-prompt-hist-btn:hover {
+    background-color: #fff7ed;
+    border-color: #fdba74;
+    color: #ea580c;
+}
+
+.osa-root button.osa-qdelete-drawer-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 20px;
+    padding: 0 7px;
+    border-radius: 5px;
+    border: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+    color: #64748b;
+    font-size: 11px !important;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.14s ease;
+}
+
+.osa-root button.osa-qdelete-drawer-btn>span {
+    font-size: 11px !important;
+    font-weight: 600;
+    line-height: 1 !important;
+    color: inherit;
+}
+
+.osa-root button.osa-qdelete-drawer-btn>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+}
+
+.osa-root button.osa-qdelete-drawer-btn:hover {
+    background-color: #fef2f2;
+    border-color: #fca5a5;
+    color: #dc2626;
+}
+
+.osa-root button.osa-btn.osa-tab2-batch-del-btn {
+    border-color: #fca5a5 !important;
+    background-color: #fff5f5 !important;
+    color: #dc2626 !important;
+    font-weight: 600;
+}
+
+.osa-root button.osa-btn.osa-tab2-batch-del-btn:hover:not(:disabled) {
+    border-color: #ef4444 !important;
+    background-color: #fee2e2 !important;
+    color: #b91c1c !important;
+}
+
+.osa-temp-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 4px;
+    background-color: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #ea580c !important;
+    font-size: 11.5px !important;
+    line-height: 1 !important;
+    font-weight: 700 !important;
+    font-variant-numeric: tabular-nums;
+}
+
+.osa-lv-count-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.osa-lv-addon-box {
+    display: flex;
+    align-items: stretch;
+    height: 34px;
+    border: 1px solid var(--osa-border-strong);
+    border-radius: 6px;
+    background-color: #ffffff;
+    overflow: hidden;
+    transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.osa-lv-addon-box:focus-within {
+    border-color: var(--osa-orange-500);
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.14);
+}
+
+.osa-lv-addon-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    background-color: #f8fafc;
+    border-right: 1px solid #e2e8f0;
+    color: #64748b !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.osa-root input.osa-lv-addon-input {
+    width: 100%;
+    min-width: 0;
+    border: none !important;
+    background: transparent !important;
+    text-align: center;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    padding: 0 4px;
+    outline: none !important;
+    font-variant-numeric: tabular-nums;
+}
+
+.osa-root input.osa-input {
+    border: 1px solid var(--osa-border-strong);
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: var(--osa-text-main);
+    font-size: 12.5px;
+    height: 34px;
+    padding: 0 8px;
+    outline: none;
+    transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.osa-root select.osa-select {
+    border: 1px solid var(--osa-border-strong);
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: var(--osa-text-main);
+    font-size: 12.5px;
+    font-weight: 600;
+    height: 34px;
+    padding: 0 8px;
+    line-height: normal;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.osa-root textarea.osa-textarea {
+    border: 1px solid var(--osa-border-strong);
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: var(--osa-text-main);
+    font-size: 12.5px;
+    line-height: 1.5;
+    padding: 8px 10px;
+    height: 104px;
+    min-height: 104px;
+    max-height: 104px;
+    resize: none;
+    outline: none;
+    transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.osa-slider-box {
+    display: flex;
+    align-items: center;
+    height: 34px;
+    padding: 0 10px;
+    background-color: #ffffff;
+    border: 1px solid var(--osa-border-strong);
+    border-radius: 6px;
+}
+
+.osa-root input.osa-input:focus,
+.osa-root select.osa-select:focus,
+.osa-root textarea.osa-textarea:focus {
+    border-color: var(--osa-orange-500);
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.14);
+}
+
+/* 워커 실시간 상태 바 & 플로팅 팝오버 콘솔 (레이아웃 밀림 0px) */
+.osa-log-popover-anchor {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.osa-worker-running-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.osa-root button.osa-worker-running-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 29px;
+    padding: 0 11px;
+    border-radius: 7px;
+    border: 1px solid #fdba74;
+    background-color: #fff7ed;
+    cursor: pointer;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    transition: border-color 0.14s ease, background-color 0.14s ease;
+}
+
+.osa-root button.osa-worker-running-pill:hover,
+.osa-root button.osa-worker-running-pill.active {
+    border-color: #f97316;
+    background-color: #ffedd5;
+}
+
+.osa-root button.osa-worker-running-pill>b {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    color: #ea580c !important;
+}
+
+.osa-root button.osa-worker-running-pill>em {
+    font-style: normal;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    color: #c2410c !important;
+    opacity: 0.85;
+    font-variant-numeric: tabular-nums;
+}
+
+.osa-root button.osa-btn.osa-worker-stop-btn {
+    border-color: #ea580c !important;
+    color: #ea580c !important;
+    background-color: #ffffff !important;
+    font-weight: 600;
+    gap: 5px;
+}
+
+.osa-root button.osa-btn.osa-worker-stop-btn:hover {
+    background-color: #fff7ed !important;
+    border-color: #c2410c !important;
+    color: #c2410c !important;
+}
+
+.osa-stop-glyph {
+    display: inline-block !important;
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 1.5px;
+    background-color: currentColor;
+    flex-shrink: 0;
+}
+
+.osa-root button.osa-icon-btn.osa-icon-btn-danger {
+    border-color: #fecaca;
+    background-color: #fff5f5;
+    color: #dc2626;
+}
+
+.osa-root button.osa-icon-btn.osa-icon-btn-danger:hover:not(:disabled) {
+    border-color: #f87171;
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.osa-log-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: min(620px, calc(100vw - 48px));
+    z-index: 240;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 10px 12px 12px;
+    box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.2), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.osa-log-popover.running {
+    border-color: #fdba74;
+    background-color: #fffcf9;
+}
+
+.osa-log-popover-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 26px;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.osa-log-popover-steps {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    padding-bottom: 2px;
+}
+
+.osa-log-popover .osa-worker-console {
+    height: 172px;
+    min-height: 172px;
+    max-height: 220px;
+}
+
+.osa-worker-banner-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px !important;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.osa-worker-banner-title>span {
+    font-size: 12.5px !important;
+    font-weight: 700;
+    line-height: 1;
+    color: inherit;
+    font-variant-numeric: tabular-nums;
+}
+
+.osa-worker-banner-title.running {
+    color: #ea580c;
+}
+
+.osa-worker-banner-title.completed {
+    color: #334155;
+}
+
+.osa-worker-pulse {
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50%;
+    background-color: #f97316;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+    animation: osaPulse 1.4s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes osaPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.45;
+        transform: scale(0.88);
+    }
+}
+
+.osa-worker-step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    padding: 0 8px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 11px !important;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.osa-worker-step.current {
+    background-color: #f97316;
+    border-color: #f97316;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.osa-worker-step.done {
+    background-color: #fff7ed;
+    border-color: #fed7aa;
+    color: #ea580c;
+    font-weight: 600;
+}
+
+.osa-worker-step.pending {
+    background-color: #f1f5f9;
+    border-color: #e2e8f0;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.osa-worker-done-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background-color: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #c2410c;
+    font-size: 11px !important;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.osa-worker-console {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 7px;
+    padding: 9px 13px;
+    font-family: Consolas, Monaco, "SpoqaHanSansNeo", monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #e2e8f0;
+    height: 124px;
+    min-height: 124px;
+    max-height: 124px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    word-break: break-all;
+}
+
+.osa-root .osa-worker-console::-webkit-scrollbar-track {
+    background-color: #1e293b;
+    border-radius: 0 7px 7px 0;
+}
+
+.osa-root .osa-worker-console::-webkit-scrollbar-thumb {
+    background-color: #475569 !important;
+    border: 1px solid #1e293b;
+}
+
+.osa-root .osa-worker-console::-webkit-scrollbar-thumb:hover,
+.osa-root .osa-worker-console::-webkit-scrollbar-thumb:active {
+    background-color: #64748b !important;
+}
+
+.osa-log-line {
+    font-size: 12px !important;
+    color: #e2e8f0;
+}
+
+.osa-log-line>span {
+    font-size: 12px !important;
+    color: inherit;
+}
+
+.osa-log-line.head {
+    color: #94a3b8;
+    font-weight: 600;
+    margin-bottom: 1px;
+}
+
+.osa-log-line.done {
+    color: #fdba74;
+    font-weight: 600;
+}
+
+.osa-log-line.err {
+    color: #f87171;
+    font-weight: 600;
+}
+
+.osa-log-step-tag {
+    color: #fb923c !important;
+    font-weight: 600;
+}
+
+/* 3. 메인 스플릿 워크스페이스 (통합 카드 하단 본문) */
+.osa-workspace {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    gap: 0;
+    overflow: hidden;
+    border-radius: 0 0 10px 10px;
+    background-color: #ffffff;
+}
+
+.osa-workspace.has-splitter {
+    gap: 0;
+}
+
+/* 좌/우 그리드 영역 넓이 조절 스플리터 바 (통합 카드 내부 세로 구분바) */
+.osa-panel-splitter {
+    width: 9px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: col-resize;
+    user-select: none;
+    position: relative;
+    z-index: 20;
+    background-color: #f8fafc;
+    border-left: 1px solid var(--osa-border);
+    border-right: 1px solid var(--osa-border);
+}
+
+.osa-panel-splitter-bar {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    background-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.14s ease;
+}
+
+.osa-panel-splitter-grip {
+    width: 2px;
+    height: 28px;
+    border-radius: 999px;
+    background-color: #cbd5e1;
+    transition: background-color 0.14s ease, height 0.14s ease;
+}
+
+.osa-panel-splitter:hover .osa-panel-splitter-bar {
+    background-color: #cbd5e1;
+}
+
+.osa-panel-splitter.dragging .osa-panel-splitter-bar {
+    background-color: #94a3b8;
+}
+
+.osa-panel-splitter:hover .osa-panel-splitter-grip,
+.osa-panel-splitter.dragging .osa-panel-splitter-grip {
+    background-color: #ffffff;
+    height: 30px;
+}
+
+body.osa-is-panel-resizing,
+body.osa-is-panel-resizing *,
+body.osa-is-col-resizing,
+body.osa-is-col-resizing * {
+    cursor: col-resize !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+.osa-main-card {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    background-color: #ffffff;
+    border: none;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* 탭 헤더 (우측 보기 패널 .osa-rp-header와 49px 높이 정확히 일치) */
+.osa-tabheader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 49px;
+    min-height: 49px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--osa-border);
+    gap: 8px;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+}
+
+/* 상단 메인 데이터 탭 (언더라인 탭 스타일 · 하위 세그먼트 필터와 명확한 위계 분리) */
+.osa-seg-tabs {
+    display: inline-flex;
+    align-items: stretch;
+    height: 46px;
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    gap: 2px;
+}
+
+.osa-root button.osa-seg-tab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 46px;
+    padding: 0 14px;
+    border-radius: 0;
+    border: none;
+    background-color: transparent;
+    font-size: 13.5px !important;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.14s ease;
+}
+
+.osa-root button.osa-seg-tab>span:first-child {
+    font-size: 13.5px !important;
+    font-weight: inherit;
+    color: inherit;
+    line-height: 1 !important;
+}
+
+.osa-root button.osa-seg-tab::after {
+    content: "";
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: -1px;
+    height: 2.5px;
+    border-radius: 2px 2px 0 0;
+    background-color: transparent;
+    transition: background-color 0.15s ease;
+}
+
+.osa-root button.osa-seg-tab:hover:not(.active) {
+    color: #1e293b;
+}
+
+.osa-root button.osa-seg-tab:hover:not(.active)::after {
+    background-color: #cbd5e1;
+}
+
+.osa-root button.osa-seg-tab.active {
+    background-color: transparent;
+    color: #ea580c;
+    font-weight: 700;
+    box-shadow: none;
+}
+
+.osa-root button.osa-seg-tab.active::after {
+    background-color: #f97316;
+}
+
+.osa-seg-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 19px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background-color: #f1f5f9;
+    font-size: 11.5px !important;
+    line-height: 1 !important;
+    font-weight: 600;
+    color: #64748b;
+    font-variant-numeric: tabular-nums;
+}
+
+.osa-root button.osa-seg-tab.active .osa-seg-count {
+    background-color: #ffedd5;
+    color: #ea580c;
+    font-weight: 700;
+}
+
+.osa-worker-btns {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* 서브 툴바 (우측 보기 패널 .osa-rp-search-wrap과 47px 높이 정확히 일치) */
+.osa-subtoolbar {
+    position: relative;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    height: 47px;
+    min-height: 47px;
+    border-bottom: 1px solid var(--osa-border);
+    gap: 12px;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+    overflow: visible;
+    background-color: #ffffff;
+}
+
+.osa-subtoolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+}
+
+.osa-subtoolbar-divider {
+    width: 1px;
+    height: 16px;
+    background-color: #e2e8f0;
+    margin: 0 2px;
+    flex-shrink: 0;
+}
+
+/* 단일 그룹 세그먼트 상태 필터 (전체 / 미분류 / 미확인 등) */
+.osa-seg-filter {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    padding: 3px;
+    border-radius: 7px;
+    background-color: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.osa-seg-filter-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px;
+    color: #64748b;
+    font-size: 12px !important;
+    font-weight: 600;
+    border-right: 1px solid #cbd5e1;
+    margin-right: 2px;
+    height: 16px;
+    user-select: none;
+}
+
+.osa-seg-filter-icon svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+}
+
+.osa-root button.osa-seg-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 5px;
+    border: none;
+    background-color: transparent;
+    font-size: 12.5px !important;
+    font-weight: 500;
+    line-height: 1;
+    color: #64748b;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.12s ease;
+}
+
+.osa-root button.osa-seg-filter-btn:hover {
+    color: #1e293b;
+}
+
+.osa-root button.osa-seg-filter-btn.active {
+    background-color: #ffffff !important;
+    color: #ea580c !important;
+    font-weight: 600 !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.osa-root button.osa-seg-filter-btn b {
+    font-size: 12px !important;
+    font-weight: 600;
+    color: #94a3b8;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.osa-root button.osa-seg-filter-btn.active b {
+    color: #ea580c !important;
+    font-weight: 700;
+}
+
+.osa-root button.osa-seg-filter-btn b.warn {
+    color: #dc2626;
+}
+
+.osa-root button.osa-filter-pill,
+.osa-root span.osa-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 30px;
+    padding: 0 11px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    font-size: 12.5px !important;
+    font-weight: 500;
+    line-height: 1;
+    color: #475569;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.12s ease;
+}
+
+.osa-root button.osa-filter-pill b,
+.osa-root span.osa-filter-pill b {
+    font-size: 12px !important;
+    font-weight: 700;
+    line-height: 1;
+    color: inherit;
+    font-variant-numeric: tabular-nums;
+}
+
+.osa-root button.osa-filter-pill:hover {
+    border-color: var(--osa-orange-300);
+    background-color: #fff7ed;
+    color: #ea580c;
+}
+
+.osa-root button.osa-filter-pill.active-all,
+.osa-root span.osa-filter-pill.active-all {
+    background-color: #1e293b !important;
+    border-color: #1e293b !important;
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+.osa-root button.osa-filter-pill.uncoded {
+    border-color: #fecaca;
+    background-color: #fef2f2;
+    color: #dc2626;
+}
+
+.osa-root button.osa-filter-pill.uncoded.active {
+    background-color: #dc2626 !important;
+    border-color: #dc2626 !important;
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+.osa-root button.osa-filter-pill.unverified.active {
+    background-color: var(--osa-orange-500) !important;
+    border-color: var(--osa-orange-500) !important;
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+/* 그리드 하단 상태·단축키 안내 푸터 바 (전 탭 높이·타이포그래피 통일) */
+.osa-grid-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    height: 35px;
+    min-height: 35px;
+    padding: 0 14px;
+    border-top: 1px solid var(--osa-border);
+    background-color: #f8fafc;
+    flex-shrink: 0;
+}
+
+.osa-grid-footer.has-pager {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+}
+
+.osa-footer-meta,
+.osa-footer-meta span {
+    font-size: 11.5px !important;
+    font-weight: 400;
+    color: #64748b;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.osa-footer-meta b {
+    font-size: 12px !important;
+    font-weight: 600;
+    color: #334155;
+    font-variant-numeric: tabular-nums;
+}
+
+.osa-pager {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.osa-root button.osa-pager-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border-radius: 5px;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    color: #475569;
+    cursor: pointer;
+    transition: border-color 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+}
+
+.osa-root button.osa-pager-btn>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+}
+
+.osa-root button.osa-pager-btn:hover:not(:disabled) {
+    border-color: #fb923c;
+    background-color: #fff7ed;
+    color: #ea580c;
+}
+
+.osa-root button.osa-pager-btn:disabled {
+    opacity: 0.38;
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+    cursor: not-allowed;
+}
+
+.osa-shortcut-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.osa-shortcut-bar>span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px !important;
+    font-weight: 400;
+    line-height: 1;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+.osa-shortcut-bar svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+}
+
+.osa-shortcut-bar>span.title {
+    color: var(--osa-orange-600) !important;
+    font-weight: 600 !important;
+    gap: 3px;
+    padding-right: 2px;
+}
+
+.osa-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 19px;
+    padding: 0 5px;
+    border-radius: 4px;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+    font-family: Consolas, Monaco, monospace;
+    font-size: 10.5px !important;
+    font-weight: 600;
+    line-height: 1;
+    color: #334155;
+}
+
+/* 4. 데이터 테이블 공통 & 스크롤바 커스텀 (회색 톤 고정 + 헤더 아래 시작점 적용) */
+.osa-root ::-webkit-scrollbar,
+.osa-modal ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.osa-root ::-webkit-scrollbar-track,
+.osa-modal ::-webkit-scrollbar-track {
+    background-color: #f8fafc;
+}
+
+.osa-root ::-webkit-scrollbar-thumb,
+.osa-modal ::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1 !important;
+    border-radius: 4px;
+    border: 1px solid #f8fafc;
+}
+
+.osa-root ::-webkit-scrollbar-thumb:hover,
+.osa-root ::-webkit-scrollbar-thumb:active,
+.osa-modal ::-webkit-scrollbar-thumb:hover,
+.osa-modal ::-webkit-scrollbar-thumb:active {
+    background-color: #94a3b8 !important;
+}
+
+.osa-table-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    position: relative;
+}
+
+.osa-modal table th,
+.osa-modal table td {
+    vertical-align: middle !important;
+}
+
+.osa-modal-table-scroll {
+    background: linear-gradient(to bottom,
+            #f8f9fa 0px,
+            #f8f9fa 35px,
+            #e2e8f0 35px,
+            #e2e8f0 36px,
+            #ffffff 36px);
+}
+
+.osa-modal-table-scroll::-webkit-scrollbar-track:vertical {
+    margin-top: 36px;
+}
+
+/* 좌측 메인 그리드: 2단 헤더(36px + 35px = 71px) 아래에서 세로 스크롤바 시작 */
+.osa-main-card .osa-table-scroll {
+    background: linear-gradient(to bottom,
+            #f1f5f9 0px,
+            #f1f5f9 35px,
+            #cbd5e1 35px,
+            #cbd5e1 36px,
+            #ffffff 36px,
+            #ffffff 70px,
+            #e2e8f0 70px,
+            #e2e8f0 71px,
+            #ffffff 71px);
+}
+
+.osa-main-card .osa-table-scroll::-webkit-scrollbar-track:vertical {
+    margin-top: 71px;
+}
+
+/* 우측 보기 패널: 좌측과 동일하게 2단 헤더(36px + 35px = 71px) 아래에서 세로 스크롤바 시작 */
+.osa-right-panel .osa-table-scroll {
+    background: linear-gradient(to bottom,
+            #f1f5f9 0px,
+            #f1f5f9 35px,
+            #cbd5e1 35px,
+            #cbd5e1 36px,
+            #ffffff 36px,
+            #ffffff 70px,
+            #e2e8f0 70px,
+            #e2e8f0 71px,
+            #ffffff 71px);
+}
+
+.osa-right-panel .osa-table-scroll::-webkit-scrollbar-track:vertical {
+    margin-top: 71px;
+}
+
+.osa-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    font-weight: 400;
+    table-layout: fixed;
+}
+
+.osa-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.osa-table thead tr.osa-th-row th {
+    position: relative;
+    background-color: #f1f5f9;
+    border-bottom: 1px solid #cbd5e1;
+    border-right: 1px solid #e2e8f0;
+    height: 36px;
+    padding: 0 10px;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    font-size: 12.5px !important;
+    line-height: 1.2 !important;
+    vertical-align: middle !important;
+    font-weight: 600;
+    color: #334155;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+    transition: box-shadow 0.1s ease;
+}
+
+.osa-table thead tr.osa-th-row th:last-child,
+.osa-table thead tr.osa-filter-row th:last-child,
+.osa-table tbody tr td:last-child {
+    border-right: none;
+}
+
+.osa-table thead tr.osa-th-row th label {
+    font-size: 12.5px !important;
+    line-height: 1 !important;
+    font-weight: 600;
+    color: #334155;
+}
+
+.osa-table thead tr.osa-th-row th[data-resize-hover="true"] {
+    box-shadow: inset -2px 0 0 0 #94a3b8;
+}
+
+.osa-table thead tr.osa-th-row th[data-resizing="true"] {
+    box-shadow: inset -2px 0 0 0 #64748b;
+}
+
+.osa-col-resize-guide {
+    position: absolute;
+    width: 1.5px;
+    background-color: #94a3b8;
+    pointer-events: none;
+    z-index: 30;
+}
+
+.osa-right-panel .osa-table thead tr.osa-th-row th {
+    height: 36px;
+}
+
+.osa-table thead tr.osa-filter-row th {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    border-right: 1px solid #f0f0f0;
+    height: 35px;
+    padding: 0 6px;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+    font-weight: 400;
+    overflow: hidden;
+}
+
+.osa-table thead tr.osa-filter-row th>* {
+    vertical-align: middle !important;
+}
+
+.osa-right-panel .osa-table thead tr.osa-filter-row th.osa-rp-filter-th {
+    padding: 0 !important;
+    overflow: visible !important;
+    border-right: none;
+}
+
+.osa-rp-filter-sticky {
+    position: sticky;
+    left: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    height: 34px;
+    padding: 4px 8px;
+    background-color: #ffffff;
+    box-sizing: border-box;
+}
+
+.osa-th-sortable {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12.5px !important;
+    font-weight: 600;
+    color: inherit;
+    line-height: 1.2 !important;
+    cursor: pointer;
+}
+
+.osa-th-sortable:hover {
+    color: var(--osa-orange-600);
+}
+
+.osa-sort-icon {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.osa-sort-icon.active {
+    color: var(--osa-orange-600);
+    font-weight: 600;
+}
+
+.osa-root input.osa-col-filter-input,
+.osa-root select.osa-col-filter-select {
+    width: 100%;
+    height: 26px;
+    padding: 0 6px;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 400;
+    color: #1a1a1a;
+    background-color: #ffffff;
+    outline: none;
+}
+
+.osa-root input.osa-col-filter-input:focus,
+.osa-root select.osa-col-filter-select:focus {
+    border-color: var(--osa-orange-400);
+    background-color: var(--osa-orange-50);
+}
+
+.osa-table tbody tr {
+    transition: background-color 0.08s ease;
+}
+
+.osa-table tbody tr td {
+    border-bottom: 1px solid #f0f0f0;
+    border-right: 1px solid #f0f0f0;
+    padding: 4px 10px;
+    vertical-align: middle;
+    color: #1a1a1a;
+    font-size: 13px;
+    line-height: 1.35;
+    font-weight: 400;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    height: 38px;
+}
+
+.osa-table tbody tr:hover td {
+    background-color: #fafafa;
+}
+
+.osa-table tbody tr.osa-row-selected td {
+    background-color: var(--osa-orange-50) !important;
+}
+
+.osa-table tbody tr.osa-row-selected td:first-child {
+    box-shadow: inset 3px 0 0 0 var(--osa-orange-500);
+}
+
+/* 단일 행 내부에서는 가로 드래그 글자 선택·복사를 허용하고, 위·아래 다른 행으로 넘어가는 다중 행 드래그 순간에만 파란 텍스트 선택 차단 */
+body.osa-is-row-dragging .osa-table.osa-drag-selectable tbody td,
+body.osa-is-row-dragging .osa-table.osa-drag-selectable tbody td * {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+.osa-table.osa-drag-selectable tbody td button,
+.osa-table.osa-drag-selectable tbody td .osa-sent-pill,
+.osa-table.osa-drag-selectable tbody td input:not(:focus) {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 멀티 추가 [+][-] 미니 버튼 */
+.osa-root button.osa-mini-square-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    border: 1px solid var(--osa-border-strong);
+    background-color: #ffffff;
+    color: var(--osa-text-sub);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.osa-root button.osa-mini-square-btn:hover:not(:disabled) {
+    border-color: var(--osa-orange-400);
+    background-color: var(--osa-orange-50);
+    color: var(--osa-orange-600);
+}
+
+.osa-root button.osa-mini-square-btn.danger:hover:not(:disabled) {
+    border-color: #fca5a5;
+    background-color: #fef2f2;
+    color: #dc2626;
+}
+
+/* 소분류 코드 인라인 입력칸 (고속 코드 펀칭 · 7자리 코드 대응) */
+.osa-root input.osa-code-punch-input {
+    width: 68px;
+    height: 26px;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--osa-orange-600);
+    background-color: #ffffff;
+    outline: none;
+    flex-shrink: 0;
+    padding: 0 4px;
+}
+
+.osa-root input.osa-code-punch-input:focus {
+    border-color: var(--osa-orange-500);
+    background-color: var(--osa-orange-50);
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.18);
+}
+
+.osa-root input.osa-code-punch-input.empty {
+    border-color: #cbd5e1;
+    background-color: #ffffff;
+    color: #94a3b8;
+}
+
+.osa-root input.osa-code-punch-input.empty:focus {
+    border-color: var(--osa-orange-500);
+    background-color: var(--osa-orange-50);
+    color: var(--osa-orange-600);
+}
+
+/* 다중 선택 건수 & 선택 해제 배지 */
+.osa-sel-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 30px;
+    padding: 0 6px 0 10px;
+    border-radius: 6px;
+    background-color: #fff7ed;
+    border: 1px solid #fdba74;
+    color: #ea580c;
+    font-size: 12px !important;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.osa-sel-badge>span {
+    font-size: 12px !important;
+    font-weight: 600;
+    color: #ea580c;
+    line-height: 1;
+}
+
+.osa-root button.osa-sel-clear-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background-color: transparent;
+    color: #ea580c;
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.osa-root button.osa-sel-clear-btn>svg {
+    display: inline-block !important;
+}
+
+.osa-root button.osa-sel-clear-btn:hover {
+    background-color: #ffedd5;
+    color: #c2410c;
+}
+
+/* 차분한 인라인 다중 선택 & 선택 삭제 컨트롤 (조회 건수 옆 통합) */
+.osa-sel-inline-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 28px;
+    white-space: nowrap;
+}
+
+.osa-sel-inline-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 12.5px !important;
+    font-weight: 500;
+    color: #475569 !important;
+    line-height: 1 !important;
+    white-space: nowrap;
+}
+
+.osa-sel-inline-text>b {
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: #ea580c !important;
+    font-variant-numeric: tabular-nums;
+}
+
+.osa-root button.osa-sel-inline-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.osa-root button.osa-sel-inline-clear>svg {
+    display: inline-block !important;
+}
+
+.osa-root button.osa-sel-inline-clear:hover {
+    background-color: #f1f5f9;
+    color: #475569;
+}
+
+.osa-root button.osa-sel-inline-del-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 26px;
+    padding: 0 9px;
+    margin-left: 3px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    color: #475569;
+    font-size: 12px !important;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+
+.osa-root button.osa-sel-inline-del-btn>span {
+    font-size: 12px !important;
+    font-weight: 600;
+    line-height: 1 !important;
+    color: inherit;
+    overflow: visible !important;
+}
+
+.osa-root button.osa-sel-inline-del-btn>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+    color: #94a3b8;
+    transition: color 0.14s ease;
+}
+
+.osa-root button.osa-sel-inline-del-btn:hover {
+    background-color: #fff5f5;
+    border-color: #fca5a5;
+    color: #dc2626;
+}
+
+.osa-root button.osa-sel-inline-del-btn:hover>svg {
+    color: #dc2626;
+}
+
+/* 감성 배지 (값 있을 때만 캡슐 배지 · 미지정 시 평소 테두리 숨김) */
+.osa-root button.osa-sent-pill,
+.osa-root span.osa-sent-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 23px;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 12px !important;
+    font-weight: 500;
+    border: 1px solid var(--osa-border);
+    background-color: #f8fafc;
+    color: var(--osa-text-sub);
+    cursor: pointer;
+    transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.osa-root button.osa-sent-pill.empty,
+.osa-root span.osa-sent-pill.empty {
+    background-color: transparent;
+    border-color: transparent;
+    color: #cbd5e1;
+}
+
+.osa-root button.osa-sent-pill.empty:hover:not(:disabled) {
+    background-color: #fff7ed;
+    border-color: #fdba74;
+    color: #ea580c;
+}
+
+.osa-root button.osa-sent-pill.pos,
+.osa-root span.osa-sent-pill.pos {
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #15803d;
+}
+
+.osa-root button.osa-sent-pill.neg,
+.osa-root span.osa-sent-pill.neg {
+    background-color: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
+.osa-root button.osa-sent-pill.neu,
+.osa-root span.osa-sent-pill.neu {
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+    color: #475569;
+}
+
+/* 5. 우측 보기 선택 · 편집 패널 */
+.osa-right-panel {
+    width: 630px;
+    min-width: 280px;
+    max-width: calc(100% - 430px);
+    min-height: 0;
+    background-color: #ffffff;
+    border: none;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.osa-right-panel.collapsed {
+    width: 38px;
+    min-width: 38px;
+    border-left: 1px solid var(--osa-border);
+}
+
+/* 우측 하단 설문온 플로팅 챗봇 아이콘 겹침 방지용 스크롤 하단 여유 */
+.osa-right-panel .osa-table-scroll {
+    padding-bottom: 56px;
+}
+
+.osa-rp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 47px;
+    min-height: 47px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--osa-border);
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.osa-rp-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px !important;
+    font-weight: 700;
+    color: var(--osa-text-main);
+    white-space: nowrap;
+}
+
+.osa-rp-title>span:first-of-type {
+    font-size: 13px !important;
+    font-weight: 700;
+    color: inherit;
+}
+
+.osa-rp-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background-color: var(--osa-orange-100);
+    color: var(--osa-orange-700);
+    font-size: 11.5px !important;
+    font-weight: 700;
+}
+
+.osa-rp-hint {
+    font-size: 11.5px !important;
+    color: var(--osa-text-muted);
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.osa-rp-search-wrap {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 47px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--osa-border);
+    flex-shrink: 0;
+}
+
+.osa-root input.osa-rp-search {
+    width: 100%;
+    height: 26px;
+    padding: 0 8px 0 26px;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    font-size: 12px;
+    background-color: #ffffff;
+    color: var(--osa-text-main);
+    outline: none;
+}
+
+.osa-root input.osa-rp-search:focus {
+    background-color: var(--osa-orange-50);
+    border-color: var(--osa-orange-400);
+}
+
+.osa-root button.osa-rp-search-clear {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: #94a3b8;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.osa-root button.osa-rp-search-clear:hover {
+    background-color: #f1f5f9;
+    color: #475569;
+}
+
+.osa-rp-empty-box {
+    position: sticky;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 36px 16px;
+    text-align: center;
+}
+
+.osa-rp-empty-text {
+    font-size: 12.5px !important;
+    color: #94a3b8 !important;
+    font-weight: 400;
+}
+
+.osa-rp-quick-add-bar {
+    position: sticky;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    background-color: #fcfcfd;
+}
+
+.osa-root button.osa-rp-quick-add-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    max-width: min(360px, calc(100% - 16px));
+    min-height: 32px;
+    padding: 5px 13px;
+    border-radius: 7px;
+    border: 1px solid #fdba74;
+    background-color: #fff7ed;
+    color: #c2410c;
+    font-size: 12px !important;
+    font-weight: 600;
+    letter-spacing: 0 !important;
+    overflow: visible !important;
+    cursor: pointer;
+    transition: background-color 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.osa-root button.osa-rp-quick-add-btn.compact {
+    min-height: 29px;
+    padding: 4px 11px;
+}
+
+.osa-root button.osa-rp-quick-add-btn:hover {
+    background-color: #ffedd5;
+    border-color: #f97316;
+    box-shadow: 0 2px 6px rgba(249, 115, 22, 0.12);
+}
+
+.osa-root button.osa-rp-quick-add-btn>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+    margin-right: 1px;
+    color: #ea580c;
+}
+
+.osa-root button.osa-rp-quick-add-btn>span.osa-rp-quick-add-kw {
+    max-width: 150px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 2px;
+    line-height: 1.4 !important;
+    letter-spacing: 0 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #c2410c !important;
+}
+
+.osa-root button.osa-rp-quick-add-btn>span.osa-rp-quick-add-suffix {
+    overflow: visible !important;
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding-right: 3px;
+    line-height: 1.4 !important;
+    letter-spacing: 0 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #c2410c !important;
+}
+
+.osa-root button.osa-rp-quick-add-btn>span.osa-rp-quick-add-code {
+    display: inline-flex !important;
+    align-items: center;
+    overflow: visible !important;
+    height: 20px;
+    padding: 0 7px;
+    border-radius: 4px;
+    background-color: #ffffff;
+    border: 1px solid #fed7aa;
+    color: #ea580c !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.osa-root .k-dropdownlist.osa-kendo-ddl-rpsort {
+    width: 96px !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    flex-shrink: 0 !important;
+}
+
+/* 우측 패널 매핑 [←] (연주황 소프트 톤) / 해제 [→] (매핑된 행만 활성화, 나머지 흐리게 비활성) */
+.osa-root tr.osa-rp-row-mapped>td {
+    background-color: #fffaf5;
+}
+
+.osa-root button.osa-map-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 22px;
+    border-radius: 5px;
+    border: 1px solid #fdba74 !important;
+    background-color: #fff7ed !important;
+    color: #ea580c !important;
+    cursor: pointer;
+    padding: 0;
+    transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+
+.osa-root button.osa-map-btn>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
+.osa-root button.osa-map-btn:hover:not(:disabled) {
+    background-color: var(--osa-orange-500) !important;
+    border-color: var(--osa-orange-500) !important;
+    color: #ffffff !important;
+}
+
+.osa-root button.osa-map-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.osa-root button.osa-unmap-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 22px;
+    border-radius: 5px;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    color: #475569;
+    cursor: pointer;
+    padding: 0;
+    transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease, opacity 0.14s ease;
+}
+
+.osa-root button.osa-unmap-btn>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
+.osa-root button.osa-unmap-btn.active {
+    border-color: #94a3b8;
+    background-color: #ffffff;
+    color: #334155;
+}
+
+.osa-root button.osa-unmap-btn:hover:not(:disabled) {
+    border-color: var(--osa-orange-400, #fb923c);
+    color: var(--osa-orange-600);
+    background-color: #fff7ed;
+}
+
+.osa-root button.osa-unmap-btn:disabled {
+    opacity: 0.24;
+    border-color: #cbd5e1;
+    background-color: #f8fafc;
+    color: #94a3b8;
+    cursor: default;
+}
+
+.osa-root button.osa-del-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 5px;
+    background-color: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.osa-root button.osa-del-icon-btn:hover:not(:disabled) {
+    background-color: #fef2f2;
+    color: #dc2626;
+}
+
+.osa-root button.osa-del-icon-btn:disabled {
+    opacity: 0.28;
+    cursor: not-allowed;
+}
+
+.osa-freq-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 5px;
+    font-size: 12px !important;
+    font-weight: 500;
+    background-color: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    font-variant-numeric: tabular-nums;
+}
+
+.osa-freq-badge.zero {
+    background-color: transparent;
+    border-color: transparent;
+    color: #cbd5e1;
+    font-weight: 400;
+}
+
+.osa-root input.osa-rp-inline-input::placeholder {
+    color: #cbd5e1;
+}
+
+.osa-root input.osa-rp-inline-input {
+    width: 100%;
+    height: 25px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background-color: transparent;
+    font-size: 13px;
+    font-weight: 400;
+    color: #1a1a1a;
+    padding: 0 4px;
+    outline: none;
+}
+
+.osa-root input.osa-rp-inline-input:hover:not(:disabled) {
+    border-color: var(--osa-border);
+    background-color: #ffffff;
+}
+
+.osa-root input.osa-rp-inline-input:focus {
+    border-color: var(--osa-orange-400);
+    background-color: var(--osa-orange-50);
+}
+
+.osa-root input.osa-rp-inline-input.code {
+    text-align: center;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--osa-orange-600);
+}
+
+.osa-rp-footer {
+    display: flex;
+    align-items: center;
+    height: 35px;
+    min-height: 35px;
+    padding: 0 64px 0 12px;
+    border-top: 1px solid var(--osa-border);
+    background-color: #f8fafc;
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+    color: var(--osa-text-muted);
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.osa-rp-footer b {
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+    font-weight: 600;
+    color: #475569;
+    margin: 0 2px;
+}
+
+.osa-rp-footer span {
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+}
+
+/* ==========================================================================
+   보기 데이터(Tab2) 자동완성 입력 · 체크박스 선택 메뉴 · 수정불가 행 / PID별 데이터(Tab3) 보조 스타일
+   ========================================================================== */
+.osa-table tbody tr.osa-row-locked td {
+    background-color: #f8fafc;
+    color: #94a3b8;
+}
+
+.osa-table tbody tr.osa-row-locked:hover td {
+    background-color: #f1f5f9;
+}
+
+.osa-root input.osa-rp-inline-input:disabled {
+    color: #94a3b8;
+    cursor: default;
+}
+
+/* 헤더 전체선택 체크박스 + 선택 옵션 화살표 [☐ ▾] (본문 체크박스와 중심축 정확히 일치) */
+.osa-th-chk-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 16px;
+}
+
+.osa-root button.osa-th-chk-arrow {
+    position: absolute;
+    left: calc(100% + 2px);
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    border-radius: 3px;
+    background-color: transparent;
+    color: #64748b;
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.osa-root button.osa-th-chk-arrow:hover {
+    background-color: #ffedd5;
+    color: #ea580c;
+}
+
+.osa-chk-menu {
+    position: fixed;
+    z-index: 100060;
+    min-width: 132px;
+    padding: 5px;
+    border-radius: 8px;
+    border: 1px solid #fdba74;
+    background-color: #ffffff;
+    box-shadow: 0 10px 24px -6px rgba(15, 23, 42, 0.14), 0 4px 8px -2px rgba(15, 23, 42, 0.06);
+    font-family: "SpoqaHanSansNeo", "NotoSans", "Malgun Gothic", sans-serif;
+}
+
+.osa-chk-menu button.osa-chk-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 28px;
+    padding: 0 9px;
+    border: none;
+    border-radius: 5px;
+    background-color: transparent;
+    color: #334155;
+    font-size: 12px !important;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+}
+
+.osa-chk-menu button.osa-chk-menu-item>span {
+    font-size: inherit !important;
+    font-weight: inherit;
+    color: inherit;
+}
+
+.osa-chk-menu button.osa-chk-menu-item:hover {
+    background-color: #fff7ed;
+    color: #c2410c;
+}
+
+/* 보기 데이터 다중선택 안내 문구 & 수정여부 토글 버튼 (기본 무채색 · 잠금 시 톤 구분) */
+.osa-tab2-hint {
+    font-size: 11.5px !important;
+    font-weight: 400 !important;
+    color: #94a3b8 !important;
+    white-space: nowrap;
+}
+
+.osa-root button.osa-lock-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 25px;
+    padding: 0 9px;
+    border-radius: 5px;
+    font-size: 12px !important;
+    font-weight: 500;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    color: #475569;
+    cursor: pointer;
+    transition: border-color 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+}
+
+.osa-root button.osa-lock-toggle-btn>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+    color: #94a3b8;
+}
+
+.osa-root button.osa-lock-toggle-btn:hover:not(:disabled) {
+    border-color: #fb923c;
+    background-color: #fff7ed;
+    color: #ea580c;
+}
+
+.osa-root button.osa-lock-toggle-btn:hover:not(:disabled)>svg {
+    color: #ea580c;
+}
+
+.osa-root button.osa-lock-toggle-btn.locked {
+    border-color: #fdba74;
+    background-color: #fff7ed;
+    color: #c2410c;
+    font-weight: 600;
+}
+
+.osa-root button.osa-lock-toggle-btn.locked>svg {
+    color: #ea580c;
+}
+
+.osa-root button.osa-lock-toggle-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 대분류명·중분류명 인라인 자동완성 콤보 입력창 (상시 화살표 노출) */
+.osa-ac-wrap {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 25px;
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    background-color: #ffffff;
+    transition: border-color 0.12s ease, background-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.osa-ac-wrap.disabled {
+    border-color: transparent;
+    background-color: transparent;
+}
+
+.osa-ac-wrap:hover:not(.disabled) {
+    border-color: #fdba74;
+    background-color: #ffffff;
+}
+
+.osa-ac-wrap.focused {
+    border-color: var(--osa-orange-500) !important;
+    background-color: var(--osa-orange-50) !important;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.12);
+}
+
+.osa-root input.osa-ac-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: 12.5px;
+    font-weight: 400;
+    color: #1a1a1a;
+    padding: 0 2px 0 6px;
+    outline: none;
+}
+
+.osa-root input.osa-ac-input::placeholder {
+    color: #cbd5e1;
+    font-size: 12px;
+}
+
+.osa-root input.osa-ac-input:disabled {
+    color: #94a3b8;
+    cursor: default;
+}
+
+.osa-root button.osa-ac-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 23px;
+    padding: 0;
+    border: none;
+    border-radius: 3px;
+    background-color: transparent;
+    color: #64748b;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: color 0.12s ease, background-color 0.12s ease;
+}
+
+.osa-root button.osa-ac-btn>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+}
+
+.osa-ac-wrap:hover:not(.disabled) button.osa-ac-btn,
+.osa-ac-wrap.focused button.osa-ac-btn {
+    color: #ea580c;
+}
+
+.osa-ac-popup {
+    position: fixed;
+    z-index: 100060;
+    max-height: 210px;
+    overflow-y: auto;
+    padding: 5px;
+    border-radius: 8px;
+    border: 1px solid #fdba74;
+    background-color: #ffffff;
+    box-shadow: 0 12px 26px -6px rgba(15, 23, 42, 0.15), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+    font-family: "SpoqaHanSansNeo", "NotoSans", "Malgun Gothic", sans-serif;
+}
+
+.osa-ac-popup::-webkit-scrollbar {
+    width: 6px;
+}
+
+.osa-ac-popup::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1 !important;
+    border-radius: 4px;
+}
+
+.osa-ac-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12.5px !important;
+    color: #1e293b;
+}
+
+.osa-ac-item:hover,
+.osa-ac-item.active {
+    background-color: #fff7ed;
+    color: #c2410c;
+}
+
+.osa-ac-item-code {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background-color: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #ea580c;
+    font-size: 11px !important;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.osa-ac-item-name {
+    font-size: 12.5px !important;
+    font-weight: 400;
+    color: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.osa-ac-empty {
+    padding: 8px 10px;
+    font-size: 12px !important;
+    color: #94a3b8;
+    text-align: center;
+}
+
+/* PID별 데이터 조회 건수 & 새로고침 스피너 */
+.osa-tab3-count,
+.osa-tab3-count span {
+    font-size: 12.5px !important;
+    font-weight: 500;
+    color: #475569;
+}
+
+.osa-tab3-count b {
+    font-size: 13px !important;
+    font-weight: 700;
+    color: #ea580c;
+}
+
+@keyframes osaSpin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.osa-spin {
+    animation: osaSpin 0.8s linear infinite;
+}
+
+/* 우측 보기 패널 수정불가(잠금) 행: 선명한 색상 유지 + 더블클릭 매핑 + 우측 소형 자물쇠 표시 */
+.osa-rp-static-cell {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 25px;
+    padding: 0 4px;
+    font-size: 13px !important;
+    font-weight: 400;
+    color: #1a1a1a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+}
+
+.osa-rp-static-cell.code {
+    justify-content: center;
+    text-align: center;
+    font-size: 12.5px !important;
+    font-weight: 500;
+    color: #475569;
+}
+
+.osa-rp-static-cell.subcode {
+    justify-content: center;
+    text-align: center;
+    font-size: 12.5px !important;
+    font-weight: 500;
+    color: var(--osa-orange-600);
+}
+
+.osa-rp-static-cell.empty {
+    color: #cbd5e1;
+    font-weight: 400;
+}
+
+.osa-rp-static-lv3 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 5px;
+    width: 100%;
+    height: 25px;
+    padding: 0 4px;
+    cursor: pointer;
+    user-select: none;
+    min-width: 0;
+}
+
+.osa-rp-static-lv3>span {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 13px !important;
+    font-weight: 400;
+    color: #1a1a1a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.osa-rp-lock-mark {
+    display: inline-block !important;
+    flex-shrink: 0;
+    color: #94a3b8;
+}
+
+/* ==========================================================================
+   응답 데이터(Tab1) 소분류 레이블 클릭 시 Kendo 드롭다운 스타일 분류 지정 팝업
+   ========================================================================== */
+.osa-root button.osa-lv3-label-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 26px;
+    padding: 0 6px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background-color: transparent;
+    color: #1a1a1a;
+    font-size: 13px !important;
+    font-weight: 400;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.osa-root button.osa-lv3-label-btn>span {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 13px !important;
+    font-weight: inherit;
+    color: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.osa-root button.osa-lv3-label-btn.uncoded {
+    color: #dc2626;
+}
+
+.osa-root button.osa-lv3-label-btn>svg {
+    display: inline-block !important;
+    flex-shrink: 0;
+    color: #cbd5e1;
+    opacity: 0;
+    transition: opacity 0.12s ease, color 0.12s ease;
+}
+
+.osa-root button.osa-lv3-label-btn:hover:not(:disabled),
+.osa-root button.osa-lv3-label-btn.open {
+    background-color: #fff7ed;
+    border-color: #fdba74;
+}
+
+.osa-root button.osa-lv3-label-btn:hover:not(:disabled)>svg,
+.osa-root button.osa-lv3-label-btn.open>svg {
+    opacity: 1;
+    color: #f97316;
+}
+
+.osa-root button.osa-lv3-label-btn:disabled {
+    cursor: default;
+}
+
+.osa-lv3-picker-popup {
+    position: fixed;
+    z-index: 100060;
+    width: 344px;
+    max-width: calc(100vw - 24px);
+    display: flex;
+    flex-direction: column;
+    border-radius: 9px;
+    border: 1px solid #fdba74;
+    background-color: #ffffff;
+    box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.14), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+    font-family: "SpoqaHanSansNeo", "NotoSans", "Malgun Gothic", sans-serif;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.osa-lv3-picker-popup *,
+.osa-lv3-picker-popup *::before,
+.osa-lv3-picker-popup *::after {
+    box-sizing: border-box;
+}
+
+.osa-lv3-picker-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 10px 7px 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.osa-lv3-picker-title {
+    font-size: 12.5px !important;
+    line-height: 1.3 !important;
+    font-weight: 700 !important;
+    color: #334155 !important;
+}
+
+.osa-lv3-picker-head-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.osa-lv3-picker-popup button.osa-lv3-picker-clear {
+    height: 22px;
+    padding: 0 7px;
+    border-radius: 5px;
+    border: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+    color: #64748b;
+    font-size: 11px !important;
+    line-height: 1 !important;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.osa-lv3-picker-popup button.osa-lv3-picker-clear:hover {
+    border-color: #fca5a5;
+    background-color: #fef2f2;
+    color: #dc2626;
+}
+
+.osa-lv3-picker-popup button.osa-lv3-picker-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 5px;
+    background-color: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.osa-lv3-picker-popup button.osa-lv3-picker-close>svg {
+    display: inline-block !important;
+}
+
+.osa-lv3-picker-popup button.osa-lv3-picker-close:hover {
+    background-color: #f1f5f9;
+    color: #334155;
+}
+
+.osa-lv3-picker-search-box {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.osa-lv3-picker-popup input.osa-lv3-picker-search {
+    width: 100%;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1 !important;
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    font-size: 12.5px !important;
+    line-height: 1.3 !important;
+    font-weight: 400;
+    outline: none !important;
+    transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.osa-lv3-picker-popup input.osa-lv3-picker-search::placeholder {
+    color: #94a3b8;
+}
+
+.osa-lv3-picker-popup input.osa-lv3-picker-search:focus {
+    border-color: #f97316 !important;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.14) !important;
+}
+
+.osa-lv3-picker-list {
+    max-height: 256px;
+    overflow-y: auto;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.osa-lv3-picker-list::-webkit-scrollbar {
+    width: 7px;
+}
+
+.osa-lv3-picker-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.osa-lv3-picker-list::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1 !important;
+    border-radius: 4px;
+}
+
+.osa-lv3-picker-list::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8 !important;
+}
+
+.osa-lv3-picker-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #1e293b;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.osa-lv3-picker-item:hover,
+.osa-lv3-picker-item.active {
+    background-color: #fff7ed;
+    color: #ea580c;
+}
+
+.osa-lv3-picker-item.selected {
+    background-color: #ffedd5;
+    color: #c2410c;
+}
+
+.osa-lv3-picker-item-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1;
+}
+
+.osa-lv3-picker-item-main {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+
+.osa-lv3-picker-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    padding: 1px 6px;
+    border-radius: 5px;
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    font-size: 11.5px !important;
+    line-height: 1.25 !important;
+    font-weight: 600 !important;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+.osa-lv3-picker-item:hover .osa-lv3-picker-badge,
+.osa-lv3-picker-item.active .osa-lv3-picker-badge,
+.osa-lv3-picker-item.selected .osa-lv3-picker-badge {
+    background-color: #ffffff;
+    border-color: #fdba74;
+    color: #ea580c;
+}
+
+.osa-lv3-picker-name {
+    font-size: 13px !important;
+    line-height: 1.3 !important;
+    font-weight: 500;
+    color: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.osa-lv3-picker-item.selected .osa-lv3-picker-name {
+    font-weight: 600;
+}
+
+.osa-lv3-picker-path {
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+    font-weight: 400;
+    color: #94a3b8 !important;
+    padding-left: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.osa-lv3-picker-freq {
+    font-size: 11.5px !important;
+    line-height: 1 !important;
+    font-weight: 500;
+    color: #94a3b8 !important;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+.osa-lv3-picker-empty {
+    padding: 20px 10px;
+    text-align: center;
+    font-size: 12px !important;
+    color: #94a3b8;
+}
+
+.osa-lv3-picker-foot {
+    padding: 6px 12px;
+    border-top: 1px solid #f1f5f9;
+    background-color: #f8fafc;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+    color: #94a3b8 !important;
+}

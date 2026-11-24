@@ -27,23 +27,64 @@ const ProListBatchMergePopup = ({ show, onClose, selectedRows = [], onConfirm })
     };
 
     return (
-        <article className="modal on" style={{ zIndex: 999999 }}>
+        <article className="modal on orange-theme" style={{ zIndex: 999999 }}>
             <div
                 className="cmn_popup"
                 style={{
                     width: "600px",
+                    maxWidth: "95vw",
                     maxHeight: "85vh",
                     display: "flex",
                     flexDirection: "column",
-                    overflow: "hidden"
+                    overflow: "hidden",
+                    borderRadius: "16px",
+                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
                 }}
             >
                 {/* 1. 공통 헤더 (.popTit) */}
-                <div className="popTit">
-                    <h3 style={{ display: "flex", alignItems: "center" }}>
+                <div className="popTit" style={{ height: "auto", padding: "16px 24px 14px 24px" }}>
+                    <h3
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                            fontSize: "20px",
+                            fontWeight: "800",
+                            color: "#0f172a",
+                            margin: 0,
+                            lineHeight: "1.3",
+                        }}
+                    >
+                        <i
+                            aria-hidden="true"
+                            style={{
+                                display: "inline-block",
+                                width: "4px",
+                                height: "20px",
+                                borderRadius: "2px",
+                                background: "linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%)",
+                                boxShadow: "0 2px 4px rgba(255, 107, 53, 0.28)",
+                                flexShrink: 0,
+                            }}
+                        />
                         문항 통합저장
+                        <span
+                            style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                padding: "2px 10px",
+                                borderRadius: "999px",
+                                fontSize: "12px",
+                                fontWeight: "700",
+                                backgroundColor: "#fff7ed",
+                                color: "#ea580c",
+                                border: "1px solid #fdba74",
+                            }}
+                        >
+                            {selectedRows.length}개 문항
+                        </span>
                     </h3>
-                    <a className="btnClose" onClick={onClose}>
+                    <a className="btnClose" onClick={onClose} style={{ cursor: "pointer" }}>
                         <span className="hidden">close</span>
                     </a>
                 </div>

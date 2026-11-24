@@ -442,16 +442,30 @@ const ProRegisterPopup = (parentProps) => {
   ]);
 
   return (
-    <article className={`modal ${modalOnOff}`}>
-      <div className="cmn_popup" style={{ maxHeight: "750px" }}>
-        <div className="popTit">
-          <h3>문항 선택 팝업
+    <article className={`modal ${modalOnOff} orange-theme`}>
+      <div className="cmn_popup" style={{ maxHeight: "750px", borderRadius: "16px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}>
+        <div className="popTit" style={{ height: "auto", padding: "16px 24px 14px 24px" }}>
+          <h3 style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "20px", fontWeight: "800", color: "#0f172a", margin: 0, lineHeight: "1.3" }}>
+            <i
+                aria-hidden="true"
+                style={{
+                    display: "inline-block",
+                    width: "4px",
+                    height: "20px",
+                    borderRadius: "2px",
+                    background: "linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%)",
+                    boxShadow: "0 2px 4px rgba(255, 107, 53, 0.28)",
+                    flexShrink: 0,
+                }}
+            />
+            문항 선택 팝업
             <span
               className="info-icon"
+              style={{ marginLeft: 0 }}
               data-tooltip={`문항 선택|추가하고자 하는 문항을 선택해주세요.`}
             ></span>
           </h3>
-          <a className="btnClose" onClick={handleCancelButton}>
+          <a className="btnClose" onClick={handleCancelButton} style={{ cursor: "pointer" }}>
             <span className="hidden">close</span>
           </a>
         </div>

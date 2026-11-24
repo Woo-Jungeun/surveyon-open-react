@@ -376,36 +376,32 @@ const HanqOptionModal = ({
                         justifyContent: "space-between",
                     }}
                 >
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <div
-                            style={{
-                                width: "36px",
-                                height: "36px",
-                                borderRadius: "10px",
-                                backgroundColor: "#f97316",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                color: "#ffffff",
-                                boxShadow: "0 2px 6px rgba(249, 115, 22, 0.25)",
-                                flexShrink: 0,
-                            }}
-                        >
-                            <Settings size={19} strokeWidth={2.2} />
-                        </div>
+                    <div style={{ minWidth: 0, paddingRight: "32px" }}>
                         <div>
                             <h3
                                 style={{
-                                    fontSize: "17px",
+                                    fontSize: "20px",
                                     fontWeight: "800",
                                     color: "#0f172a",
                                     margin: 0,
                                     lineHeight: "1.3",
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: "8px",
+                                    gap: "10px",
                                 }}
                             >
+                                <i
+                                    aria-hidden="true"
+                                    style={{
+                                        display: "inline-block",
+                                        width: "4px",
+                                        height: "20px",
+                                        borderRadius: "2px",
+                                        background: "linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%)",
+                                        boxShadow: "0 2px 4px rgba(255, 107, 53, 0.28)",
+                                        flexShrink: 0,
+                                    }}
+                                />
                                 <span>한큐분석 공통 옵션 설정</span>
                                 {targetCount > 0 && (
                                     <span

@@ -53,7 +53,33 @@ const Sidebar = ({
         }
     };
 
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(() =>
+        location.pathname.includes("/ai_open_analysis/option_setting")
+    );
+    const prevPathnameRef = useRef(location.pathname);
+
+    // 분석 화면(/ai_open_analysis/option_setting*) 진입 시 사이드바 자동 접힘
+    useEffect(() => {
+        const prev = prevPathnameRef.current;
+        const curr = location.pathname;
+        prevPathnameRef.current = curr;
+        if (
+            !prev.includes("/ai_open_analysis/option_setting") &&
+            curr.includes("/ai_open_analysis/option_setting")
+        ) {
+            setIsCollapsed(true);
+        }
+    }, [location.pathname]);
+
+    useEffect(() => {
+        const onRequestCollapse = (e) => {
+            if (typeof e?.detail?.collapsed === "boolean") {
+                setIsCollapsed(e.detail.collapsed);
+            }
+        };
+        window.addEventListener("surveyon:sidebar-collapse", onRequestCollapse);
+        return () => window.removeEventListener("surveyon:sidebar-collapse", onRequestCollapse);
+    }, []);
     const [userOpen, setUserOpen] = useState(false);
     const [hasMergePn, setHasMergePn] = useState(false);
     const [permissionOpen, setPermissionOpen] = useState(false);

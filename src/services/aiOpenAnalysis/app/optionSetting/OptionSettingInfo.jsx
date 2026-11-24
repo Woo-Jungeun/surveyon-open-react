@@ -1,1098 +1,1403 @@
-import React, { Fragment, useState, useEffect, useContext, useRef, useCallback } from "react";
+import React, {
+    Fragment,
+    useState,
+    useEffect,
+    useContext,
+    useRef,
+    useCallback,
+    forwardRef,
+    useImperativeHandle,
+} from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@progress/kendo-react-buttons";
-import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
-import OptionSettingPopup from "@/services/aiOpenAnalysis/app/optionSetting/OptionSettingPopup";    // 기존 프롬프트 내용 팝업
-import { Input } from "@progress/kendo-react-inputs";
-import { TextArea, Slider } from "@progress/kendo-react-inputs";
-import { OptionSettingApi } from "@/services/aiOpenAnalysis/app/optionSetting/OptionSettingApi.js";
-import "@/services/aiOpenAnalysis/app/optionSetting/OptionSetting.css";
+import {
+    Trash2,
+    Terminal,
+    Sparkles,
+    Zap,
+    ArrowLeftRight,
+    Languages,
+    History,
+    X,
+} from "lucide-react";
+import OptionSettingPopup from "@/services/aiOpenAnalysis/app/optionSetting/OptionSettingPopup";
+import { OsaDropDown } from "./OptionSettingKendoSelect.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
-import useWorkerLogSignalR from "@/hooks/useWorkerLogSignalR";
-import { HUB_URL, HUB_NAME } from "@/config/signalr/signalr.js";
 import { loadingSpinnerContext as analysisSpinnerContext } from "@/components/common/AnalysisLoadingSpinner.jsx";
-import { loadingSpinnerContext as standardSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { useSelector } from "react-redux";
-/**
- * 분석 > 정보 영역
- *
- * @author jewoo
- * @since 2025-08-19<br />
-*/
+import {
+    getAnalysisInfo,
+    getAnalysisStatus,
+    checkAnalysisPopup,
+    saveAnalysisInfo,
+    startAnalysisWorker,
+    createWorkerHubConnection,
+    getAnalysisWorkerStatus,
+    stopAnalysisWorker,
+    deleteAnalysisQuestion,
+} from "@/api/analysisApi.js";
+import { isCodeLocked } from "./optionSettingUtils";
 
-// 버튼 정의
 const ACTION_LABEL = {
-    translateResponse: "번역",
-    classified: "보기분석",
-    response: "응답자분석(NEW)",
-    recallResponse: "응답자 빈셀&기타",
+    translate: "번역",
+    analyze: "보기분석",
+    respondent: "응답자분석(전체)",
+    empty_etc: "응답자분석(빈셀)",
 };
+
+const WORKER_STEPS = [
+    { step: 1, label: "1. 데이터 준비" },
+    { step: 2, label: "2. AI 모델 분석" },
+    { step: 3, label: "3. 결과 정제" },
+    { step: 4, label: "4. DB 반영" },
+];
+
 const MODAL_SCOPE = {
     visibleOn: (path) => path.includes("/option_setting"),
     autoCloseOnRouteChange: true,
-    // zIndex: 2000, // 필요하면 추가
 };
 
-/*섹션 영역 */
-const Section = ({ id, title, first, open, onToggle, headerAddon, children }) => (
-    <div className={`leftInfo ${open ? "on" : ""}`}>
-        <div className={`infoTitRow ${first ? "brdTopN" : ""}`}>
-            {/* 제목: 자체 케럿 제거(no-caret) */}
-            <button
-                type="button"
-                className="infoTit no-caret"
-                aria-expanded={open}
-                aria-controls={id}
-                onClick={onToggle}
-            >
-                {title}
-            </button>
+const TEMP_MIN = 0;
+const TEMP_MAX = 1;
+const TEMP_DEFAULT = 0.2;
 
-            {/* 제목 오른쪽(케럿 왼쪽)에 넣을 추가 버튼 영역 */}
-            {headerAddon ? <div className="infoTitAddon">{headerAddon}</div> : null}
+const orIfEmpty = (v, fallback) =>
+    v === undefined || v === null || String(v).trim() === "" ? fallback : v;
 
-            {/* 맨 오른쪽 토글 아이콘*/}
-            <button
-                type="button"
-                className={`infoCaret ${open ? "on" : ""}`}
-                aria-label={open ? "접기" : "펼치기"}
-                onClick={onToggle}
-            />
-        </div>
+const parseTemp = (v, def = TEMP_DEFAULT) => {
+    const n = typeof v === "number" ? v : parseFloat(v);
+    if (!Number.isFinite(n)) return def;
+    const clamped = Math.max(TEMP_MIN, Math.min(TEMP_MAX, n));
+    return Math.round(clamped * 10) / 10;
+};
 
-        {open && (
-            <div id={id} className="infoList">
-                {children}
-            </div>
-        )}
-    </div>
-);
+const toOptions = (arr) =>
+    (Array.isArray(arr) ? arr : []).map((x) => ({
+        keyid: x.keyid,
+        value: String(x.keyvalue ?? ""),
+        text: String(x.keytext ?? x.keyvalue ?? ""),
+        keyselected: x.keyselected ?? "",
+    }));
 
-const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount, fetchLv3Options, onQidLoaded, onDuplicateRemoveDateLoaded, project_lock, onAnalysisComplete, onFetchIn, onSaveIn, onSaveLb }) => {
+const pickSelected = (opts) => {
+    if (!opts.length) return null;
+    // 1) 신규 백엔드 명세: 배열 내 항목별 keyselected === keyvalue(또는 keyid/text/true/Y) 매칭 우선
+    const direct = opts.find((o) => {
+        const ks = String(o.keyselected ?? "").trim();
+        if (!ks) return false;
+        return (
+            ks === String(o.value) ||
+            ks === String(o.keyid) ||
+            ks === String(o.text) ||
+            ks.toLowerCase() === "true" ||
+            ks.toUpperCase() === "Y" ||
+            ks.toLowerCase() === "selected"
+        );
+    });
+    if (direct) return direct;
+
+    // 2) 레거시 호환: 배열 첫 항목(또는 임의 항목)에 선택 토큰이 담긴 경우
+    const tokenCarrier = opts.find((o) => String(o.keyselected ?? "").trim() !== "");
+    const token = String(tokenCarrier?.keyselected ?? "").trim();
+    if (!token) return null;
+    return (
+        opts.find((o) => String(o.value) === token) ||
+        opts.find((o) => String(o.keyid) === token) ||
+        opts.find((o) => String(o.text) === token) ||
+        null
+    );
+};
+
+const inferWorkerStep = (line, currentStep = 1) => {
+    const s = String(line || "").toLowerCase();
+    if (/저장|반영|완료|complete|finish|step\s*4|4\/4|<eof>/.test(s)) return Math.max(currentStep, 4);
+    if (/파싱|정제|검증|매핑|분류\s*완료|step\s*3|3\/4/.test(s)) return Math.max(currentStep, 3);
+    if (/gpt|openai|모델|호출|분석\s*중|번역\s*중|청크|batch|chunk|step\s*2|2\/4/.test(s))
+        return Math.max(currentStep, 2);
+    return Math.max(currentStep, 1);
+};
+
+const formatElapsed = (sec) => {
+    const s = Math.max(0, Math.floor(sec || 0));
+    const mm = String(Math.floor(s / 60)).padStart(2, "0");
+    const ss = String(s % 60).padStart(2, "0");
+    return `${mm}:${ss}`;
+};
+
+/**
+ * 상단 탭 전환 & AI 실행 바 + 헤더 하단 상세 분석 설정 드로어 + 실시간 AI 워커 진행 배너
+ */
+const OptionSettingInfo = forwardRef((props, ref) => {
+    const {
+        onNavigateTab,
+        projectnum,
+        qnum,
+        displayQnum,
+        qTitle,
+        userPerm,
+        codes = [],
+        responseCount = 0,
+        infoRawData = null,
+        onSettingsChange,
+        onQidLoaded,
+        onDuplicateRemoveDateLoaded,
+        project_lock,
+        tabDivision = "1",
+        onWorkerCompleted,
+        onBusyChange,
+        leftSlot = null,
+        expanded: controlledExpanded,
+        onExpandedChange,
+        drawerMountNode = null,
+    } = props;
+
     const auth = useSelector((store) => store.auth);
+    const userId = auth?.user?.userId || sessionStorage.getItem("userId") || "";
     const modal = useContext(modalContext);
     const loadingSpinner = useContext(analysisSpinnerContext);
-    const standardSpinner = useContext(standardSpinnerContext);
     const navigate = useNavigate();
-    const completedOnceRef = useRef(false); // 분석 결과 끝난 ref
-    const logTextRef = useRef("");   // 최신 로그 문자열 저장용
-    // 로그 안정성 체크용 ref
-    const lineCountRef = useRef(0);   // 마지막 라인 수
-    const lastStableRef = useRef(0);  // 연속 안정 횟수
-    const [data, setData] = useState({}); //데이터 
-    const [qid, setQid] = useState(""); //qid 
-    // qid를 ref로도 저장하여 재렌더/언마운트 시에도 유지
+
+    const loadingSpinnerRef = useRef(loadingSpinner);
+    loadingSpinnerRef.current = loadingSpinner;
+    const modalRef = useRef(modal);
+    modalRef.current = modal;
+
+    const [internalExpanded, setInternalExpanded] = useState(false);
+    const expanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
+    const setExpanded = useCallback(
+        (next) => {
+            const resolved = typeof next === "function" ? next(expanded) : next;
+            if (controlledExpanded === undefined) {
+                setInternalExpanded(resolved);
+            }
+            onExpandedChange?.(resolved);
+        },
+        [controlledExpanded, expanded, onExpandedChange]
+    );
+    const [showConsole, setShowConsole] = useState(false);
+    const logPopoverWrapRef = useRef(null);
+
+    const [data, setData] = useState({
+        temperature: TEMP_DEFAULT,
+        open_item_lv1: "0~50",
+        open_item_lv2: "0",
+        open_item_lv3: "0",
+    });
+    const [qid, setQid] = useState("");
     const qidRef = useRef("");
+
+    const [resultLangOptions, setResultLangOptions] = useState([]);
+    const [resultLangValue, setResultLangValue] = useState("");
+    const [modelOptions, setModelOptions] = useState([]);
+    const [modelValue, setModelValue] = useState("");
+
+    const [previousPromptShow, setPreviousPromptShow] = useState(false);
+    const [previousPromptExValue, setPreviousPromptExValue] = useState("");
+    const [previousPromptResValue, setPreviousPromptResValue] = useState("");
+
+    const [saving, setSaving] = useState(false);
+    const [runningJobId, setRunningJobId] = useState(null);
+    const [runningAction, setRunningAction] = useState(null);
+    const [workerStep, setWorkerStep] = useState(0);
+    const [elapsedSec, setElapsedSec] = useState(0);
+    const [logText, setLogText] = useState("");
+
+    const hubRef = useRef(null);
+    const pollTimerRef = useRef(null);
+    const elapsedTimerRef = useRef(null);
+    const settledRef = useRef(false);
+    const logOffsetRef = useRef(0);
+    const logRef = useRef(null);
+    const logTextRef = useRef("");
+    logTextRef.current = logText;
+    const initStatusCheckedKeyRef = useRef("");
+
+    const isWorkerBusy = saving || Boolean(runningJobId);
+
+    useEffect(() => {
+        onBusyChange?.(isWorkerBusy);
+    }, [isWorkerBusy, onBusyChange]);
+
+    const analyzingActiveRef = useRef(false);
+    const setAnalyzing = useCallback((on) => {
+        const sp = loadingSpinnerRef.current;
+        if (!sp) return;
+        const next = Boolean(on);
+        if (analyzingActiveRef.current === next) return;
+        analyzingActiveRef.current = next;
+        next ? sp.show() : sp.hide();
+    }, []);
+
+    const appendLog = useCallback((raw) => {
+        if (raw == null) return;
+        const text = String(raw);
+        if (!text) return;
+        setLogText((prev) => prev + (text.endsWith("\n") ? text : `${text}\n`));
+        setWorkerStep((prev) => inferWorkerStep(text, prev || 1));
+    }, []);
+
+    const clearLog = useCallback(() => {
+        setLogText("");
+    }, []);
+
+    useEffect(() => {
+        const el = logRef.current;
+        if (el) el.scrollTop = el.scrollHeight;
+    }, [logText, showConsole, runningJobId]);
+
+    useEffect(() => {
+        if (!showConsole) return;
+        const handleOutside = (e) => {
+            if (
+                e.target?.closest?.(
+                    ".cmn_popup, .k-dialog-wrapper, .k-window, .k-overlay, .osa-modal"
+                )
+            ) {
+                return;
+            }
+            if (logPopoverWrapRef.current && !logPopoverWrapRef.current.contains(e.target)) {
+                setShowConsole(false);
+            }
+        };
+        const handleEsc = (e) => {
+            if (e.key === "Escape") setShowConsole(false);
+        };
+        document.addEventListener("mousedown", handleOutside);
+        document.addEventListener("keydown", handleEsc);
+        return () => {
+            document.removeEventListener("mousedown", handleOutside);
+            document.removeEventListener("keydown", handleEsc);
+        };
+    }, [showConsole]);
+
+    useEffect(() => {
+        if (!runningJobId) {
+            if (elapsedTimerRef.current) {
+                clearInterval(elapsedTimerRef.current);
+                elapsedTimerRef.current = null;
+            }
+            return;
+        }
+        setElapsedSec(0);
+        elapsedTimerRef.current = setInterval(() => {
+            setElapsedSec((s) => s + 1);
+        }, 1000);
+        return () => {
+            if (elapsedTimerRef.current) {
+                clearInterval(elapsedTimerRef.current);
+                elapsedTimerRef.current = null;
+            }
+        };
+    }, [runningJobId]);
+
+    const cleanupWorkerResources = useCallback(async (jobIdToLeave) => {
+        if (pollTimerRef.current) {
+            clearInterval(pollTimerRef.current);
+            pollTimerRef.current = null;
+        }
+        if (hubRef.current) {
+            const conn = hubRef.current;
+            hubRef.current = null;
+            if (jobIdToLeave) {
+                try {
+                    await conn.invoke("Leave", jobIdToLeave);
+                } catch {
+                    // ignore
+                }
+            }
+            try {
+                await conn.stop();
+            } catch {
+                // ignore
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            settledRef.current = true;
+            cleanupWorkerResources(null);
+            setAnalyzing(false);
+        };
+    }, [cleanupWorkerResources, setAnalyzing]);
+
+    const selectedModelLabel =
+        modelOptions.find((o) => String(o.value) === String(modelValue))?.text ||
+        modelValue ||
+        data?.model_select ||
+        "-";
+    const selectedLangLabel =
+        resultLangOptions.find((o) => String(o.value) === String(resultLangValue))?.text ||
+        resultLangValue ||
+        data?.result_lang ||
+        "한국어 (Korean)";
+
+    useEffect(() => {
+        onSettingsChange?.({
+            ...data,
+            qid: qid || data?.qid || "",
+            temperature: parseTemp(data?.temperature),
+            open_item_lv1: String(orIfEmpty(data?.open_item_lv1, "0~50")),
+            open_item_lv2: String(orIfEmpty(data?.open_item_lv2, "0")),
+            open_item_lv3: String(orIfEmpty(data?.open_item_lv3, "0")),
+            _modelLabel: selectedModelLabel,
+            _langLabel: selectedLangLabel,
+            _hasPrompt: Boolean(data?.prompt_string && String(data.prompt_string).trim() !== ""),
+        });
+    }, [data, qid, selectedModelLabel, selectedLangLabel, onSettingsChange]);
+
     useEffect(() => {
         qidRef.current = qid;
-        if (qid) {
-            onQidLoaded?.(qid);
-        }
+        if (qid) onQidLoaded?.(qid);
     }, [qid, onQidLoaded]);
 
+    const applyInfoObject = useCallback(
+        (d = {}) => {
+            if (!d || Object.keys(d).length === 0) return;
+
+            const nextQid = String(d?.qid || "").trim();
+            if (nextQid) setQid(nextQid);
+
+            const apiOpts = toOptions(d?.apikey);
+            const apiInit = pickSelected(apiOpts) || apiOpts[0];
+
+            const langOpts = toOptions(d?.result_lang);
+            setResultLangOptions(langOpts);
+            const langInit = pickSelected(langOpts) || langOpts[0];
+
+            const modelOpts = toOptions(d?.model_select);
+            setModelOptions(modelOpts);
+            const modelInit = pickSelected(modelOpts) || modelOpts[0];
+
+            if (langInit) setResultLangValue(String(langInit.value));
+            if (modelInit) setModelValue(String(modelInit.value));
+
+            setPreviousPromptExValue(d?.prompt_string_ex_backup || "");
+            setPreviousPromptResValue(d?.prompt_string_res_backup || "");
+
+            const dupDate = d?.duplicate_remove_date ?? d?.duplicateRemoveDate ?? "";
+            if (dupDate) {
+                onDuplicateRemoveDateLoaded?.(dupDate);
+            }
+
+            setData((prev) => ({
+                ...prev,
+                ...d,
+                temperature: parseTemp(d?.temperature),
+                open_item_lv1: orIfEmpty(d?.open_item_lv1, "0~50"),
+                open_item_lv2: orIfEmpty(d?.open_item_lv2, "0"),
+                open_item_lv3: orIfEmpty(d?.open_item_lv3, "0"),
+                apikeyid: apiInit
+                    ? apiInit.value
+                    : typeof d?.apikeyid === "string"
+                        ? d.apikeyid
+                        : prev?.apikeyid || "",
+                apikey: apiInit
+                    ? apiInit.keyid
+                    : typeof d?.apikey === "string"
+                        ? d.apikey
+                        : prev?.apikey || "",
+                result_lang: langInit
+                    ? langInit.value
+                    : typeof d?.result_lang === "string"
+                        ? d.result_lang
+                        : prev?.result_lang || "Korean",
+                model_select: modelInit
+                    ? modelInit.value
+                    : typeof d?.model_select === "string"
+                        ? d.model_select
+                        : prev?.model_select || "",
+                duplicateRemoveDate: dupDate,
+            }));
+        },
+        [onDuplicateRemoveDateLoaded]
+    );
+
     useEffect(() => {
-        if (data?.duplicateRemoveDate) {
-            onDuplicateRemoveDateLoaded?.(data.duplicateRemoveDate);
+        if (infoRawData && Object.keys(infoRawData).length > 0) {
+            applyInfoObject(infoRawData);
         }
-    }, [data?.duplicateRemoveDate, onDuplicateRemoveDateLoaded]);
+    }, [infoRawData, applyInfoObject]);
 
-    const { optionEditData, optionSaveData, optionAnalysisStart, optionAnalysisStatus, optionStatus } = OptionSettingApi();
-    const activeJobRef = useRef(null);                  // ← 현재 진행중 job 기억
-    const activeTypeRef = useRef(null);
-    const nextTabRef = useRef(null);    //탭 이동
-    // 유틸: 짧게 기다리기
-    const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+    const searchInfo = useCallback(async () => {
+        if (!projectnum || !qnum) return null;
+        try {
+            const res = await getAnalysisInfo(projectnum, qnum, userId);
+            const first =
+                (Array.isArray(res?.resultjson) ? res.resultjson[0] : null) ||
+                (Array.isArray(res?.data) ? res.data[0] : null) ||
+                res?.info ||
+                {};
+            applyInfoObject(first);
+            return first;
+        } catch {
+            return null;
+        }
+    }, [projectnum, qnum, userId, applyInfoObject]);
 
-    // 유틸: 로그 라인 수/문자 수 계산
-    const getLogMetrics = (s) => ({
-        lines: String(s ?? "").split("\n").length,
-        chars: String(s ?? "").length,
-    });
+    // SignalR + 1.5초 폴링 이중화
+    const attachJobMonitor = useCallback(
+        async (jobId, actionType) => {
+            if (!jobId) return;
+            await cleanupWorkerResources(null);
 
-    const setAnalyzing = useCallback((on) => {
-        if (!loadingSpinner) return;
-        on ? loadingSpinner.show() : loadingSpinner.hide();
-    }, [loadingSpinner]);
+            settledRef.current = false;
+            logOffsetRef.current = 0;
+            setRunningJobId(jobId);
+            setRunningAction(actionType);
+            setWorkerStep(1);
+            setAnalyzing(true);
 
-    // 최종 완료 처리 (팝업, 로딩 off, 탭 이동)
-    const finalizeCompletion = useCallback((hasError) => {
-        if (completedOnceRef.current) return;  // 중복 방지
-        completedOnceRef.current = true;
+            const handleFinish = async (hasError, reasonMsg = "") => {
+                if (settledRef.current) return;
+                settledRef.current = true;
 
-        setAnalyzing(false);
-        activeJobRef.current = null;
+                await cleanupWorkerResources(jobId);
+                setAnalyzing(false);
+                setRunningJobId(null);
+                setWorkerStep(hasError ? 0 : 4);
+                setShowConsole(true);
 
-        if (hasError) {
-            modal.showErrorAlert("에러", "분석 중 오류가 발생했습니다.", MODAL_SCOPE);
-        } else {
-            modal.showConfirm("알림", "분석이 완료되었습니다.", MODAL_SCOPE, {
-                btns: [
-                    {
-                        title: "확인",
-                        click: async () => {
-                            standardSpinner?.show();
+                if (hasError) {
+                    appendLog(reasonMsg || "✖ 분석 중 오류가 발생했습니다.");
+                    modalRef.current?.showErrorAlert?.(
+                        "에러",
+                        reasonMsg || "분석 작업 중 오류가 발생했습니다.",
+                        MODAL_SCOPE
+                    );
+                    return;
+                }
+
+                appendLog(`✔ ${ACTION_LABEL[actionType] || "분석"} 완료`);
+                try {
+                    if (qidRef.current) {
+                        await checkAnalysisPopup(projectnum, qnum, qidRef.current, "1");
+                    }
+                } catch {
+                    // ignore
+                }
+
+                try {
+                    await onWorkerCompleted?.(actionType);
+                } catch (err) {
+                    console.error("[OptionSettingInfo] 완료 후 갱신 오류:", err);
+                }
+
+                const targetTab = actionType === "analyze" ? "2" : "1";
+                onNavigateTab?.(targetTab);
+                modalRef.current?.showAlert?.("알림", "분석이 완료되었습니다.", MODAL_SCOPE);
+            };
+
+            (async () => {
+                try {
+                    const hub = createWorkerHubConnection();
+                    hubRef.current = hub;
+
+                    hub.on("onLine", (jobKey, line, isError) => {
+                        if (settledRef.current) return;
+                        if (jobKey && String(jobKey) !== String(jobId)) return;
+                        if (line != null) {
+                            appendLog(isError ? `[ERR] ${line}` : String(line));
+                        }
+                    });
+
+                    hub.on("onCompleted", (jobKey, hasError) => {
+                        if (settledRef.current) return;
+                        if (jobKey && String(jobKey) !== String(jobId)) return;
+                        handleFinish(Boolean(hasError));
+                    });
+
+                    hub.onreconnected(async () => {
+                        if (!settledRef.current) {
                             try {
-                                const curType = activeTypeRef.current;
-                                if (curType === "response" || curType === "recallResponse") {
-                                    try {
-                                    // 1. in 조회 (서버의 최신 분석결과 반영 데이터)
-                                    const resIn = await optionEditData.mutateAsync({
-                                        params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "in", skipSpinner: true }
-                                    });
-                                    const freshInRows = resIn?.resultjson || [];
+                                await hub.invoke("Join", jobId);
+                            } catch {
+                                // ignore
+                            }
+                        }
+                    });
 
+                    await hub.start();
+                    if (!settledRef.current) {
+                        await hub.invoke("Join", jobId);
+                    }
+                } catch (sigErr) {
+                    console.warn("[OptionSettingInfo] SignalR 폴백(폴링 유지):", sigErr);
+                }
+            })();
 
-                                    // 3. popupcheck 조회
-                                    await optionEditData.mutateAsync({
-                                        params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "popupcheck", checkyn: 1, skipSpinner: true }
-                                    });
+            let pollingBusy = false;
+            pollTimerRef.current = setInterval(async () => {
+                if (settledRef.current || pollingBusy) return;
+                pollingBusy = true;
+                try {
+                    const statusRes = await getAnalysisWorkerStatus(jobId, logOffsetRef.current);
+                    if (settledRef.current || !statusRes) return;
 
-                                    // 4. lb 조회
-                                    await fetchLv3Options?.(true);
+                    const out = statusRes?.output ?? statusRes?.resultjson?.output;
+                    const nextOffset = statusRes?.nextOffset ?? statusRes?.resultjson?.nextOffset;
 
-                                    // 5. 앞의 조회가 모두 성공하면 최신 데이터(freshInRows)를 사용하여 in 저장 (재조회 스킵 true)
-                                    await onSaveIn?.(true, freshInRows);
-                                } catch (e) {
-                                    console.error("[OptionSettingInfo] 분석 완료 후 프로세스 에러:", e);
-                                    // 하나라도 실패하면 저장을 진행하지 않거나 별도 처리가 가능
-                                }
+                    if (typeof out === "string" && out.length > 0) {
+                        if (typeof nextOffset === "number" && nextOffset > logOffsetRef.current) {
+                            if (!hubRef.current || hubRef.current.state !== "Connected") {
+                                appendLog(out);
                             } else {
-                                // 번역, 보기분석 등은 in 저장 없이 조회만 수행
-                                try {
-                                    if (curType === "classified") {
-                                        // 1. 분석 결과 반영된 최신 lb 데이터 조회
-                                        const resLb = await optionEditData.mutateAsync({
-                                            params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "lb", skipSpinner: true }
-                                        });
-                                        const freshRows = resLb?.resultjson || [];
+                                setWorkerStep((prev) => inferWorkerStep(out, prev || 1));
+                            }
+                            logOffsetRef.current = nextOffset;
+                        } else if (logOffsetRef.current === 0) {
+                            logOffsetRef.current = out.length;
+                            if (!logTextRef.current) appendLog(out);
+                        }
+                    } else if (typeof nextOffset === "number") {
+                        logOffsetRef.current = nextOffset;
+                    }
 
-                                        // 2. 저장(export) 페이로드 생성 (빈값 방지)
-                                        const cleaned = freshRows.map((r) => ({
-                                            lv1: String(r.lv1 ?? ""),
-                                            lv2: String(r.lv2 ?? ""),
-                                            lv3: String(r.lv3 ?? ""),
-                                            qnum: String(qnum ?? ""),
-                                            lv1code: String(r.lv1code ?? ""),
-                                            lv2code: String(r.lv2code ?? ""),
-                                            lv321code: String(r.lv321code ?? ""),
-                                            summary: String(r.summary ?? ""),
-                                            ex_gubun: String(r.ex_gubun ?? "분석(수정가능)"),
-                                            lv23code: String(r.lv23code ?? ""),
-                                            lv123code: String(r.lv123code ?? ""),
-                                            representative_response: String(r.representative_response ?? ""),
-                                        }));
+                    const isCompleted =
+                        statusRes?.isCompleted === true ||
+                        statusRes?.IsCompleted === true ||
+                        statusRes?.resultjson?.isCompleted === true;
 
-                                        // 3. 분석완료 직후 gb=lb 저장 API 태우기
-                                        await optionSaveData.mutateAsync({
-                                            user: auth?.user?.userId || "",
-                                            projectnum: sessionStorage.getItem("projectnum") || projectnum || "",
-                                            qnum: sessionStorage.getItem("qnum") || qnum || "",
-                                            gb: "lb",
-                                            data: cleaned,
-                                            lvcode: "1", // 기본값 설정
-                                            skipSpinner: true
-                                        });
+                    if (isCompleted) {
+                        const hasErr =
+                            statusRes?.hasError === true ||
+                            statusRes?.HasError === true ||
+                            statusRes?.resultjson?.hasError === true;
+                        handleFinish(hasErr);
+                    }
+                } catch {
+                    // ignore
+                } finally {
+                    pollingBusy = false;
+                }
+            }, 1500);
+        },
+        [
+            appendLog,
+            cleanupWorkerResources,
+            onNavigateTab,
+            onWorkerCompleted,
+            projectnum,
+            qnum,
+            setAnalyzing,
+        ]
+    );
 
+    useEffect(() => {
+        if (!projectnum || !qnum || !qid) return;
+        const checkKey = `${projectnum}__${qnum}__${qid}`;
+        if (initStatusCheckedKeyRef.current === checkKey) return;
+        initStatusCheckedKeyRef.current = checkKey;
 
-                                        // 2. popupcheck 조회
-                                        await optionEditData.mutateAsync({
-                                            params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "popupcheck", checkyn: 1, skipSpinner: true }
-                                        });
+        (async () => {
+            try {
+                const r = await getAnalysisStatus(projectnum, qnum, qid);
+                if (String(r?.popupcheck) === "1") {
+                    const raw = String(r?.output ?? "").trim();
+                    const isRunning = /분석중|running/i.test(raw.replace(/\s+/g, ""));
+                    const job =
+                        r?.jobId || r?.job || r?.contents?.job || r?.data?.job || r?.currentJob || null;
+                    if (isRunning && job) {
+                        appendLog("진행 중인 분석 작업에 재연결합니다...");
+                        attachJobMonitor(job, "respondent");
+                    }
+                }
+            } catch {
+                // ignore
+            }
+        })();
+    }, [projectnum, qnum, qid, appendLog, attachJobMonitor]);
 
-                                        // 3. fetchLv3Options 는 freshRows를 넘겨주어 또 조회하지 않도록 함 (조회 횟수 단축)
-                                        await fetchLv3Options?.(true, freshRows);
-                                    } else {
+    const runWorkerAction = useCallback(
+        async (actionType) => {
+            if (saving || runningJobId) return false;
+            if (!projectnum || !qnum) {
+                modalRef.current?.showErrorAlert?.(
+                    "알림",
+                    "문항/프로젝트 정보를 먼저 불러온 뒤 실행해 주세요.",
+                    MODAL_SCOPE
+                );
+                return false;
+            }
+            if (!String(data?.open_item_lv1 ?? "").trim()) {
+                modalRef.current?.showErrorAlert?.("알림", "소분류 개수를 입력하세요.", MODAL_SCOPE);
+                return false;
+            }
 
-                                        // 2. popupcheck 조회
-                                        await optionEditData.mutateAsync({
-                                            params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "popupcheck", checkyn: 1, skipSpinner: true }
-                                        });
+            const settingsPayload = {
+                apikeyid: String(data?.apikeyid || ""),
+                apikey: String(data?.apikey || ""),
+                data_type: "DB",
+                projectnum: String(projectnum || ""),
+                qnum: String(qnum || ""),
+                question_fin: String(data?.question_fin || ""),
+                keyword_string: String(data?.keyword_string || data?.question_fin || ""),
+                prompt_string: String(data?.prompt_string || ""),
+                model_select: String(
+                    modelValue ||
+                    (typeof data?.model_select === "string" ? data.model_select : "") ||
+                    ""
+                ),
+                result_lang: String(
+                    resultLangValue ||
+                    (typeof data?.result_lang === "string" ? data.result_lang : "") ||
+                    "Korean"
+                ),
+                temperature: parseTemp(data?.temperature),
+                open_item_lv1: String(orIfEmpty(data?.open_item_lv1, "0~50")),
+                open_item_lv2: String(orIfEmpty(data?.open_item_lv2, "0")),
+                open_item_lv3: String(orIfEmpty(data?.open_item_lv3, "0")),
+                select_rows: "",
+                select_column_id: "pid",
+                select_column_title: String(qnum || ""),
+                prompt_string_ex_backup: data?.prompt_string_ex_backup ?? {},
+                prompt_string_res_backup: data?.prompt_string_res_backup ?? {},
+            };
 
-                                        // 3. lb 조회
-                                        await fetchLv3Options?.(true);
-                                    }
-                                } catch (e) {
-                                    console.error("[OptionSettingInfo] 분석 완료 후 프로세스 에러:", e);
+            const actionEvMap = {
+                translate: "1",
+                analyze: "2",
+                respondent: "3",
+                empty_etc: "4",
+            };
+
+            const actionFlags =
+                actionType === "analyze"
+                    ? {
+                        classified: "Y",
+                        opencodeCategory: "Y",
+                        response: "N",
+                        opencodeResponse: "N",
+                        recallResponse: "N",
+                        translateResponse: "N",
+                    }
+                    : actionType === "respondent"
+                        ? {
+                            classified: "N",
+                            opencodeCategory: "N",
+                            response: "Y",
+                            opencodeResponse: "Y",
+                            recallResponse: "Y",
+                            translateResponse: "N",
+                        }
+                        : actionType === "empty_etc"
+                            ? {
+                                classified: "N",
+                                opencodeCategory: "N",
+                                response: "N",
+                                opencodeResponse: "N",
+                                recallResponse: "Y",
+                                translateResponse: "N",
+                            }
+                            : {
+                                classified: "N",
+                                opencodeCategory: "N",
+                                response: "N",
+                                opencodeResponse: "N",
+                                recallResponse: "N",
+                                translateResponse: "Y",
+                            };
+
+            setSaving(true);
+            try {
+                try {
+                    await saveAnalysisInfo(
+                        projectnum,
+                        qnum,
+                        settingsPayload,
+                        userId,
+                        undefined,
+                        actionEvMap[actionType]
+                    );
+                } catch {
+                    // 선저장 실패 시에도 settings 직접 전달
+                }
+
+                clearLog();
+                appendLog(`== ${ACTION_LABEL[actionType] || actionType} 시작 ==`);
+
+                const startRes = await startAnalysisWorker(projectnum, qnum, actionType, userId, {
+                    qid: qidRef.current || qid || undefined,
+                    ...actionFlags,
+                    settings: settingsPayload,
+                });
+
+                const jobId =
+                    startRes?.jobId ||
+                    startRes?.job ||
+                    startRes?.resultjson?.jobId ||
+                    startRes?.resultjson?.job ||
+                    startRes?.contents?.job ||
+                    startRes?.data?.job;
+
+                const ok =
+                    startRes?.ok === true ||
+                    String(startRes?.success) === "777" ||
+                    Boolean(jobId);
+
+                if (!ok) {
+                    modalRef.current?.showErrorAlert?.(
+                        "에러",
+                        startRes?.message || startRes?.Message || "분석 작업을 시작하지 못했습니다.",
+                        MODAL_SCOPE
+                    );
+                    return false;
+                }
+
+                if (jobId) {
+                    await attachJobMonitor(jobId, actionType);
+                } else {
+                    appendLog("[INFO] 작업이 즉시 처리되었습니다.");
+                    setShowConsole(true);
+                    await onWorkerCompleted?.(actionType);
+                    onNavigateTab?.(actionType === "analyze" ? "2" : "1");
+                }
+                return true;
+            } catch (err) {
+                console.error("[OptionSettingInfo] startAnalysisWorker error:", err);
+                modalRef.current?.showErrorAlert?.(
+                    "에러",
+                    "분석 요청 중 오류가 발생했습니다.",
+                    MODAL_SCOPE
+                );
+                setAnalyzing(false);
+                return false;
+            } finally {
+                setSaving(false);
+            }
+        },
+        [
+            appendLog,
+            attachJobMonitor,
+            clearLog,
+            data,
+            modelValue,
+            onNavigateTab,
+            onWorkerCompleted,
+            projectnum,
+            qid,
+            qnum,
+            resultLangValue,
+            runningJobId,
+            saving,
+            setAnalyzing,
+            userId,
+        ]
+    );
+
+    // 외부(탭 헤더 버튼)에서 확인창 포함 워커 실행 호출
+    const triggerWorker = useCallback(
+        (actionType) => {
+            if (project_lock === "수정불가" || isWorkerBusy) return;
+
+            if (actionType === "analyze") {
+                const hasUnlocked = (codes || []).some((r) => !r?.__pendingDelete && !isCodeLocked(r));
+                if (hasUnlocked) {
+                    modalRef.current?.showConfirm?.(
+                        "알림",
+                        "기존 분석 보기 결과가 있습니다.\n수정가능 보기를 새로 분석하시겠습니까? (수정불가 보기는 유지됩니다.)",
+                        {
+                            btns: [
+                                { title: "취소" },
+                                { title: "확인", click: () => runWorkerAction("analyze") },
+                            ],
+                        }
+                    );
+                    return;
+                }
+                runWorkerAction("analyze");
+                return;
+            }
+
+            if (actionType === "respondent") {
+                if (responseCount > 0) {
+                    modalRef.current?.showConfirm?.(
+                        "알림",
+                        "기존 응답 분류 결과가 있습니다.\n응답자분석(전체)을 새로 실행하시겠습니까?",
+                        {
+                            btns: [
+                                { title: "취소" },
+                                { title: "확인", click: () => runWorkerAction("respondent") },
+                            ],
+                        }
+                    );
+                    return;
+                }
+                runWorkerAction("respondent");
+                return;
+            }
+
+            runWorkerAction(actionType);
+        },
+        [codes, isWorkerBusy, project_lock, responseCount, runWorkerAction]
+    );
+
+    const deleteQnum = useCallback(() => {
+        const qLabel = displayQnum || qnum || "현재 문항";
+        modalRef.current?.showConfirm?.(
+            "문항 삭제 확인",
+            `[${qLabel}] 문항 전체와 모든 응답·보기 분석 데이터가 영구 삭제됩니다.\n삭제 후에는 복구할 수 없습니다. 계속하시겠습니까?`,
+            MODAL_SCOPE,
+            {
+                btns: [
+                    { title: "취소" },
+                    {
+                        title: "문항 영구 삭제",
+                        click: async () => {
+                            try {
+                                const res = await deleteAnalysisQuestion(
+                                    projectnum,
+                                    qnum,
+                                    qidRef.current || qid,
+                                    userId
+                                );
+                                if (res?.ok === true || String(res?.success) === "777") {
+                                    modalRef.current?.showAlert?.("알림", "문항이 삭제되었습니다.");
+                                    navigate("/ai_open_analysis/pro_list");
+                                } else {
+                                    modalRef.current?.showErrorAlert?.(
+                                        "에러",
+                                        res?.message || "문항 삭제 중 오류가 발생했습니다."
+                                    );
                                 }
-                            }
-
-                            // 모든 백그라운드 저장 및 데이터 처리 완료 후 최종적으로 UI를 업데이트하기 위해 탭 이동(및 리로드) 실행
-                            if (nextTabRef.current) {
-                                onNavigateTab?.(nextTabRef.current);
-                                nextTabRef.current = null;
-                                await sleep(80);
-                            }
-                            } finally {
-                                standardSpinner?.hide();
+                            } catch {
+                                modalRef.current?.showErrorAlert?.(
+                                    "에러",
+                                    "문항 삭제 중 오류가 발생했습니다."
+                                );
                             }
                         },
                     },
                 ],
-            });
-        }
-    }, [modal, onNavigateTab, setAnalyzing, optionEditData, auth, projectnum, qnum, fetchLv3Options, onAnalysisComplete, onFetchIn, onSaveIn]);
-
-
-    // status 호출용
-    const buildStatusPayload = (job) => {
-        const qidValue = qidRef.current || qid;
-        // 필수값/잡키 없으면 status 치지 않음
-        if (!projectnum || !qidValue || !job) return null;
-
-        return {
-            user: auth?.user?.userId || "",
-            projectnum,
-            qid: qidValue,
-            action: "status",
-            job: String(job),
-        };
-    };
-
-    // SignalR 완료 콜백 직후, 
-    // 상태 API와 현재 로그 스냅샷(라인 수)을 짧은 간격으로 몇 차례 확인해(연속 안정 2회) 
-    // 실제 로그 유입이 멈췄을 때만 최종 완료 처리(모달/로딩 off)하는 함수
-    const logActionsRef = useRef(null);
-
-    // SignalR 완료 콜백 직후, 
-    // 상태 API와 현재 로그 스냅샷(라인 수)을 짧은 간격으로 몇 차례 확인해(연속 안정 2회) 
-    // 실제 로그 유입이 멈췄을 때만 최종 완료 처리(모달/로딩 off)하는 함수
-    const confirmEndByStatusAndSnapshot = useCallback(
-        async ({ interval = 1000, hasError = false, job }) => {
-            const startTime = Date.now();
-            const TIMEOUT_MS = 15 * 60 * 1000; // 최대 15분 기다림
-            const CHECK_INTERVAL = interval;  // 1초 단위로 polling
-
-            while (true) {
-                // 타임아웃 보호
-                if (Date.now() - startTime > TIMEOUT_MS) {
-                    console.warn("[StatusCheck] 15분 경과 → 강제 중단");
-                    finalizeCompletion(false);
-                    break;
-                }
-
-                try {
-                    const payload = buildStatusPayload(job || activeJobRef.current);
-                    if (!payload) {
-                        await sleep(CHECK_INTERVAL);
-                        continue;
-                    }
-
-                    const statusRes = await optionAnalysisStatus.mutateAsync(payload);
-                    const out = String(statusRes?.output || "");
-
-                    // 로그 동기화 (Polling Fallback)
-                    const { appendLog, clearLog } = logActionsRef.current || {};
-                    if (appendLog && clearLog && out) {
-                        const currentLog = logTextRef.current || "";
-                        // 서버 로그가 더 길면 동기화 시도
-                        if (out.length > currentLog.length) {
-                            if (out.startsWith(currentLog)) {
-                                // 기존 로그의 뒷부분만 추가
-                                appendLog(out.substring(currentLog.length));
-                            } else {
-                                // 불일치 시 전체 교체 (안전장치)
-                                clearLog();
-                                appendLog(out);
-                            }
-                        }
-                    }
-
-                    // 완료 조건 1: 서버 플래그
-                    if (statusRes?.IsCompleted === true) {
-                        // console.log("[StatusCheck] IsCompleted = true → 완료");
-                        // finalizeCompletion(statusRes?.HasError === true); todo 추후 다시 확인인
-                        finalizeCompletion(false);
-                        break;
-                    }
-
-                    // 완료 조건 2: 로그에 <eof> 포함
-                    //   if (out.includes("<eof>")) {
-                    //     console.log("[StatusCheck] output에 <eof> 포함 → 완료");
-                    //     finalizeCompletion(false);
-                    //     break;
-                    //   }
-
-                    // 아직 미완료 → 대기 후 반복
-                    await sleep(CHECK_INTERVAL);
-                } catch (err) {
-                    console.warn("[StatusCheck] polling error", err);
-                    await sleep(CHECK_INTERVAL);
-                }
             }
-        },
-        [optionAnalysisStatus, buildStatusPayload, finalizeCompletion]
+        );
+    }, [displayQnum, navigate, projectnum, qid, qnum, userId]);
+
+    useImperativeHandle(
+        ref,
+        () => ({
+            triggerWorker,
+            deleteQuestion: deleteQnum,
+        }),
+        [triggerWorker, deleteQnum]
     );
 
-    // SignalR 훅
-    const { logText, appendLog, clearLog, joinJob } = useWorkerLogSignalR({
-        hubUrl: HUB_URL,      // 운영: https://son.hrc.kr/o/signalr / dev: /o/signalr
-        hubName: HUB_NAME,    // 서버 허브 이름
-        onCompleted: ({ hasError, jobKey }) => {
-            if (completedOnceRef.current) return;
-            // status 호출에 job 누락되지 않도록 보강
-            const currentJob = jobKey || activeJobRef.current;
-            if (currentJob) {
-                activeJobRef.current = currentJob;
-                confirmEndByStatusAndSnapshot({ hasError, job: currentJob });
-            } else {
-                console.warn("jobKey 없음 - 상태 확인 스킵");
-            }
-        },
-    });
-
-    // appendLog, clearLog를 ref에 저장 (callback에서 사용하기 위함)
-    useEffect(() => {
-        logActionsRef.current = { appendLog, clearLog };
-    }, [appendLog, clearLog]);
-
-    // 최신 logText를 ref에 반영
-    useEffect(() => {
-        logTextRef.current = String(logText ?? "");
-    }, [logText]);
-
-    const initStatusCheckedRef = useRef(false);
-
-    // 최초 진입 시 현재 분석 상태 조회
-    const checkInitialStatus = useCallback(async () => {
-        if (!projectnum || !qid) return; // 데이터 준비 전이면 스킵
-
+    const handleStopWorker = async () => {
+        if (!runningJobId) return;
+        const jobToStop = runningJobId;
+        settledRef.current = true;
         try {
-
-            const payload = { user: auth?.user?.userId || "", projectnum, qid };
-            const r = await optionStatus.mutateAsync(payload);
-            // 팝업 오픈 필요할 경우만 
-            if (String(r?.popupcheck) === "1") {
-                // 상태 텍스트 파싱
-                const raw = String(r?.output ?? "").trim();
-                const norm = raw.replace(/\s+/g, "");      // 공백 제거
-                const isRunning = /분석중/.test(norm);
-                const isDone = /분석완료/.test(norm);
-
-                // 진행 중 job 키(있으면 실시간 조인)
-                const job =
-                    r?.job ??
-                    r?.contents?.job ??
-                    r?.data?.job ??
-                    r?.currentJob ??
-                    null;
-
-                // 출력 헬퍼
-                const put = (s) => appendLog(s.endsWith("\n") ? s : s + "\n");
-                // 분석 결과창에 출력
-                if (isRunning) {
-                    put("분석 중입니다...");
-                    setAnalyzing(true);              // 로딩바 on
-                    if (job) {
-                        const ok = await joinJob(job);
-                        put(ok ? "== 실시간 로그 연결됨 ==\n" : "[WARN] 실시간 로그 연결 실패(상태 조회)\n");
-                    }
-                } else if (isDone) {
-                    setAnalyzing(false);              // 로딩바 off
-                    put("분석이 완료되었습니다.");
-                    finalizeCompletion(false);
-                }
-            }
+            await stopAnalysisWorker(jobToStop, projectnum, qnum, userId);
+            appendLog("⏹ 사용자 요청으로 분석 작업이 중지되었습니다.");
         } catch {
-            appendLog("[ERR] 상태 조회 실패\n");
-        }
-    }, [projectnum, qid, optionStatus, appendLog, joinJob]);
-
-    useEffect(() => {
-        return () => {
-            activeJobRef.current = null;
-        };
-    }, []); // 언마운트에서만 실행
-
-    // 최초 진입 시 현재 분석 상태 조회
-    useEffect(() => {
-        if (!projectnum || !qid) return;
-        if (initStatusCheckedRef.current) return;
-        initStatusCheckedRef.current = true;
-        checkInitialStatus();
-    }, [projectnum, qid]);
-
-    // 배열 -> 옵션으로 변환
-    const toOptions = (arr) =>
-        (Array.isArray(arr) ? arr : []).map(x => ({
-            keyid: x.keyid,
-            value: x.keyvalue, // 드롭다운의 키값
-            text: x.keytext,  // 표시 텍스트
-            keyselected: x.keyselected ?? "", // 토큰 그대로 보관
-        }));
-
-    // keyselected 토큰으로 선택 항목 찾기 (value -> id -> text 순 매칭)
-    const pickSelected = (opts) => {
-        if (!opts.length) return null;
-        const token = String(opts[0].keyselected ?? ""); // 모든 항목에 같은 토큰이 들어오는 구조
-        if (!token) return null;
-        return (
-            opts.find(o => String(o.value) === token) ||
-            opts.find(o => String(o.keyid) === token) ||
-            opts.find(o => String(o.text) === token) ||
-            null
-        );
-    };
-
-    /* 토글 on/off */
-    const [openPrompt, setOpenPrompt] = useState(false);
-    const [openOption, setOpenOption] = useState(false);
-    const [openCounts, setOpenCounts] = useState(true);
-
-    //  API 키 드롭다운용 옵션/선택값
-    const [apiKeyOptions, setApiKeyOptions] = useState([]);
-    const [apiKeyValue, setApiKeyValue] = useState("");   // 드롭다운에 바인딩할 'value'는 keyvalue (문자열)
-
-    //  결과언어
-    const [resultLangOptions, setResultLangOptions] = useState([]);
-    const [resultLangValue, setResultLangValue] = useState("");
-
-    //  모델선택
-    const [modelOptions, setModelOptions] = useState([]);
-    const [modelValue, setModelValue] = useState("");
-
-    // 기존 버튼 팝업 show 
-    const [previousPromptShow, setPreviousPromptShow] = useState(false);        // 기존 프롬프트 팝업 popupShow
-    const [previousPromptExValue, setPreviousPromptExValue] = useState("");     // 기존 보기 프롬프트 로그 데이터
-    const [previousPromptResValue, setPreviousPromptResValue] = useState("");   // 기존 응답 프롬프트 로그 데이터
-
-    const [saving, setSaving] = useState(false); //저장 API가 진행 중인지 표시하는 플래그
-
-    // 분류 개수 빈값인지 체크
-    const orIfEmpty = (v, fallback) =>
-        (v === undefined || v === null || String(v).trim() === "") ? fallback : v;
-
-    /*창의성 조절*/
-    const TEMP_MIN = 0;
-    const TEMP_MAX = 1;
-    const TEMP_STEP = 0.1;
-    const TEMP_DEFAULT = 0.2;
-
-    // temperature 입력(문자열/숫자)을 0~1 범위로 클램프하고 소수점 1자리로 반올림해 숫자로 반환
-    const parseTemp = (v, def = TEMP_DEFAULT) => {
-        const n = typeof v === "number" ? v : parseFloat(v);
-        if (!Number.isFinite(n)) return def;
-        // 0~1 범위로 클램프 + 소수 1자리 고정
-        const clamped = Math.max(TEMP_MIN, Math.min(TEMP_MAX, n));
-        return Math.round(clamped * 10) / 10;
-    };
-
-    // 옵션 상태 반영
-    const applySearchResult = (d = {}) => {
-        setData(prev => ({
-            ...prev,
-            ...d,
-            temperature: parseTemp(d?.temperature),
-            // 분류 개수 빈값이면 기본값
-            open_item_lv1: orIfEmpty(d?.open_item_lv1, "0~50"),
-            open_item_lv2: orIfEmpty(d?.open_item_lv2, "0"),
-            open_item_lv3: orIfEmpty(d?.open_item_lv3, "0"),
-            popupcheck: d?.popupcheck ?? "",
-        }));
-
-        setPreviousPromptExValue(d?.prompt_string_ex_backup || "");
-        setPreviousPromptResValue(d?.prompt_string_res_backup || "");
-
-        // --- apikey ---
-        const apiOpts = toOptions(d?.apikey);
-        setApiKeyOptions(apiOpts);
-        const apiInit = pickSelected(apiOpts) || apiOpts[0];
-        if (apiInit) {
-            setApiKeyValue(String(apiInit.value));
-            setData(prev => ({ ...prev, apikeyid: apiInit.value, apikey: apiInit.keyid }));
-        }
-
-        // --- result_lang ---
-        const langOpts = toOptions(d?.result_lang);
-        setResultLangOptions(langOpts);
-        const langInit = pickSelected(langOpts) || langOpts[0];
-        if (langInit) {
-            setResultLangValue(String(langInit.value));
-            setData(prev => ({ ...prev, result_lang: langInit.value }));
-        }
-
-        // --- model_select ---
-        const modelOpts = toOptions(d?.model_select);
-        setModelOptions(modelOpts);
-        const modelInit = pickSelected(modelOpts) || modelOpts[0];
-        if (modelInit) {
-            setModelValue(String(modelInit.value));
-            setData(prev => ({ ...prev, model_select: modelInit.value }));
-        }
-
-        // --- duplicateRemoveDate ---
-        if (d?.duplicateRemoveDate) {
-            setData(prev => ({ ...prev, duplicateRemoveDate: d.duplicateRemoveDate }));
-        }
-
-        // 프롬프트 내용 있으면 토글 열린 상태 유지
-        if (d?.prompt_string && String(d.prompt_string).trim() !== "") {
-            setOpenPrompt(true);
-        }
-    };
-
-    // 조회/재조회 공용
-    const searchInfo = useCallback(async (over = {}) => {
-        const res = await optionEditData.mutateAsync({
-            params: { user: auth?.user?.userId || "", projectnum: sessionStorage.getItem("projectnum") || "", qnum: sessionStorage.getItem("qnum") || "", gb: "info" },
-        });
-
-        const d = res?.resultjson?.[0] || {};
-        if (res?.duplicateRemoveDate) {
-            d.duplicateRemoveDate = res.duplicateRemoveDate;
-        }
-
-        setQid(prev => {
-            const next = String(d?.qid || "").trim();
-            return next ? next : prev;
-        });
-        applySearchResult(d);
-        return d;
-    }, [optionEditData, projectnum, qnum, onQidLoaded]);
-
-    useEffect(() => {
-        searchInfo();   // 최초 조회
-    }, []);
-
-    // 팝업에서 '선택' 눌렀을 때: textarea에 적용하고 팝업 닫기
-    const handleSelectPrompt = ({ text }) => {
-        setOpenPrompt(true);        // 프롬프트 섹션이 닫혀 있어도 자동으로 열기
-
-        setData(prev => ({
-            ...prev,
-            prompt_string: String(text || "")
-        }));
-        setPreviousPromptShow(false);
-    };
-
-    // onChangeInputEvent 핸들러
-    const onChangeInputEvent = (e, col) => {
-        let next = e?.value ?? e?.target?.value ?? "";
-
-        // temperature라면 숫자로 변환 후 소수점 한 자리 고정
-        if (col === "temperature") next = parseTemp(next);
-
-        setData(prev => ({
-            ...prev,
-            [col]: next,
-        }));
-    }
-
-    // 공통 드롭다운 onChange 핸들러
-    const handleDropdownChange = (key) => (e) => {
-        const item = e?.value; // 선택 객체
-        if (!item) return;
-
-        switch (key) {
-            case "apikey":
-                setApiKeyValue(String(item.value));
-                setData((prev) => ({
-                    ...prev,
-                    apikeyid: item.value,  // keyvalue
-                    apikey: item.keyid,    // keyid
-                }));
-                break;
-
-            case "result_lang":
-                setResultLangValue(String(item.value));
-                setData((prev) => ({
-                    ...prev,
-                    result_lang: item.value,
-                }));
-                break;
-
-            case "model_select":
-                setModelValue(String(item.value));
-                setData((prev) => ({
-                    ...prev,
-                    model_select: item.value,
-                }));
-                break;
-
-            default:
-                break;
-        }
-    };
-
-    useEffect(() => {
-        setData(prev => {
-            const v = prev?.temperature;
-            return (v === undefined || v === null || v === "")
-                ? { ...prev, temperature: TEMP_DEFAULT }
-                : prev;
-        });
-    }, []);
-
-    // payload 생성
-    const buildInfoPayload = (type) => {
-        // type → ev 매핑
-        const typeToEv = {
-            translateResponse: "1",
-            classified: "2",
-            response: "3",
-            recallResponse: "4",
-        };
-
-        const info = {
-            apikeyid: String(data?.apikeyid || ""),
-            apikey: String(data?.apikey || ""),
-            data_type: "DB",
-            projectnum: sessionStorage.getItem("projectnum") || "",
-            result_lang: String(data?.result_lang || "Korean"),
-            select_rows: "",
-            model_select: String(data?.model_select || ""),
-            open_item_lv1: String(data?.open_item_lv1 ?? ""),
-            open_item_lv2: String(data?.open_item_lv2 ?? ""),
-            open_item_lv3: String(data?.open_item_lv3 ?? ""),
-            prompt_string: String(data?.prompt_string || ""),
-            keyword_string: String(data?.keyword_string || ""),
-            select_column_id: "pid",
-            select_column_title: sessionStorage.getItem("qnum") || "",
-            temperature: parseTemp(data?.temperature),
-            prompt_string_ex_backup: data?.prompt_string_ex_backup ?? {},
-            prompt_string_res_backup: data?.prompt_string_res_backup ?? {},
-        };
-
-        return {
-            user: auth?.user?.userId || "",
-            projectnum: sessionStorage.getItem("projectnum") || "",
-            qnum: sessionStorage.getItem("qnum") || "",
-            gb: "info",
-            data: [info],
-            ev: typeToEv[type], //버튼 구분
-        };
-    };
-
-    // 버튼 별 api payload 생성 
-    const buildAnalysisPayload = (type) => {
-        const base = {
-            token: "",
-            user: auth?.user?.userId || "",
-            projectnum: sessionStorage.getItem("projectnum") || "",
-            qid,
-            action: "start",
-        };
-
-        switch (type) {
-            case "translateResponse":      // 번역
-                return { ...base, translateResponse: "Y" };
-
-            case "classified":             // 보기분석
-                return { ...base, classified: "Y", opencodeCategory: "Y" };
-
-            case "response":               // 응답자분석(NEW)
-                return { ...base, response: "Y", opencodeResponse: "Y" };
-
-            case "recallResponse":         // 응답자 기타&빈셀
-                return { ...base, recallResponse: "Y" };
-
-            default:
-                return base;
-        }
-    };
-
-    // 공통 버튼 실행
-    const runInfoSave = async (type) => {
-        /*유효성 체크 */
-        if (saving) return false;
-        if (!qid || !projectnum) {
-            modal.showErrorAlert("알림", "문항/프로젝트 정보를 먼저 불러온 뒤 실행해 주세요.", MODAL_SCOPE);
-            return false;
-        }
-        if (!String(data?.open_item_lv1 ?? "").trim()) {
-            modal.showErrorAlert("알림", "소분류 개수를 입력하세요.", MODAL_SCOPE);
-            return false;
-        }
-        if (!apiKeyOptions?.length || !apiKeyOptions[0]?.keyselected) {
-            modal.showErrorAlert("알림", "apikey가 설정되지 않았습니다.\n설정 후 분석해주세요.", MODAL_SCOPE);
-            return false;
-        }
-
-        // 새 작업 시작 시 초기화 (검증 다 통과한 후)
-        completedOnceRef.current = false;
-        activeTypeRef.current = type;
-        lastStableRef.current = 0;
-        lineCountRef.current = getLogMetrics(logTextRef.current).lines;
-
-        setSaving(true);
-        try {
-            // 1) 옵션 정보 저장
-            const payload = buildInfoPayload(type);
-            const saveRes = await optionSaveData.mutateAsync(payload);
-            if (String(saveRes?.success) !== '777') {
-                modal.showErrorAlert("에러", "오류가 발생했습니다.", MODAL_SCOPE); //오류 팝업 표출
-                return false;
-            }
-            // console.log(`[INFO][${type}] saved (777)`, saveRes);
-
-            // 저장 성공 시 서버 기준 최신값으로 재조회
-            await searchInfo();
-
-            // 2) 저장 성공 시 → 분석 API 호출
-            const analysisPayload = buildAnalysisPayload(type);
-            const analysisRes = await optionAnalysisStart.mutateAsync(analysisPayload);
-
-            const ok = String(analysisRes?.success) === '777' || analysisRes?.ok === true;
-            const job = analysisRes?.job || analysisRes?.contents?.job || analysisRes?.data?.job;
-
-            if (!ok) {
-                modal.showErrorAlert("에러", "오류가 발생했습니다.", MODAL_SCOPE);
-                return false;
-            }
-
-            const text = ACTION_LABEL[type] ?? type;  // 라벨 추출
-            // 분석 결과창 표출
-            appendLog(`== ${text} 시작 ==\n`);
-
-            if (job) {
-                // 허브 조인 + 로딩 on
-                activeJobRef.current = job;
-                setAnalyzing(true); // 먼저 ON
-                const joined = await joinJob(job);
-                if (!joined) appendLog("[WARN] 실시간 로그 연결 실패(작업은 진행 중)\n");
-
-                // 누락 로그 보정: status 호출
-                try {
-                    const r = await optionAnalysisStatus.mutateAsync(buildStatusPayload(job));
-                    if (r?.output) appendLog(String(r.output));
-                } catch { }
-            } else {
-                appendLog("[INFO] job 키가 없어 실시간 로그 조인을 생략합니다.\n");
-            }
-            // 탭 이동 
-            nextTabRef.current = (type === "classified") ? "2" : "1";
-
-            return true;
-        } catch (e) {
-            modal.showErrorAlert("에러", "오류가 발생했습니다.", MODAL_SCOPE); //오류 팝업 표출
-            setAnalyzing(false);      // 에러 즉시 off
-            return false;
+            appendLog("[WARN] 작업 중지 요청 처리 중 오류가 발생했습니다.");
         } finally {
-            setSaving(false);
+            await cleanupWorkerResources(jobToStop);
+            setAnalyzing(false);
+            setRunningJobId(null);
+            setWorkerStep(0);
         }
     };
 
-    const logRef = useRef(null);
-    // 로그가 바뀔 때(추가될 때) 바닥에 붙여 주기
-    useEffect(() => {
-        const el = logRef.current;
-        if (!el) return;
-        // 로그가 추가될 때마다 항상 맨 아래로
-        el.scrollTop = el.scrollHeight;
-    }, [logText]);
+    const settingsDrawerNode = expanded ? (
+        <div className="osa-header-drawer-wrap">
+            <div className="osa-header-drawer-card">
+                {/* 1열: 문항명 */}
+                <div className="osa-drawer-col osa-field-group">
+                    <div className="osa-field-label">
+                        <span className="osa-field-title">
+                            문항명
+                        </span>
 
-    // 문항 삭제 버튼 이벤트  
-    const deleteQnum = async () => {
-        modal.showConfirm("알림", "삭제하시면 데이터를 복구할 수 없습니다.\n해당 문항을 삭제하시겠습니까?", MODAL_SCOPE, {
-            btns: [
-                { title: "취소", background: "#75849a" },
-                {
-                    title: "확인",
-                    click: async () => {
-                        try {
-                            const payload = {
-                                params: {
-                                    gb: "del_qnum",
-                                    projectnum: sessionStorage.getItem("projectnum") || "",
-                                    qnum: sessionStorage.getItem("qnum") || "",
-                                    user: auth?.user?.userId || "",
-                                }
-                            };
-                            const res = await optionEditData.mutateAsync(payload);
-
-                            if (String(res.success) === '777') {
-                                modal.showAlert("알림", "문항이 삭제되었습니다.");
-                                navigate("/ai_open_analysis/pro_list"); // 문항 목록 페이지로 이동
-                            } else {
-                                modal.showErrorAlert("에러", "문항이 삭제 중 오류가 발생했습니다.");
-                            }
-                        } catch (err) {
+                    </div>
+                    <textarea
+                        className="osa-textarea"
+                        disabled={project_lock === "수정불가"}
+                        value={
+                            data?.keyword_string && String(data.keyword_string).trim() !== ""
+                                ? data.keyword_string
+                                : data?.question_fin || ""
                         }
-                    },
-                },
-            ],
-        });
-    };
+                        onChange={(e) =>
+                            setData((prev) => ({ ...prev, keyword_string: e.target.value }))
+                        }
+                    />
+                </div>
 
-    return (
-        <Fragment>
-            <div className="collapseBar">
-                {isOpen && <div className="collapseTitle">{(qnum ? `${qnum} ` : "")}</div>}
-                <Button
-                    type="button"
-                    className="btnCollapse"
-                    onClick={onToggle}
-                    aria-expanded={isOpen}
-                    title={isOpen ? "왼쪽 패널 접기" : "왼쪽 패널 펼치기"}
-                >
-                    {isOpen ? "<<" : ">>"}
-                </Button>
-            </div>
+                {/* 2열: 프롬프트 지침 */}
+                <div className="osa-drawer-col osa-field-group">
+                    <div className="osa-field-label">
+                        <span className="osa-field-title">
+                            프롬프트 지침
+                            <span
+                                className="info-icon"
+                                data-tooltip={`프롬프트 지침|보기·응답자 분석 시 반영할 추가 지침 정의\n예: 소분류 문구의 어조는 '~함'으로 통일해줘`}
+                            />
+                        </span>
+                        <button
+                            type="button"
+                            className="osa-prompt-hist-btn"
+                            onClick={() => setPreviousPromptShow(true)}
+                        >
+                            <History size={12} />
+                            <span>프롬프트 이력</span>
+                        </button>
+                    </div>
+                    <textarea
+                        className="osa-textarea"
+                        disabled={project_lock === "수정불가"}
+                        placeholder="보기/응답자 분석 시 반영할 추가 지침을 입력하세요."
+                        value={data?.prompt_string || ""}
+                        onChange={(e) =>
+                            setData((prev) => ({ ...prev, prompt_string: e.target.value }))
+                        }
+                    />
+                </div>
 
-            {/* 접혔을 땐 내용 숨김 */}
-            {isOpen && (
-                <div className="left-body">
-                    <div style={{ marginBottom: "6px" }}>
-                        {/* 문항 요약 */}
-                        <div className="cmn_pop_ipt">
-                            <TextArea
-                                className="custom-padding-textarea k-input-solid"
-                                rows={2}
-                                value={
-                                    data?.keyword_string && data.keyword_string.trim() !== ""
-                                        ? data.keyword_string
-                                        : data?.question_fin || ""
+                {/* 3열: 모델 / 언어 / 창의성 / 분류 개수 (2x2 정렬 그리드) */}
+                <div className="osa-drawer-col osa-drawer-col-params">
+                    <div className="osa-field-group">
+                        <div className="osa-field-label">
+                            <span className="osa-field-title">모델 선택</span>
+                        </div>
+                        <OsaDropDown
+                            size="md"
+                            options={modelOptions}
+                            disabled={project_lock === "수정불가"}
+                            value={modelValue}
+                            onValueChange={(v) => {
+                                setModelValue(v);
+                                setData((prev) => ({ ...prev, model_select: v }));
+                            }}
+                        />
+                    </div>
+
+                    <div className="osa-field-group">
+                        <div className="osa-field-label">
+                            <span className="osa-field-title">결과 언어</span>
+                        </div>
+                        <OsaDropDown
+                            size="md"
+                            options={resultLangOptions}
+                            disabled={project_lock === "수정불가"}
+                            value={resultLangValue}
+                            onValueChange={(v) => {
+                                setResultLangValue(v);
+                                setData((prev) => ({ ...prev, result_lang: v }));
+                            }}
+                        />
+                    </div>
+
+                    <div className="osa-field-group">
+                        <div className="osa-field-label">
+                            <span className="osa-field-title">
+                                창의성 조절
+                                <span
+                                    className="info-icon"
+                                    data-tooltip={`창의성 조절|0에 가까울수록 일관적이며, 1에 가까울수록 새로운 보기 분류를 시도합니다.`}
+                                />
+                            </span>
+                            <span className="osa-temp-badge">
+                                {parseTemp(data?.temperature).toFixed(1)}
+                            </span>
+                        </div>
+                        <div className="osa-slider-box">
+                            <input
+                                type="range"
+                                className="osa-range-slider"
+                                min={TEMP_MIN}
+                                max={TEMP_MAX}
+                                step={0.1}
+                                disabled={project_lock === "수정불가"}
+                                value={parseTemp(data?.temperature)}
+                                style={{
+                                    margin: 0,
+                                    background: `linear-gradient(to right, #f97316 ${parseTemp(data?.temperature) * 100
+                                        }%, #e2e8f0 ${parseTemp(data?.temperature) * 100}%)`,
+                                }}
+                                onChange={(e) =>
+                                    setData((prev) => ({
+                                        ...prev,
+                                        temperature: parseTemp(e.target.value),
+                                    }))
                                 }
-                                onChange={(e) => onChangeInputEvent(e, "keyword_string")}
                             />
                         </div>
                     </div>
-                    {/* 프롬프트 지침 (기존 버튼 포함) */}
-                    <Section
-                        id="sec-prompt"
-                        title={
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                                프롬프트 지침
-                                <span
-                                    className="info-icon"
-                                    data-tooltip={`프롬프트 지침|보기분석시 추가 지침 정의
-                                        \n예1. 소분류 카테고리 분류시 문구의 어조는 "~있었음", "~했음"으로 구체적인 어조로 분류해줘.
-                                        예2."정책"의 단어는 제외하고 분류되게 해줘
-                                        예3. 소분류 카테고리 분류시 추출된 항목문구가 더 설명이 들어간 문구로 구성해줘
-                                        예4. 소분류 카테고리 분류시 추출된 항목문구가 더 설명이 들어간 문구로 구성해줘`}
-                                ></span>
-                            </span>
-                        }
-                        first
-                        open={openPrompt}
-                        onToggle={() => setOpenPrompt(v => !v)}
-                        headerAddon={<Button className="btnMini" onClick={() => { setPreviousPromptShow(true) }}>기존</Button>}
-                    >
-                        <div className="promptArea">
-                            <TextArea
-                                className="promptBox"
-                                rows={3}
-                                placeholder="프롬프트 지침을 입력하세요."
-                                value={data?.prompt_string || ""}
-                                onChange={(e) => onChangeInputEvent(e, "prompt_string")}
-                            />
-                        </div>
-                    </Section>
 
-                    {/* 옵션 */}
-                    <Section
-                        id="sec-option"
-                        title={
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                                옵션
-                                <span
-                                    className="info-icon"
-                                    data-tooltip={`옵션|결과언어 : 보기분석 후 결과 언어, 번역 시 결과 언어\n창의성 조절 : 1에 가까울수록 새로운 보기 분석을 시도한다.`}
-                                ></span>
-                            </span>
-                        }
-                        open={openOption}
-                        onToggle={() => setOpenOption(v => !v)}
-                    >
-                        {/* <div className="cmn_pop_ipt">
-                            <span className="iptTit">apikey</span>
-                            <CustomDropDownList
-                                data={apiKeyOptions}
-                                textField="text"        // 화면 표시: keytext
-                                dataItemKey="value"     // 고유키: keyvalue
-                                defaultValue={apiKeyValue}     // 현재 선택값: keyvalue
-                                onChange={handleDropdownChange("apikey")}
-                            />
-                        </div> */}
-                        <div className="cmn_pop_ipt">
-                            <span className="iptTit">결과언어</span>
-                            <CustomDropDownList
-                                data={resultLangOptions}
-                                textField="text"
-                                dataItemKey="value"
-                                defaultValue={resultLangValue}
-                                onChange={handleDropdownChange("result_lang")}
-                            />
+                    <div className="osa-field-group">
+                        <div className="osa-field-label">
+                            <span className="osa-field-title">분류 개수</span>
+                            <em className="osa-field-subhint">0 입력 시 제외</em>
                         </div>
-                        <div className="cmn_pop_ipt">
-                            <span className="iptTit">모델선택</span>
-                            <CustomDropDownList
-                                data={modelOptions}
-                                textField="text"
-                                dataItemKey="value"
-                                defaultValue={modelValue}
-                                onChange={handleDropdownChange("model_select")}
-                            />
-                        </div>
-                        <div className="cmn_pop_ipt">
-                            <span className="iptTit">창의성 조절</span>
-
-                            <div className="tempCtrl" style={{ display: "flex", alignItems: "center", gap: 8, width: "100%" }}>
-                                <Slider
-                                    min={TEMP_MIN}
-                                    max={TEMP_MAX}
-                                    step={TEMP_STEP}
-                                    buttons={false}                 // 좌우 +/− 버튼 숨김 (원하면 true)
-                                    value={parseTemp(data?.temperature)}
-                                    onChange={(e) => onChangeInputEvent(e, "temperature")}   // e.value 사용
-                                    style={{ flex: 1, width: "140px" }}
-                                />
-                                <span className="tempValue">
-                                    {parseTemp(data?.temperature).toFixed(1)}
-                                </span>
-                            </div>
-                        </div>
-                    </Section>
-
-                    {/* 분류개수 설정 */}
-                    <Section
-                        id="sec-counts"
-                        title={
-                            <>
-                                분류 개수 설정
-                                <span className="titNote">(대/중분류 0 설정시 제외)</span>
-                            </>
-                        }
-                        open={openCounts}
-                        onToggle={() => setOpenCounts(v => !v)}
-                    >
-                        <div style={{ display: "flex", gap: "6px", alignItems: "center", width: "100%", boxSizing: "border-box" }}>
-                            <style>{`
-                                .custom-counts-input {
-                                    height: 26px;
-                                }
-                                .custom-counts-input .k-input-inner {
-                                    padding: 0 4px !important;
-                                    text-align: center;
-                                }
-                            `}</style>
-                            <div style={{ display: "flex", alignItems: "center", gap: "4px", flex: 1 }}>
-                                <span style={{ fontSize: "12px", color: "#334155", whiteSpace: "nowrap", fontWeight: 500, letterSpacing: "-0.5px" }}>소분류</span>
-                                <Input
-                                    className="k-input k-input-solid custom-counts-input"
-                                    value={data?.open_item_lv1 || ""}
-                                    onChange={(e) => onChangeInputEvent(e, "open_item_lv1")}
-                                    style={{ width: "100%", minWidth: "30px", fontSize: "12px" }}
-                                />
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: "4px", flex: 1 }}>
-                                <span style={{ fontSize: "12px", color: "#334155", whiteSpace: "nowrap", fontWeight: 500, letterSpacing: "-0.5px" }}>중분류</span>
-                                <Input
-                                    className="k-input k-input-solid custom-counts-input"
-                                    value={data?.open_item_lv2 || ""}
-                                    onChange={(e) => onChangeInputEvent(e, "open_item_lv2")}
-                                    style={{ width: "100%", minWidth: "30px", fontSize: "12px" }}
-                                />
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: "4px", flex: 1 }}>
-                                <span style={{ fontSize: "12px", color: "#334155", whiteSpace: "nowrap", fontWeight: 500, letterSpacing: "-0.5px" }}>대분류</span>
-                                <Input
-                                    className="k-input k-input-solid custom-counts-input"
-                                    value={data?.open_item_lv3 || ""}
-                                    onChange={(e) => onChangeInputEvent(e, "open_item_lv3")}
-                                    style={{ width: "100%", minWidth: "30px", fontSize: "12px" }}
-                                />
-                            </div>
-                        </div>
-                    </Section>
-
-                    {/* 버튼 3개 */}
-                    {project_lock !== '수정불가' && (
-                        <div className="btnWrap type01 btnRowFit">
-                            <Button className="btnTxt" disabled={saving}
-                                onClick={() => runInfoSave("translateResponse")}>
-                                번역
-                            </Button>
-
-                            <Button themeColor="primary" disabled={saving}
-                                onClick={async () => {
-                                    try {
-                                        const hasAnalysis = (lv3Options ?? []).some(
-                                            (r) => r.ex_gubun?.trim?.() === "분석(수정가능)"
-                                        );
-                                        if (hasAnalysis) {
-                                            modal.showConfirm(
-                                                "알림",
-                                                "기존 분석 결과가 있습니다.\n삭제 후 새로 분석하시겠습니까?",
-                                                {
-                                                    btns: [
-                                                        { title: "취소" },
-                                                        { title: "확인", click: () => runInfoSave("classified") },
-                                                    ],
-                                                }
-                                            );
-                                        } else {
-                                            runInfoSave("classified");
+                        <div className="osa-lv-count-grid">
+                            {[
+                                {
+                                    short: "대",
+                                    field: "open_item_lv3",
+                                    title: "대분류 개수 (0 입력 시 제외)",
+                                },
+                                {
+                                    short: "중",
+                                    field: "open_item_lv2",
+                                    title: "중분류 개수 (0 입력 시 제외)",
+                                },
+                                {
+                                    short: "소",
+                                    field: "open_item_lv1",
+                                    title: "소분류 개수 범위 (예: 0~50)",
+                                },
+                            ].map((item) => (
+                                <label
+                                    key={item.field}
+                                    className="osa-lv-addon-box"
+                                    title={item.title}
+                                >
+                                    <span className="osa-lv-addon-tag">{item.short}</span>
+                                    <input
+                                        type="text"
+                                        className="osa-lv-addon-input"
+                                        disabled={project_lock === "수정불가"}
+                                        value={data?.[item.field] ?? ""}
+                                        onChange={(e) =>
+                                            setData((prev) => ({
+                                                ...prev,
+                                                [item.field]: e.target.value,
+                                            }))
                                         }
-                                    } catch (err) {
-                                        console.error("분석 전 확인 오류", err);
-                                        modal.showErrorAlert("오류", "기존 분석 여부 확인 중 문제가 발생했습니다.");
-                                    }
-                                }}
-                            >
-                                보기분석
-                            </Button>
-
-                            <Button themeColor="primary" disabled={saving}
-                                onClick={() => {
-                                    try {
-                                        if (responseCount < 0) {
-                                            modal.showConfirm(
-                                                "알림",
-                                                "기존 분석 결과가 있습니다.\n삭제 후 새로 분석하시겠습니까?",
-                                                {
-                                                    btns: [
-                                                        { title: "취소" },
-                                                        { title: "확인", click: () => runInfoSave("response") },
-                                                    ],
-                                                }
-                                            );
-                                        } else {
-                                            runInfoSave("response");
-                                        }
-                                    } catch (err) {
-                                        console.error("응답자분석 전 확인 오류", err);
-                                        modal.showErrorAlert("오류", "기존 분석 여부 확인 중 문제가 발생했습니다.");
-                                    }
-                                }}>
-                                응답자분석(NEW)
-                            </Button>
-
-                            {showEmptyEtcBtn && (
-                                <Button className="btnTxt" disabled={saving}
-                                    onClick={() => runInfoSave("recallResponse")}>
-                                    응답자 빈셀&기타
-                                </Button>
-                            )}
+                                    />
+                                </label>
+                            ))}
                         </div>
-                    )}
-                    {/* 분석결과 */}
-                    {project_lock !== '수정불가' && (
-                        <div style={{ marginTop: "6px" }}>
-                            <div ref={logRef} className="resultBox" aria-label="분석결과창" style={{ minHeight: "80px", height: "140px" }}>
-                                {logText}
-                            </div>
-                            <div className="mgT10" style={{ display: "flex", justifyContent: "space-between" }}>
-                                {userPerm === 2 && <Button className="btnTxt type02" onClick={deleteQnum}>문항 삭제</Button>}
-                                {/* <Button className="btnTxt type02" onClick={clearLog}>로그 지우기</Button> */}
-                            </div>
-                        </div>
-                    )}
+                    </div>
                 </div>
-            )}
-            {/* 기존 프롬프트 내용 팝업 */}
-            {previousPromptShow &&
+            </div>
+        </div>
+    ) : null;
+
+    const activeStepNum = workerStep || 1;
+    const activeStepShort = (
+        WORKER_STEPS.find((s) => s.step === activeStepNum)?.label || "1. 데이터 준비"
+    ).replace(/^\d+\.\s*/, "");
+
+    return (
+        <Fragment>
+            {settingsDrawerNode &&
+                (drawerMountNode
+                    ? createPortal(settingsDrawerNode, drawerMountNode)
+                    : settingsDrawerNode)}
+
+            <div className={`osa-settings-card ${runningJobId ? "is-worker-running" : ""}`}>
+                {/* 좌측 탭 전환 + 우측 AI 실행 버튼 바 (실행 중에는 진행 상태 바로 깔끔하게 전환) */}
+                <div className="osa-settings-bar">
+                    <div className="osa-settings-bar-left">{leftSlot}</div>
+
+                    <div
+                        ref={logPopoverWrapRef}
+                        className="osa-log-popover-anchor"
+                        style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}
+                    >
+                        {runningJobId ? (
+                            <div className="osa-worker-running-group">
+                                <button
+                                    type="button"
+                                    className={`osa-worker-running-pill ${showConsole ? "active" : ""}`}
+                                    title="클릭하여 실시간 AI 실행 로그 열기/닫기"
+                                    onClick={() => setShowConsole((v) => !v)}
+                                >
+                                    <span className="osa-worker-pulse" />
+                                    <b>{ACTION_LABEL[runningAction] || "AI 분석"} 진행 중</b>
+                                    <em>
+                                        · {formatElapsed(elapsedSec)} ({activeStepNum}/4{" "}
+                                        {activeStepShort})
+                                    </em>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className={`osa-btn ${showConsole ? "active" : ""}`}
+                                    style={{ height: "29px", padding: "0 9px", fontSize: "12px" }}
+                                    title="실시간 실행 로그 열기/닫기"
+                                    onClick={() => setShowConsole((v) => !v)}
+                                >
+                                    <Terminal size={13} />
+                                    <span>로그</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="osa-btn osa-worker-stop-btn"
+                                    style={{ height: "29px", padding: "0 10px", fontSize: "12px" }}
+                                    title="진행 중인 AI 분석 작업 중지"
+                                    onClick={handleStopWorker}
+                                >
+                                    <span className="osa-stop-glyph" aria-hidden="true" />
+                                    <span>중지</span>
+                                </button>
+                            </div>
+                        ) : String(tabDivision) !== "3" ? (
+                            <>
+                                {project_lock !== "수정불가" && (
+                                    <div className="osa-worker-btns">
+                                        <button
+                                            type="button"
+                                            className={`osa-btn ${tabDivision === "2" ? "osa-btn-accent" : ""
+                                                }`}
+                                            style={{ height: "29px", padding: "0 10px", fontSize: "12px" }}
+                                            disabled={isWorkerBusy}
+                                            onClick={() => triggerWorker("analyze")}
+                                        >
+                                            <Sparkles size={13} />
+                                            <span>보기분석</span>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            className={`osa-btn ${tabDivision !== "2" ? "osa-btn-accent" : ""
+                                                }`}
+                                            style={{ height: "29px", padding: "0 11px", fontSize: "12px" }}
+                                            disabled={isWorkerBusy}
+                                            onClick={() => triggerWorker("respondent")}
+                                        >
+                                            <Zap size={13} />
+                                            <span>응답자분석(전체)</span>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            className="osa-btn"
+                                            style={{ height: "29px", padding: "0 10px", fontSize: "12px" }}
+                                            disabled={isWorkerBusy}
+                                            onClick={() => triggerWorker("empty_etc")}
+                                        >
+                                            <ArrowLeftRight size={13} />
+                                            <span>응답자분석(빈셀)</span>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            className="osa-btn"
+                                            style={{ height: "29px", padding: "0 10px", fontSize: "12px" }}
+                                            disabled={isWorkerBusy}
+                                            onClick={() => triggerWorker("translate")}
+                                        >
+                                            <Languages size={13} />
+                                            <span>번역</span>
+                                        </button>
+                                    </div>
+                                )}
+
+                                {(logText || showConsole) && (
+                                    <>
+                                        {project_lock !== "수정불가" && (
+                                            <div className="osa-subtoolbar-divider" />
+                                        )}
+                                        <button
+                                            type="button"
+                                            className={`osa-btn ${showConsole ? "active" : ""}`}
+                                            style={{ height: "29px", padding: "0 9px", fontSize: "12px" }}
+                                            title="최근 AI 워커 실행 로그 보기"
+                                            onClick={() => setShowConsole((v) => !v)}
+                                        >
+                                            <Terminal size={13} />
+                                            <span>로그</span>
+                                        </button>
+                                    </>
+                                )}
+
+                            </>
+                        ) : null}
+
+                        {/* 버튼 바로 아래 플로팅 팝오버 콘솔 (레이아웃 밀림 0px) */}
+                        {showConsole && (
+                            <div
+                                className={`osa-log-popover ${runningJobId ? "running" : "completed"
+                                    }`}
+                            >
+                                <div className="osa-log-popover-head">
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "8px",
+                                            minWidth: 0,
+                                        }}
+                                    >
+                                        <span
+                                            className={`osa-worker-banner-title ${runningJobId ? "running" : "completed"
+                                                }`}
+                                        >
+                                            {runningJobId ? (
+                                                <>
+                                                    <span className="osa-worker-pulse" />
+                                                    <span>
+                                                        {ACTION_LABEL[runningAction] || "AI 분석"} 실행 중 (
+                                                        {formatElapsed(elapsedSec)})
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Terminal size={13} color="#ea580c" />
+                                                    <span>최근 AI 워커 실행 로그</span>
+                                                </>
+                                            )}
+                                        </span>
+
+                                        {!runningJobId && logText && (
+                                            <span className="osa-worker-done-badge">실행 완료</span>
+                                        )}
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: "6px",
+                                            flexShrink: 0,
+                                        }}
+                                    >
+                                        {runningJobId ? (
+                                            <button
+                                                type="button"
+                                                className="osa-btn osa-worker-stop-btn"
+                                                style={{
+                                                    height: "25px",
+                                                    padding: "0 8px",
+                                                    fontSize: "11.5px",
+                                                }}
+                                                onClick={handleStopWorker}
+                                            >
+                                                <span className="osa-stop-glyph" aria-hidden="true" />
+                                                <span>작업 중지</span>
+                                            </button>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                className="osa-btn"
+                                                disabled={!logText}
+                                                style={{
+                                                    height: "25px",
+                                                    padding: "0 8px",
+                                                    fontSize: "11.5px",
+                                                }}
+                                                onClick={() => {
+                                                    setLogText("");
+                                                }}
+                                            >
+                                                <span>로그 지우기</span>
+                                            </button>
+                                        )}
+
+                                        <button
+                                            type="button"
+                                            className="osa-icon-btn"
+                                            style={{ width: "25px", height: "25px" }}
+                                            title="로그 창 닫기 (Esc)"
+                                            aria-label="로그 창 닫기"
+                                            onClick={() => setShowConsole(false)}
+                                        >
+                                            <X size={13} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {runningJobId && (
+                                    <div className="osa-log-popover-steps">
+                                        {WORKER_STEPS.map((st) => {
+                                            const isCurrent = workerStep === st.step;
+                                            const isDone = workerStep > st.step;
+                                            return (
+                                                <span
+                                                    key={st.step}
+                                                    className={`osa-worker-step ${isCurrent
+                                                        ? "current"
+                                                        : isDone
+                                                            ? "done"
+                                                            : "pending"
+                                                        }`}
+                                                >
+                                                    {isDone ? `✓ ${st.label}` : st.label}
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+
+                                <div ref={logRef} className="osa-worker-console">
+                                    {logText ? (
+                                        String(logText)
+                                            .split(/\r?\n/)
+                                            .filter(
+                                                (line, idx, arr) =>
+                                                    !(idx === arr.length - 1 && line === "")
+                                            )
+                                            .map((line, i) => {
+                                                const isErr = /error|warn|실패|오류/i.test(line);
+                                                const isDone = /^✔|^✓/.test(line.trim());
+                                                const isHead = /^==/.test(line.trim());
+                                                const stepMatch = line.match(
+                                                    /^(\[\d+\/\d+[^\]]*\])\s*(.*)$/
+                                                );
+                                                return (
+                                                    <div
+                                                        key={i}
+                                                        className={`osa-log-line ${isErr
+                                                            ? "err"
+                                                            : isDone
+                                                                ? "done"
+                                                                : isHead
+                                                                    ? "head"
+                                                                    : ""
+                                                            }`}
+                                                    >
+                                                        {stepMatch ? (
+                                                            <>
+                                                                <span className="osa-log-step-tag">
+                                                                    {stepMatch[1]}
+                                                                </span>{" "}
+                                                                <span>{stepMatch[2]}</span>
+                                                            </>
+                                                        ) : (
+                                                            line
+                                                        )}
+                                                    </div>
+                                                );
+                                            })
+                                    ) : (
+                                        <div className="osa-log-line head">
+                                            {runningJobId
+                                                ? "로그 스트림 연결 대기 중..."
+                                                : "표시할 실행 로그가 없습니다."}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {previousPromptShow && (
                 <OptionSettingPopup
                     popupShow={previousPromptShow}
                     setPopupShow={setPreviousPromptShow}
-                    previousPromptExValue={previousPromptExValue}           //보기 프롬프트 로그
+                    projectnum={projectnum}
+                    qnum={qnum}
+                    displayQnum={displayQnum}
+                    qTitle={qTitle || data?.question_fin || ""}
+                    previousPromptExValue={previousPromptExValue}
                     setPreviousPromptExValue={setPreviousPromptExValue}
-                    previousPromptResValue={previousPromptResValue}         //응답 프롬프트 로그
+                    previousPromptResValue={previousPromptResValue}
                     setPreviousPromptResValue={setPreviousPromptResValue}
-                    onSelectPrompt={handleSelectPrompt}
+                    onSelectPrompt={({ text }) => {
+                        setExpanded(true);
+                        setData((prev) => ({ ...prev, prompt_string: String(text || "") }));
+                        setPreviousPromptShow(false);
+                    }}
                 />
-            }
+            )}
         </Fragment>
     );
-};
+});
 
 export default OptionSettingInfo;
