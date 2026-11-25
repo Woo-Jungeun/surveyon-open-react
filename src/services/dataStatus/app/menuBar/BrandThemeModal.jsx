@@ -33,11 +33,11 @@ export const DEFAULT_PRESET_TABLE_THEMES = {
     theme_stripe: "#F8FAFC",
     theme_text: "#0F172A",
     theme_text_muted: "#64748B",
-    theme_base_bg: "#EFF6FF",
-    theme_base_fg: "#1E40AF",
+    theme_base_bg: "#C7DCFE",
+    theme_base_fg: "#1E3A8A",
     theme_etc_bg: "#F8FAFC",
     theme_etc_fg: "#334155",
-    theme_group_preset_bg: "#E0E7FF",
+    theme_group_preset_bg: "#E8EEFF",
     theme_group_preset_fg: "#1D4ED8",
   },
   KURLY_PURPLE: {
@@ -55,11 +55,11 @@ export const DEFAULT_PRESET_TABLE_THEMES = {
     theme_stripe: "#FCF9FF",
     theme_text: "#0F172A",
     theme_text_muted: "#64748B",
-    theme_base_bg: "#FAF5FF",
-    theme_base_fg: "#5F0080",
+    theme_base_bg: "#DFC7F7",
+    theme_base_fg: "#4A044E",
     theme_etc_bg: "#F8F5FF",
     theme_etc_fg: "#4C1D95",
-    theme_group_preset_bg: "#EDE9FE",
+    theme_group_preset_bg: "#EFE7FE",
     theme_group_preset_fg: "#6D28D9",
   },
   MCD_RED: {
@@ -77,12 +77,12 @@ export const DEFAULT_PRESET_TABLE_THEMES = {
     theme_stripe: "#FFFDF7",
     theme_text: "#0F172A",
     theme_text_muted: "#64748B",
-    theme_base_bg: "#FEF3C7",
-    theme_base_fg: "#991B1B",
+    theme_base_bg: "#F8C9C5",
+    theme_base_fg: "#7F1D1D",
     theme_etc_bg: "#FFFBEB",
     theme_etc_fg: "#92400E",
-    theme_group_preset_bg: "#FFEDD5",
-    theme_group_preset_fg: "#C2410C",
+    theme_group_preset_bg: "#FEF0C7",
+    theme_group_preset_fg: "#B45309",
   },
   SBUX_GREEN: {
     theme_primary: "#00704A",
@@ -99,8 +99,8 @@ export const DEFAULT_PRESET_TABLE_THEMES = {
     theme_stripe: "#F8FBF9",
     theme_text: "#0F172A",
     theme_text_muted: "#64748B",
-    theme_base_bg: "#ECFDF5",
-    theme_base_fg: "#00704A",
+    theme_base_bg: "#BBE8D5",
+    theme_base_fg: "#064E3B",
     theme_etc_bg: "#FAF6EE",
     theme_etc_fg: "#785C28",
     theme_group_preset_bg: "#F5EFE2",
@@ -121,7 +121,7 @@ export const DEFAULT_PRESET_TABLE_THEMES = {
     theme_stripe: "#F7FAFC",
     theme_text: "#0F172A",
     theme_text_muted: "#64748B",
-    theme_base_bg: "#EBF3FA",
+    theme_base_bg: "#C3D5EB",
     theme_base_fg: "#002C5F",
     theme_etc_bg: "#F0F9FF",
     theme_etc_fg: "#0369A1",
@@ -143,11 +143,11 @@ export const DEFAULT_PRESET_TABLE_THEMES = {
     theme_stripe: "#FEF7F9",
     theme_text: "#0F172A",
     theme_text_muted: "#64748B",
-    theme_base_bg: "#FCE7EB",
-    theme_base_fg: "#880E2B",
+    theme_base_bg: "#F5C2D4",
+    theme_base_fg: "#700A26",
     theme_etc_bg: "#FDF2F8",
     theme_etc_fg: "#831843",
-    theme_group_preset_bg: "#FBCFE8",
+    theme_group_preset_bg: "#FCE4EE",
     theme_group_preset_fg: "#9D174D",
   },
 };
@@ -245,10 +245,45 @@ function mixHex(hex1, hex2, ratio1 = 0.5) {
   return rgbToHex(r1 * w1 + r2 * w2, g1 * w1 + g2 * w2, b1 * w1 + b2 * w2);
 }
 
-function getContrastFg(bgHex) {
+function getRelativeLuminance(bgHex) {
   const [r, g, b] = hexToRgb(bgHex);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.75 ? "#0F172A" : "#FFFFFF";
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+
+function getContrastFg(bgHex) {
+  return getRelativeLuminance(bgHex) > 0.75 ? "#0F172A" : "#FFFFFF";
+}
+
+/**
+ * Base 행 배경이 Top2(소계) 행 배경보다 시각적·명도상으로 확실히 더 진한 톤을 갖도록 산출
+ */
+function computeDeeperBaseStyle(primaryHex, top2BgHex) {
+  const pUpper = String(primaryHex || "#2563EB").toUpperCase();
+  const top2Lum = getRelativeLuminance(top2BgHex || "#F1F5F9");
+  const targetMaxLum = Math.max(0.72, top2Lum - 0.065);
+
+  let baseBg = mixHex(pUpper, "#FFFFFF", 0.25);
+  if (getRelativeLuminance(baseBg) > targetMaxLum) {
+    for (let ratio = 0.28; ratio <= 0.42; ratio += 0.03) {
+      baseBg = mixHex(pUpper, "#FFFFFF", ratio);
+      if (getRelativeLuminance(baseBg) <= targetMaxLum) break;
+    }
+  }
+  if (getRelativeLuminance(baseBg) > targetMaxLum) {
+    const shadedPrimary = mixHex(pUpper, "#334155", 0.55);
+    for (let ratio = 0.12; ratio <= 0.55; ratio += 0.04) {
+      baseBg = mixHex(shadedPrimary, baseBg, ratio);
+      if (getRelativeLuminance(baseBg) <= targetMaxLum) break;
+    }
+  }
+
+  const finalLum = getRelativeLuminance(baseBg);
+  const baseFg =
+    finalLum < 0.58
+      ? "#FFFFFF"
+      : mixHex(pUpper, "#0F172A", getRelativeLuminance(pUpper) > 0.65 ? 0.22 : 0.62);
+
+  return { bg: baseBg, fg: baseFg };
 }
 
 /**
@@ -274,13 +309,15 @@ export function generateTableThemeFromBrand(primary = "#2563EB", secondary = "#3
   const { l: sfLightness } = hexToHsl(sfUpper);
   const safeSurface = sfLightness < 86 ? mixHex(sfUpper, "#FFFFFF", 0.16) : sfUpper;
   const primaryFg = getContrastFg(pUpper);
+  const top2Bg = mixHex(sUpper, "#FFFFFF", 0.14);
+  const deeperBase = computeDeeperBaseStyle(pUpper, top2Bg);
 
   return {
     theme_primary: pUpper,
     theme_primary_fg: primaryFg,
     theme_header_group_bg: pUpper,
     theme_header_group_fg: primaryFg,
-    theme_stub_header_bg: mixHex(pUpper, "#FFFFFF", 0.16),
+    theme_stub_header_bg: mixHex(pUpper, "#FFFFFF", 0.15),
     theme_stub_header_fg: mixHex(pUpper, "#0F172A", 0.35),
     theme_stub_group_bg: mixHex(safeSurface, "#F8FAFC", 0.65),
     theme_stub_group_fg: mixHex(pUpper, "#0F172A", 0.30),
@@ -290,11 +327,11 @@ export function generateTableThemeFromBrand(primary = "#2563EB", secondary = "#3
     theme_stripe: mixHex(safeSurface, "#FFFFFF", 0.45),
     theme_text: "#0F172A",
     theme_text_muted: "#64748B",
-    theme_base_bg: mixHex(safeSurface, "#FFFFFF", 0.85),
-    theme_base_fg: mixHex(pUpper, "#0F172A", 0.72),
-    theme_etc_bg: mixHex(sUpper, "#FFFFFF", 0.10),
+    theme_base_bg: deeperBase.bg,
+    theme_base_fg: deeperBase.fg,
+    theme_etc_bg: mixHex(sUpper, "#FFFFFF", 0.09),
     theme_etc_fg: mixHex(sUpper, "#1E293B", 0.55),
-    theme_group_preset_bg: mixHex(sUpper, "#FFFFFF", 0.16),
+    theme_group_preset_bg: top2Bg,
     theme_group_preset_fg: mixHex(sUpper, "#0F172A", 0.75),
   };
 }
@@ -305,6 +342,7 @@ export function normalizeTableThemeJson(rawJson, primary = "#2563EB", secondary 
   }
   const cloned = { ...rawJson };
   const p = String(cloned.theme_primary || primary || "#2563EB").toUpperCase();
+  const s = String(secondary || p || "#3B82F6").toUpperCase();
   const primaryFg = getContrastFg(p);
   cloned.theme_primary_fg = primaryFg;
   if (
@@ -314,6 +352,28 @@ export function normalizeTableThemeJson(rawJson, primary = "#2563EB", secondary 
     cloned.theme_header_group_bg = DEFAULT_PRESET_TABLE_THEMES[code]?.theme_header_group_bg || p;
   }
   cloned.theme_header_group_fg = primaryFg;
+
+  const presetTheme = code ? DEFAULT_PRESET_TABLE_THEMES[code] : null;
+  const top2Bg =
+    presetTheme?.theme_group_preset_bg ||
+    cloned.theme_group_preset_bg ||
+    mixHex(s, "#FFFFFF", 0.14);
+
+  if (
+    !cloned.theme_base_bg ||
+    getRelativeLuminance(cloned.theme_base_bg) > getRelativeLuminance(top2Bg) - 0.045
+  ) {
+    if (presetTheme) {
+      cloned.theme_base_bg = presetTheme.theme_base_bg;
+      cloned.theme_base_fg = presetTheme.theme_base_fg;
+      cloned.theme_group_preset_bg = presetTheme.theme_group_preset_bg;
+      cloned.theme_group_preset_fg = presetTheme.theme_group_preset_fg;
+    } else {
+      const deeperBase = computeDeeperBaseStyle(p, top2Bg);
+      cloned.theme_base_bg = deeperBase.bg;
+      cloned.theme_base_fg = deeperBase.fg;
+    }
+  }
   return cloned;
 }
 

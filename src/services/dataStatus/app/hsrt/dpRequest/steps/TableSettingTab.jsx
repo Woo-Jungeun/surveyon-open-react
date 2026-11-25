@@ -193,9 +193,12 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                     secondary: d.secondary || d.primary,
                     surface: d.surface || '#EFF6FF',
                     isDefault: Boolean(d.isDefault),
-                    tableThemeJson:
-                        d.tableThemeJson ||
-                        generateTableThemeFromBrand(d.primary, d.secondary, d.surface),
+                    tableThemeJson: normalizeTableThemeJson(
+                        d.tableThemeJson || generateTableThemeFromBrand(d.primary, d.secondary, d.surface),
+                        d.primary,
+                        d.secondary,
+                        d.surface
+                    ),
                 });
             } else {
                 syncBrand();
