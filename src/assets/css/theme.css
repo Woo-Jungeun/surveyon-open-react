@@ -125,6 +125,31 @@
     --header-bg-gradient: linear-gradient(to right, #ECFDF5, #D1FAE5);
 }
 
+
+/* Theme: 실사관리 (Deep Navy) */
+[data-theme="fieldManagement"],
+[data-theme="field-management"] {
+    --primary-color: #1e3a8a;
+    --primary-hover: #172554;
+    --primary-focus: #1e3a8a;
+    --primary-dark: #172554;
+
+    --primary-bg-light: rgba(30, 58, 138, 0.08);
+    --primary-bg-medium: rgba(30, 58, 138, 0.15);
+    --primary-bg-hover: #eff6ff;
+    --primary-bg-selected: #dbeafe;
+
+    --primary-border: #3b82f6;
+    --primary-border-light: #93c5fd;
+    --primary-border-hover: #1e3a8a;
+    --primary-border-focus: #1e3a8a;
+
+    --primary-text: #1e3a8a;
+    --primary-text-dark: #172554;
+
+    --header-bg-gradient: linear-gradient(to right, #eff6ff, #dbeafe);
+}
+
 /* Theme: AI오픈분석 (Orange) - Default */
 [data-theme="ai-open-analysis"] {
     --primary-color: #F97316;

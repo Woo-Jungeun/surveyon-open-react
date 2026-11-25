@@ -8,6 +8,7 @@ const routeThemeMap = {
   '/survey_creation': 'survey-creation',
   '/data_status': 'data-dashboard',
   '/data_management': 'data-management',
+  '/field_management': 'field-management',
   '/ai_open_analysis': 'ai-open-analysis',
   '/respondent_management': 'respondent-management',
   '/board/notice': 'respondent-management',
