@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useCallback, useMemo, useEffect } from "react";
+import React, { Fragment, useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
 import GridData from "@/components/common/grid/GridData.jsx";
@@ -47,10 +47,37 @@ const DateTimeCell = (props) => {
     return <td colSpan={props.colSpan} className={props.className} title={val} style={{ ...props.style, textAlign: 'center', fontSize: '12px', cursor: 'pointer' }} onClick={handleCellClick}>{val}</td>;
 };
 
+// 상단 고정 여부 판별 헬퍼 (대소문자 'Y'/'y' 및 top_yn 필드 호환)
+const isTopPinned = (item) => String(item?.topyn ?? item?.top_yn ?? "").trim().toLowerCase() === "y";
+
+// 백엔드 초기 캐시 누락 대비 사용자별 상단 고정 프로젝트 로컬 백업 헬퍼
+const getPinStorageKey = (uid) => (uid ? `surveyon_pinned_projects_${uid}` : "");
+const readLocalPinnedSet = (uid) => {
+    const key = getPinStorageKey(uid);
+    if (!key || typeof localStorage === "undefined") return null;
+    try {
+        const raw = localStorage.getItem(key);
+        if (raw === null) return null; // 아직 한 번도 저장된 적 없음
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? new Set(parsed.map(String)) : null;
+    } catch {
+        return null;
+    }
+};
+const writeLocalPinnedSet = (uid, pinSet) => {
+    const key = getPinStorageKey(uid);
+    if (!key || typeof localStorage === "undefined" || !pinSet) return;
+    try {
+        localStorage.setItem(key, JSON.stringify(Array.from(pinSet)));
+    } catch {
+        // ignore storage quota errors
+    }
+};
+
 // 상단 고정(Pin) 커스텀 셀
 const PinCell = (props) => {
     const { dataItem, onTogglePin, isToggling } = props;
-    const isPinned = dataItem?.topyn === 'y';
+    const isPinned = isTopPinned(dataItem);
 
     const handleClick = (e) => {
         e.stopPropagation();
@@ -187,6 +214,7 @@ const GridRenderer = (props) => {
         selectedState,
         setSelectedState,
         idGetter,
+        setData,
         dataState,
         setDataState,
         dataItemKey,
@@ -210,6 +238,45 @@ const GridRenderer = (props) => {
     const [displayNum, setDisplayNum] = useState(0);
     const [togglingProjectNum, setTogglingProjectNum] = useState(null);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const reconciledKeyRef = useRef("");
+
+    // 목록 로드 시: 서버 고정값이 내려오면 로컬 백업 갱신, 백엔드 초기 캐시 누락으로 0건 내려오면 로컬 백업에서 즉시 복원
+    useEffect(() => {
+        const list = dataState?.data || [];
+        if (!userId || !list.length) return;
+
+        const serverPinnedNums = list.filter(isTopPinned).map((p) => String(p.projectnum)).filter(Boolean);
+        if (serverPinnedNums.length > 0) {
+            writeLocalPinnedSet(userId, new Set(serverPinnedNums));
+            return;
+        }
+
+        const localSet = readLocalPinnedSet(userId);
+        if (!localSet || localSet.size === 0) return;
+
+        const reconcileKey = `${userId}:${list.length}:${Array.from(localSet).join(",")}`;
+        if (reconciledKeyRef.current === reconcileKey) return;
+        reconciledKeyRef.current = reconcileKey;
+
+        const hasMatchInList = list.some((p) => localSet.has(String(p.projectnum)));
+        if (!hasMatchInList) return;
+
+        const restorePins = (arr = []) =>
+            arr.map((p) =>
+                localSet.has(String(p.projectnum))
+                    ? { ...p, topyn: "y", ...(p.top_yn !== undefined ? { top_yn: "y" } : {}) }
+                    : p
+            );
+
+        if (setData) setData((prev) => ({ ...prev, data: restorePins(prev?.data || []) }));
+        if (setDataState) setDataState((prev) => ({ ...prev, data: restorePins(prev?.data || []) }));
+
+        // 백엔드 캐시도 함께 깨어나도록 첫 번째 고정 항목을 백그라운드로 조용히 재동기화
+        const firstPinnedPn = Array.from(localSet).find((pn) => list.some((p) => String(p.projectnum) === pn));
+        if (firstPinnedPn && toggleProjectTop?.mutateAsync) {
+            toggleProjectTop.mutateAsync({ user: userId, projectnum: firstPinnedPn, topyn: "y" }).catch(() => {});
+        }
+    }, [userId, dataState?.data, setData, setDataState, toggleProjectTop]);
 
     // 프로젝트 목록 새로고침 핸들러
     const handleRefresh = useCallback(async () => {
@@ -233,24 +300,40 @@ const GridRenderer = (props) => {
     const handleTogglePin = useCallback(async (item) => {
         if (!item?.projectnum || togglingProjectNum) return;
 
-        const currentTopYn = item.topyn === 'y' ? 'y' : 'n';
+        const currentTopYn = isTopPinned(item) ? 'y' : 'n';
         const nextTopYn = currentTopYn === 'y' ? 'n' : 'y';
         const projectnum = item.projectnum;
 
         setTogglingProjectNum(projectnum);
 
-        // 1. 낙관적 업데이트 (즉시 UI 반영)
-        if (setDataState) {
-            setDataState(prev => {
-                const nextList = (prev.data || []).map(p => {
-                    if (p.projectnum === projectnum) {
-                        return { ...p, topyn: nextTopYn };
-                    }
-                    return p;
-                });
-                return { ...prev, data: nextList };
-            });
-        }
+        const applyPinValue = (val) => {
+            const mapList = (list = []) =>
+                list.map(p => (p.projectnum === projectnum ? { ...p, topyn: val, ...(p.top_yn !== undefined ? { top_yn: val } : {}) } : p));
+            if (setData) {
+                setData(prev => ({ ...prev, data: mapList(prev?.data || []) }));
+            }
+            if (setDataState) {
+                setDataState(prev => ({ ...prev, data: mapList(prev?.data || []) }));
+            }
+        };
+
+        // 1. 낙관적 업데이트 (즉시 UI 및 상단 정렬 반영)
+        applyPinValue(nextTopYn);
+
+        const syncLocalPinStorage = (targetVal) => {
+            if (!userId) return;
+            const baseList = dataState?.data || [];
+            const nextSet = new Set(
+                baseList
+                    .filter((p) => (String(p.projectnum) === String(projectnum) ? targetVal === 'y' : isTopPinned(p)))
+                    .map((p) => String(p.projectnum))
+                    .filter(Boolean)
+            );
+            if (targetVal === 'y') nextSet.add(String(projectnum));
+            else nextSet.delete(String(projectnum));
+            writeLocalPinnedSet(userId, nextSet);
+        };
+        syncLocalPinStorage(nextTopYn);
 
         try {
             const res = await toggleProjectTop.mutateAsync({
@@ -263,24 +346,15 @@ const GridRenderer = (props) => {
                 throw new Error(res?.message || res?.Message || "상단 고정 설정에 실패했습니다.");
             }
         } catch (err) {
+            syncLocalPinStorage(currentTopYn);
             console.error("toggleProjectTop failed:", err);
             // 실패 시 롤백
-            if (setDataState) {
-                setDataState(prev => {
-                    const rollbackList = (prev.data || []).map(p => {
-                        if (p.projectnum === projectnum) {
-                            return { ...p, topyn: currentTopYn };
-                        }
-                        return p;
-                    });
-                    return { ...prev, data: rollbackList };
-                });
-            }
+            applyPinValue(currentTopYn);
             alert(err?.message || "상단 고정 처리 중 오류가 발생했습니다.");
         } finally {
             setTogglingProjectNum(null);
         }
-    }, [userId, togglingProjectNum, toggleProjectTop, setDataState]);
+    }, [userId, togglingProjectNum, toggleProjectTop, setData, setDataState, dataState?.data]);
 
     useEffect(() => {
         if (!syncProgress) {
@@ -345,7 +419,7 @@ const GridRenderer = (props) => {
         const pinned = [];
         const unpinned = [];
         for (const item of result) {
-            if (item.topyn === 'y') {
+            if (isTopPinned(item)) {
                 pinned.push(item);
             } else {
                 unpinned.push(item);
@@ -364,7 +438,7 @@ const GridRenderer = (props) => {
 
     // 상단 고정(Pin) 프로젝트 행 강조 렌더러 (설문온 메인 보라색 테마)
     const rowRender = useCallback((trElement, rowProps) => {
-        const isPinned = rowProps.dataItem?.topyn === 'y';
+        const isPinned = isTopPinned(rowProps.dataItem);
         if (isPinned) {
             const existingStyle = trElement.props.style || {};
             const existingClassName = trElement.props.className || '';
@@ -536,6 +610,7 @@ const GridRenderer = (props) => {
                             height: "100%",
                             style: { border: "none" },
                             data: filteredData,
+                            disableInternalSort: true,
                             dataItemKey: dataItemKey,
                             selectedState,
                             setSelectedState,
