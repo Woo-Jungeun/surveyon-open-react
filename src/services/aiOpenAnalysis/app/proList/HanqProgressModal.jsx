@@ -19,7 +19,11 @@ import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { ProListApi } from "./ProListApi.js";
-import { OptionSettingApi } from "@/services/aiOpenAnalysis/app/optionSetting/OptionSettingApi.js";
+import {
+    getAnalysisInfo,
+    saveAnalysisInfo,
+    checkAnalysisPopup,
+} from "@/api/analysisApi.js";
 import { DEFAULT_HANQ_OPTIONS } from "./HanqOptionModal.jsx";
 
 function getCookie(name) {
@@ -66,7 +70,22 @@ const toOptions = (arr) =>
 
 const pickSelected = (opts) => {
     if (!opts.length) return null;
-    const token = String(opts[0].keyselected ?? "");
+    const direct = opts.find((o) => {
+        const ks = String(o.keyselected ?? "").trim();
+        if (!ks) return false;
+        return (
+            ks === String(o.value) ||
+            ks === String(o.keyid) ||
+            ks === String(o.text) ||
+            ks.toLowerCase() === "true" ||
+            ks.toUpperCase() === "Y" ||
+            ks.toLowerCase() === "selected"
+        );
+    });
+    if (direct) return direct;
+
+    const tokenCarrier = opts.find((o) => String(o.keyselected ?? "").trim() !== "");
+    const token = String(tokenCarrier?.keyselected ?? "").trim();
     if (!token) return null;
     return (
         opts.find((o) => String(o.value) === token) ||
@@ -109,7 +128,6 @@ const HanqProgressModal = ({
         getAnalysisWorkerStatus,
         stopAnalysisWorker,
     } = ProListApi();
-    const { optionEditData } = OptionSettingApi();
 
     // ---------------- 좌측: 공통 옵션 상태 ----------------
     const [options, setOptions] = useState({ ...DEFAULT_HANQ_OPTIONS });
@@ -241,17 +259,7 @@ const HanqProgressModal = ({
                     "";
 
                 const [infoRes, hanqRes] = await Promise.all([
-                    optionEditData
-                        .mutateAsync({
-                            params: {
-                                user: userId,
-                                projectnum: pn,
-                                qnum: qnumForInfo,
-                                gb: "info",
-                                skipSpinner: true,
-                            },
-                        })
-                        .catch(() => null),
+                    qnumForInfo ? getAnalysisInfo(pn, qnumForInfo, userId).catch(() => null) : Promise.resolve(null),
                     getHanqOptionAll
                         .mutateAsync({
                             projectnum: pn,
@@ -262,7 +270,11 @@ const HanqProgressModal = ({
 
                 if (!isMounted) return;
 
-                const infoData = infoRes?.resultjson?.[0] || {};
+                const infoData =
+                    (Array.isArray(infoRes?.resultjson) ? infoRes.resultjson[0] : null) ||
+                    (Array.isArray(infoRes?.data) ? infoRes.data[0] : null) ||
+                    infoRes?.info ||
+                    {};
                 const fetchedModelOpts = toOptions(infoData?.model_select);
                 const fetchedLangOpts = toOptions(infoData?.result_lang);
                 const fetchedApiKeyOpts = toOptions(infoData?.apikey);
@@ -272,14 +284,15 @@ const HanqProgressModal = ({
                 const activeLangOpts =
                     fetchedLangOpts.length > 0 ? fetchedLangOpts : FALLBACK_LANG_OPTIONS;
 
+                const apiInit = pickSelected(fetchedApiKeyOpts) || fetchedApiKeyOpts[0] || null;
                 const defaultModelVal =
                     (pickSelected(activeModelOpts) || activeModelOpts[0])?.value ||
                     DEFAULT_HANQ_OPTIONS.model_select;
                 const defaultLangVal =
                     (pickSelected(activeLangOpts) || activeLangOpts[0])?.value ||
                     DEFAULT_HANQ_OPTIONS.result_lang;
-                const defaultApiKeyId =
-                    (pickSelected(fetchedApiKeyOpts) || fetchedApiKeyOpts[0])?.value || "";
+                const defaultApiKeyId = apiInit?.value || (typeof infoData?.apikeyid === "string" ? infoData.apikeyid : "") || "";
+                const defaultApiKey = apiInit?.keyid || (typeof infoData?.apikey === "string" ? infoData.apikey : "") || "";
 
                 setModelOptions(activeModelOpts);
                 setLangOptions(activeLangOpts);
@@ -291,6 +304,7 @@ const HanqProgressModal = ({
                     model_select: String(defaultModelVal),
                     result_lang: String(defaultLangVal),
                     ...(defaultApiKeyId ? { apikeyid: defaultApiKeyId } : {}),
+                    ...(defaultApiKey ? { apikey: String(defaultApiKey) } : {}),
                 };
 
                 if (String(hanqRes?.success) === "777") {
@@ -328,6 +342,9 @@ const HanqProgressModal = ({
                             ...(data.apikeyid || defaultApiKeyId
                                 ? { apikeyid: data.apikeyid || defaultApiKeyId }
                                 : {}),
+                            ...(data.apikey || defaultApiKey
+                                ? { apikey: String(data.apikey || defaultApiKey) }
+                                : {}),
                         };
                     }
                 }
@@ -360,6 +377,13 @@ const HanqProgressModal = ({
             const pn = projectnum || sessionStorage.getItem("projectnum") || "";
             const userId = user || sessionStorage.getItem("userId") || "";
 
+            const actionEvMap = {
+                translate: "1",
+                analyze: "2",
+                respondent: "3",
+                empty_etc: "4",
+            };
+
             const stepFlags =
                 actionType === "analyze"
                     ? {
@@ -367,6 +391,8 @@ const HanqProgressModal = ({
                         opencodeCategory: "Y",
                         response: "N",
                         opencodeResponse: "N",
+                        recallResponse: "N",
+                        translateResponse: "N",
                     }
                     : actionType === "respondent"
                         ? {
@@ -375,10 +401,42 @@ const HanqProgressModal = ({
                             response: "Y",
                             opencodeResponse: "Y",
                             recallResponse: "Y",
+                            translateResponse: "N",
                         }
                         : {
+                            classified: "N",
+                            opencodeCategory: "N",
+                            response: "N",
+                            opencodeResponse: "N",
                             recallResponse: "Y",
+                            translateResponse: "N",
                         };
+
+            const questionTitle =
+                question.question_title || question.qnum_text || question.qnum || "";
+
+            const settingsPayload = {
+                apikeyid: String(globalOptions.apikeyid || ""),
+                apikey: String(globalOptions.apikey || ""),
+                data_type: "DB",
+                projectnum: String(pn),
+                qnum: String(question.qnum || ""),
+                question_fin: String(questionTitle),
+                keyword_string: String(questionTitle),
+                prompt_string: String(globalOptions.prompt_string ?? ""),
+                model_select: String(globalOptions.model_select || "GPT-5.2"),
+                result_lang: String(globalOptions.result_lang || "Korean"),
+                temperature: Number(globalOptions.temperature ?? 0.2),
+                lvcode: String(globalOptions.lvcode || "3"),
+                open_item_lv1: String(globalOptions.open_item_lv1 ?? "0~50"),
+                open_item_lv2: String(globalOptions.open_item_lv2 ?? "0"),
+                open_item_lv3: String(globalOptions.open_item_lv3 ?? "0"),
+                select_rows: "",
+                select_column_id: "pid",
+                select_column_title: String(question.qnum || ""),
+                isHanq: true,
+                ...stepFlags,
+            };
 
             const payload = {
                 projectnum: pn,
@@ -387,13 +445,7 @@ const HanqProgressModal = ({
                 action: actionType,
                 isHanq: true,
                 qid: question.id ? String(question.id) : undefined,
-                settings: {
-                    ...globalOptions,
-                    isHanq: true,
-                    question_fin:
-                        question.question_title || question.qnum_text || question.qnum,
-                    apikeyid: globalOptions.apikeyid || undefined,
-                },
+                settings: settingsPayload,
                 ...stepFlags,
             };
 
@@ -401,6 +453,20 @@ const HanqProgressModal = ({
                 `▶ [${question.qnum}] ${stepDef.label} (${stepDef.desc}) 시작 요청 중...`,
                 "divider"
             );
+
+            // 파이썬 워커가 문항별 DB 설정(result_lang, model_select, lvcode 등)을 읽을 수 있도록 실행 직전 선저장
+            try {
+                await saveAnalysisInfo(
+                    pn,
+                    question.qnum,
+                    settingsPayload,
+                    userId,
+                    undefined,
+                    actionEvMap[actionType]
+                );
+            } catch (saveErr) {
+                console.warn(`[HanqProgressModal] [${question.qnum}] 문항 설정 선저장 실패(계속 진행):`, saveErr);
+            }
 
             let startRes;
             try {
@@ -643,6 +709,9 @@ const HanqProgressModal = ({
                 setCompletedSteps((prev) => prev + 1);
 
                 if (ok) {
+                    if (question.id) {
+                        checkAnalysisPopup(projectnum || sessionStorage.getItem("projectnum") || "", question.qnum, String(question.id), "1").catch(() => {});
+                    }
                     if (isPrimaryUIUpdater) {
                         setStepStatuses((prev) => ({
                             ...prev,
@@ -734,6 +803,7 @@ const HanqProgressModal = ({
                                 result_lang:
                                     serverDefaultLang || DEFAULT_HANQ_OPTIONS.result_lang,
                                 ...(prev?.apikeyid ? { apikeyid: prev.apikeyid } : {}),
+                                ...(prev?.apikey ? { apikey: prev.apikey } : {}),
                             }));
                         },
                     },

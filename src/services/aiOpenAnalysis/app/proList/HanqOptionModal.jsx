@@ -43,7 +43,22 @@ const toOptions = (arr) =>
 
 const pickSelected = (opts) => {
     if (!opts.length) return null;
-    const token = String(opts[0].keyselected ?? "");
+    const direct = opts.find((o) => {
+        const ks = String(o.keyselected ?? "").trim();
+        if (!ks) return false;
+        return (
+            ks === String(o.value) ||
+            ks === String(o.keyid) ||
+            ks === String(o.text) ||
+            ks.toLowerCase() === "true" ||
+            ks.toUpperCase() === "Y" ||
+            ks.toLowerCase() === "selected"
+        );
+    });
+    if (direct) return direct;
+
+    const tokenCarrier = opts.find((o) => String(o.keyselected ?? "").trim() !== "");
+    const token = String(tokenCarrier?.keyselected ?? "").trim();
     if (!token) return null;
     return (
         opts.find((o) => String(o.value) === token) ||
