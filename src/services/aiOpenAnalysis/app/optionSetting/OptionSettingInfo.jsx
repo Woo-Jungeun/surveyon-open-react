@@ -14,9 +14,7 @@ import {
     Trash2,
     Terminal,
     Sparkles,
-    Zap,
-    ArrowLeftRight,
-    Languages,
+    ChevronRight,
     History,
     X,
 } from "lucide-react";
@@ -39,7 +37,7 @@ import {
 import { isCodeLocked } from "./optionSettingUtils";
 
 const ACTION_LABEL = {
-    translate: "번역",
+    translate: "번역/교정",
     analyze: "보기분석",
     respondent: "응답자분석(전체)",
     empty_etc: "응답자분석(빈셀)",
@@ -1139,51 +1137,95 @@ const OptionSettingInfo = forwardRef((props, ref) => {
                             <>
                                 {project_lock !== "수정불가" && (
                                     <div className="osa-worker-btns">
-                                        <button
-                                            type="button"
-                                            className={`osa-btn ${tabDivision === "2" ? "osa-btn-accent" : ""
-                                                }`}
-                                            style={{ height: "29px", padding: "0 10px", fontSize: "12px" }}
-                                            disabled={isWorkerBusy}
-                                            onClick={() => triggerWorker("analyze")}
-                                        >
-                                            <Sparkles size={13} />
-                                            <span>보기분석</span>
-                                        </button>
+                                        <span className="osa-auto-label">
+                                            <Sparkles size={11.5} strokeWidth={2.2} />
+                                            <span>자동분석</span>
+                                        </span>
 
-                                        <button
-                                            type="button"
-                                            className={`osa-btn ${tabDivision !== "2" ? "osa-btn-accent" : ""
-                                                }`}
-                                            style={{ height: "29px", padding: "0 11px", fontSize: "12px" }}
-                                            disabled={isWorkerBusy}
-                                            onClick={() => triggerWorker("respondent")}
-                                        >
-                                            <Zap size={13} />
-                                            <span>응답자분석(전체)</span>
-                                        </button>
+                                        <div className="osa-tip-anchor">
+                                            <button
+                                                type="button"
+                                                className={`osa-btn osa-toolbar-action-btn ${tabDivision === "2" ? "osa-btn-accent" : ""
+                                                    }`}
+                                                disabled={isWorkerBusy}
+                                                onClick={() => triggerWorker("analyze")}
+                                            >
+                                                <span>1. 보기분석</span>
+                                            </button>
+                                            <div className="osa-speech-bubble" role="tooltip">
+                                                <div className="osa-speech-title">1. 보기분석</div>
+                                                <div className="osa-speech-body">
+                                                    전체 응답을 바탕으로 <b>보기(카테고리) 항목을 자동 생성</b>합니다.
+                                                    <span className="osa-speech-sub">
+                                                        (분석 설정의 분류 단계·개수 반영)
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                        <button
-                                            type="button"
-                                            className="osa-btn"
-                                            style={{ height: "29px", padding: "0 10px", fontSize: "12px" }}
-                                            disabled={isWorkerBusy}
-                                            onClick={() => triggerWorker("empty_etc")}
-                                        >
-                                            <ArrowLeftRight size={13} />
-                                            <span>응답자분석(빈셀)</span>
-                                        </button>
+                                        <ChevronRight
+                                            size={13}
+                                            strokeWidth={2.2}
+                                            className="osa-step-chevron"
+                                            aria-hidden="true"
+                                        />
 
-                                        <button
-                                            type="button"
-                                            className="osa-btn"
-                                            style={{ height: "29px", padding: "0 10px", fontSize: "12px" }}
-                                            disabled={isWorkerBusy}
-                                            onClick={() => triggerWorker("translate")}
-                                        >
-                                            <Languages size={13} />
-                                            <span>번역</span>
-                                        </button>
+                                        <div className="osa-tip-anchor">
+                                            <button
+                                                type="button"
+                                                className={`osa-btn osa-toolbar-action-btn ${tabDivision !== "2" ? "osa-btn-accent" : ""
+                                                    }`}
+                                                disabled={isWorkerBusy}
+                                                onClick={() => triggerWorker("respondent")}
+                                            >
+                                                <span>2. 응답자분석(전체)</span>
+                                            </button>
+                                            <div className="osa-speech-bubble" role="tooltip">
+                                                <div className="osa-speech-title">2. 응답자분석(전체)</div>
+                                                <div className="osa-speech-body">
+                                                    생성된 보기에 맞춰 <b>전체 응답 데이터를 자동으로 코드 분류</b>합니다.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="osa-tip-anchor">
+                                            <button
+                                                type="button"
+                                                className="osa-btn osa-toolbar-action-btn"
+                                                disabled={isWorkerBusy}
+                                                onClick={() => triggerWorker("empty_etc")}
+                                            >
+                                                <span>응답자분석(빈셀)</span>
+                                            </button>
+                                            <div
+                                                className="osa-speech-bubble align-right tail-mid-right"
+                                                role="tooltip"
+                                            >
+                                                <div className="osa-speech-title">응답자분석(빈셀)</div>
+                                                <div className="osa-speech-body">
+                                                    분류되지 않고 <b>비어 있는 응답만 재분석</b>하여 빈 코드를 채웁니다.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="osa-subtoolbar-divider" />
+
+                                        <div className="osa-tip-anchor">
+                                            <button
+                                                type="button"
+                                                className="osa-btn osa-toolbar-action-btn"
+                                                disabled={isWorkerBusy}
+                                                onClick={() => triggerWorker("translate")}
+                                            >
+                                                <span>번역/교정</span>
+                                            </button>
+                                            <div className="osa-speech-bubble align-right" role="tooltip">
+                                                <div className="osa-speech-title">번역/교정</div>
+                                                <div className="osa-speech-body">
+                                                    <b>외국어는 번역·교정</b>, <b>한국어는 오탈자 교정</b>을 자동으로 수행합니다.
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
 
@@ -1194,8 +1236,7 @@ const OptionSettingInfo = forwardRef((props, ref) => {
                                         )}
                                         <button
                                             type="button"
-                                            className={`osa-btn ${showConsole ? "active" : ""}`}
-                                            style={{ height: "29px", padding: "0 9px", fontSize: "12px" }}
+                                            className={`osa-btn osa-toolbar-action-btn ${showConsole ? "active" : ""}`}
                                             title="최근 AI 워커 실행 로그 보기"
                                             onClick={() => setShowConsole((v) => !v)}
                                         >

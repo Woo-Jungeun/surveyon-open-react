@@ -8,7 +8,6 @@ import React, {
     useCallback,
 } from "react";
 import {
-    LayoutGrid,
     Search,
     Plus,
     Trash2,
@@ -404,7 +403,6 @@ const OptionSettingLv3Panel = memo(
                 <div className="osa-rp-header">
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
                         <span className="osa-rp-title">
-                            <LayoutGrid size={15} color="#f97316" />
                             <span>보기 선택 · 편집</span>
                             <span className="osa-rp-count">
                                 {activeCodes.length.toLocaleString()}
