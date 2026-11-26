@@ -28,10 +28,10 @@ import { OsaDropDown, OsaCategoryComboInput } from "./OptionSettingKendoSelect.j
 import { useOsaResizableTable } from "./useOsaResizableTable";
 
 const RP_SORT_OPTIONS = [
-    { value: "legacy", text: "기본순" },
     { value: "code", text: "소코드순" },
     { value: "freq", text: "빈도순" },
     { value: "lv1", text: "대분류순" },
+    { value: "lv2", text: "중분류순" },
     { value: "alpha", text: "가나다순" },
 ];
 
@@ -62,7 +62,7 @@ const OptionSettingLv3Panel = memo(
     }) => {
         const [searchTerm, setSearchTerm] = useState("");
         const deferredSearch = useDeferredValue(searchTerm);
-        const [sortMode, setSortMode] = useState("legacy"); // 'legacy' | 'code' | 'freq' | 'lv1' | 'alpha'
+        const [sortMode, setSortMode] = useState("code"); // 'code' | 'freq' | 'lv1' | 'lv2' | 'alpha'
         const searchInputRef = useRef(null);
         const tableScrollRef = useRef(null);
         const [scrollViewportW, setScrollViewportW] = useState(0);
@@ -213,35 +213,48 @@ const OptionSettingLv3Panel = memo(
                 );
             }
 
-            if (sortMode !== "legacy") {
-                arr.sort((a, b) => {
-                    // 9997~9999 특수코드는 빈도 0일 때 하단 배치
-                    const na = natCode(a._subCode);
-                    const nb = natCode(b._subCode);
-                    const aSpecial = typeof na === "number" && na >= 9997;
-                    const bSpecial = typeof nb === "number" && nb >= 9997;
+            arr.sort((a, b) => {
+                const na = natCode(a._subCode);
+                const nb = natCode(b._subCode);
+                const aSpecial = typeof na === "number" && na >= 9997;
+                const bSpecial = typeof nb === "number" && nb >= 9997;
 
-                    if (sortMode === "freq") {
-                        if (b._freq !== a._freq) return b._freq - a._freq;
-                        if (aSpecial !== bSpecial) return aSpecial ? 1 : -1;
-                        return na < nb ? -1 : na > nb ? 1 : 0;
-                    }
-                    if (sortMode === "lv1") {
-                        if (aSpecial !== bSpecial) return aSpecial ? 1 : -1;
-                        const c1 = cleanStr(a.lv1).localeCompare(cleanStr(b.lv1), "ko");
-                        if (c1 !== 0) return c1;
-                        return na < nb ? -1 : na > nb ? 1 : 0;
-                    }
-                    if (sortMode === "alpha") {
-                        if (aSpecial !== bSpecial) return aSpecial ? 1 : -1;
-                        return cleanStr(a.lv3).localeCompare(cleanStr(b.lv3), "ko");
-                    }
-                    // 'code' 소코드순
-                    return na < nb ? -1 : na > nb ? 1 : 0;
-                });
-            } else {
-                arr.sort(compareLegacyCodeOrder);
-            }
+                if (sortMode === "freq") {
+                    if (b._freq !== a._freq) return b._freq - a._freq;
+                    if (aSpecial !== bSpecial) return aSpecial ? 1 : -1;
+                    return compareLegacyCodeOrder(a, b);
+                }
+                if (sortMode === "lv1") {
+                    if (aSpecial !== bSpecial) return aSpecial ? 1 : -1;
+                    const aEmpty = cleanStr(a.lv1) === "" && cleanStr(a.lv1code) === "";
+                    const bEmpty = cleanStr(b.lv1) === "" && cleanStr(b.lv1code) === "";
+                    if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+                    const ca = natCode(a.lv1code);
+                    const cb = natCode(b.lv1code);
+                    if (ca !== cb) return ca < cb ? -1 : 1;
+                    const c1 = cleanStr(a.lv1).localeCompare(cleanStr(b.lv1), "ko");
+                    if (c1 !== 0) return c1;
+                    return compareLegacyCodeOrder(a, b);
+                }
+                if (sortMode === "lv2") {
+                    if (aSpecial !== bSpecial) return aSpecial ? 1 : -1;
+                    const aEmpty = cleanStr(a.lv2) === "" && cleanStr(a.lv2code) === "";
+                    const bEmpty = cleanStr(b.lv2) === "" && cleanStr(b.lv2code) === "";
+                    if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+                    const ca = natCode(a.lv2code);
+                    const cb = natCode(b.lv2code);
+                    if (ca !== cb) return ca < cb ? -1 : 1;
+                    const c2 = cleanStr(a.lv2).localeCompare(cleanStr(b.lv2), "ko");
+                    if (c2 !== 0) return c2;
+                    return compareLegacyCodeOrder(a, b);
+                }
+                if (sortMode === "alpha") {
+                    if (aSpecial !== bSpecial) return aSpecial ? 1 : -1;
+                    return cleanStr(a.lv3).localeCompare(cleanStr(b.lv3), "ko");
+                }
+                // 기본: 'code' 소코드순 (보기 데이터 탭과 100% 동일 기준)
+                return compareLegacyCodeOrder(a, b);
+            });
 
             return arr;
         }, [activeCodes, deferredSearch, freqMap, sortMode]);
