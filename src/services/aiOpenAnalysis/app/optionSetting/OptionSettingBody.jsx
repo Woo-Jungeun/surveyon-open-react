@@ -49,7 +49,9 @@ import {
     ensureRowUids,
     extractList,
     normalizeCodeRows,
+    getGubunCategory,
     buildGubunAndLockPatch,
+    saveCodeGubunMeta,
     isCodeLocked,
     applyCodeFieldPropagation,
     validateCodeLabelConsistency,
@@ -451,7 +453,7 @@ const OptionSettingBody = () => {
                     );
                 }
 
-                const normCodes = normalizeCodeRows(extractList(codesRes), currentQnum);
+                const normCodes = normalizeCodeRows(extractList(codesRes), currentQnum, projectnum);
                 const normResp = normalizeResponseRows(extractList(respRes), normCodes);
                 const normRaw = extractList(rawRes);
 
@@ -516,7 +518,7 @@ const OptionSettingBody = () => {
             }
         }
 
-        const normCodes = normalizeCodeRows(extractList(codesRes), currentQnum);
+        const normCodes = normalizeCodeRows(extractList(codesRes), currentQnum, projectnum);
         const normResp = normalizeResponseRows(extractList(respRes), normCodes);
         const normRaw = extractList(rawRes);
 
@@ -1079,21 +1081,29 @@ const OptionSettingBody = () => {
                         ]
                         : activeCodes;
 
-                const cleanedCodes = finalCodesRaw.map((r) => ({
-                    lv1: cleanStr(r.lv1),
-                    lv2: cleanStr(r.lv2),
-                    lv3: cleanStr(r.lv3),
-                    qnum: String(currentQnum || ""),
-                    lv1code: cleanStr(r.lv1code),
-                    lv2code: cleanStr(r.lv2code),
-                    lv321code: cleanStr(r.lv321code),
-                    summary: cleanStr(r.summary),
-                    ex_gubun: String(r.ex_gubun || "분석(수정가능)"),
-                    is_lock: Boolean(r.is_lock),
-                    lv23code: cleanStr(r.lv23code),
-                    lv123code: cleanStr(r.lv123code ?? r.code_num),
-                    representative_response: cleanStr(r.representative_response),
-                }));
+                const cleanedCodes = finalCodesRaw.map((r) => {
+                    const gubunPatch = buildGubunAndLockPatch(
+                        getGubunCategory(r),
+                        isCodeLocked(r)
+                    );
+                    return {
+                        lv1: cleanStr(r.lv1),
+                        lv2: cleanStr(r.lv2),
+                        lv3: cleanStr(r.lv3),
+                        qnum: String(currentQnum || ""),
+                        lv1code: cleanStr(r.lv1code),
+                        lv2code: cleanStr(r.lv2code),
+                        lv321code: cleanStr(r.lv321code),
+                        summary: cleanStr(r.summary),
+                        ex_gubun: gubunPatch.ex_gubun,
+                        gubun_type: gubunPatch.gubun_type,
+                        is_lock: gubunPatch.is_lock,
+                        is_editable: gubunPatch.is_editable,
+                        lv23code: cleanStr(r.lv23code),
+                        lv123code: cleanStr(r.lv123code ?? r.code_num),
+                        representative_response: cleanStr(r.representative_response),
+                    };
+                });
 
                 const activeResponses = (responses || []).filter((r) => !r?.__pendingDelete);
                 const payloadResponses = activeResponses.map((r) => {
@@ -1200,6 +1210,9 @@ const OptionSettingBody = () => {
                     );
                     return false;
                 }
+
+                // 서버가 잠금 보기를 레거시 '설문(수정불가)'로 일괄 반환하더라도 사용자가 지정한 보기구분(자동분석/설문지/트래킹)을 보존
+                saveCodeGubunMeta(projectnum, currentQnum, finalCodesRaw);
 
                 // 3단계: 응답 목록 및 중복코드 제거 저장
                 const respRes = await saveAnalysisResponses(
@@ -1738,7 +1751,7 @@ const OptionSettingBody = () => {
                 user={userId}
                 onApplied={async () => {
                     const codesRes = await getAnalysisCodes(projectnum, currentQnum);
-                    const freshCodes = normalizeCodeRows(extractList(codesRes), currentQnum);
+                    const freshCodes = normalizeCodeRows(extractList(codesRes), currentQnum, projectnum);
                     committedCodesRef.current = freshCodes;
                     setCodes(freshCodes);
                     tab2Ref.current?.resetBaseline?.(freshCodes);

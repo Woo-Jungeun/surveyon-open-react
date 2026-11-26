@@ -98,81 +98,102 @@ export const buildGubunAndLockPatch = (category, explicitLock = null) => {
     };
 };
 
+const CODE_GUBUN_META_PREFIX = "osa_code_gubun_meta_";
+
+const getCodeGubunStorageKey = (projectnum, qnum) => {
+    const pn = cleanStr(projectnum) || (typeof sessionStorage !== "undefined" ? cleanStr(sessionStorage.getItem("projectnum")) : "");
+    const qn = cleanStr(qnum) || (typeof sessionStorage !== "undefined" ? cleanStr(sessionStorage.getItem("qnum")) : "");
+    return pn && qn ? `${CODE_GUBUN_META_PREFIX}${pn}__${qn}` : "";
+};
+
+export const readCodeGubunMeta = (projectnum, qnum) => {
+    if (typeof localStorage === "undefined") return {};
+    const storageKey = getCodeGubunStorageKey(projectnum, qnum);
+    if (!storageKey) return {};
+    try {
+        const raw = localStorage.getItem(storageKey);
+        const parsed = raw ? JSON.parse(raw) : null;
+        return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+        return {};
+    }
+};
+
+export const saveCodeGubunMeta = (projectnum, qnum, items = []) => {
+    if (typeof localStorage === "undefined") return;
+    const storageKey = getCodeGubunStorageKey(projectnum, qnum);
+    if (!storageKey) return;
+    try {
+        const nextMap = {};
+        (items || []).forEach((r) => {
+            if (!r || r.__pendingDelete) return;
+            const code = cleanStr(r.lv123code ?? r.code_num);
+            if (!code) return;
+            const cat = getGubunCategory(r);
+            const locked = isCodeLocked(r);
+            nextMap[code] = {
+                gubun_type: cat,
+                lv3: cleanStr(r.lv3),
+                is_lock: locked,
+            };
+        });
+        localStorage.setItem(storageKey, JSON.stringify(nextMap));
+    } catch {
+        // ignore storage quota errors
+    }
+};
+
 /**
- * 레거시 Jsonload.selectPnLb 보기 정렬 규칙과 100% 동일한 비교 함수:
- * 1순위: ex_gubun === "survey" 또는 "설문(수정불가)" 우선
- * 2순위: lv1code 없는 것 먼저 → 숫자 오름차순
- * 3순위: lv2code 없는 것 먼저 → 숫자 오름차순
- * 4순위: lv123code 숫자 오름차순 (없으면 맨 뒤)
+ * 보기 정렬 비교 함수: 소코드(lv123code / code_num) 숫자 오름차순 (없거나 비숫자는 맨 뒤)
  */
 export const compareLegacyCodeOrder = (a, b) => {
-    const parseLegacyInt = (val) => {
+    const parseCodeInt = (val) => {
         const s = cleanStr(val);
         if (!s || !/^-?\d+$/.test(s)) return Number.MAX_SAFE_INTEGER;
         const n = Number(s);
         return Number.isSafeInteger(n) ? n : Number.MAX_SAFE_INTEGER;
     };
 
-    const isSurveyOrLocked = (row) => {
-        const eg = cleanStr(row?.ex_gubun);
-        if (eg === "survey" || eg === "설문(수정불가)") return true;
-        if (!eg && isCodeLocked(row)) return true;
-        return false;
-    };
+    const rawA = cleanStr(a?.lv123code ?? a?.code_num);
+    const rawB = cleanStr(b?.lv123code ?? b?.code_num);
+    const numA = parseCodeInt(rawA);
+    const numB = parseCodeInt(rawB);
+    if (numA !== numB) return numA - numB;
 
-    const sA = isSurveyOrLocked(a) ? 0 : 1;
-    const sB = isSurveyOrLocked(b) ? 0 : 1;
-    if (sA !== sB) return sA - sB;
-
-    const l1EmptyA = cleanStr(a?.lv1code) === "" ? 0 : 1;
-    const l1EmptyB = cleanStr(b?.lv1code) === "" ? 0 : 1;
-    if (l1EmptyA !== l1EmptyB) return l1EmptyA - l1EmptyB;
-
-    const l1NumA = parseLegacyInt(a?.lv1code);
-    const l1NumB = parseLegacyInt(b?.lv1code);
-    if (l1NumA !== l1NumB) return l1NumA - l1NumB;
-
-    const l2EmptyA = cleanStr(a?.lv2code) === "" ? 0 : 1;
-    const l2EmptyB = cleanStr(b?.lv2code) === "" ? 0 : 1;
-    if (l2EmptyA !== l2EmptyB) return l2EmptyA - l2EmptyB;
-
-    const l2NumA = parseLegacyInt(a?.lv2code);
-    const l2NumB = parseLegacyInt(b?.lv2code);
-    if (l2NumA !== l2NumB) return l2NumA - l2NumB;
-
-    const l3NumA = parseLegacyInt(a?.lv123code ?? a?.code_num);
-    const l3NumB = parseLegacyInt(b?.lv123code ?? b?.code_num);
-    if (l3NumA !== l3NumB) return l3NumA - l3NumB;
-
-    return 0;
+    return rawA.localeCompare(rawB, "ko", { numeric: true });
 };
 
-export const normalizeCodeRows = (items = [], defaultQnum = "") =>
-    [...(items || [])].sort(compareLegacyCodeOrder).map((r, idx) => {
+export const normalizeCodeRows = (items = [], defaultQnum = "", projectnum = "") => {
+    const resolvedQnum = cleanStr(defaultQnum) || cleanStr(items?.[0]?.qnum);
+    const metaMap = readCodeGubunMeta(projectnum, resolvedQnum);
+
+    const prepared = (items || []).map((r) => {
         const code = cleanStr(r?.lv123code ?? r?.code_num);
         const lv3 = cleanStr(r?.lv3);
         const locked = isCodeLocked(r);
-        const cat = getGubunCategory(r);
-        const exGubun =
-            r?.ex_gubun ||
-            (cat === "설문지"
-                ? locked
-                    ? "설문(수정불가)"
-                    : "설문(수정가능)"
-                : cat === "트래킹"
-                  ? locked
-                      ? "트래킹(수정불가)"
-                      : "트래킹(수정가능)"
-                  : locked
-                    ? "분석(수정불가)"
-                    : "분석(수정가능)");
-        const rowKey =
-            r?.__rowKey ||
-            r?._uid ||
-            `code_${encodeURIComponent(code)}_${encodeURIComponent(lv3)}_${idx}`;
+        const rawGubunType = cleanStr(r?.gubun_type);
+        const rawEx = cleanStr(r?.ex_gubun);
+
+        let cat = getGubunCategory(r);
+        const isAmbiguousLegacyEx =
+            !rawGubunType &&
+            (rawEx === "" ||
+                rawEx === "survey" ||
+                rawEx === "analysis" ||
+                rawEx === "설문(수정불가)" ||
+                rawEx === "분석(수정가능)");
+
+        if (isAmbiguousLegacyEx && code && metaMap[code]?.gubun_type) {
+            const saved = metaMap[code];
+            // 동일 소분류명이거나 잠금(수정불가) 상태로 유지된 코드면 사용자가 지정한 보기구분(자동분석/설문지/트래킹) 복원
+            if (saved.lv3 === lv3 || (locked && saved.is_lock)) {
+                cat = saved.gubun_type;
+            }
+        }
+
+        const patch = buildGubunAndLockPatch(cat, locked);
         return {
             ...r,
-            no: idx + 1,
             qnum: r?.qnum || defaultQnum,
             lv1: cleanStr(r?.lv1),
             lv1code: cleanStr(r?.lv1code),
@@ -181,14 +202,26 @@ export const normalizeCodeRows = (items = [], defaultQnum = "") =>
             lv3,
             lv123code: code,
             code_num: code,
-            ex_gubun: exGubun,
-            gubun_type: cat,
-            is_lock: locked,
-            lock: locked,
-            is_editable: locked ? "불가" : "가능",
+            ex_gubun: patch.ex_gubun,
+            gubun_type: patch.gubun_type,
+            is_lock: patch.is_lock,
+            lock: patch.lock,
+            is_editable: patch.is_editable,
+        };
+    });
+
+    return prepared.sort(compareLegacyCodeOrder).map((r, idx) => {
+        const rowKey =
+            r?.__rowKey ||
+            r?._uid ||
+            `code_${encodeURIComponent(r.lv123code)}_${encodeURIComponent(r.lv3)}_${idx}`;
+        return {
+            ...r,
+            no: idx + 1,
             __rowKey: rowKey,
         };
     });
+};
 
 export const codesToLv3Options = (codes = []) =>
     (codes || [])
