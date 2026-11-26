@@ -501,3 +501,83 @@ export const OsaCategoryComboInput = ({
     );
 };
 
+/**
+ * 인라인 코드/텍스트 셀 입력기 — 외부 자동채움(예: 중분류명 입력 시 중코드 자동 부여) 시에도
+ * DOM 언마운트(포커스 유실) 없이 값만 즉시 동기화
+ */
+export const OsaInlineInput = React.memo(
+    ({
+        value = "",
+        placeholder = "",
+        disabled = false,
+        className = "osa-rp-inline-input",
+        style,
+        title,
+        onCommit,
+        onKeyDown,
+        ...restProps
+    }) => {
+        const [draft, setDraft] = useState(value ?? "");
+        const inputRef = useRef(null);
+        const dirtyByUserRef = useRef(false);
+
+        useEffect(() => {
+            const next = value ?? "";
+            setDraft(next);
+            // 방금 옆 셀(예: 중분류명) 커밋과 동시에 이 코드 칸을 클릭해 포커스된 상태라면 자동 부여된 코드를 선택 상태로 표시
+            if (
+                typeof document !== "undefined" &&
+                document.activeElement === inputRef.current &&
+                !dirtyByUserRef.current &&
+                next !== ""
+            ) {
+                requestAnimationFrame(() => {
+                    if (document.activeElement === inputRef.current && !dirtyByUserRef.current) {
+                        inputRef.current?.select?.();
+                    }
+                });
+            }
+        }, [value]);
+
+        return (
+            <input
+                ref={inputRef}
+                type="text"
+                className={className}
+                style={style}
+                placeholder={placeholder}
+                disabled={disabled}
+                title={title}
+                value={draft}
+                onFocus={() => {
+                    dirtyByUserRef.current = false;
+                }}
+                onChange={(e) => {
+                    dirtyByUserRef.current = true;
+                    setDraft(e.target.value);
+                }}
+                onBlur={(e) => {
+                    dirtyByUserRef.current = false;
+                    onCommit?.(e.target.value, e);
+                }}
+                onKeyDown={(e) => {
+                    if (onKeyDown) {
+                        onKeyDown(e);
+                        return;
+                    }
+                    if (e.key === "Enter") {
+                        e.target.blur();
+                    } else if (e.key === "Escape") {
+                        e.preventDefault();
+                        dirtyByUserRef.current = false;
+                        setDraft(value ?? "");
+                        e.target.blur();
+                    }
+                }}
+                {...restProps}
+            />
+        );
+    }
+);
+
+

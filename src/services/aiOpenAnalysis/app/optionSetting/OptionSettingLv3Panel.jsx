@@ -24,7 +24,7 @@ import {
     getNextAutoSubCode,
     compareLegacyCodeOrder,
 } from "./optionSettingUtils";
-import { OsaDropDown, OsaCategoryComboInput } from "./OptionSettingKendoSelect.jsx";
+import { OsaDropDown, OsaCategoryComboInput, OsaInlineInput } from "./OptionSettingKendoSelect.jsx";
 import { useOsaResizableTable } from "./useOsaResizableTable";
 
 const RP_SORT_OPTIONS = [
@@ -63,6 +63,8 @@ const OptionSettingLv3Panel = memo(
         const [searchTerm, setSearchTerm] = useState("");
         const deferredSearch = useDeferredValue(searchTerm);
         const [sortMode, setSortMode] = useState("code"); // 'code' | 'freq' | 'lv1' | 'lv2' | 'alpha'
+        const [sortVersion, setSortVersion] = useState(0);
+        const pinnedOrderRef = useRef({ sig: "", keys: [] });
         const searchInputRef = useRef(null);
         const tableScrollRef = useRef(null);
         const [scrollViewportW, setScrollViewportW] = useState(0);
@@ -195,69 +197,85 @@ const OptionSettingLv3Panel = memo(
 
         const sortedFilteredCodes = useMemo(() => {
             const kw = deferredSearch.trim().toLowerCase();
-            let arr = activeCodes.map((c) => {
+            const allRows = activeCodes.map((c, idx) => {
                 const subCode = cleanStr(c.lv123code ?? c.code_num);
                 const freq = subCode ? freqMap.get(subCode) || 0 : 0;
-                return { ...c, _subCode: subCode, _freq: freq };
+                const rk = c.__rowKey || c._uid || `rp_${subCode}_${idx}`;
+                return { ...c, __rowKey: rk, _subCode: subCode, _freq: freq };
             });
 
-            if (kw) {
-                arr = arr.filter(
-                    (c) =>
-                        cleanStr(c.lv3).toLowerCase().includes(kw) ||
-                        c._subCode.toLowerCase().includes(kw) ||
-                        cleanStr(c.lv1).toLowerCase().includes(kw) ||
-                        cleanStr(c.lv2).toLowerCase().includes(kw) ||
-                        cleanStr(c.lv1code).toLowerCase().includes(kw) ||
-                        cleanStr(c.lv2code).toLowerCase().includes(kw)
-                );
+            const rowKeysSig = allRows.map((r) => r.__rowKey).join("|");
+            const freqSig = sortMode === "freq" ? allRows.map((r) => r._freq).join(",") : "";
+            const orderSig = `${sortMode}::${sortVersion}::${rowKeysSig}::${freqSig}`;
+
+            let orderedRows;
+            if (pinnedOrderRef.current.sig !== orderSig) {
+                const sorted = [...allRows].sort((a, b) => {
+                    const na = natCode(a._subCode);
+                    const nb = natCode(b._subCode);
+                    const aSpecial = typeof na === "number" && na >= 9997;
+                    const bSpecial = typeof nb === "number" && nb >= 9997;
+
+                    if (sortMode === "freq") {
+                        if (b._freq !== a._freq) return b._freq - a._freq;
+                        if (aSpecial !== bSpecial) return aSpecial ? 1 : -1;
+                        return compareLegacyCodeOrder(a, b);
+                    }
+                    if (sortMode === "lv1") {
+                        if (aSpecial !== bSpecial) return aSpecial ? 1 : -1;
+                        const aEmpty = cleanStr(a.lv1) === "" && cleanStr(a.lv1code) === "";
+                        const bEmpty = cleanStr(b.lv1) === "" && cleanStr(b.lv1code) === "";
+                        if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+                        const ca = natCode(a.lv1code);
+                        const cb = natCode(b.lv1code);
+                        if (ca !== cb) return ca < cb ? -1 : 1;
+                        const c1 = cleanStr(a.lv1).localeCompare(cleanStr(b.lv1), "ko");
+                        if (c1 !== 0) return c1;
+                        return compareLegacyCodeOrder(a, b);
+                    }
+                    if (sortMode === "lv2") {
+                        if (aSpecial !== bSpecial) return aSpecial ? 1 : -1;
+                        const aEmpty = cleanStr(a.lv2) === "" && cleanStr(a.lv2code) === "";
+                        const bEmpty = cleanStr(b.lv2) === "" && cleanStr(b.lv2code) === "";
+                        if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+                        const ca = natCode(a.lv2code);
+                        const cb = natCode(b.lv2code);
+                        if (ca !== cb) return ca < cb ? -1 : 1;
+                        const c2 = cleanStr(a.lv2).localeCompare(cleanStr(b.lv2), "ko");
+                        if (c2 !== 0) return c2;
+                        return compareLegacyCodeOrder(a, b);
+                    }
+                    if (sortMode === "alpha") {
+                        if (aSpecial !== bSpecial) return aSpecial ? 1 : -1;
+                        return cleanStr(a.lv3).localeCompare(cleanStr(b.lv3), "ko");
+                    }
+                    // 기본: 'code' 소코드순 (보기 데이터 탭과 100% 동일 기준)
+                    return compareLegacyCodeOrder(a, b);
+                });
+                pinnedOrderRef.current = {
+                    sig: orderSig,
+                    keys: sorted.map((r) => r.__rowKey),
+                };
+                orderedRows = sorted;
+            } else {
+                // 인라인 셀 편집(중분류명·중코드 등) 중에는 행 위치가 튀지 않도록 현재 행 순서 고정
+                const byKey = new Map(allRows.map((r) => [r.__rowKey, r]));
+                orderedRows = pinnedOrderRef.current.keys
+                    .map((k) => byKey.get(k))
+                    .filter(Boolean);
             }
 
-            arr.sort((a, b) => {
-                const na = natCode(a._subCode);
-                const nb = natCode(b._subCode);
-                const aSpecial = typeof na === "number" && na >= 9997;
-                const bSpecial = typeof nb === "number" && nb >= 9997;
-
-                if (sortMode === "freq") {
-                    if (b._freq !== a._freq) return b._freq - a._freq;
-                    if (aSpecial !== bSpecial) return aSpecial ? 1 : -1;
-                    return compareLegacyCodeOrder(a, b);
-                }
-                if (sortMode === "lv1") {
-                    if (aSpecial !== bSpecial) return aSpecial ? 1 : -1;
-                    const aEmpty = cleanStr(a.lv1) === "" && cleanStr(a.lv1code) === "";
-                    const bEmpty = cleanStr(b.lv1) === "" && cleanStr(b.lv1code) === "";
-                    if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
-                    const ca = natCode(a.lv1code);
-                    const cb = natCode(b.lv1code);
-                    if (ca !== cb) return ca < cb ? -1 : 1;
-                    const c1 = cleanStr(a.lv1).localeCompare(cleanStr(b.lv1), "ko");
-                    if (c1 !== 0) return c1;
-                    return compareLegacyCodeOrder(a, b);
-                }
-                if (sortMode === "lv2") {
-                    if (aSpecial !== bSpecial) return aSpecial ? 1 : -1;
-                    const aEmpty = cleanStr(a.lv2) === "" && cleanStr(a.lv2code) === "";
-                    const bEmpty = cleanStr(b.lv2) === "" && cleanStr(b.lv2code) === "";
-                    if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
-                    const ca = natCode(a.lv2code);
-                    const cb = natCode(b.lv2code);
-                    if (ca !== cb) return ca < cb ? -1 : 1;
-                    const c2 = cleanStr(a.lv2).localeCompare(cleanStr(b.lv2), "ko");
-                    if (c2 !== 0) return c2;
-                    return compareLegacyCodeOrder(a, b);
-                }
-                if (sortMode === "alpha") {
-                    if (aSpecial !== bSpecial) return aSpecial ? 1 : -1;
-                    return cleanStr(a.lv3).localeCompare(cleanStr(b.lv3), "ko");
-                }
-                // 기본: 'code' 소코드순 (보기 데이터 탭과 100% 동일 기준)
-                return compareLegacyCodeOrder(a, b);
-            });
-
-            return arr;
-        }, [activeCodes, deferredSearch, freqMap, sortMode]);
+            if (!kw) return orderedRows;
+            return orderedRows.filter(
+                (c) =>
+                    cleanStr(c.lv3).toLowerCase().includes(kw) ||
+                    c._subCode.toLowerCase().includes(kw) ||
+                    cleanStr(c.lv1).toLowerCase().includes(kw) ||
+                    cleanStr(c.lv2).toLowerCase().includes(kw) ||
+                    cleanStr(c.lv1code).toLowerCase().includes(kw) ||
+                    cleanStr(c.lv2code).toLowerCase().includes(kw)
+            );
+        }, [activeCodes, deferredSearch, freqMap, sortMode, sortVersion]);
 
         const nextAutoCode = useMemo(() => getNextAutoSubCode(activeCodes), [activeCodes]);
 
@@ -537,7 +555,11 @@ const OptionSettingLv3Panel = memo(
                                             popupWidth="118px"
                                             options={RP_SORT_OPTIONS}
                                             value={sortMode}
-                                            onValueChange={setSortMode}
+                                            allowSameValueSelect
+                                            onValueChange={(v) => {
+                                                setSortMode(v);
+                                                setSortVersion((n) => n + 1);
+                                            }}
                                         />
 
                                         {project_lock !== "수정불가" && (
@@ -678,24 +700,15 @@ const OptionSettingLv3Panel = memo(
                                                                 {row.lv1code || "—"}
                                                             </span>
                                                         ) : (
-                                                            <input
-                                                                key={`l1c_${rKey}_${row.lv1code}`}
-                                                                type="text"
+                                                            <OsaInlineInput
+                                                                data-rp-cell={`${rKey}:lv1code`}
                                                                 className="osa-rp-inline-input code"
                                                                 style={{ color: "#475569" }}
                                                                 placeholder="—"
-                                                                defaultValue={row.lv1code || ""}
-                                                                onBlur={(e) =>
-                                                                    onEditCodeField?.(
-                                                                        row,
-                                                                        "lv1code",
-                                                                        e.target.value
-                                                                    )
+                                                                value={row.lv1code || ""}
+                                                                onCommit={(val) =>
+                                                                    onEditCodeField?.(row, "lv1code", val)
                                                                 }
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === "Enter")
-                                                                        e.target.blur();
-                                                                }}
                                                             />
                                                         )}
                                                     </td>
@@ -737,24 +750,15 @@ const OptionSettingLv3Panel = memo(
                                                                 {row.lv2code || "—"}
                                                             </span>
                                                         ) : (
-                                                            <input
-                                                                key={`l2c_${rKey}_${row.lv2code}`}
-                                                                type="text"
+                                                            <OsaInlineInput
+                                                                data-rp-cell={`${rKey}:lv2code`}
                                                                 className="osa-rp-inline-input code"
                                                                 style={{ color: "#475569" }}
                                                                 placeholder="—"
-                                                                defaultValue={row.lv2code || ""}
-                                                                onBlur={(e) =>
-                                                                    onEditCodeField?.(
-                                                                        row,
-                                                                        "lv2code",
-                                                                        e.target.value
-                                                                    )
+                                                                value={row.lv2code || ""}
+                                                                onCommit={(val) =>
+                                                                    onEditCodeField?.(row, "lv2code", val)
                                                                 }
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === "Enter")
-                                                                        e.target.blur();
-                                                                }}
                                                             />
                                                         )}
                                                     </td>
@@ -802,21 +806,13 @@ const OptionSettingLv3Panel = memo(
                                                         {row._subCode}
                                                     </span>
                                                 ) : (
-                                                    <input
-                                                        key={`sc_${rKey}_${row._subCode}`}
-                                                        type="text"
+                                                    <OsaInlineInput
+                                                        data-rp-cell={`${rKey}:lv123code`}
                                                         className="osa-rp-inline-input code"
-                                                        defaultValue={row._subCode}
-                                                        onBlur={(e) =>
-                                                            onEditCodeField?.(
-                                                                row,
-                                                                "lv123code",
-                                                                e.target.value
-                                                            )
+                                                        value={row._subCode}
+                                                        onCommit={(val) =>
+                                                            onEditCodeField?.(row, "lv123code", val)
                                                         }
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === "Enter") e.target.blur();
-                                                        }}
                                                     />
                                                 )}
                                             </td>
@@ -841,24 +837,16 @@ const OptionSettingLv3Panel = memo(
                                                         )}
                                                     </div>
                                                 ) : (
-                                                    <input
-                                                        key={`l3_${rKey}_${row.lv3}`}
+                                                    <OsaInlineInput
                                                         data-rp-lv3-key={rKey}
-                                                        type="text"
+                                                        data-rp-cell={`${rKey}:lv3`}
                                                         className="osa-rp-inline-input"
                                                         placeholder="소분류명 입력"
-                                                        defaultValue={row.lv3 || ""}
+                                                        value={row.lv3 || ""}
                                                         title={row.lv3 || ""}
-                                                        onBlur={(e) =>
-                                                            onEditCodeField?.(
-                                                                row,
-                                                                "lv3",
-                                                                e.target.value
-                                                            )
+                                                        onCommit={(val) =>
+                                                            onEditCodeField?.(row, "lv3", val)
                                                         }
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === "Enter") e.target.blur();
-                                                        }}
                                                     />
                                                 )}
                                             </td>

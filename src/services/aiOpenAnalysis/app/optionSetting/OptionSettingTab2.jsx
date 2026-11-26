@@ -32,7 +32,7 @@ import {
     validateCodeLabelConsistency,
     toggleThreeStageSort,
 } from "./optionSettingUtils";
-import { OsaDropDown, OsaCategoryComboInput } from "./OptionSettingKendoSelect.jsx";
+import { OsaDropDown, OsaCategoryComboInput, OsaInlineInput } from "./OptionSettingKendoSelect.jsx";
 import { useOsaResizableTable } from "./useOsaResizableTable";
 
 const GUBUN_FILTER_OPTIONS = [
@@ -100,6 +100,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     modalRef.current = modal;
 
     const [sort, setSort] = useState([]);
+    const pinnedSortRef = useRef({ sig: "", keys: [] });
     const [gridSelectedCodes, setGridSelectedCodes] = useState(new Set());
     const [explicitChecked, setExplicitChecked] = useState(false);
     const selectedCodesRef = useRef(gridSelectedCodes);
@@ -354,11 +355,26 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             return true;
         });
 
-        // 컬럼 정렬이 지정된 경우 우선 적용, 미지정 시 레거시(Jsonload.selectPnLb) 순서 유지
+        // 컬럼 정렬이 지정된 경우 우선 적용하되, 인라인 편집 중에는 행 위치가 튀지 않도록 순서 고정
         if (sort.length > 0) {
             const { field, dir } = sort[0];
             const mul = dir === "desc" ? -1 : 1;
-            return [...list].sort((a, b) => natCompare(a?.[field], b?.[field]) * mul);
+            const rowKeysSig = activeCodes.map((r) => r.__rowKey).join("|");
+            const freqSig = field === "_freq" ? activeCodes.map((r) => r._freq).join(",") : "";
+            const orderSig = `${field}:${dir}::${rowKeysSig}::${freqSig}`;
+            if (pinnedSortRef.current.sig !== orderSig) {
+                const sortedAll = [...activeCodes].sort(
+                    (a, b) => natCompare(a?.[field], b?.[field]) * mul
+                );
+                pinnedSortRef.current = {
+                    sig: orderSig,
+                    keys: sortedAll.map((r) => r.__rowKey),
+                };
+            }
+            const filteredMap = new Map(list.map((r) => [r.__rowKey, r]));
+            return pinnedSortRef.current.keys
+                .map((k) => filteredMap.get(k))
+                .filter(Boolean);
         }
 
         return list;
@@ -1295,16 +1311,14 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                         {showLv1 && (
                                             <>
                                                 <td>
-                                                    <input
-                                                        key={`t2_l1c_${rKey}_${row.lv1code}`}
+                                                    <OsaInlineInput
                                                         data-tab2-cell={`${rKey}:lv1code`}
-                                                        type="text"
                                                         className="osa-rp-inline-input code"
                                                         style={{ color: "#475569" }}
                                                         placeholder="대코드"
                                                         disabled={readOnly}
-                                                        defaultValue={row.lv1code}
-                                                        onBlur={(e) =>
+                                                        value={row.lv1code}
+                                                        onCommit={(_val, e) =>
                                                             handleInlineInputBlur(e, row, "lv1code")
                                                         }
                                                         onKeyDown={(e) =>
@@ -1339,16 +1353,14 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                         {showLv2 && (
                                             <>
                                                 <td>
-                                                    <input
-                                                        key={`t2_l2c_${rKey}_${row.lv2code}`}
+                                                    <OsaInlineInput
                                                         data-tab2-cell={`${rKey}:lv2code`}
-                                                        type="text"
                                                         className="osa-rp-inline-input code"
                                                         style={{ color: "#475569" }}
                                                         placeholder="중코드"
                                                         disabled={readOnly}
-                                                        defaultValue={row.lv2code}
-                                                        onBlur={(e) =>
+                                                        value={row.lv2code}
+                                                        onCommit={(_val, e) =>
                                                             handleInlineInputBlur(e, row, "lv2code")
                                                         }
                                                         onKeyDown={(e) =>
@@ -1390,14 +1402,12 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                         </td>
 
                                         <td>
-                                            <input
-                                                key={`t2_sc_${rKey}_${row._subCode}`}
+                                            <OsaInlineInput
                                                 data-tab2-cell={`${rKey}:lv123code`}
-                                                type="text"
                                                 className="osa-rp-inline-input code"
                                                 disabled={readOnly}
-                                                defaultValue={row._subCode}
-                                                onBlur={(e) =>
+                                                value={row._subCode}
+                                                onCommit={(_val, e) =>
                                                     handleInlineInputBlur(e, row, "lv123code")
                                                 }
                                                 onKeyDown={(e) =>
@@ -1407,15 +1417,13 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                         </td>
 
                                         <td>
-                                            <input
-                                                key={`t2_l3_${rKey}_${row.lv3}`}
+                                            <OsaInlineInput
                                                 data-tab2-cell={`${rKey}:lv3`}
-                                                type="text"
                                                 className="osa-rp-inline-input"
                                                 placeholder="소분류명 입력"
                                                 disabled={readOnly}
-                                                defaultValue={row.lv3}
-                                                onBlur={(e) =>
+                                                value={row.lv3}
+                                                onCommit={(_val, e) =>
                                                     handleInlineInputBlur(e, row, "lv3")
                                                 }
                                                 onKeyDown={(e) =>
